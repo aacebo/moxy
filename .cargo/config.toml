@@ -1,0 +1,11 @@
+[build]
+jobs = -1
+
+[env]
+RUST_BACKTRACE = "1"
+# RUST_TEST_NOCAPTURE = "1"
+
+[net]
+retry = 3
+
+[alias]
