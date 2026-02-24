@@ -4,4 +4,11 @@ version = 4
 
 [[package]]
 name = "moxy"
-version = "0.1.0"
+version = "0.0.0"
+dependencies = [
+ "moxy-derive",
+]
+
+[[package]]
+name = "moxy-derive"
+version = "0.0.0"
