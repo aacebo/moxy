@@ -7,6 +7,7 @@ A set of helpful macros for day to day quality of life tasks including
 - Field Accessors
 - Popular Trait Derives
     - Display
+    - Deref
     - etc...
 
 ## Options

@@ -1,8 +1,14 @@
-use proc_macro::TokenStream;
-use quote::quote;
+mod deref;
 
-#[proc_macro_derive(Moxy)]
-pub fn derive(input: TokenStream) -> TokenStream {
+use proc_macro::TokenStream;
+
+#[proc_macro_derive(Deref, attributes(moxy))]
+pub fn derive_deref(input: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(input as syn::DeriveInput);
-    quote! {}.into()
+
+    match &input.data {
+        syn::Data::Struct(v) => deref::derive_struct(&input, v),
+        _ => panic!("unsupported type"),
+    }
+    .into()
 }
