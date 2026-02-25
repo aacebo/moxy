@@ -1,4 +1,6 @@
+pub(crate) mod attr;
 mod deref;
+pub(crate) mod parse;
 
 use proc_macro::TokenStream;
 

@@ -91,8 +91,8 @@ struct User {
 > Type alias
 
 ```rust
-#[derive(Display)]
-#[display(alias = "UserDetails")]
+#[derive(Moxy, Display)]
+#[moxy(alias = "UserDetails")]
 struct User {
     name: String,
     email: String,
@@ -120,6 +120,20 @@ struct User {
 #[derive(Display)]
 #[display(style = debug | compact | keyvalue | map | table | json | json::pretty)]
 struct User {
+    name: String,
+    email: String,
+    phone: String,
+}
+```
+
+### PartialEq
+
+> Specify keys to use for cmp
+
+```rust
+#[derive(PartialEq)]
+struct User {
+    #[moxy(eq)]
     name: String,
     email: String,
     phone: String,

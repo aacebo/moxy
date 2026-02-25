@@ -1,6 +1,8 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
+use crate::attr::Attr;
+
 pub fn derive_struct(input: &syn::DeriveInput, data: &syn::DataStruct) -> TokenStream {
     let ident = &input.ident;
     let (impl_generics, type_generics, where_generics) = &input.generics.split_for_impl();
@@ -8,17 +10,9 @@ pub fn derive_struct(input: &syn::DeriveInput, data: &syn::DataStruct) -> TokenS
     let field = fields
         .iter()
         .find(|(_, field)| {
-            field.attrs.iter().any(|attr| {
-                if !attr.path().is_ident("moxy") {
-                    return false;
-                }
-
-                match attr.parse_args_with(
-                    syn::punctuated::Punctuated::<syn::Meta, syn::Token![,]>::parse_terminated,
-                ) {
-                    Ok(v) => v.iter().any(|p| p.path().is_ident("deref")),
-                    Err(_) => false,
-                }
+            field.attrs.iter().any(|attr| match Attr::parse(attr) {
+                Ok(v) => v.is_moxy() && v.get("deref").is_some(),
+                Err(_) => false,
             })
         })
         .map(|(i, field)| (syn::Index::from(*i), field))
