@@ -1,6 +1,8 @@
 use quote::quote;
 use syn::punctuated::Punctuated;
 
+use crate::Error;
+
 #[derive(Clone)]
 pub enum Arg {
     /// `#[moxy(deref)]`
@@ -39,6 +41,7 @@ impl Arg {
         }
     }
 
+    #[allow(unused)]
     pub fn lit(&self) -> Option<&syn::Lit> {
         match self {
             Self::Literal(_, v) => Some(v),
@@ -46,6 +49,7 @@ impl Arg {
         }
     }
 
+    #[allow(unused)]
     pub fn ident(&self) -> Option<&syn::Ident> {
         match self {
             Self::Ident(_, v) => Some(v),
@@ -53,6 +57,7 @@ impl Arg {
         }
     }
 
+    #[allow(unused)]
     pub fn args(&self) -> Option<&Punctuated<Self, syn::Token![,]>> {
         match self {
             Self::List(_, v) => Some(v),
@@ -60,8 +65,9 @@ impl Arg {
         }
     }
 
+    #[allow(unused)]
     pub fn error(&self, message: &str) -> proc_macro2::TokenStream {
-        syn::Error::new_spanned(self.path(), message).to_compile_error()
+        self.path().error(message).to_compile_error()
     }
 }
 
