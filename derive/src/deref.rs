@@ -1,7 +1,7 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::core::Field;
+use crate::{Error, core::Field};
 
 pub fn derive_struct(input: &syn::DeriveInput, data: &syn::DataStruct) -> TokenStream {
     let ident = &input.ident;
@@ -19,7 +19,7 @@ pub fn derive_struct(input: &syn::DeriveInput, data: &syn::DataStruct) -> TokenS
         .or_else(|| fields.first());
 
     match field {
-        None => syn::Error::new_spanned(&input, "field not found").to_compile_error(),
+        None => input.error("field not found").to_compile_error(),
         Some(field) => {
             let field_name = field.name();
             let field_ty = field.ty();
