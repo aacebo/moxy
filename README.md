@@ -171,22 +171,33 @@ struct Pair(String, i32);
 
 ### Color (feature `color`)
 
-Adds ANSI colors to output via the `colored` crate. The user's crate must depend on `colored`.
-Works as a modifier — combine with any style.
+Adds ANSI truecolor output via the `colored` crate. The user's crate must depend on `colored`.
+Works as a modifier — combine with any style. Colors struct names, field names, values, and punctuation.
 
 ```rust
+// Default theme (dracula)
 #[derive(Display)]
 #[moxy(display(color))]
 struct User { name: String, email: String }
-// User { name: John, email: john@example.com }  (with colored names)
 
-// Combine with other styles
+// Named theme
+#[derive(Display)]
+#[moxy(display(color = "atom-one-dark"))]
+struct User { name: String, email: String }
+
+// Combine with styles and pretty
 #[moxy(display(debug, color))]
 #[moxy(display(map, color, pretty))]
-#[moxy(display(keyvalue, color))]
+#[moxy(display(keyvalue, color = "github-dark"))]
 ```
 
-Color scheme: struct name in cyan/bold, field names in blue.
+**Themes:**
+
+| Theme | Struct name | Field names | Values | Punctuation |
+|-------|-------------|-------------|--------|-------------|
+| `dracula` (default) | cyan | pink | yellow | white |
+| `atom-one-dark` | gold | purple | green | gray |
+| `github-dark` | blue | red | light blue | light gray |
 
 ### Skip Fields
 

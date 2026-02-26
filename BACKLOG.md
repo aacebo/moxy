@@ -16,7 +16,6 @@
 ## Display Formats
 
 - [ ] `table` — tabular output
-- [ ] `color` themes via `#[moxy(display(color = "theme"))]`
 
 ## Type Support
 
