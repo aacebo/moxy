@@ -2,7 +2,7 @@ pub(crate) mod core;
 mod deref;
 
 use proc_macro::TokenStream;
-use quote::ToTokens;
+use quote::{ToTokens, quote};
 
 pub(crate) trait Render {
     fn render(&self) -> syn::Result<proc_macro2::TokenStream>;
@@ -28,5 +28,6 @@ impl<T: syn::spanned::Spanned> Error for T {}
 #[proc_macro_derive(Deref, attributes(moxy))]
 pub fn derive_deref(tokens: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(tokens as syn::DeriveInput);
-    deref::parse(input).to_token_stream().into()
+    let el = deref::parse(input);
+    quote!(#el).into()
 }
