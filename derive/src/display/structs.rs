@@ -23,7 +23,7 @@ impl Render for StructSyntax {
             attr.args().iter().find_map(|arg| {
                 if arg.path().is_ident("__value") {
                     arg.as_lit().and_then(|lit| match lit {
-                        syn::Lit::Str(s) => Some(s.value()),
+                        syn::Lit::Str(s) => Some(s),
                         _ => None,
                     })
                 } else {
@@ -209,7 +209,7 @@ fn render_map(fields: &[&Field]) -> TokenStream {
     }
 }
 
-fn render_custom_fmt(fields: &[&Field], is_named: bool, fmt_str: &str) -> TokenStream {
+fn render_custom_fmt(fields: &[&Field], is_named: bool, pattern: &syn::LitStr) -> TokenStream {
     if is_named {
         let field_idents: Vec<_> = fields
             .iter()
@@ -222,13 +222,13 @@ fn render_custom_fmt(fields: &[&Field], is_named: bool, fmt_str: &str) -> TokenS
         quote! {
             #[allow(unused_variables)]
             let Self { #(#field_idents,)* .. } = self;
-            ::std::write!(f, #fmt_str)
+            ::std::write!(f, #pattern)
         }
     } else {
         let field_indices: Vec<_> = fields.iter().map(|f| f.name().clone()).collect();
 
         quote! {
-            ::std::write!(f, #fmt_str, #(self.#field_indices,)*)
+            ::std::write!(f, #pattern, #(self.#field_indices,)*)
         }
     }
 }
