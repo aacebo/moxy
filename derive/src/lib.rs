@@ -1,33 +1,25 @@
 pub(crate) mod core;
 mod deref;
+mod display;
+pub(crate) mod params;
+mod traits;
 
 use proc_macro::TokenStream;
-use quote::{ToTokens, quote};
 
-pub(crate) trait Render {
-    fn render(&self) -> syn::Result<proc_macro2::TokenStream>;
-}
-
-impl<T: ToTokens> Render for syn::Result<T> {
-    fn render(&self) -> syn::Result<proc_macro2::TokenStream> {
-        match self {
-            Err(err) => Err(err.clone()),
-            Ok(v) => Ok(v.to_token_stream()),
-        }
-    }
-}
-
-pub(crate) trait Error: syn::spanned::Spanned {
-    fn error(&self, message: &str) -> syn::Error {
-        syn::Error::new(self.span(), message)
-    }
-}
-
-impl<T: syn::spanned::Spanned> Error for T {}
+pub(crate) use traits::*;
 
 #[proc_macro_derive(Deref, attributes(moxy))]
 pub fn derive_deref(tokens: TokenStream) -> TokenStream {
-    let input = syn::parse_macro_input!(tokens as syn::DeriveInput);
-    let el = deref::parse(input);
-    quote!(#el).into()
+    match deref::render(tokens) {
+        Err(err) => err.to_compile_error().into(),
+        Ok(v) => v.into(),
+    }
+}
+
+#[proc_macro_derive(Display, attributes(moxy))]
+pub fn derive_display(tokens: TokenStream) -> TokenStream {
+    match display::render(tokens) {
+        Err(err) => err.to_compile_error().into(),
+        Ok(v) => v.into(),
+    }
 }
