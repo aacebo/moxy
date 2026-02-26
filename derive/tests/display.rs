@@ -474,7 +474,7 @@ mod color {
 
     #[derive(Display)]
     #[moxy(display(color))]
-    pub struct ColorNamed {
+    pub struct ColorDefault {
         name: String,
         email: String,
     }
@@ -489,50 +489,6 @@ mod color {
     #[derive(Display)]
     #[moxy(display(color))]
     pub struct ColorTuple(String, i32);
-
-    #[test]
-    fn test_color_named() {
-        let v = ColorNamed {
-            name: "John".into(),
-            email: "john@example.com".into(),
-        };
-        println!("{v}");
-        let expected = format!(
-            "{} {{ {}: {}, {}: {} }}",
-            "ColorNamed".cyan().bold(),
-            "name".blue(),
-            "John",
-            "email".blue(),
-            "john@example.com",
-        );
-        assert_eq!(v.to_string(), expected);
-    }
-
-    #[test]
-    fn test_color_pretty() {
-        let v = ColorPretty {
-            name: "John".into(),
-            email: "john@example.com".into(),
-        };
-        println!("{v}");
-        let expected = format!(
-            "{} {{\n    {}: {},\n    {}: {},\n}}",
-            "ColorPretty".cyan().bold(),
-            "name".blue(),
-            "John",
-            "email".blue(),
-            "john@example.com",
-        );
-        assert_eq!(v.to_string(), expected);
-    }
-
-    #[test]
-    fn test_color_tuple() {
-        let v = ColorTuple("hello".into(), 42);
-        println!("{v}");
-        let expected = format!("{}({}, {})", "ColorTuple".cyan().bold(), "hello", 42,);
-        assert_eq!(v.to_string(), expected);
-    }
 
     #[derive(Display)]
     #[moxy(display(debug, color))]
@@ -555,6 +511,90 @@ mod color {
         email: String,
     }
 
+    #[derive(Display)]
+    #[moxy(display(color = "dracula"))]
+    pub struct Dracula {
+        name: String,
+        email: String,
+    }
+
+    #[derive(Display)]
+    #[moxy(display(color = "atom-one-dark"))]
+    pub struct AtomOneDark {
+        name: String,
+        email: String,
+    }
+
+    #[derive(Display)]
+    #[moxy(display(color = "github-dark"))]
+    pub struct GitHubDark {
+        name: String,
+        email: String,
+    }
+
+    #[test]
+    fn test_color_default() {
+        let v = ColorDefault {
+            name: "John".into(),
+            email: "john@example.com".into(),
+        };
+        println!("{v}");
+        let expected = format!(
+            "{}{}{}{}{}{}{}{}{}{}",
+            "ColorDefault".truecolor(139, 233, 253).bold(),
+            " { ".truecolor(248, 248, 242),
+            "name".truecolor(255, 121, 198),
+            ": ".truecolor(248, 248, 242),
+            "John".truecolor(241, 250, 140),
+            ", ".truecolor(248, 248, 242),
+            "email".truecolor(255, 121, 198),
+            ": ".truecolor(248, 248, 242),
+            "john@example.com".truecolor(241, 250, 140),
+            " }".truecolor(248, 248, 242),
+        );
+        assert_eq!(v.to_string(), expected);
+    }
+
+    #[test]
+    fn test_color_pretty() {
+        let v = ColorPretty {
+            name: "John".into(),
+            email: "john@example.com".into(),
+        };
+        println!("{v}");
+        let expected = format!(
+            "{}{}    {}{}{}{}    {}{}{}{}{}",
+            "ColorPretty".truecolor(139, 233, 253).bold(),
+            " {\n".truecolor(248, 248, 242),
+            "name".truecolor(255, 121, 198),
+            ": ".truecolor(248, 248, 242),
+            "John".truecolor(241, 250, 140),
+            ",\n".truecolor(248, 248, 242),
+            "email".truecolor(255, 121, 198),
+            ": ".truecolor(248, 248, 242),
+            "john@example.com".truecolor(241, 250, 140),
+            ",\n".truecolor(248, 248, 242),
+            "}".truecolor(248, 248, 242),
+        );
+        assert_eq!(v.to_string(), expected);
+    }
+
+    #[test]
+    fn test_color_tuple() {
+        let v = ColorTuple("hello".into(), 42);
+        println!("{v}");
+        let expected = format!(
+            "{}{}{}{}{}{}",
+            "ColorTuple".truecolor(139, 233, 253).bold(),
+            "(".truecolor(248, 248, 242),
+            "hello".truecolor(241, 250, 140),
+            ", ".truecolor(248, 248, 242),
+            "42".truecolor(241, 250, 140),
+            ")".truecolor(248, 248, 242),
+        );
+        assert_eq!(v.to_string(), expected);
+    }
+
     #[test]
     fn test_debug_color() {
         let v = DebugColor {
@@ -563,12 +603,17 @@ mod color {
         };
         println!("{v}");
         let expected = format!(
-            "{} {{ {}: {:?}, {}: {:?} }}",
-            "DebugColor".cyan().bold(),
-            "name".blue(),
-            "John",
-            "email".blue(),
-            "john@example.com",
+            "{}{}{}{}{}{}{}{}{}{}",
+            "DebugColor".truecolor(139, 233, 253).bold(),
+            " { ".truecolor(248, 248, 242),
+            "name".truecolor(255, 121, 198),
+            ": ".truecolor(248, 248, 242),
+            format!("{:?}", "John").truecolor(241, 250, 140),
+            ", ".truecolor(248, 248, 242),
+            "email".truecolor(255, 121, 198),
+            ": ".truecolor(248, 248, 242),
+            format!("{:?}", "john@example.com").truecolor(241, 250, 140),
+            " }".truecolor(248, 248, 242),
         );
         assert_eq!(v.to_string(), expected);
     }
@@ -581,11 +626,16 @@ mod color {
         };
         println!("{v}");
         let expected = format!(
-            "{{ {}: {}, {}: {} }}",
-            "name".blue(),
-            "John",
-            "email".blue(),
-            "john@example.com",
+            "{}{}{}{}{}{}{}{}{}",
+            "{ ".truecolor(248, 248, 242),
+            "name".truecolor(255, 121, 198),
+            ": ".truecolor(248, 248, 242),
+            "John".truecolor(241, 250, 140),
+            ", ".truecolor(248, 248, 242),
+            "email".truecolor(255, 121, 198),
+            ": ".truecolor(248, 248, 242),
+            "john@example.com".truecolor(241, 250, 140),
+            " }".truecolor(248, 248, 242),
         );
         assert_eq!(v.to_string(), expected);
     }
@@ -598,11 +648,82 @@ mod color {
         };
         println!("{v}");
         let expected = format!(
-            "{}={} {}={}",
-            "name".blue(),
-            "John",
-            "email".blue(),
-            "john@example.com",
+            "{}{}{} {}{}{}",
+            "name".truecolor(255, 121, 198),
+            "=".truecolor(248, 248, 242),
+            "John".truecolor(241, 250, 140),
+            "email".truecolor(255, 121, 198),
+            "=".truecolor(248, 248, 242),
+            "john@example.com".truecolor(241, 250, 140),
+        );
+        assert_eq!(v.to_string(), expected);
+    }
+
+    #[test]
+    fn test_dracula() {
+        let v = Dracula {
+            name: "John".into(),
+            email: "john@example.com".into(),
+        };
+        println!("{v}");
+        let expected = format!(
+            "{}{}{}{}{}{}{}{}{}{}",
+            "Dracula".truecolor(139, 233, 253).bold(),
+            " { ".truecolor(248, 248, 242),
+            "name".truecolor(255, 121, 198),
+            ": ".truecolor(248, 248, 242),
+            "John".truecolor(241, 250, 140),
+            ", ".truecolor(248, 248, 242),
+            "email".truecolor(255, 121, 198),
+            ": ".truecolor(248, 248, 242),
+            "john@example.com".truecolor(241, 250, 140),
+            " }".truecolor(248, 248, 242),
+        );
+        assert_eq!(v.to_string(), expected);
+    }
+
+    #[test]
+    fn test_atom_one_dark() {
+        let v = AtomOneDark {
+            name: "John".into(),
+            email: "john@example.com".into(),
+        };
+        println!("{v}");
+        let expected = format!(
+            "{}{}{}{}{}{}{}{}{}{}",
+            "AtomOneDark".truecolor(230, 192, 123).bold(),
+            " { ".truecolor(171, 178, 191),
+            "name".truecolor(198, 120, 221),
+            ": ".truecolor(171, 178, 191),
+            "John".truecolor(152, 195, 121),
+            ", ".truecolor(171, 178, 191),
+            "email".truecolor(198, 120, 221),
+            ": ".truecolor(171, 178, 191),
+            "john@example.com".truecolor(152, 195, 121),
+            " }".truecolor(171, 178, 191),
+        );
+        assert_eq!(v.to_string(), expected);
+    }
+
+    #[test]
+    fn test_github_dark() {
+        let v = GitHubDark {
+            name: "John".into(),
+            email: "john@example.com".into(),
+        };
+        println!("{v}");
+        let expected = format!(
+            "{}{}{}{}{}{}{}{}{}{}",
+            "GitHubDark".truecolor(121, 192, 255).bold(),
+            " { ".truecolor(201, 209, 217),
+            "name".truecolor(255, 123, 114),
+            ": ".truecolor(201, 209, 217),
+            "John".truecolor(165, 214, 255),
+            ", ".truecolor(201, 209, 217),
+            "email".truecolor(255, 123, 114),
+            ": ".truecolor(201, 209, 217),
+            "john@example.com".truecolor(165, 214, 255),
+            " }".truecolor(201, 209, 217),
         );
         assert_eq!(v.to_string(), expected);
     }

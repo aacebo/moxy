@@ -1,4 +1,6 @@
 mod structs;
+#[cfg(feature = "color")]
+mod themes;
 
 use crate::{Render, params::Params};
 

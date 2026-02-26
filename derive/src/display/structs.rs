@@ -45,10 +45,17 @@ impl Render for StructSyntax {
             .map(|attr| attr.exists("pretty"))
             .unwrap_or(false);
 
-        let color = cfg!(feature = "color")
-            && display_attr
-                .map(|attr| attr.exists("color"))
-                .unwrap_or(false);
+        let theme: Option<String> = if cfg!(feature = "color") {
+            display_attr.and_then(|attr| {
+                let arg = attr.args().iter().find(|a| a.path().is_ident("color"))?;
+                match arg.as_lit() {
+                    Some(syn::Lit::Str(s)) => Some(s.value()),
+                    _ => Some(String::new()),
+                }
+            })
+        } else {
+            None
+        };
 
         let alias = display_attr.and_then(|attr| {
             attr.args().iter().find_map(|arg| {
@@ -92,13 +99,26 @@ impl Render for StructSyntax {
         } else if let Some(fmt_str) = custom_fmt {
             render_custom_fmt(&visible_fields, is_named, &fmt_str, &fmt_exprs)
         } else if let Some(mode) = style {
-            render_style(&mode, &visible_fields, is_named, &name_str, pretty, color)
+            render_style(
+                &mode,
+                &visible_fields,
+                is_named,
+                &name_str,
+                pretty,
+                theme.as_deref(),
+            )
         } else {
-            render_default(&visible_fields, is_named, &name_str, pretty, color)
+            render_default(
+                &visible_fields,
+                is_named,
+                &name_str,
+                pretty,
+                theme.as_deref(),
+            )
         };
 
         #[cfg(feature = "color")]
-        let body = if color {
+        let body = if theme.is_some() {
             quote! { use ::colored::Colorize as _; #inner }
         } else {
             inner
@@ -116,46 +136,123 @@ impl Render for StructSyntax {
     }
 }
 
+#[cfg(feature = "color")]
+fn themed_tokens(theme: &str) -> (TokenStream, TokenStream, TokenStream, TokenStream) {
+    let t = super::themes::get(theme);
+    let nc = t.name();
+    let fc = t.field();
+    let vc = t.value();
+    let pc = t.punct();
+    let (nr, ng, nb) = (nc.r, nc.g, nc.b);
+    let (fr, fg, fb) = (fc.r, fc.g, fc.b);
+    let (vr, vg, vb) = (vc.r, vc.g, vc.b);
+    let (pr, pg, pb) = (pc.r, pc.g, pc.b);
+    (
+        quote! { .truecolor(#nr, #ng, #nb).bold() },
+        quote! { .truecolor(#fr, #fg, #fb) },
+        quote! { .truecolor(#vr, #vg, #vb) },
+        quote! { .truecolor(#pr, #pg, #pb) },
+    )
+}
+
 fn render_default(
     fields: &[&Field],
     is_named: bool,
     name: &str,
     pretty: bool,
-    color: bool,
+    theme: Option<&str>,
 ) -> TokenStream {
+    let _ = &theme;
+    #[cfg(feature = "color")]
+    if let Some(t) = theme {
+        let (nc, fc, vc, pc) = themed_tokens(t);
+        let mut fmt = String::new();
+        let mut args: Vec<TokenStream> = Vec::new();
+
+        if is_named {
+            fmt.push_str("{}{}");
+            args.push(quote! { #name #nc });
+            args.push(if pretty {
+                quote! { " {\n" #pc }
+            } else {
+                quote! { " { " #pc }
+            });
+
+            for (i, f) in fields.iter().enumerate() {
+                let fname = f.name();
+                let dname = f.display_name();
+                if pretty {
+                    fmt.push_str("    {}{}{}{}");
+                } else {
+                    fmt.push_str("{}{}{}");
+                    if i + 1 < fields.len() {
+                        fmt.push_str("{}");
+                    }
+                }
+                args.push(quote! { #dname #fc });
+                args.push(quote! { ": " #pc });
+                args.push(quote! { ::std::format!("{}", self.#fname) #vc });
+                if pretty {
+                    args.push(quote! { ",\n" #pc });
+                } else if i + 1 < fields.len() {
+                    args.push(quote! { ", " #pc });
+                }
+            }
+
+            fmt.push_str("{}");
+            args.push(if pretty {
+                quote! { "}" #pc }
+            } else {
+                quote! { " }" #pc }
+            });
+        } else {
+            fmt.push_str("{}{}");
+            args.push(quote! { #name #nc });
+            args.push(if pretty {
+                quote! { "(\n" #pc }
+            } else {
+                quote! { "(" #pc }
+            });
+
+            for (i, f) in fields.iter().enumerate() {
+                let fname = f.name();
+                if pretty {
+                    fmt.push_str("    {}{}");
+                    args.push(quote! { ::std::format!("{}", self.#fname) #vc });
+                    args.push(quote! { ",\n" #pc });
+                } else {
+                    fmt.push_str("{}");
+                    args.push(quote! { ::std::format!("{}", self.#fname) #vc });
+                    if i + 1 < fields.len() {
+                        fmt.push_str("{}");
+                        args.push(quote! { ", " #pc });
+                    }
+                }
+            }
+
+            fmt.push_str("{}");
+            args.push(quote! { ")" #pc });
+        }
+
+        return quote! { ::std::write!(f, #fmt, #(#args),*) };
+    }
+
     let mut fmt = String::new();
     let mut args = Vec::new();
 
     if is_named {
-        if color {
-            fmt.push_str("{}");
-            args.push(quote! { #name.cyan().bold() });
-        } else {
-            fmt.push_str(name);
-        }
+        fmt.push_str(name);
         fmt.push_str(if pretty { " {{\n" } else { " {{ " });
 
         for (i, f) in fields.iter().enumerate() {
             let fname = f.name();
             if pretty {
                 fmt.push_str("    ");
-                if color {
-                    fmt.push_str("{}: {},\n");
-                    let dname = f.display_name();
-                    args.push(quote! { #dname.blue() });
-                } else {
-                    fmt.push_str(&f.display_name());
-                    fmt.push_str(": {},\n");
-                }
+                fmt.push_str(&f.display_name());
+                fmt.push_str(": {},\n");
             } else {
-                if color {
-                    fmt.push_str("{}: {}");
-                    let dname = f.display_name();
-                    args.push(quote! { #dname.blue() });
-                } else {
-                    fmt.push_str(&f.display_name());
-                    fmt.push_str(": {}");
-                }
+                fmt.push_str(&f.display_name());
+                fmt.push_str(": {}");
                 if i + 1 < fields.len() {
                     fmt.push_str(", ");
                 }
@@ -165,12 +262,7 @@ fn render_default(
 
         fmt.push_str(if pretty { "}}" } else { " }}" });
     } else {
-        if color {
-            fmt.push_str("{}");
-            args.push(quote! { #name.cyan().bold() });
-        } else {
-            fmt.push_str(name);
-        }
+        fmt.push_str(name);
         fmt.push_str(if pretty { "(\n" } else { "(" });
 
         for (i, f) in fields.iter().enumerate() {
@@ -197,9 +289,85 @@ fn render_debug(
     is_named: bool,
     name: &str,
     pretty: bool,
-    color: bool,
+    theme: Option<&str>,
 ) -> TokenStream {
-    if !pretty && !color {
+    let _ = &theme;
+    #[cfg(feature = "color")]
+    if let Some(t) = theme {
+        let (nc, fc, vc, pc) = themed_tokens(t);
+        let mut fmt = String::new();
+        let mut args: Vec<TokenStream> = Vec::new();
+
+        fmt.push_str("{}");
+        args.push(quote! { #name #nc });
+
+        if is_named {
+            fmt.push_str("{}");
+            args.push(if pretty {
+                quote! { " {\n" #pc }
+            } else {
+                quote! { " { " #pc }
+            });
+
+            for (i, f) in fields.iter().enumerate() {
+                let fname = f.name();
+                let dname = f.display_name();
+                if pretty {
+                    fmt.push_str("    {}{}{}{}");
+                } else {
+                    fmt.push_str("{}{}{}");
+                    if i + 1 < fields.len() {
+                        fmt.push_str("{}");
+                    }
+                }
+                args.push(quote! { #dname #fc });
+                args.push(quote! { ": " #pc });
+                args.push(quote! { ::std::format!("{:?}", self.#fname) #vc });
+                if pretty {
+                    args.push(quote! { ",\n" #pc });
+                } else if i + 1 < fields.len() {
+                    args.push(quote! { ", " #pc });
+                }
+            }
+
+            fmt.push_str("{}");
+            args.push(if pretty {
+                quote! { "}" #pc }
+            } else {
+                quote! { " }" #pc }
+            });
+        } else {
+            fmt.push_str("{}");
+            args.push(if pretty {
+                quote! { "(\n" #pc }
+            } else {
+                quote! { "(" #pc }
+            });
+
+            for (i, f) in fields.iter().enumerate() {
+                let fname = f.name();
+                if pretty {
+                    fmt.push_str("    {}{}");
+                    args.push(quote! { ::std::format!("{:?}", self.#fname) #vc });
+                    args.push(quote! { ",\n" #pc });
+                } else {
+                    fmt.push_str("{}");
+                    args.push(quote! { ::std::format!("{:?}", self.#fname) #vc });
+                    if i + 1 < fields.len() {
+                        fmt.push_str("{}");
+                        args.push(quote! { ", " #pc });
+                    }
+                }
+            }
+
+            fmt.push_str("{}");
+            args.push(quote! { ")" #pc });
+        }
+
+        return quote! { ::std::write!(f, #fmt, #(#args),*) };
+    }
+
+    if !pretty {
         if is_named {
             let entries: Vec<_> = fields
                 .iter()
@@ -235,51 +403,26 @@ fn render_debug(
     let mut fmt = String::new();
     let mut args = Vec::new();
 
-    if color {
-        fmt.push_str("{}");
-        args.push(quote! { #name.cyan().bold() });
-    } else {
-        fmt.push_str(name);
-    }
+    fmt.push_str(name);
 
     if is_named {
-        fmt.push_str(if pretty { " {{\n" } else { " {{ " });
+        fmt.push_str(" {{\n");
 
-        for (i, f) in fields.iter().enumerate() {
+        for f in fields.iter() {
             let fname = f.name();
-            if pretty {
-                fmt.push_str("    ");
-            }
-            if color {
-                fmt.push_str("{}: {:?}");
-                let dname = f.display_name();
-                args.push(quote! { #dname.blue() });
-            } else {
-                fmt.push_str(&f.display_name());
-                fmt.push_str(": {:?}");
-            }
-            if pretty {
-                fmt.push_str(",\n");
-            } else if i + 1 < fields.len() {
-                fmt.push_str(", ");
-            }
+            fmt.push_str("    ");
+            fmt.push_str(&f.display_name());
+            fmt.push_str(": {:?},\n");
             args.push(quote! { self.#fname });
         }
 
-        fmt.push_str(if pretty { "}}" } else { " }}" });
+        fmt.push_str("}}");
     } else {
-        fmt.push_str(if pretty { "(\n" } else { "(" });
+        fmt.push_str("(\n");
 
-        for (i, f) in fields.iter().enumerate() {
+        for f in fields.iter() {
             let fname = f.name();
-            if pretty {
-                fmt.push_str("    {:?},\n");
-            } else {
-                fmt.push_str("{:?}");
-                if i + 1 < fields.len() {
-                    fmt.push_str(", ");
-                }
-            }
+            fmt.push_str("    {:?},\n");
             args.push(quote! { self.#fname });
         }
 
@@ -307,21 +450,39 @@ fn render_compact(fields: &[&Field]) -> TokenStream {
     quote! { ::std::write!(f, #fmt, #(#args),*) }
 }
 
-fn render_keyvalue(fields: &[&Field], pretty: bool, color: bool) -> TokenStream {
+fn render_keyvalue(fields: &[&Field], pretty: bool, theme: Option<&str>) -> TokenStream {
+    let _ = &theme;
+    #[cfg(feature = "color")]
+    if let Some(t) = theme {
+        let (_nc, fc, vc, pc) = themed_tokens(t);
+        let sep = if pretty { "\n" } else { " " };
+        let mut fmt = String::new();
+        let mut args: Vec<TokenStream> = Vec::new();
+
+        for (i, f) in fields.iter().enumerate() {
+            let fname = f.name();
+            let dname = f.display_name();
+            fmt.push_str("{}{}{}");
+            args.push(quote! { #dname #fc });
+            args.push(quote! { "=" #pc });
+            args.push(quote! { ::std::format!("{}", self.#fname) #vc });
+
+            if i + 1 < fields.len() {
+                fmt.push_str(sep);
+            }
+        }
+
+        return quote! { ::std::write!(f, #fmt, #(#args),*) };
+    }
+
     let sep = if pretty { "\n" } else { " " };
     let mut fmt = String::new();
     let mut args = Vec::new();
 
     for (i, f) in fields.iter().enumerate() {
         let fname = f.name();
-        if color {
-            fmt.push_str("{}={}");
-            let dname = f.display_name();
-            args.push(quote! { #dname.blue() });
-        } else {
-            fmt.push_str(&f.display_name());
-            fmt.push_str("={}");
-        }
+        fmt.push_str(&f.display_name());
+        fmt.push_str("={}");
 
         if i + 1 < fields.len() {
             fmt.push_str(sep);
@@ -332,7 +493,54 @@ fn render_keyvalue(fields: &[&Field], pretty: bool, color: bool) -> TokenStream 
     quote! { ::std::write!(f, #fmt, #(#args),*) }
 }
 
-fn render_map(fields: &[&Field], pretty: bool, color: bool) -> TokenStream {
+fn render_map(fields: &[&Field], pretty: bool, theme: Option<&str>) -> TokenStream {
+    let _ = &theme;
+    #[cfg(feature = "color")]
+    if let Some(t) = theme {
+        let (_nc, fc, vc, pc) = themed_tokens(t);
+        let mut fmt = String::new();
+        let mut args: Vec<TokenStream> = Vec::new();
+
+        fmt.push_str("{}");
+        args.push(if pretty {
+            quote! { "{\n" #pc }
+        } else {
+            quote! { "{ " #pc }
+        });
+
+        for (i, f) in fields.iter().enumerate() {
+            let fname = f.name();
+            let dname = f.display_name();
+
+            if pretty {
+                fmt.push_str("    {}{}{}{}");
+                args.push(quote! { #dname #fc });
+                args.push(quote! { ": " #pc });
+                args.push(quote! { ::std::format!("{}", self.#fname) #vc });
+                args.push(quote! { ",\n" #pc });
+            } else {
+                fmt.push_str("{}{}{}");
+                args.push(quote! { #dname #fc });
+                args.push(quote! { ": " #pc });
+                args.push(quote! { ::std::format!("{}", self.#fname) #vc });
+
+                if i + 1 < fields.len() {
+                    fmt.push_str("{}");
+                    args.push(quote! { ", " #pc });
+                }
+            }
+        }
+
+        fmt.push_str("{}");
+        args.push(if pretty {
+            quote! { "}" #pc }
+        } else {
+            quote! { " }" #pc }
+        });
+
+        return quote! { ::std::write!(f, #fmt, #(#args),*) };
+    }
+
     let mut fmt = String::new();
     let mut args = Vec::new();
 
@@ -343,23 +551,11 @@ fn render_map(fields: &[&Field], pretty: bool, color: bool) -> TokenStream {
 
         if pretty {
             fmt.push_str("    ");
-            if color {
-                fmt.push_str("{}: {},\n");
-                let dname = f.display_name();
-                args.push(quote! { #dname.blue() });
-            } else {
-                fmt.push_str(&f.display_name());
-                fmt.push_str(": {},\n");
-            }
+            fmt.push_str(&f.display_name());
+            fmt.push_str(": {},\n");
         } else {
-            if color {
-                fmt.push_str("{}: {}");
-                let dname = f.display_name();
-                args.push(quote! { #dname.blue() });
-            } else {
-                fmt.push_str(&f.display_name());
-                fmt.push_str(": {}");
-            }
+            fmt.push_str(&f.display_name());
+            fmt.push_str(": {}");
 
             if i + 1 < fields.len() {
                 fmt.push_str(", ");
@@ -480,13 +676,13 @@ fn render_style(
     is_named: bool,
     name: &str,
     pretty: bool,
-    color: bool,
+    theme: Option<&str>,
 ) -> TokenStream {
     match style {
-        "debug" => render_debug(fields, is_named, name, pretty, color),
+        "debug" => render_debug(fields, is_named, name, pretty, theme),
         "compact" => render_compact(fields),
-        "keyvalue" => render_keyvalue(fields, pretty, color),
-        "map" => render_map(fields, pretty, color),
+        "keyvalue" => render_keyvalue(fields, pretty, theme),
+        "map" => render_map(fields, pretty, theme),
         #[cfg(feature = "json")]
         "json" => render_json(fields, is_named, pretty),
         _ => unreachable!(),
