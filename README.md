@@ -118,6 +118,76 @@ struct User {
 // hi! my name is John and my email is john@example.com
 ```
 
+#### Expression Arguments
+
+Use `std::fmt`-style positional arguments with arbitrary expressions.
+
+```rust
+#[derive(Display)]
+#[moxy(display("{}", self.greeting()))]
+struct User { name: String }
+
+impl User {
+    fn greeting(&self) -> String {
+        format!("Hello, {}!", self.name)
+    }
+}
+// Hello, John!
+
+#[derive(Display)]
+#[moxy(display("double: {}", count * 2))]
+struct Counter { count: i32 }
+// double: 10
+```
+
+### JSON (feature `json`)
+
+Serializes fields to JSON. Requires field types to implement `serde::Serialize`.
+The user's crate must depend on `serde_json`.
+
+```rust
+#[derive(Display, serde::Serialize)]
+#[moxy(display(json))]
+struct User { name: String, age: i32 }
+// {"age":30,"name":"John"}
+
+#[derive(Display, serde::Serialize)]
+#[moxy(display(json, pretty))]
+struct User { name: String, age: i32 }
+// {
+//   "age": 30,
+//   "name": "John"
+// }
+```
+
+Tuple structs produce JSON arrays:
+
+```rust
+#[derive(Display, serde::Serialize)]
+#[moxy(display(json))]
+struct Pair(String, i32);
+// ["hello",42]
+```
+
+### Color (feature `color`)
+
+Adds ANSI colors to output via the `colored` crate. The user's crate must depend on `colored`.
+Works as a modifier — combine with any style.
+
+```rust
+#[derive(Display)]
+#[moxy(display(color))]
+struct User { name: String, email: String }
+// User { name: John, email: john@example.com }  (with colored names)
+
+// Combine with other styles
+#[moxy(display(debug, color))]
+#[moxy(display(map, color, pretty))]
+#[moxy(display(keyvalue, color))]
+```
+
+Color scheme: struct name in cyan/bold, field names in blue.
+
 ### Skip Fields
 
 ```rust

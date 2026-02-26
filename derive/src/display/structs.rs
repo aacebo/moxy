@@ -35,13 +35,20 @@ impl Render for StructSyntax {
         let style = display_attr.and_then(|attr| {
             attr.args().iter().find_map(|arg| {
                 let name = arg.path().get_ident()?.to_string();
-                matches!(name.as_str(), "debug" | "compact" | "keyvalue" | "map").then_some(name)
+                let is_style = matches!(name.as_str(), "debug" | "compact" | "keyvalue" | "map")
+                    || cfg!(feature = "json") && name == "json";
+                is_style.then_some(name)
             })
         });
 
         let pretty = display_attr
             .map(|attr| attr.exists("pretty"))
             .unwrap_or(false);
+
+        let color = cfg!(feature = "color")
+            && display_attr
+                .map(|attr| attr.exists("color"))
+                .unwrap_or(false);
 
         let alias = display_attr.and_then(|attr| {
             attr.args().iter().find_map(|arg| {
@@ -80,15 +87,24 @@ impl Render for StructSyntax {
             .map(|attr| attr.args().iter().filter_map(|arg| arg.as_expr()).collect())
             .unwrap_or_default();
 
-        let body = if is_unit || visible_fields.is_empty() {
+        let inner = if is_unit || visible_fields.is_empty() {
             quote! { ::std::write!(f, #name_str) }
         } else if let Some(fmt_str) = custom_fmt {
             render_custom_fmt(&visible_fields, is_named, &fmt_str, &fmt_exprs)
         } else if let Some(mode) = style {
-            render_style(&mode, &visible_fields, is_named, &name_str, pretty)
+            render_style(&mode, &visible_fields, is_named, &name_str, pretty, color)
         } else {
-            render_default(&visible_fields, is_named, &name_str, pretty)
+            render_default(&visible_fields, is_named, &name_str, pretty, color)
         };
+
+        #[cfg(feature = "color")]
+        let body = if color {
+            quote! { use ::colored::Colorize as _; #inner }
+        } else {
+            inner
+        };
+        #[cfg(not(feature = "color"))]
+        let body = inner;
 
         Ok(quote! {
             impl #impl_generics ::std::fmt::Display for #ident #type_generics #where_generics {
@@ -100,23 +116,46 @@ impl Render for StructSyntax {
     }
 }
 
-fn render_default(fields: &[&Field], is_named: bool, name: &str, pretty: bool) -> TokenStream {
+fn render_default(
+    fields: &[&Field],
+    is_named: bool,
+    name: &str,
+    pretty: bool,
+    color: bool,
+) -> TokenStream {
     let mut fmt = String::new();
     let mut args = Vec::new();
 
     if is_named {
-        fmt.push_str(name);
+        if color {
+            fmt.push_str("{}");
+            args.push(quote! { #name.cyan().bold() });
+        } else {
+            fmt.push_str(name);
+        }
         fmt.push_str(if pretty { " {{\n" } else { " {{ " });
 
         for (i, f) in fields.iter().enumerate() {
             let fname = f.name();
             if pretty {
                 fmt.push_str("    ");
-                fmt.push_str(&f.display_name());
-                fmt.push_str(": {},\n");
+                if color {
+                    fmt.push_str("{}: {},\n");
+                    let dname = f.display_name();
+                    args.push(quote! { #dname.blue() });
+                } else {
+                    fmt.push_str(&f.display_name());
+                    fmt.push_str(": {},\n");
+                }
             } else {
-                fmt.push_str(&f.display_name());
-                fmt.push_str(": {}");
+                if color {
+                    fmt.push_str("{}: {}");
+                    let dname = f.display_name();
+                    args.push(quote! { #dname.blue() });
+                } else {
+                    fmt.push_str(&f.display_name());
+                    fmt.push_str(": {}");
+                }
                 if i + 1 < fields.len() {
                     fmt.push_str(", ");
                 }
@@ -126,7 +165,12 @@ fn render_default(fields: &[&Field], is_named: bool, name: &str, pretty: bool) -
 
         fmt.push_str(if pretty { "}}" } else { " }}" });
     } else {
-        fmt.push_str(name);
+        if color {
+            fmt.push_str("{}");
+            args.push(quote! { #name.cyan().bold() });
+        } else {
+            fmt.push_str(name);
+        }
         fmt.push_str(if pretty { "(\n" } else { "(" });
 
         for (i, f) in fields.iter().enumerate() {
@@ -148,8 +192,14 @@ fn render_default(fields: &[&Field], is_named: bool, name: &str, pretty: bool) -
     quote! { ::std::write!(f, #fmt, #(#args),*) }
 }
 
-fn render_debug(fields: &[&Field], is_named: bool, name: &str, pretty: bool) -> TokenStream {
-    if !pretty {
+fn render_debug(
+    fields: &[&Field],
+    is_named: bool,
+    name: &str,
+    pretty: bool,
+    color: bool,
+) -> TokenStream {
+    if !pretty && !color {
         if is_named {
             let entries: Vec<_> = fields
                 .iter()
@@ -185,26 +235,51 @@ fn render_debug(fields: &[&Field], is_named: bool, name: &str, pretty: bool) -> 
     let mut fmt = String::new();
     let mut args = Vec::new();
 
-    fmt.push_str(name);
+    if color {
+        fmt.push_str("{}");
+        args.push(quote! { #name.cyan().bold() });
+    } else {
+        fmt.push_str(name);
+    }
 
     if is_named {
-        fmt.push_str(" {{\n");
+        fmt.push_str(if pretty { " {{\n" } else { " {{ " });
 
-        for f in fields.iter() {
+        for (i, f) in fields.iter().enumerate() {
             let fname = f.name();
-            fmt.push_str("    ");
-            fmt.push_str(&f.display_name());
-            fmt.push_str(": {:?},\n");
+            if pretty {
+                fmt.push_str("    ");
+            }
+            if color {
+                fmt.push_str("{}: {:?}");
+                let dname = f.display_name();
+                args.push(quote! { #dname.blue() });
+            } else {
+                fmt.push_str(&f.display_name());
+                fmt.push_str(": {:?}");
+            }
+            if pretty {
+                fmt.push_str(",\n");
+            } else if i + 1 < fields.len() {
+                fmt.push_str(", ");
+            }
             args.push(quote! { self.#fname });
         }
 
-        fmt.push_str("}}");
+        fmt.push_str(if pretty { "}}" } else { " }}" });
     } else {
-        fmt.push_str("(\n");
+        fmt.push_str(if pretty { "(\n" } else { "(" });
 
-        for f in fields.iter() {
+        for (i, f) in fields.iter().enumerate() {
             let fname = f.name();
-            fmt.push_str("    {:?},\n");
+            if pretty {
+                fmt.push_str("    {:?},\n");
+            } else {
+                fmt.push_str("{:?}");
+                if i + 1 < fields.len() {
+                    fmt.push_str(", ");
+                }
+            }
             args.push(quote! { self.#fname });
         }
 
@@ -232,15 +307,21 @@ fn render_compact(fields: &[&Field]) -> TokenStream {
     quote! { ::std::write!(f, #fmt, #(#args),*) }
 }
 
-fn render_keyvalue(fields: &[&Field], pretty: bool) -> TokenStream {
+fn render_keyvalue(fields: &[&Field], pretty: bool, color: bool) -> TokenStream {
     let sep = if pretty { "\n" } else { " " };
     let mut fmt = String::new();
     let mut args = Vec::new();
 
     for (i, f) in fields.iter().enumerate() {
         let fname = f.name();
-        fmt.push_str(&f.display_name());
-        fmt.push_str("={}");
+        if color {
+            fmt.push_str("{}={}");
+            let dname = f.display_name();
+            args.push(quote! { #dname.blue() });
+        } else {
+            fmt.push_str(&f.display_name());
+            fmt.push_str("={}");
+        }
 
         if i + 1 < fields.len() {
             fmt.push_str(sep);
@@ -251,7 +332,7 @@ fn render_keyvalue(fields: &[&Field], pretty: bool) -> TokenStream {
     quote! { ::std::write!(f, #fmt, #(#args),*) }
 }
 
-fn render_map(fields: &[&Field], pretty: bool) -> TokenStream {
+fn render_map(fields: &[&Field], pretty: bool, color: bool) -> TokenStream {
     let mut fmt = String::new();
     let mut args = Vec::new();
 
@@ -262,11 +343,23 @@ fn render_map(fields: &[&Field], pretty: bool) -> TokenStream {
 
         if pretty {
             fmt.push_str("    ");
-            fmt.push_str(&f.display_name());
-            fmt.push_str(": {},\n");
+            if color {
+                fmt.push_str("{}: {},\n");
+                let dname = f.display_name();
+                args.push(quote! { #dname.blue() });
+            } else {
+                fmt.push_str(&f.display_name());
+                fmt.push_str(": {},\n");
+            }
         } else {
-            fmt.push_str(&f.display_name());
-            fmt.push_str(": {}");
+            if color {
+                fmt.push_str("{}: {}");
+                let dname = f.display_name();
+                args.push(quote! { #dname.blue() });
+            } else {
+                fmt.push_str(&f.display_name());
+                fmt.push_str(": {}");
+            }
 
             if i + 1 < fields.len() {
                 fmt.push_str(", ");
@@ -324,18 +417,78 @@ fn render_custom_fmt(
     }
 }
 
+#[cfg(feature = "json")]
+fn render_json(fields: &[&Field], is_named: bool, pretty: bool) -> TokenStream {
+    if is_named {
+        let inserts: Vec<_> = fields
+            .iter()
+            .map(|f| {
+                let fname = f.name();
+                let dname = f.display_name();
+                quote! {
+                    __map.insert(
+                        #dname.into(),
+                        ::serde_json::to_value(&self.#fname).unwrap_or(::serde_json::Value::Null),
+                    );
+                }
+            })
+            .collect();
+
+        let serialize = if pretty {
+            quote! { ::serde_json::to_string_pretty(&__val) }
+        } else {
+            quote! { ::serde_json::to_string(&__val) }
+        };
+
+        quote! {
+            let mut __map = ::serde_json::Map::new();
+            #(#inserts)*
+            let __val = ::serde_json::Value::Object(__map);
+            ::std::write!(f, "{}", #serialize.unwrap_or_default())
+        }
+    } else {
+        let pushes: Vec<_> = fields
+            .iter()
+            .map(|f| {
+                let fname = f.name();
+                quote! {
+                    __arr.push(
+                        ::serde_json::to_value(&self.#fname).unwrap_or(::serde_json::Value::Null),
+                    );
+                }
+            })
+            .collect();
+
+        let serialize = if pretty {
+            quote! { ::serde_json::to_string_pretty(&__val) }
+        } else {
+            quote! { ::serde_json::to_string(&__val) }
+        };
+
+        quote! {
+            let mut __arr = ::std::vec::Vec::new();
+            #(#pushes)*
+            let __val = ::serde_json::Value::Array(__arr);
+            ::std::write!(f, "{}", #serialize.unwrap_or_default())
+        }
+    }
+}
+
 fn render_style(
     style: &str,
     fields: &[&Field],
     is_named: bool,
     name: &str,
     pretty: bool,
+    color: bool,
 ) -> TokenStream {
     match style {
-        "debug" => render_debug(fields, is_named, name, pretty),
+        "debug" => render_debug(fields, is_named, name, pretty, color),
         "compact" => render_compact(fields),
-        "keyvalue" => render_keyvalue(fields, pretty),
-        "map" => render_map(fields, pretty),
+        "keyvalue" => render_keyvalue(fields, pretty, color),
+        "map" => render_map(fields, pretty, color),
+        #[cfg(feature = "json")]
+        "json" => render_json(fields, is_named, pretty),
         _ => unreachable!(),
     }
 }

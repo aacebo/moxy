@@ -147,213 +147,463 @@ pub struct FieldExpr {
 
 #[test]
 fn test_named_default() {
-    let u = NamedDefault {
+    let v = NamedDefault {
         name: "John".into(),
         email: "john@example.com".into(),
     };
+    println!("{v}");
     assert_eq!(
-        u.to_string(),
+        v.to_string(),
         "NamedDefault { name: John, email: john@example.com }"
     );
 }
 
 #[test]
 fn test_tuple_default() {
-    let t = TupleDefault("hello".into(), "world".into());
-    assert_eq!(t.to_string(), "TupleDefault(hello, world)");
+    let v = TupleDefault("hello".into(), "world".into());
+    println!("{v}");
+    assert_eq!(v.to_string(), "TupleDefault(hello, world)");
 }
 
 #[test]
 fn test_unit_default() {
-    assert_eq!(UnitDefault.to_string(), "UnitDefault");
+    let v = UnitDefault;
+    println!("{v}");
+    assert_eq!(v.to_string(), "UnitDefault");
 }
 
 #[test]
 fn test_skip() {
-    let u = Ignored {
+    let v = Ignored {
         name: "John".into(),
         email: "john@example.com".into(),
     };
-    assert_eq!(u.to_string(), "Ignored { name: John }");
+    println!("{v}");
+    assert_eq!(v.to_string(), "Ignored { name: John }");
 }
 
 #[test]
 fn test_custom_fmt() {
-    let c = CustomFmt {
+    let v = CustomFmt {
         name: "John".into(),
         email: "john@example.com".into(),
     };
+    println!("{v}");
     assert_eq!(
-        c.to_string(),
+        v.to_string(),
         "hi! my name is John and my email is john@example.com"
     );
 }
 
 #[test]
 fn test_debug_mode() {
-    let d = DebugMode {
+    let v = DebugMode {
         name: "John".into(),
         email: "john@example.com".into(),
     };
+    println!("{v}");
     assert_eq!(
-        d.to_string(),
+        v.to_string(),
         "DebugMode { name: \"John\", email: \"john@example.com\" }"
     );
 }
 
 #[test]
 fn test_compact_mode() {
-    let c = CompactMode {
+    let v = CompactMode {
         name: "John".into(),
         email: "john@example.com".into(),
     };
-    assert_eq!(c.to_string(), "John john@example.com");
+    println!("{v}");
+    assert_eq!(v.to_string(), "John john@example.com");
 }
 
 #[test]
 fn test_keyvalue_mode() {
-    let k = KeyValueMode {
+    let v = KeyValueMode {
         name: "John".into(),
         email: "john@example.com".into(),
     };
-    assert_eq!(k.to_string(), "name=John email=john@example.com");
+    println!("{v}");
+    assert_eq!(v.to_string(), "name=John email=john@example.com");
 }
 
 #[test]
 fn test_map_mode() {
-    let m = MapMode {
+    let v = MapMode {
         name: "John".into(),
         email: "john@example.com".into(),
     };
-    assert_eq!(m.to_string(), "{ name: John, email: john@example.com }");
+    println!("{v}");
+    assert_eq!(v.to_string(), "{ name: John, email: john@example.com }");
 }
 
 #[test]
 fn test_tuple_debug() {
-    let t = TupleDebug("hello".into(), 42);
-    assert_eq!(t.to_string(), "TupleDebug(\"hello\", 42)");
+    let v = TupleDebug("hello".into(), 42);
+    println!("{v}");
+    assert_eq!(v.to_string(), "TupleDebug(\"hello\", 42)");
 }
 
 #[test]
 fn test_tuple_compact() {
-    let t = TupleCompact("hello".into(), 42);
-    assert_eq!(t.to_string(), "hello 42");
+    let v = TupleCompact("hello".into(), 42);
+    println!("{v}");
+    assert_eq!(v.to_string(), "hello 42");
 }
 
 #[test]
 fn test_default_pretty() {
-    let d = DefaultPretty {
+    let v = DefaultPretty {
         name: "John".into(),
         email: "john@example.com".into(),
     };
+    println!("{v}");
     assert_eq!(
-        d.to_string(),
+        v.to_string(),
         "DefaultPretty {\n    name: John,\n    email: john@example.com,\n}"
     );
 }
 
 #[test]
 fn test_tuple_default_pretty() {
-    let t = TupleDefaultPretty("hello".into(), 42);
-    assert_eq!(t.to_string(), "TupleDefaultPretty(\n    hello,\n    42,\n)");
+    let v = TupleDefaultPretty("hello".into(), 42);
+    println!("{v}");
+    assert_eq!(v.to_string(), "TupleDefaultPretty(\n    hello,\n    42,\n)");
 }
 
 #[test]
 fn test_debug_pretty() {
-    let d = DebugPretty {
+    let v = DebugPretty {
         name: "John".into(),
         email: "john@example.com".into(),
     };
+    println!("{v}");
     assert_eq!(
-        d.to_string(),
+        v.to_string(),
         "DebugPretty {\n    name: \"John\",\n    email: \"john@example.com\",\n}"
     );
 }
 
 #[test]
 fn test_tuple_debug_pretty() {
-    let t = TupleDebugPretty("hello".into(), 42);
+    let v = TupleDebugPretty("hello".into(), 42);
+    println!("{v}");
     assert_eq!(
-        t.to_string(),
+        v.to_string(),
         "TupleDebugPretty(\n    \"hello\",\n    42,\n)"
     );
 }
 
 #[test]
 fn test_keyvalue_pretty() {
-    let k = KeyValuePretty {
+    let v = KeyValuePretty {
         name: "John".into(),
         email: "john@example.com".into(),
     };
-    assert_eq!(k.to_string(), "name=John\nemail=john@example.com");
+    println!("{v}");
+    assert_eq!(v.to_string(), "name=John\nemail=john@example.com");
 }
 
 #[test]
 fn test_map_pretty() {
-    let m = MapPretty {
+    let v = MapPretty {
         name: "John".into(),
         email: "john@example.com".into(),
     };
+    println!("{v}");
     assert_eq!(
-        m.to_string(),
+        v.to_string(),
         "{\n    name: John,\n    email: john@example.com,\n}"
     );
 }
 
 #[test]
 fn test_aliased_struct() {
-    let a = AliasedStruct {
+    let v = AliasedStruct {
         name: "John".into(),
         email: "john@example.com".into(),
     };
+    println!("{v}");
     assert_eq!(
-        a.to_string(),
+        v.to_string(),
         "User { name: John, email: john@example.com }"
     );
 }
 
 #[test]
 fn test_aliased_field() {
-    let a = AliasedField {
+    let v = AliasedField {
         name: "John".into(),
         email: "john@example.com".into(),
     };
+    println!("{v}");
     assert_eq!(
-        a.to_string(),
+        v.to_string(),
         "AliasedField { full_name: John, email: john@example.com }"
     );
 }
 
 #[test]
 fn test_aliased_debug() {
-    let a = AliasedDebug {
+    let v = AliasedDebug {
         name: "John".into(),
         email: "john@example.com".into(),
     };
+    println!("{v}");
     assert_eq!(
-        a.to_string(),
+        v.to_string(),
         "U { n: \"John\", email: \"john@example.com\" }"
     );
 }
 
 #[test]
 fn test_self_field_access() {
-    let s = SelfFieldAccess {
+    let v = SelfFieldAccess {
         name: "John".into(),
     };
-    assert_eq!(s.to_string(), "John");
+    println!("{v}");
+    assert_eq!(v.to_string(), "John");
 }
 
 #[test]
 fn test_self_method_call() {
-    let s = SelfMethodCall {
+    let v = SelfMethodCall {
         name: "John".into(),
     };
-    assert_eq!(s.to_string(), "Hello, John!");
+    println!("{v}");
+    assert_eq!(v.to_string(), "Hello, John!");
 }
 
 #[test]
 fn test_field_expr() {
-    let f = FieldExpr { count: 5 };
-    assert_eq!(f.to_string(), "double: 10");
+    let v = FieldExpr { count: 5 };
+    println!("{v}");
+    assert_eq!(v.to_string(), "double: 10");
+}
+
+#[cfg(feature = "json")]
+mod json {
+    use moxy_derive::Display;
+
+    #[derive(Display, serde::Serialize)]
+    #[moxy(display(json))]
+    pub struct JsonNamed {
+        name: String,
+        age: i32,
+    }
+
+    #[derive(Display, serde::Serialize)]
+    #[moxy(display(json, pretty))]
+    pub struct JsonPretty {
+        name: String,
+        age: i32,
+    }
+
+    #[derive(Display, serde::Serialize)]
+    #[moxy(display(json))]
+    pub struct JsonTuple(String, i32);
+
+    #[derive(Display, serde::Serialize)]
+    #[moxy(display(json))]
+    pub struct JsonSkip {
+        name: String,
+        #[moxy(display(skip))]
+        #[allow(unused)]
+        secret: String,
+    }
+
+    #[derive(Display, serde::Serialize)]
+    #[moxy(display(json, alias = "Person"))]
+    pub struct JsonAlias {
+        #[moxy(display(alias = "full_name"))]
+        name: String,
+    }
+
+    #[test]
+    fn test_json_named() {
+        let v = JsonNamed {
+            name: "John".into(),
+            age: 30,
+        };
+        println!("{v}");
+        assert_eq!(v.to_string(), r#"{"age":30,"name":"John"}"#);
+    }
+
+    #[test]
+    fn test_json_pretty() {
+        let v = JsonPretty {
+            name: "John".into(),
+            age: 30,
+        };
+        println!("{v}");
+        assert_eq!(v.to_string(), "{\n  \"age\": 30,\n  \"name\": \"John\"\n}");
+    }
+
+    #[test]
+    fn test_json_tuple() {
+        let v = JsonTuple("hello".into(), 42);
+        println!("{v}");
+        assert_eq!(v.to_string(), r#"["hello",42]"#);
+    }
+
+    #[test]
+    fn test_json_skip() {
+        let v = JsonSkip {
+            name: "John".into(),
+            secret: "hidden".into(),
+        };
+        println!("{v}");
+        assert_eq!(v.to_string(), r#"{"name":"John"}"#);
+    }
+
+    #[test]
+    fn test_json_alias() {
+        let v = JsonAlias {
+            name: "John".into(),
+        };
+        println!("{v}");
+        assert_eq!(v.to_string(), r#"{"full_name":"John"}"#);
+    }
+}
+
+#[cfg(feature = "color")]
+mod color {
+    use colored::Colorize;
+    use moxy_derive::Display;
+
+    #[derive(Display)]
+    #[moxy(display(color))]
+    pub struct ColorNamed {
+        name: String,
+        email: String,
+    }
+
+    #[derive(Display)]
+    #[moxy(display(color, pretty))]
+    pub struct ColorPretty {
+        name: String,
+        email: String,
+    }
+
+    #[derive(Display)]
+    #[moxy(display(color))]
+    pub struct ColorTuple(String, i32);
+
+    #[test]
+    fn test_color_named() {
+        let v = ColorNamed {
+            name: "John".into(),
+            email: "john@example.com".into(),
+        };
+        println!("{v}");
+        let expected = format!(
+            "{} {{ {}: {}, {}: {} }}",
+            "ColorNamed".cyan().bold(),
+            "name".blue(),
+            "John",
+            "email".blue(),
+            "john@example.com",
+        );
+        assert_eq!(v.to_string(), expected);
+    }
+
+    #[test]
+    fn test_color_pretty() {
+        let v = ColorPretty {
+            name: "John".into(),
+            email: "john@example.com".into(),
+        };
+        println!("{v}");
+        let expected = format!(
+            "{} {{\n    {}: {},\n    {}: {},\n}}",
+            "ColorPretty".cyan().bold(),
+            "name".blue(),
+            "John",
+            "email".blue(),
+            "john@example.com",
+        );
+        assert_eq!(v.to_string(), expected);
+    }
+
+    #[test]
+    fn test_color_tuple() {
+        let v = ColorTuple("hello".into(), 42);
+        println!("{v}");
+        let expected = format!("{}({}, {})", "ColorTuple".cyan().bold(), "hello", 42,);
+        assert_eq!(v.to_string(), expected);
+    }
+
+    #[derive(Display)]
+    #[moxy(display(debug, color))]
+    pub struct DebugColor {
+        name: String,
+        email: String,
+    }
+
+    #[derive(Display)]
+    #[moxy(display(map, color))]
+    pub struct MapColor {
+        name: String,
+        email: String,
+    }
+
+    #[derive(Display)]
+    #[moxy(display(keyvalue, color))]
+    pub struct KeyValueColor {
+        name: String,
+        email: String,
+    }
+
+    #[test]
+    fn test_debug_color() {
+        let v = DebugColor {
+            name: "John".into(),
+            email: "john@example.com".into(),
+        };
+        println!("{v}");
+        let expected = format!(
+            "{} {{ {}: {:?}, {}: {:?} }}",
+            "DebugColor".cyan().bold(),
+            "name".blue(),
+            "John",
+            "email".blue(),
+            "john@example.com",
+        );
+        assert_eq!(v.to_string(), expected);
+    }
+
+    #[test]
+    fn test_map_color() {
+        let v = MapColor {
+            name: "John".into(),
+            email: "john@example.com".into(),
+        };
+        println!("{v}");
+        let expected = format!(
+            "{{ {}: {}, {}: {} }}",
+            "name".blue(),
+            "John",
+            "email".blue(),
+            "john@example.com",
+        );
+        assert_eq!(v.to_string(), expected);
+    }
+
+    #[test]
+    fn test_keyvalue_color() {
+        let v = KeyValueColor {
+            name: "John".into(),
+            email: "john@example.com".into(),
+        };
+        println!("{v}");
+        let expected = format!(
+            "{}={} {}={}",
+            "name".blue(),
+            "John",
+            "email".blue(),
+            "john@example.com",
+        );
+        assert_eq!(v.to_string(), expected);
+    }
 }

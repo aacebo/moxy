@@ -16,9 +16,7 @@
 ## Display Formats
 
 - [ ] `table` — tabular output
-- [ ] `json` — JSON output via feature `json`
-- [ ] `json(pretty)` — pretty-printed JSON output
-- [ ] `color` — color output via feature `color`
+- [ ] `color` themes via `#[moxy(display(color = "theme"))]`
 
 ## Type Support
 
