@@ -11,6 +11,9 @@ repository.workspace = true
 
 [features]
 derive = ["moxy-derive"]
+json = ["moxy-derive/json"]
+color = ["moxy-derive/color"]
+full = ["moxy-derive/full"]
 
 [dependencies]
 moxy-derive = { path = "./derive", version = "0.0.0", optional = true }

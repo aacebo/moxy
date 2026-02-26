@@ -9,7 +9,6 @@ Enable the `color` feature in your `Cargo.toml`:
 ```toml
 [dependencies]
 moxy = { version = "0.0.0", features = ["derive", "color"] }
-colored = "3"
 ```
 
 ## Basic Usage
@@ -57,7 +56,7 @@ Each theme colorizes four elements: the struct name, field names, values, and pu
 
 ## Combining with Formats
 
-Color works with any display format:
+Color works with default, debug, map, and keyvalue formats. Compact and JSON modes do not support color.
 
 ```rust,ignore
 // Default + color

@@ -1,6 +1,6 @@
 # Pretty Printing
 
-Add `pretty` to any format for multi-line output with indentation. It works as a modifier — combine it with any display format.
+Add `pretty` to any format for multi-line output with indentation. It works as a modifier — combine it with default, debug, keyvalue, map, and json formats. Compact mode does not support pretty printing.
 
 ## Default + Pretty
 

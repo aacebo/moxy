@@ -2,22 +2,6 @@
 
 The `Display` derive supports several built-in format modes. Each is specified as a flag in the `#[moxy(display(...))]` attribute.
 
-All examples below use this struct:
-
-```rust
-use moxy::derive::Display;
-
-struct User {
-    name: String,
-    email: String,
-}
-
-let user = User {
-    name: "John".into(),
-    email: "john@example.com".into(),
-};
-```
-
 ## Default
 
 No attribute needed. Produces struct-literal style output with the type name, field names, and unquoted values:

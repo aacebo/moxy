@@ -10,7 +10,6 @@ Enable the `json` feature in your `Cargo.toml`:
 [dependencies]
 moxy = { version = "0.0.0", features = ["derive", "json"] }
 serde = { version = "1", features = ["derive"] }
-serde_json = "1"
 ```
 
 Your struct must derive both `Display` and `serde::Serialize`:
