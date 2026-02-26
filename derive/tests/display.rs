@@ -63,6 +63,42 @@ pub struct TupleDebug(String, i32);
 #[moxy(display(style = compact))]
 pub struct TupleCompact(String, i32);
 
+#[derive(Display)]
+#[moxy(display(pretty))]
+pub struct DefaultPretty {
+    name: String,
+    email: String,
+}
+
+#[derive(Display)]
+#[moxy(display(pretty))]
+pub struct TupleDefaultPretty(String, i32);
+
+#[derive(Display)]
+#[moxy(display(style = debug, pretty))]
+pub struct DebugPretty {
+    name: String,
+    email: String,
+}
+
+#[derive(Display)]
+#[moxy(display(style = debug, pretty))]
+pub struct TupleDebugPretty(String, i32);
+
+#[derive(Display)]
+#[moxy(display(style = keyvalue, pretty))]
+pub struct KeyValuePretty {
+    name: String,
+    email: String,
+}
+
+#[derive(Display)]
+#[moxy(display(style = map, pretty))]
+pub struct MapPretty {
+    name: String,
+    email: String,
+}
+
 #[test]
 fn test_named_default() {
     let u = NamedDefault {
@@ -156,4 +192,64 @@ fn test_tuple_debug() {
 fn test_tuple_compact() {
     let t = TupleCompact("hello".into(), 42);
     assert_eq!(t.to_string(), "hello 42");
+}
+
+#[test]
+fn test_default_pretty() {
+    let d = DefaultPretty {
+        name: "John".into(),
+        email: "john@example.com".into(),
+    };
+    assert_eq!(
+        d.to_string(),
+        "DefaultPretty {\n    name: John,\n    email: john@example.com,\n}"
+    );
+}
+
+#[test]
+fn test_tuple_default_pretty() {
+    let t = TupleDefaultPretty("hello".into(), 42);
+    assert_eq!(t.to_string(), "TupleDefaultPretty(\n    hello,\n    42,\n)");
+}
+
+#[test]
+fn test_debug_pretty() {
+    let d = DebugPretty {
+        name: "John".into(),
+        email: "john@example.com".into(),
+    };
+    assert_eq!(
+        d.to_string(),
+        "DebugPretty {\n    name: \"John\",\n    email: \"john@example.com\",\n}"
+    );
+}
+
+#[test]
+fn test_tuple_debug_pretty() {
+    let t = TupleDebugPretty("hello".into(), 42);
+    assert_eq!(
+        t.to_string(),
+        "TupleDebugPretty(\n    \"hello\",\n    42,\n)"
+    );
+}
+
+#[test]
+fn test_keyvalue_pretty() {
+    let k = KeyValuePretty {
+        name: "John".into(),
+        email: "john@example.com".into(),
+    };
+    assert_eq!(k.to_string(), "name=John\nemail=john@example.com");
+}
+
+#[test]
+fn test_map_pretty() {
+    let m = MapPretty {
+        name: "John".into(),
+        email: "john@example.com".into(),
+    };
+    assert_eq!(
+        m.to_string(),
+        "{\n    name: John,\n    email: john@example.com,\n}"
+    );
 }
