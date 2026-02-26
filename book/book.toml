@@ -5,10 +5,10 @@ language = "en"
 
 [rust]
 edition = "2024"
-test-command = "cargo test"
-test-args = ["--library-path", "../target/debug/deps"]
 
 [output.html]
+default-theme = "ayu"
+preferred-dark-theme = "ayu"
 git-repository-url = "https://github.com/aacebo/moxy"
 git-repository-icon = "fab-github"
 smart-punctuation = true
@@ -20,5 +20,5 @@ enable = true
 page-break = true
 
 [output.html.playground]
-editable = true
-runnable = true
+editable = false
+runnable = false
