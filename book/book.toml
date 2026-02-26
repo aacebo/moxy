@@ -2,3 +2,23 @@
 title = "Moxy"
 authors = ["Alex Acebo"]
 language = "en"
+
+[rust]
+edition = "2024"
+test-command = "cargo test"
+test-args = ["--library-path", "../target/debug/deps"]
+
+[output.html]
+git-repository-url = "https://github.com/aacebo/moxy"
+git-repository-icon = "fab-github"
+smart-punctuation = true
+definition-lists = true
+sidebar-header-nav = true
+
+[output.html.print]
+enable = true
+page-break = true
+
+[output.html.playground]
+editable = true
+runnable = true

@@ -29,7 +29,7 @@ See [Feature Flags](./04-features.md) for details on each feature.
 
 Import the derives you need from `moxy::derive`:
 
-```rust,ignore
+```rust
 use moxy::derive::{Deref, Display};
 ```
 
@@ -37,7 +37,7 @@ use moxy::derive::{Deref, Display};
 
 Add `#[derive(Display)]` to get a `std::fmt::Display` implementation:
 
-```rust,ignore
+```rust
 use moxy::derive::Display;
 
 #[derive(Display)]
@@ -59,7 +59,7 @@ println!("{user}");
 
 Add `#[derive(Deref)]` to delegate `std::ops::Deref` to an inner field:
 
-```rust,ignore
+```rust
 use moxy::derive::Deref;
 
 #[derive(Deref)]

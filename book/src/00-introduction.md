@@ -9,7 +9,7 @@ Moxy is a Rust derive macro crate that eliminates boilerplate. Get `Display` and
 
 ## Quick Example
 
-```rust,ignore
+```rust
 use moxy::derive::{Deref, Display};
 
 #[derive(Deref, Display)]

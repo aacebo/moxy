@@ -6,7 +6,7 @@ The `Display` derive works with named structs, tuple structs, and unit structs. 
 
 The most common case. Fields are displayed with their names:
 
-```rust,ignore
+```rust
 use moxy::derive::Display;
 
 #[derive(Display)]
@@ -24,7 +24,9 @@ All format modes, pretty printing, field attributes, and modifiers work with nam
 
 Tuple struct fields are displayed positionally inside parentheses:
 
-```rust,ignore
+```rust
+# use moxy::derive::Display;
+#
 #[derive(Display)]
 struct Pair(String, i32);
 
@@ -34,7 +36,9 @@ let pair = Pair("hello".into(), 42);
 
 ### With Debug
 
-```rust,ignore
+```rust
+# use moxy::derive::Display;
+#
 #[derive(Display)]
 #[moxy(display(debug))]
 struct Pair(String, i32);
@@ -44,7 +48,9 @@ struct Pair(String, i32);
 
 ### With Compact
 
-```rust,ignore
+```rust
+# use moxy::derive::Display;
+#
 #[derive(Display)]
 #[moxy(display(compact))]
 struct Pair(String, i32);
@@ -54,7 +60,9 @@ struct Pair(String, i32);
 
 ### With Pretty
 
-```rust,ignore
+```rust
+# use moxy::derive::Display;
+#
 #[derive(Display)]
 #[moxy(display(pretty))]
 struct Pair(String, i32);
@@ -69,7 +77,9 @@ struct Pair(String, i32);
 
 Unit structs display as just their type name:
 
-```rust,ignore
+```rust
+# use moxy::derive::Display;
+#
 #[derive(Display)]
 struct Marker;
 

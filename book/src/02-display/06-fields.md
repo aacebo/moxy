@@ -6,7 +6,7 @@ Field-level attributes let you control which fields appear in the output and how
 
 Exclude a field from the display output with `#[moxy(display(skip))]`:
 
-```rust,ignore
+```rust
 use moxy::derive::Display;
 
 #[derive(Display)]
@@ -32,7 +32,9 @@ Skip works with all formats — the field is omitted from the output regardless 
 
 Rename a field in the output with `#[moxy(display(alias = "..."))]`:
 
-```rust,ignore
+```rust
+# use moxy::derive::Display;
+#
 #[derive(Display)]
 struct User {
     #[moxy(display(alias = "full_name"))]
@@ -55,7 +57,9 @@ assert_eq!(
 
 Rename the struct itself in the output with a struct-level alias:
 
-```rust,ignore
+```rust
+# use moxy::derive::Display;
+#
 #[derive(Display)]
 #[moxy(display(alias = "Person"))]
 struct User {
@@ -78,7 +82,9 @@ assert_eq!(
 
 Struct and field aliases can be used together, and they work with any format:
 
-```rust,ignore
+```rust
+# use moxy::derive::Display;
+#
 #[derive(Display)]
 #[moxy(display(debug, alias = "U"))]
 struct User {
