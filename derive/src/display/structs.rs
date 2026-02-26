@@ -33,10 +33,10 @@ impl Render for StructSyntax {
         });
 
         let style = display_attr.and_then(|attr| {
-            attr.args()
-                .iter()
-                .filter(|arg| arg.path().is_ident("style"))
-                .find_map(|arg| arg.as_ident().map(|v| v.to_string()))
+            attr.args().iter().find_map(|arg| {
+                let name = arg.path().get_ident()?.to_string();
+                matches!(name.as_str(), "debug" | "compact" | "keyvalue" | "map").then_some(name)
+            })
         });
         let pretty = display_attr
             .map(|attr| attr.exists("pretty"))
@@ -94,93 +94,56 @@ impl Render for StructSyntax {
 }
 
 fn render_default(fields: &[&Field], is_named: bool, name: &str, pretty: bool) -> TokenStream {
+    let mut fmt = String::new();
+    let mut args = Vec::new();
+
     if is_named {
-        if pretty {
-            let parts: Vec<_> = fields
-                .iter()
-                .map(|f| {
-                    let fname = f.name();
-                    let fname_str = fname.to_string();
-                    quote! { ::std::write!(f, "    {}: {},\n", #fname_str, self.#fname)?; }
-                })
-                .collect();
+        fmt.push_str(name);
+        fmt.push_str(if pretty { " {{\n" } else { " {{ " });
 
-            quote! {
-                ::std::write!(f, "{} {{\n", #name)?;
-                #(#parts)*
-                ::std::write!(f, "}}")
+        for (i, f) in fields.iter().enumerate() {
+            let fname = f.name();
+            if pretty {
+                fmt.push_str("    ");
+                fmt.push_str(&fname.to_string());
+                fmt.push_str(": {},\n");
+            } else {
+                fmt.push_str(&fname.to_string());
+                fmt.push_str(": {}");
+                if i + 1 < fields.len() {
+                    fmt.push_str(", ");
+                }
             }
-        } else {
-            let parts: Vec<_> = fields
-                .iter()
-                .enumerate()
-                .map(|(i, f)| {
-                    let fname = f.name();
-                    let fname_str = fname.to_string();
-                    let sep = if i + 1 < fields.len() { ", " } else { "" };
-                    quote! { ::std::write!(f, "{}: {}{}", #fname_str, self.#fname, #sep)?; }
-                })
-                .collect();
-
-            quote! {
-                ::std::write!(f, "{} {{ ", #name)?;
-                #(#parts)*
-                ::std::write!(f, " }}")
-            }
+            args.push(quote! { self.#fname });
         }
+
+        fmt.push_str(if pretty { "}}" } else { " }}" });
     } else {
-        if pretty {
-            let parts: Vec<_> = fields
-                .iter()
-                .map(|f| {
-                    let fname = f.name();
-                    quote! { ::std::write!(f, "    {},\n", self.#fname)?; }
-                })
-                .collect();
+        fmt.push_str(name);
+        fmt.push_str(if pretty { "(\n" } else { "(" });
 
-            quote! {
-                ::std::write!(f, "{}(\n", #name)?;
-                #(#parts)*
-                ::std::write!(f, ")")
+        for (i, f) in fields.iter().enumerate() {
+            let fname = f.name();
+            if pretty {
+                fmt.push_str("    {},\n");
+            } else {
+                fmt.push_str("{}");
+                if i + 1 < fields.len() {
+                    fmt.push_str(", ");
+                }
             }
-        } else {
-            let parts: Vec<_> = fields
-                .iter()
-                .enumerate()
-                .map(|(i, f)| {
-                    let fname = f.name();
-                    let sep = if i + 1 < fields.len() { ", " } else { "" };
-                    quote! { ::std::write!(f, "{}{}", self.#fname, #sep)?; }
-                })
-                .collect();
-
-            quote! {
-                ::std::write!(f, "{}(", #name)?;
-                #(#parts)*
-                ::std::write!(f, ")")
-            }
+            args.push(quote! { self.#fname });
         }
+
+        fmt.push(')');
     }
+
+    quote! { ::std::write!(f, #fmt, #(#args),*) }
 }
 
 fn render_debug(fields: &[&Field], is_named: bool, name: &str, pretty: bool) -> TokenStream {
-    if is_named {
-        if pretty {
-            let parts: Vec<_> = fields
-                .iter()
-                .map(|f| {
-                    let fname = f.name();
-                    let fname_str = fname.to_string();
-                    quote! { ::std::write!(f, "    {}: {:?},\n", #fname_str, self.#fname)?; }
-                })
-                .collect();
-
-            quote! {
-                ::std::write!(f, "{} {{\n", #name)?;
-                #(#parts)*
-                ::std::write!(f, "}}")
-            }
-        } else {
+    if !pretty {
+        if is_named {
             let entries: Vec<_> = fields
                 .iter()
                 .map(|f| {
@@ -190,141 +153,119 @@ fn render_debug(fields: &[&Field], is_named: bool, name: &str, pretty: bool) -> 
                 })
                 .collect();
 
-            quote! {
+            return quote! {
                 f.debug_struct(#name)
                     #(#entries)*
                     .finish()
-            }
+            };
         }
-    } else {
-        if pretty {
-            let parts: Vec<_> = fields
-                .iter()
-                .map(|f| {
-                    let fname = f.name();
-                    quote! { ::std::write!(f, "    {:?},\n", self.#fname)?; }
-                })
-                .collect();
 
-            quote! {
-                ::std::write!(f, "{}(\n", #name)?;
-                #(#parts)*
-                ::std::write!(f, ")")
-            }
-        } else {
-            let entries: Vec<_> = fields
-                .iter()
-                .map(|f| {
-                    let fname = f.name();
-                    quote! { .field(&self.#fname) }
-                })
-                .collect();
-
-            quote! {
-                f.debug_tuple(#name)
-                    #(#entries)*
-                    .finish()
-            }
-        }
-    }
-}
-
-fn render_compact(fields: &[&Field]) -> TokenStream {
-    let parts: Vec<_> = fields
-        .iter()
-        .enumerate()
-        .map(|(i, f)| {
-            let fname = f.name();
-            if i + 1 < fields.len() {
-                quote! { ::std::write!(f, "{} ", self.#fname)?; }
-            } else {
-                quote! { ::std::write!(f, "{}", self.#fname)?; }
-            }
-        })
-        .collect();
-
-    quote! {
-        #(#parts)*
-        ::std::result::Result::Ok(())
-    }
-}
-
-fn render_keyvalue(fields: &[&Field], pretty: bool) -> TokenStream {
-    if pretty {
-        let parts: Vec<_> = fields
-            .iter()
-            .enumerate()
-            .map(|(i, f)| {
-                let fname = f.name();
-                let fname_str = fname.to_string();
-                if i + 1 < fields.len() {
-                    quote! { ::std::write!(f, "{}={}\n", #fname_str, self.#fname)?; }
-                } else {
-                    quote! { ::std::write!(f, "{}={}", #fname_str, self.#fname)?; }
-                }
-            })
-            .collect();
-
-        quote! {
-            #(#parts)*
-            ::std::result::Result::Ok(())
-        }
-    } else {
-        let parts: Vec<_> = fields
-            .iter()
-            .enumerate()
-            .map(|(i, f)| {
-                let fname = f.name();
-                let fname_str = fname.to_string();
-                if i + 1 < fields.len() {
-                    quote! { ::std::write!(f, "{}={} ", #fname_str, self.#fname)?; }
-                } else {
-                    quote! { ::std::write!(f, "{}={}", #fname_str, self.#fname)?; }
-                }
-            })
-            .collect();
-
-        quote! {
-            #(#parts)*
-            ::std::result::Result::Ok(())
-        }
-    }
-}
-
-fn render_map(fields: &[&Field], pretty: bool) -> TokenStream {
-    if pretty {
-        let parts: Vec<_> = fields
+        let entries: Vec<_> = fields
             .iter()
             .map(|f| {
                 let fname = f.name();
-                let fname_str = fname.to_string();
-                quote! { ::std::write!(f, "    {}: {},\n", #fname_str, self.#fname)?; }
+                quote! { .field(&self.#fname) }
             })
             .collect();
 
-        quote! {
-            ::std::write!(f, "{{\n")?;
-            #(#parts)*
-            ::std::write!(f, "}}")
-        }
-    } else {
-        let parts: Vec<_> = fields
-            .iter()
-            .enumerate()
-            .map(|(i, f)| {
-                let fname = f.name();
-                let fname_str = fname.to_string();
-                let sep = if i + 1 < fields.len() { ", " } else { "" };
-                quote! { ::std::write!(f, "{}: {}{}", #fname_str, self.#fname, #sep)?; }
-            })
-            .collect();
-
-        quote! {
-            ::std::write!(f, "{{ ")?;
-            #(#parts)*
-            ::std::write!(f, " }}")
-        }
+        return quote! {
+            f.debug_tuple(#name)
+                #(#entries)*
+                .finish()
+        };
     }
+
+    let mut fmt = String::new();
+    let mut args = Vec::new();
+
+    fmt.push_str(name);
+
+    if is_named {
+        fmt.push_str(" {{\n");
+
+        for f in fields.iter() {
+            let fname = f.name();
+            fmt.push_str("    ");
+            fmt.push_str(&fname.to_string());
+            fmt.push_str(": {:?},\n");
+            args.push(quote! { self.#fname });
+        }
+
+        fmt.push_str("}}");
+    } else {
+        fmt.push_str("(\n");
+
+        for f in fields.iter() {
+            let fname = f.name();
+            fmt.push_str("    {:?},\n");
+            args.push(quote! { self.#fname });
+        }
+
+        fmt.push(')');
+    }
+
+    quote! { ::std::write!(f, #fmt, #(#args),*) }
+}
+
+fn render_compact(fields: &[&Field]) -> TokenStream {
+    let mut fmt = String::new();
+    let mut args = Vec::new();
+
+    for (i, f) in fields.iter().enumerate() {
+        let fname = f.name();
+        fmt.push_str("{}");
+        if i + 1 < fields.len() {
+            fmt.push(' ');
+        }
+        args.push(quote! { self.#fname });
+    }
+
+    quote! { ::std::write!(f, #fmt, #(#args),*) }
+}
+
+fn render_keyvalue(fields: &[&Field], pretty: bool) -> TokenStream {
+    let sep = if pretty { "\n" } else { " " };
+    let mut fmt = String::new();
+    let mut args = Vec::new();
+
+    for (i, f) in fields.iter().enumerate() {
+        let fname = f.name();
+        fmt.push_str(&fname.to_string());
+        fmt.push_str("={}");
+        if i + 1 < fields.len() {
+            fmt.push_str(sep);
+        }
+        args.push(quote! { self.#fname });
+    }
+
+    quote! { ::std::write!(f, #fmt, #(#args),*) }
+}
+
+fn render_map(fields: &[&Field], pretty: bool) -> TokenStream {
+    let mut fmt = String::new();
+    let mut args = Vec::new();
+
+    fmt.push_str(if pretty { "{{\n" } else { "{{ " });
+
+    for (i, f) in fields.iter().enumerate() {
+        let fname = f.name();
+        if pretty {
+            fmt.push_str("    ");
+            fmt.push_str(&fname.to_string());
+            fmt.push_str(": {},\n");
+        } else {
+            fmt.push_str(&fname.to_string());
+            fmt.push_str(": {}");
+            if i + 1 < fields.len() {
+                fmt.push_str(", ");
+            }
+        }
+        args.push(quote! { self.#fname });
+    }
+
+    fmt.push_str(if pretty { "}}" } else { " }}" });
+
+    quote! { ::std::write!(f, #fmt, #(#args),*) }
 }
 
 fn render_custom_fmt(fields: &[&Field], is_named: bool, pattern: &syn::LitStr) -> TokenStream {

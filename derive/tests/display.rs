@@ -28,39 +28,39 @@ pub struct CustomFmt {
 }
 
 #[derive(Display)]
-#[moxy(display(style = debug))]
+#[moxy(display(debug))]
 pub struct DebugMode {
     name: String,
     email: String,
 }
 
 #[derive(Display)]
-#[moxy(display(style = compact))]
+#[moxy(display(compact))]
 pub struct CompactMode {
     name: String,
     email: String,
 }
 
 #[derive(Display)]
-#[moxy(display(style = keyvalue))]
+#[moxy(display(keyvalue))]
 pub struct KeyValueMode {
     name: String,
     email: String,
 }
 
 #[derive(Display)]
-#[moxy(display(style = map))]
+#[moxy(display(map))]
 pub struct MapMode {
     name: String,
     email: String,
 }
 
 #[derive(Display)]
-#[moxy(display(style = debug))]
+#[moxy(display(debug))]
 pub struct TupleDebug(String, i32);
 
 #[derive(Display)]
-#[moxy(display(style = compact))]
+#[moxy(display(compact))]
 pub struct TupleCompact(String, i32);
 
 #[derive(Display)]
@@ -75,25 +75,25 @@ pub struct DefaultPretty {
 pub struct TupleDefaultPretty(String, i32);
 
 #[derive(Display)]
-#[moxy(display(style = debug, pretty))]
+#[moxy(display(debug, pretty))]
 pub struct DebugPretty {
     name: String,
     email: String,
 }
 
 #[derive(Display)]
-#[moxy(display(style = debug, pretty))]
+#[moxy(display(debug, pretty))]
 pub struct TupleDebugPretty(String, i32);
 
 #[derive(Display)]
-#[moxy(display(style = keyvalue, pretty))]
+#[moxy(display(keyvalue, pretty))]
 pub struct KeyValuePretty {
     name: String,
     email: String,
 }
 
 #[derive(Display)]
-#[moxy(display(style = map, pretty))]
+#[moxy(display(map, pretty))]
 pub struct MapPretty {
     name: String,
     email: String,
