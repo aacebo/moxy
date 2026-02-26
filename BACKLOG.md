@@ -16,8 +16,9 @@
 ## Display Formats
 
 - [ ] `table` — tabular output
-- [ ] `json` — JSON output
+- [ ] `json` — JSON output via feature `json`
 - [ ] `json(pretty)` — pretty-printed JSON output
+- [ ] `color` — color output via feature `color`
 
 ## Type Support
 
