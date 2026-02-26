@@ -76,10 +76,14 @@ impl Render for StructSyntax {
         let is_named = matches!(args.data.fields, syn::Fields::Named(_));
         let is_unit = matches!(args.data.fields, syn::Fields::Unit);
         let name_str = alias.unwrap_or_else(|| ident.to_string());
+        let fmt_exprs: Vec<&syn::Expr> = display_attr
+            .map(|attr| attr.args().iter().filter_map(|arg| arg.as_expr()).collect())
+            .unwrap_or_default();
+
         let body = if is_unit || visible_fields.is_empty() {
             quote! { ::std::write!(f, #name_str) }
         } else if let Some(fmt_str) = custom_fmt {
-            render_custom_fmt(&visible_fields, is_named, &fmt_str)
+            render_custom_fmt(&visible_fields, is_named, &fmt_str, &fmt_exprs)
         } else if let Some(mode) = style {
             render_style(&mode, &visible_fields, is_named, &name_str, pretty)
         } else {
@@ -277,7 +281,12 @@ fn render_map(fields: &[&Field], pretty: bool) -> TokenStream {
     quote! { ::std::write!(f, #fmt, #(#args),*) }
 }
 
-fn render_custom_fmt(fields: &[&Field], is_named: bool, pattern: &syn::LitStr) -> TokenStream {
+fn render_custom_fmt(
+    fields: &[&Field],
+    is_named: bool,
+    pattern: &syn::LitStr,
+    exprs: &[&syn::Expr],
+) -> TokenStream {
     if is_named {
         let field_idents: Vec<_> = fields
             .iter()
@@ -287,16 +296,30 @@ fn render_custom_fmt(fields: &[&Field], is_named: bool, pattern: &syn::LitStr) -
             })
             .collect();
 
-        quote! {
-            #[allow(unused_variables)]
-            let Self { #(#field_idents,)* .. } = self;
-            ::std::write!(f, #pattern)
+        if exprs.is_empty() {
+            quote! {
+                #[allow(unused)]
+                let Self { #(#field_idents,)* .. } = self;
+                ::std::write!(f, #pattern)
+            }
+        } else {
+            quote! {
+                #[allow(unused)]
+                let Self { #(#field_idents,)* .. } = self;
+                ::std::write!(f, #pattern, #(#exprs),*)
+            }
         }
     } else {
-        let field_indices: Vec<_> = fields.iter().map(|f| f.name().clone()).collect();
+        if exprs.is_empty() {
+            let field_indices: Vec<_> = fields.iter().map(|f| f.name().clone()).collect();
 
-        quote! {
-            ::std::write!(f, #pattern, #(self.#field_indices,)*)
+            quote! {
+                ::std::write!(f, #pattern, #(self.#field_indices,)*)
+            }
+        } else {
+            quote! {
+                ::std::write!(f, #pattern, #(#exprs),*)
+            }
         }
     }
 }

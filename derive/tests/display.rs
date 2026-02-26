@@ -121,6 +121,30 @@ pub struct AliasedDebug {
     email: String,
 }
 
+#[derive(Display)]
+#[moxy(display("{}", self.name))]
+pub struct SelfFieldAccess {
+    name: String,
+}
+
+#[derive(Display)]
+#[moxy(display("{}", self.greeting()))]
+pub struct SelfMethodCall {
+    name: String,
+}
+
+impl SelfMethodCall {
+    fn greeting(&self) -> String {
+        format!("Hello, {}!", self.name)
+    }
+}
+
+#[derive(Display)]
+#[moxy(display("double: {}", count * 2))]
+pub struct FieldExpr {
+    count: i32,
+}
+
 #[test]
 fn test_named_default() {
     let u = NamedDefault {
@@ -310,4 +334,26 @@ fn test_aliased_debug() {
         a.to_string(),
         "U { n: \"John\", email: \"john@example.com\" }"
     );
+}
+
+#[test]
+fn test_self_field_access() {
+    let s = SelfFieldAccess {
+        name: "John".into(),
+    };
+    assert_eq!(s.to_string(), "John");
+}
+
+#[test]
+fn test_self_method_call() {
+    let s = SelfMethodCall {
+        name: "John".into(),
+    };
+    assert_eq!(s.to_string(), "Hello, John!");
+}
+
+#[test]
+fn test_field_expr() {
+    let f = FieldExpr { count: 5 };
+    assert_eq!(f.to_string(), "double: 10");
 }

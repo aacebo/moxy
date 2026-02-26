@@ -13,6 +13,8 @@ pub enum Arg {
     Ident(syn::Path, syn::Ident),
     /// `#[moxy(display(explicit, format = compact))]`
     Attr(Attr),
+    /// `#[moxy(display("{}", self.sign()))]`
+    Expr(syn::Path, syn::Expr),
 }
 
 impl Arg {
@@ -30,6 +32,10 @@ impl Arg {
 
     pub fn from_attr(attr: Attr) -> Self {
         Self::Attr(attr)
+    }
+
+    pub fn from_expr(path: syn::Path, expr: syn::Expr) -> Self {
+        Self::Expr(path, expr)
     }
 
     #[allow(unused)]
@@ -52,12 +58,18 @@ impl Arg {
         matches!(self, Self::Attr(_))
     }
 
+    #[allow(unused)]
+    pub fn is_expr(&self) -> bool {
+        matches!(self, Self::Expr(_, _))
+    }
+
     pub fn path(&self) -> &syn::Path {
         match self {
             Self::Flag(path) => path,
             Self::Literal(path, _) => path,
             Self::Ident(path, _) => path,
             Self::Attr(attr) => attr.path(),
+            Self::Expr(path, _) => path,
         }
     }
 
@@ -110,6 +122,14 @@ impl Arg {
     }
 
     #[allow(unused)]
+    pub fn as_expr(&self) -> Option<&syn::Expr> {
+        match self {
+            Self::Expr(_, expr) => Some(expr),
+            _ => None,
+        }
+    }
+
+    #[allow(unused)]
     pub fn error(&self, message: &str) -> proc_macro2::TokenStream {
         self.path().error(message).to_compile_error()
     }
@@ -122,6 +142,7 @@ impl quote::ToTokens for Arg {
             Self::Literal(path, value) => quote!(#path = #value),
             Self::Ident(path, ident) => quote!(#path = #ident),
             Self::Attr(attr) => quote!(#attr),
+            Self::Expr(_, expr) => quote!(#expr),
         });
     }
 }
@@ -134,23 +155,34 @@ impl syn::parse::Parse for Arg {
             return Ok(Arg::from_lit(path, lit));
         }
 
-        let path: syn::Path = input.parse()?;
-
-        if input.peek(syn::Token![=]) {
-            input.parse::<syn::Token![=]>()?;
-
-            if input.peek(syn::Ident) {
-                Ok(Arg::from_ident(path, input.parse()?))
-            } else {
-                Ok(Arg::from_lit(path, input.parse()?))
+        let fork = input.fork();
+        if fork.parse::<syn::Path>().is_ok() {
+            if fork.peek(syn::Token![=]) {
+                let path: syn::Path = input.parse()?;
+                input.parse::<syn::Token![=]>()?;
+                if input.peek(syn::Ident) {
+                    return Ok(Arg::from_ident(path, input.parse()?));
+                } else {
+                    return Ok(Arg::from_lit(path, input.parse()?));
+                }
             }
-        } else if input.peek(syn::token::Paren) {
-            let list;
-            let _ = syn::parenthesized!(list in input);
-            let items = Punctuated::<Arg, syn::Token![,]>::parse_terminated(&list)?;
-            Ok(Arg::from_attr(Attr::new(path, items)))
-        } else {
-            Ok(Arg::from_flag(path))
+
+            if fork.peek(syn::token::Paren) {
+                let path: syn::Path = input.parse()?;
+                let list;
+                let _ = syn::parenthesized!(list in input);
+                let items = Punctuated::<Arg, syn::Token![,]>::parse_terminated(&list)?;
+                return Ok(Arg::from_attr(Attr::new(path, items)));
+            }
+
+            if fork.is_empty() || fork.peek(syn::Token![,]) {
+                let path: syn::Path = input.parse()?;
+                return Ok(Arg::from_flag(path));
+            }
         }
+
+        let expr: syn::Expr = input.parse()?;
+        let path: syn::Path = syn::parse_quote!(__expr);
+        Ok(Arg::from_expr(path, expr))
     }
 }

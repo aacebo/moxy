@@ -12,7 +12,17 @@ repository.workspace = true
 [lib]
 proc-macro = true
 
+[features]
+default = []
+full = ["color", "json"]
+color = ["dep:colored"]
+json = ["dep:serde_json"]
+
 [dependencies]
 proc-macro2 = "1"
 quote = "1"
 syn = { version = "2", features = ["full", "extra-traits"] }
+
+# Optional
+colored = { version = "3", optional = true }
+serde_json = { version = "1", optional = true }
