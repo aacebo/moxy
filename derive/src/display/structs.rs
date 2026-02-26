@@ -64,13 +64,7 @@ impl Render for StructSyntax {
         } else if let Some(fmt_str) = custom_fmt {
             render_custom_fmt(&visible_fields, is_named, &fmt_str)
         } else if let Some(mode) = style {
-            match mode.as_str() {
-                "debug" => render_debug(&visible_fields, is_named, ident.to_string().as_str()),
-                "compact" => render_compact(&visible_fields),
-                "keyvalue" => render_keyvalue(&visible_fields),
-                "map" => render_map(&visible_fields),
-                _ => unreachable!(),
-            }
+            render_style(&mode, &visible_fields, is_named, ident.to_string().as_str())
         } else {
             render_default(&visible_fields, is_named, ident.to_string().as_str())
         };
@@ -236,5 +230,15 @@ fn render_custom_fmt(fields: &[&Field], is_named: bool, fmt_str: &str) -> TokenS
         quote! {
             ::std::write!(f, #fmt_str, #(self.#field_indices,)*)
         }
+    }
+}
+
+fn render_style(style: &str, fields: &[&Field], is_named: bool, name: &str) -> TokenStream {
+    match style {
+        "debug" => render_debug(fields, is_named, name),
+        "compact" => render_compact(fields),
+        "keyvalue" => render_keyvalue(fields),
+        "map" => render_map(fields),
+        _ => unreachable!(),
     }
 }
