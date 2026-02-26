@@ -50,3 +50,12 @@ impl Render for StructMacro {
         }
     }
 }
+
+impl quote::ToTokens for StructMacro {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend(match self.render() {
+            Err(err) => err.to_compile_error(),
+            Ok(v) => v,
+        })
+    }
+}
