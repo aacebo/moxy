@@ -3,6 +3,7 @@ use syn::punctuated::Punctuated;
 
 use crate::core::Arg;
 
+#[repr(transparent)]
 #[derive(Clone)]
 pub struct Attrs(Vec<Attr>);
 
@@ -31,18 +32,26 @@ impl Attrs {
         self.0.iter()
     }
 
-    pub fn exists(&self, attr: &str, arg: &str) -> bool {
-        self.0
-            .iter()
-            .any(|a| a.path().is_ident(attr) && a.exists(arg))
+    pub fn exists(&self, name: &str) -> bool {
+        self.0.iter().any(|a| a.exists(name))
     }
 
+    /// get all the arguments that belong to
+    /// the given attribute name
     #[allow(unused)]
-    pub fn get(&self, attr: &str, arg: &str) -> Option<&Arg> {
+    pub fn get(&self, name: &str) -> Box<[Arg]> {
         self.0
             .iter()
-            .filter(|a| a.path().is_ident(attr))
-            .find_map(|a| a.get(arg))
+            .filter(|a| a.exists(name))
+            .flat_map(|a| a.args.clone())
+            .fold(vec![], |mut acc, arg| {
+                if !acc.contains(&arg) {
+                    acc.push(arg);
+                }
+
+                acc
+            })
+            .into_boxed_slice()
     }
 }
 
@@ -60,13 +69,17 @@ impl quote::ToTokens for Attrs {
 /// ### Example
 /// `#[moxy(display(format = compact))]`
 ///
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub struct Attr {
     path: syn::Path,
     args: Punctuated<Arg, syn::Token![,]>,
 }
 
 impl Attr {
+    pub fn new(path: syn::Path, args: Punctuated<Arg, syn::Token![,]>) -> Self {
+        Self { path, args }
+    }
+
     pub fn parse(attr: &syn::Attribute) -> syn::Result<Self> {
         let args = attr.parse_args_with(
             syn::punctuated::Punctuated::<Arg, syn::Token![,]>::parse_terminated,
@@ -90,6 +103,7 @@ impl Attr {
         self.args.iter().any(|arg| arg.path().is_ident(ident))
     }
 
+    #[allow(unused)]
     pub fn get(&self, ident: &str) -> Option<&Arg> {
         self.args.iter().find(|arg| arg.path().is_ident(ident))
     }

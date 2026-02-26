@@ -1,9 +1,9 @@
 use quote::quote;
 use syn::punctuated::Punctuated;
 
-use crate::Error;
+use crate::{Error, core::Attr};
 
-#[derive(Clone)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum Arg {
     /// `#[moxy(deref)]`
     Flag(syn::Path),
@@ -12,7 +12,7 @@ pub enum Arg {
     /// `#[moxy(display(format = compact))]`
     Ident(syn::Path, syn::Ident),
     /// `#[moxy(display(explicit, format = compact))]`
-    List(syn::Path, Punctuated<Self, syn::Token![,]>),
+    Attr(Attr),
 }
 
 impl Arg {
@@ -20,7 +20,7 @@ impl Arg {
         Self::Flag(path)
     }
 
-    pub fn from_literal(path: syn::Path, value: syn::Lit) -> Self {
+    pub fn from_lit(path: syn::Path, value: syn::Lit) -> Self {
         Self::Literal(path, value)
     }
 
@@ -28,8 +28,28 @@ impl Arg {
         Self::Ident(path, value)
     }
 
-    pub fn from_list(path: syn::Path, value: Punctuated<Self, syn::Token![,]>) -> Self {
-        Self::List(path, value)
+    pub fn from_attr(attr: Attr) -> Self {
+        Self::Attr(attr)
+    }
+
+    #[allow(unused)]
+    pub fn is_flag(&self) -> bool {
+        matches!(self, Self::Flag(_))
+    }
+
+    #[allow(unused)]
+    pub fn is_lit(&self) -> bool {
+        matches!(self, Self::Literal(_, _))
+    }
+
+    #[allow(unused)]
+    pub fn is_ident(&self) -> bool {
+        matches!(self, Self::Ident(_, _))
+    }
+
+    #[allow(unused)]
+    pub fn is_attr(&self) -> bool {
+        matches!(self, Self::Attr(_))
     }
 
     pub fn path(&self) -> &syn::Path {
@@ -37,12 +57,12 @@ impl Arg {
             Self::Flag(path) => path,
             Self::Literal(path, _) => path,
             Self::Ident(path, _) => path,
-            Self::List(path, _) => path,
+            Self::Attr(attr) => attr.path(),
         }
     }
 
     #[allow(unused)]
-    pub fn lit(&self) -> Option<&syn::Lit> {
+    pub fn as_lit(&self) -> Option<&syn::Lit> {
         match self {
             Self::Literal(_, v) => Some(v),
             _ => None,
@@ -50,7 +70,7 @@ impl Arg {
     }
 
     #[allow(unused)]
-    pub fn ident(&self) -> Option<&syn::Ident> {
+    pub fn as_ident(&self) -> Option<&syn::Ident> {
         match self {
             Self::Ident(_, v) => Some(v),
             _ => None,
@@ -58,9 +78,9 @@ impl Arg {
     }
 
     #[allow(unused)]
-    pub fn args(&self) -> Option<&Punctuated<Self, syn::Token![,]>> {
+    pub fn as_attr(&self) -> Option<&Attr> {
         match self {
-            Self::List(_, v) => Some(v),
+            Self::Attr(attr) => Some(attr),
             _ => None,
         }
     }
@@ -77,7 +97,7 @@ impl quote::ToTokens for Arg {
             Self::Flag(path) => quote!(#path),
             Self::Literal(path, value) => quote!(#path = #value),
             Self::Ident(path, ident) => quote!(#path = #ident),
-            Self::List(path, args) => quote!(#path(#args)),
+            Self::Attr(attr) => quote!(#attr),
         });
     }
 }
@@ -92,12 +112,13 @@ impl syn::parse::Parse for Arg {
             if input.peek(syn::Ident) {
                 Ok(Arg::from_ident(path, input.parse()?))
             } else {
-                Ok(Arg::from_literal(path, input.parse()?))
+                Ok(Arg::from_lit(path, input.parse()?))
             }
         } else if input.peek(syn::token::Paren) {
             let list;
             let _ = syn::parenthesized!(list in input);
-            Ok(Arg::from_list(path, Punctuated::parse_terminated(&list)?))
+            let items = Punctuated::<Arg, syn::Token![,]>::parse_terminated(&list)?;
+            Ok(Arg::from_attr(Attr::new(path, items)))
         } else {
             Ok(Arg::from_flag(path))
         }

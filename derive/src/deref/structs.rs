@@ -22,7 +22,7 @@ impl Render for StructSyntax {
 
         let field = fields
             .iter()
-            .find(|field| field.attrs().exists("moxy", "deref"))
+            .find(|field| field.attrs().exists("deref"))
             .or_else(|| fields.first());
 
         match field {
