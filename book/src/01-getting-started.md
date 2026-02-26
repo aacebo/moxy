@@ -1,0 +1,78 @@
+# Getting Started
+
+## Installation
+
+Add moxy to your `Cargo.toml` with the `derive` feature:
+
+```toml
+[dependencies]
+moxy = { version = "0.0.0", features = ["derive"] }
+```
+
+To enable all optional features:
+
+```toml
+[dependencies]
+moxy = { version = "0.0.0", features = ["derive", "full"] }
+```
+
+Or pick individual features:
+
+```toml
+[dependencies]
+moxy = { version = "0.0.0", features = ["derive", "json", "color"] }
+```
+
+See [Feature Flags](./04-features.md) for details on each feature.
+
+## Basic Usage
+
+Import the derives you need from `moxy::derive`:
+
+```rust,ignore
+use moxy::derive::{Deref, Display};
+```
+
+### Display
+
+Add `#[derive(Display)]` to get a `std::fmt::Display` implementation:
+
+```rust,ignore
+use moxy::derive::Display;
+
+#[derive(Display)]
+struct User {
+    name: String,
+    email: String,
+}
+
+let user = User {
+    name: "John".into(),
+    email: "john@example.com".into(),
+};
+
+println!("{user}");
+// User { name: John, email: john@example.com }
+```
+
+### Deref
+
+Add `#[derive(Deref)]` to delegate `std::ops::Deref` to an inner field:
+
+```rust,ignore
+use moxy::derive::Deref;
+
+#[derive(Deref)]
+struct Email(String);
+
+let email = Email("john@example.com".into());
+assert_eq!(email.len(), 16);
+```
+
+## Next Steps
+
+- [Display formats](./02-display/01-formats.md) — debug, compact, keyvalue, map
+- [Custom format strings](./02-display/03-custom.md) — template syntax with expressions
+- [JSON output](./02-display/04-json.md) — serialize to JSON
+- [Colored output](./02-display/05-color.md) — ANSI truecolor themes
+- [Deref patterns](./03-deref/00-index.md) — tuple, named, and multi-field structs
