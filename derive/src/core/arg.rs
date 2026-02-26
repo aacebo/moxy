@@ -86,6 +86,30 @@ impl Arg {
     }
 
     #[allow(unused)]
+    pub fn to_lit(self) -> Option<syn::Lit> {
+        match self {
+            Self::Literal(_, v) => Some(v),
+            _ => None,
+        }
+    }
+
+    #[allow(unused)]
+    pub fn to_ident(self) -> Option<syn::Ident> {
+        match self {
+            Self::Ident(_, v) => Some(v),
+            _ => None,
+        }
+    }
+
+    #[allow(unused)]
+    pub fn to_attr(self) -> Option<Attr> {
+        match self {
+            Self::Attr(attr) => Some(attr),
+            _ => None,
+        }
+    }
+
+    #[allow(unused)]
     pub fn error(&self, message: &str) -> proc_macro2::TokenStream {
         self.path().error(message).to_compile_error()
     }
@@ -104,6 +128,12 @@ impl quote::ToTokens for Arg {
 
 impl syn::parse::Parse for Arg {
     fn parse(input: syn::parse::ParseStream) -> syn::Result<Self> {
+        if input.peek(syn::LitStr) {
+            let lit: syn::Lit = input.parse()?;
+            let path: syn::Path = syn::parse_quote!(__value);
+            return Ok(Arg::from_lit(path, lit));
+        }
+
         let path: syn::Path = input.parse()?;
 
         if input.peek(syn::Token![=]) {

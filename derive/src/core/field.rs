@@ -91,3 +91,12 @@ impl quote::ToTokens for FieldName {
         });
     }
 }
+
+impl std::fmt::Display for FieldName {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Ident(v) => write!(f, "{}", v),
+            Self::Index(v) => write!(f, "{}", v.index),
+        }
+    }
+}

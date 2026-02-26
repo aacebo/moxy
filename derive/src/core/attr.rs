@@ -39,19 +39,18 @@ impl Attrs {
     /// get all the arguments that belong to
     /// the given attribute name
     #[allow(unused)]
-    pub fn get(&self, name: &str) -> Box<[Arg]> {
+    pub fn get(&self, name: &str) -> Vec<Arg> {
         self.0
             .iter()
-            .filter(|a| a.exists(name))
-            .flat_map(|a| a.args.clone())
+            .filter(|a| a.path().is_ident("moxy") && a.exists(name))
+            .flat_map(|a| a.get(name).clone())
             .fold(vec![], |mut acc, arg| {
                 if !acc.contains(&arg) {
-                    acc.push(arg);
+                    acc.push(arg.clone());
                 }
 
                 acc
             })
-            .into_boxed_slice()
     }
 }
 
@@ -59,6 +58,14 @@ impl quote::ToTokens for Attrs {
     fn to_tokens(&self, tokens: &mut proc_macro2::TokenStream) {
         let items = &self.0;
         tokens.extend(quote!(#(#items,)*));
+    }
+}
+
+impl std::ops::Deref for Attrs {
+    type Target = [Attr];
+
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }
 
