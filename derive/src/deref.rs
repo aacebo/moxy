@@ -1,37 +1,51 @@
 use proc_macro2::TokenStream;
 use quote::quote;
 
-use crate::{Error, core::Field};
+use crate::{Error, Render, core::Field};
 
-pub fn derive_struct(input: &syn::DeriveInput, data: &syn::DataStruct) -> TokenStream {
-    let ident = &input.ident;
-    let (impl_generics, type_generics, where_generics) = &input.generics.split_for_impl();
-    let fields: Vec<_> = data
-        .fields
-        .iter()
-        .enumerate()
-        .filter_map(|(i, field)| Field::parse(i, field).ok())
-        .collect();
+pub struct StructMacro {
+    input: syn::DeriveInput,
+    data: syn::DataStruct,
+}
 
-    let field = fields
-        .iter()
-        .find(|field| field.attrs().exists("moxy", "deref"))
-        .or_else(|| fields.first());
+impl StructMacro {
+    pub fn new(input: syn::DeriveInput, data: syn::DataStruct) -> Self {
+        Self { input, data }
+    }
+}
 
-    match field {
-        None => input.error("field not found").to_compile_error(),
-        Some(field) => {
-            let field_name = field.name();
-            let field_ty = field.ty();
+impl Render for StructMacro {
+    fn render(&self) -> syn::Result<TokenStream> {
+        let ident = &self.input.ident;
+        let (impl_generics, type_generics, where_generics) = &self.input.generics.split_for_impl();
+        let fields: Vec<_> = self
+            .data
+            .fields
+            .iter()
+            .enumerate()
+            .filter_map(|(i, field)| Field::parse(i, field).ok())
+            .collect();
 
-            quote! {
-                impl #impl_generics ::std::ops::Deref for #ident #type_generics #where_generics {
-                    type Target = #field_ty;
+        let field = fields
+            .iter()
+            .find(|field| field.attrs().exists("moxy", "deref"))
+            .or_else(|| fields.first());
 
-                    fn deref(&self) -> &Self::Target {
-                        &self.#field_name
+        match field {
+            None => Err(self.input.error("field not found")),
+            Some(field) => {
+                let field_name = field.name();
+                let field_ty = field.ty();
+
+                Ok(quote! {
+                    impl #impl_generics ::std::ops::Deref for #ident #type_generics #where_generics {
+                        type Target = #field_ty;
+
+                        fn deref(&self) -> &Self::Target {
+                            &self.#field_name
+                        }
                     }
-                }
+                })
             }
         }
     }
