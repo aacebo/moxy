@@ -3,6 +3,7 @@ use quote::quote;
 
 use crate::{Error, Render, core::Field};
 
+#[derive(Clone)]
 pub struct StructMacro {
     input: syn::DeriveInput,
     data: syn::DataStruct,
