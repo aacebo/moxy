@@ -30,10 +30,7 @@ pub fn derive_deref(tokens: TokenStream) -> TokenStream {
     let input = syn::parse_macro_input!(tokens as syn::DeriveInput);
 
     match input.data.clone() {
-        syn::Data::Struct(v) => deref::StructMacro::new(input, v)
-            .render()
-            .unwrap_or_default()
-            .to_token_stream(),
+        syn::Data::Struct(v) => deref::StructMacro::new(input, v).to_token_stream(),
         _ => panic!("unsupported type"),
     }
     .into()
