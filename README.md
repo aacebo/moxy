@@ -105,7 +105,7 @@ struct User {
 
 ```rust
 #[derive(Display)]
-#[display("hi! my name is {name}")]
+#[moxy(display("hi! my name is {name}"))]
 struct User {
     name: String,
     email: String,
@@ -118,7 +118,7 @@ struct User {
 
 ```rust
 #[derive(Display)]
-#[display(debug | compact | keyvalue | map | table | json | json(pretty))]
+#[moxy(display(debug | compact | keyvalue | map | table | json | json(pretty)))]
 struct User {
     name: String,
     email: String,
@@ -133,7 +133,7 @@ struct User {
 ```rust
 #[derive(PartialEq)]
 struct User {
-    #[moxy(eq)]
+    #[moxy(pk)]
     name: String,
     email: String,
     phone: String,
