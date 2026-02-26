@@ -25,7 +25,7 @@ A set of helpful macros for day to day quality of life tasks including
 ## Examples
 
 ```rust
-#[derive(Debug, Display, Clone, Moxy)]
+#[derive(Debug, Display, Clone)]
 struct User {
     #[moxy(get, get_mut, set, build, forward, display)]
     name: String,
@@ -79,7 +79,7 @@ struct User {
 
 ```rust
 #[derive(Display)]
-#[display(explicit)]
+#[moxy(display(explicit))]
 struct User {
     #[moxy(display)]
     name: String,
@@ -91,7 +91,7 @@ struct User {
 > Type alias
 
 ```rust
-#[derive(Moxy, Display)]
+#[derive(Display)]
 #[moxy(alias = "UserDetails")]
 struct User {
     name: String,
@@ -105,7 +105,7 @@ struct User {
 
 ```rust
 #[derive(Display)]
-#[display(format = "hi! my name is {name}")]
+#[display("hi! my name is {name}")]
 struct User {
     name: String,
     email: String,
@@ -118,7 +118,7 @@ struct User {
 
 ```rust
 #[derive(Display)]
-#[display(style = debug | compact | keyvalue | map | table | json | json::pretty)]
+#[display(debug | compact | keyvalue | map | table | json | json(pretty))]
 struct User {
     name: String,
     email: String,
