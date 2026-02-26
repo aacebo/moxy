@@ -15,7 +15,7 @@ pub struct UnitDefault;
 #[derive(Display)]
 pub struct Ignored {
     name: String,
-    #[moxy(display(ignore))]
+    #[moxy(display(skip))]
     #[allow(unused)]
     email: String,
 }
@@ -99,6 +99,28 @@ pub struct MapPretty {
     email: String,
 }
 
+#[derive(Display)]
+#[moxy(display(alias = "User"))]
+pub struct AliasedStruct {
+    name: String,
+    email: String,
+}
+
+#[derive(Display)]
+pub struct AliasedField {
+    #[moxy(display(alias = "full_name"))]
+    name: String,
+    email: String,
+}
+
+#[derive(Display)]
+#[moxy(display(debug, alias = "U"))]
+pub struct AliasedDebug {
+    #[moxy(display(alias = "n"))]
+    name: String,
+    email: String,
+}
+
 #[test]
 fn test_named_default() {
     let u = NamedDefault {
@@ -123,7 +145,7 @@ fn test_unit_default() {
 }
 
 #[test]
-fn test_ignore() {
+fn test_skip() {
     let u = Ignored {
         name: "John".into(),
         email: "john@example.com".into(),
@@ -251,5 +273,41 @@ fn test_map_pretty() {
     assert_eq!(
         m.to_string(),
         "{\n    name: John,\n    email: john@example.com,\n}"
+    );
+}
+
+#[test]
+fn test_aliased_struct() {
+    let a = AliasedStruct {
+        name: "John".into(),
+        email: "john@example.com".into(),
+    };
+    assert_eq!(
+        a.to_string(),
+        "User { name: John, email: john@example.com }"
+    );
+}
+
+#[test]
+fn test_aliased_field() {
+    let a = AliasedField {
+        name: "John".into(),
+        email: "john@example.com".into(),
+    };
+    assert_eq!(
+        a.to_string(),
+        "AliasedField { full_name: John, email: john@example.com }"
+    );
+}
+
+#[test]
+fn test_aliased_debug() {
+    let a = AliasedDebug {
+        name: "John".into(),
+        email: "john@example.com".into(),
+    };
+    assert_eq!(
+        a.to_string(),
+        "U { n: \"John\", email: \"john@example.com\" }"
     );
 }

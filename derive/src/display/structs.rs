@@ -38,9 +38,23 @@ impl Render for StructSyntax {
                 matches!(name.as_str(), "debug" | "compact" | "keyvalue" | "map").then_some(name)
             })
         });
+
         let pretty = display_attr
             .map(|attr| attr.exists("pretty"))
             .unwrap_or(false);
+
+        let alias = display_attr.and_then(|attr| {
+            attr.args().iter().find_map(|arg| {
+                if arg.path().is_ident("alias") {
+                    arg.as_lit().and_then(|lit| match lit {
+                        syn::Lit::Str(s) => Some(s.value()),
+                        _ => None,
+                    })
+                } else {
+                    None
+                }
+            })
+        });
 
         let fields: Vec<_> = args
             .data
@@ -55,32 +69,21 @@ impl Render for StructSyntax {
             .filter(|f| {
                 let field_display = f.attrs().get("display");
                 let field_attr = field_display.iter().find_map(|a| a.as_attr());
-                !field_attr.map(|a| a.exists("ignore")).unwrap_or(false)
+                !field_attr.map(|a| a.exists("skip")).unwrap_or(false)
             })
             .collect();
 
         let is_named = matches!(args.data.fields, syn::Fields::Named(_));
         let is_unit = matches!(args.data.fields, syn::Fields::Unit);
-        let name_str = ident.to_string();
+        let name_str = alias.unwrap_or_else(|| ident.to_string());
         let body = if is_unit || visible_fields.is_empty() {
             quote! { ::std::write!(f, #name_str) }
         } else if let Some(fmt_str) = custom_fmt {
             render_custom_fmt(&visible_fields, is_named, &fmt_str)
         } else if let Some(mode) = style {
-            render_style(
-                &mode,
-                &visible_fields,
-                is_named,
-                ident.to_string().as_str(),
-                pretty,
-            )
+            render_style(&mode, &visible_fields, is_named, &name_str, pretty)
         } else {
-            render_default(
-                &visible_fields,
-                is_named,
-                ident.to_string().as_str(),
-                pretty,
-            )
+            render_default(&visible_fields, is_named, &name_str, pretty)
         };
 
         Ok(quote! {
@@ -105,10 +108,10 @@ fn render_default(fields: &[&Field], is_named: bool, name: &str, pretty: bool) -
             let fname = f.name();
             if pretty {
                 fmt.push_str("    ");
-                fmt.push_str(&fname.to_string());
+                fmt.push_str(&f.display_name());
                 fmt.push_str(": {},\n");
             } else {
-                fmt.push_str(&fname.to_string());
+                fmt.push_str(&f.display_name());
                 fmt.push_str(": {}");
                 if i + 1 < fields.len() {
                     fmt.push_str(", ");
@@ -148,7 +151,7 @@ fn render_debug(fields: &[&Field], is_named: bool, name: &str, pretty: bool) -> 
                 .iter()
                 .map(|f| {
                     let fname = f.name();
-                    let fname_str = fname.to_string();
+                    let fname_str = f.display_name();
                     quote! { .field(#fname_str, &self.#fname) }
                 })
                 .collect();
@@ -186,7 +189,7 @@ fn render_debug(fields: &[&Field], is_named: bool, name: &str, pretty: bool) -> 
         for f in fields.iter() {
             let fname = f.name();
             fmt.push_str("    ");
-            fmt.push_str(&fname.to_string());
+            fmt.push_str(&f.display_name());
             fmt.push_str(": {:?},\n");
             args.push(quote! { self.#fname });
         }
@@ -214,9 +217,11 @@ fn render_compact(fields: &[&Field]) -> TokenStream {
     for (i, f) in fields.iter().enumerate() {
         let fname = f.name();
         fmt.push_str("{}");
+
         if i + 1 < fields.len() {
             fmt.push(' ');
         }
+
         args.push(quote! { self.#fname });
     }
 
@@ -230,8 +235,9 @@ fn render_keyvalue(fields: &[&Field], pretty: bool) -> TokenStream {
 
     for (i, f) in fields.iter().enumerate() {
         let fname = f.name();
-        fmt.push_str(&fname.to_string());
+        fmt.push_str(&f.display_name());
         fmt.push_str("={}");
+
         if i + 1 < fields.len() {
             fmt.push_str(sep);
         }
@@ -249,17 +255,20 @@ fn render_map(fields: &[&Field], pretty: bool) -> TokenStream {
 
     for (i, f) in fields.iter().enumerate() {
         let fname = f.name();
+
         if pretty {
             fmt.push_str("    ");
-            fmt.push_str(&fname.to_string());
+            fmt.push_str(&f.display_name());
             fmt.push_str(": {},\n");
         } else {
-            fmt.push_str(&fname.to_string());
+            fmt.push_str(&f.display_name());
             fmt.push_str(": {}");
+
             if i + 1 < fields.len() {
                 fmt.push_str(", ");
             }
         }
+
         args.push(quote! { self.#fname });
     }
 

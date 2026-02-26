@@ -38,6 +38,27 @@ impl Field {
     pub fn ty(&self) -> &syn::Type {
         &self.ty
     }
+
+    pub fn display_name(&self) -> String {
+        let display = self.attrs.get("display");
+
+        display
+            .iter()
+            .find_map(|a| a.as_attr())
+            .and_then(|attr| {
+                attr.args().iter().find_map(|arg| {
+                    if arg.path().is_ident("alias") {
+                        arg.as_lit().and_then(|lit| match lit {
+                            syn::Lit::Str(s) => Some(s.value()),
+                            _ => None,
+                        })
+                    } else {
+                        None
+                    }
+                })
+            })
+            .unwrap_or_else(|| self.name.to_string())
+    }
 }
 
 impl quote::ToTokens for Field {
