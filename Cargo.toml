@@ -4,7 +4,7 @@ members = [".", "crates/*"]
 default-members = [".", "crates/*"]
 
 [workspace.package]
-version = "0.0.2"
+version = "0.0.3"
 edition = "2024"
 license = "MIT"
 readme = "README.md"
@@ -32,4 +32,4 @@ color = ["moxy-derive/color"]
 full = ["moxy-derive/full"]
 
 [dependencies]
-moxy-derive = { path = "./crates/derive", version = "0.0.2", optional = true }
+moxy-derive = { path = "./crates/derive", version = "0.0.3", optional = true }
