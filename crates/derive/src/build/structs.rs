@@ -51,6 +51,7 @@ impl Render for StructSyntax {
                             })
                         })
                     });
+
                 let method_name = match &custom {
                     Some(ident) => quote!(#ident),
                     None => quote!(#fname),
@@ -81,7 +82,7 @@ impl Render for StructSyntax {
                     });
 
                 Ok(if let Some(default) = default_tokens {
-                    quote!(#fname: self.#fname.unwrap_or_else(|| #default))
+                    quote!(#fname: self.#fname.unwrap_or_else(|| #default.into()))
                 } else {
                     quote!(#fname: self.#fname.expect("required"))
                 })

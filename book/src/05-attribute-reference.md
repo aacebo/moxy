@@ -43,6 +43,15 @@ Specifying the same option twice with different values is a compile error:
 | `display(skip)` | Exclude field from output | `#[moxy(display(skip))]` |
 | `display(alias = "name")` | Rename field in output | `#[moxy(display(alias = "full_name"))]` |
 
+## Build — Field Level
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `build` | Include field in builder (panics if unset at build time) | `#[moxy(build)]` |
+| `build("name")` | Include field with a custom setter method name | `#[moxy(build("username"))]` |
+| `build(default = expr)` | Include field with a fallback value (optional in builder) | `#[moxy(build(default = 8080u16))]` |
+| `build("name", default = expr)` | Custom setter name + default value | `#[moxy(build("port", default = 8080u16))]` |
+
 ## Deref — Field Level
 
 | Attribute | Description | Example |

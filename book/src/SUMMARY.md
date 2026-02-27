@@ -14,5 +14,6 @@
     - [Fields](./02-display/06-fields.md)
     - [Struct Types](./02-display/07-structs.md)
 - [Deref](./03-deref/00-index.md)
+- [Build](./04-build/00-index.md)
 - [Feature Flags](./04-features.md)
 - [Attribute Reference](./05-attribute-reference.md)
