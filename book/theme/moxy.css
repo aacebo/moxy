@@ -1,36 +1,3 @@
-.ayu {
-    --bg: #2d1b00;
-    --fg: #dccf8f;
-    --sidebar-bg: #1a0f00;
-    --sidebar-fg: #dccf8f;
-    --sidebar-non-existant: #5c3000;
-    --sidebar-active: #ffb03b;
-    --sidebar-spacer: #5c3000;
-    --sidebar-header-border-color: #8b4513;
-    --scrollbar: #5c3000;
-    --icons: #8b4513;
-    --icons-hover: #f0a500;
-    --links: #ffb03b;
-    --inline-code-color: #f0a500;
-    --theme-popup-bg: #1a0f00;
-    --theme-popup-border: #8b4513;
-    --theme-hover: #5c3000;
-    --quote-bg: #1a0f00;
-    --quote-border: #8b4513;
-    --table-border-color: #5c3000;
-    --table-header-bg: #1a0f00;
-    --table-alternate-bg: #231400;
-    --searchbar-border-color: #8b4513;
-    --searchbar-bg: #1a0f00;
-    --searchbar-fg: #dccf8f;
-    --searchbar-shadow-color: #0d0800;
-    --searchresults-header-fg: #f0a500;
-    --searchresults-border-color: #5c3000;
-    --searchresults-li-bg: #231400;
-    --search-mark-bg: #b6492640;
-    --color-scheme: dark;
-}
-
 .ayu pre {
     background-color: #1a0f00;
     border-radius: 8px;
