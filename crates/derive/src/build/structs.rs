@@ -258,16 +258,21 @@ impl StructSyntax {
         let syn::Type::Path(type_path) = field.ty() else {
             return None;
         };
+
         let segment = type_path.path.segments.last()?;
+
         if segment.ident != "Option" {
             return None;
         }
+
         let syn::PathArguments::AngleBracketed(args) = &segment.arguments else {
             return None;
         };
+
         let syn::GenericArgument::Type(inner) = args.args.first()? else {
             return None;
         };
+
         Some(inner)
     }
 
@@ -281,6 +286,7 @@ impl StructSyntax {
                     if !a.path().is_ident("__value") {
                         return None;
                     }
+                    
                     a.as_lit().and_then(|lit| match lit {
                         syn::Lit::Str(s) => Some(format_ident!("{}", s.value())),
                         _ => None,
