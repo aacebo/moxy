@@ -3,6 +3,7 @@ pub(crate) mod core;
 mod default;
 mod deref;
 mod display;
+mod get;
 pub(crate) mod params;
 mod traits;
 
@@ -37,6 +38,14 @@ pub fn derive_build(tokens: TokenStream) -> TokenStream {
 #[proc_macro_derive(Default, attributes(moxy))]
 pub fn derive_default(tokens: TokenStream) -> TokenStream {
     match default::render(tokens) {
+        Err(err) => err.to_compile_error().into(),
+        Ok(v) => v.into(),
+    }
+}
+
+#[proc_macro_derive(Get, attributes(moxy))]
+pub fn derive_get(tokens: TokenStream) -> TokenStream {
+    match get::render(tokens) {
         Err(err) => err.to_compile_error().into(),
         Ok(v) => v.into(),
     }
