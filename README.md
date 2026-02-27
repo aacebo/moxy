@@ -1,6 +1,6 @@
 # Moxy
 
-Derive macros that eliminate Rust boilerplate. Get `Display`, `Deref`, `Default`, and `Build` implementations with a single attribute.
+Derive macros that eliminate Rust boilerplate. Get `Display`, `Deref`, `Default`, `Build`, `Get`, and `Set` implementations with a single attribute.
 
 ## Install
 

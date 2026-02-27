@@ -4,6 +4,7 @@ use crate::core::Attrs;
 
 #[derive(Clone)]
 pub struct Field {
+    raw_attrs: Vec<syn::Attribute>,
     attrs: Attrs,
     vis: syn::Visibility,
     name: FieldName,
@@ -13,6 +14,7 @@ pub struct Field {
 impl Field {
     pub fn parse(i: usize, field: &syn::Field) -> syn::Result<Self> {
         Ok(Self {
+            raw_attrs: field.attrs.clone(),
             attrs: Attrs::parse(&field.attrs)?,
             vis: field.vis.clone(),
             name: match &field.ident {
@@ -21,6 +23,10 @@ impl Field {
             },
             ty: field.ty.clone(),
         })
+    }
+
+    pub fn raw_attrs(&self) -> &[syn::Attribute] {
+        &self.raw_attrs
     }
 
     pub fn attrs(&self) -> &Attrs {

@@ -67,6 +67,25 @@ Supports literals, typed literals, constants, and arbitrary expressions:
 #[moxy(default = Vec::new())]       // expression
 ```
 
+## Get — Field Level
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `get` | Generate getter (returns `&Deref::Target` — e.g. `String` → `&str`. Use `copy` for primitives) | `#[moxy(get)]` |
+| `get("name")` | Custom getter method name | `#[moxy(get("id"))]` |
+| `get(copy)` | Return by value (for `Copy` types and primitives like `u32`, `bool`) | `#[moxy(get(copy))]` |
+| `get(clone)` | Return by clone | `#[moxy(get(clone))]` |
+| `get(mutable)` | Also generate `field_mut(&mut self) -> &mut T` | `#[moxy(get(mutable))]` |
+| `get(on = expr)` | Run expression before returning | `#[moxy(get(on = log::debug!("read")))]` |
+
+## Set — Field Level
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `set` | Generate setter (`fn set_field(&mut self, value: impl Into<T>) -> &mut Self`) | `#[moxy(set)]` |
+| `set("name")` | Custom setter method name (replaces `set_field`) | `#[moxy(set("update_id"))]` |
+| `set(on = expr)` | Transform: expression result is assigned (`value: T` in scope) | `#[moxy(set(on = value.to_lowercase()))]` |
+
 ## Deref — Field Level
 
 | Attribute | Description | Example |

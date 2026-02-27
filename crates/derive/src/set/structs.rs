@@ -22,80 +22,58 @@ impl Render for StructSyntax {
 
         let fields: Vec<_> = fields
             .into_iter()
-            .filter(|field| field.attrs().exists("get"))
+            .filter(|field| field.attrs().exists("set"))
             .collect();
 
         let methods: Vec<TokenStream> = fields
             .iter()
             .map(|field| -> syn::Result<TokenStream> {
                 let fname = field.name();
-                let ty = field.ty();
                 let docs = self.render_docs(field);
+                let is_option = self.render_option_inner(field).is_some();
+                let on_callback = self.render_on_callback(field)?;
+
                 let method_name = match self.render_custom_method_name(field)? {
                     Some(id) => id,
-                    None => format_ident!("{}", fname.to_string()),
+                    None => format_ident!("set_{}", fname.to_string()),
                 };
-                let on_callback = self.render_on_callback(field)?;
-                let is_option = self.render_option_inner(field).is_some();
-                let is_bool = self.render_is_bool(field);
-                let has_copy = self.render_has_modifier(field, "copy")?;
-                let has_clone = self.render_has_modifier(field, "clone")?;
-                let has_mut = self.render_has_modifier(field, "mutable")?;
 
-                let callback = on_callback
-                    .as_ref()
-                    .map(|expr| quote!(#expr;))
-                    .unwrap_or_default();
+                let setter_ty = if is_option {
+                    let inner = self.render_option_inner(field).unwrap();
+                    quote!(#inner)
+                } else {
+                    let ty = field.ty();
+                    quote!(#ty)
+                };
 
-                let getter = if is_option {
-                    let inner_ty = self.render_option_inner(field).unwrap();
-                    quote! {
-                        #(#docs)*
-                        pub fn #method_name(&self) -> ::std::option::Option<&<#inner_ty as ::std::ops::Deref>::Target> {
-                            #callback
-                            self.#fname.as_deref()
+                let body = if let Some(on_expr) = on_callback {
+                    if is_option {
+                        quote! {
+                            let value: #setter_ty = value.into();
+                            self.#fname = ::std::option::Option::Some(#on_expr);
+                        }
+                    } else {
+                        quote! {
+                            let value: #setter_ty = value.into();
+                            self.#fname = #on_expr;
                         }
                     }
-                } else if is_bool || has_copy {
+                } else if is_option {
                     quote! {
-                        #(#docs)*
-                        pub fn #method_name(&self) -> #ty {
-                            #callback
-                            self.#fname
-                        }
-                    }
-                } else if has_clone {
-                    quote! {
-                        #(#docs)*
-                        pub fn #method_name(&self) -> #ty {
-                            #callback
-                            self.#fname.clone()
-                        }
+                        self.#fname = ::std::option::Option::Some(value.into());
                     }
                 } else {
                     quote! {
-                        #(#docs)*
-                        pub fn #method_name(&self) -> &<#ty as ::std::ops::Deref>::Target {
-                            #callback
-                            &self.#fname
-                        }
+                        self.#fname = value.into();
                     }
-                };
-
-                let mut_getter = if has_mut {
-                    let mut_name = format_ident!("{}_mut", fname.to_string());
-                    quote! {
-                        pub fn #mut_name(&mut self) -> &mut #ty {
-                            &mut self.#fname
-                        }
-                    }
-                } else {
-                    quote!()
                 };
 
                 Ok(quote! {
-                    #getter
-                    #mut_getter
+                    #(#docs)*
+                    pub fn #method_name<V: ::std::convert::Into<#setter_ty>>(&mut self, value: V) -> &mut Self {
+                        #body
+                        self
+                    }
                 })
             })
             .collect::<syn::Result<Vec<_>>>()?;
@@ -126,21 +104,9 @@ impl StructSyntax {
         Some(inner)
     }
 
-    fn render_is_bool(&self, field: &Field) -> bool {
-        matches!(field.ty(), syn::Type::Path(p) if p.path.is_ident("bool"))
-    }
-
-    fn render_has_modifier(&self, field: &Field, name: &str) -> syn::Result<bool> {
-        let get_args = field.attrs().get("get")?;
-        Ok(get_args.iter().any(|arg| {
-            arg.as_attr()
-                .is_some_and(|attr| attr.args().iter().any(|a| a.path().is_ident(name)))
-        }))
-    }
-
     fn render_custom_method_name(&self, field: &Field) -> syn::Result<Option<proc_macro2::Ident>> {
-        let get_args = field.attrs().get("get")?;
-        Ok(get_args
+        let set_args = field.attrs().get("set")?;
+        Ok(set_args
             .iter()
             .find_map(|arg| arg.as_attr())
             .and_then(|attr| {
@@ -157,8 +123,8 @@ impl StructSyntax {
     }
 
     fn render_on_callback(&self, field: &Field) -> syn::Result<Option<proc_macro2::TokenStream>> {
-        let get_args = field.attrs().get("get")?;
-        Ok(get_args
+        let set_args = field.attrs().get("set")?;
+        Ok(set_args
             .iter()
             .find_map(|arg| arg.as_attr())
             .and_then(|attr| {

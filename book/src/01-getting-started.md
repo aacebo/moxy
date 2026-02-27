@@ -23,7 +23,7 @@ Or pick individual features:
 moxy = { version = "0.0.0", features = ["derive", "json", "color"] }
 ```
 
-See [Feature Flags](./05-features.md) for details on each feature.
+See [Feature Flags](./07-features.md) for details on each feature.
 
 ## Basic Usage
 
@@ -109,6 +109,46 @@ let config = Config::default();
 assert_eq!(config.host, "localhost");
 assert_eq!(config.port, 8080);
 assert_eq!(config.debug, false);
+```
+
+### Get
+
+Add `#[derive(Get)]` and annotate fields with `#[moxy(get)]` to generate getters:
+
+```rust
+use moxy::Get;
+
+#[derive(Get)]
+struct User {
+    #[moxy(get)]
+    name: String,
+    #[moxy(get)]
+    bio: Option<String>,
+}
+
+let user = User { name: "alice".into(), bio: Some("hello".into()) };
+assert_eq!(user.name(), "alice");
+assert_eq!(user.bio(), Some("hello"));
+```
+
+### Set
+
+Add `#[derive(Set)]` and annotate fields with `#[moxy(set)]` to generate setters with `Into<T>` coercion:
+
+```rust
+use moxy::Set;
+
+#[derive(Set)]
+struct Config {
+    #[moxy(set)]
+    host: String,
+    #[moxy(set)]
+    port: u16,
+}
+
+let mut cfg = Config { host: String::new(), port: 0 };
+cfg.set_host("localhost").set_port(8080_u16);
+assert_eq!(cfg.host, "localhost");
 ```
 
 ## Next Steps

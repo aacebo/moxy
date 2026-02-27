@@ -62,6 +62,22 @@ Moxy has the cleanest syntax and universal `.into()`. The main gap is enum suppo
 
 Moxy's const generic approach is simpler (no extra types/traits), has universal `Into`, and covers the struct builder case well. Bon is more powerful with function/method builders and a richer attribute set.
 
+## Get/Set — moxy vs getset vs derive-getters
+
+| Feature | moxy | getset | derive-getters |
+|---------|------|--------|----------------|
+| Opt-in per field | Yes (`#[moxy(get)]`) | No (all fields, skip to exclude) | No (all fields) |
+| Deref::Target returns | Yes (`String` → `&str`, `Option<String>` → `Option<&str>`) | No (`&String`, `&Option<T>`) | No (`&String`) |
+| `Into<T>` setters | Yes | No (direct `T`) | N/A |
+| Copy/Clone modifiers | Per-field (`copy`, `clone`) | Separate derives | No |
+| Mut getter | `get(mutable)` modifier | Separate derive | No |
+| Setter chaining | `&mut Self` | `&mut Self` | N/A |
+| Doc forwarding | Yes (`///` → method) | No | Yes |
+| Transform callbacks | `on = expr` (get: side effect, set: transform) | No | No |
+| Derive count | 2 (Get, Set) | 6 | 1 |
+
+Moxy consolidates 6 getset derives into 2, with per-field modifiers, smarter Option handling, Into coercion on setters, and transform callbacks — features no competing crate offers.
+
 ## Cross-cutting gaps
 
-The consistent gap across all four macros is **enum support**. The second most impactful addition would be **DerefMut** for the Deref macro.
+The consistent gap across all six macros is **enum support**. The second most impactful addition would be **DerefMut** for the Deref macro.

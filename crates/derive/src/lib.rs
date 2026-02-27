@@ -5,6 +5,7 @@ mod deref;
 mod display;
 mod get;
 pub(crate) mod params;
+mod set;
 mod traits;
 
 use proc_macro::TokenStream;
@@ -46,6 +47,14 @@ pub fn derive_default(tokens: TokenStream) -> TokenStream {
 #[proc_macro_derive(Get, attributes(moxy))]
 pub fn derive_get(tokens: TokenStream) -> TokenStream {
     match get::render(tokens) {
+        Err(err) => err.to_compile_error().into(),
+        Ok(v) => v.into(),
+    }
+}
+
+#[proc_macro_derive(Set, attributes(moxy))]
+pub fn derive_set(tokens: TokenStream) -> TokenStream {
+    match set::render(tokens) {
         Err(err) => err.to_compile_error().into(),
         Ok(v) => v.into(),
     }
