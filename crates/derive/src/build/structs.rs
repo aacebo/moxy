@@ -64,10 +64,17 @@ impl Render for StructSyntax {
             impl #impl_generics #build_ident #type_generics #where_generics {
                 #(#build_methods)*
 
-                pub fn build(self) -> #ident {
+                pub fn build(self) -> #ident #type_generics {
                     #ident {
                         #(#build_fields_assign,)*
+                        ..Default::default()
                     }
+                }
+            }
+
+            impl #impl_generics #ident #type_generics #where_generics {
+                pub fn new() -> #build_ident #type_generics {
+                    #build_ident::default()
                 }
             }
         })
