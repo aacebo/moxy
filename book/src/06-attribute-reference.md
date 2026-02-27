@@ -47,7 +47,7 @@ Specifying the same option twice with different values is a compile error:
 
 | Attribute | Description | Example |
 |-----------|-------------|---------|
-| `build` | Include field in builder (panics if unset at build time) | `#[moxy(build)]` |
+| `build` | Include field in builder (compile error if unset at build time) | `#[moxy(build)]` |
 | `build("name")` | Include field with a custom setter method name | `#[moxy(build("username"))]` |
 | `build(default = expr)` | Include field with a fallback value (optional in builder) | `#[moxy(build(default = 8080u16))]` |
 | `build("name", default = expr)` | Custom setter name + default value | `#[moxy(build("port", default = 8080u16))]` |

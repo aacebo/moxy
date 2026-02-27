@@ -1,6 +1,8 @@
 # Build
 
-The `Build` derive macro generates a fluent builder for your struct. Annotate fields with `#[moxy(build)]` to include them in the builder, then call `YourStruct::new()` to get a builder instance.
+The `Build` derive macro generates a **type-safe** fluent builder for your struct. Annotate fields with `#[moxy(build)]` to include them in the builder, then call `YourStruct::new()` to get a builder instance.
+
+The builder uses const generic bools to track which required fields have been set. Missing a required field is a **compile error** — not a runtime panic. Setters can be called in any order, and setting a required field twice is also a compile error.
 
 ## Basic Usage
 
@@ -25,9 +27,9 @@ assert_eq!(config.port, 8080);
 ```
 
 `Build` generates:
-- A `ConfigBuilder` struct with `Option<T>` fields for each annotated field
+- A `ConfigBuilder` struct with const generic bools tracking required field state
 - A setter method per annotated field that accepts `V: Into<T>` for flexible conversions
-- A `build()` method that constructs the final struct
+- A `build()` method — only available once all required fields are set
 - A `Config::new()` factory that returns a fresh `ConfigBuilder`
 
 Non-annotated fields are initialised with `Default::default()` via a struct spread.

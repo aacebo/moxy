@@ -17,7 +17,7 @@ let w: Wrapper<u32> = Wrapper::new().value(42u32).build();
 assert_eq!(w.value, 42u32);
 ```
 
-The generated builder is `WrapperBuilder<T: Default>` and `Wrapper::new()` returns `WrapperBuilder<T>`. All generics are inferred from the call site.
+The generated builder is `WrapperBuilder<T, const VALUE: bool>` — type parameters are forwarded and const bool parameters track required fields. `Wrapper::new()` returns a `WrapperBuilder<T>` with all const generics defaulted to `false`. All generics are inferred from the call site.
 
 ## With Defaults
 

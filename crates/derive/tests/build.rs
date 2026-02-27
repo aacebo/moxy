@@ -78,16 +78,6 @@ fn test_no_annotated_fields() {
     assert_eq!(e.count, 0u32);
 }
 
-/// Calling build() without setting a required field panics.
-#[test]
-#[should_panic]
-fn test_missing_field_panics() {
-    Config::new()
-        .host("localhost")
-        // intentionally omit .port()
-        .build();
-}
-
 /// Custom builder method name overrides the field name.
 #[derive(Build, Default)]
 pub struct Credentials {
@@ -181,6 +171,35 @@ fn test_custom_name_with_default() {
 fn test_custom_name_with_default_overridden() {
     let s = Service::new().addr("127.0.0.1").build();
     assert_eq!(s.address, "127.0.0.1");
+}
+
+/// Option<T> field is optional — setter accepts T, wraps in Some.
+#[derive(Build, Default)]
+pub struct Profile {
+    #[moxy(build)]
+    pub name: String,
+    #[moxy(build)]
+    pub bio: Option<String>,
+    #[moxy(build)]
+    pub age: Option<u32>,
+}
+
+#[test]
+fn test_option_field_unset() {
+    let p = Profile::new().name("alice").build();
+
+    assert_eq!(p.name, "alice");
+    assert_eq!(p.bio, None);
+    assert_eq!(p.age, None);
+}
+
+#[test]
+fn test_option_field_set() {
+    let p = Profile::new().name("alice").bio("hello").age(30u32).build();
+
+    assert_eq!(p.name, "alice");
+    assert_eq!(p.bio, Some("hello".to_string()));
+    assert_eq!(p.age, Some(30));
 }
 
 /// Constant used as a default value.
