@@ -11,12 +11,14 @@ readme = "README.md"
 documentation = "https://aacebo.github.io/moxy"
 homepage = "https://aacebo.github.io/moxy"
 repository = "https://www.github.com/aacebo/moxy"
+keywords = ["derive", "macro", "builder", "display", "getset"]
+categories = ["development-tools::procedural-macro-helpers", "rust-patterns", "no-std"]
 
 # ----------- Package ----------- #
 
 [package]
 name = "moxy"
-description = "A set of helpful macros for day to day quality of life tasks"
+description = "Derive macros that eliminate Rust boilerplate — Display, Deref, Default, Build, Get, Set"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -24,6 +26,8 @@ readme.workspace = true
 documentation.workspace = true
 homepage.workspace = true
 repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
 
 [features]
 derive = ["moxy-derive"]
