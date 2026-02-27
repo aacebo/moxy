@@ -39,7 +39,7 @@ pub struct Empty {
 /// All fields annotated; fluent chaining produces correct values.
 #[test]
 fn test_all_fields_build() {
-    let config = Config::new().host("localhost".into()).port(8080).build();
+    let config = Config::new().host("localhost").port(8080 as u16).build();
 
     assert_eq!(config.host, "localhost");
     assert_eq!(config.port, 8080);
@@ -49,8 +49,8 @@ fn test_all_fields_build() {
 #[test]
 fn test_partial_fields_default() {
     let conn = Connection::new()
-        .host("127.0.0.1".into())
-        .port(5432)
+        .host("127.0.0.1")
+        .port(5432 as u16)
         .build();
 
     assert_eq!(conn.host, "127.0.0.1");
@@ -86,7 +86,7 @@ fn test_no_annotated_fields() {
 #[should_panic]
 fn test_missing_field_panics() {
     Config::new()
-        .host("localhost".into())
+        .host("localhost")
         // intentionally omit .port()
         .build();
 }

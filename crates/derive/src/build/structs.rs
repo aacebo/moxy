@@ -39,8 +39,8 @@ impl Render for StructSyntax {
                 let ty = field.ty();
 
                 quote! {
-                    pub fn #name(mut self, value: #ty) -> Self {
-                        self.#name = Some(value);
+                    pub fn #name<V: Into<#ty>>(mut self, value: V) -> Self {
+                        self.#name = Some(value.into());
                         self
                     }
                 }
