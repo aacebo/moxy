@@ -45,6 +45,9 @@ impl Render for StructSyntax {
                     .find_map(|arg| arg.as_attr())
                     .and_then(|attr| {
                         attr.args().iter().find_map(|a| {
+                            if !a.path().is_ident("__value") {
+                                return None;
+                            }
                             a.as_lit().and_then(|lit| match lit {
                                 syn::Lit::Str(s) => Some(format_ident!("{}", s.value())),
                                 _ => None,

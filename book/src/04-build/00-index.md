@@ -85,7 +85,7 @@ providing a fallback value at build time:
 #
 #[derive(Build, Default)]
 struct Server {
-    #[moxy(build(default = "localhost".to_string()))]
+    #[moxy(build(default = "localhost"))]
     pub host: String,
     #[moxy(build(default = 8080u16))]
     pub port: u16,
@@ -133,7 +133,7 @@ assert_eq!(w.value, 42u32);
 #
 #[derive(Build, Default)]
 struct Api {
-    #[moxy(build(default = "localhost".to_string()))]
+    #[moxy(build(default = "localhost"))]
     pub host: String,    // optional — has a default
     #[moxy(build)]
     pub token: String,   // required — must be set

@@ -111,7 +111,7 @@ fn test_custom_method_name() {
 /// Default value provided inline — field is optional in the builder.
 #[derive(Build, Default)]
 pub struct Server {
-    #[moxy(build(default = "localhost".to_string()))]
+    #[moxy(build(default = "localhost"))]
     pub host: String,
     #[moxy(build(default = 8080u16))]
     pub port: u16,
@@ -136,4 +136,70 @@ fn test_default_value_overridden() {
         .build();
     assert_eq!(s.host, "example.com");
     assert_eq!(s.port, 443u16);
+}
+
+/// Expression default — arbitrary expression is evaluated each time build() is called.
+#[derive(Build, Default)]
+pub struct Collection {
+    #[moxy(build(default = Vec::new()))]
+    pub items: Vec<String>,
+    #[moxy(build(default = "prefix".to_string()))]
+    pub prefix: String,
+}
+
+#[test]
+fn test_expression_default() {
+    let c = Collection::new().build();
+    assert!(c.items.is_empty());
+    assert_eq!(c.prefix, "prefix");
+}
+
+#[test]
+fn test_expression_default_overridden() {
+    let c = Collection::new()
+        .items(vec!["a".to_string()])
+        .prefix("custom")
+        .build();
+    assert_eq!(c.items, vec!["a".to_string()]);
+    assert_eq!(c.prefix, "custom");
+}
+
+/// Custom method name combined with a default value.
+#[derive(Build, Default)]
+pub struct Service {
+    #[moxy(build("addr", default = "0.0.0.0"))]
+    pub address: String,
+}
+
+#[test]
+fn test_custom_name_with_default() {
+    let s = Service::new().build();
+    assert_eq!(s.address, "0.0.0.0");
+}
+
+#[test]
+fn test_custom_name_with_default_overridden() {
+    let s = Service::new().addr("127.0.0.1").build();
+    assert_eq!(s.address, "127.0.0.1");
+}
+
+/// Constant used as a default value.
+const DEFAULT_RETRIES: u32 = 3;
+
+#[derive(Build, Default)]
+pub struct Client {
+    #[moxy(build(default = DEFAULT_RETRIES))]
+    pub retries: u32,
+}
+
+#[test]
+fn test_constant_default() {
+    let c = Client::new().build();
+    assert_eq!(c.retries, 3);
+}
+
+#[test]
+fn test_constant_default_overridden() {
+    let c = Client::new().retries(10u32).build();
+    assert_eq!(c.retries, 10);
 }
