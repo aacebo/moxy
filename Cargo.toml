@@ -1,3 +1,19 @@
+[workspace]
+resolver = "3"
+members = ["crates/*"]
+default-members = ["crates/*"]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+license = "MIT"
+readme = "README.md"
+documentation = "https://aacebo.github.io/moxy"
+homepage = "https://aacebo.github.io/moxy"
+repository = "https://www.github.com/aacebo/moxy"
+
+# ----------- Package ----------- #
+
 [package]
 name = "moxy"
 description = "A set of helpful macros for day to day quality of life tasks"
@@ -16,20 +32,4 @@ color = ["moxy-derive/color"]
 full = ["moxy-derive/full"]
 
 [dependencies]
-moxy-derive = { path = "./derive", version = "0.0.0", optional = true }
-
-# ----- Workspace ----- #
-
-[workspace]
-resolver = "3"
-members = ["derive"]
-default-members = ["derive"]
-
-[workspace.package]
-version = "0.0.0"
-edition = "2024"
-license = "MIT"
-readme = "README.md"
-documentation = "https://aacebo.github.io/moxy"
-homepage = "https://aacebo.github.io/moxy"
-repository = "https://www.github.com/aacebo/moxy"
+moxy-derive = { path = "./crates/derive", version = "0.0.0", optional = true }
