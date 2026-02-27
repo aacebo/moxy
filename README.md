@@ -1,4 +1,4 @@
-# Moxy
+![moxy](assets/banner.svg)
 
 Derive macros that eliminate Rust boilerplate. Get `Display`, `Deref`, `Default`, `Build`, `Get`, and `Set` implementations with a single attribute.
 

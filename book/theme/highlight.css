@@ -1,0 +1,77 @@
+/*
+ * Moxy highlight.js theme
+ * Based on Pojoaque by Jason Tate (http://web-cms-designs.com/ftopict-10.html)
+ * Modified to match the moxy 70's brown/gold logo palette
+ */
+
+.hljs {
+    display: block;
+    overflow-x: auto;
+    padding: 0.5em;
+    color: #dccf8f;
+    background: #2d1b00;
+}
+
+.hljs-comment,
+.hljs-quote {
+    color: #7a7048;
+    font-style: italic;
+}
+
+.hljs-keyword,
+.hljs-selector-tag,
+.hljs-literal,
+.hljs-addition {
+    color: #b64926;
+}
+
+.hljs-number,
+.hljs-string,
+.hljs-doctag,
+.hljs-regexp {
+    color: #468966;
+}
+
+.hljs-title,
+.hljs-section,
+.hljs-built_in,
+.hljs-name {
+    color: #ffb03b;
+}
+
+.hljs-variable,
+.hljs-template-variable,
+.hljs-class .hljs-title,
+.hljs-type,
+.hljs-tag {
+    color: #b58900;
+}
+
+.hljs-attribute {
+    color: #b89859;
+}
+
+.hljs-symbol,
+.hljs-bullet,
+.hljs-link,
+.hljs-subst,
+.hljs-meta {
+    color: #cb4b16;
+}
+
+.hljs-deletion {
+    color: #dc322f;
+}
+
+.hljs-selector-id,
+.hljs-selector-class {
+    color: #d3a60c;
+}
+
+.hljs-emphasis {
+    font-style: italic;
+}
+
+.hljs-strong {
+    font-weight: bold;
+}

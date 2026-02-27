@@ -1,3 +1,5 @@
+![moxy](https://raw.githubusercontent.com/aacebo/moxy/master/assets/banner.svg)
+
 # Introduction
 
 Moxy is a Rust derive macro crate that eliminates boilerplate. Get `Display`, `Deref`, `Default`, `Build`, `Get`, and `Set` implementations with a single attribute — no hand-written `impl` blocks needed.
