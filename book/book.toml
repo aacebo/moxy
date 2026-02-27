@@ -15,10 +15,6 @@ smart-punctuation = true
 definition-lists = true
 sidebar-header-nav = true
 
-[output.html.print]
-enable = true
-page-break = true
-
 [output.html.playground]
 editable = false
 runnable = false
