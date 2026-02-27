@@ -52,6 +52,21 @@ Specifying the same option twice with different values is a compile error:
 | `build(default = expr)` | Include field with a fallback value (optional in builder) | `#[moxy(build(default = 8080u16))]` |
 | `build("name", default = expr)` | Custom setter name + default value | `#[moxy(build("port", default = 8080u16))]` |
 
+## Default — Field Level
+
+| Attribute | Description | Example |
+|-----------|-------------|---------|
+| `default = expr` | Use expression as field's default value (passed through `.into()`) | `#[moxy(default = "localhost")]` |
+
+Supports literals, typed literals, constants, and arbitrary expressions:
+
+```rust
+#[moxy(default = "hello")]          // string literal
+#[moxy(default = 8080u16)]          // typed literal
+#[moxy(default = MAX_RETRIES)]      // constant
+#[moxy(default = Vec::new())]       // expression
+```
+
 ## Deref — Field Level
 
 | Attribute | Description | Example |

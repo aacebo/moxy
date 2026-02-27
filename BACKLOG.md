@@ -10,9 +10,7 @@
 - [ ] `get` — generate getter method
 - [ ] `get_mut` — generate mutable getter method
 - [ ] `set` — generate setter method
-- [ ] `build` — generate builder method
 - [ ] `forward` — lift methods from field type to parent type
-- [ ] `default` — provide a default expr or value
 
 ## Display Formats
 

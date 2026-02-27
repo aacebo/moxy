@@ -1,5 +1,6 @@
 mod build;
 pub(crate) mod core;
+mod default;
 mod deref;
 mod display;
 pub(crate) mod params;
@@ -28,6 +29,14 @@ pub fn derive_display(tokens: TokenStream) -> TokenStream {
 #[proc_macro_derive(Build, attributes(moxy))]
 pub fn derive_build(tokens: TokenStream) -> TokenStream {
     match build::render(tokens) {
+        Err(err) => err.to_compile_error().into(),
+        Ok(v) => v.into(),
+    }
+}
+
+#[proc_macro_derive(Default, attributes(moxy))]
+pub fn derive_default(tokens: TokenStream) -> TokenStream {
+    match default::render(tokens) {
         Err(err) => err.to_compile_error().into(),
         Ok(v) => v.into(),
     }

@@ -23,14 +23,14 @@ Or pick individual features:
 moxy = { version = "0.0.0", features = ["derive", "json", "color"] }
 ```
 
-See [Feature Flags](./04-features.md) for details on each feature.
+See [Feature Flags](./05-features.md) for details on each feature.
 
 ## Basic Usage
 
 Import the derives you need from `moxy::derive`:
 
 ```rust
-use moxy::derive::{Deref, Display};
+use moxy::derive::{Default, Deref, Display};
 ```
 
 ### Display
@@ -89,6 +89,28 @@ assert_eq!(config.host, "localhost");
 assert_eq!(config.port, 8080);
 ```
 
+### Default
+
+Add `#[derive(Default)]` and annotate fields with `#[moxy(default = expr)]` to generate a custom `Default` implementation:
+
+```rust
+use moxy::derive::Default;
+
+#[derive(Default)]
+struct Config {
+    #[moxy(default = "localhost")]
+    pub host: String,
+    #[moxy(default = 8080u16)]
+    pub port: u16,
+    pub debug: bool,
+}
+
+let config = Config::default();
+assert_eq!(config.host, "localhost");
+assert_eq!(config.port, 8080);
+assert_eq!(config.debug, false);
+```
+
 ## Next Steps
 
 - [Display formats](./02-display/01-formats.md) — debug, compact, keyvalue, map
@@ -98,3 +120,4 @@ assert_eq!(config.port, 8080);
 - [Deref patterns](./03-deref/00-index.md) — tuple, named, and multi-field structs
 - [Build defaults](./04-build/02-defaults.md) — inline fallback values with `default = <expr>`
 - [Build custom names](./04-build/03-custom-names.md) — rename generated setter methods
+- [Default expressions](./05-default/01-expressions.md) — literals, constants, and complex expressions
