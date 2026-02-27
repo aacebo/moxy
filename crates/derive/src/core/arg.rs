@@ -129,6 +129,17 @@ impl Arg {
         }
     }
 
+    /// Returns tokens for the value side of any `path = value` arg.
+    #[allow(unused)]
+    pub fn as_value_tokens(&self) -> Option<proc_macro2::TokenStream> {
+        match self {
+            Self::Literal(_, lit) => Some(quote::quote!(#lit)),
+            Self::Ident(_, ident) => Some(quote::quote!(#ident)),
+            Self::Expr(_, expr) => Some(quote::quote!(#expr)),
+            _ => None,
+        }
+    }
+
     #[allow(unused)]
     pub fn error(&self, message: &str) -> proc_macro2::TokenStream {
         self.path().error(message).to_compile_error()
@@ -156,15 +167,20 @@ impl syn::parse::Parse for Arg {
         }
 
         let fork = input.fork();
+
         if fork.parse::<syn::Path>().is_ok() {
             if fork.peek(syn::Token![=]) {
                 let path: syn::Path = input.parse()?;
                 input.parse::<syn::Token![=]>()?;
-                if input.peek(syn::Ident) {
-                    return Ok(Arg::from_ident(path, input.parse()?));
-                } else {
-                    return Ok(Arg::from_lit(path, input.parse()?));
-                }
+                let expr: syn::Expr = input.parse()?;
+
+                return Ok(match expr {
+                    syn::Expr::Lit(expr_lit) => Arg::from_lit(path, expr_lit.lit),
+                    syn::Expr::Path(expr_path) if expr_path.path.get_ident().is_some() => {
+                        Arg::from_ident(path, expr_path.path.get_ident().unwrap().clone())
+                    }
+                    other => Arg::from_expr(path, other),
+                });
             }
 
             if fork.peek(syn::token::Paren) {

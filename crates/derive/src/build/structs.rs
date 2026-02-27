@@ -67,11 +67,26 @@ impl Render for StructSyntax {
 
         let build_fields_assign: Vec<_> = fields
             .iter()
-            .map(|field| {
-                let name = field.name();
-                quote!(#name: self.#name.expect("required"))
+            .map(|field| -> syn::Result<TokenStream> {
+                let fname = field.name();
+                let build_args = field.attrs().get("build")?;
+                let default_tokens: Option<proc_macro2::TokenStream> = build_args
+                    .iter()
+                    .find_map(|arg| arg.as_attr())
+                    .and_then(|attr| {
+                        attr.args()
+                            .iter()
+                            .find(|a| a.path().is_ident("default"))
+                            .and_then(|a| a.as_value_tokens())
+                    });
+
+                Ok(if let Some(default) = default_tokens {
+                    quote!(#fname: self.#fname.unwrap_or_else(|| #default))
+                } else {
+                    quote!(#fname: self.#fname.expect("required"))
+                })
             })
-            .collect();
+            .collect::<syn::Result<Vec<_>>>()?;
 
         Ok(quote! {
             #[derive(Default)]

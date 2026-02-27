@@ -48,10 +48,7 @@ fn test_all_fields_build() {
 /// Non-annotated field receives its Default value (0u64).
 #[test]
 fn test_partial_fields_default() {
-    let conn = Connection::new()
-        .host("127.0.0.1")
-        .port(5432_u16)
-        .build();
+    let conn = Connection::new().host("127.0.0.1").port(5432_u16).build();
 
     assert_eq!(conn.host, "127.0.0.1");
     assert_eq!(conn.port, 5432);
@@ -109,4 +106,34 @@ fn test_custom_method_name() {
 
     assert_eq!(c.user, "alice");
     assert_eq!(c.password, "secret");
+}
+
+/// Default value provided inline — field is optional in the builder.
+#[derive(Build, Default)]
+pub struct Server {
+    #[moxy(build(default = "localhost".to_string()))]
+    pub host: String,
+    #[moxy(build(default = 8080u16))]
+    pub port: u16,
+    #[moxy(build)]
+    pub name: String,
+}
+
+#[test]
+fn test_default_value_used_when_unset() {
+    let s = Server::new().name("api").build();
+    assert_eq!(s.host, "localhost");
+    assert_eq!(s.port, 8080u16);
+    assert_eq!(s.name, "api");
+}
+
+#[test]
+fn test_default_value_overridden() {
+    let s = Server::new()
+        .host("example.com")
+        .port(443u16)
+        .name("web")
+        .build();
+    assert_eq!(s.host, "example.com");
+    assert_eq!(s.port, 443u16);
 }
