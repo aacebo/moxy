@@ -1,11 +1,12 @@
 # Introduction
 
-Moxy is a Rust derive macro crate that eliminates boilerplate. Get `Display` and `Deref` implementations with a single attribute — no hand-written `impl` blocks needed.
+Moxy is a Rust derive macro crate that eliminates boilerplate. Get `Display`, `Deref`, and fluent builder implementations with a single attribute — no hand-written `impl` blocks needed.
 
 ## What You Get
 
 - **[Display](./02-display/00-index.md)** — Flexible `std::fmt::Display` with multiple output formats, JSON serialization, and colored terminal output.
 - **[Deref](./03-deref/00-index.md)** — Automatic `std::ops::Deref` delegation to inner fields.
+- **[Build](./04-build/00-index.md)** — Fluent builder pattern with `V: Into<T>` setters, inline defaults, and custom method names.
 
 ## Quick Example
 

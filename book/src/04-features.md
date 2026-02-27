@@ -4,7 +4,7 @@ Moxy uses Cargo feature flags to keep optional functionality behind compile-time
 
 ## `derive`
 
-Enables the derive macros (`Display`, `Deref`). This is required to use any moxy derives.
+Enables the derive macros (`Display`, `Deref`, `Build`). This is required to use any moxy derives.
 
 ```toml
 [dependencies]

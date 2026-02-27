@@ -69,6 +69,26 @@ let email = Email("john@example.com".into());
 assert_eq!(email.len(), 16);
 ```
 
+### Build
+
+Add `#[derive(Build)]` to generate a fluent builder. Annotate each field you want in the builder with `#[moxy(build)]`:
+
+```rust
+use moxy::derive::Build;
+
+#[derive(Build, Default)]
+struct Config {
+    #[moxy(build)]
+    pub host: String,
+    #[moxy(build(default = 8080u16))]
+    pub port: u16,
+}
+
+let config = Config::new().host("localhost").build();
+assert_eq!(config.host, "localhost");
+assert_eq!(config.port, 8080);
+```
+
 ## Next Steps
 
 - [Display formats](./02-display/01-formats.md) — debug, compact, keyvalue, map
@@ -76,3 +96,5 @@ assert_eq!(email.len(), 16);
 - [JSON output](./02-display/04-json.md) — serialize to JSON
 - [Colored output](./02-display/05-color.md) — ANSI truecolor themes
 - [Deref patterns](./03-deref/00-index.md) — tuple, named, and multi-field structs
+- [Build defaults](./04-build/02-defaults.md) — inline fallback values with `default = <expr>`
+- [Build custom names](./04-build/03-custom-names.md) — rename generated setter methods
