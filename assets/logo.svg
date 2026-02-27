@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 88" shape-rendering="crispEdges">
+  <rect fill="#1a0f00" width="88" height="88"/>
+
+  <!-- single pixel border -->
+  <rect fill="#8b4513" x="2" y="2" width="84" height="84"/>
+  <rect fill="#2d1b00" x="4" y="4" width="80" height="80"/>
+
+  <!-- scanlines -->
+  <g opacity="0.04">
+    <rect fill="#ffd700" y="6" width="88" height="1"/>
+    <rect fill="#ffd700" y="10" width="88" height="1"/>
+    <rect fill="#ffd700" y="14" width="88" height="1"/>
+    <rect fill="#ffd700" y="18" width="88" height="1"/>
+    <rect fill="#ffd700" y="22" width="88" height="1"/>
+    <rect fill="#ffd700" y="26" width="88" height="1"/>
+    <rect fill="#ffd700" y="30" width="88" height="1"/>
+    <rect fill="#ffd700" y="34" width="88" height="1"/>
+    <rect fill="#ffd700" y="38" width="88" height="1"/>
+    <rect fill="#ffd700" y="42" width="88" height="1"/>
+    <rect fill="#ffd700" y="46" width="88" height="1"/>
+    <rect fill="#ffd700" y="50" width="88" height="1"/>
+    <rect fill="#ffd700" y="54" width="88" height="1"/>
+    <rect fill="#ffd700" y="58" width="88" height="1"/>
+    <rect fill="#ffd700" y="62" width="88" height="1"/>
+    <rect fill="#ffd700" y="66" width="88" height="1"/>
+    <rect fill="#ffd700" y="70" width="88" height="1"/>
+    <rect fill="#ffd700" y="74" width="88" height="1"/>
+    <rect fill="#ffd700" y="78" width="88" height="1"/>
+    <rect fill="#ffd700" y="82" width="88" height="1"/>
+  </g>
+
+  <!-- M shadow -->
+  <g fill="#5c3000" transform="translate(2,2)">
+    <rect x="18" y="16" width="8" height="52"/>
+    <rect x="58" y="16" width="8" height="52"/>
+    <rect x="26" y="16" width="8" height="8"/>
+    <rect x="50" y="16" width="8" height="8"/>
+    <rect x="26" y="24" width="8" height="8"/>
+    <rect x="50" y="24" width="8" height="8"/>
+    <rect x="34" y="24" width="8" height="8"/>
+    <rect x="42" y="24" width="8" height="8"/>
+    <rect x="38" y="32" width="8" height="8"/>
+  </g>
+
+  <!-- M main -->
+  <g fill="#f0a500">
+    <rect x="18" y="16" width="8" height="52"/>
+    <rect x="58" y="16" width="8" height="52"/>
+    <rect x="26" y="16" width="8" height="8"/>
+    <rect x="50" y="16" width="8" height="8"/>
+    <rect x="26" y="24" width="8" height="8"/>
+    <rect x="50" y="24" width="8" height="8"/>
+    <rect x="34" y="24" width="8" height="8"/>
+    <rect x="42" y="24" width="8" height="8"/>
+    <rect x="38" y="32" width="8" height="8"/>
+  </g>
+
+  <!-- top-edge highlight -->
+  <g fill="#ffd700">
+    <rect x="18" y="16" width="8" height="2"/>
+    <rect x="26" y="16" width="8" height="2"/>
+    <rect x="50" y="16" width="8" height="2"/>
+    <rect x="58" y="16" width="8" height="2"/>
+  </g>
+</svg>
