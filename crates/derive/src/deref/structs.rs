@@ -17,8 +17,8 @@ impl Render for StructSyntax {
             .fields
             .iter()
             .enumerate()
-            .filter_map(|(i, field)| Field::parse(i, field).ok())
-            .collect();
+            .map(|(i, field)| Field::parse(i, field))
+            .collect::<syn::Result<Vec<_>>>()?;
 
         let field = fields
             .iter()

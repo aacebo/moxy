@@ -19,7 +19,9 @@ impl Render for StructSyntax {
             .fields
             .iter()
             .enumerate()
-            .filter_map(|(i, field)| Field::parse(i, field).ok())
+            .map(|(i, field)| Field::parse(i, field))
+            .collect::<syn::Result<Vec<_>>>()?
+            .into_iter()
             .filter(|field| field.attrs().exists("build"))
             .collect();
 

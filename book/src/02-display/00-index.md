@@ -39,6 +39,16 @@ struct User {
 }
 ```
 
+Multiple `#[moxy(...)]` attributes on the same item are merged, so these two forms are equivalent:
+
+```rust
+#[moxy(display(debug, pretty))]
+
+// same as:
+#[moxy(display(debug))]
+#[moxy(display(pretty))]
+```
+
 ## What's Next
 
 - [Formats](./01-formats.md) — debug, compact, keyvalue, map

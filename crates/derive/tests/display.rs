@@ -382,6 +382,47 @@ fn test_field_expr() {
     assert_eq!(v.to_string(), "double: 10");
 }
 
+// Split attribute merging — each pair should behave like the combined single attribute.
+
+#[derive(Display)]
+#[moxy(display(alias = "Foo"))]
+#[moxy(display(compact))]
+pub struct SplitStyleAndAlias {
+    name: String,
+    email: String,
+}
+
+#[derive(Display)]
+#[moxy(display(debug))]
+#[moxy(display(pretty))]
+pub struct SplitDebugPretty {
+    name: String,
+    email: String,
+}
+
+#[test]
+fn test_split_style_and_alias() {
+    let v = SplitStyleAndAlias {
+        name: "John".into(),
+        email: "john@example.com".into(),
+    };
+    // compact mode outputs field values space-separated (struct name/alias unused)
+    assert_eq!(v.to_string(), "John john@example.com");
+}
+
+#[test]
+fn test_split_debug_pretty() {
+    let v = SplitDebugPretty {
+        name: "John".into(),
+        email: "john@example.com".into(),
+    };
+    // equivalent to #[moxy(display(debug, pretty))]
+    assert_eq!(
+        v.to_string(),
+        "SplitDebugPretty {\n    name: \"John\",\n    email: \"john@example.com\",\n}"
+    );
+}
+
 #[cfg(feature = "json")]
 mod json {
     use moxy_derive::Display;

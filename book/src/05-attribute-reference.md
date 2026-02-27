@@ -17,7 +17,24 @@ All moxy attributes use the `#[moxy(...)]` syntax. This page is a quick referenc
 | `display(alias = "name")` | Rename the type in output | `#[moxy(display(alias = "Person"))]` |
 | `display("fmt", exprs...)` | Custom format string | `#[moxy(display("{}", self.name))]` |
 
-Modifiers can be combined: `#[moxy(display(debug, pretty, color))]`
+Modifiers can be combined in a single attribute: `#[moxy(display(debug, pretty, color))]`
+
+They can also be split across multiple `#[moxy(...)]` attributes — arguments are merged automatically:
+
+```rust
+#[moxy(display(debug))]
+#[moxy(display(pretty))]    // equivalent to #[moxy(display(debug, pretty))]
+```
+
+Specifying the same option twice with different values is a compile error:
+
+```rust
+#[moxy(display(alias = "A"))]
+#[moxy(display(alias = "B"))]  // error: conflicting values for `alias`
+
+#[moxy(display(compact))]
+#[moxy(display(debug))]        // error: conflicting display styles
+```
 
 ## Display — Field Level
 

@@ -17,7 +17,7 @@ impl Render for StructSyntax {
         let ident = &args.input.ident;
         let (impl_generics, type_generics, where_generics) = &args.input.generics.split_for_impl();
         let attributes = Attrs::parse(&args.input.attrs)?;
-        let display = attributes.get("display");
+        let display = attributes.get("display")?;
         let display_attr = display.iter().find_map(|arg| arg.as_attr());
         let custom_fmt = display_attr.and_then(|attr| {
             attr.args().iter().find_map(|arg| {
@@ -32,14 +32,28 @@ impl Render for StructSyntax {
             })
         });
 
-        let style = display_attr.and_then(|attr| {
-            attr.args().iter().find_map(|arg| {
-                let name = arg.path().get_ident()?.to_string();
-                let is_style = matches!(name.as_str(), "debug" | "compact" | "keyvalue" | "map")
-                    || cfg!(feature = "json") && name == "json";
-                is_style.then_some(name)
-            })
-        });
+        let style = if let Some(attr) = display_attr {
+            let styles: Vec<_> = attr
+                .args()
+                .iter()
+                .filter_map(|arg| {
+                    let name = arg.path().get_ident()?.to_string();
+                    let is_style =
+                        matches!(name.as_str(), "debug" | "compact" | "keyvalue" | "map")
+                            || cfg!(feature = "json") && name == "json";
+                    is_style.then_some((name, arg.path().clone()))
+                })
+                .collect();
+            if styles.len() > 1 {
+                return Err(syn::Error::new_spanned(
+                    &styles[1].1,
+                    "conflicting display styles; only one style may be specified",
+                ));
+            }
+            styles.into_iter().next().map(|(name, _)| name)
+        } else {
+            None
+        };
 
         let pretty = display_attr
             .map(|attr| attr.exists("pretty"))
@@ -75,17 +89,24 @@ impl Render for StructSyntax {
             .fields
             .iter()
             .enumerate()
-            .filter_map(|(i, field)| Field::parse(i, field).ok())
-            .collect();
+            .map(|(i, field)| Field::parse(i, field))
+            .collect::<syn::Result<Vec<_>>>()?;
 
-        let visible_fields: Vec<&Field> = fields
+        let visible_fields = fields
             .iter()
-            .filter(|f| {
-                let field_display = f.attrs().get("display");
+            .map(|f| -> syn::Result<Option<&Field>> {
+                let field_display = f.attrs().get("display")?;
                 let field_attr = field_display.iter().find_map(|a| a.as_attr());
-                !field_attr.map(|a| a.exists("skip")).unwrap_or(false)
+                Ok(if field_attr.map(|a| a.exists("skip")).unwrap_or(false) {
+                    None
+                } else {
+                    Some(f)
+                })
             })
-            .collect();
+            .collect::<syn::Result<Vec<_>>>()?
+            .into_iter()
+            .flatten()
+            .collect::<Vec<_>>();
 
         let is_named = matches!(args.data.fields, syn::Fields::Named(_));
         let is_unit = matches!(args.data.fields, syn::Fields::Unit);
@@ -106,7 +127,7 @@ impl Render for StructSyntax {
                 &name_str,
                 pretty,
                 theme.as_deref(),
-            )
+            )?
         } else {
             render_default(
                 &visible_fields,
@@ -114,7 +135,7 @@ impl Render for StructSyntax {
                 &name_str,
                 pretty,
                 theme.as_deref(),
-            )
+            )?
         };
 
         #[cfg(feature = "color")]
@@ -161,7 +182,7 @@ fn render_default(
     name: &str,
     pretty: bool,
     theme: Option<&str>,
-) -> TokenStream {
+) -> syn::Result<TokenStream> {
     let _ = &theme;
     #[cfg(feature = "color")]
     if let Some(t) = theme {
@@ -180,7 +201,7 @@ fn render_default(
 
             for (i, f) in fields.iter().enumerate() {
                 let fname = f.name();
-                let dname = f.display_name();
+                let dname = f.display_name()?;
                 if pretty {
                     fmt.push_str("    {}{}{}{}");
                 } else {
@@ -234,7 +255,7 @@ fn render_default(
             args.push(quote! { ")" #pc });
         }
 
-        return quote! { ::std::write!(f, #fmt, #(#args),*) };
+        return Ok(quote! { ::std::write!(f, #fmt, #(#args),*) });
     }
 
     let mut fmt = String::new();
@@ -248,10 +269,10 @@ fn render_default(
             let fname = f.name();
             if pretty {
                 fmt.push_str("    ");
-                fmt.push_str(&f.display_name());
+                fmt.push_str(&f.display_name()?);
                 fmt.push_str(": {},\n");
             } else {
-                fmt.push_str(&f.display_name());
+                fmt.push_str(&f.display_name()?);
                 fmt.push_str(": {}");
                 if i + 1 < fields.len() {
                     fmt.push_str(", ");
@@ -281,7 +302,7 @@ fn render_default(
         fmt.push(')');
     }
 
-    quote! { ::std::write!(f, #fmt, #(#args),*) }
+    Ok(quote! { ::std::write!(f, #fmt, #(#args),*) })
 }
 
 fn render_debug(
@@ -290,7 +311,7 @@ fn render_debug(
     name: &str,
     pretty: bool,
     theme: Option<&str>,
-) -> TokenStream {
+) -> syn::Result<TokenStream> {
     let _ = &theme;
     #[cfg(feature = "color")]
     if let Some(t) = theme {
@@ -311,7 +332,7 @@ fn render_debug(
 
             for (i, f) in fields.iter().enumerate() {
                 let fname = f.name();
-                let dname = f.display_name();
+                let dname = f.display_name()?;
                 if pretty {
                     fmt.push_str("    {}{}{}{}");
                 } else {
@@ -364,25 +385,25 @@ fn render_debug(
             args.push(quote! { ")" #pc });
         }
 
-        return quote! { ::std::write!(f, #fmt, #(#args),*) };
+        return Ok(quote! { ::std::write!(f, #fmt, #(#args),*) });
     }
 
     if !pretty {
         if is_named {
-            let entries: Vec<_> = fields
+            let entries = fields
                 .iter()
                 .map(|f| {
                     let fname = f.name();
-                    let fname_str = f.display_name();
-                    quote! { .field(#fname_str, &self.#fname) }
+                    let fname_str = f.display_name()?;
+                    Ok(quote! { .field(#fname_str, &self.#fname) })
                 })
-                .collect();
+                .collect::<syn::Result<Vec<_>>>()?;
 
-            return quote! {
+            return Ok(quote! {
                 f.debug_struct(#name)
                     #(#entries)*
                     .finish()
-            };
+            });
         }
 
         let entries: Vec<_> = fields
@@ -393,11 +414,11 @@ fn render_debug(
             })
             .collect();
 
-        return quote! {
+        return Ok(quote! {
             f.debug_tuple(#name)
                 #(#entries)*
                 .finish()
-        };
+        });
     }
 
     let mut fmt = String::new();
@@ -411,7 +432,7 @@ fn render_debug(
         for f in fields.iter() {
             let fname = f.name();
             fmt.push_str("    ");
-            fmt.push_str(&f.display_name());
+            fmt.push_str(&f.display_name()?);
             fmt.push_str(": {:?},\n");
             args.push(quote! { self.#fname });
         }
@@ -429,10 +450,10 @@ fn render_debug(
         fmt.push(')');
     }
 
-    quote! { ::std::write!(f, #fmt, #(#args),*) }
+    Ok(quote! { ::std::write!(f, #fmt, #(#args),*) })
 }
 
-fn render_compact(fields: &[&Field]) -> TokenStream {
+fn render_compact(fields: &[&Field]) -> syn::Result<TokenStream> {
     let mut fmt = String::new();
     let mut args = Vec::new();
 
@@ -447,10 +468,14 @@ fn render_compact(fields: &[&Field]) -> TokenStream {
         args.push(quote! { self.#fname });
     }
 
-    quote! { ::std::write!(f, #fmt, #(#args),*) }
+    Ok(quote! { ::std::write!(f, #fmt, #(#args),*) })
 }
 
-fn render_keyvalue(fields: &[&Field], pretty: bool, theme: Option<&str>) -> TokenStream {
+fn render_keyvalue(
+    fields: &[&Field],
+    pretty: bool,
+    theme: Option<&str>,
+) -> syn::Result<TokenStream> {
     let _ = &theme;
     #[cfg(feature = "color")]
     if let Some(t) = theme {
@@ -461,7 +486,7 @@ fn render_keyvalue(fields: &[&Field], pretty: bool, theme: Option<&str>) -> Toke
 
         for (i, f) in fields.iter().enumerate() {
             let fname = f.name();
-            let dname = f.display_name();
+            let dname = f.display_name()?;
             fmt.push_str("{}{}{}");
             args.push(quote! { #dname #fc });
             args.push(quote! { "=" #pc });
@@ -472,7 +497,7 @@ fn render_keyvalue(fields: &[&Field], pretty: bool, theme: Option<&str>) -> Toke
             }
         }
 
-        return quote! { ::std::write!(f, #fmt, #(#args),*) };
+        return Ok(quote! { ::std::write!(f, #fmt, #(#args),*) });
     }
 
     let sep = if pretty { "\n" } else { " " };
@@ -481,7 +506,7 @@ fn render_keyvalue(fields: &[&Field], pretty: bool, theme: Option<&str>) -> Toke
 
     for (i, f) in fields.iter().enumerate() {
         let fname = f.name();
-        fmt.push_str(&f.display_name());
+        fmt.push_str(&f.display_name()?);
         fmt.push_str("={}");
 
         if i + 1 < fields.len() {
@@ -490,10 +515,10 @@ fn render_keyvalue(fields: &[&Field], pretty: bool, theme: Option<&str>) -> Toke
         args.push(quote! { self.#fname });
     }
 
-    quote! { ::std::write!(f, #fmt, #(#args),*) }
+    Ok(quote! { ::std::write!(f, #fmt, #(#args),*) })
 }
 
-fn render_map(fields: &[&Field], pretty: bool, theme: Option<&str>) -> TokenStream {
+fn render_map(fields: &[&Field], pretty: bool, theme: Option<&str>) -> syn::Result<TokenStream> {
     let _ = &theme;
     #[cfg(feature = "color")]
     if let Some(t) = theme {
@@ -510,7 +535,7 @@ fn render_map(fields: &[&Field], pretty: bool, theme: Option<&str>) -> TokenStre
 
         for (i, f) in fields.iter().enumerate() {
             let fname = f.name();
-            let dname = f.display_name();
+            let dname = f.display_name()?;
 
             if pretty {
                 fmt.push_str("    {}{}{}{}");
@@ -538,7 +563,7 @@ fn render_map(fields: &[&Field], pretty: bool, theme: Option<&str>) -> TokenStre
             quote! { " }" #pc }
         });
 
-        return quote! { ::std::write!(f, #fmt, #(#args),*) };
+        return Ok(quote! { ::std::write!(f, #fmt, #(#args),*) });
     }
 
     let mut fmt = String::new();
@@ -551,10 +576,10 @@ fn render_map(fields: &[&Field], pretty: bool, theme: Option<&str>) -> TokenStre
 
         if pretty {
             fmt.push_str("    ");
-            fmt.push_str(&f.display_name());
+            fmt.push_str(&f.display_name()?);
             fmt.push_str(": {},\n");
         } else {
-            fmt.push_str(&f.display_name());
+            fmt.push_str(&f.display_name()?);
             fmt.push_str(": {}");
 
             if i + 1 < fields.len() {
@@ -567,7 +592,7 @@ fn render_map(fields: &[&Field], pretty: bool, theme: Option<&str>) -> TokenStre
 
     fmt.push_str(if pretty { "}}" } else { " }}" });
 
-    quote! { ::std::write!(f, #fmt, #(#args),*) }
+    Ok(quote! { ::std::write!(f, #fmt, #(#args),*) })
 }
 
 fn render_custom_fmt(
@@ -614,21 +639,21 @@ fn render_custom_fmt(
 }
 
 #[cfg(feature = "json")]
-fn render_json(fields: &[&Field], is_named: bool, pretty: bool) -> TokenStream {
+fn render_json(fields: &[&Field], is_named: bool, pretty: bool) -> syn::Result<TokenStream> {
     if is_named {
-        let inserts: Vec<_> = fields
+        let inserts = fields
             .iter()
             .map(|f| {
                 let fname = f.name();
-                let dname = f.display_name();
-                quote! {
+                let dname = f.display_name()?;
+                Ok(quote! {
                     __map.insert(
                         #dname.into(),
                         ::serde_json::to_value(&self.#fname).unwrap_or(::serde_json::Value::Null),
                     );
-                }
+                })
             })
-            .collect();
+            .collect::<syn::Result<Vec<_>>>()?;
 
         let serialize = if pretty {
             quote! { ::serde_json::to_string_pretty(&__val) }
@@ -636,12 +661,12 @@ fn render_json(fields: &[&Field], is_named: bool, pretty: bool) -> TokenStream {
             quote! { ::serde_json::to_string(&__val) }
         };
 
-        quote! {
+        Ok(quote! {
             let mut __map = ::serde_json::Map::new();
             #(#inserts)*
             let __val = ::serde_json::Value::Object(__map);
             ::std::write!(f, "{}", #serialize.unwrap_or_default())
-        }
+        })
     } else {
         let pushes: Vec<_> = fields
             .iter()
@@ -661,12 +686,12 @@ fn render_json(fields: &[&Field], is_named: bool, pretty: bool) -> TokenStream {
             quote! { ::serde_json::to_string(&__val) }
         };
 
-        quote! {
+        Ok(quote! {
             let mut __arr = ::std::vec::Vec::new();
             #(#pushes)*
             let __val = ::serde_json::Value::Array(__arr);
             ::std::write!(f, "{}", #serialize.unwrap_or_default())
-        }
+        })
     }
 }
 
@@ -677,7 +702,7 @@ fn render_style(
     name: &str,
     pretty: bool,
     theme: Option<&str>,
-) -> TokenStream {
+) -> syn::Result<TokenStream> {
     match style {
         "debug" => render_debug(fields, is_named, name, pretty, theme),
         "compact" => render_compact(fields),

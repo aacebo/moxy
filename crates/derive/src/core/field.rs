@@ -39,10 +39,9 @@ impl Field {
         &self.ty
     }
 
-    pub fn display_name(&self) -> String {
-        let display = self.attrs.get("display");
-
-        display
+    pub fn display_name(&self) -> syn::Result<String> {
+        let display = self.attrs.get("display")?;
+        Ok(display
             .iter()
             .find_map(|a| a.as_attr())
             .and_then(|attr| {
@@ -57,7 +56,7 @@ impl Field {
                     }
                 })
             })
-            .unwrap_or_else(|| self.name.to_string())
+            .unwrap_or_else(|| self.name.to_string()))
     }
 }
 
