@@ -5,7 +5,7 @@ Every field annotated with `#[moxy(build)]` gets a fluent setter method on the g
 ## `V: Into<T>` Signature
 
 ```rust
-use moxy::derive::Build;
+use moxy::Build;
 
 #[derive(Build, Default)]
 struct Server {
@@ -27,7 +27,7 @@ Required setters consume the builder and return a new type, advancing the typest
 Only annotate the fields you want in the builder. Fields without `#[moxy(build)]` are not exposed as setters — they receive `Default::default()` when `build()` is called:
 
 ```rust
-# use moxy::derive::Build;
+# use moxy::Build;
 #
 #[derive(Build, Default)]
 struct Connection {
@@ -47,7 +47,7 @@ assert_eq!(conn.timeout, 0u64);
 A field annotated with bare `#[moxy(build)]` is **required** — `build()` is not available until all required fields are set. Forgetting one is a compile error:
 
 ```rust,compile_fail
-# use moxy::derive::Build;
+# use moxy::Build;
 #
 #[derive(Build, Default)]
 struct Config {
@@ -71,7 +71,7 @@ Config::new().host("localhost").build();
 Setting a required field twice is also a compile error — the setter is consumed after use:
 
 ```rust,compile_fail
-# use moxy::derive::Build;
+# use moxy::Build;
 #
 # #[derive(Build, Default)]
 # struct Config {
@@ -97,7 +97,7 @@ To make a field optional, provide a fallback with [`default = <expr>`](./02-defa
 Fields with an `Option<T>` type are automatically optional — no `default` attribute needed. The setter accepts the inner type `T` and wraps it in `Some`:
 
 ```rust
-# use moxy::derive::Build;
+# use moxy::Build;
 #
 #[derive(Build, Default)]
 struct Profile {
@@ -121,7 +121,7 @@ assert_eq!(p.bio, Some("hello".to_string()));
 Required setters can be called in any order:
 
 ```rust
-# use moxy::derive::Build;
+# use moxy::Build;
 #
 # #[derive(Build, Default)]
 # struct Config {

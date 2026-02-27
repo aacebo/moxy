@@ -7,7 +7,7 @@ The `Display` derive macro implements `std::fmt::Display` for your structs. It s
 Without any attributes, `Display` produces a struct-literal style output:
 
 ```rust
-use moxy::derive::Display;
+use moxy::Display;
 
 #[derive(Display)]
 struct User {
@@ -28,7 +28,7 @@ assert_eq!(format!("{user}"), "User { name: John, email: john@example.com }");
 Display behavior is controlled through `#[moxy(display(...))]` attributes at the struct level and field level:
 
 ```rust
-# use moxy::derive::Display;
+# use moxy::Display;
 #
 #[derive(Display)]
 #[moxy(display(debug, pretty))]      // struct-level: format + modifiers

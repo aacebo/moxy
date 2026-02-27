@@ -7,7 +7,7 @@ Instead of using a built-in format, you can provide a custom format string. Fiel
 Reference fields by name inside curly braces:
 
 ```rust
-use moxy::derive::Display;
+use moxy::Display;
 
 #[derive(Display)]
 #[moxy(display("hi! my name is {name} and my email is {email}"))]
@@ -40,7 +40,7 @@ Use `std::fmt`-style positional arguments with arbitrary Rust expressions. The f
 Access fields through `self`:
 
 ```rust
-# use moxy::derive::Display;
+# use moxy::Display;
 #
 #[derive(Display)]
 #[moxy(display("{}", self.name))]
@@ -56,7 +56,7 @@ struct User {
 Call methods on `self`:
 
 ```rust
-# use moxy::derive::Display;
+# use moxy::Display;
 #
 #[derive(Display)]
 #[moxy(display("{}", self.greeting()))]
@@ -78,7 +78,7 @@ impl User {
 Any valid Rust expression works:
 
 ```rust
-# use moxy::derive::Display;
+# use moxy::Display;
 #
 #[derive(Display)]
 #[moxy(display("double: {}", count * 2))]

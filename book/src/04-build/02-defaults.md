@@ -5,7 +5,7 @@ Use `default = <expr>` inside `build(...)` to make a field optional in the build
 ## Basic Default
 
 ```rust
-use moxy::derive::Build;
+use moxy::Build;
 
 #[derive(Build, Default)]
 struct Server {
@@ -32,7 +32,7 @@ assert_eq!(s.host, "0.0.0.0");
 The default expression is passed through the same `Into<T>` conversion used by the setter, so it does not need to be the exact field type — it only needs to implement `Into<T>`:
 
 ```rust
-# use moxy::derive::Build;
+# use moxy::Build;
 #
 #[derive(Build, Default)]
 struct App {
@@ -55,7 +55,7 @@ struct App {
 Any valid Rust expression works — including named constants, function calls, and more complex expressions:
 
 ```rust
-# use moxy::derive::Build;
+# use moxy::Build;
 #
 const DEFAULT_RETRIES: u32 = 3;
 

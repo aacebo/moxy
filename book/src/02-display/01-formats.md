@@ -7,7 +7,7 @@ The `Display` derive supports several built-in format modes. Each is specified a
 No attribute needed. Produces struct-literal style output with the type name, field names, and unquoted values:
 
 ```rust
-# use moxy::derive::Display;
+# use moxy::Display;
 #
 #[derive(Display)]
 struct User {
@@ -23,7 +23,7 @@ struct User {
 Wraps string values in quotes, similar to Rust's `Debug` trait:
 
 ```rust
-# use moxy::derive::Display;
+# use moxy::Display;
 #
 #[derive(Display)]
 #[moxy(display(debug))]
@@ -40,7 +40,7 @@ struct User {
 Values only, space-separated. No type name, no field names, no punctuation:
 
 ```rust
-# use moxy::derive::Display;
+# use moxy::Display;
 #
 #[derive(Display)]
 #[moxy(display(compact))]
@@ -57,7 +57,7 @@ struct User {
 Field-value pairs separated by `=`, space-delimited:
 
 ```rust
-# use moxy::derive::Display;
+# use moxy::Display;
 #
 #[derive(Display)]
 #[moxy(display(keyvalue))]
@@ -74,7 +74,7 @@ struct User {
 Anonymous map style — like default but without the type name:
 
 ```rust
-# use moxy::derive::Display;
+# use moxy::Display;
 #
 #[derive(Display)]
 #[moxy(display(map))]

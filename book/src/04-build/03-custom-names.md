@@ -5,7 +5,7 @@ By default the builder setter is named after the struct field. Pass a string lit
 ## Renaming a Setter
 
 ```rust
-use moxy::derive::Build;
+use moxy::Build;
 
 #[derive(Build, Default)]
 struct Credentials {
@@ -30,7 +30,7 @@ The field name in the struct (`user`) and the generated setter name (`username`)
 A custom name and a `default` value can be used together:
 
 ```rust
-# use moxy::derive::Build;
+# use moxy::Build;
 #
 #[derive(Build, Default)]
 struct Service {

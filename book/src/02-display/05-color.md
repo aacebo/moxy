@@ -16,7 +16,7 @@ moxy = { version = "0.0.0", features = ["derive", "color"] }
 Use `color` for the default theme (Dracula):
 
 ```rust,ignore
-use moxy::derive::Display;
+use moxy::Display;
 
 #[derive(Display)]
 #[moxy(display(color))]

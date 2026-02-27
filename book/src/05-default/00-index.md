@@ -2,12 +2,12 @@
 
 The `Default` derive macro generates an `impl Default` for your struct, with per-field custom default values. Annotate fields with `#[moxy(default = expr)]` to override the standard `Default::default()`.
 
-When imported via `use moxy::derive::Default`, this derive shadows `std`'s built-in `Default` derive. Fields without `#[moxy(default = ...)]` still receive their normal `Default::default()` value.
+When imported via `use moxy::Default`, this derive shadows `std`'s built-in `Default` derive. Fields without `#[moxy(default = ...)]` still receive their normal `Default::default()` value.
 
 ## Basic Usage
 
 ```rust
-use moxy::derive::Default;
+use moxy::Default;
 
 #[derive(Default)]
 struct Config {

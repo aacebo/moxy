@@ -9,7 +9,7 @@ For structs with one field, `Deref` automatically targets that field. No attribu
 ### Tuple Struct
 
 ```rust
-use moxy::derive::Deref;
+use moxy::Deref;
 
 #[derive(Deref)]
 struct Email(String);
@@ -21,7 +21,7 @@ assert_eq!(email.len(), 16); // delegates to String::len
 ### Named Struct
 
 ```rust
-# use moxy::derive::Deref;
+# use moxy::Deref;
 #
 #[derive(Deref)]
 struct Email {
@@ -37,7 +37,7 @@ assert_eq!(email.len(), 16);
 When a struct has multiple fields, mark the deref target with `#[moxy(deref)]`:
 
 ```rust
-# use moxy::derive::Deref;
+# use moxy::Deref;
 #
 #[derive(Deref)]
 struct User {
@@ -63,7 +63,7 @@ Without `#[moxy(deref)]` on a multi-field struct, the macro will produce a compi
 The `Deref` derive is ideal for the newtype pattern:
 
 ```rust
-# use moxy::derive::Deref;
+# use moxy::Deref;
 #
 #[derive(Deref)]
 struct Username(String);

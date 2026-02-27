@@ -7,7 +7,7 @@ The `Default` derive works with named structs, tuple structs, and unit structs.
 The most common case — fields are referenced by name:
 
 ```rust
-use moxy::derive::Default;
+use moxy::Default;
 
 #[derive(Default)]
 struct Config {
@@ -29,7 +29,7 @@ assert_eq!(c.verbose, false);
 Positional fields work the same way:
 
 ```rust
-# use moxy::derive::Default;
+# use moxy::Default;
 #
 #[derive(Default)]
 struct Endpoint(
@@ -47,7 +47,7 @@ assert_eq!(ep.1, 3000);
 Unit structs have no fields, so `#[derive(Default)]` just generates `Self`:
 
 ```rust
-# use moxy::derive::Default;
+# use moxy::Default;
 #
 #[derive(Default)]
 struct Marker;
@@ -60,7 +60,7 @@ let _ = Marker::default();
 Type parameters are propagated through the generated `impl` block. Unannotated fields with generic types require `T: Default`:
 
 ```rust
-# use moxy::derive::Default;
+# use moxy::Default;
 #
 #[derive(Default)]
 struct Container<T: Default> {
@@ -79,7 +79,7 @@ assert_eq!(c.value, String::default());
 When both `Default` and `Build` are derived, the builder's `..Default::default()` spread picks up moxy's generated defaults automatically:
 
 ```rust
-use moxy::derive::{Build, Default};
+use moxy::{Build, Default};
 
 #[derive(Build, Default)]
 struct Server {

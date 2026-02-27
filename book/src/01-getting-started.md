@@ -27,10 +27,10 @@ See [Feature Flags](./05-features.md) for details on each feature.
 
 ## Basic Usage
 
-Import the derives you need from `moxy::derive`:
+Import the derives you need from `moxy`:
 
 ```rust
-use moxy::derive::{Default, Deref, Display};
+use moxy::{Default, Deref, Display};
 ```
 
 ### Display
@@ -38,7 +38,7 @@ use moxy::derive::{Default, Deref, Display};
 Add `#[derive(Display)]` to get a `std::fmt::Display` implementation:
 
 ```rust
-use moxy::derive::Display;
+use moxy::Display;
 
 #[derive(Display)]
 struct User {
@@ -60,7 +60,7 @@ println!("{user}");
 Add `#[derive(Deref)]` to delegate `std::ops::Deref` to an inner field:
 
 ```rust
-use moxy::derive::Deref;
+use moxy::Deref;
 
 #[derive(Deref)]
 struct Email(String);
@@ -74,7 +74,7 @@ assert_eq!(email.len(), 16);
 Add `#[derive(Build)]` to generate a fluent builder. Annotate each field you want in the builder with `#[moxy(build)]`:
 
 ```rust
-use moxy::derive::Build;
+use moxy::Build;
 
 #[derive(Build, Default)]
 struct Config {
@@ -94,7 +94,7 @@ assert_eq!(config.port, 8080);
 Add `#[derive(Default)]` and annotate fields with `#[moxy(default = expr)]` to generate a custom `Default` implementation:
 
 ```rust
-use moxy::derive::Default;
+use moxy::Default;
 
 #[derive(Default)]
 struct Config {

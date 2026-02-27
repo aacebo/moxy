@@ -7,7 +7,7 @@ The `default = <expr>` attribute accepts any valid Rust expression — string li
 String literals and typed numeric literals work directly:
 
 ```rust
-use moxy::derive::Default;
+use moxy::Default;
 
 #[derive(Default)]
 struct Server {
@@ -30,7 +30,7 @@ assert_eq!(s.tls, true);
 The default expression is wrapped in `.into()`, so any type implementing `Into<T>` for the field type works:
 
 ```rust
-# use moxy::derive::Default;
+# use moxy::Default;
 #
 #[derive(Default)]
 struct App {
@@ -53,7 +53,7 @@ assert_eq!(app.prefix, "api");
 Named constants and static values work as expressions:
 
 ```rust
-# use moxy::derive::Default;
+# use moxy::Default;
 #
 const MAX_RETRIES: u32 = 3;
 
@@ -72,7 +72,7 @@ assert_eq!(c.retries, 3);
 Any expression valid in value position works — function calls, constructor calls, and more:
 
 ```rust
-# use moxy::derive::Default;
+# use moxy::Default;
 #
 #[derive(Default)]
 struct Collection {

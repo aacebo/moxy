@@ -5,7 +5,7 @@
 ## Basic Generic Struct
 
 ```rust
-use moxy::derive::Build;
+use moxy::Build;
 
 #[derive(Build, Default)]
 struct Wrapper<T: Default> {
@@ -24,7 +24,7 @@ The generated builder is `WrapperBuilder<T, const VALUE: bool>` — type paramet
 Generic fields can have defaults too, as long as the default expression is compatible with the type parameter's bounds:
 
 ```rust
-# use moxy::derive::Build;
+# use moxy::Build;
 #
 #[derive(Build, Default)]
 struct Container<T: Default + Clone> {

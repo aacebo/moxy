@@ -15,7 +15,7 @@ serde = { version = "1", features = ["derive"] }
 Your struct must derive both `Display` and `serde::Serialize`:
 
 ```rust,ignore
-use moxy::derive::Display;
+use moxy::Display;
 
 #[derive(Display, serde::Serialize)]
 #[moxy(display(json))]

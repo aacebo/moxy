@@ -7,7 +7,7 @@ The builder uses const generic bools to track which required fields have been se
 ## Basic Usage
 
 ```rust
-use moxy::derive::Build;
+use moxy::Build;
 
 #[derive(Build, Default)]
 struct Config {

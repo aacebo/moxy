@@ -5,7 +5,7 @@ Add `pretty` to any format for multi-line output with indentation. It works as a
 ## Default + Pretty
 
 ```rust
-use moxy::derive::Display;
+use moxy::Display;
 
 #[derive(Display)]
 #[moxy(display(pretty))]
@@ -28,7 +28,7 @@ let user = User {
 ## Debug + Pretty
 
 ```rust
-# use moxy::derive::Display;
+# use moxy::Display;
 #
 #[derive(Display)]
 #[moxy(display(debug, pretty))]
@@ -48,7 +48,7 @@ struct User {
 One pair per line, no indentation:
 
 ```rust
-# use moxy::derive::Display;
+# use moxy::Display;
 #
 #[derive(Display)]
 #[moxy(display(keyvalue, pretty))]
@@ -64,7 +64,7 @@ struct User {
 ## Map + Pretty
 
 ```rust
-# use moxy::derive::Display;
+# use moxy::Display;
 #
 #[derive(Display)]
 #[moxy(display(map, pretty))]
@@ -84,7 +84,7 @@ struct User {
 Pretty printing works with tuple structs too:
 
 ```rust
-# use moxy::derive::Display;
+# use moxy::Display;
 #
 #[derive(Display)]
 #[moxy(display(pretty))]
@@ -97,7 +97,7 @@ struct Pair(String, i32);
 ```
 
 ```rust
-# use moxy::derive::Display;
+# use moxy::Display;
 #
 #[derive(Display)]
 #[moxy(display(debug, pretty))]
