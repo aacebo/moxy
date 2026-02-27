@@ -36,18 +36,34 @@ impl Render for StructSyntax {
 
         let build_methods: Vec<_> = fields
             .iter()
-            .map(|field| {
-                let name = field.name();
+            .map(|field| -> syn::Result<TokenStream> {
+                let fname = field.name();
                 let ty = field.ty();
+                let build_args = field.attrs().get("build")?;
+                let custom: Option<proc_macro2::Ident> = build_args
+                    .iter()
+                    .find_map(|arg| arg.as_attr())
+                    .and_then(|attr| {
+                        attr.args().iter().find_map(|a| {
+                            a.as_lit().and_then(|lit| match lit {
+                                syn::Lit::Str(s) => Some(format_ident!("{}", s.value())),
+                                _ => None,
+                            })
+                        })
+                    });
+                let method_name = match &custom {
+                    Some(ident) => quote!(#ident),
+                    None => quote!(#fname),
+                };
 
-                quote! {
-                    pub fn #name<V: Into<#ty>>(mut self, value: V) -> Self {
-                        self.#name = Some(value.into());
+                Ok(quote! {
+                    pub fn #method_name<V: Into<#ty>>(mut self, value: V) -> Self {
+                        self.#fname = Some(value.into());
                         self
                     }
-                }
+                })
             })
-            .collect();
+            .collect::<syn::Result<Vec<_>>>()?;
 
         let build_fields_assign: Vec<_> = fields
             .iter()

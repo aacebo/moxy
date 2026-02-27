@@ -90,3 +90,23 @@ fn test_missing_field_panics() {
         // intentionally omit .port()
         .build();
 }
+
+/// Custom builder method name overrides the field name.
+#[derive(Build, Default)]
+pub struct Credentials {
+    #[moxy(build("username"))]
+    pub user: String,
+    #[moxy(build)]
+    pub password: String,
+}
+
+#[test]
+fn test_custom_method_name() {
+    let c = Credentials::new()
+        .username("alice")
+        .password("secret")
+        .build();
+
+    assert_eq!(c.user, "alice");
+    assert_eq!(c.password, "secret");
+}
