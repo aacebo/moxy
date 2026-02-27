@@ -1,14 +1,11 @@
 mod structs;
 
-use crate::{Render, params};
+use crate::{Render, params::Params};
 
 pub fn render(tokens: proc_macro::TokenStream) -> syn::Result<proc_macro2::TokenStream> {
-    let input = syn::parse::<syn::DeriveInput>(tokens.into())?;
+    let args = syn::parse(tokens)?;
 
-    match input.data.clone() {
-        syn::Data::Struct(data) => {
-            structs::StructSyntax.render(params::StructParams { input, data })
-        }
-        _ => panic!("invalid type"),
+    match args {
+        Params::Struct(v) => structs::StructSyntax.render(v),
     }
 }
