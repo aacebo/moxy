@@ -5,5 +5,5 @@
   "rust-analyzer.cargo.targetDir": true,
   "terminal.integrated.suggest.enabled": false,
   "rust-analyzer.restartServerOnConfigChange": true,
-  "rust-analyzer.check.workspace": false
+  "rust-analyzer.check.workspace": true
 }
