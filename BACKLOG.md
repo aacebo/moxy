@@ -3,7 +3,8 @@
 ## Derive Macros
 
 - [ ] `PartialEq` — specify fields to use for comparison via `#[moxy(pk)]`
-- [ ] Error — derive error types
+- [ ] `Error` — derive error types
+- [ ] `Delegate` — delegate trait implementations to a field
 
 ## Field Attributes
 
@@ -23,209 +24,116 @@
 
 ## Derive Syntax Prototypes
 
-### Get
+### Delegate
 
-Two separate derives: `Get` for read access, `Set` for write access.
+Delegate a trait implementation to a named field. Annotate fields with `#[moxy(delegate(Trait))]`
+to opt in — the macro generates a complete `impl Trait for Struct` that forwards every method
+call to that field.
 
-**Ecosystem reference:** [getset](https://crates.io/crates/getset) (most popular — 6 derives, visibility control), [derive-getters](https://crates.io/crates/derive-getters) (simpler — ref getters + dissolve), [derive_setters](https://crates.io/crates/derive_setters) (consuming setters).
-
-Annotate fields with `#[moxy(get)]` to opt in. Consistent with how Build works.
+**Ecosystem reference:** [delegate](https://crates.io/crates/delegate) (macro-based, method-level
+forwarding), [ambassador](https://crates.io/crates/ambassador) (attribute-based, whole-trait
+delegation — closest analogue).
 
 ```rust
-#[derive(Get)]
-struct User {
-    #[moxy(get)]
-    name: String,
-    #[moxy(get)]
-    email: String,
-    password_hash: String,
+use moxy::Delegate;
+
+trait Greet {
+    fn hello(&self) -> String;
+    fn goodbye(&self) -> String;
 }
 
-let user = User { name: "alice".into(), email: "a@b.com".into(), password_hash: "...".into() };
-assert_eq!(user.name(), "alice");       // fn name(&self) -> &str
-assert_eq!(user.email(), "a@b.com");    // fn email(&self) -> &str
-// user.password_hash() — no annotation, no getter
-```
-
-**Bool fields** return `bool` by value (devs name the field `is_active` if they want that convention):
-
-```rust
-#[derive(Get)]
-struct Flags {
-    #[moxy(get)]
-    is_active: bool,
-    #[moxy(get)]
-    verified: bool,
+struct Inner;
+impl Greet for Inner {
+    fn hello(&self) -> String { "Hello!".to_string() }
+    fn goodbye(&self) -> String { "Goodbye!".to_string() }
 }
 
-assert!(flags.is_active());    // fn is_active(&self) -> bool
-assert!(flags.verified());     // fn verified(&self) -> bool
-```
-
-**Option\<T\> fields** return `Option<&Deref::Target>` via `.as_deref()`:
-
-```rust
-#[derive(Get)]
-struct Profile {
-    #[moxy(get)]
-    name: String,
-    #[moxy(get)]
-    bio: Option<String>,
-}
-
-let bio: Option<&str> = profile.bio();  // fn bio(&self) -> Option<&str>
-```
-
-**Modifiers** — `copy`, `clone`, `mutable`:
-
-```rust
-#[derive(Get)]
-struct Metrics {
-    #[moxy(get(copy))]
-    count: u32,                          // fn count(&self) -> u32
-
-    #[moxy(get(clone))]
-    label: Arc<String>,                  // fn label(&self) -> Arc<String>
-
-    #[moxy(get(mutable))]
-    buffer: Vec<u8>,                     // fn buffer(&self) -> &[u8]
-                                         // fn buffer_mut(&mut self) -> &mut Vec<u8>
-}
-```
-
-**Custom name:**
-
-```rust
-#[derive(Get)]
-struct Row {
-    #[moxy(get("id"))]
-    row_id: u64,                         // fn id(&self) -> &u64
-}
-```
-
-**Callback** — `on = expr` runs before returning. Receives `&self` context:
-
-```rust
-#[derive(Get)]
-struct Metrics {
-    #[moxy(get(on = log::debug!("accessed count")))]
-    count: u32,
+#[derive(Delegate)]
+struct Wrapper {
+    #[moxy(delegate(Greet))]
+    inner: Inner,
+    label: String,
 }
 
 // Generated:
-// fn count(&self) -> &u32 {
-//     log::debug!("accessed count");
-//     &self.count
+// impl Greet for Wrapper {
+//     fn hello(&self) -> String { self.inner.hello() }
+//     fn goodbye(&self) -> String { self.inner.goodbye() }
+// }
+
+let w = Wrapper { inner: Inner, label: "test".into() };
+assert_eq!(w.hello(), "Hello!");
+assert_eq!(w.goodbye(), "Goodbye!");
+// label is unrelated — Greet is fully covered by delegation
+```
+
+**Multiple traits from one field:**
+
+```rust
+#[derive(Delegate)]
+struct Wrapper {
+    #[moxy(delegate(Greet, Farewell))]
+    inner: Inner,
+}
+```
+
+**Different traits delegated to different fields:**
+
+```rust
+#[derive(Delegate)]
+struct App {
+    #[moxy(delegate(Greet))]
+    greeter: Greeter,
+    #[moxy(delegate(Logger))]
+    logger: Logger,
+}
+
+// Generated:
+// impl Greet for App { ... forwarded to self.greeter ... }
+// impl Logger for App { ... forwarded to self.logger ... }
+```
+
+**Generics — where bounds are inferred automatically:**
+
+```rust
+#[derive(Delegate)]
+struct Wrapper<T> {
+    #[moxy(delegate(Greet))]
+    inner: T,
+}
+
+// Generated:
+// impl<T: Greet> Greet for Wrapper<T> {
+//     fn hello(&self) -> String { self.inner.hello() }
+//     fn goodbye(&self) -> String { self.inner.goodbye() }
 // }
 ```
 
-**Doc forwarding** — `///` comments on fields are forwarded to generated methods:
+The macro adds `FieldType: Trait` to the generated `impl` where clause automatically. Struct-level
+where clauses are forwarded as-is.
+
+**Traits with associated types:**
 
 ```rust
-#[derive(Get)]
-struct User {
-    /// The user's display name
-    #[moxy(get)]
-    name: String,
+#[derive(Delegate)]
+struct StreamWrapper<S: Stream> {
+    #[moxy(delegate(Stream))]
+    inner: S,
 }
 
 // Generated:
-// /// The user's display name
-// fn name(&self) -> &String { &self.name }
-```
-
-### Set
-
-Annotate fields with `#[moxy(set)]` to opt in. Uses `Into<T>` (consistent with Build). Returns `&mut Self` for chaining.
-
-```rust
-#[derive(Set)]
-struct Config {
-    #[moxy(set)]
-    host: String,
-    #[moxy(set)]
-    port: u16,
-    read_only: bool,
-}
-
-let mut cfg = Config { host: String::new(), port: 0, read_only: true };
-cfg.set_host("localhost").set_port(8080_u16);
-// cfg.set_read_only() — no annotation, no setter
-
-assert_eq!(cfg.host, "localhost");
-assert_eq!(cfg.port, 8080);
-```
-
-**Option\<T\> fields** — setter accepts `T`, wraps in `Some` (consistent with Build):
-
-```rust
-#[derive(Set)]
-struct Profile {
-    #[moxy(set)]
-    bio: Option<String>,
-}
-
-profile.set_bio("hello");  // fn set_bio(&mut self, value: impl Into<String>) -> &mut Self
-assert_eq!(profile.bio, Some("hello".to_string()));
-```
-
-**Callback** — `on = expr` runs before assignment. The incoming value is passed as `value: T`. If the expression returns `T`, the returned value is what gets assigned (transform):
-
-```rust
-#[derive(Set)]
-struct Config {
-    #[moxy(set(on = value.to_lowercase()))]
-    host: String,
-}
-
-// Generated:
-// fn set_host(&mut self, value: impl Into<String>) -> &mut Self {
-//     let value: String = value.into();
-//     self.host = value.to_lowercase();
-//     self
-// }
-
-cfg.set_host("LOCALHOST");
-assert_eq!(cfg.host, "localhost");
-```
-
-Side effects without transforms — return `value` to pass through unchanged:
-
-```rust
-#[derive(Set)]
-struct Config {
-    #[moxy(set(on = { log::info!("host changed to {}", value); value }))]
-    host: String,
-}
-
-// Generated:
-// fn set_host(&mut self, value: impl Into<String>) -> &mut Self {
-//     let value: String = value.into();
-//     self.host = { log::info!("host changed to {}", value); value };
-//     self
+// impl<S: Stream> Stream for StreamWrapper<S> {
+//     type Item = S::Item;
+//     fn next(&mut self) -> Option<Self::Item> { self.inner.next() }
 // }
 ```
 
-**Custom name:**
+Associated types are resolved as `<FieldType as Trait>::AssocType` in the generated impl.
 
-```rust
-#[derive(Set)]
-struct Row {
-    #[moxy(set("update_id"))]
-    row_id: u64,                         // fn update_id(&mut self, value: impl Into<u64>) -> &mut Self
-}
-```
+**Limitations:**
 
-### Get/Set ecosystem comparison
-
-| Feature | moxy Get/Set | getset | derive-getters |
-|---------|-------------|--------|----------------|
-| Opt-in per field | Yes (`#[moxy(get)]`) | No (all fields, skip to exclude) | No (all fields) |
-| Option\<T\> → Option\<&T\> | Yes | No (`&Option<T>`) | No (`&Option<T>`) |
-| `Into<T>` setters | Yes | No (direct `T`) | N/A |
-| Copy/Clone modifiers | Per-field | Separate derives | No |
-| Mut getter | `get(mutable)` modifier | Separate derive | No |
-| Setter chaining | `&mut Self` | `&mut Self` | N/A |
-| Doc forwarding | Yes (`///` → method) | No | Yes |
-| Callbacks | `on = expr` (get: side effect, set: transform) | No | No |
-| Derive count | 2 (Get, Set) | 6 | 1 |
+- The trait and its implementor must be in scope at the delegation site (no auto-imports generated)
+- Delegating the same trait twice on different fields is a compile error (duplicate `impl`)
+- Traits with `Self`-returning methods (e.g. `Clone`) require `T: Clone` — the generated call
+  returns `self.inner.clone()`, which gives the inner type, not `Self`. These traits may need
+  a manual `impl` instead.
