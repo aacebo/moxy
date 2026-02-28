@@ -2,6 +2,9 @@
 
 The `Display` derive supports several built-in format modes. Each is specified as a flag in the `#[moxy(display(...))]` attribute.
 
+> [!NOTE]
+> Format flags are mutually exclusive — only one of `debug`, `compact`, `keyvalue`, `map`, or `json` can be active at a time. Modifiers like `pretty` and `color` can be combined with any format.
+
 ## Default
 
 No attribute needed. Produces struct-literal style output with the type name, field names, and unquoted values:

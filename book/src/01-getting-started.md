@@ -16,6 +16,9 @@ To enable all optional features:
 moxy = { version = "0.0.0", features = ["derive", "full"] }
 ```
 
+> [!TIP]
+> Enable `full` during development to get access to all features, then trim to only what you need before publishing.
+
 Or pick individual features:
 
 ```toml
@@ -90,6 +93,9 @@ assert_eq!(config.port, 8080);
 ```
 
 ### Default
+
+> [!NOTE]
+> `use moxy::Default` shadows Rust's built-in `Default` derive. If you need both in the same module, qualify the std one as `#[derive(std::default::Default)]`.
 
 Add `#[derive(Default)]` and annotate fields with `#[moxy(default = expr)]` to generate a custom `Default` implementation:
 

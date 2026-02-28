@@ -49,6 +49,9 @@ Multiple `#[moxy(...)]` attributes on the same item are merged, so these two for
 #[moxy(display(pretty))]
 ```
 
+> [!TIP]
+> Splitting attributes across multiple lines is useful when mixing format flags with field-level overrides — each concern can live on its own `#[moxy(...)]` line.
+
 ## What's Next
 
 - [Formats](./01-formats.md) — debug, compact, keyvalue, map

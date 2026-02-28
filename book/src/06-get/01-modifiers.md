@@ -22,6 +22,9 @@ assert!(m.is_active());    // fn is_active(&self) -> bool (bool auto-copies)
 
 Bool fields automatically return by value — no `copy` modifier needed.
 
+> [!NOTE]
+> `bool` fields always return by value regardless of modifier — you do not need `get(copy)` for booleans.
+
 ## Clone
 
 For types where you want an owned copy via `.clone()`:

@@ -56,9 +56,15 @@ let user = User {
 assert_eq!(user.len(), 16); // delegates to email.len()
 ```
 
+> [!WARNING]
+> Omitting `#[moxy(deref)]` on a multi-field struct is a compile error — the macro cannot infer which field to delegate to.
+
 Without `#[moxy(deref)]` on a multi-field struct, the macro will produce a compile error asking you to specify which field to target.
 
 ## Use Cases
+
+> [!NOTE]
+> `Deref` is intended for the newtype pattern. Delegating to an unrelated field in a multi-field struct can cause surprising behavior for callers who use `*` or method resolution.
 
 The `Deref` derive is ideal for the newtype pattern:
 

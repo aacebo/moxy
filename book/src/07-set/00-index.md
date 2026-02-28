@@ -4,6 +4,9 @@ The `Set` derive macro generates setter methods for struct fields. Annotate fiel
 
 Setters use `Into<T>` for flexible type coercion (consistent with Build) and return `&mut Self` for chaining.
 
+> [!NOTE]
+> `Set` setters return `&mut Self` and borrow mutably — they do not consume `self`. This is different from `Build` setters, which consume the builder to advance the typestate.
+
 ## Basic Usage
 
 ```rust

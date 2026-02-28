@@ -4,6 +4,9 @@ Moxy uses Cargo feature flags to keep optional functionality behind compile-time
 
 ## `derive`
 
+> [!IMPORTANT]
+> `derive` is always required — no other moxy feature works without it.
+
 Enables the derive macros (`Display`, `Deref`, `Build`). This is required to use any moxy derives.
 
 ```toml
@@ -12,6 +15,9 @@ moxy = { version = "0.0.0", features = ["derive"] }
 ```
 
 ## `json`
+
+> [!NOTE]
+> `serde` must be added as a separate dependency — moxy does not re-export it.
 
 Enables the `json` display format, which serializes structs to JSON via `serde_json`. Your crate must also depend on `serde`:
 

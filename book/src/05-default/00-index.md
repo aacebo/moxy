@@ -4,6 +4,9 @@ The `Default` derive macro generates an `impl Default` for your struct, with per
 
 When imported via `use moxy::Default`, this derive shadows `std`'s built-in `Default` derive. Fields without `#[moxy(default = ...)]` still receive their normal `Default::default()` value.
 
+> [!NOTE]
+> `use moxy::Default` shadows Rust's built-in `Default` derive. If you need both in the same module, qualify the std one explicitly: `#[derive(std::default::Default)]`.
+
 ## Basic Usage
 
 ```rust

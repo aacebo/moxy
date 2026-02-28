@@ -4,6 +4,9 @@ The `json` format serializes your struct to JSON using `serde_json`. This requir
 
 ## Setup
 
+> [!IMPORTANT]
+> The `json` feature flag must be enabled and the struct must also derive `serde::Serialize`. Without both, the `json` format flag will not compile.
+
 Enable the `json` feature in your `Cargo.toml`:
 
 ```toml

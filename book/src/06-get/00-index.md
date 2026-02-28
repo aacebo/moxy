@@ -4,6 +4,9 @@ The `Get` derive macro generates getter methods for struct fields. Annotate fiel
 
 Getters return through `Deref::Target`, so `String` fields return `&str`, `Vec<T>` returns `&[T]`, etc. Use `copy` for primitives and `clone` for types like `Arc<T>`.
 
+> [!NOTE]
+> Getters return `&Deref::Target`, not `&T`. This is more ergonomic for common types (`String` → `&str`, `Vec<T>` → `&[T]`), but for types without a natural `Deref` target, use `get(copy)` or `get(clone)` to get an owned value instead.
+
 ## Basic Usage
 
 ```rust

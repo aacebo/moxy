@@ -70,3 +70,6 @@ assert_eq!(c.retries, 3);
 ```
 
 The expression is placed inside `unwrap_or_else(|| <expr>.into())`, so it is evaluated lazily — only when the field was not set.
+
+> [!TIP]
+> Because defaults are evaluated lazily, expensive expressions like `Vec::new()` or function calls are only executed if the field was not set by the caller — there is no cost when the field is provided.

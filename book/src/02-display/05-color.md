@@ -4,6 +4,9 @@ The `color` modifier adds ANSI truecolor (24-bit RGB) output via the `colored` c
 
 ## Setup
 
+> [!IMPORTANT]
+> The `color` feature flag must be enabled. Without it, the `color` modifier is not available.
+
 Enable the `color` feature in your `Cargo.toml`:
 
 ```toml
@@ -57,6 +60,9 @@ Each theme colorizes four elements: the struct name, field names, values, and pu
 ## Combining with Formats
 
 Color works with default, debug, map, and keyvalue formats. Compact and JSON modes do not support color.
+
+> [!NOTE]
+> `compact` and `json` formats ignore the `color` modifier — ANSI codes are not injected for these modes.
 
 ```rust,ignore
 // Default + color

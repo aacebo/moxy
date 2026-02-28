@@ -2,6 +2,9 @@
 
 Every field annotated with `#[moxy(build)]` gets a fluent setter method on the generated builder. Setters accept any value that implements `Into<T>`, so callers are not forced to construct the exact field type.
 
+> [!NOTE]
+> All missing-field errors are **compile errors**, not runtime panics. The typestate guarantees that `build()` cannot be called until every required field has been set.
+
 ## `V: Into<T>` Signature
 
 ```rust
@@ -67,6 +70,9 @@ struct Config {
 //           - `ConfigBuilder<true, true>`
 Config::new().host("localhost").build();
 ```
+
+> [!CAUTION]
+> Setting a required field twice is also a compile error — the setter is consumed after first use and the updated builder type no longer has that method.
 
 Setting a required field twice is also a compile error — the setter is consumed after use:
 

@@ -12,6 +12,7 @@ preferred-dark-theme = "ayu"
 git-repository-url = "https://github.com/aacebo/moxy"
 git-repository-icon = "fab-github"
 additional-css = ["theme/moxy.css"]
+admonitions = true
 smart-punctuation = true
 definition-lists = true
 sidebar-header-nav = true

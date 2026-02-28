@@ -34,6 +34,9 @@ assert_eq!(config.port, 8080);
 
 Non-annotated fields are initialised with `Default::default()` via a struct spread.
 
+> [!NOTE]
+> `Build` requires the struct to also implement `Default` — either `#[derive(Default)]` or a manual `impl Default`. This is needed to initialise unannotated fields via the struct spread in `build()`.
+
 ## What's Next
 
 - [Setters](./01-setters.md) — `V: Into<T>` setter pattern, partial annotation, required vs optional fields
