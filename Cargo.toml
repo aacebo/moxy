@@ -40,7 +40,9 @@ workspace = true
 [features]
 default = []
 ast = ["moxy-ast"]
+fmt = ["moxy-fmt"]
 token = ["moxy-token"]
+template = ["moxy-template"]
 diagnostic = ["moxy-diagnostic"]
 macros = ["moxy-macros"]
 serde = ["moxy-ast/serde", "moxy-token/serde"]
@@ -49,5 +51,7 @@ proc-macro2 = ["moxy-token/proc-macro2"]
 [dependencies]
 moxy-ast = { path = "crates/moxy-ast", optional = true }
 moxy-diagnostic = { path = "crates/moxy-diagnostic", optional = true }
+moxy-fmt = { path = "crates/moxy-fmt", optional = true }
 moxy-macros = { path = "crates/moxy-macros", optional = true }
 moxy-token = { path = "crates/moxy-token", optional = true }
+moxy-template = { path = "crates/moxy-template", optional = true }

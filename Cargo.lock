@@ -20,7 +20,9 @@ version = "0.0.0"
 dependencies = [
  "moxy-ast",
  "moxy-diagnostic",
+ "moxy-fmt",
  "moxy-macros",
+ "moxy-template",
  "moxy-token",
 ]
 
@@ -48,12 +50,26 @@ dependencies = [
 ]
 
 [[package]]
+name = "moxy-fmt"
+version = "0.0.0"
+dependencies = [
+ "moxy-token",
+]
+
+[[package]]
 name = "moxy-macros"
 version = "0.0.0"
 dependencies = [
  "proc-macro2",
  "quote",
  "syn",
+]
+
+[[package]]
+name = "moxy-template"
+version = "0.0.0"
+dependencies = [
+ "moxy-token",
 ]
 
 [[package]]

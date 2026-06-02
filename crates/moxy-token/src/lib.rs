@@ -12,18 +12,17 @@
 extern crate proc_macro;
 
 pub mod bridge;
-pub mod parse;
-pub mod source;
-pub mod span;
-
 mod delim;
 mod group;
 mod ident;
 pub mod keyword;
 pub mod lex;
 mod literal;
+pub mod parse;
 pub mod punct;
+pub mod source;
 mod spacing;
+pub mod span;
 mod stream;
 
 pub use delim::*;
