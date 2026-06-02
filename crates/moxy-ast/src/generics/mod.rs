@@ -100,44 +100,54 @@ mod tests {
 
     use super::*;
 
-    fn parse<T: Parse>(src: &str) -> T {
-        let ts = TokenStream::from_str(src).unwrap();
-        ts.parse().parse::<T>().unwrap()
-    }
-
     fn render<T: ToTokenStream>(v: &T) -> String {
         v.to_token_stream().to_string()
     }
 
     #[test]
     fn generics_basic() {
-        let g: Generics = parse("<T>");
+        let g = moxy_token::parse!("<T>" as Generics).unwrap();
         assert_eq!(g.params.len(), 1);
         assert!(matches!(g.params.first().unwrap(), GenericParam::Type(_)));
 
-        let g2: Generics = parse("<'a, T: Clone, const N: usize>");
+        let g2 = moxy_token::parse!("<'a, T: Clone, const N: usize>" as Generics).unwrap();
         assert_eq!(g2.params.len(), 3);
         assert!(matches!(g2.params.first().unwrap(), GenericParam::Lifetime(_)));
     }
 
     #[test]
     fn generics_where() {
-        let g: Generics = parse("<T> where T: Clone");
+        let g = moxy_token::parse!("<T> where T: Clone" as Generics).unwrap();
         assert!(g.where_clause.is_some());
     }
 
     #[test]
     fn type_bounds() {
-        assert!(matches!(parse::<TypeBound>("Clone"), TypeBound::Trait(_)));
-        assert!(matches!(parse::<TypeBound>("'a"), TypeBound::Lifetime(_)));
-        assert!(matches!(parse::<TypeBound>("?Sized"), TypeBound::Trait(_)));
+        assert!(matches!(
+            moxy_token::parse!("Clone" as TypeBound).unwrap(),
+            TypeBound::Trait(_)
+        ));
+        assert!(matches!(
+            moxy_token::parse!("'a" as TypeBound).unwrap(),
+            TypeBound::Lifetime(_)
+        ));
+        assert!(matches!(
+            moxy_token::parse!("?Sized" as TypeBound).unwrap(),
+            TypeBound::Trait(_)
+        ));
     }
 
     #[test]
     fn impl_dyn_types() {
         use crate::Type;
-        assert!(matches!(parse::<Type>("impl Clone"), Type::ImplTrait(_)));
-        assert!(matches!(parse::<Type>("dyn Clone + 'a"), Type::TraitObject(_)));
-        assert_eq!(render(&parse::<Type>("impl Clone")), "impl Clone");
+        assert!(matches!(
+            moxy_token::parse!("impl Clone" as Type).unwrap(),
+            Type::ImplTrait(_)
+        ));
+        assert!(matches!(
+            moxy_token::parse!("dyn Clone + 'a" as Type).unwrap(),
+            Type::TraitObject(_)
+        ));
+        assert_eq!(render(&moxy_token::parse!("impl Clone" as Type).unwrap()), "impl Clone");
     }
 }

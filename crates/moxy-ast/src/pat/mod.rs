@@ -457,69 +457,61 @@ mod tests {
 
     use super::*;
 
-    fn parse_pat(src: &str) -> Result<Pattern, ParseError> {
-        let ts = TokenStream::from_str(src).unwrap();
-        ts.parse().parse::<Pattern>()
-    }
-
-    fn pat(src: &str) -> Pattern {
-        parse_pat(src).unwrap()
-    }
-
     fn roundtrip(src: &str) -> String {
-        pat(src).to_token_stream().to_string()
+        let p: Pattern = moxy_token::parse!(src).unwrap();
+        p.to_token_stream().to_string()
     }
 
     #[test]
     fn wildcard() {
-        assert!(matches!(pat("_"), Pattern::Wild));
+        assert!(matches!(moxy_token::parse!("_" as Pattern).unwrap(), Pattern::Wild));
         assert_eq!(roundtrip("_"), "_");
     }
 
     #[test]
     fn rest() {
-        assert!(matches!(pat(".."), Pattern::Rest));
+        assert!(matches!(moxy_token::parse!(".." as Pattern).unwrap(), Pattern::Rest));
         assert_eq!(roundtrip(".."), "..");
     }
 
     #[test]
     fn ident_binding() {
-        assert!(matches!(pat("x"), Pattern::Ident(_)));
+        assert!(matches!(moxy_token::parse!("x" as Pattern).unwrap(), Pattern::Ident(_)));
         assert_eq!(roundtrip("x"), "x");
     }
 
     #[test]
     fn mut_binding() {
-        assert!(matches!(pat("mut x"), Pattern::Ident(_)));
+        assert!(matches!(moxy_token::parse!("mut x" as Pattern).unwrap(), Pattern::Ident(_)));
     }
 
     #[test]
     fn ref_binding() {
-        assert!(matches!(pat("ref x"), Pattern::Ident(_)));
+        assert!(matches!(moxy_token::parse!("ref x" as Pattern).unwrap(), Pattern::Ident(_)));
     }
 
     #[test]
     fn tuple_pattern() {
-        assert!(matches!(pat("(a, b)"), Pattern::Tuple(_)));
+        assert!(matches!(moxy_token::parse!("(a, b)" as Pattern).unwrap(), Pattern::Tuple(_)));
     }
 
     #[test]
     fn slice_pattern() {
-        assert!(matches!(pat("[a, b]"), Pattern::Slice(_)));
+        assert!(matches!(moxy_token::parse!("[a, b]" as Pattern).unwrap(), Pattern::Slice(_)));
     }
 
     #[test]
     fn reference_pattern() {
-        assert!(matches!(pat("&x"), Pattern::Reference(_)));
+        assert!(matches!(moxy_token::parse!("&x" as Pattern).unwrap(), Pattern::Reference(_)));
     }
 
     #[test]
     fn lit_pattern() {
-        assert!(matches!(pat("42"), Pattern::Lit(_)));
+        assert!(matches!(moxy_token::parse!("42" as Pattern).unwrap(), Pattern::Lit(_)));
     }
 
     #[test]
     fn or_pattern() {
-        assert!(matches!(pat("A | B"), Pattern::Or(_)));
+        assert!(matches!(moxy_token::parse!("A | B" as Pattern).unwrap(), Pattern::Or(_)));
     }
 }

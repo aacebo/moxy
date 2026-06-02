@@ -69,20 +69,13 @@ mod tests {
     use super::attr::*;
     use super::*;
 
-    fn parse<T: Parse>(src: &str) -> T {
-        let ts = TokenStream::from_str(src).unwrap();
-        ts.parse().parse::<T>().unwrap()
-    }
-
     fn render<T: ToTokenStream>(v: &T) -> String {
         v.to_token_stream().to_string()
     }
 
-    // `TokenStream` Display spaces top-level tokens (only the lifetime tick is
-    // glued), so `#`/`#!` render with a space before the `[...]` group.
     #[test]
     fn outer_empty() {
-        let a: Attribute = parse("#[inline]");
+        let a = moxy_token::parse!("#[inline]" as Attribute).unwrap();
         assert_eq!(a.style, AttrStyle::Outer);
         assert!(matches!(a.args, AttrArgs::Empty));
         assert_eq!(render(&a), "# [inline]");
@@ -90,7 +83,7 @@ mod tests {
 
     #[test]
     fn outer_delimited() {
-        let a: Attribute = parse("#[derive(Clone, Debug)]");
+        let a = moxy_token::parse!("#[derive(Clone, Debug)]" as Attribute).unwrap();
         assert_eq!(a.style, AttrStyle::Outer);
         assert!(matches!(a.args, AttrArgs::Delimited { .. }));
         assert_eq!(render(&a), "# [derive (Clone , Debug)]");
@@ -98,7 +91,7 @@ mod tests {
 
     #[test]
     fn inner() {
-        let a: Attribute = parse("#![no_std]");
+        let a = moxy_token::parse!("#![no_std]" as Attribute).unwrap();
         assert_eq!(a.style, AttrStyle::Inner);
         assert_eq!(render(&a), "# ! [no_std]");
     }
@@ -119,21 +112,24 @@ mod tests {
 
     #[test]
     fn name_value() {
-        let a: Attribute = parse("#[path = \"x.rs\"]");
+        let a = moxy_token::parse!("#[path = \"x.rs\"]" as Attribute).unwrap();
         assert!(matches!(a.args, AttrArgs::NameValue(_)));
         assert_eq!(render(&a), "# [path = \"x.rs\"]");
     }
 
     #[test]
     fn cfg_delimited() {
-        let a: Attribute = parse("#[cfg(feature = \"x\")]");
+        let a = moxy_token::parse!("#[cfg(feature = \"x\")]" as Attribute).unwrap();
         assert!(matches!(a.args, AttrArgs::Delimited { .. }));
     }
 
     #[test]
     fn meta_forms() {
-        assert!(matches!(parse::<Meta>("inline"), Meta::Path(_)));
-        assert!(matches!(parse::<Meta>("derive(Clone)"), Meta::List(_)));
-        assert!(matches!(parse::<Meta>("path = \"x\""), Meta::NameValue(_)));
+        assert!(matches!(moxy_token::parse!("inline" as Meta).unwrap(), Meta::Path(_)));
+        assert!(matches!(moxy_token::parse!("derive(Clone)" as Meta).unwrap(), Meta::List(_)));
+        assert!(matches!(
+            moxy_token::parse!("path = \"x\"" as Meta).unwrap(),
+            Meta::NameValue(_)
+        ));
     }
 }

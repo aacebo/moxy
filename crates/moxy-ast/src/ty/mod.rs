@@ -238,69 +238,73 @@ mod tests {
 
     use super::*;
 
-    fn parse(src: &str) -> Type {
-        let ts = TokenStream::from_str(src).unwrap();
-        ts.parse().parse::<Type>().unwrap()
+    fn roundtrip(src: &str) -> String {
+        let t: Type = moxy_token::parse!(src).unwrap();
+        t.to_token_stream().to_string()
     }
 
-    fn roundtrip(src: &str) -> String {
-        parse(src).to_token_stream().to_string()
+    fn parse_err(src: &str) -> bool {
+        moxy_token::parse!(src).map(|_: Type| ()).is_err()
     }
 
     #[test]
     fn never_infer_array_macro() {
-        assert!(matches!(parse("!"), Type::Never));
-        assert!(matches!(parse("_"), Type::Infer));
-        assert!(matches!(parse("[u8; 4]"), Type::Array(_)));
-        assert!(matches!(parse("[u8]"), Type::Slice(_)));
-        assert!(matches!(parse("m!(x)"), Type::Macro(_)));
+        assert!(matches!(moxy_token::parse!("!" as Type).unwrap(), Type::Never));
+        assert!(matches!(moxy_token::parse!("_" as Type).unwrap(), Type::Infer));
+        assert!(matches!(moxy_token::parse!("[u8; 4]" as Type).unwrap(), Type::Array(_)));
+        assert!(matches!(moxy_token::parse!("[u8]" as Type).unwrap(), Type::Slice(_)));
+        assert!(matches!(moxy_token::parse!("m!(x)" as Type).unwrap(), Type::Macro(_)));
         assert_eq!(roundtrip("[u8 ; 4]"), "[u8 ; 4]");
     }
 
     #[test]
     fn fn_trait_bounds() {
-        assert!(matches!(parse("Fn(u8) -> bool"), Type::Path(_)));
-        // `Box<dyn Fn(u8) -> bool>` and `dyn FnMut()` should parse.
-        assert!(matches!(parse("Box<dyn Fn(u8) -> bool>"), Type::Path(_)));
-        assert!(matches!(parse("dyn FnMut()"), Type::TraitObject(_)));
+        assert!(matches!(moxy_token::parse!("Fn(u8) -> bool" as Type).unwrap(), Type::Path(_)));
+        assert!(matches!(
+            moxy_token::parse!("Box<dyn Fn(u8) -> bool>" as Type).unwrap(),
+            Type::Path(_)
+        ));
+        assert!(matches!(
+            moxy_token::parse!("dyn FnMut()" as Type).unwrap(),
+            Type::TraitObject(_)
+        ));
     }
 
     #[test]
     fn reference() {
-        assert!(matches!(parse("&'a T"), Type::Reference { .. }));
-        assert!(matches!(parse("&mut T"), Type::Reference { .. }));
-        assert!(matches!(parse("&T"), Type::Reference { .. }));
+        assert!(matches!(moxy_token::parse!("&'a T" as Type).unwrap(), Type::Reference { .. }));
+        assert!(matches!(
+            moxy_token::parse!("&mut T" as Type).unwrap(),
+            Type::Reference { .. }
+        ));
+        assert!(matches!(moxy_token::parse!("&T" as Type).unwrap(), Type::Reference { .. }));
     }
 
     #[test]
     fn pointer() {
-        assert!(matches!(parse("*const T"), Type::Pointer { .. }));
-        assert!(matches!(parse("*mut T"), Type::Pointer { .. }));
+        assert!(matches!(
+            moxy_token::parse!("*const T" as Type).unwrap(),
+            Type::Pointer { .. }
+        ));
+        assert!(matches!(moxy_token::parse!("*mut T" as Type).unwrap(), Type::Pointer { .. }));
         assert!(parse_err("*T"));
-    }
-
-    fn parse_err(src: &str) -> bool {
-        let ts = TokenStream::from_str(src).unwrap();
-        ts.parse().parse::<Type>().is_err()
     }
 
     #[test]
     fn slice() {
-        assert!(matches!(parse("[T]"), Type::Slice { .. }));
+        assert!(matches!(moxy_token::parse!("[T]" as Type).unwrap(), Type::Slice { .. }));
     }
 
     #[test]
     fn paren_vs_tuple() {
-        assert!(matches!(parse("(T)"), Type::Paren { .. }));
-        assert!(matches!(parse("(A, B)"), Type::Tuple { .. }));
-        assert!(matches!(parse("(T,)"), Type::Tuple { .. }));
-        assert!(matches!(parse("()"), Type::Tuple { .. }));
+        assert!(matches!(moxy_token::parse!("(T)" as Type).unwrap(), Type::Paren { .. }));
+        assert!(matches!(moxy_token::parse!("(A, B)" as Type).unwrap(), Type::Tuple { .. }));
+        assert!(matches!(moxy_token::parse!("(T,)" as Type).unwrap(), Type::Tuple { .. }));
+        assert!(matches!(moxy_token::parse!("()" as Type).unwrap(), Type::Tuple { .. }));
     }
 
     #[test]
     fn roundtrips() {
-        // (source, rendered) — Display spaces top-level tokens; the lifetime
-        // tick is the only glued case.
         for (src, rendered) in [
             ("&'a T", "& 'a T"),
             ("&mut T", "& mut T"),
@@ -316,23 +320,27 @@ mod tests {
 
     #[test]
     fn path() {
-        assert!(matches!(parse("T"), Type::Path { .. }));
-        assert!(matches!(parse("std::vec::Vec"), Type::Path { .. }));
+        assert!(matches!(moxy_token::parse!("T" as Type).unwrap(), Type::Path { .. }));
+        assert!(matches!(
+            moxy_token::parse!("std::vec::Vec" as Type).unwrap(),
+            Type::Path { .. }
+        ));
         assert_eq!(roundtrip("std :: vec :: Vec"), "std :: vec :: Vec");
     }
 
     #[test]
     fn qualified_path() {
-        assert!(matches!(parse("<T as Trait>::Item"), Type::Path { .. }));
-        // `TokenStream` Display spaces top-level tokens (the lifetime tick is the
-        // only glued case), so the rendered forms carry spaces.
+        assert!(matches!(
+            moxy_token::parse!("<T as Trait>::Item" as Type).unwrap(),
+            Type::Path { .. }
+        ));
         assert_eq!(roundtrip("<T as Trait>::Item"), "< T as Trait > :: Item");
         assert_eq!(roundtrip("<T>::Item"), "< T > :: Item");
     }
 
     #[test]
     fn nested() {
-        assert!(matches!(parse("&[T]"), Type::Reference { .. }));
+        assert!(matches!(moxy_token::parse!("&[T]" as Type).unwrap(), Type::Reference { .. }));
         assert_eq!(roundtrip("&[T]"), "& [T]");
         assert_eq!(roundtrip("(A, B)"), "(A , B)");
     }
@@ -341,7 +349,7 @@ mod tests {
     fn from_variant() {
         let s = TypeSlice {
             span: Span::default(),
-            elem: Box::new(parse("T")),
+            elem: Box::new(moxy_token::parse!("T" as Type).unwrap()),
         };
         assert!(matches!(Type::from(s), Type::Slice { .. }));
     }

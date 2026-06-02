@@ -18,17 +18,27 @@ impl<T: Parse> Peek for T {
     }
 }
 
+/// Parse a source string into a typed AST node, returning `Result<T, ParseError>`.
+///
+/// The type can be given explicitly with `as T` or inferred from context.
+///
+/// # Example
+/// ```ignore
+/// let item: Item = moxy_token::parse!("fn foo() {}");
+/// let item = moxy_token::parse!("fn foo() {}" as Item);
+/// ```
 #[macro_export]
 macro_rules! parse {
-    ($tokens:ident as $ty:ty) => {{
-        let mut stream = $tokens.parse();
-        match <$ty as $crate::Parse>::parse(&mut stream) {
-            Ok(v) => v,
-            Err(e) => return e.to_compile_error().into_iter().collect(),
-        }
+    ($src:literal as $ty:ty) => {{
+        use ::std::str::FromStr;
+        $crate::TokenStream::from_str($src)
+            .map_err($crate::parse::ParseError::from)
+            .and_then(|ts| <$ty as $crate::Parse>::parse(&mut ts.parse()))
     }};
-    (? $tokens:ident as $ty:ty) => {{
-        let mut stream = $tokens.parse();
-        <$ty as $crate::Parse>::parse(&mut stream)
+    ($src:expr) => {{
+        use ::std::str::FromStr;
+        $crate::TokenStream::from_str(::std::convert::AsRef::<str>::as_ref(&$src))
+            .map_err($crate::parse::ParseError::from)
+            .and_then(|ts| $crate::Parse::parse(&mut ts.parse()))
     }};
 }

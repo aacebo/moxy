@@ -162,43 +162,41 @@ mod tests {
 
     use super::*;
 
-    fn parse<T: Parse>(src: &str) -> Result<T, ParseError> {
-        let ts = TokenStream::from_str(src).unwrap();
-        ts.parse().parse::<T>()
-    }
-
-    fn lit(src: &str) -> Lit {
-        parse::<Lit>(src).unwrap()
-    }
-
     fn roundtrip(src: &str) -> String {
-        lit(src).to_token_stream().to_string()
+        let l: Lit = moxy_token::parse!(src).unwrap();
+        l.to_token_stream().to_string()
     }
 
     #[test]
     fn classifies() {
-        assert!(matches!(lit("\"s\""), Lit::Str(_)));
-        assert!(matches!(lit("42"), Lit::Int(_)));
-        assert!(matches!(lit("1.5"), Lit::Float(_)));
-        assert!(matches!(lit("'c'"), Lit::Char(_)));
-        assert!(matches!(lit("b'x'"), Lit::Byte(_)));
-        assert!(matches!(lit("b\"x\""), Lit::ByteStr(_)));
-        assert!(matches!(lit("c\"x\""), Lit::CStr(_)));
-        assert!(matches!(lit("true"), Lit::Bool(_)));
-        assert!(matches!(lit("false"), Lit::Bool(_)));
+        assert!(matches!(moxy_token::parse!("\"s\"" as Lit).unwrap(), Lit::Str(_)));
+        assert!(matches!(moxy_token::parse!("42" as Lit).unwrap(), Lit::Int(_)));
+        assert!(matches!(moxy_token::parse!("1.5" as Lit).unwrap(), Lit::Float(_)));
+        assert!(matches!(moxy_token::parse!("'c'" as Lit).unwrap(), Lit::Char(_)));
+        assert!(matches!(moxy_token::parse!("b'x'" as Lit).unwrap(), Lit::Byte(_)));
+        assert!(matches!(moxy_token::parse!("b\"x\"" as Lit).unwrap(), Lit::ByteStr(_)));
+        assert!(matches!(moxy_token::parse!("c\"x\"" as Lit).unwrap(), Lit::CStr(_)));
+        assert!(matches!(moxy_token::parse!("true" as Lit).unwrap(), Lit::Bool(_)));
+        assert!(matches!(moxy_token::parse!("false" as Lit).unwrap(), Lit::Bool(_)));
     }
 
     #[test]
     fn bool_value() {
-        assert!(matches!(lit("true"), Lit::Bool(LitBool { value: true, .. })));
-        assert!(matches!(lit("false"), Lit::Bool(LitBool { value: false, .. })));
+        assert!(matches!(
+            moxy_token::parse!("true" as Lit).unwrap(),
+            Lit::Bool(LitBool { value: true, .. })
+        ));
+        assert!(matches!(
+            moxy_token::parse!("false" as Lit).unwrap(),
+            Lit::Bool(LitBool { value: false, .. })
+        ));
     }
 
     #[test]
     fn hex_oct_bin_are_ints() {
-        assert!(matches!(lit("0xff"), Lit::Int(_)));
-        assert!(matches!(lit("0o17"), Lit::Int(_)));
-        assert!(matches!(lit("0b1010"), Lit::Int(_)));
+        assert!(matches!(moxy_token::parse!("0xff" as Lit).unwrap(), Lit::Int(_)));
+        assert!(matches!(moxy_token::parse!("0o17" as Lit).unwrap(), Lit::Int(_)));
+        assert!(matches!(moxy_token::parse!("0b1010" as Lit).unwrap(), Lit::Int(_)));
     }
 
     #[test]
@@ -210,20 +208,20 @@ mod tests {
 
     #[test]
     fn leaves_parse_their_own_kind() {
-        assert!(parse::<LitInt>("42").is_ok());
-        assert!(parse::<LitStr>("\"s\"").is_ok());
-        assert!(parse::<LitFloat>("1.5").is_ok());
-        assert!(parse::<LitChar>("'c'").is_ok());
-        assert!(parse::<LitBool>("true").is_ok());
+        assert!(moxy_token::parse!("42" as LitInt).is_ok());
+        assert!(moxy_token::parse!("\"s\"" as LitStr).is_ok());
+        assert!(moxy_token::parse!("1.5" as LitFloat).is_ok());
+        assert!(moxy_token::parse!("'c'" as LitChar).is_ok());
+        assert!(moxy_token::parse!("true" as LitBool).is_ok());
     }
 
     #[test]
     fn leaves_reject_other_kinds() {
-        assert!(parse::<LitInt>("\"s\"").is_err());
-        assert!(parse::<LitStr>("42").is_err());
-        assert!(parse::<LitFloat>("42").is_err());
-        assert!(parse::<LitInt>("1.5").is_err());
-        assert!(parse::<LitBool>("42").is_err());
+        assert!(moxy_token::parse!("\"s\"" as LitInt).is_err());
+        assert!(moxy_token::parse!("42" as LitStr).is_err());
+        assert!(moxy_token::parse!("42" as LitFloat).is_err());
+        assert!(moxy_token::parse!("1.5" as LitInt).is_err());
+        assert!(moxy_token::parse!("42" as LitBool).is_err());
     }
 
     #[test]

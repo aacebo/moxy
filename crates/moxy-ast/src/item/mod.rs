@@ -235,17 +235,10 @@ impl ToTokens for Item {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
     use moxy_token::ToTokenStream;
 
     use super::*;
     use crate::Crate;
-
-    fn parse<T: Parse>(src: &str) -> T {
-        let ts = TokenStream::from_str(src).unwrap();
-        ts.parse().parse::<T>().unwrap()
-    }
 
     fn render<T: ToTokenStream>(v: &T) -> String {
         v.to_token_stream().to_string()
@@ -253,20 +246,26 @@ mod tests {
 
     #[test]
     fn item_fn() {
-        let i: Item = parse("fn f<T: A + 'a>(x: T) -> U where T: B { x }");
+        let i = moxy_token::parse!("fn f<T: A + 'a>(x: T) -> U where T: B { x }" as Item).unwrap();
         assert!(matches!(i, Item::Fn(_)));
     }
 
     #[test]
     fn item_struct() {
-        assert!(matches!(parse::<Item>("pub struct S<T> { a: T }"), Item::Struct(_)));
-        assert!(matches!(parse::<Item>("struct P(u8, u16);"), Item::Struct(_)));
-        assert!(matches!(parse::<Item>("struct U;"), Item::Struct(_)));
+        assert!(matches!(
+            moxy_token::parse!("pub struct S<T> { a: T }" as Item).unwrap(),
+            Item::Struct(_)
+        ));
+        assert!(matches!(
+            moxy_token::parse!("struct P(u8, u16);" as Item).unwrap(),
+            Item::Struct(_)
+        ));
+        assert!(matches!(moxy_token::parse!("struct U;" as Item).unwrap(), Item::Struct(_)));
     }
 
     #[test]
     fn item_enum() {
-        let i: Item = parse("enum E { A, B(u8), C { x: i32 } }");
+        let i = moxy_token::parse!("enum E { A, B(u8), C { x: i32 } }" as Item).unwrap();
         match i {
             Item::Enum(e) => assert_eq!(e.variants.len(), 3),
             _ => panic!("expected enum"),
@@ -276,15 +275,15 @@ mod tests {
     #[test]
     fn item_impl() {
         assert!(matches!(
-            parse::<Item>("impl<T> Trait for S<T> { fn m(&self) {} }"),
+            moxy_token::parse!("impl<T> Trait for S<T> { fn m(&self) {} }" as Item).unwrap(),
             Item::Impl(_)
         ));
-        assert!(matches!(parse::<Item>("impl S { }"), Item::Impl(_)));
+        assert!(matches!(moxy_token::parse!("impl S { }" as Item).unwrap(), Item::Impl(_)));
     }
 
     #[test]
     fn item_trait() {
-        let i: Item = parse("trait T: Clone { fn m(&self); type Out; }");
+        let i = moxy_token::parse!("trait T: Clone { fn m(&self); type Out; }" as Item).unwrap();
         match i {
             Item::Trait(t) => assert_eq!(t.items.len(), 2),
             _ => panic!("expected trait"),
@@ -293,19 +292,31 @@ mod tests {
 
     #[test]
     fn item_use() {
-        assert!(matches!(parse::<Item>("use a::{b, c as d, e::*};"), Item::Use(_)));
+        assert!(matches!(
+            moxy_token::parse!("use a::{b, c as d, e::*};" as Item).unwrap(),
+            Item::Use(_)
+        ));
     }
 
     #[test]
     fn item_const_static_type() {
-        assert!(matches!(parse::<Item>("const X: u8 = 1;"), Item::Const(_)));
-        assert!(matches!(parse::<Item>("static Y: u8 = 1;"), Item::Static(_)));
-        assert!(matches!(parse::<Item>("type Z = u8;"), Item::TypeAlias(_)));
+        assert!(matches!(
+            moxy_token::parse!("const X: u8 = 1;" as Item).unwrap(),
+            Item::Const(_)
+        ));
+        assert!(matches!(
+            moxy_token::parse!("static Y: u8 = 1;" as Item).unwrap(),
+            Item::Static(_)
+        ));
+        assert!(matches!(
+            moxy_token::parse!("type Z = u8;" as Item).unwrap(),
+            Item::TypeAlias(_)
+        ));
     }
 
     #[test]
     fn item_with_attr() {
-        let i: Item = parse("#[derive(Clone)] pub fn g() {}");
+        let i = moxy_token::parse!("#[derive(Clone)] pub fn g() {}" as Item).unwrap();
         match i {
             Item::Fn(f) => assert_eq!(f.attrs.len(), 1),
             _ => panic!("expected fn"),
@@ -314,27 +325,36 @@ mod tests {
 
     #[test]
     fn item_mod_and_macro() {
-        assert!(matches!(parse::<Item>("mod m { fn a() {} }"), Item::Mod(_)));
-        assert!(matches!(parse::<Item>("mod m;"), Item::Mod(_)));
-        assert!(matches!(parse::<Item>("macro_rules! m { () => {} }"), Item::Macro2(_)));
+        assert!(matches!(
+            moxy_token::parse!("mod m { fn a() {} }" as Item).unwrap(),
+            Item::Mod(_)
+        ));
+        assert!(matches!(moxy_token::parse!("mod m;" as Item).unwrap(), Item::Mod(_)));
+        assert!(matches!(
+            moxy_token::parse!("macro_rules! m { () => {} }" as Item).unwrap(),
+            Item::Macro2(_)
+        ));
     }
 
     #[test]
     fn unsafe_auto_trait() {
-        match parse::<Item>("unsafe trait T {}") {
+        match moxy_token::parse!("unsafe trait T {}" as Item).unwrap() {
             Item::Trait(t) => assert!(matches!(t.unsafety, crate::Unsafety::Unsafe)),
             _ => panic!("expected trait"),
         }
-        match parse::<Item>("auto trait T {}") {
+        match moxy_token::parse!("auto trait T {}" as Item).unwrap() {
             Item::Trait(t) => assert!(t.auto_keyword.is_some()),
             _ => panic!("expected trait"),
         }
-        assert!(matches!(parse::<Item>("unsafe auto trait T {}"), Item::Trait(_)));
+        assert!(matches!(
+            moxy_token::parse!("unsafe auto trait T {}" as Item).unwrap(),
+            Item::Trait(_)
+        ));
     }
 
     #[test]
     fn negative_impl() {
-        match parse::<Item>("impl !Send for S {}") {
+        match moxy_token::parse!("impl !Send for S {}" as Item).unwrap() {
             Item::Impl(i) => {
                 let tr = i.trait_ref.unwrap();
                 assert!(matches!(tr.polarity, crate::BoundPolarity::Negative));
@@ -345,21 +365,16 @@ mod tests {
 
     #[test]
     fn variadic_fn() {
-        // extern "C" fn(u8, ...) as a bare-fn type round-trips the variadic.
-        let sig: crate::Signature = {
-            let ts = TokenStream::from_str("fn printf(fmt: u8, ...)").unwrap();
-            ts.parse().parse().unwrap()
-        };
+        let sig = moxy_token::parse!("fn printf(fmt: u8, ...)" as crate::Signature).unwrap();
         assert!(sig.variadic.is_some());
     }
 
     #[test]
     fn crate_roundtrip() {
-        let c: Crate = parse("fn a() {} struct S { x: u8 }");
+        let c = moxy_token::parse!("fn a() {} struct S { x: u8 }" as Crate).unwrap();
         assert_eq!(c.items.len(), 2);
-        // re-render and re-parse stability
         let r = render(&c);
-        let c2: Crate = parse(&r);
+        let c2: Crate = moxy_token::parse!(r).unwrap();
         assert_eq!(render(&c2), r);
     }
 }

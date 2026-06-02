@@ -85,3 +85,12 @@ impl ToTokens for ParseError {
         self.to_compile_error().to_tokens(tokens);
     }
 }
+
+impl<T: ToTokens, E: ToTokens> ToTokens for Result<T, E> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            Self::Ok(v) => v.to_tokens(tokens),
+            Self::Err(err) => err.to_tokens(tokens),
+        }
+    }
+}

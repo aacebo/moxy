@@ -50,29 +50,24 @@ mod tests {
 
     use super::*;
 
-    fn parse<T: Parse>(src: &str) -> T {
-        let ts = TokenStream::from_str(src).unwrap();
-        ts.parse().parse::<T>().unwrap()
-    }
-
     fn render<T: ToTokenStream>(v: &T) -> String {
         v.to_token_stream().to_string()
     }
 
     #[test]
     fn lifetime() {
-        let l: Lifetime = parse("'a");
+        let l = moxy_token::parse!("'a" as Lifetime).unwrap();
         assert_eq!(l.ident.text, "a");
         assert_eq!(render(&l), "'a");
 
-        let s: Lifetime = parse("'static");
+        let s = moxy_token::parse!("'static" as Lifetime).unwrap();
         assert_eq!(s.ident.text, "static");
         assert_eq!(render(&s), "'static");
     }
 
     #[test]
     fn simple_path() {
-        let p: Path = parse("Foo");
+        let p = moxy_token::parse!("Foo" as Path).unwrap();
         assert!(!p.leading_colon);
         assert_eq!(p.segments.len(), 1);
         assert_eq!(render(&p), "Foo");
@@ -80,14 +75,14 @@ mod tests {
 
     #[test]
     fn multi_segment() {
-        let p: Path = parse("std::collections::HashMap");
+        let p = moxy_token::parse!("std::collections::HashMap" as Path).unwrap();
         assert_eq!(p.segments.len(), 3);
         assert_eq!(render(&p), "std :: collections :: HashMap");
     }
 
     #[test]
     fn leading_colon() {
-        let p: Path = parse("::core::mem");
+        let p = moxy_token::parse!("::core::mem" as Path).unwrap();
         assert!(p.leading_colon);
         assert_eq!(p.segments.len(), 2);
         assert_eq!(render(&p), ":: core :: mem");
@@ -95,7 +90,7 @@ mod tests {
 
     #[test]
     fn angle_bracketed() {
-        let p: Path = parse("Vec<T>");
+        let p = moxy_token::parse!("Vec<T>" as Path).unwrap();
         assert_eq!(p.segments.len(), 1);
         assert!(matches!(p.segments.first().unwrap().args, PathArguments::AngleBracketed(_)));
         assert_eq!(render(&p), "Vec < T >");
@@ -103,18 +98,17 @@ mod tests {
 
     #[test]
     fn nested_generics_shr() {
-        // `Vec<Box<T>>` closes with a single `>>` token; structured parsing must split it.
-        let p: Path = parse("Vec<Box<T>>");
+        let p = moxy_token::parse!("Vec<Box<T>>" as Path).unwrap();
         assert_eq!(p.segments.len(), 1);
         assert!(matches!(p.segments.first().unwrap().args, PathArguments::AngleBracketed(_)));
 
-        let deep: Path = parse("A<B<C<D>>>");
+        let deep = moxy_token::parse!("A<B<C<D>>>" as Path).unwrap();
         assert_eq!(deep.segments.len(), 1);
     }
 
     #[test]
     fn assoc_type_arg() {
-        let p: Path = parse("Iterator<Item = u8>");
+        let p = moxy_token::parse!("Iterator<Item = u8>" as Path).unwrap();
         match &p.segments.first().unwrap().args {
             PathArguments::AngleBracketed(a) => {
                 assert!(matches!(a.args.first().unwrap(), crate::GenericArgument::AssocType(_)));

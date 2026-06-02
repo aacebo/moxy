@@ -337,27 +337,33 @@ mod tests {
     use super::*;
     use crate::{BinOp, Pattern, Stmt, StmtBlock};
 
-    fn parse<T: Parse>(src: &str) -> T {
-        let ts = TokenStream::from_str(src).unwrap();
-        ts.parse().parse::<T>().unwrap()
-    }
-
     fn render<T: ToTokenStream>(v: &T) -> String {
         v.to_token_stream().to_string()
     }
 
     #[test]
     fn literals_and_paths() {
-        assert!(matches!(parse::<Expr>("42"), Expr::Primary(PrimaryExpr::Lit(_))));
-        assert!(matches!(parse::<Expr>("foo"), Expr::Primary(PrimaryExpr::Path(_))));
-        assert!(matches!(parse::<Expr>("a::b::c"), Expr::Primary(PrimaryExpr::Path(_))));
-        assert!(matches!(parse::<Expr>("true"), Expr::Primary(PrimaryExpr::Lit(_))));
+        assert!(matches!(
+            moxy_token::parse!("42" as Expr).unwrap(),
+            Expr::Primary(PrimaryExpr::Lit(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("foo" as Expr).unwrap(),
+            Expr::Primary(PrimaryExpr::Path(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("a::b::c" as Expr).unwrap(),
+            Expr::Primary(PrimaryExpr::Path(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("true" as Expr).unwrap(),
+            Expr::Primary(PrimaryExpr::Lit(_))
+        ));
     }
 
     #[test]
     fn binary_precedence() {
-        // `a + b * c` parses as `a + (b * c)`
-        let e = parse::<Expr>("a + b * c");
+        let e = moxy_token::parse!("a + b * c" as Expr).unwrap();
         match e {
             Expr::Binary(BinaryExpr::Binary(ExprBinary {
                 op: BinOp::Add, right, ..
@@ -373,8 +379,7 @@ mod tests {
 
     #[test]
     fn binary_left_assoc() {
-        // `a - b - c` parses as `(a - b) - c`
-        let e = parse::<Expr>("a - b - c");
+        let e = moxy_token::parse!("a - b - c" as Expr).unwrap();
         match e {
             Expr::Binary(BinaryExpr::Binary(ExprBinary {
                 op: BinOp::Sub, left, ..
@@ -390,18 +395,39 @@ mod tests {
 
     #[test]
     fn postfix() {
-        assert!(matches!(parse::<Expr>("f(x)"), Expr::Postfix(PostfixExpr::Call(_))));
-        assert!(matches!(parse::<Expr>("a.b"), Expr::Postfix(PostfixExpr::Field(_))));
-        assert!(matches!(parse::<Expr>("a.b()"), Expr::Postfix(PostfixExpr::MethodCall(_))));
-        assert!(matches!(parse::<Expr>("a[0]"), Expr::Postfix(PostfixExpr::Index(_))));
-        assert!(matches!(parse::<Expr>("x?"), Expr::Unary(UnaryExpr::Try(_))));
-        assert!(matches!(parse::<Expr>("x.await"), Expr::Postfix(PostfixExpr::Await(_))));
-        assert!(matches!(parse::<Expr>("a.0"), Expr::Postfix(PostfixExpr::Field(_))));
+        assert!(matches!(
+            moxy_token::parse!("f(x)" as Expr).unwrap(),
+            Expr::Postfix(PostfixExpr::Call(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("a.b" as Expr).unwrap(),
+            Expr::Postfix(PostfixExpr::Field(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("a.b()" as Expr).unwrap(),
+            Expr::Postfix(PostfixExpr::MethodCall(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("a[0]" as Expr).unwrap(),
+            Expr::Postfix(PostfixExpr::Index(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("x?" as Expr).unwrap(),
+            Expr::Unary(UnaryExpr::Try(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("x.await" as Expr).unwrap(),
+            Expr::Postfix(PostfixExpr::Await(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("a.0" as Expr).unwrap(),
+            Expr::Postfix(PostfixExpr::Field(_))
+        ));
     }
 
     #[test]
     fn method_turbofish() {
-        let e = parse::<Expr>("x.collect::<Vec<_>>()");
+        let e = moxy_token::parse!("x.collect::<Vec<_>>()" as Expr).unwrap();
         match e {
             Expr::Postfix(PostfixExpr::MethodCall(m)) => assert!(m.turbofish.is_some()),
             _ => panic!("expected method call with turbofish"),
@@ -410,170 +436,284 @@ mod tests {
 
     #[test]
     fn path_turbofish() {
-        // `Foo::<T>` in expression position.
-        assert!(matches!(parse::<Expr>("Foo::<T>"), Expr::Primary(PrimaryExpr::Path(_))));
+        assert!(matches!(
+            moxy_token::parse!("Foo::<T>" as Expr).unwrap(),
+            Expr::Primary(PrimaryExpr::Path(_))
+        ));
     }
 
     #[test]
     fn ranges() {
-        assert!(matches!(parse::<Expr>("0..10"), Expr::Binary(BinaryExpr::Range(_))));
-        assert!(matches!(parse::<Expr>("0..=10"), Expr::Binary(BinaryExpr::Range(_))));
-        assert!(matches!(parse::<Expr>("a.."), Expr::Binary(BinaryExpr::Range(_))));
-        assert!(matches!(parse::<Expr>("..b"), Expr::Binary(BinaryExpr::Range(_))));
-        assert!(matches!(parse::<Expr>(".."), Expr::Binary(BinaryExpr::Range(_))));
+        assert!(matches!(
+            moxy_token::parse!("0..10" as Expr).unwrap(),
+            Expr::Binary(BinaryExpr::Range(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("0..=10" as Expr).unwrap(),
+            Expr::Binary(BinaryExpr::Range(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("a.." as Expr).unwrap(),
+            Expr::Binary(BinaryExpr::Range(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("..b" as Expr).unwrap(),
+            Expr::Binary(BinaryExpr::Range(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!(".." as Expr).unwrap(),
+            Expr::Binary(BinaryExpr::Range(_))
+        ));
     }
 
     #[test]
     fn if_while_let() {
         assert!(matches!(
-            parse::<Expr>("if let Some(x) = o { x } else { 0 }"),
+            moxy_token::parse!("if let Some(x) = o { x } else { 0 }" as Expr).unwrap(),
             Expr::Block(BlockExpr::If(_))
         ));
         assert!(matches!(
-            parse::<Expr>("while let Some(x) = it.next() { }"),
+            moxy_token::parse!("while let Some(x) = it.next() { }" as Expr).unwrap(),
             Expr::Block(BlockExpr::While(_))
         ));
     }
 
     #[test]
     fn block_exprs() {
-        assert!(matches!(parse::<Expr>("async { 1 }"), Expr::Block(BlockExpr::Async(_))));
-        assert!(matches!(parse::<Expr>("async move { x }"), Expr::Block(BlockExpr::Async(_))));
-        assert!(matches!(parse::<Expr>("const { 1 }"), Expr::Block(BlockExpr::Const(_))));
-        assert!(matches!(parse::<Expr>("try { 1 }"), Expr::Block(BlockExpr::TryBlock(_))));
+        assert!(matches!(
+            moxy_token::parse!("async { 1 }" as Expr).unwrap(),
+            Expr::Block(BlockExpr::Async(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("async move { x }" as Expr).unwrap(),
+            Expr::Block(BlockExpr::Async(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("const { 1 }" as Expr).unwrap(),
+            Expr::Block(BlockExpr::Const(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("try { 1 }" as Expr).unwrap(),
+            Expr::Block(BlockExpr::TryBlock(_))
+        ));
     }
 
     #[test]
     fn closures_with_modifiers() {
-        assert!(matches!(parse::<Expr>("async || 1"), Expr::Primary(PrimaryExpr::Closure(_))));
         assert!(matches!(
-            parse::<Expr>("async move |x| x"),
+            moxy_token::parse!("async || 1" as Expr).unwrap(),
             Expr::Primary(PrimaryExpr::Closure(_))
         ));
-        assert!(matches!(parse::<Expr>("const || 1"), Expr::Primary(PrimaryExpr::Closure(_))));
+        assert!(matches!(
+            moxy_token::parse!("async move |x| x" as Expr).unwrap(),
+            Expr::Primary(PrimaryExpr::Closure(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("const || 1" as Expr).unwrap(),
+            Expr::Primary(PrimaryExpr::Closure(_))
+        ));
     }
 
     #[test]
     fn labeled() {
         assert!(matches!(
-            parse::<Expr>("'a: loop { break 'a 1 }"),
+            moxy_token::parse!("'a: loop { break 'a 1 }" as Expr).unwrap(),
             Expr::Block(BlockExpr::Loop(_))
         ));
-        assert!(matches!(parse::<Expr>("'a: { 1 }"), Expr::Block(BlockExpr::Brace(_))));
+        assert!(matches!(
+            moxy_token::parse!("'a: { 1 }" as Expr).unwrap(),
+            Expr::Block(BlockExpr::Brace(_))
+        ));
     }
 
     #[test]
     fn qualified_path_expr() {
         assert!(matches!(
-            parse::<Expr>("<T as Trait>::CONST"),
+            moxy_token::parse!("<T as Trait>::CONST" as Expr).unwrap(),
             Expr::Primary(PrimaryExpr::Path(_))
         ));
         assert!(matches!(
-            parse::<Expr>("::std::mem::swap"),
+            moxy_token::parse!("::std::mem::swap" as Expr).unwrap(),
             Expr::Primary(PrimaryExpr::Path(_))
         ));
     }
 
     #[test]
     fn unary_and_ref() {
-        assert!(matches!(parse::<Expr>("-x"), Expr::Unary(UnaryExpr::Unary(_))));
-        assert!(matches!(parse::<Expr>("!x"), Expr::Unary(UnaryExpr::Unary(_))));
-        assert!(matches!(parse::<Expr>("*x"), Expr::Unary(UnaryExpr::Unary(_))));
-        assert!(matches!(parse::<Expr>("&x"), Expr::Unary(UnaryExpr::Reference(_))));
-        assert!(matches!(parse::<Expr>("&mut x"), Expr::Unary(UnaryExpr::Reference(_))));
+        assert!(matches!(
+            moxy_token::parse!("-x" as Expr).unwrap(),
+            Expr::Unary(UnaryExpr::Unary(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("!x" as Expr).unwrap(),
+            Expr::Unary(UnaryExpr::Unary(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("*x" as Expr).unwrap(),
+            Expr::Unary(UnaryExpr::Unary(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("&x" as Expr).unwrap(),
+            Expr::Unary(UnaryExpr::Reference(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("&mut x" as Expr).unwrap(),
+            Expr::Unary(UnaryExpr::Reference(_))
+        ));
     }
 
     #[test]
     fn collections() {
-        assert!(matches!(parse::<Expr>("(a, b)"), Expr::Primary(PrimaryExpr::Tuple(_))));
-        assert!(matches!(parse::<Expr>("(a)"), Expr::Primary(PrimaryExpr::Paren(_))));
-        assert!(matches!(parse::<Expr>("[a, b, c]"), Expr::Primary(PrimaryExpr::Array(_))));
-        assert!(matches!(parse::<Expr>("[0; 4]"), Expr::Primary(PrimaryExpr::Repeat(_))));
+        assert!(matches!(
+            moxy_token::parse!("(a, b)" as Expr).unwrap(),
+            Expr::Primary(PrimaryExpr::Tuple(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("(a)" as Expr).unwrap(),
+            Expr::Primary(PrimaryExpr::Paren(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("[a, b, c]" as Expr).unwrap(),
+            Expr::Primary(PrimaryExpr::Array(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("[0; 4]" as Expr).unwrap(),
+            Expr::Primary(PrimaryExpr::Repeat(_))
+        ));
     }
 
     #[test]
     fn cast_and_assign() {
-        assert!(matches!(parse::<Expr>("x as u32"), Expr::Unary(UnaryExpr::Cast(_))));
-        assert!(matches!(parse::<Expr>("x = y"), Expr::Binary(BinaryExpr::Assign(_))));
-        assert!(matches!(parse::<Expr>("x += y"), Expr::Binary(BinaryExpr::AssignOp(_))));
+        assert!(matches!(
+            moxy_token::parse!("x as u32" as Expr).unwrap(),
+            Expr::Unary(UnaryExpr::Cast(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("x = y" as Expr).unwrap(),
+            Expr::Binary(BinaryExpr::Assign(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("x += y" as Expr).unwrap(),
+            Expr::Binary(BinaryExpr::AssignOp(_))
+        ));
     }
 
     #[test]
     fn control_flow() {
         assert!(matches!(
-            parse::<Expr>("if a { b } else { c }"),
+            moxy_token::parse!("if a { b } else { c }" as Expr).unwrap(),
             Expr::Block(BlockExpr::If(_))
         ));
-        assert!(matches!(parse::<Expr>("while a { }"), Expr::Block(BlockExpr::While(_))));
-        assert!(matches!(parse::<Expr>("for x in xs { }"), Expr::Block(BlockExpr::ForLoop(_))));
-        assert!(matches!(parse::<Expr>("loop { }"), Expr::Block(BlockExpr::Loop(_))));
         assert!(matches!(
-            parse::<Expr>("match x { _ => 1 }"),
+            moxy_token::parse!("while a { }" as Expr).unwrap(),
+            Expr::Block(BlockExpr::While(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("for x in xs { }" as Expr).unwrap(),
+            Expr::Block(BlockExpr::ForLoop(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("loop { }" as Expr).unwrap(),
+            Expr::Block(BlockExpr::Loop(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("match x { _ => 1 }" as Expr).unwrap(),
             Expr::Block(BlockExpr::Match(_))
         ));
-        assert!(matches!(parse::<Expr>("{ a }"), Expr::Block(BlockExpr::Brace(_))));
-        assert!(matches!(parse::<Expr>("unsafe { }"), Expr::Block(BlockExpr::Unsafe(_))));
-        assert!(matches!(parse::<Expr>("return x"), Expr::Jump(JumpExpr::Return(_))));
+        assert!(matches!(
+            moxy_token::parse!("{ a }" as Expr).unwrap(),
+            Expr::Block(BlockExpr::Brace(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("unsafe { }" as Expr).unwrap(),
+            Expr::Block(BlockExpr::Unsafe(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("return x" as Expr).unwrap(),
+            Expr::Jump(JumpExpr::Return(_))
+        ));
     }
 
     #[test]
     fn struct_literal() {
-        let e = parse::<Expr>("Foo { a: 1, b }");
+        let e = moxy_token::parse!("Foo { a: 1, b }" as Expr).unwrap();
         assert!(matches!(e, Expr::Primary(PrimaryExpr::Struct(_))));
-        // struct literal is disallowed in `if` condition position
-        assert!(matches!(parse::<Expr>("if x { }"), Expr::Block(BlockExpr::If(_))));
+        assert!(matches!(
+            moxy_token::parse!("if x { }" as Expr).unwrap(),
+            Expr::Block(BlockExpr::If(_))
+        ));
     }
 
     #[test]
     fn closures() {
-        assert!(matches!(parse::<Expr>("|x| x"), Expr::Primary(PrimaryExpr::Closure(_))));
         assert!(matches!(
-            parse::<Expr>("|x: u32| -> u32 { x }"),
+            moxy_token::parse!("|x| x" as Expr).unwrap(),
             Expr::Primary(PrimaryExpr::Closure(_))
         ));
-        assert!(matches!(parse::<Expr>("move || 1"), Expr::Primary(PrimaryExpr::Closure(_))));
-        assert!(matches!(parse::<Expr>("|| {}"), Expr::Primary(PrimaryExpr::Closure(_))));
+        assert!(matches!(
+            moxy_token::parse!("|x: u32| -> u32 { x }" as Expr).unwrap(),
+            Expr::Primary(PrimaryExpr::Closure(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("move || 1" as Expr).unwrap(),
+            Expr::Primary(PrimaryExpr::Closure(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("|| {}" as Expr).unwrap(),
+            Expr::Primary(PrimaryExpr::Closure(_))
+        ));
     }
 
     #[test]
     fn macro_call() {
-        assert!(matches!(parse::<Expr>("vec![1, 2, 3]"), Expr::Primary(PrimaryExpr::Macro(_))));
         assert!(matches!(
-            parse::<Expr>("println!(\"hi\")"),
+            moxy_token::parse!("vec![1, 2, 3]" as Expr).unwrap(),
+            Expr::Primary(PrimaryExpr::Macro(_))
+        ));
+        assert!(matches!(
+            moxy_token::parse!("println!(\"hi\")" as Expr).unwrap(),
             Expr::Primary(PrimaryExpr::Macro(_))
         ));
     }
 
     #[test]
     fn patterns() {
-        assert!(matches!(parse::<Pattern>("x"), Pattern::Ident(_)));
-        assert!(matches!(parse::<Pattern>("_"), Pattern::Wild));
-        assert!(matches!(parse::<Pattern>("mut x"), Pattern::Ident(_)));
-        assert!(matches!(parse::<Pattern>("&x"), Pattern::Reference(_)));
-        assert!(matches!(parse::<Pattern>("(a, b)"), Pattern::Tuple(_)));
-        assert!(matches!(parse::<Pattern>("Some(x)"), Pattern::TupleStruct(_)));
-        assert!(matches!(parse::<Pattern>("Point { x, y }"), Pattern::Struct(_)));
-        assert!(matches!(parse::<Pattern>("1"), Pattern::Lit(_)));
+        assert!(matches!(moxy_token::parse!("x" as Pattern).unwrap(), Pattern::Ident(_)));
+        assert!(matches!(moxy_token::parse!("_" as Pattern).unwrap(), Pattern::Wild));
+        assert!(matches!(moxy_token::parse!("mut x" as Pattern).unwrap(), Pattern::Ident(_)));
+        assert!(matches!(moxy_token::parse!("&x" as Pattern).unwrap(), Pattern::Reference(_)));
+        assert!(matches!(moxy_token::parse!("(a, b)" as Pattern).unwrap(), Pattern::Tuple(_)));
+        assert!(matches!(
+            moxy_token::parse!("Some(x)" as Pattern).unwrap(),
+            Pattern::TupleStruct(_)
+        ));
+        assert!(matches!(
+            moxy_token::parse!("Point { x, y }" as Pattern).unwrap(),
+            Pattern::Struct(_)
+        ));
+        assert!(matches!(moxy_token::parse!("1" as Pattern).unwrap(), Pattern::Lit(_)));
     }
 
     #[test]
     fn or_and_exotic_patterns() {
-        assert!(matches!(parse::<Pattern>("A | B | C"), Pattern::Or(_)));
-        assert!(matches!(parse::<Pattern>("| A | B"), Pattern::Or(_)));
-        assert!(matches!(parse::<Pattern>("box x"), Pattern::Box(_)));
-        assert!(matches!(parse::<Pattern>("const { 1 }"), Pattern::Const(_)));
-        // single alternative stays a non-Or pattern
-        assert!(matches!(parse::<Pattern>("x"), Pattern::Ident(_)));
+        assert!(matches!(moxy_token::parse!("A | B | C" as Pattern).unwrap(), Pattern::Or(_)));
+        assert!(matches!(moxy_token::parse!("| A | B" as Pattern).unwrap(), Pattern::Or(_)));
+        assert!(matches!(moxy_token::parse!("box x" as Pattern).unwrap(), Pattern::Box(_)));
+        assert!(matches!(
+            moxy_token::parse!("const { 1 }" as Pattern).unwrap(),
+            Pattern::Const(_)
+        ));
+        assert!(matches!(moxy_token::parse!("x" as Pattern).unwrap(), Pattern::Ident(_)));
     }
 
     #[test]
     fn statements_and_blocks() {
-        let b = parse::<StmtBlock>("{ let x = 1; x + 1 }");
+        let b = moxy_token::parse!("{ let x = 1; x + 1 }" as StmtBlock).unwrap();
         assert_eq!(b.stmts.len(), 2);
         assert!(matches!(b.stmts[0], Stmt::Local(_)));
         assert!(matches!(b.stmts[1], Stmt::Expr(..)));
 
-        let b2 = parse::<StmtBlock>("{ foo(); bar(); }");
+        let b2 = moxy_token::parse!("{ foo(); bar(); }" as StmtBlock).unwrap();
         assert_eq!(b2.stmts.len(), 2);
         assert!(matches!(b2.stmts[0], Stmt::Expr(_, Some(_))));
     }
@@ -581,10 +721,9 @@ mod tests {
     #[test]
     fn roundtrips() {
         for src in ["a + b * c", "f (x , y)", "a . b . c", "x as u32", "- x", "& mut x"] {
-            let e = parse::<Expr>(src);
-            // re-render and re-parse must produce an equal token string
+            let e: Expr = moxy_token::parse!(src).unwrap();
             let r = render(&e);
-            let e2 = parse::<Expr>(&r);
+            let e2: Expr = moxy_token::parse!(r).unwrap();
             assert_eq!(render(&e2), r, "unstable roundtrip for {src}");
         }
     }
