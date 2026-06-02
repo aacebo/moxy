@@ -2,6 +2,7 @@
 resolver = "3"
 members = [".", "crates/*"]
 default-members = [".", "crates/*"]
+exclude = ["archive/*"]
 
 [workspace.package]
 version = "0.0.0"

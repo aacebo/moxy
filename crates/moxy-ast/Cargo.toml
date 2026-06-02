@@ -10,4 +10,23 @@ repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
 
+[lib]
+doctest = false
+
+[lints.clippy]
+collapsible-if = "allow"
+new-ret-no-self = "allow"
+
+[features]
+default = []
+serde = ["dep:serde", "moxy-token/serde"]
+
 [dependencies]
+moxy-token = { path = "../moxy-token" }
+moxy-macros = { path = "../moxy-macros" }
+serde = { version = "1", features = ["derive"], optional = true }
+
+[dev-dependencies]
+moxy-token = { path = "../moxy-token", features = ["serde", "proc-macro2"] }
+serde_json = "1"
+proc-macro2 = { version = "1", features = ["span-locations"] }

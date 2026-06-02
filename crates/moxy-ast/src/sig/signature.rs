@@ -1,0 +1,132 @@
+use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::token::keyword::{Extern, Fn};
+use moxy_token::token::punct::{Comma, Gt, Lt};
+use moxy_token::token::{Delim, ToTokens, TokenTree};
+use moxy_token::{Parse, Span, TokenStream};
+
+use super::{Abi, FnParam, Variadic};
+use crate::{Asyncness, Constness, Generics, Ident, Punctuated, ReturnType, Unsafety};
+
+#[doc = "A function signature."]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct Signature {
+    pub span: Span,
+    pub constness: Constness,
+    pub asyncness: Asyncness,
+    pub unsafety: Unsafety,
+    pub abi: Option<Abi>,
+    pub ident: Ident,
+    pub generics: Generics,
+    pub inputs: Punctuated<FnParam, Comma>,
+    pub variadic: Option<Variadic>,
+    pub output: ReturnType,
+}
+
+impl Parse for Signature {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let constness = stream.parse::<Constness>()?;
+        let asyncness = stream.parse::<Asyncness>()?;
+        let unsafety = stream.parse::<Unsafety>()?;
+        let abi = if stream.peek::<Extern>().is_some() {
+            Some(stream.parse::<Abi>()?)
+        } else {
+            None
+        };
+
+        let _ = stream.parse::<Fn>()?;
+        let ident = stream.parse::<Ident>()?;
+        let mut generics = stream.parse::<Generics>()?;
+
+        let group = stream.parse_group(Delim::Paren)?;
+        let mut inner = group.parse();
+        let mut inputs = Punctuated::new();
+        let mut variadic = None;
+        while !inner.is_empty() {
+            if let Some(v) = inner.parse_opt::<Variadic>() {
+                variadic = Some(v);
+                break;
+            }
+            inputs.push_value(inner.parse::<FnParam>()?);
+            if inner.peek::<Comma>().is_some() {
+                inputs.push_punct(inner.parse::<Comma>()?);
+            } else {
+                break;
+            }
+        }
+
+        let output = stream.parse::<ReturnType>()?;
+
+        if stream.peek::<moxy_token::token::keyword::Where>().is_some() {
+            generics.where_clause = Some(stream.parse()?);
+        }
+
+        Ok(Self {
+            span: Span::default(),
+            constness,
+            asyncness,
+            unsafety,
+            abi,
+            ident,
+            generics,
+            inputs,
+            variadic,
+            output,
+        })
+    }
+}
+
+impl Signature {
+    pub fn emit_angle_params(generics: &Generics, t: &mut TokenStream) {
+        if !generics.params.is_empty() {
+            Lt::default().to_tokens(t);
+            generics.params.to_tokens(t);
+            Gt::default().to_tokens(t);
+        }
+    }
+
+    pub fn is_start(stream: &mut moxy_token::parse::ParseStream) -> bool {
+        let mut fork = stream.fork();
+        let _ = fork.parse::<crate::Constness>();
+        let _ = fork.parse::<crate::Asyncness>();
+        let _ = fork.parse::<crate::Unsafety>();
+
+        if fork.peek::<Extern>().is_some() {
+            let _ = fork.parse::<crate::sig::Abi>();
+        }
+
+        fork.peek::<Fn>().is_some()
+    }
+}
+
+impl ToTokens for Signature {
+    fn to_tokens(&self, t: &mut TokenStream) {
+        self.constness.to_tokens(t);
+        self.asyncness.to_tokens(t);
+        self.unsafety.to_tokens(t);
+        if let Some(abi) = &self.abi {
+            abi.to_tokens(t);
+        }
+        Fn::default().to_tokens(t);
+        self.ident.to_tokens(t);
+        let mut params = TokenStream::new();
+        Signature::emit_angle_params(&self.generics, &mut params);
+        t.extend(params);
+        let mut inner = TokenStream::new();
+        self.inputs.to_tokens(&mut inner);
+
+        if let Some(v) = &self.variadic {
+            if !self.inputs.is_empty() && !self.inputs.trailing_punct() {
+                Comma::default().to_tokens(&mut inner);
+            }
+            v.to_tokens(&mut inner);
+        }
+
+        t.extend_one(TokenTree::Group(moxy_token::token::Group::new(Delim::Paren, inner)));
+        self.output.to_tokens(t);
+
+        if let Some(w) = &self.generics.where_clause {
+            w.to_tokens(t);
+        }
+    }
+}

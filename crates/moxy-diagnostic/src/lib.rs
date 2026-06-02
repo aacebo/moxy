@@ -1,14 +1,36 @@
-pub fn add(left: u64, right: u64) -> u64 {
-    left + right
+#![cfg_attr(nightly, feature(proc_macro_diagnostic))]
+
+extern crate proc_macro;
+
+mod diagnostic;
+mod level;
+
+pub use diagnostic::*;
+pub use level::*;
+use moxy_token::Span;
+
+/// Convenience constructors for building [`Diagnostic`]s from a [`Span`].
+pub trait SpanExt {
+    fn error(&self, message: impl std::fmt::Display) -> Diagnostic;
+    fn warn(&self, message: impl std::fmt::Display) -> Diagnostic;
+    fn note(&self, message: impl std::fmt::Display) -> Diagnostic;
+    fn help(&self, message: impl std::fmt::Display) -> Diagnostic;
 }
 
-#[cfg(test)]
-mod tests {
-    use super::*;
+impl SpanExt for Span {
+    fn error(&self, message: impl std::fmt::Display) -> Diagnostic {
+        Diagnostic::new().level(Level::Error).span(*self).message(message).build()
+    }
 
-    #[test]
-    fn it_works() {
-        let result = add(2, 2);
-        assert_eq!(result, 4);
+    fn warn(&self, message: impl std::fmt::Display) -> Diagnostic {
+        Diagnostic::new().level(Level::Warning).span(*self).message(message).build()
+    }
+
+    fn note(&self, message: impl std::fmt::Display) -> Diagnostic {
+        Diagnostic::new().level(Level::Note).span(*self).message(message).build()
+    }
+
+    fn help(&self, message: impl std::fmt::Display) -> Diagnostic {
+        Diagnostic::new().level(Level::Help).span(*self).message(message).build()
     }
 }
