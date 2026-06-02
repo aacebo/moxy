@@ -1,0 +1,30 @@
+[workspace]
+resolver = "3"
+members = [".", "crates/*"]
+default-members = [".", "crates/*"]
+
+[workspace.package]
+version = "0.0.0"
+edition = "2024"
+license = "MIT"
+readme = "README.md"
+documentation = "https://docs.rs/moxy"
+homepage = "https://www.github.com/aacebo/moxy"
+repository = "https://www.github.com/aacebo/moxy"
+keywords = ["macro", "framework", "proc", "rust"]
+categories = ["development-tools::procedural-macro-helpers", "rust-patterns", "no-std"]
+
+[package]
+name = "moxy"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+readme.workspace = true
+documentation.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+
+[lib]
+doctest = false
