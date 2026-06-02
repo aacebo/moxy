@@ -9,6 +9,7 @@ use crate::*;
 pub struct ExprReference {
     pub span: Span,
     pub attrs: Vec<Attribute>,
+    pub and_punct: And,
     pub mutability: Mutability,
     pub expr: Box<super::super::Expr>,
 }
@@ -18,7 +19,7 @@ impl ToTokens for ExprReference {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        And::default().to_tokens(t);
+        self.and_punct.to_tokens(t);
         self.mutability.to_tokens(t);
         self.expr.to_tokens(t);
     }

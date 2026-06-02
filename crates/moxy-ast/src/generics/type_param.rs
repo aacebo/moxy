@@ -12,7 +12,9 @@ pub struct TypeParam {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub ident: Ident,
+    pub colon_punct: Option<Colon>,
     pub bounds: Punctuated<TypeBound, Plus>,
+    pub eq_punct: Option<Eq>,
     pub default: Option<Type>,
 }
 
@@ -21,25 +23,29 @@ impl Parse for TypeParam {
         let attrs = stream.parse_vec::<Attribute>()?;
         let ident = stream.parse::<Ident>()?;
 
-        let bounds = if stream.peek::<Colon>().is_some() {
-            let _ = stream.parse::<Colon>()?;
-            TypeBound::parse_bounds(stream)?
+        let (colon_punct, bounds) = if stream.peek::<Colon>().is_some() {
+            let colon_punct = stream.parse::<Colon>()?;
+            let bounds = TypeBound::parse_bounds(stream)?;
+            (Some(colon_punct), bounds)
         } else {
-            Punctuated::new()
+            (None, Punctuated::new())
         };
 
-        let default = if stream.peek::<Eq>().is_some() {
-            let _ = stream.parse::<Eq>()?;
-            Some(stream.parse::<Type>()?)
+        let (eq_punct, default) = if stream.peek::<Eq>().is_some() {
+            let eq_punct = stream.parse::<Eq>()?;
+            let default = stream.parse::<Type>()?;
+            (Some(eq_punct), Some(default))
         } else {
-            None
+            (None, None)
         };
 
         Ok(Self {
             span: Span::default(),
             attrs,
             ident,
+            colon_punct,
             bounds,
+            eq_punct,
             default,
         })
     }
@@ -52,11 +58,15 @@ impl ToTokens for TypeParam {
         }
         self.ident.to_tokens(t);
         if !self.bounds.is_empty() {
-            Colon::default().to_tokens(t);
+            if let Some(colon_punct) = &self.colon_punct {
+                colon_punct.to_tokens(t);
+            }
             self.bounds.to_tokens(t);
         }
         if let Some(d) = &self.default {
-            Eq::default().to_tokens(t);
+            if let Some(eq_punct) = &self.eq_punct {
+                eq_punct.to_tokens(t);
+            }
             d.to_tokens(t);
         }
     }

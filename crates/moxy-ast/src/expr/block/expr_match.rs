@@ -11,8 +11,26 @@ use crate::{Attribute, Expr, Pattern};
 pub struct ExprMatch {
     pub span: Span,
     pub attrs: Vec<Attribute>,
+    pub match_keyword: Match,
     pub expr: Box<Expr>,
     pub arms: Vec<MatchArm>,
+}
+
+impl ExprMatch {
+    pub fn parse_from(stream: &mut ParseStream) -> Result<Expr, ParseError> {
+        let match_keyword = stream.parse::<Match>()?;
+        let expr = Box::new(super::super::parse_expr(stream, false)?);
+        let group = stream.parse_group(Delim::Brace)?;
+        let mut inner = group.parse();
+        let arms = inner.parse_vec::<MatchArm>()?;
+        Ok(Expr::Block(super::BlockExpr::Match(Self {
+            span: Span::default(),
+            attrs: Vec::new(),
+            match_keyword,
+            expr,
+            arms,
+        })))
+    }
 }
 
 impl ToTokens for ExprMatch {
@@ -20,7 +38,7 @@ impl ToTokens for ExprMatch {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        Match::default().to_tokens(t);
+        self.match_keyword.to_tokens(t);
         self.expr.to_tokens(t);
         let mut inner = TokenStream::new();
         for arm in &self.arms {
@@ -37,31 +55,37 @@ pub struct MatchArm {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub pat: Pattern,
+    pub if_keyword: Option<If>,
     pub guard: Option<Box<Expr>>,
+    pub fat_arrow: FatArrow,
     pub body: Expr,
+    pub comma: Option<Comma>,
 }
 
 impl Parse for MatchArm {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn parse(stream: &mut moxy_token::parse::ParseStream) -> Result<Self, moxy_token::parse::ParseError> {
         let attrs = stream.parse_vec::<Attribute>()?;
         let pat = stream.parse::<Pattern>()?;
 
-        let guard = if stream.peek::<If>().is_some() {
-            let _ = stream.parse::<If>()?;
-            Some(Box::new(stream.parse::<Expr>()?))
+        let (if_keyword, guard) = if let Some(if_kw) = stream.parse_opt::<If>() {
+            (Some(if_kw), Some(Box::new(stream.parse::<Expr>()?)))
         } else {
-            None
+            (None, None)
         };
 
-        let _ = stream.parse::<FatArrow>()?;
+        let fat_arrow = stream.parse::<FatArrow>()?;
         let body = stream.parse::<Expr>()?;
-        let _ = stream.parse::<Comma>();
+        let comma = stream.parse_opt::<Comma>();
+
         Ok(Self {
             span: Span::default(),
             attrs,
             pat,
+            if_keyword,
             guard,
+            fat_arrow,
             body,
+            comma,
         })
     }
 }
@@ -74,12 +98,12 @@ impl ToTokens for MatchArm {
         self.pat.to_tokens(t);
 
         if let Some(g) = &self.guard {
-            If::default().to_tokens(t);
+            self.if_keyword.to_tokens(t);
             g.to_tokens(t);
         }
 
-        FatArrow::default().to_tokens(t);
+        self.fat_arrow.to_tokens(t);
         self.body.to_tokens(t);
-        Comma::default().to_tokens(t);
+        self.comma.to_tokens(t);
     }
 }

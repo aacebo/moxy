@@ -77,12 +77,13 @@ impl BinaryExpr {
     pub fn parse_from(stream: &mut ParseStream, mut lhs: Expr, min: Precedence, allow_struct: bool) -> Result<Expr, ParseError> {
         loop {
             if Precedence::Cast >= min && stream.peek::<moxy_token::keyword::As>().is_some() {
-                let _ = stream.parse::<moxy_token::keyword::As>()?;
+                let as_keyword = stream.parse::<moxy_token::keyword::As>()?;
                 let ty = Box::new(stream.parse::<Type>()?);
                 lhs = Expr::Unary(UnaryExpr::Cast(ExprCast {
                     span: Span::default(),
                     attrs: Vec::new(),
                     expr: Box::new(lhs),
+                    as_keyword,
                     ty,
                 }));
                 continue;

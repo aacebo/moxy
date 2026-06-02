@@ -9,11 +9,26 @@ use crate::Path;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Visibility {
     Inherited,
-    Public,
-    Crate,
-    SelfValue,
-    Super,
-    Restricted { in_token: bool, path: Path },
+    Public {
+        pub_keyword: Pub,
+    },
+    Crate {
+        pub_keyword: Pub,
+        crate_keyword: Crate,
+    },
+    SelfValue {
+        pub_keyword: Pub,
+        self_keyword: SelfValue,
+    },
+    Super {
+        pub_keyword: Pub,
+        super_keyword: Super,
+    },
+    Restricted {
+        pub_keyword: Pub,
+        in_keyword: Option<In>,
+        path: Path,
+    },
 }
 
 impl Parse for Visibility {
@@ -21,7 +36,7 @@ impl Parse for Visibility {
         if stream.peek::<Pub>().is_none() {
             return Ok(Visibility::Inherited);
         }
-        let _ = stream.parse::<Pub>()?;
+        let pub_keyword = stream.parse::<Pub>()?;
 
         // `pub(...)` restricted forms.
         if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Paren) {
@@ -29,30 +44,45 @@ impl Parse for Visibility {
             let mut inner = group.parse();
 
             if inner.peek::<Crate>().is_some() {
-                return Ok(Visibility::Crate);
+                let crate_keyword = inner.parse::<Crate>()?;
+                return Ok(Visibility::Crate {
+                    pub_keyword,
+                    crate_keyword,
+                });
             }
 
             if inner.peek::<SelfValue>().is_some() {
-                return Ok(Visibility::SelfValue);
+                let self_keyword = inner.parse::<SelfValue>()?;
+                return Ok(Visibility::SelfValue {
+                    pub_keyword,
+                    self_keyword,
+                });
             }
 
             if inner.peek::<Super>().is_some() {
-                return Ok(Visibility::Super);
+                let super_keyword = inner.parse::<Super>()?;
+                return Ok(Visibility::Super {
+                    pub_keyword,
+                    super_keyword,
+                });
             }
 
             // `pub(in path)`
-            let in_token = if inner.peek::<In>().is_some() {
-                let _ = inner.parse::<In>()?;
-                true
+            let in_keyword = if inner.peek::<In>().is_some() {
+                Some(inner.parse::<In>()?)
             } else {
-                false
+                None
             };
 
             let path = inner.parse::<Path>()?;
-            return Ok(Visibility::Restricted { in_token, path });
+            return Ok(Visibility::Restricted {
+                pub_keyword,
+                in_keyword,
+                path,
+            });
         }
 
-        Ok(Visibility::Public)
+        Ok(Visibility::Public { pub_keyword })
     }
 }
 
@@ -60,31 +90,44 @@ impl ToTokens for Visibility {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
             Visibility::Inherited => {}
-            Visibility::Public => Pub::default().to_tokens(t),
-            Visibility::Crate => {
-                Pub::default().to_tokens(t);
+            Visibility::Public { pub_keyword } => pub_keyword.to_tokens(t),
+            Visibility::Crate {
+                pub_keyword,
+                crate_keyword,
+            } => {
+                pub_keyword.to_tokens(t);
                 let mut inner = TokenStream::new();
-                Crate::default().to_tokens(&mut inner);
+                crate_keyword.to_tokens(&mut inner);
                 t.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));
             }
-            Visibility::SelfValue => {
-                Pub::default().to_tokens(t);
+            Visibility::SelfValue {
+                pub_keyword,
+                self_keyword,
+            } => {
+                pub_keyword.to_tokens(t);
                 let mut inner = TokenStream::new();
-                SelfValue::default().to_tokens(&mut inner);
+                self_keyword.to_tokens(&mut inner);
                 t.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));
             }
-            Visibility::Super => {
-                Pub::default().to_tokens(t);
+            Visibility::Super {
+                pub_keyword,
+                super_keyword,
+            } => {
+                pub_keyword.to_tokens(t);
                 let mut inner = TokenStream::new();
-                Super::default().to_tokens(&mut inner);
+                super_keyword.to_tokens(&mut inner);
                 t.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));
             }
-            Visibility::Restricted { in_token, path } => {
-                Pub::default().to_tokens(t);
+            Visibility::Restricted {
+                pub_keyword,
+                in_keyword,
+                path,
+            } => {
+                pub_keyword.to_tokens(t);
                 let mut inner = TokenStream::new();
 
-                if *in_token {
-                    In::default().to_tokens(&mut inner);
+                if let Some(in_kw) = in_keyword {
+                    in_kw.to_tokens(&mut inner);
                 }
 
                 path.to_tokens(&mut inner);

@@ -10,6 +10,7 @@ pub struct ExprTry {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub expr: Box<super::super::Expr>,
+    pub question_punct: Question,
 }
 
 impl ToTokens for ExprTry {
@@ -18,6 +19,6 @@ impl ToTokens for ExprTry {
             a.to_tokens(t);
         }
         self.expr.to_tokens(t);
-        Question::default().to_tokens(t);
+        self.question_punct.to_tokens(t);
     }
 }

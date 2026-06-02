@@ -12,9 +12,11 @@ pub struct ItemStruct {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
+    pub struct_keyword: Struct,
     pub ident: Ident,
     pub generics: Generics,
     pub fields: Fields,
+    pub semi_punct: Semi,
 }
 
 impl Parse for ItemStruct {
@@ -35,9 +37,11 @@ impl Parse for ItemStruct {
             span: Span::default(),
             attrs,
             vis,
+            struct_keyword: Struct::default(),
             ident,
             generics,
             fields,
+            semi_punct: Semi::default(),
         })
     }
 }
@@ -48,13 +52,13 @@ impl ToTokens for ItemStruct {
             a.to_tokens(t);
         }
         self.vis.to_tokens(t);
-        Struct::default().to_tokens(t);
+        self.struct_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);
         self.fields.to_tokens(t);
 
         if !matches!(self.fields, Fields::Named(_)) {
-            Semi::default().to_tokens(t);
+            self.semi_punct.to_tokens(t);
         }
     }
 }

@@ -14,7 +14,9 @@ pub struct ItemMod {
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub unsafety: Unsafety,
+    pub mod_keyword: Mod,
     pub ident: Ident,
+    pub semi_punct: Semi,
     pub content: Option<Vec<Item>>,
 }
 
@@ -23,16 +25,16 @@ impl Parse for ItemMod {
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
         let unsafety = Unsafety::Safe;
-        let _ = stream.parse::<Mod>()?;
+        let mod_keyword = stream.parse::<Mod>()?;
         let ident = stream.parse::<Ident>()?;
 
-        let content = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
+        let (semi_punct, content) = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
             let group = stream.parse_group(Delim::Brace)?;
             let mut inner = group.parse();
-            Some(inner.parse_vec::<Item>()?)
+            (Semi::default(), Some(inner.parse_vec::<Item>()?))
         } else {
-            let _ = stream.parse::<Semi>();
-            None
+            let semi_punct = stream.parse::<Semi>()?;
+            (semi_punct, None)
         };
 
         Ok(ItemMod {
@@ -40,7 +42,9 @@ impl Parse for ItemMod {
             attrs,
             vis,
             unsafety,
+            mod_keyword,
             ident,
+            semi_punct,
             content,
         })
     }
@@ -52,7 +56,7 @@ impl ToTokens for ItemMod {
             a.to_tokens(t);
         }
         self.vis.to_tokens(t);
-        Mod::default().to_tokens(t);
+        self.mod_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         match &self.content {
             Some(items) => {
@@ -62,7 +66,7 @@ impl ToTokens for ItemMod {
                 }
                 t.extend_one(TokenTree::Group(Group::new(Delim::Brace, inner)));
             }
-            None => Semi::default().to_tokens(t),
+            None => self.semi_punct.to_tokens(t),
         }
     }
 }

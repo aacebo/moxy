@@ -12,32 +12,41 @@ pub struct ItemExternCrate {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
+    pub extern_keyword: Extern,
+    pub crate_keyword: Crate,
     pub ident: Ident,
+    pub as_keyword: Option<As>,
     pub rename: Option<Ident>,
+    pub semi_punct: Semi,
 }
 
 impl Parse for ItemExternCrate {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
-        let _ = stream.parse::<Extern>()?;
-        let _ = stream.parse::<Crate>()?;
+        let extern_keyword = stream.parse::<Extern>()?;
+        let crate_keyword = stream.parse::<Crate>()?;
         let ident = stream.parse::<Ident>()?;
 
-        let rename = if stream.peek::<As>().is_some() {
-            let _ = stream.parse::<As>()?;
-            Some(stream.parse::<Ident>()?)
+        let (as_keyword, rename) = if stream.peek::<As>().is_some() {
+            let as_keyword = stream.parse::<As>()?;
+            let rename = stream.parse::<Ident>()?;
+            (Some(as_keyword), Some(rename))
         } else {
-            None
+            (None, None)
         };
 
-        let _ = stream.parse::<Semi>();
+        let semi_punct = stream.parse::<Semi>()?;
         Ok(ItemExternCrate {
             span: Span::default(),
             attrs,
             vis,
+            extern_keyword,
+            crate_keyword,
             ident,
+            as_keyword,
             rename,
+            semi_punct,
         })
     }
 }
@@ -48,15 +57,15 @@ impl ToTokens for ItemExternCrate {
             a.to_tokens(t);
         }
         self.vis.to_tokens(t);
-        Extern::default().to_tokens(t);
-        Crate::default().to_tokens(t);
+        self.extern_keyword.to_tokens(t);
+        self.crate_keyword.to_tokens(t);
         self.ident.to_tokens(t);
 
-        if let Some(r) = &self.rename {
-            As::default().to_tokens(t);
+        if let (Some(as_keyword), Some(r)) = (&self.as_keyword, &self.rename) {
+            as_keyword.to_tokens(t);
             r.to_tokens(t);
         }
 
-        Semi::default().to_tokens(t);
+        self.semi_punct.to_tokens(t);
     }
 }

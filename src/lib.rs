@@ -5,6 +5,7 @@ pub mod ast {
 
 #[cfg(feature = "fmt")]
 pub mod fmt {
+    #[allow(unused)]
     pub use moxy_fmt::*;
 }
 

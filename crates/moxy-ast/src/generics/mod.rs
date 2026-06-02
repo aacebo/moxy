@@ -36,6 +36,8 @@ pub use where_predicate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Generics {
     pub span: Span,
+    pub lt_punct: Lt,
+    pub gt_punct: Gt,
     pub params: Punctuated<GenericParam, Comma>,
     pub where_clause: Option<WhereClause>,
 }
@@ -69,6 +71,8 @@ impl Parse for Generics {
 
         Ok(Self {
             span: Span::default(),
+            lt_punct: Lt::default(),
+            gt_punct: Gt::default(),
             params,
             where_clause,
         })
@@ -78,9 +82,9 @@ impl Parse for Generics {
 impl ToTokens for Generics {
     fn to_tokens(&self, t: &mut TokenStream) {
         if !self.params.is_empty() {
-            Lt::default().to_tokens(t);
+            self.lt_punct.to_tokens(t);
             self.params.to_tokens(t);
-            Gt::default().to_tokens(t);
+            self.gt_punct.to_tokens(t);
         }
         if let Some(w) = &self.where_clause {
             w.to_tokens(t);

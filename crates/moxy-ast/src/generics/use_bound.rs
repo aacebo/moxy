@@ -10,13 +10,16 @@ use crate::{Lifetime, Punctuated};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseBound {
     pub span: Span,
+    pub use_keyword: Use,
+    pub lt_punct: Lt,
     pub lifetimes: Punctuated<Lifetime, Comma>,
+    pub gt_punct: Gt,
 }
 
 impl Parse for UseBound {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let _ = stream.parse::<Use>()?;
-        let _ = stream.parse::<Lt>()?;
+        let use_keyword = stream.parse::<Use>()?;
+        let lt_punct = stream.parse::<Lt>()?;
         let mut lifetimes = Punctuated::new();
 
         while !stream.peek_angle_close() && !stream.is_empty() {
@@ -31,16 +34,19 @@ impl Parse for UseBound {
         stream.eat_angle_close()?;
         Ok(Self {
             span: Span::default(),
+            use_keyword,
+            lt_punct,
             lifetimes,
+            gt_punct: Gt::default(),
         })
     }
 }
 
 impl ToTokens for UseBound {
     fn to_tokens(&self, t: &mut TokenStream) {
-        Use::default().to_tokens(t);
-        Lt::default().to_tokens(t);
+        self.use_keyword.to_tokens(t);
+        self.lt_punct.to_tokens(t);
         self.lifetimes.to_tokens(t);
-        Gt::default().to_tokens(t);
+        self.gt_punct.to_tokens(t);
     }
 }

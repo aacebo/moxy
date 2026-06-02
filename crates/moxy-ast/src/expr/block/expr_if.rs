@@ -1,4 +1,5 @@
 use moxy_token::keyword::{Else, If};
+use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::{Span, ToTokens, TokenStream};
 
 use crate::*;
@@ -9,9 +10,37 @@ use crate::*;
 pub struct ExprIf {
     pub span: Span,
     pub attrs: Vec<Attribute>,
+    pub if_keyword: If,
     pub cond: Box<super::super::Expr>,
     pub then_branch: StmtBlock,
+    pub else_keyword: Option<Else>,
     pub else_branch: Option<Box<super::super::Expr>>,
+}
+
+impl ExprIf {
+    pub fn parse_from(stream: &mut ParseStream) -> Result<super::super::Expr, ParseError> {
+        let if_keyword = stream.parse::<If>()?;
+        let cond = Box::new(super::super::parse_expr(stream, false)?);
+        let then_branch = stream.parse::<StmtBlock>()?;
+
+        let (else_keyword, else_branch) = if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("else")) {
+            let else_kw = stream.parse::<Else>()?;
+            let branch = Some(Box::new(crate::PrimaryExpr::parse_from(stream, true)?));
+            (Some(else_kw), branch)
+        } else {
+            (None, None)
+        };
+
+        Ok(super::super::Expr::Block(super::BlockExpr::If(Self {
+            span: Span::default(),
+            attrs: Vec::new(),
+            if_keyword,
+            cond,
+            then_branch,
+            else_keyword,
+            else_branch,
+        })))
+    }
 }
 
 impl ToTokens for ExprIf {
@@ -19,12 +48,12 @@ impl ToTokens for ExprIf {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        If::default().to_tokens(t);
+        self.if_keyword.to_tokens(t);
         self.cond.to_tokens(t);
         self.then_branch.to_tokens(t);
 
         if let Some(e) = &self.else_branch {
-            Else::default().to_tokens(t);
+            self.else_keyword.to_tokens(t);
             e.to_tokens(t);
         }
     }

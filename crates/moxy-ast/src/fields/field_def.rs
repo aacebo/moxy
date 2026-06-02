@@ -13,6 +13,7 @@ pub struct FieldDef {
     pub vis: Visibility,
     pub mutability: Mutability,
     pub ident: Option<Ident>,
+    pub colon_punct: Option<Colon>,
     pub ty: Type,
 }
 
@@ -22,18 +23,18 @@ impl Parse for FieldDef {
         let vis = stream.parse::<Visibility>()?;
         let mutability = stream.parse::<Mutability>()?;
 
-        let ident = {
+        let (ident, colon_punct) = {
             let mut fork = stream.fork();
             if let Ok(id) = fork.parse::<Ident>() {
                 if fork.peek::<Colon>().is_some() {
                     stream.seek(&fork);
-                    let _ = stream.parse::<Colon>()?;
-                    Some(id)
+                    let colon = stream.parse::<Colon>()?;
+                    (Some(id), Some(colon))
                 } else {
-                    None
+                    (None, None)
                 }
             } else {
-                None
+                (None, None)
             }
         };
 
@@ -44,6 +45,7 @@ impl Parse for FieldDef {
             vis,
             mutability,
             ident,
+            colon_punct,
             ty,
         })
     }
@@ -59,7 +61,9 @@ impl ToTokens for FieldDef {
 
         if let Some(id) = &self.ident {
             id.to_tokens(t);
-            Colon::default().to_tokens(t);
+            if let Some(colon_punct) = &self.colon_punct {
+                colon_punct.to_tokens(t);
+            }
         }
 
         self.ty.to_tokens(t);

@@ -10,6 +10,7 @@ use crate::{Lifetime, Punctuated};
 pub struct LifetimePredicate {
     pub span: Span,
     pub lifetime: Lifetime,
+    pub colon_punct: Colon,
     pub bounds: Punctuated<Lifetime, Plus>,
 }
 
@@ -20,6 +21,7 @@ impl Parse for LifetimePredicate {
         Ok(Self {
             span: Span::default(),
             lifetime,
+            colon_punct: Colon::default(),
             bounds,
         })
     }
@@ -29,7 +31,7 @@ impl ToTokens for LifetimePredicate {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.lifetime.to_tokens(t);
         if !self.bounds.is_empty() {
-            Colon::default().to_tokens(t);
+            self.colon_punct.to_tokens(t);
             self.bounds.to_tokens(t);
         }
     }

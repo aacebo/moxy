@@ -13,6 +13,7 @@ pub struct ItemMacro {
     pub ident: Option<Ident>,
     pub mac: MacroCall,
     pub semi: bool,
+    pub semi_punct: Option<Semi>,
 }
 
 impl Parse for ItemMacro {
@@ -20,11 +21,11 @@ impl Parse for ItemMacro {
         let attrs = stream.parse_vec::<Attribute>()?;
         let mac = stream.parse::<MacroCall>()?;
 
-        let semi = if stream.peek::<Semi>().is_some() {
-            let _ = stream.parse::<Semi>()?;
-            true
+        let (semi, semi_punct) = if stream.peek::<Semi>().is_some() {
+            let punct = stream.parse::<Semi>()?;
+            (true, Some(punct))
         } else {
-            false
+            (false, None)
         };
 
         Ok(ItemMacro {
@@ -33,6 +34,7 @@ impl Parse for ItemMacro {
             ident: None,
             mac,
             semi,
+            semi_punct,
         })
     }
 }
@@ -44,8 +46,8 @@ impl ToTokens for ItemMacro {
         }
         self.mac.to_tokens(t);
 
-        if self.semi {
-            Semi::default().to_tokens(t);
+        if let Some(semi_punct) = &self.semi_punct {
+            semi_punct.to_tokens(t);
         }
     }
 }

@@ -12,6 +12,7 @@ pub struct ItemEnum {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
+    pub enum_keyword: Enum,
     pub ident: Ident,
     pub generics: Generics,
     pub variants: Punctuated<Variant, Comma>,
@@ -21,7 +22,7 @@ impl Parse for ItemEnum {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
-        let _ = stream.parse::<Enum>()?;
+        let enum_keyword = stream.parse::<Enum>()?;
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
 
@@ -36,6 +37,7 @@ impl Parse for ItemEnum {
             span: Span::default(),
             attrs,
             vis,
+            enum_keyword,
             ident,
             generics,
             variants,
@@ -49,7 +51,7 @@ impl ToTokens for ItemEnum {
             a.to_tokens(t);
         }
         self.vis.to_tokens(t);
-        Enum::default().to_tokens(t);
+        self.enum_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);
         let mut inner = TS::new();
@@ -66,6 +68,7 @@ pub struct Variant {
     pub attrs: Vec<Attribute>,
     pub ident: Ident,
     pub fields: Fields,
+    pub eq_punct: Option<Eq>,
     pub discriminant: Option<Expr>,
 }
 
@@ -75,11 +78,12 @@ impl Parse for Variant {
         let ident = stream.parse::<Ident>()?;
         let fields = stream.parse::<Fields>()?;
 
-        let discriminant = if stream.peek::<Eq>().is_some() {
-            let _ = stream.parse::<Eq>()?;
-            Some(stream.parse::<Expr>()?)
+        let (eq_punct, discriminant) = if stream.peek::<Eq>().is_some() {
+            let eq_punct = stream.parse::<Eq>()?;
+            let discriminant = stream.parse::<Expr>()?;
+            (Some(eq_punct), Some(discriminant))
         } else {
-            None
+            (None, None)
         };
 
         Ok(Self {
@@ -87,6 +91,7 @@ impl Parse for Variant {
             attrs,
             ident,
             fields,
+            eq_punct,
             discriminant,
         })
     }
@@ -100,8 +105,8 @@ impl ToTokens for Variant {
         self.ident.to_tokens(t);
         self.fields.to_tokens(t);
 
-        if let Some(d) = &self.discriminant {
-            Eq::default().to_tokens(t);
+        if let (Some(eq_punct), Some(d)) = (&self.eq_punct, &self.discriminant) {
+            eq_punct.to_tokens(t);
             d.to_tokens(t);
         }
     }

@@ -11,6 +11,7 @@ pub struct LifetimeParam {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub lifetime: Lifetime,
+    pub colon_punct: Option<Colon>,
     pub bounds: Punctuated<Lifetime, Plus>,
 }
 
@@ -19,10 +20,12 @@ impl Parse for LifetimeParam {
         let attrs = stream.parse_vec::<Attribute>()?;
         let lifetime = stream.parse::<Lifetime>()?;
         let bounds = Lifetime::parse_bounds(stream)?;
+        let colon_punct = if !bounds.is_empty() { Some(Colon::default()) } else { None };
         Ok(Self {
             span: Span::default(),
             attrs,
             lifetime,
+            colon_punct,
             bounds,
         })
     }
@@ -36,7 +39,9 @@ impl ToTokens for LifetimeParam {
         self.lifetime.to_tokens(t);
 
         if !self.bounds.is_empty() {
-            Colon::default().to_tokens(t);
+            if let Some(colon_punct) = &self.colon_punct {
+                colon_punct.to_tokens(t);
+            }
             self.bounds.to_tokens(t);
         }
     }

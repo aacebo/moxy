@@ -10,6 +10,7 @@ pub struct ExprType {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub expr: Box<super::super::Expr>,
+    pub colon_punct: Colon,
     pub ty: Box<Type>,
 }
 
@@ -19,7 +20,7 @@ impl ToTokens for ExprType {
             a.to_tokens(t);
         }
         self.expr.to_tokens(t);
-        Colon::default().to_tokens(t);
+        self.colon_punct.to_tokens(t);
         self.ty.to_tokens(t);
     }
 }

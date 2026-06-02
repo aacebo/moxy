@@ -17,3 +17,18 @@ impl<T: Parse> Peek for T {
         Self::parse(stream).ok()
     }
 }
+
+#[macro_export]
+macro_rules! parse {
+    ($tokens:ident as $ty:ty) => {{
+        let mut stream = $tokens.parse();
+        match <$ty as $crate::Parse>::parse(&mut stream) {
+            Ok(v) => v,
+            Err(e) => return e.to_compile_error().into_iter().collect(),
+        }
+    }};
+    (? $tokens:ident as $ty:ty) => {{
+        let mut stream = $tokens.parse();
+        <$ty as $crate::Parse>::parse(&mut stream)
+    }};
+}

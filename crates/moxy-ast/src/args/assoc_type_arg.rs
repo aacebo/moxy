@@ -12,6 +12,7 @@ pub struct AssocTypeArg {
     pub span: Span,
     pub ident: Ident,
     pub generics: Option<AngleArgs>,
+    pub eq_punct: Eq,
     pub ty: Type,
 }
 
@@ -26,7 +27,7 @@ impl Parse for AssocTypeArg {
             None
         };
 
-        let _ = fork.parse::<Eq>()?;
+        let eq_punct = fork.parse::<Eq>()?;
         // Try to parse a type; if it fails this is not an assoc-type binding.
         let ty = fork.parse::<Type>()?;
         stream.seek(&fork);
@@ -34,6 +35,7 @@ impl Parse for AssocTypeArg {
             span: Span::default(),
             ident,
             generics,
+            eq_punct,
             ty,
         })
     }
@@ -47,7 +49,7 @@ impl ToTokens for AssocTypeArg {
             g.to_tokens(t);
         }
 
-        Eq::default().to_tokens(t);
+        self.eq_punct.to_tokens(t);
         self.ty.to_tokens(t);
     }
 }

@@ -12,9 +12,12 @@ pub struct ItemTraitAlias {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
+    pub trait_keyword: Trait,
     pub ident: Ident,
     pub generics: Generics,
+    pub eq_punct: Eq,
     pub bounds: Punctuated<TypeBound, Plus>,
+    pub semi_punct: Semi,
 }
 
 impl Parse for ItemTraitAlias {
@@ -28,19 +31,22 @@ impl Parse for ItemTraitAlias {
             let _ = stream.parse::<Auto>()?;
         }
 
-        let _ = stream.parse::<Trait>()?;
+        let trait_keyword = stream.parse::<Trait>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
-        let _ = stream.parse::<Eq>()?;
+        let eq_punct = stream.parse::<Eq>()?;
         let bounds = crate::TypeBound::parse_bounds(stream)?;
-        let _ = stream.parse::<Semi>();
+        let semi_punct = stream.parse::<Semi>()?;
         Ok(ItemTraitAlias {
             span: Span::default(),
             attrs,
             vis,
+            trait_keyword,
             ident,
             generics,
+            eq_punct,
             bounds,
+            semi_punct,
         })
     }
 }
@@ -51,11 +57,11 @@ impl ToTokens for ItemTraitAlias {
             a.to_tokens(t);
         }
         self.vis.to_tokens(t);
-        Trait::default().to_tokens(t);
+        self.trait_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);
-        Eq::default().to_tokens(t);
+        self.eq_punct.to_tokens(t);
         self.bounds.to_tokens(t);
-        Semi::default().to_tokens(t);
+        self.semi_punct.to_tokens(t);
     }
 }

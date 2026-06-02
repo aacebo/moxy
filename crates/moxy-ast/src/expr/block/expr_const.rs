@@ -1,4 +1,5 @@
 use moxy_token::keyword::Const;
+use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::{Span, ToTokens, TokenStream};
 
 use crate::*;
@@ -9,7 +10,21 @@ use crate::*;
 pub struct ExprConst {
     pub span: Span,
     pub attrs: Vec<Attribute>,
+    pub const_keyword: Const,
     pub block: StmtBlock,
+}
+
+impl ExprConst {
+    pub fn parse_from(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let const_keyword = stream.parse::<Const>()?;
+        let block = stream.parse::<StmtBlock>()?;
+        Ok(Self {
+            span: Span::default(),
+            attrs: Vec::new(),
+            const_keyword,
+            block,
+        })
+    }
 }
 
 impl ToTokens for ExprConst {
@@ -17,7 +32,7 @@ impl ToTokens for ExprConst {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        Const::default().to_tokens(t);
+        self.const_keyword.to_tokens(t);
         self.block.to_tokens(t);
     }
 }

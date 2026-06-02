@@ -147,11 +147,12 @@ impl PostfixExpr {
             }
 
             if stream.peek::<Question>().is_some() {
-                let _ = stream.parse::<Question>()?;
+                let question_punct = stream.parse::<Question>()?;
                 expr = Expr::Unary(UnaryExpr::Try(ExprTry {
                     span: Span::default(),
                     attrs: Vec::new(),
                     expr: Box::new(expr),
+                    question_punct,
                 }));
                 continue;
             }

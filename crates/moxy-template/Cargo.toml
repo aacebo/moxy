@@ -16,5 +16,10 @@ doctest = false
 [lints]
 workspace = true
 
+[features]
+default = []
+serde = ["dep:serde", "moxy-token/serde"]
+
 [dependencies]
 moxy-token = { path = "../moxy-token" }
+serde = { version = "1", features = ["derive"], optional = true }

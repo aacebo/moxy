@@ -1,4 +1,5 @@
 use moxy_token::keyword::Try;
+use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::{Span, ToTokens, TokenStream};
 
 use crate::*;
@@ -9,7 +10,21 @@ use crate::*;
 pub struct ExprTryBlock {
     pub span: Span,
     pub attrs: Vec<Attribute>,
+    pub try_keyword: Try,
     pub block: StmtBlock,
+}
+
+impl ExprTryBlock {
+    pub fn parse_from(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let try_keyword = stream.parse::<Try>()?;
+        let block = stream.parse::<StmtBlock>()?;
+        Ok(Self {
+            span: Span::default(),
+            attrs: Vec::new(),
+            try_keyword,
+            block,
+        })
+    }
 }
 
 impl ToTokens for ExprTryBlock {
@@ -17,7 +32,7 @@ impl ToTokens for ExprTryBlock {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        Try::default().to_tokens(t);
+        self.try_keyword.to_tokens(t);
         self.block.to_tokens(t);
     }
 }

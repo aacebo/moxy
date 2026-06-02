@@ -10,12 +10,14 @@ use crate::Punctuated;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct AngleArgs {
     pub span: Span,
+    pub lt_punct: Lt,
     pub args: Punctuated<GenericArgument, Comma>,
+    pub gt_punct: Gt,
 }
 
 impl Parse for AngleArgs {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let _ = stream.parse::<Lt>()?;
+        let lt_punct = stream.parse::<Lt>()?;
         let mut args = Punctuated::new();
 
         while !stream.peek_angle_close() && !stream.is_empty() {
@@ -30,15 +32,17 @@ impl Parse for AngleArgs {
         stream.eat_angle_close()?;
         Ok(Self {
             span: Span::default(),
+            lt_punct,
             args,
+            gt_punct: Gt::default(),
         })
     }
 }
 
 impl ToTokens for AngleArgs {
     fn to_tokens(&self, t: &mut TokenStream) {
-        Lt::default().to_tokens(t);
+        self.lt_punct.to_tokens(t);
         self.args.to_tokens(t);
-        Gt::default().to_tokens(t);
+        self.gt_punct.to_tokens(t);
     }
 }

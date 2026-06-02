@@ -13,7 +13,9 @@ pub struct ItemImpl {
     pub attrs: Vec<Attribute>,
     pub defaultness: Defaultness,
     pub unsafety: Unsafety,
+    pub impl_keyword: Impl,
     pub generics: Generics,
+    pub for_keyword: Option<For>,
     pub trait_ref: Option<TraitRef>,
     pub self_ty: Type,
     pub items: Vec<ImplItem>,
@@ -37,7 +39,7 @@ impl Parse for ItemImpl {
         let attrs = stream.parse_vec::<Attribute>()?;
         let defaultness = stream.parse::<Defaultness>()?;
         let unsafety = stream.parse::<Unsafety>()?;
-        let _ = stream.parse::<Impl>()?;
+        let impl_keyword = stream.parse::<Impl>()?;
         let generics = stream.parse::<Generics>()?;
 
         // Optional `!` for a negative impl (`impl !Trait for T`).
@@ -51,12 +53,16 @@ impl Parse for ItemImpl {
         // `impl Trait for Type` vs `impl Type`. Parse a type; if `for` follows, it was the trait.
         let first = stream.parse::<Type>()?;
 
-        let (trait_ref, self_ty) = if stream.peek::<For>().is_some() {
-            let _ = stream.parse::<For>()?;
+        let (for_keyword, trait_ref, self_ty) = if stream.peek::<For>().is_some() {
+            let for_keyword = stream.parse::<For>()?;
             let self_ty = stream.parse::<Type>()?;
-            (Some(ItemImpl::type_to_trait_ref(first, polarity)?), self_ty)
+            (
+                Some(for_keyword),
+                Some(ItemImpl::type_to_trait_ref(first, polarity)?),
+                self_ty,
+            )
         } else {
-            (None, first)
+            (None, None, first)
         };
 
         let mut generics = generics;
@@ -73,7 +79,9 @@ impl Parse for ItemImpl {
             attrs,
             defaultness,
             unsafety,
+            impl_keyword,
             generics,
+            for_keyword,
             trait_ref,
             self_ty,
             items,
@@ -88,12 +96,14 @@ impl ToTokens for ItemImpl {
         }
         self.defaultness.to_tokens(t);
         self.unsafety.to_tokens(t);
-        Impl::default().to_tokens(t);
+        self.impl_keyword.to_tokens(t);
         self.generics.to_tokens(t);
 
         if let Some(tr) = &self.trait_ref {
             tr.to_tokens(t);
-            For::default().to_tokens(t);
+            if let Some(for_keyword) = &self.for_keyword {
+                for_keyword.to_tokens(t);
+            }
         }
 
         self.self_ty.to_tokens(t);

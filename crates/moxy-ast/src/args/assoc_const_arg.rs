@@ -12,6 +12,7 @@ pub struct AssocConstArg {
     pub span: Span,
     pub ident: Ident,
     pub generics: Option<AngleArgs>,
+    pub eq_punct: Eq,
     pub expr: Expr,
 }
 
@@ -26,13 +27,14 @@ impl Parse for AssocConstArg {
             None
         };
 
-        let _ = fork.parse::<Eq>()?;
+        let eq_punct = fork.parse::<Eq>()?;
         let expr = fork.parse::<Expr>()?;
         stream.seek(&fork);
         Ok(Self {
             span: Span::default(),
             ident,
             generics,
+            eq_punct,
             expr,
         })
     }
@@ -46,7 +48,7 @@ impl ToTokens for AssocConstArg {
             g.to_tokens(t);
         }
 
-        Eq::default().to_tokens(t);
+        self.eq_punct.to_tokens(t);
         self.expr.to_tokens(t);
     }
 }

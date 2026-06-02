@@ -1,0 +1,52 @@
+mod tmpl_for;
+mod tmpl_if;
+mod tmpl_match;
+
+use moxy_token::keyword::{For, If, Match};
+use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::punct::At;
+use moxy_token::{LexError, Parse, ToTokens, TokenStream};
+pub use tmpl_for::*;
+pub use tmpl_if::*;
+pub use tmpl_match::*;
+
+#[doc = "A template `@`-directive: `@if`, `@for`, or `@match`."]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub enum TmplKeyword {
+    If(TmplIf),
+    For(TmplFor),
+    Match(TmplMatch),
+}
+
+impl Parse for TmplKeyword {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let at_punct = stream.parse::<At>()?;
+
+        if let Some(if_kw) = stream.parse_opt::<If>() {
+            return Ok(Self::If(TmplIf::parse_after_keyword_if(stream, at_punct, if_kw)?));
+        }
+
+        if let Some(for_kw) = stream.parse_opt::<For>() {
+            return Ok(Self::For(TmplFor::parse_after_keyword_for(stream, at_punct, for_kw)?));
+        }
+
+        if let Some(match_kw) = stream.parse_opt::<Match>() {
+            return Ok(Self::Match(TmplMatch::parse_after_keyword_match(stream, at_punct, match_kw)?));
+        }
+
+        Err(LexError::new(stream.span())
+            .message("expected `if`, `for`, or `match` after `@`")
+            .into())
+    }
+}
+
+impl ToTokens for TmplKeyword {
+    fn to_tokens(&self, t: &mut TokenStream) {
+        match self {
+            Self::If(v) => v.to_tokens(t),
+            Self::For(v) => v.to_tokens(t),
+            Self::Match(v) => v.to_tokens(t),
+        }
+    }
+}

@@ -11,6 +11,8 @@ use crate::{Attribute, Ident};
 pub struct ItemMacroRules {
     pub span: Span,
     pub attrs: Vec<Attribute>,
+    pub macro_rules_keyword: MacroRules,
+    pub not_punct: Not,
     pub ident: Ident,
     pub rules: TokenStream,
 }
@@ -18,8 +20,8 @@ pub struct ItemMacroRules {
 impl Parse for ItemMacroRules {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse_vec::<Attribute>()?;
-        let _ = stream.parse::<MacroRules>()?;
-        let _ = stream.parse::<Not>()?;
+        let macro_rules_keyword = stream.parse::<MacroRules>()?;
+        let not_punct = stream.parse::<Not>()?;
         let ident = stream.parse::<Ident>()?;
 
         let rules = match stream.curr() {
@@ -36,6 +38,8 @@ impl Parse for ItemMacroRules {
         Ok(ItemMacroRules {
             span: Span::default(),
             attrs,
+            macro_rules_keyword,
+            not_punct,
             ident,
             rules,
         })
@@ -47,8 +51,8 @@ impl ToTokens for ItemMacroRules {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        MacroRules::default().to_tokens(t);
-        Not::default().to_tokens(t);
+        self.macro_rules_keyword.to_tokens(t);
+        self.not_punct.to_tokens(t);
         self.ident.to_tokens(t);
         t.extend_one(TokenTree::Group(Group::new(Delim::Brace, self.rules.clone())));
     }

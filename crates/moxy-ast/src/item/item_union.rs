@@ -11,6 +11,7 @@ pub struct ItemUnion {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
+    pub union_keyword: Union,
     pub ident: Ident,
     pub generics: Generics,
     pub fields: FieldsNamed,
@@ -20,7 +21,7 @@ impl Parse for ItemUnion {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
-        let _ = stream.parse::<Union>()?;
+        let union_keyword = stream.parse::<Union>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
         let fields = stream.parse::<FieldsNamed>()?;
@@ -28,6 +29,7 @@ impl Parse for ItemUnion {
             span: Span::default(),
             attrs,
             vis,
+            union_keyword,
             ident,
             generics,
             fields,
@@ -41,7 +43,7 @@ impl ToTokens for ItemUnion {
             a.to_tokens(t);
         }
         self.vis.to_tokens(t);
-        Union::default().to_tokens(t);
+        self.union_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);
         self.fields.to_tokens(t);

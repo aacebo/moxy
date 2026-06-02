@@ -12,6 +12,7 @@ pub struct FieldValue {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub member: Member,
+    pub colon_punct: Option<Colon>,
     pub expr: Expr,
     pub shorthand: bool,
 }
@@ -21,12 +22,13 @@ impl Parse for FieldValue {
         let attrs = stream.parse_vec::<Attribute>()?;
         let member = stream.parse::<Member>()?;
         if stream.peek::<Colon>().is_some() {
-            let _ = stream.parse::<Colon>()?;
+            let colon_punct = Some(stream.parse::<Colon>()?);
             let expr = stream.parse::<Expr>()?;
             Ok(Self {
                 span: Span::default(),
                 attrs,
                 member,
+                colon_punct,
                 expr,
                 shorthand: false,
             })
@@ -48,6 +50,7 @@ impl Parse for FieldValue {
                 span: Span::default(),
                 attrs,
                 member,
+                colon_punct: None,
                 expr,
                 shorthand: true,
             })
@@ -65,7 +68,7 @@ impl ToTokens for FieldValue {
             self.member.to_tokens(t);
         } else {
             self.member.to_tokens(t);
-            Colon::default().to_tokens(t);
+            self.colon_punct.to_tokens(t);
             self.expr.to_tokens(t);
         }
     }

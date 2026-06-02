@@ -22,7 +22,7 @@ pub use expr_path::*;
 pub use expr_repeat::*;
 pub use expr_struct::*;
 pub use expr_tuple::*;
-use moxy_token::keyword::{Break, Const, Continue, Let, Return, Unsafe, Yield};
+use moxy_token::keyword::{Break, Const, Continue, Let, Return, Try, Unsafe, Yield};
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, Eq, Or, OrOr, Semi};
 use moxy_token::{Delim, LexError, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
@@ -188,7 +188,6 @@ impl ExprClosure {
 }
 
 impl ExprStruct {
-    #[allow(clippy::type_complexity)]
     pub fn parse_body(stream: &mut ParseStream) -> Result<(Punctuated<FieldValue, Comma>, Option<Box<Expr>>), ParseError> {
         use moxy_token::punct::DotDot;
         let mut fields = Punctuated::new();
@@ -343,52 +342,19 @@ impl PrimaryExpr {
         }
 
         if stream.peek::<Unsafe>().is_some() {
-            let _ = stream.parse::<Unsafe>()?;
-            return Ok(Expr::Block(BlockExpr::Unsafe(ExprUnsafe {
-                span: Span::default(),
-                attrs: Vec::new(),
-                block: stream.parse()?,
-            })));
+            return Ok(Expr::Block(BlockExpr::Unsafe(ExprUnsafe::parse_from(stream)?)));
         }
 
-        // `const { }` block (vs `const` closure, which has `|`/`move` next).
         if stream.peek::<Const>().is_some() && ExprBrace::is_next(stream) {
-            let _ = stream.parse::<Const>()?;
-            return Ok(Expr::Block(BlockExpr::Const(ExprConst {
-                span: Span::default(),
-                attrs: Vec::new(),
-                block: stream.parse()?,
-            })));
+            return Ok(Expr::Block(BlockExpr::Const(ExprConst::parse_from(stream)?)));
         }
 
-        // `async { }` / `async move { }` block (vs `async` closure).
         if stream.peek::<moxy_token::keyword::Async>().is_some() && ExprAsync::is_block(stream) {
-            use moxy_token::keyword::Move;
-            let _ = stream.parse::<moxy_token::keyword::Async>()?;
-
-            let capture = if stream.peek::<Move>().is_some() {
-                let _ = stream.parse::<Move>()?;
-                true
-            } else {
-                false
-            };
-
-            return Ok(Expr::Block(BlockExpr::Async(ExprAsync {
-                span: Span::default(),
-                attrs: Vec::new(),
-                capture,
-                block: stream.parse()?,
-            })));
+            return Ok(Expr::Block(BlockExpr::Async(ExprAsync::parse_from(stream)?)));
         }
 
-        // `try { }` block.
-        if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("try")) && ExprBrace::is_next(stream) {
-            stream.advance();
-            return Ok(Expr::Block(BlockExpr::TryBlock(ExprTryBlock {
-                span: Span::default(),
-                attrs: Vec::new(),
-                block: stream.parse()?,
-            })));
+        if stream.peek::<Try>().is_some() && ExprBrace::is_next(stream) {
+            return Ok(Expr::Block(BlockExpr::TryBlock(ExprTryBlock::parse_from(stream)?)));
         }
 
         if stream.peek::<Return>().is_some() {

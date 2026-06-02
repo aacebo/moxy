@@ -18,6 +18,9 @@ categories = ["development-tools::procedural-macro-helpers", "rust-patterns", "n
 [workspace.lints.clippy]
 collapsible-if = "allow"
 new-ret-no-self = "allow"
+get_first = "allow"
+explicit_counter_loop = "allow"
+type_complexity = "allow"
 
 [package]
 name = "moxy"
@@ -45,7 +48,7 @@ token = ["moxy-token"]
 template = ["moxy-template"]
 diagnostic = ["moxy-diagnostic"]
 macros = ["moxy-macros"]
-serde = ["moxy-ast/serde", "moxy-token/serde"]
+serde = ["moxy-ast/serde", "moxy-token/serde", "moxy-template/serde"]
 proc-macro2 = ["moxy-token/proc-macro2"]
 
 [dependencies]

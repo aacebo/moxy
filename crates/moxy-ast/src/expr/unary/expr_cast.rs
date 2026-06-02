@@ -10,6 +10,7 @@ pub struct ExprCast {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub expr: Box<super::super::Expr>,
+    pub as_keyword: As,
     pub ty: Box<Type>,
 }
 
@@ -19,7 +20,7 @@ impl ToTokens for ExprCast {
             a.to_tokens(t);
         }
         self.expr.to_tokens(t);
-        As::default().to_tokens(t);
+        self.as_keyword.to_tokens(t);
         self.ty.to_tokens(t);
     }
 }

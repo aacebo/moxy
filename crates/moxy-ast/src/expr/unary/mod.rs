@@ -79,12 +79,13 @@ impl UnaryExpr {
         }
 
         if stream.peek::<And>().is_some() {
-            let _ = stream.parse::<And>()?;
+            let and_punct = stream.parse::<And>()?;
             let mutability = stream.parse::<Mutability>()?;
             let expr = Box::new(UnaryExpr::parse_from(stream, allow_struct)?);
             return Ok(Expr::Unary(UnaryExpr::Reference(ExprReference {
                 span: Span::default(),
                 attrs: Vec::new(),
+                and_punct,
                 mutability,
                 expr,
             })));

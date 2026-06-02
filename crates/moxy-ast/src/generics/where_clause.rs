@@ -11,12 +11,13 @@ use crate::Punctuated;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct WhereClause {
     pub span: Span,
+    pub where_keyword: Where,
     pub predicates: Punctuated<WherePredicate, Comma>,
 }
 
 impl Parse for WhereClause {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let _ = stream.parse::<Where>()?;
+        let where_keyword = stream.parse::<Where>()?;
         let mut predicates = Punctuated::new();
 
         while !stream.is_empty() && !matches!(stream.curr(), Some(moxy_token::TokenTree::Group(_))) {
@@ -30,6 +31,7 @@ impl Parse for WhereClause {
 
         Ok(Self {
             span: Span::default(),
+            where_keyword,
             predicates,
         })
     }
@@ -37,7 +39,7 @@ impl Parse for WhereClause {
 
 impl ToTokens for WhereClause {
     fn to_tokens(&self, t: &mut TokenStream) {
-        Where::default().to_tokens(t);
+        self.where_keyword.to_tokens(t);
         self.predicates.to_tokens(t);
     }
 }

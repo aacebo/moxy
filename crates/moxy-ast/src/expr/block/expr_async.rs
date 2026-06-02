@@ -1,5 +1,5 @@
 use moxy_token::keyword::{Async, Move};
-use moxy_token::parse::ParseStream;
+use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::{Span, ToTokens, TokenStream};
 
 use super::ExprBrace;
@@ -11,13 +11,12 @@ use crate::*;
 pub struct ExprAsync {
     pub span: Span,
     pub attrs: Vec<Attribute>,
-    pub capture: bool,
+    pub async_keyword: Async,
+    pub move_keyword: Option<Move>,
     pub block: StmtBlock,
 }
 
 impl ExprAsync {
-    /// Returns `true` when the current async keyword is followed by a block
-    /// (`async { }` or `async move { }`), as opposed to an async closure.
     pub fn is_block(stream: &ParseStream) -> bool {
         if ExprBrace::is_next(stream) {
             return true;
@@ -26,6 +25,19 @@ impl ExprAsync {
         matches!(stream.nth(1), Some(tt) if tt.name().as_deref() == Some("move"))
             && matches!(stream.nth(2), Some(moxy_token::TokenTree::Group(g)) if g.delim() == moxy_token::Delim::Brace)
     }
+
+    pub fn parse_from(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let async_keyword = stream.parse::<Async>()?;
+        let move_keyword = stream.parse_opt::<Move>();
+        let block = stream.parse::<StmtBlock>()?;
+        Ok(Self {
+            span: Span::default(),
+            attrs: Vec::new(),
+            async_keyword,
+            move_keyword,
+            block,
+        })
+    }
 }
 
 impl ToTokens for ExprAsync {
@@ -33,12 +45,8 @@ impl ToTokens for ExprAsync {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        Async::default().to_tokens(t);
-
-        if self.capture {
-            Move::default().to_tokens(t);
-        }
-
+        self.async_keyword.to_tokens(t);
+        self.move_keyword.to_tokens(t);
         self.block.to_tokens(t);
     }
 }

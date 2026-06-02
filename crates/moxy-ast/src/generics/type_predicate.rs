@@ -12,6 +12,7 @@ pub struct TypePredicate {
     pub span: Span,
     pub lifetimes: Option<BoundLifetimes>,
     pub bounded_ty: Type,
+    pub colon_punct: Colon,
     pub bounds: Punctuated<TypeBound, Plus>,
 }
 
@@ -19,12 +20,13 @@ impl Parse for TypePredicate {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let lifetimes = stream.parse_opt::<BoundLifetimes>();
         let bounded_ty = stream.parse::<Type>()?;
-        let _ = stream.parse::<Colon>()?;
+        let colon_punct = stream.parse::<Colon>()?;
         let bounds = TypeBound::parse_bounds(stream)?;
         Ok(Self {
             span: Span::default(),
             lifetimes,
             bounded_ty,
+            colon_punct,
             bounds,
         })
     }
@@ -37,7 +39,7 @@ impl ToTokens for TypePredicate {
         }
 
         self.bounded_ty.to_tokens(t);
-        Colon::default().to_tokens(t);
+        self.colon_punct.to_tokens(t);
         self.bounds.to_tokens(t);
     }
 }

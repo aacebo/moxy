@@ -12,6 +12,7 @@ pub struct ConstraintArg {
     pub span: Span,
     pub ident: Ident,
     pub generics: Option<AngleArgs>,
+    pub colon_punct: Colon,
     pub bounds: Punctuated<TypeBound, Plus>,
 }
 
@@ -26,7 +27,7 @@ impl Parse for ConstraintArg {
             None
         };
 
-        let _ = fork.parse::<Colon>()?;
+        let colon_punct = fork.parse::<Colon>()?;
         let mut bounds = Punctuated::new();
 
         loop {
@@ -43,6 +44,7 @@ impl Parse for ConstraintArg {
             span: Span::default(),
             ident,
             generics,
+            colon_punct,
             bounds,
         })
     }
@@ -56,7 +58,7 @@ impl ToTokens for ConstraintArg {
             g.to_tokens(t);
         }
 
-        Colon::default().to_tokens(t);
+        self.colon_punct.to_tokens(t);
         self.bounds.to_tokens(t);
     }
 }

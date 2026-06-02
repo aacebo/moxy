@@ -12,32 +12,40 @@ pub struct ItemStatic {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
+    pub static_keyword: Static,
     pub mutability: Mutability,
     pub ident: Ident,
+    pub colon_punct: Colon,
     pub ty: Type,
+    pub eq_punct: Eq,
     pub expr: Expr,
+    pub semi_punct: Semi,
 }
 
 impl Parse for ItemStatic {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
-        let _ = stream.parse::<Static>()?;
+        let static_keyword = stream.parse::<Static>()?;
         let mutability = stream.parse::<Mutability>()?;
         let ident = stream.parse::<Ident>()?;
-        let _ = stream.parse::<Colon>()?;
+        let colon_punct = stream.parse::<Colon>()?;
         let ty = stream.parse::<Type>()?;
-        let _ = stream.parse::<Eq>()?;
+        let eq_punct = stream.parse::<Eq>()?;
         let expr = stream.parse::<Expr>()?;
-        let _ = stream.parse::<Semi>();
+        let semi_punct = stream.parse::<Semi>()?;
         Ok(ItemStatic {
             span: Span::default(),
             attrs,
             vis,
+            static_keyword,
             mutability,
             ident,
+            colon_punct,
             ty,
+            eq_punct,
             expr,
+            semi_punct,
         })
     }
 }
@@ -48,13 +56,13 @@ impl ToTokens for ItemStatic {
             a.to_tokens(t);
         }
         self.vis.to_tokens(t);
-        Static::default().to_tokens(t);
+        self.static_keyword.to_tokens(t);
         self.mutability.to_tokens(t);
         self.ident.to_tokens(t);
-        Colon::default().to_tokens(t);
+        self.colon_punct.to_tokens(t);
         self.ty.to_tokens(t);
-        Eq::default().to_tokens(t);
+        self.eq_punct.to_tokens(t);
         self.expr.to_tokens(t);
-        Semi::default().to_tokens(t);
+        self.semi_punct.to_tokens(t);
     }
 }

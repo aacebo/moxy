@@ -326,7 +326,7 @@ mod tests {
             _ => panic!("expected trait"),
         }
         match parse::<Item>("auto trait T {}") {
-            Item::Trait(t) => assert!(t.auto),
+            Item::Trait(t) => assert!(t.auto_keyword.is_some()),
             _ => panic!("expected trait"),
         }
         assert!(matches!(parse::<Item>("unsafe auto trait T {}"), Item::Trait(_)));

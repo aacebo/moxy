@@ -13,9 +13,11 @@ pub struct ItemTrait {
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub unsafety: Unsafety,
-    pub auto: bool,
+    pub auto_keyword: Option<Auto>,
+    pub trait_keyword: Trait,
     pub ident: Ident,
     pub generics: Generics,
+    pub colon_punct: Option<Colon>,
     pub supertraits: Punctuated<TypeBound, Plus>,
     pub items: Vec<TraitItem>,
 }
@@ -25,22 +27,22 @@ impl Parse for ItemTrait {
         let attrs = stream.parse_vec::<Attribute>()?;
         let vis = stream.parse::<Visibility>()?;
         let unsafety = stream.parse::<Unsafety>()?;
-        let auto = if stream.peek::<Auto>().is_some() {
-            let _ = stream.parse::<Auto>()?;
-            true
+        let auto_keyword = if stream.peek::<Auto>().is_some() {
+            Some(stream.parse::<Auto>()?)
         } else {
-            false
+            None
         };
 
-        let _ = stream.parse::<Trait>()?;
+        let trait_keyword = stream.parse::<Trait>()?;
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
 
-        let supertraits = if stream.peek::<Colon>().is_some() {
-            let _ = stream.parse::<Colon>()?;
-            crate::TypeBound::parse_bounds(stream)?
+        let (colon_punct, supertraits) = if stream.peek::<Colon>().is_some() {
+            let colon_punct = stream.parse::<Colon>()?;
+            let supertraits = crate::TypeBound::parse_bounds(stream)?;
+            (Some(colon_punct), supertraits)
         } else {
-            Punctuated::new()
+            (None, Punctuated::new())
         };
 
         if stream.peek::<moxy_token::keyword::Where>().is_some() {
@@ -55,9 +57,11 @@ impl Parse for ItemTrait {
             attrs,
             vis,
             unsafety,
-            auto,
+            auto_keyword,
+            trait_keyword,
             ident,
             generics,
+            colon_punct,
             supertraits,
             items,
         })
@@ -71,16 +75,18 @@ impl ToTokens for ItemTrait {
         }
         self.vis.to_tokens(t);
 
-        if self.auto {
-            Auto::default().to_tokens(t);
+        if let Some(auto_keyword) = &self.auto_keyword {
+            auto_keyword.to_tokens(t);
         }
 
-        Trait::default().to_tokens(t);
+        self.trait_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);
 
         if !self.supertraits.is_empty() {
-            Colon::default().to_tokens(t);
+            if let Some(colon_punct) = &self.colon_punct {
+                colon_punct.to_tokens(t);
+            }
             self.supertraits.to_tokens(t);
         }
 
