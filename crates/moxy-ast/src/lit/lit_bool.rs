@@ -1,6 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::{self, LexError, ToTokens};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
 
 use super::Lit;
 
@@ -26,7 +25,7 @@ impl Parse for LitBool {
 impl ToTokens for LitBool {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let text = if self.value { "true" } else { "false" };
-        token::Ident::new(text, self.span).to_tokens(tokens);
+        moxy_token::Ident::new(text, self.span).to_tokens(tokens);
     }
 }
 

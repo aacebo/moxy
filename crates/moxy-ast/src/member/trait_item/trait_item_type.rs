@@ -1,8 +1,7 @@
+use moxy_token::keyword::Type as KwType;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::keyword::Type as KwType;
-use moxy_token::token::punct::{Colon, Eq, Plus, Semi};
-use moxy_token::token::{LexError, ToTokens};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::{Colon, Eq, Plus, Semi};
+use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
 
 use super::TraitItem;
 use crate::{Attribute, Generics, Ident, Punctuated, Type, TypeBound};

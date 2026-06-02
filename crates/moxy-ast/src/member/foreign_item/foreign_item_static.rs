@@ -1,8 +1,7 @@
+use moxy_token::keyword::Static;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::keyword::Static;
-use moxy_token::token::punct::{Colon, Semi};
-use moxy_token::token::{LexError, ToTokens};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::{Colon, Semi};
+use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
 
 use super::ForeignItem;
 use crate::{Attribute, Ident, Mutability, Type, Visibility};

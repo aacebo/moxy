@@ -1,6 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::{LexError, ToTokenStream, ToTokens};
-use moxy_token::{Parse, TokenStream};
+use moxy_token::{LexError, Parse, ToTokenStream, ToTokens, TokenStream};
 
 macro_rules! define_leaf {
     ($(
@@ -70,7 +69,7 @@ macro_rules! define_leaf {
     };
 }
 
-use moxy_token::token::{keyword, punct};
+use moxy_token::{keyword, punct};
 
 define_leaf! {
     #[doc = "A binary operator (`+`, `==`, `&&`, ...)."]
@@ -175,8 +174,7 @@ define_leaf! {
 mod tests {
     use std::str::FromStr;
 
-    use moxy_token::TokenStream;
-    use moxy_token::token::ToTokenStream;
+    use moxy_token::{ToTokenStream, TokenStream};
 
     use super::*;
 

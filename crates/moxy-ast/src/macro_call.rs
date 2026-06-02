@@ -1,7 +1,6 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::punct::Not;
-use moxy_token::token::{Delim, Group, LexError, ToTokens};
-use moxy_token::{Parse, Span, TokenStream, TokenTree};
+use moxy_token::punct::Not;
+use moxy_token::{Delim, Group, LexError, Parse, Span, ToTokens, TokenStream, TokenTree};
 
 use crate::{Attribute, Path};
 
@@ -18,7 +17,7 @@ pub struct MacroCall {
 
 impl MacroCall {
     pub fn parse_semi(stream: &mut ParseStream) -> Result<(Self, bool), ParseError> {
-        use moxy_token::token::punct::Semi;
+        use moxy_token::punct::Semi;
         let mac = stream.parse::<MacroCall>()?;
 
         let semi = if stream.peek::<Semi>().is_some() {

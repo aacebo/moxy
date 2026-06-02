@@ -1,8 +1,7 @@
+use moxy_token::keyword::Where;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::ToTokens;
-use moxy_token::token::keyword::Where;
-use moxy_token::token::punct::Comma;
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::Comma;
+use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
 use super::WherePredicate;
 use crate::Punctuated;

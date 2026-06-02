@@ -1,7 +1,6 @@
-use moxy_token::token::ToTokens;
-use moxy_token::token::keyword::Let;
-use moxy_token::token::punct::Eq;
-use moxy_token::{Span, TokenStream};
+use moxy_token::keyword::Let;
+use moxy_token::punct::Eq;
+use moxy_token::{Span, ToTokens, TokenStream};
 
 use crate::*;
 

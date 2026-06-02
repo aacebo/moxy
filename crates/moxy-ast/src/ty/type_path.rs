@@ -1,8 +1,7 @@
+use moxy_token::keyword::As;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::ToTokens;
-use moxy_token::token::keyword::As;
-use moxy_token::token::punct::{Gt, Lt, PathSep};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::{Gt, Lt, PathSep};
+use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
 use super::QSelf;
 use crate::{Path, PathSegment};

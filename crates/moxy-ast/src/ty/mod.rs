@@ -1,8 +1,7 @@
+use moxy_token::keyword::{Dyn, Impl};
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::keyword::{Dyn, Impl};
-use moxy_token::token::punct::{And, Comma, Star};
-use moxy_token::token::{Delim, ToTokens};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::{And, Comma, Star};
+use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream};
 
 use crate::Punctuated;
 
@@ -123,8 +122,8 @@ impl Parse for Type {
         }
 
         // Never `!`.
-        if stream.peek::<moxy_token::token::punct::Not>().is_some() {
-            let _ = stream.parse::<moxy_token::token::punct::Not>()?;
+        if stream.peek::<moxy_token::punct::Not>().is_some() {
+            let _ = stream.parse::<moxy_token::punct::Not>()?;
             return Ok(Type::Never);
         }
 
@@ -143,8 +142,8 @@ impl Parse for Type {
             let mut inner = group.parse();
             let elem = Box::new(inner.parse::<Type>()?);
 
-            if inner.peek::<moxy_token::token::punct::Semi>().is_some() {
-                let _ = inner.parse::<moxy_token::token::punct::Semi>()?;
+            if inner.peek::<moxy_token::punct::Semi>().is_some() {
+                let _ = inner.parse::<moxy_token::punct::Semi>()?;
                 let len = inner.parse::<crate::Expr>()?;
                 return Ok(Type::Array(TypeArray {
                     span: Span::default(),
@@ -170,9 +169,9 @@ impl Parse for Type {
         }
 
         // Bare fn pointer: `fn(...)`, `extern "C" fn(...)`, `unsafe fn(...)`.
-        if stream.peek::<moxy_token::token::keyword::Fn>().is_some()
-            || stream.peek::<moxy_token::token::keyword::Extern>().is_some()
-            || stream.peek::<moxy_token::token::keyword::Unsafe>().is_some()
+        if stream.peek::<moxy_token::keyword::Fn>().is_some()
+            || stream.peek::<moxy_token::keyword::Extern>().is_some()
+            || stream.peek::<moxy_token::keyword::Unsafe>().is_some()
         {
             return Ok(Type::BareFn(stream.parse()?));
         }
@@ -223,8 +222,8 @@ impl ToTokens for Type {
             Type::BareFn(value) => value.to_tokens(tokens),
             Type::Array(value) => value.to_tokens(tokens),
             Type::Macro(value) => value.to_tokens(tokens),
-            Type::Never => moxy_token::token::punct::Not::default().to_tokens(tokens),
-            Type::Infer => moxy_token::token::Ident::new("_", Span::default()).to_tokens(tokens),
+            Type::Never => moxy_token::punct::Not::default().to_tokens(tokens),
+            Type::Infer => moxy_token::Ident::new("_", Span::default()).to_tokens(tokens),
             // `Group` is only produced via the proc-macro bridge, never `from_str`.
             Type::Group(_) => {}
         }
@@ -235,7 +234,7 @@ impl ToTokens for Type {
 mod tests {
     use std::str::FromStr;
 
-    use moxy_token::token::ToTokenStream;
+    use moxy_token::ToTokenStream;
 
     use super::*;
 

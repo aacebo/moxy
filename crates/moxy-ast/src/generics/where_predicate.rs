@@ -1,6 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::ToTokens;
-use moxy_token::{Parse, TokenStream};
+use moxy_token::{Parse, ToTokens, TokenStream};
 
 use super::{LifetimePredicate, TypePredicate};
 
@@ -17,7 +16,7 @@ impl Parse for WherePredicate {
         if matches!(
             stream.curr(),
             Some(moxy_token::TokenTree::Token(moxy_token::Token::Punct(
-                moxy_token::token::Punctuation::Quote(_)
+                moxy_token::Punctuation::Quote(_)
             )))
         ) {
             return Ok(WherePredicate::Lifetime(stream.parse()?));

@@ -1,5 +1,4 @@
-use moxy_token::token::ToTokens;
-use moxy_token::{Span, TokenStream};
+use moxy_token::{Span, ToTokens, TokenStream};
 
 use crate::Attribute;
 

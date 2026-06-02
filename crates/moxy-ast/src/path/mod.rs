@@ -1,6 +1,6 @@
 use moxy_macros::{Parse, ToTokens};
 use moxy_token::Span;
-use moxy_token::token::punct::PathSep;
+use moxy_token::punct::PathSep;
 
 use crate::Punctuated;
 
@@ -46,8 +46,7 @@ impl From<crate::Ident> for Path {
 mod tests {
     use std::str::FromStr;
 
-    use moxy_token::token::ToTokenStream;
-    use moxy_token::{Parse, TokenStream};
+    use moxy_token::{Parse, ToTokenStream, TokenStream};
 
     use super::*;
 

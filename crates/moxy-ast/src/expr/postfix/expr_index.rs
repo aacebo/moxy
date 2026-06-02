@@ -1,5 +1,4 @@
-use moxy_token::token::{Delim, Group, ToTokens};
-use moxy_token::{Span, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, Span, ToTokens, TokenStream, TokenTree};
 
 use crate::Attribute;
 

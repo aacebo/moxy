@@ -1,6 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::{ToTokens, Token, TokenTree};
-use moxy_token::{Parse, TokenStream};
+use moxy_token::{Parse, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::{Lifetime, Type};
 
@@ -31,7 +30,7 @@ impl Parse for GenericArgument {
         // Lifetime: starts with `'`.
         if matches!(
             stream.curr(),
-            Some(TokenTree::Token(Token::Punct(moxy_token::token::Punctuation::Quote(_))))
+            Some(TokenTree::Token(Token::Punct(moxy_token::Punctuation::Quote(_))))
         ) {
             return Ok(GenericArgument::Lifetime(stream.parse()?));
         }
@@ -54,7 +53,7 @@ impl Parse for GenericArgument {
 
         // Literal or block expression const argument.
         let is_const = matches!(stream.curr(), Some(TokenTree::Token(Token::Literal(_))))
-            || matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == moxy_token::token::Delim::Brace);
+            || matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == moxy_token::Delim::Brace);
 
         if is_const {
             return Ok(GenericArgument::Const(stream.parse()?));

@@ -1,6 +1,5 @@
 use crate::parse::ParseError;
-use crate::token::{Delim, Group, Ident, Keyword, Literal, Punctuation, Spacing, ToTokens};
-use crate::{Span, Token, TokenStream, TokenTree};
+use crate::{Delim, Group, Ident, Keyword, Literal, Punctuation, Spacing, Span, ToTokens, Token, TokenStream, TokenTree};
 
 // --- LexError ---
 
@@ -166,8 +165,8 @@ impl ToTokens<TokenStream> for proc_macro2::TokenStream {
 }
 
 fn scan_puncts(s: &str, tokens: &mut TokenStream) {
+    use crate::lex::{Cursor, Scan};
     use crate::source::SourceMap;
-    use crate::token::lex::{Cursor, Scan};
 
     let span = SourceMap::with_mut(|sm| sm.push(s));
     let mut cursor = Cursor::new(s, span.byte_range().start as u32);
@@ -239,8 +238,7 @@ impl From<TokenStream> for proc_macro2::TokenStream {
 mod tests {
     use std::str::FromStr;
 
-    use crate::TokenStream;
-    use crate::token::{Punctuation, Token, TokenTree};
+    use crate::{Punctuation, Token, TokenStream, TokenTree};
 
     #[test]
     fn coalesces_joint_puncts_inbound() {
@@ -266,7 +264,7 @@ mod tests {
         let TokenTree::Group(g) = &trees[2] else {
             panic!("expected group, got {:?}", trees[2]);
         };
-        assert_eq!(g.delim(), crate::token::Delim::Paren);
+        assert_eq!(g.delim(), crate::Delim::Paren);
         assert!(matches!(
             g.stream().into_iter().next().unwrap(),
             TokenTree::Token(Token::Ident(_))

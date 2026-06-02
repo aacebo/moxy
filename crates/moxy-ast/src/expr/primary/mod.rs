@@ -22,11 +22,10 @@ pub use expr_path::*;
 pub use expr_repeat::*;
 pub use expr_struct::*;
 pub use expr_tuple::*;
-use moxy_token::Span;
+use moxy_token::keyword::{Break, Const, Continue, Let, Return, Unsafe, Yield};
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::keyword::{Break, Const, Continue, Let, Return, Unsafe, Yield};
-use moxy_token::token::punct::{Comma, Eq, Or, OrOr, Semi};
-use moxy_token::token::{Delim, LexError, Punctuation, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::punct::{Comma, Eq, Or, OrOr, Semi};
+use moxy_token::{Delim, LexError, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
 
 use super::block::{
     ExprAsync, ExprBrace, ExprConst, ExprForLoop, ExprIf, ExprLoop, ExprMatch, ExprTryBlock, ExprUnsafe, ExprWhile,
@@ -140,7 +139,7 @@ impl From<ExprMacro> for PrimaryExpr {
 
 impl ExprClosure {
     pub fn parse_from(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        use moxy_token::token::keyword::Move;
+        use moxy_token::keyword::Move;
         let constness = stream.parse::<Constness>()?;
         let asyncness = stream.parse::<Asyncness>()?;
         let capture = if stream.peek::<Move>().is_some() {
@@ -191,7 +190,7 @@ impl ExprClosure {
 impl ExprStruct {
     #[allow(clippy::type_complexity)]
     pub fn parse_body(stream: &mut ParseStream) -> Result<(Punctuated<FieldValue, Comma>, Option<Box<Expr>>), ParseError> {
-        use moxy_token::token::punct::DotDot;
+        use moxy_token::punct::DotDot;
         let mut fields = Punctuated::new();
         let mut rest = None;
 
@@ -294,15 +293,15 @@ impl PrimaryExpr {
         if Label::is_prefix(stream) {
             let label = Some(stream.parse::<Label>()?);
 
-            if stream.peek::<moxy_token::token::keyword::While>().is_some() {
+            if stream.peek::<moxy_token::keyword::While>().is_some() {
                 return Ok(Expr::Block(BlockExpr::While(ExprWhile::parse_from(stream, label)?)));
             }
 
-            if stream.peek::<moxy_token::token::keyword::For>().is_some() {
+            if stream.peek::<moxy_token::keyword::For>().is_some() {
                 return Ok(Expr::Block(BlockExpr::ForLoop(ExprForLoop::parse_from(stream, label)?)));
             }
 
-            if stream.peek::<moxy_token::token::keyword::Loop>().is_some() {
+            if stream.peek::<moxy_token::keyword::Loop>().is_some() {
                 return Ok(Expr::Block(BlockExpr::Loop(ExprLoop::parse_from(stream, label)?)));
             }
 
@@ -323,23 +322,23 @@ impl PrimaryExpr {
             })));
         }
 
-        if stream.peek::<moxy_token::token::keyword::If>().is_some() {
+        if stream.peek::<moxy_token::keyword::If>().is_some() {
             return ExprIf::parse_from(stream);
         }
 
-        if stream.peek::<moxy_token::token::keyword::While>().is_some() {
+        if stream.peek::<moxy_token::keyword::While>().is_some() {
             return Ok(Expr::Block(BlockExpr::While(ExprWhile::parse_from(stream, None)?)));
         }
 
-        if stream.peek::<moxy_token::token::keyword::For>().is_some() {
+        if stream.peek::<moxy_token::keyword::For>().is_some() {
             return Ok(Expr::Block(BlockExpr::ForLoop(ExprForLoop::parse_from(stream, None)?)));
         }
 
-        if stream.peek::<moxy_token::token::keyword::Loop>().is_some() {
+        if stream.peek::<moxy_token::keyword::Loop>().is_some() {
             return Ok(Expr::Block(BlockExpr::Loop(ExprLoop::parse_from(stream, None)?)));
         }
 
-        if stream.peek::<moxy_token::token::keyword::Match>().is_some() {
+        if stream.peek::<moxy_token::keyword::Match>().is_some() {
             return ExprMatch::parse_from(stream);
         }
 
@@ -363,9 +362,9 @@ impl PrimaryExpr {
         }
 
         // `async { }` / `async move { }` block (vs `async` closure).
-        if stream.peek::<moxy_token::token::keyword::Async>().is_some() && ExprAsync::is_block(stream) {
-            use moxy_token::token::keyword::Move;
-            let _ = stream.parse::<moxy_token::token::keyword::Async>()?;
+        if stream.peek::<moxy_token::keyword::Async>().is_some() && ExprAsync::is_block(stream) {
+            use moxy_token::keyword::Move;
+            let _ = stream.parse::<moxy_token::keyword::Async>()?;
 
             let capture = if stream.peek::<Move>().is_some() {
                 let _ = stream.parse::<Move>()?;
@@ -465,7 +464,7 @@ impl PrimaryExpr {
         }
 
         // Qualified path `<T as Trait>::assoc` in expression position.
-        if stream.peek::<moxy_token::token::punct::Lt>().is_some() {
+        if stream.peek::<moxy_token::punct::Lt>().is_some() {
             let (qself, path) = crate::ty::QSelf::parse_qualified(stream)?;
             return Ok(Expr::Primary(PrimaryExpr::Path(ExprPath {
                 span: Span::default(),

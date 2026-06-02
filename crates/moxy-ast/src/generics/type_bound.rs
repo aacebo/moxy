@@ -1,6 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::ToTokens;
-use moxy_token::{Parse, TokenStream};
+use moxy_token::{Parse, ToTokens, TokenStream};
 
 use super::{TraitBound, UseBound};
 use crate::Lifetime;
@@ -17,8 +16,8 @@ pub enum TypeBound {
 impl TypeBound {
     pub fn parse_bounds(
         stream: &mut moxy_token::parse::ParseStream,
-    ) -> Result<crate::Punctuated<Self, moxy_token::token::punct::Plus>, moxy_token::parse::ParseError> {
-        use moxy_token::token::punct::Plus;
+    ) -> Result<crate::Punctuated<Self, moxy_token::punct::Plus>, moxy_token::parse::ParseError> {
+        use moxy_token::punct::Plus;
         let mut bounds = crate::Punctuated::new();
 
         loop {
@@ -52,13 +51,13 @@ impl Parse for TypeBound {
         if matches!(
             stream.curr(),
             Some(moxy_token::TokenTree::Token(moxy_token::Token::Punct(
-                moxy_token::token::Punctuation::Quote(_)
+                moxy_token::Punctuation::Quote(_)
             )))
         ) {
             return Ok(TypeBound::Lifetime(stream.parse()?));
         }
 
-        if stream.peek::<moxy_token::token::keyword::Use>().is_some() {
+        if stream.peek::<moxy_token::keyword::Use>().is_some() {
             return Ok(TypeBound::Use(stream.parse()?));
         }
 

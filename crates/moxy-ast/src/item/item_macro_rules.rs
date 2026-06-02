@@ -1,8 +1,7 @@
+use moxy_token::keyword::MacroRules;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::keyword::MacroRules;
-use moxy_token::token::punct::Not;
-use moxy_token::token::{Delim, Group, LexError, ToTokens, TokenTree};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::Not;
+use moxy_token::{Delim, Group, LexError, Parse, Span, ToTokens, TokenStream, TokenTree};
 
 use crate::{Attribute, Ident};
 

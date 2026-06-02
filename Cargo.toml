@@ -15,6 +15,10 @@ repository = "https://www.github.com/aacebo/moxy"
 keywords = ["macro", "framework", "proc", "rust"]
 categories = ["development-tools::procedural-macro-helpers", "rust-patterns", "no-std"]
 
+[workspace.lints.clippy]
+collapsible-if = "allow"
+new-ret-no-self = "allow"
+
 [package]
 name = "moxy"
 version.workspace = true
@@ -29,3 +33,21 @@ categories.workspace = true
 
 [lib]
 doctest = false
+
+[lints]
+workspace = true
+
+[features]
+default = []
+ast = ["moxy-ast"]
+token = ["moxy-token"]
+diagnostic = ["moxy-diagnostic"]
+macros = ["moxy-macros"]
+serde = ["moxy-ast/serde", "moxy-token/serde"]
+proc-macro2 = ["moxy-token/proc-macro2"]
+
+[dependencies]
+moxy-ast = { path = "crates/moxy-ast", optional = true }
+moxy-diagnostic = { path = "crates/moxy-diagnostic", optional = true }
+moxy-macros = { path = "crates/moxy-macros", optional = true }
+moxy-token = { path = "crates/moxy-token", optional = true }

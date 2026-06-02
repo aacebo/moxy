@@ -1,6 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::{self, LexError, ToTokens};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
 
 use super::Lit;
 
@@ -25,7 +24,7 @@ impl Parse for LitFloat {
 
 impl ToTokens for LitFloat {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        token::Literal::from_repr(&self.repr, self.span).to_tokens(tokens);
+        moxy_token::Literal::from_repr(&self.repr, self.span).to_tokens(tokens);
     }
 }
 

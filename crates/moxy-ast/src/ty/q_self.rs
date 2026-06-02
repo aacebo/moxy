@@ -1,8 +1,7 @@
+use moxy_token::keyword::As;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::ToTokens;
-use moxy_token::token::keyword::As;
-use moxy_token::token::punct::{Gt, Lt};
-use moxy_token::{Span, TokenStream};
+use moxy_token::punct::{Gt, Lt};
+use moxy_token::{Span, ToTokens, TokenStream};
 
 use super::Type;
 use crate::Path;
@@ -23,7 +22,7 @@ impl QSelf {
     /// by `TypePath` and expression-path parsing.
     pub fn parse_qualified(stream: &mut ParseStream) -> Result<(Self, Path), ParseError> {
         let (qself, trait_path) = Self::parse_with_trait(stream)?;
-        let _ = stream.parse::<moxy_token::token::punct::PathSep>()?;
+        let _ = stream.parse::<moxy_token::punct::PathSep>()?;
         let rest = stream.parse::<Path>()?;
 
         let mut segments = trait_path.map(|p| p.segments).unwrap_or_default();

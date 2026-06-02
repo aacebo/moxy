@@ -1,8 +1,7 @@
+use moxy_token::keyword::{Auto, Trait};
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::keyword::{Auto, Trait};
-use moxy_token::token::punct::{Colon, Plus};
-use moxy_token::token::{Delim, ToTokens};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::{Colon, Plus};
+use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream};
 
 use crate::{Attribute, Generics, Ident, Punctuated, TraitItem, TypeBound, Unsafety, Visibility};
 
@@ -44,7 +43,7 @@ impl Parse for ItemTrait {
             Punctuated::new()
         };
 
-        if stream.peek::<moxy_token::token::keyword::Where>().is_some() {
+        if stream.peek::<moxy_token::keyword::Where>().is_some() {
             generics.where_clause = Some(stream.parse()?);
         }
 
@@ -91,8 +90,8 @@ impl ToTokens for ItemTrait {
             it.to_tokens(&mut inner);
         }
 
-        t.extend_one(moxy_token::TokenTree::Group(moxy_token::token::Group::new(
-            moxy_token::token::Delim::Brace,
+        t.extend_one(moxy_token::TokenTree::Group(moxy_token::Group::new(
+            moxy_token::Delim::Brace,
             inner,
         )));
     }

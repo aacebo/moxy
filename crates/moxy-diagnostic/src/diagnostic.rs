@@ -1,5 +1,4 @@
-use moxy_token::token::{ToTokenStream, ToTokens};
-use moxy_token::{Span, TokenStream};
+use moxy_token::{Span, ToTokenStream, ToTokens, TokenStream};
 
 use crate::Level;
 

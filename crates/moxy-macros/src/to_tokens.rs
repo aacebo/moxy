@@ -26,7 +26,7 @@ pub fn expand(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     };
 
     Ok(quote! {
-        impl #imp ::moxy_token::token::ToTokens for #name #ty #wher {
+        impl #imp ::moxy_token::ToTokens for #name #ty #wher {
             fn to_tokens(&self, #tokens: &mut ::moxy_token::TokenStream) {
                 #body
             }
@@ -127,20 +127,20 @@ fn one(access: &proc_macro2::TokenStream, ty: &Type, opts: &ToTokenOptions, toke
         quote! {
             {
                 let mut inner = ::moxy_token::TokenStream::new();
-                ::moxy_token::token::ToTokens::to_tokens(#access, &mut inner);
+                ::moxy_token::ToTokens::to_tokens(#access, &mut inner);
                 #tokens.extend_one(::moxy_token::TokenTree::Group(
-                    ::moxy_token::token::Group::new(::moxy_token::token::Delim::#delim, inner),
+                    ::moxy_token::Group::new(::moxy_token::Delim::#delim, inner),
                 ));
             }
         }
     } else if type_is(ty, "Option") {
         quote! {
             if let ::core::option::Option::Some(inner) = #access {
-                ::moxy_token::token::ToTokens::to_tokens(inner, #tokens);
+                ::moxy_token::ToTokens::to_tokens(inner, #tokens);
             }
         }
     } else {
-        quote! { ::moxy_token::token::ToTokens::to_tokens(#access, #tokens); }
+        quote! { ::moxy_token::ToTokens::to_tokens(#access, #tokens); }
     };
 
     quote! { #prefix #core #suffix }

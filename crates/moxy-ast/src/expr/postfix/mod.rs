@@ -9,10 +9,9 @@ pub use expr_call::*;
 pub use expr_field::*;
 pub use expr_index::*;
 pub use expr_method_call::*;
-use moxy_token::Span;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::punct::{Dot, Question};
-use moxy_token::token::{Delim, ToTokens, TokenStream};
+use moxy_token::punct::{Dot, Question};
+use moxy_token::{Delim, Span, ToTokens, TokenStream};
 
 use super::unary::ExprTry;
 use super::{Expr, UnaryExpr};

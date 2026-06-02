@@ -1,6 +1,5 @@
 use super::{ParseError, Peek};
-use crate::token::{Delim, LexError, Punctuation, Token};
-use crate::{Parse, Span, TokenStream, TokenTree};
+use crate::{Delim, LexError, Parse, Punctuation, Span, Token, TokenStream, TokenTree};
 
 pub struct ParseStream<'a> {
     input: &'a TokenStream,
@@ -175,8 +174,7 @@ impl<'a> ParseStream<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::token::Ident;
-    use crate::{Token, TokenStream, TokenTree};
+    use crate::{Ident, Token, TokenStream, TokenTree};
 
     #[test]
     fn empty_stream() {

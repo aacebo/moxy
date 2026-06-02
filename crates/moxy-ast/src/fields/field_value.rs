@@ -1,7 +1,6 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::ToTokens;
-use moxy_token::token::punct::Colon;
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::Colon;
+use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
 use crate::expr::{ExprPath, PrimaryExpr};
 use crate::{Attribute, Expr, Member};
@@ -40,7 +39,7 @@ impl Parse for FieldValue {
                     path: id.clone().into(),
                 })),
                 Member::Unnamed(_) => {
-                    return Err(moxy_token::token::LexError::new(stream.span())
+                    return Err(moxy_token::LexError::new(stream.span())
                         .message("tuple index needs a value")
                         .into());
                 }

@@ -1,6 +1,6 @@
 use moxy_macros::{Parse, ToTokens};
 use moxy_token::Span;
-use moxy_token::token::punct::Comma;
+use moxy_token::punct::Comma;
 
 use super::Type;
 use crate::Punctuated;

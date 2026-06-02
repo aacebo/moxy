@@ -1,6 +1,6 @@
 use moxy_macros::{Parse, ToTokens};
 use moxy_token::Span;
-use moxy_token::token::punct::Colon;
+use moxy_token::punct::Colon;
 
 use super::Type;
 use crate::{Attribute, Pattern};

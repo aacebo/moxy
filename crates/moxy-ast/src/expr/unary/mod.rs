@@ -7,10 +7,9 @@ pub use expr_cast::*;
 pub use expr_reference::*;
 pub use expr_try::*;
 pub use expr_unary::*;
-use moxy_token::Span;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::punct::And;
-use moxy_token::token::{ToTokens, TokenStream};
+use moxy_token::punct::And;
+use moxy_token::{Span, ToTokens, TokenStream};
 
 use super::binary::ExprRange;
 use super::{BinaryExpr, Expr};
@@ -66,9 +65,7 @@ impl From<ExprTry> for UnaryExpr {
 impl UnaryExpr {
     pub fn parse_from(stream: &mut ParseStream, allow_struct: bool) -> Result<Expr, ParseError> {
         // Prefix range: `..b`, `..=b`, `..`.
-        if stream.peek::<moxy_token::token::punct::DotDot>().is_some()
-            || stream.peek::<moxy_token::token::punct::DotDotEq>().is_some()
-        {
+        if stream.peek::<moxy_token::punct::DotDot>().is_some() || stream.peek::<moxy_token::punct::DotDotEq>().is_some() {
             use crate::RangeLimits;
             let limits = stream.parse::<RangeLimits>()?;
             let end = super::binary::ExprRange::maybe_end(stream, allow_struct)?;

@@ -1,7 +1,6 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::punct::Semi;
-use moxy_token::token::{Delim, ToTokens};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::Semi;
+use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream};
 
 use super::Type;
 use crate::Expr;
@@ -36,9 +35,6 @@ impl ToTokens for TypeArray {
         self.elem.to_tokens(&mut inner);
         Semi::default().to_tokens(&mut inner);
         self.len.to_tokens(&mut inner);
-        tokens.extend_one(moxy_token::TokenTree::Group(moxy_token::token::Group::new(
-            Delim::Bracket,
-            inner,
-        )));
+        tokens.extend_one(moxy_token::TokenTree::Group(moxy_token::Group::new(Delim::Bracket, inner)));
     }
 }

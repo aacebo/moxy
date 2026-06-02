@@ -1,8 +1,7 @@
+use moxy_token::keyword::SelfValue;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::ToTokens;
-use moxy_token::token::keyword::SelfValue;
-use moxy_token::token::punct::And;
-use moxy_token::{Parse, TokenStream};
+use moxy_token::punct::And;
+use moxy_token::{Parse, ToTokens, TokenStream};
 
 use super::Receiver;
 use crate::{Lifetime, Mutability, TypedParam};

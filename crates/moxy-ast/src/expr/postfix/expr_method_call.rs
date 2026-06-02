@@ -1,7 +1,6 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::punct::{Comma, Dot};
-use moxy_token::token::{Delim, Group, ToTokens};
-use moxy_token::{Span, TokenStream, TokenTree};
+use moxy_token::punct::{Comma, Dot};
+use moxy_token::{Delim, Group, Span, ToTokens, TokenStream, TokenTree};
 
 use crate::*;
 
@@ -22,13 +21,13 @@ impl ExprMethodCall {
     pub fn parse_turbofish(stream: &mut ParseStream) -> Result<Option<AngleArgs>, ParseError> {
         let mut fork = stream.fork();
 
-        if fork.peek::<moxy_token::token::punct::PathSep>().is_none() {
+        if fork.peek::<moxy_token::punct::PathSep>().is_none() {
             return Ok(None);
         }
 
-        let _ = fork.parse::<moxy_token::token::punct::PathSep>()?;
+        let _ = fork.parse::<moxy_token::punct::PathSep>()?;
 
-        if fork.peek::<moxy_token::token::punct::Lt>().is_none() {
+        if fork.peek::<moxy_token::punct::Lt>().is_none() {
             return Ok(None);
         }
 

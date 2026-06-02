@@ -1,6 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::ToTokens;
-use moxy_token::{Parse, TokenStream};
+use moxy_token::{Parse, ToTokens, TokenStream};
 
 pub mod binary;
 pub mod block;
@@ -333,7 +332,7 @@ pub fn parse_expr(stream: &mut ParseStream, allow_struct: bool) -> Result<Expr, 
 mod tests {
     use std::str::FromStr;
 
-    use moxy_token::token::ToTokenStream;
+    use moxy_token::ToTokenStream;
 
     use super::*;
     use crate::{BinOp, Pattern, Stmt, StmtBlock};

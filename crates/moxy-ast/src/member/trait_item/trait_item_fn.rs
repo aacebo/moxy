@@ -1,7 +1,6 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::punct::Semi;
-use moxy_token::token::{Delim, LexError, ToTokens, TokenTree};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::Semi;
+use moxy_token::{Delim, LexError, Parse, Span, ToTokens, TokenStream, TokenTree};
 
 use super::TraitItem;
 use crate::{Attribute, Signature, StmtBlock};

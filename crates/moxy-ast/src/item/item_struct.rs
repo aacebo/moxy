@@ -1,8 +1,7 @@
+use moxy_token::keyword::Struct;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::ToTokens;
-use moxy_token::token::keyword::Struct;
-use moxy_token::token::punct::Semi;
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::Semi;
+use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
 use crate::{Attribute, Fields, Generics, Ident, Visibility};
 
@@ -26,7 +25,7 @@ impl Parse for ItemStruct {
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
 
-        if stream.peek::<moxy_token::token::keyword::Where>().is_some() {
+        if stream.peek::<moxy_token::keyword::Where>().is_some() {
             generics.where_clause = Some(stream.parse()?);
         }
 

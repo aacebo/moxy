@@ -1,7 +1,6 @@
+use moxy_token::keyword::Extern;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::keyword::Extern;
-use moxy_token::token::{self, ToTokens, Token, TokenTree};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::{Parse, Span, ToTokens, Token, TokenStream, TokenTree};
 
 #[doc = "An ABI string (`extern \"C\"`)."]
 #[derive(Debug, Clone)]
@@ -36,7 +35,7 @@ impl ToTokens for Abi {
         Extern::default().to_tokens(t);
 
         if let Some(name) = &self.name {
-            token::Literal::string(name).to_tokens(t);
+            moxy_token::Literal::string(name).to_tokens(t);
         }
     }
 }

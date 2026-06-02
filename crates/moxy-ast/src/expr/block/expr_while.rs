@@ -1,6 +1,5 @@
-use moxy_token::token::ToTokens;
-use moxy_token::token::keyword::While;
-use moxy_token::{Span, TokenStream};
+use moxy_token::keyword::While;
+use moxy_token::{Span, ToTokens, TokenStream};
 
 use crate::*;
 

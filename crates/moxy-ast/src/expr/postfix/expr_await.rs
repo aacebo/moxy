@@ -1,7 +1,6 @@
-use moxy_token::token::ToTokens;
-use moxy_token::token::keyword::Await as KwAwait;
-use moxy_token::token::punct::Dot;
-use moxy_token::{Span, TokenStream};
+use moxy_token::keyword::Await as KwAwait;
+use moxy_token::punct::Dot;
+use moxy_token::{Span, ToTokens, TokenStream};
 
 use crate::Attribute;
 

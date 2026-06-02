@@ -1,7 +1,6 @@
+use moxy_token::keyword::Union;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::ToTokens;
-use moxy_token::token::keyword::Union;
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
 use crate::{Attribute, FieldsNamed, Generics, Ident, Visibility};
 

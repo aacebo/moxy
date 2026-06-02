@@ -1,7 +1,6 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::ToTokens;
-use moxy_token::token::punct::{Colon, Lt, Plus};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::{Colon, Lt, Plus};
+use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
 use super::AngleArgs;
 use crate::{Ident, Punctuated, TypeBound};

@@ -1,6 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::ToTokens;
-use moxy_token::{Parse, TokenStream};
+use moxy_token::{Parse, ToTokens, TokenStream};
 
 mod trait_item_const;
 mod trait_item_fn;

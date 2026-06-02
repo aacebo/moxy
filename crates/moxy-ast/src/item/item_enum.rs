@@ -1,8 +1,7 @@
+use moxy_token::keyword::Enum;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::keyword::Enum;
-use moxy_token::token::punct::{Comma, Eq};
-use moxy_token::token::{Delim, Group, ToTokens, TokenStream as TS, TokenTree};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::{Comma, Eq};
+use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream as TS, TokenStream, TokenTree};
 
 use crate::{Attribute, Expr, Fields, Generics, Ident, Punctuated, Visibility};
 
@@ -26,7 +25,7 @@ impl Parse for ItemEnum {
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
 
-        if stream.peek::<moxy_token::token::keyword::Where>().is_some() {
+        if stream.peek::<moxy_token::keyword::Where>().is_some() {
             generics.where_clause = Some(stream.parse()?);
         }
 

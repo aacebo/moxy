@@ -1,6 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::{Delim, ToTokens};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream};
 
 use crate::{Abi, Attribute, ForeignItem, Unsafety};
 
@@ -46,8 +45,8 @@ impl ToTokens for ItemForeignMod {
             it.to_tokens(&mut inner);
         }
 
-        t.extend_one(moxy_token::TokenTree::Group(moxy_token::token::Group::new(
-            moxy_token::token::Delim::Brace,
+        t.extend_one(moxy_token::TokenTree::Group(moxy_token::Group::new(
+            moxy_token::Delim::Brace,
             inner,
         )));
     }

@@ -27,7 +27,7 @@ pub fn expand(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
                     Some(tok) => quote! {
                         if #fork.peek::<#tok>().is_none() {
                             return Err(::moxy_token::parse::ParseError::from(
-                                ::moxy_token::token::LexError::new(#fork.span())
+                                ::moxy_token::LexError::new(#fork.span())
                             ));
                         }
                     },
@@ -55,7 +55,7 @@ pub fn expand(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
             quote! {
                 #(#arms)*
                 Err(::moxy_token::parse::ParseError::from(
-                    ::moxy_token::token::LexError::new(#stream.span())
+                    ::moxy_token::LexError::new(#stream.span())
                         .message(concat!("expected `", #nm, "`"))
                 ))
             }
@@ -133,7 +133,7 @@ fn one(binding: &syn::Ident, ty: &Type, opts: &ParseOptions, stream: &syn::Ident
         let inner = value_expr(opts, ty, stream);
         quote! {
             let #binding = {
-                let group = #stream.parse_group(::moxy_token::token::Delim::#delim)?;
+                let group = #stream.parse_group(::moxy_token::Delim::#delim)?;
                 let mut group_stream = group.parse();
                 let #stream = &mut group_stream;
                 #inner

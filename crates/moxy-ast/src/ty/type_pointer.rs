@@ -1,8 +1,7 @@
+use moxy_token::keyword::{Const, Mut};
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::keyword::{Const, Mut};
-use moxy_token::token::punct::Star;
-use moxy_token::token::{LexError, ToTokens, Token, TokenTree};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::Star;
+use moxy_token::{LexError, Parse, Span, ToTokens, Token, TokenStream, TokenTree};
 
 use super::Type;
 use crate::Mutability;

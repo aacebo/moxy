@@ -1,8 +1,7 @@
+use moxy_token::keyword::{Mut, Ref};
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::keyword::{Mut, Ref};
-use moxy_token::token::punct::{And, At, Colon, Comma, DotDot, Or as OrPunct};
-use moxy_token::token::{Delim, LexError, Punctuation, ToTokens};
-use moxy_token::{Parse, Span, Token, TokenStream, TokenTree};
+use moxy_token::punct::{And, At, Colon, Comma, DotDot, Or as OrPunct};
+use moxy_token::{Delim, LexError, Parse, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::{Attribute, Expr, Ident, Member, Mutability, Path, Punctuated, RangeLimits, Type};
 
@@ -181,7 +180,7 @@ impl ToTokens for Pattern {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
             Pattern::Wild => {
-                moxy_token::token::Ident::new("_", Span::default()).to_tokens(t);
+                moxy_token::Ident::new("_", Span::default()).to_tokens(t);
             }
             Pattern::Rest => DotDot::default().to_tokens(t),
             Pattern::Ident(v) => v.to_tokens(t),
@@ -199,11 +198,11 @@ impl ToTokens for Pattern {
             Pattern::Group(v) => v.to_tokens(t),
             Pattern::Paren(v) => v.to_tokens(t),
             Pattern::Box(p) => {
-                moxy_token::token::keyword::Box::default().to_tokens(t);
+                moxy_token::keyword::Box::default().to_tokens(t);
                 p.to_tokens(t);
             }
             Pattern::Const(b) => {
-                moxy_token::token::keyword::Const::default().to_tokens(t);
+                moxy_token::keyword::Const::default().to_tokens(t);
                 b.to_tokens(t);
             }
         }
@@ -454,7 +453,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
 mod tests {
     use std::str::FromStr;
 
-    use moxy_token::token::ToTokenStream;
+    use moxy_token::ToTokenStream;
 
     use super::*;
 

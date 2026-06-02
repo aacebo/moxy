@@ -1,6 +1,6 @@
 use moxy_macros::{Parse, ToTokens};
 use moxy_token::Span;
-use moxy_token::token::punct::Quote;
+use moxy_token::punct::Quote;
 
 use super::LifetimeName;
 
@@ -17,8 +17,8 @@ pub struct Lifetime {
 impl Lifetime {
     pub fn parse_bounds(
         stream: &mut moxy_token::parse::ParseStream,
-    ) -> Result<crate::Punctuated<Self, moxy_token::token::punct::Plus>, moxy_token::parse::ParseError> {
-        use moxy_token::token::punct::{Colon, Plus};
+    ) -> Result<crate::Punctuated<Self, moxy_token::punct::Plus>, moxy_token::parse::ParseError> {
+        use moxy_token::punct::{Colon, Plus};
         let mut bounds = crate::Punctuated::new();
         if stream.peek::<Colon>().is_some() {
             let _ = stream.parse::<Colon>()?;

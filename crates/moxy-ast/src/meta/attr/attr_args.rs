@@ -1,7 +1,6 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::punct::Eq;
-use moxy_token::token::{Delim, Group, LexError, ToTokens};
-use moxy_token::{Parse, TokenStream, TokenTree};
+use moxy_token::punct::Eq;
+use moxy_token::{Delim, Group, LexError, Parse, ToTokens, TokenStream, TokenTree};
 
 use crate::Expr;
 
@@ -24,7 +23,7 @@ impl Parse for AttrArgs {
                 stream.advance();
                 Ok(AttrArgs::Delimited { delim, tokens })
             }
-            Some(TokenTree::Token(moxy_token::Token::Punct(moxy_token::token::Punctuation::Eq(_)))) => {
+            Some(TokenTree::Token(moxy_token::Token::Punct(moxy_token::Punctuation::Eq(_)))) => {
                 let _ = stream.parse::<Eq>()?;
                 Ok(AttrArgs::NameValue(stream.parse::<Expr>()?))
             }

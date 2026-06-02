@@ -1,6 +1,5 @@
-use moxy_token::token::punct::Comma;
-use moxy_token::token::{Delim, Group, ToTokens};
-use moxy_token::{Span, TokenStream, TokenTree};
+use moxy_token::punct::Comma;
+use moxy_token::{Delim, Group, Span, ToTokens, TokenStream, TokenTree};
 
 use crate::*;
 

@@ -1,8 +1,7 @@
+use moxy_token::keyword::{Extern, Fn};
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::keyword::{Extern, Fn};
-use moxy_token::token::punct::Comma;
-use moxy_token::token::{Delim, Group, ToTokens};
-use moxy_token::{Parse, Span, TokenStream, TokenTree};
+use moxy_token::punct::Comma;
+use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream, TokenTree};
 
 use crate::{Abi, BareFnArg, BoundLifetimes, Punctuated, ReturnType, Unsafety, Variadic};
 

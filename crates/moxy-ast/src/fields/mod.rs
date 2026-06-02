@@ -1,6 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::{Delim, Group, ToTokens, TokenTree};
-use moxy_token::{Parse, TokenStream};
+use moxy_token::{Delim, Group, Parse, ToTokens, TokenStream, TokenTree};
 
 mod field_def;
 mod field_value;

@@ -1,5 +1,4 @@
-use moxy_token::token::{Eq, ToTokens};
-use moxy_token::{Span, TokenStream};
+use moxy_token::{Eq, Span, ToTokens, TokenStream};
 
 use crate::{Expr, Path};
 

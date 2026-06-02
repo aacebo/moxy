@@ -1,7 +1,6 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::ToTokens;
-use moxy_token::token::punct::Semi;
-use moxy_token::{Parse, TokenStream};
+use moxy_token::punct::Semi;
+use moxy_token::{Parse, ToTokens, TokenStream};
 
 use crate::Expr;
 

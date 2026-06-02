@@ -1,8 +1,7 @@
+use moxy_token::keyword::Mod;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::keyword::Mod;
-use moxy_token::token::punct::Semi;
-use moxy_token::token::{Delim, Group, ToTokens, TokenTree};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::Semi;
+use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream, TokenTree};
 
 use super::Item;
 use crate::{Attribute, Ident, Unsafety, Visibility};

@@ -1,8 +1,7 @@
+use moxy_token::keyword::{For, Impl};
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::keyword::{For, Impl};
-use moxy_token::token::punct::Not;
-use moxy_token::token::{Delim, LexError, ToTokens};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::Not;
+use moxy_token::{Delim, LexError, Parse, Span, ToTokens, TokenStream};
 
 use crate::{Attribute, BoundPolarity, Defaultness, Generics, ImplItem, TraitRef, Type, Unsafety};
 
@@ -62,7 +61,7 @@ impl Parse for ItemImpl {
 
         let mut generics = generics;
 
-        if stream.peek::<moxy_token::token::keyword::Where>().is_some() {
+        if stream.peek::<moxy_token::keyword::Where>().is_some() {
             generics.where_clause = Some(stream.parse()?);
         }
 
@@ -104,8 +103,8 @@ impl ToTokens for ItemImpl {
             it.to_tokens(&mut inner);
         }
 
-        t.extend_one(moxy_token::TokenTree::Group(moxy_token::token::Group::new(
-            moxy_token::token::Delim::Brace,
+        t.extend_one(moxy_token::TokenTree::Group(moxy_token::Group::new(
+            moxy_token::Delim::Brace,
             inner,
         )));
     }

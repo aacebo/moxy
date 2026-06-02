@@ -1,7 +1,6 @@
+use moxy_token::keyword::{Async, Move};
 use moxy_token::parse::ParseStream;
-use moxy_token::token::ToTokens;
-use moxy_token::token::keyword::{Async, Move};
-use moxy_token::{Span, TokenStream};
+use moxy_token::{Span, ToTokens, TokenStream};
 
 use super::ExprBrace;
 use crate::*;
@@ -25,7 +24,7 @@ impl ExprAsync {
         }
 
         matches!(stream.nth(1), Some(tt) if tt.name().as_deref() == Some("move"))
-            && matches!(stream.nth(2), Some(moxy_token::token::TokenTree::Group(g)) if g.delim() == moxy_token::token::Delim::Brace)
+            && matches!(stream.nth(2), Some(moxy_token::TokenTree::Group(g)) if g.delim() == moxy_token::Delim::Brace)
     }
 }
 

@@ -1,8 +1,7 @@
+use moxy_token::keyword::For;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::ToTokens;
-use moxy_token::token::keyword::For;
-use moxy_token::token::punct::{Colon, Comma, Gt, Lt, RArrow};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::{Colon, Comma, Gt, Lt, RArrow};
+use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
 use crate::{Attribute, Lifetime, Pattern, Punctuated, Type};
 

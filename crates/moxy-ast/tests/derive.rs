@@ -3,14 +3,13 @@ use std::str::FromStr;
 use moxy_ast::Punctuated;
 use moxy_macros::{Parse, ToTokens};
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::punct::{Comma, Lt, PathSep};
-use moxy_token::token::{LexError, ToTokenStream, ToTokens, Token, TokenTree};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::{Comma, Lt, PathSep};
+use moxy_token::{LexError, Parse, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
 
 /// Minimal Parse-able identifier wrapper, so these tests don't depend on
 /// the (separately-landed) `ast::Ident` Parse impl.
 #[derive(Debug, Clone)]
-struct Ident(moxy_token::token::Ident);
+struct Ident(moxy_token::Ident);
 
 impl Ident {
     fn name(&self) -> std::borrow::Cow<'_, str> {

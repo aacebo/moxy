@@ -1,6 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::{self, LexError, ToTokens};
-use moxy_token::{Parse, Span, Token, TokenStream, TokenTree};
+use moxy_token::{LexError, Parse, Span, ToTokens, Token, TokenStream, TokenTree};
 
 #[doc = "The name part of a lifetime (e.g. the `a` in `'a`, or the `static` in `'static`)."]
 #[derive(Debug, Clone)]
@@ -48,7 +47,7 @@ impl ToTokens for LifetimeName {
             self.text.clone()
         };
 
-        token::Ident::new(&name, self.span).to_tokens(tokens);
+        moxy_token::Ident::new(&name, self.span).to_tokens(tokens);
     }
 }
 

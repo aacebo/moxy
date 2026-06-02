@@ -1,6 +1,5 @@
-use moxy_token::token::punct::{Comma, DotDot};
-use moxy_token::token::{Delim, ToTokens};
-use moxy_token::{Span, TokenStream};
+use moxy_token::punct::{Comma, DotDot};
+use moxy_token::{Delim, Span, ToTokens, TokenStream};
 
 use crate::pat::PatField;
 use crate::*;
@@ -30,8 +29,8 @@ impl ToTokens for PatStruct {
             DotDot::default().to_tokens(&mut inner);
         }
 
-        t.extend_one(moxy_token::TokenTree::Group(moxy_token::token::Group::new(
-            moxy_token::token::Delim::Brace,
+        t.extend_one(moxy_token::TokenTree::Group(moxy_token::Group::new(
+            moxy_token::Delim::Brace,
             inner,
         )));
     }

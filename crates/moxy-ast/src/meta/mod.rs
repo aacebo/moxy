@@ -6,8 +6,7 @@ pub use attr::Attribute;
 pub use meta_list::*;
 pub use meta_name_value::*;
 use moxy_token::parse::{Parse, ParseError, ParseStream};
-use moxy_token::token::{Eq, ToTokens};
-use moxy_token::{Span, TokenStream};
+use moxy_token::{Eq, Span, ToTokens, TokenStream};
 
 use crate::{Expr, Path};
 
@@ -24,7 +23,7 @@ impl Parse for Meta {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let path = stream.parse::<Path>()?;
 
-        if let Some(moxy_token::token::TokenTree::Group(group)) = stream.curr() {
+        if let Some(moxy_token::TokenTree::Group(group)) = stream.curr() {
             let delim = group.delim();
             let tokens = stream.parse_group(delim)?;
 
@@ -65,8 +64,7 @@ impl ToTokens for Meta {
 mod tests {
     use std::str::FromStr;
 
-    use moxy_token::token::ToTokenStream;
-    use moxy_token::{Parse, TokenStream};
+    use moxy_token::{Parse, ToTokenStream, TokenStream};
 
     use super::attr::*;
     use super::*;

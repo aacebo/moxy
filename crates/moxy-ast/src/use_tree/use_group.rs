@@ -1,7 +1,6 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::punct::Comma;
-use moxy_token::token::{Delim, Group, LexError, ToTokens};
-use moxy_token::{Parse, Span, TokenStream, TokenTree};
+use moxy_token::punct::Comma;
+use moxy_token::{Delim, Group, LexError, Parse, Span, ToTokens, TokenStream, TokenTree};
 
 use super::UseTree;
 use crate::Punctuated;

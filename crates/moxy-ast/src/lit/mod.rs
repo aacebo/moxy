@@ -1,6 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::{self, LexError, ToTokens};
-use moxy_token::{Parse, Token, TokenStream, TokenTree};
+use moxy_token::{LexError, Parse, ToTokens, Token, TokenStream, TokenTree};
 
 mod lit_bool;
 mod lit_byte;
@@ -32,7 +31,7 @@ pub enum Lit {
     Int(LitInt),
     Float(LitFloat),
     Bool(LitBool),
-    Verbatim(token::Literal),
+    Verbatim(moxy_token::Literal),
 }
 
 impl From<LitStr> for Lit {
@@ -83,8 +82,8 @@ impl From<LitBool> for Lit {
     }
 }
 
-impl From<token::Literal> for Lit {
-    fn from(value: token::Literal) -> Self {
+impl From<moxy_token::Literal> for Lit {
+    fn from(value: moxy_token::Literal) -> Self {
         Lit::Verbatim(value)
     }
 }
@@ -150,7 +149,7 @@ impl ToTokens for Lit {
 
 impl std::fmt::Display for Lit {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use moxy_token::token::ToTokenStream;
+        use moxy_token::ToTokenStream;
         write!(f, "{}", self.to_token_stream())
     }
 }
@@ -159,8 +158,7 @@ impl std::fmt::Display for Lit {
 mod tests {
     use std::str::FromStr;
 
-    use moxy_token::Span;
-    use moxy_token::token::ToTokenStream;
+    use moxy_token::{Span, ToTokenStream};
 
     use super::*;
 

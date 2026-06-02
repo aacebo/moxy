@@ -1,5 +1,4 @@
-use moxy_token::token::{Delim, ToTokens};
-use moxy_token::{Span, TokenStream};
+use moxy_token::{Delim, Span, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -19,8 +18,8 @@ impl ToTokens for PatParen {
         }
         let mut inner = TokenStream::new();
         self.pat.to_tokens(&mut inner);
-        t.extend_one(moxy_token::TokenTree::Group(moxy_token::token::Group::new(
-            moxy_token::token::Delim::Paren,
+        t.extend_one(moxy_token::TokenTree::Group(moxy_token::Group::new(
+            moxy_token::Delim::Paren,
             inner,
         )));
     }

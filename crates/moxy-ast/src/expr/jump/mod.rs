@@ -7,7 +7,7 @@ pub use expr_break::*;
 pub use expr_continue::*;
 pub use expr_return::*;
 pub use expr_yield::*;
-use moxy_token::token::{ToTokens, TokenStream};
+use moxy_token::{ToTokens, TokenStream};
 
 #[doc = "Jump/control-flow expressions: return, break, continue, yield."]
 #[derive(Debug, Clone)]

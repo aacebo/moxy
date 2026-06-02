@@ -1,6 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::{LexError, ToTokens};
-use moxy_token::{Parse, TokenStream};
+use moxy_token::{LexError, Parse, ToTokens, TokenStream};
 
 mod item_const;
 mod item_enum;
@@ -238,7 +237,7 @@ impl ToTokens for Item {
 mod tests {
     use std::str::FromStr;
 
-    use moxy_token::token::ToTokenStream;
+    use moxy_token::ToTokenStream;
 
     use super::*;
     use crate::Crate;

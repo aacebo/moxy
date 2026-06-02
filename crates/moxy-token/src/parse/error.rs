@@ -1,6 +1,5 @@
-use crate::token::punct::Not;
-use crate::token::{Delim, Group, Ident, LexError, Literal, Punctuation, ToTokenStream, ToTokens};
-use crate::{Span, TokenStream, TokenTree};
+use crate::punct::Not;
+use crate::{Delim, Group, Ident, LexError, Literal, Punctuation, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 #[derive(Debug, Clone)]
 pub struct ParseError {

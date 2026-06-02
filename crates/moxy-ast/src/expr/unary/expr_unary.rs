@@ -1,7 +1,6 @@
 use moxy_token::parse::ParseStream;
-use moxy_token::token::ToTokens;
-use moxy_token::token::punct::{Not, Star};
-use moxy_token::{Span, TokenStream};
+use moxy_token::punct::{Not, Star};
+use moxy_token::{Span, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -18,9 +17,7 @@ pub struct ExprUnary {
 impl ExprUnary {
     /// Returns `true` if the stream starts with a prefix unary operator (`!`, `-`, `*`).
     pub fn is_prefix(stream: &mut ParseStream) -> bool {
-        stream.peek::<Not>().is_some()
-            || stream.peek::<moxy_token::token::punct::Minus>().is_some()
-            || stream.peek::<Star>().is_some()
+        stream.peek::<Not>().is_some() || stream.peek::<moxy_token::punct::Minus>().is_some() || stream.peek::<Star>().is_some()
     }
 }
 

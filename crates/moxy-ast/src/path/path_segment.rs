@@ -1,7 +1,6 @@
 use moxy_macros::ToTokens;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::Delim;
-use moxy_token::{Parse, Span, TokenTree};
+use moxy_token::{Delim, Parse, Span, TokenTree};
 
 use super::PathArguments;
 use crate::Ident;

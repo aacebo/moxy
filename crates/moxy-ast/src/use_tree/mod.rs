@@ -1,8 +1,7 @@
+use moxy_token::keyword::As;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::keyword::As;
-use moxy_token::token::punct::{PathSep, Star};
-use moxy_token::token::{Delim, ToTokens};
-use moxy_token::{Parse, Span, TokenStream, TokenTree};
+use moxy_token::punct::{PathSep, Star};
+use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream, TokenTree};
 
 use crate::Ident;
 

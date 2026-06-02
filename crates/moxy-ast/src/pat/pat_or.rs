@@ -1,6 +1,5 @@
-use moxy_token::token::ToTokens;
-use moxy_token::token::punct::Or as OrPunct;
-use moxy_token::{Span, TokenStream};
+use moxy_token::punct::Or as OrPunct;
+use moxy_token::{Span, ToTokens, TokenStream};
 
 use crate::*;
 

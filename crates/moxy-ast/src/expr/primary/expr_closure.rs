@@ -1,8 +1,7 @@
+use moxy_token::keyword::Move;
 use moxy_token::parse::ParseStream;
-use moxy_token::token::keyword::Move;
-use moxy_token::token::punct::{Comma, Or, OrOr};
-use moxy_token::token::{Punctuation, ToTokens, Token, TokenTree};
-use moxy_token::{Span, TokenStream};
+use moxy_token::punct::{Comma, Or, OrOr};
+use moxy_token::{Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::*;
 
@@ -26,7 +25,7 @@ impl ExprClosure {
     /// Returns `true` when the stream is positioned at the start of a closure
     /// expression (`|...|`, `||`, `move`, or a `const`/`async` not followed by a block).
     pub fn is_start(stream: &mut ParseStream) -> bool {
-        use moxy_token::token::keyword::Const;
+        use moxy_token::keyword::Const;
         if stream.peek::<Or>().is_some() || stream.peek::<OrOr>().is_some() || stream.peek::<Move>().is_some() {
             return true;
         }
@@ -37,7 +36,7 @@ impl ExprClosure {
                 | Some(TokenTree::Token(Token::Keyword(_)))
         );
 
-        (stream.peek::<Const>().is_some() || stream.peek::<moxy_token::token::keyword::Async>().is_some())
+        (stream.peek::<Const>().is_some() || stream.peek::<moxy_token::keyword::Async>().is_some())
             && leads_closure
             && !super::super::block::ExprBrace::is_next(stream)
     }

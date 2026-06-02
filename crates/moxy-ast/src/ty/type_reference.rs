@@ -1,6 +1,6 @@
 use moxy_macros::{Parse, ToTokens};
 use moxy_token::Span;
-use moxy_token::token::punct::And;
+use moxy_token::punct::And;
 
 use super::Type;
 use crate::{Lifetime, Mutability};

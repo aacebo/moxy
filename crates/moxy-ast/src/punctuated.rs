@@ -2,8 +2,7 @@ use std::ops::{Index, IndexMut};
 use std::{slice, vec};
 
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::ToTokens;
-use moxy_token::{Parse, TokenStream};
+use moxy_token::{Parse, ToTokens, TokenStream};
 
 pub struct Punctuated<T, P> {
     inner: Vec<(T, P)>,
@@ -809,9 +808,8 @@ impl<T: serde::Serialize, P> serde::Serialize for Punctuated<T, P> {
 
 #[cfg(test)]
 mod tests {
-    use moxy_token::Span;
-    use moxy_token::token::Ident;
-    use moxy_token::token::punct::Comma;
+    use moxy_token::punct::Comma;
+    use moxy_token::{Ident, Span};
 
     use super::*;
 
@@ -858,7 +856,7 @@ mod tests {
 
     #[test]
     fn to_tokens_roundtrip() {
-        use moxy_token::token::ToTokenStream;
+        use moxy_token::ToTokenStream;
 
         let ts = parse_stream("a , b , c");
         let mut ps = ts.parse();

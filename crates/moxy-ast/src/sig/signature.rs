@@ -1,8 +1,7 @@
+use moxy_token::keyword::{Extern, Fn};
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::keyword::{Extern, Fn};
-use moxy_token::token::punct::{Comma, Gt, Lt};
-use moxy_token::token::{Delim, ToTokens, TokenTree};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::{Comma, Gt, Lt};
+use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream, TokenTree};
 
 use super::{Abi, FnParam, Variadic};
 use crate::{Asyncness, Constness, Generics, Ident, Punctuated, ReturnType, Unsafety};
@@ -57,7 +56,7 @@ impl Parse for Signature {
 
         let output = stream.parse::<ReturnType>()?;
 
-        if stream.peek::<moxy_token::token::keyword::Where>().is_some() {
+        if stream.peek::<moxy_token::keyword::Where>().is_some() {
             generics.where_clause = Some(stream.parse()?);
         }
 
@@ -122,7 +121,7 @@ impl ToTokens for Signature {
             v.to_tokens(&mut inner);
         }
 
-        t.extend_one(TokenTree::Group(moxy_token::token::Group::new(Delim::Paren, inner)));
+        t.extend_one(TokenTree::Group(moxy_token::Group::new(Delim::Paren, inner)));
         self.output.to_tokens(t);
 
         if let Some(w) = &self.generics.where_clause {

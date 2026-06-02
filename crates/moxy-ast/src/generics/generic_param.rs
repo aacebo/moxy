@@ -1,7 +1,6 @@
+use moxy_token::keyword::Const;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::ToTokens;
-use moxy_token::token::keyword::Const;
-use moxy_token::{Parse, TokenStream};
+use moxy_token::{Parse, ToTokens, TokenStream};
 
 use super::{ConstParam, LifetimeParam, TypeParam};
 
@@ -37,7 +36,7 @@ impl Parse for GenericParam {
         if matches!(
             stream.curr(),
             Some(moxy_token::TokenTree::Token(moxy_token::Token::Punct(
-                moxy_token::token::Punctuation::Quote(_)
+                moxy_token::Punctuation::Quote(_)
             )))
         ) {
             return Ok(GenericParam::Lifetime(stream.parse()?));

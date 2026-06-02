@@ -1,6 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::{self, LexError, ToTokens};
-use moxy_token::{Parse, Span, Token, TokenStream, TokenTree};
+use moxy_token::{LexError, Parse, Span, ToTokens, Token, TokenStream, TokenTree};
 
 #[doc = "An identifier token (e.g. a variable name, type name, or keyword-like ident)."]
 #[derive(Debug, Clone)]
@@ -42,7 +41,7 @@ impl ToTokens for Ident {
             self.text.clone()
         };
 
-        token::Ident::new(&name, self.span).to_tokens(tokens);
+        moxy_token::Ident::new(&name, self.span).to_tokens(tokens);
     }
 }
 
@@ -60,7 +59,7 @@ impl std::fmt::Display for Ident {
 mod tests {
     use std::str::FromStr;
 
-    use moxy_token::token::ToTokenStream;
+    use moxy_token::ToTokenStream;
 
     use super::*;
 

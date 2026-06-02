@@ -4,9 +4,8 @@ mod attr_style;
 pub use attr_args::*;
 pub use attr_style::*;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::punct::{Not, Pound};
-use moxy_token::token::{Delim, Group, ToTokens};
-use moxy_token::{Parse, Span, TokenStream, TokenTree};
+use moxy_token::punct::{Not, Pound};
+use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream, TokenTree};
 
 use crate::Path;
 

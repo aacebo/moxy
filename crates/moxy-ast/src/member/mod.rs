@@ -1,6 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::{self, LexError, ToTokens, Token, TokenTree};
-use moxy_token::{Parse, TokenStream};
+use moxy_token::{LexError, Parse, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::Ident;
 
@@ -43,7 +42,7 @@ impl ToTokens for Member {
         match self {
             Member::Named(ident) => ident.to_tokens(tokens),
             Member::Unnamed(index) => {
-                token::Literal::from_repr(&index.to_string(), moxy_token::Span::default()).to_tokens(tokens);
+                moxy_token::Literal::from_repr(&index.to_string(), moxy_token::Span::default()).to_tokens(tokens);
             }
         }
     }

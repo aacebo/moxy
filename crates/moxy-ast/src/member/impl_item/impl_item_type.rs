@@ -1,8 +1,7 @@
+use moxy_token::keyword::Type as KwType;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::token::keyword::Type as KwType;
-use moxy_token::token::punct::{Eq, Semi};
-use moxy_token::token::{LexError, ToTokens};
-use moxy_token::{Parse, Span, TokenStream};
+use moxy_token::punct::{Eq, Semi};
+use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
 
 use super::ImplItem;
 use crate::{Attribute, Defaultness, Generics, Ident, Type, Visibility};
