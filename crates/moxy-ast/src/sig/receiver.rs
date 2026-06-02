@@ -26,7 +26,7 @@ impl Parse for Receiver {
             false
         };
 
-        let lifetime = if reference { stream.parse_opt::<Lifetime>() } else { None };
+        let lifetime = if reference { stream.parse_if::<Lifetime>() } else { None };
         let mutability = stream.parse::<Mutability>()?;
         let _ = stream.parse::<SelfValue>()?;
         Ok(Self {

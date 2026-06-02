@@ -123,7 +123,7 @@ impl Label {
             return None;
         }
 
-        let name = stream.parse_opt::<Lifetime>()?;
+        let name = stream.parse_if::<Lifetime>()?;
         Some(Label {
             span: Span::default(),
             name,

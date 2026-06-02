@@ -111,12 +111,56 @@ impl<'a> ParseStream<'a> {
         T::parse(self)
     }
 
-    /// Parse `T` only if it matches, leaving the stream unchanged otherwise.
-    pub fn parse_opt<T: Parse>(&mut self) -> Option<T> {
+    /// Parse `T` if it matches; leave the stream unchanged otherwise.
+    pub fn parse_if<T: Parse>(&mut self) -> Option<T> {
         let mut fork = self.fork();
         let v = T::parse(&mut fork).ok()?;
         self.seek(&fork);
         Some(v)
+    }
+
+    /// Parse `T` repeatedly while it matches, collecting results. Never errors.
+    pub fn parse_while<T: Parse>(&mut self) -> Vec<T> {
+        let mut items = Vec::new();
+
+        while let Some(item) = self.parse_if::<T>() {
+            items.push(item);
+        }
+
+        items
+    }
+
+    /// Parse `T` until the stream is empty, propagating the first error.
+    pub fn parse_until_empty<T: Parse>(&mut self) -> Result<Vec<T>, ParseError> {
+        let mut items = Vec::new();
+
+        while !self.is_empty() {
+            items.push(T::parse(self)?);
+        }
+
+        Ok(items)
+    }
+
+    /// Discard leading `T` tokens while they match. Returns `self` for chaining.
+    pub fn skip_while<T: Parse>(&mut self) -> &mut Self {
+        while self.parse_if::<T>().is_some() {}
+        self
+    }
+
+    /// Discard one `T` if it matches. Returns `self` for chaining.
+    pub fn skip_if<T: Parse>(&mut self) -> &mut Self {
+        self.parse_if::<T>();
+        self
+    }
+
+    /// Advance past tokens until `pred(curr())` is true (does NOT consume the matching token).
+    /// Returns `self` for chaining.
+    pub fn skip_until<F: Fn(Option<&TokenTree>) -> bool>(&mut self, pred: F) -> &mut Self {
+        while !self.is_empty() && !pred(self.curr()) {
+            self.advance();
+        }
+
+        self
     }
 
     pub fn advance_by(&mut self, n: usize) -> Option<&[TokenTree]> {

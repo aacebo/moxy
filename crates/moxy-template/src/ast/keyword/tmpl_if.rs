@@ -46,7 +46,7 @@ impl TmplIf {
 
             stream.seek(&fork);
 
-            if let Some(if_kw2) = stream.parse_opt::<If>() {
+            if let Some(if_kw2) = stream.parse_if::<If>() {
                 branches.push(parse_branch(stream, Some(at2), Some(else_kw), if_kw2)?);
             } else {
                 let body_stream = stream.parse_group(Delim::Brace)?;

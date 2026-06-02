@@ -20,7 +20,7 @@ pub struct TypeBareFn {
 
 impl Parse for TypeBareFn {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let lifetimes = stream.parse_opt::<BoundLifetimes>();
+        let lifetimes = stream.parse_if::<BoundLifetimes>();
         let unsafety = stream.parse::<Unsafety>()?;
         let abi = if stream.peek::<Extern>().is_some() {
             Some(stream.parse::<Abi>()?)

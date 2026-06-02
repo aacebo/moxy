@@ -42,7 +42,7 @@ impl Parse for Signature {
         let mut inputs = Punctuated::new();
         let mut variadic = None;
         while !inner.is_empty() {
-            if let Some(v) = inner.parse_opt::<Variadic>() {
+            if let Some(v) = inner.parse_if::<Variadic>() {
                 variadic = Some(v);
                 break;
             }

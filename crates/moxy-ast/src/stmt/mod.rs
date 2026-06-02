@@ -38,7 +38,7 @@ impl Parse for Stmt {
             return Ok(Stmt::Macro(stream.parse()?));
         }
         let expr = stream.parse::<Expr>()?;
-        let semi = stream.parse_opt::<Semi>();
+        let semi = stream.parse_if::<Semi>();
         Ok(Stmt::Expr(Box::new(expr), semi))
     }
 }

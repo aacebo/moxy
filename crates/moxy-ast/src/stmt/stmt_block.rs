@@ -15,11 +15,7 @@ impl Parse for StmtBlock {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let group = stream.parse_group(Delim::Brace)?;
         let mut inner = group.parse();
-        let mut stmts = Vec::new();
-
-        while !inner.is_empty() {
-            stmts.push(inner.parse::<Stmt>()?);
-        }
+        let stmts = inner.parse_until_empty::<Stmt>()?;
 
         Ok(Self {
             span: Span::default(),

@@ -235,7 +235,7 @@ impl ExprRepeat {
 }
 
 impl Expr {
-    pub fn parse_opt(stream: &mut ParseStream) -> Result<Option<Box<Self>>, ParseError> {
+    pub fn parse_if(stream: &mut ParseStream) -> Result<Option<Box<Self>>, ParseError> {
         if stream.is_empty() || stream.peek::<Semi>().is_some() || stream.peek::<Comma>().is_some() {
             return Ok(None);
         }
@@ -362,7 +362,7 @@ impl PrimaryExpr {
             return Ok(Expr::Jump(JumpExpr::Return(ExprReturn {
                 span: Span::default(),
                 attrs: Vec::new(),
-                expr: Expr::parse_opt(stream)?,
+                expr: Expr::parse_if(stream)?,
             })));
         }
 
@@ -371,7 +371,7 @@ impl PrimaryExpr {
             return Ok(Expr::Jump(JumpExpr::Yield(ExprYield {
                 span: Span::default(),
                 attrs: Vec::new(),
-                expr: Expr::parse_opt(stream)?,
+                expr: Expr::parse_if(stream)?,
             })));
         }
 
@@ -382,7 +382,7 @@ impl PrimaryExpr {
                 span: Span::default(),
                 attrs: Vec::new(),
                 label,
-                expr: Expr::parse_opt(stream)?,
+                expr: Expr::parse_if(stream)?,
             })));
         }
 
@@ -421,7 +421,7 @@ impl PrimaryExpr {
             })));
         }
 
-        if let Some(mac) = stream.parse_opt::<crate::MacroCall>() {
+        if let Some(mac) = stream.parse_if::<crate::MacroCall>() {
             return Ok(Expr::Primary(PrimaryExpr::Macro(ExprMacro {
                 span: moxy_token::Span::default(),
                 attrs: Vec::new(),

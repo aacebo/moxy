@@ -198,7 +198,7 @@ impl Parse for Type {
         }
 
         // Macro type `m!(...)` — a path followed by `!`.
-        if let Some(mac) = stream.parse_opt::<TypeMacro>() {
+        if let Some(mac) = stream.parse_if::<TypeMacro>() {
             return Ok(Type::Macro(mac));
         }
 

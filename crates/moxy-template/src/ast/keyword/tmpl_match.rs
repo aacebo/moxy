@@ -63,7 +63,7 @@ impl Parse for TmplMatchArm {
         let body_stream = stream.parse_group(Delim::Brace)?;
         let mut body_ps = body_stream.parse();
         let body = Template::parse(&mut body_ps)?;
-        let comma = stream.parse_opt::<Comma>();
+        let comma = stream.parse_if::<Comma>();
 
         Ok(Self {
             span,

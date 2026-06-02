@@ -23,15 +23,15 @@ impl Parse for TmplKeyword {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at_punct = stream.parse::<At>()?;
 
-        if let Some(if_kw) = stream.parse_opt::<If>() {
+        if let Some(if_kw) = stream.parse_if::<If>() {
             return Ok(Self::If(TmplIf::parse_after_keyword_if(stream, at_punct, if_kw)?));
         }
 
-        if let Some(for_kw) = stream.parse_opt::<For>() {
+        if let Some(for_kw) = stream.parse_if::<For>() {
             return Ok(Self::For(TmplFor::parse_after_keyword_for(stream, at_punct, for_kw)?));
         }
 
-        if let Some(match_kw) = stream.parse_opt::<Match>() {
+        if let Some(match_kw) = stream.parse_if::<Match>() {
             return Ok(Self::Match(TmplMatch::parse_after_keyword_match(stream, at_punct, match_kw)?));
         }
 

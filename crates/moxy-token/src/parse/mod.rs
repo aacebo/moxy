@@ -20,11 +20,7 @@ impl<T: Parse> Peek for T {
 
 impl<T: Parse> Parse for Vec<T> {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let mut items = Vec::new();
-        while let Some(item) = stream.parse_opt::<T>() {
-            items.push(item);
-        }
-        Ok(items)
+        Ok(stream.parse_while::<T>())
     }
 }
 

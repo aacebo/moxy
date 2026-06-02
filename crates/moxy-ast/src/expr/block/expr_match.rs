@@ -67,7 +67,7 @@ impl Parse for MatchArm {
         let attrs = stream.parse::<Vec<Attribute>>()?;
         let pat = stream.parse::<Pattern>()?;
 
-        let (if_keyword, guard) = if let Some(if_kw) = stream.parse_opt::<If>() {
+        let (if_keyword, guard) = if let Some(if_kw) = stream.parse_if::<If>() {
             (Some(if_kw), Some(Box::new(stream.parse::<Expr>()?)))
         } else {
             (None, None)
@@ -75,7 +75,7 @@ impl Parse for MatchArm {
 
         let fat_arrow = stream.parse::<FatArrow>()?;
         let body = stream.parse::<Expr>()?;
-        let comma = stream.parse_opt::<Comma>();
+        let comma = stream.parse_if::<Comma>();
 
         Ok(Self {
             span: Span::default(),

@@ -28,7 +28,7 @@ impl ExprAsync {
 
     pub fn parse_from(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let async_keyword = stream.parse::<Async>()?;
-        let move_keyword = stream.parse_opt::<Move>();
+        let move_keyword = stream.parse_if::<Move>();
         let block = stream.parse::<StmtBlock>()?;
         Ok(Self {
             span: Span::default(),

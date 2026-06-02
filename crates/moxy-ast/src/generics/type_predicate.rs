@@ -18,7 +18,7 @@ pub struct TypePredicate {
 
 impl Parse for TypePredicate {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let lifetimes = stream.parse_opt::<BoundLifetimes>();
+        let lifetimes = stream.parse_if::<BoundLifetimes>();
         let bounded_ty = stream.parse::<Type>()?;
         let colon_punct = stream.parse::<Colon>()?;
         let bounds = TypeBound::parse_bounds(stream)?;
