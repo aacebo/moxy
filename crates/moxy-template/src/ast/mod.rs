@@ -10,7 +10,7 @@ pub use tmpl_tokens::*;
 
 #[doc = "A single node in a template."]
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize), serde(tag = "type", rename_all = "lowercase"))]
 pub enum Node {
     Tokens(TmplTokens),
     Interp(TmplInterp),
