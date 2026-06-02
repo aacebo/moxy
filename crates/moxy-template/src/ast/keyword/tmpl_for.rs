@@ -49,14 +49,10 @@ impl TmplFor {
 
 impl ToTokens for TmplFor {
     fn to_tokens(&self, t: &mut TokenStream) {
-        self.at_punct.to_tokens(t);
         self.for_keyword.to_tokens(t);
-
-        let mut paren_inner = TokenStream::new();
-        self.binding.to_tokens(&mut paren_inner);
-        self.in_keyword.to_tokens(&mut paren_inner);
-        self.iter.to_tokens(&mut paren_inner);
-        t.extend_one(TokenTree::Group(Group::new(Delim::Paren, paren_inner)));
+        self.binding.to_tokens(t);
+        self.in_keyword.to_tokens(t);
+        self.iter.to_tokens(t);
 
         let mut body = TokenStream::new();
         self.body.to_tokens(&mut body);

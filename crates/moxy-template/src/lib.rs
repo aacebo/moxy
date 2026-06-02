@@ -172,9 +172,11 @@ mod tests {
         }
 
         #[test]
-        fn template_interp_roundtrip() {
+        fn template_interp_splices_expr() {
+            // {{ name }} should emit `name` directly, not {{ name }}
             let ts = crate::template!({ { name } });
-            assert!(ts.to_string().contains("name"));
+            let s = ts.to_string();
+            assert_eq!(s, "name");
         }
 
         #[test]
@@ -183,12 +185,31 @@ mod tests {
         }
 
         #[test]
-        fn template_if_roundtrip() {
+        fn template_if_emits_rust_if() {
             let ts = crate::template!(@if (cond) { yes });
             let s = ts.to_string();
-            assert!(s.contains("if"));
-            assert!(s.contains("cond"));
+            assert!(s.contains("if cond"));
             assert!(s.contains("yes"));
+            assert!(!s.contains('@'));
+        }
+
+        #[test]
+        fn template_for_emits_rust_for() {
+            let ts = crate::template!(@for (item in items) { {{ item }} });
+            let s = ts.to_string();
+            assert!(s.contains("for item in items"));
+            assert!(s.contains("item"));
+            assert!(!s.contains('@'));
+        }
+
+        #[test]
+        fn template_match_emits_rust_match() {
+            let ts = crate::template!(@match (x) { A => { a }, B => { b }, });
+            let s = ts.to_string();
+            assert!(s.contains("match x"));
+            assert!(s.contains("A =>"));
+            assert!(s.contains("B =>"));
+            assert!(!s.contains('@'));
         }
     }
 }

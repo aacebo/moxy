@@ -77,17 +77,13 @@ impl Parse for TmplMatchArm {
 
 impl ToTokens for TmplMatch {
     fn to_tokens(&self, t: &mut TokenStream) {
-        self.at_punct.to_tokens(t);
         self.match_keyword.to_tokens(t);
-        let mut expr = TokenStream::new();
-        self.expr.to_tokens(&mut expr);
-        t.extend_one(TokenTree::Group(Group::new(Delim::Paren, expr)));
-        let mut arms = TokenStream::new();
+        self.expr.to_tokens(t);
 
+        let mut arms = TokenStream::new();
         for arm in &self.arms {
             arm.to_tokens(&mut arms);
         }
-
         t.extend_one(TokenTree::Group(Group::new(Delim::Brace, arms)));
     }
 }

@@ -1,5 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream};
 
 #[doc = "A template interpolation: `{{ expr }}`."]
 #[derive(Debug, Clone)]
@@ -21,11 +21,6 @@ impl Parse for TmplInterp {
 
 impl ToTokens for TmplInterp {
     fn to_tokens(&self, t: &mut TokenStream) {
-        let mut inner = TokenStream::new();
-        self.expr.to_tokens(&mut inner);
-        let inner_group = TokenTree::Group(Group::new(Delim::Brace, inner));
-        let mut outer = TokenStream::new();
-        outer.extend_one(inner_group);
-        t.extend_one(TokenTree::Group(Group::new(Delim::Brace, outer)));
+        self.expr.to_tokens(t);
     }
 }
