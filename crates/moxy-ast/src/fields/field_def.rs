@@ -19,7 +19,7 @@ pub struct FieldDef {
 
 impl Parse for FieldDef {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let vis = stream.parse::<Visibility>()?;
         let mutability = stream.parse::<Mutability>()?;
 

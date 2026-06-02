@@ -298,7 +298,7 @@ impl PatStruct {
 
 fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     let at = stream.span();
-    let attrs = stream.parse_vec::<Attribute>()?;
+    let attrs = stream.parse::<Vec<Attribute>>()?;
 
     // Wildcard `_`
     if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("_")) {

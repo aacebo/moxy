@@ -24,7 +24,7 @@ pub struct ItemConst {
 
 impl Parse for ItemConst {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let vis = stream.parse::<Visibility>()?;
         let const_keyword = stream.parse::<Const>()?;
         let ident = stream.parse::<Ident>()?;

@@ -17,7 +17,7 @@ pub enum FnParam {
 impl FnParam {
     pub fn is_receiver(stream: &mut ParseStream) -> bool {
         let mut fork = stream.fork();
-        let _ = fork.parse_vec::<crate::Attribute>();
+        while fork.parse_opt::<crate::Attribute>().is_some() {}
 
         if fork.peek::<SelfValue>().is_some() {
             return true;

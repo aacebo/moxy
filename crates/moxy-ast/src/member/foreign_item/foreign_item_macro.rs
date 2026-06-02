@@ -17,7 +17,7 @@ pub struct ForeignItemMacro {
 
 impl Parse for ForeignItemMacro {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let (mac, semi) = crate::MacroCall::parse_semi(stream)?;
         Ok(ForeignItemMacro {
             span: Span::default(),

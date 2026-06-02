@@ -19,7 +19,7 @@ pub struct FieldValue {
 
 impl Parse for FieldValue {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let member = stream.parse::<Member>()?;
         if stream.peek::<Colon>().is_some() {
             let colon_punct = Some(stream.parse::<Colon>()?);

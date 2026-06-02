@@ -20,7 +20,7 @@ pub struct TypeParam {
 
 impl Parse for TypeParam {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let ident = stream.parse::<Ident>()?;
 
         let (colon_punct, bounds) = if stream.peek::<Colon>().is_some() {

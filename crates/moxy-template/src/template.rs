@@ -10,9 +10,21 @@ pub struct Template {
     pub nodes: Vec<Node>,
 }
 
+impl Template {
+    pub fn render(&self) -> TokenStream {
+        let mut stream = TokenStream::new();
+
+        for node in &self.nodes {
+            node.to_tokens(&mut stream);
+        }
+
+        stream
+    }
+}
+
 impl Parse for Template {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let nodes = stream.parse_vec::<Node>()?;
+        let nodes = stream.parse::<Vec<Node>>()?;
         Ok(Self { nodes })
     }
 }

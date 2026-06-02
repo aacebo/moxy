@@ -16,7 +16,7 @@ pub struct StmtMacro {
 
 impl Parse for StmtMacro {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let mac = stream.parse::<MacroCall>()?;
         let semi = if stream.peek::<Semi>().is_some() {
             let _ = stream.parse::<Semi>()?;

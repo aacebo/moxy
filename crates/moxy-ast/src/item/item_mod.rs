@@ -22,7 +22,7 @@ pub struct ItemMod {
 
 impl Parse for ItemMod {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let vis = stream.parse::<Visibility>()?;
         let unsafety = Unsafety::Safe;
         let mod_keyword = stream.parse::<Mod>()?;
@@ -31,7 +31,8 @@ impl Parse for ItemMod {
         let (semi_punct, content) = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
             let group = stream.parse_group(Delim::Brace)?;
             let mut inner = group.parse();
-            (Semi::default(), Some(inner.parse_vec::<Item>()?))
+            let items = inner.parse::<Vec<Item>>()?;
+            (Semi::default(), Some(items))
         } else {
             let semi_punct = stream.parse::<Semi>()?;
             (semi_punct, None)

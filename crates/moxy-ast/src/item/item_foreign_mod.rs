@@ -16,12 +16,12 @@ pub struct ItemForeignMod {
 
 impl Parse for ItemForeignMod {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let unsafety = stream.parse::<Unsafety>()?;
         let abi = stream.parse::<Abi>()?;
         let group = stream.parse_group(Delim::Brace)?;
         let mut inner = group.parse();
-        let items = inner.parse_vec::<ForeignItem>()?;
+        let items = inner.parse::<Vec<ForeignItem>>()?;
         Ok(ItemForeignMod {
             span: Span::default(),
             attrs,

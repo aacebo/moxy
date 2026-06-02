@@ -21,7 +21,7 @@ pub struct TraitItemType {
 impl Parse for TraitItemType {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
 
         if stream.curr().and_then(|t| t.name()).as_deref() != Some("type") {
             return Err(LexError::new(at).message("expected trait type").into());

@@ -43,7 +43,7 @@ impl Parse for GenericParam {
         }
 
         let mut fork = stream.fork();
-        let _ = fork.parse_vec::<crate::Attribute>();
+        while fork.parse_opt::<crate::Attribute>().is_some() {}
 
         if fork.peek::<Const>().is_some() {
             return Ok(GenericParam::Const(stream.parse()?));

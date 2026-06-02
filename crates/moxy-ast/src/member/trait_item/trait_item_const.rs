@@ -21,7 +21,7 @@ pub struct TraitItemConst {
 impl Parse for TraitItemConst {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
 
         if stream.curr().and_then(|t| t.name()).as_deref() != Some("const") {
             return Err(LexError::new(at).message("expected trait const").into());

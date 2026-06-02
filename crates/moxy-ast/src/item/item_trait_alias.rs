@@ -22,7 +22,7 @@ pub struct ItemTraitAlias {
 
 impl Parse for ItemTraitAlias {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let vis = stream.parse::<Visibility>()?;
         let _unsafety = stream.parse::<Unsafety>()?;
 

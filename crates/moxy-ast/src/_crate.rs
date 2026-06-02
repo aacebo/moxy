@@ -14,8 +14,8 @@ pub struct Crate {
 
 impl Parse for Crate {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
-        let items = stream.parse_vec::<Item>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let items = stream.parse::<Vec<Item>>()?;
         Ok(Self {
             span: Span::default(),
             attrs,

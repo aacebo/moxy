@@ -15,7 +15,7 @@ pub struct BareFnArg {
 
 impl Parse for BareFnArg {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
 
         let name = {
             let mut fork = stream.fork();

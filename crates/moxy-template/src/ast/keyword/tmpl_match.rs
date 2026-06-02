@@ -33,7 +33,7 @@ impl TmplMatch {
         let expr = stream.parse_group(Delim::Paren)?;
         let arms_stream = stream.parse_group(Delim::Brace)?;
         let mut arms_ps = arms_stream.parse();
-        let arms = arms_ps.parse_vec::<TmplMatchArm>()?;
+        let arms = arms_ps.parse::<Vec<TmplMatchArm>>()?;
         Ok(Self {
             span,
             at_punct,

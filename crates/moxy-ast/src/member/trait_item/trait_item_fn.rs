@@ -18,7 +18,7 @@ pub struct TraitItemFn {
 impl Parse for TraitItemFn {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
 
         if !crate::sig::Signature::is_start(stream) {
             return Err(LexError::new(at).message("expected trait fn").into());

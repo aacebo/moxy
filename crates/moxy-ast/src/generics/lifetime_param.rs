@@ -17,7 +17,7 @@ pub struct LifetimeParam {
 
 impl Parse for LifetimeParam {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let lifetime = stream.parse::<Lifetime>()?;
         let bounds = Lifetime::parse_bounds(stream)?;
         let colon_punct = if !bounds.is_empty() { Some(Colon::default()) } else { None };

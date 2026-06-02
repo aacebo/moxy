@@ -19,7 +19,7 @@ pub struct ItemMacroRules {
 
 impl Parse for ItemMacroRules {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let macro_rules_keyword = stream.parse::<MacroRules>()?;
         let not_punct = stream.parse::<Not>()?;
         let ident = stream.parse::<Ident>()?;

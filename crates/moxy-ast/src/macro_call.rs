@@ -33,7 +33,7 @@ impl MacroCall {
 
 impl Parse for MacroCall {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let path = stream.parse::<Path>()?;
         let _ = stream.parse::<Not>()?;
 

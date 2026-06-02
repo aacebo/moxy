@@ -17,7 +17,7 @@ pub struct ItemFn {
 
 impl Parse for ItemFn {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let vis = stream.parse::<Visibility>()?;
         let defaultness = Defaultness::Final;
         let sig = stream.parse::<Signature>()?;

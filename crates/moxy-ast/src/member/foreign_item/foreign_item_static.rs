@@ -21,7 +21,7 @@ pub struct ForeignItemStatic {
 impl Parse for ForeignItemStatic {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let vis = stream.parse::<Visibility>()?;
 
         if stream.curr().and_then(|t| t.name()).as_deref() != Some("static") {

@@ -18,6 +18,16 @@ impl<T: Parse> Peek for T {
     }
 }
 
+impl<T: Parse> Parse for Vec<T> {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let mut items = Vec::new();
+        while let Some(item) = stream.parse_opt::<T>() {
+            items.push(item);
+        }
+        Ok(items)
+    }
+}
+
 /// Parse a source string into a typed AST node, returning `Result<T, ParseError>`.
 ///
 /// The type can be given explicitly with `as T` or inferred from context.

@@ -24,7 +24,7 @@ pub struct ItemStatic {
 
 impl Parse for ItemStatic {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let vis = stream.parse::<Visibility>()?;
         let static_keyword = stream.parse::<Static>()?;
         let mutability = stream.parse::<Mutability>()?;

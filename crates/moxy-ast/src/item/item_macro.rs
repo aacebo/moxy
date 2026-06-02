@@ -18,7 +18,7 @@ pub struct ItemMacro {
 
 impl Parse for ItemMacro {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let mac = stream.parse::<MacroCall>()?;
 
         let (semi, semi_punct) = if stream.peek::<Semi>().is_some() {

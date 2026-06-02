@@ -18,7 +18,7 @@ pub struct Receiver {
 
 impl Parse for Receiver {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let reference = if stream.peek::<And>().is_some() {
             let _ = stream.parse::<And>()?;
             true

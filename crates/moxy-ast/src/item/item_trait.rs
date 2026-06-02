@@ -24,7 +24,7 @@ pub struct ItemTrait {
 
 impl Parse for ItemTrait {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let vis = stream.parse::<Visibility>()?;
         let unsafety = stream.parse::<Unsafety>()?;
         let auto_keyword = if stream.peek::<Auto>().is_some() {
@@ -51,7 +51,7 @@ impl Parse for ItemTrait {
 
         let group = stream.parse_group(Delim::Brace)?;
         let mut inner = group.parse();
-        let items = inner.parse_vec::<TraitItem>()?;
+        let items = inner.parse::<Vec<TraitItem>>()?;
         Ok(ItemTrait {
             span: Span::default(),
             attrs,

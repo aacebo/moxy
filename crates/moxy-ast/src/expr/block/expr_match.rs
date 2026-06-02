@@ -22,7 +22,7 @@ impl ExprMatch {
         let expr = Box::new(super::super::parse_expr(stream, false)?);
         let group = stream.parse_group(Delim::Brace)?;
         let mut inner = group.parse();
-        let arms = inner.parse_vec::<MatchArm>()?;
+        let arms = inner.parse::<Vec<MatchArm>>()?;
         Ok(Expr::Block(super::BlockExpr::Match(Self {
             span: Span::default(),
             attrs: Vec::new(),
@@ -64,7 +64,7 @@ pub struct MatchArm {
 
 impl Parse for MatchArm {
     fn parse(stream: &mut moxy_token::parse::ParseStream) -> Result<Self, moxy_token::parse::ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let pat = stream.parse::<Pattern>()?;
 
         let (if_keyword, guard) = if let Some(if_kw) = stream.parse_opt::<If>() {

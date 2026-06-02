@@ -19,7 +19,7 @@ pub struct ItemUse {
 
 impl Parse for ItemUse {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let vis = stream.parse::<Visibility>()?;
         let use_keyword = stream.parse::<Use>()?;
         let tree = stream.parse::<UseTree>()?;

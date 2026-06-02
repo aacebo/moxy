@@ -19,7 +19,7 @@ pub struct ItemUnion {
 
 impl Parse for ItemUnion {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let vis = stream.parse::<Visibility>()?;
         let union_keyword = stream.parse::<Union>()?;
         let ident = stream.parse::<Ident>()?;

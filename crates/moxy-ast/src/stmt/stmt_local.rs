@@ -27,7 +27,7 @@ pub struct StmtLocalInit {
 
 impl Parse for StmtLocal {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let _ = stream.parse::<Let>()?;
         let pat = stream.parse::<Pattern>()?;
 

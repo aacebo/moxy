@@ -17,7 +17,7 @@ pub struct ImplItemMacro {
 
 impl Parse for ImplItemMacro {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let (mac, semi) = crate::MacroCall::parse_semi(stream)?;
         Ok(ImplItemMacro {
             span: Span::default(),

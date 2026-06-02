@@ -22,7 +22,7 @@ pub struct ItemExternCrate {
 
 impl Parse for ItemExternCrate {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let vis = stream.parse::<Visibility>()?;
         let extern_keyword = stream.parse::<Extern>()?;
         let crate_keyword = stream.parse::<Crate>()?;

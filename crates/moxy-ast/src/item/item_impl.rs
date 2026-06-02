@@ -36,7 +36,7 @@ impl ItemImpl {
 
 impl Parse for ItemImpl {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let defaultness = stream.parse::<Defaultness>()?;
         let unsafety = stream.parse::<Unsafety>()?;
         let impl_keyword = stream.parse::<Impl>()?;
@@ -73,7 +73,7 @@ impl Parse for ItemImpl {
 
         let group = stream.parse_group(Delim::Brace)?;
         let mut inner = group.parse();
-        let items = inner.parse_vec::<ImplItem>()?;
+        let items = inner.parse::<Vec<ImplItem>>()?;
         Ok(ItemImpl {
             span: Span::default(),
             attrs,

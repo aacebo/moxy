@@ -21,7 +21,7 @@ pub struct ConstParam {
 
 impl Parse for ConstParam {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse_vec::<Attribute>()?;
+        let attrs = stream.parse::<Vec<Attribute>>()?;
         let const_keyword = stream.parse::<Const>()?;
         let ident = stream.parse::<Ident>()?;
         let colon_punct = stream.parse::<Colon>()?;
