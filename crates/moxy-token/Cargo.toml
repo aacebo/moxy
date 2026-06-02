@@ -22,7 +22,7 @@ serde = ["dep:serde"]
 proc-macro2 = ["dep:proc-macro2"]
 
 [build-dependencies]
-version_check = "0.9"
+moxy-build = { path = "../moxy-build" }
 
 [dependencies]
 unicode-ident = "1"

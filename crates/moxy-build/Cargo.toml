@@ -1,5 +1,6 @@
 [package]
-name = "moxy-diagnostic"
+name = "moxy-build"
+publish = false
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -15,9 +16,3 @@ doctest = false
 
 [lints]
 workspace = true
-
-[build-dependencies]
-moxy-build = { path = "../moxy-build" }
-
-[dependencies]
-moxy-token = { path = "../moxy-token" }

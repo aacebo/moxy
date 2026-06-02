@@ -36,11 +36,15 @@ dependencies = [
 ]
 
 [[package]]
+name = "moxy-build"
+version = "0.0.0"
+
+[[package]]
 name = "moxy-diagnostic"
 version = "0.0.0"
 dependencies = [
+ "moxy-build",
  "moxy-token",
- "version_check",
 ]
 
 [[package]]
@@ -56,11 +60,11 @@ dependencies = [
 name = "moxy-token"
 version = "0.0.0"
 dependencies = [
+ "moxy-build",
  "proc-macro2",
  "serde",
  "serde_json",
  "unicode-ident",
- "version_check",
 ]
 
 [[package]]
@@ -140,12 +144,6 @@ name = "unicode-ident"
 version = "1.0.24"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "e6e4313cd5fcd3dad5cafa179702e2b244f760991f45397d14d4ebf38247da75"
-
-[[package]]
-name = "version_check"
-version = "0.9.5"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "0b928f33d975fc6ad9f86c8f283853ad26bdd5b10b7f1542aa2fa15e2289105a"
 
 [[package]]
 name = "zmij"

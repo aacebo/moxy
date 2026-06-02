@@ -1,11 +1,9 @@
-extern crate version_check as rustc;
+extern crate moxy_build as build;
 
 fn main() {
-    // hack to use rustc::version_check to check if diagnostics are supported
-    if let Some((version, channel, _)) = rustc::triple() {
-        if version.at_least("1.31.0") && channel.supports_features() {
-            println!("cargo::rustc-check-cfg=cfg(nightly)");
-            println!("cargo::rustc-cfg=nightly");
-        }
-    }
+    build::rustc::Config::new()
+        .require_version("1.31.0")
+        .check_cfg("cfg(nightly)")
+        .cfg("nightly")
+        .emit();
 }
