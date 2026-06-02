@@ -5,5 +5,6 @@ fn main() {
         .require_version("1.31.0")
         .check_cfg("cfg(nightly)")
         .cfg("nightly")
+        .rerun_if_changed("build.rs")
         .emit();
 }
