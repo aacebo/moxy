@@ -18,6 +18,7 @@ mod ident;
 pub mod keyword;
 pub mod lex;
 mod literal;
+mod macros;
 pub mod parse;
 pub mod punct;
 pub mod source;

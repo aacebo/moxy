@@ -1,13 +1,12 @@
 use moxy_token::keyword::{For, In};
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::At;
-use moxy_token::{Delim, Ident, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Delim, Group, Ident, Parse, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
 
-use crate::template::{self, Template};
+use crate::template::Template;
 
 #[doc = "A template for-loop directive: `@for (binding in iter) { body }`."]
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TmplFor {
     pub span: Span,
     pub at_punct: At,
@@ -49,10 +48,10 @@ impl TmplFor {
 
 impl ToTokens for TmplFor {
     fn to_tokens(&self, out: &mut TokenStream) {
-        out.extend(template::rust("for"));
+        <Token![for]>::new(Span::call_site()).to_tokens(out);
         self.binding.to_tokens(out);
-        out.extend(template::rust("in"));
+        <Token![in]>::new(Span::call_site()).to_tokens(out);
         self.iter.to_tokens(out);
-        out.extend_one(template::brace_body(&self.body.nodes));
+        out.extend_one(TokenTree::Group(Group::new(Delim::Brace, self.body.to_token_stream())));
     }
 }

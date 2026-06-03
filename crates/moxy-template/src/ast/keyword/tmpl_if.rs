@@ -1,13 +1,12 @@
 use moxy_token::keyword::{Else, If};
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::At;
-use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Delim, Group, Parse, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
 
-use crate::template::{self, Template};
+use crate::template::Template;
 
 #[doc = "A template if/else-if/else directive: `@if (cond) { body } @else if (cond) { body } @else { body }`."]
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TmplIf {
     pub span: Span,
     pub at_punct: At,
@@ -20,7 +19,6 @@ pub struct TmplIf {
 
 #[doc = "A single branch of a `@if` or `@else if` directive."]
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TmplIfBranch {
     pub span: Span,
     pub at_punct: Option<At>,
@@ -96,16 +94,16 @@ impl ToTokens for TmplIf {
     fn to_tokens(&self, out: &mut TokenStream) {
         for (i, branch) in self.branches.iter().enumerate() {
             if i > 0 {
-                out.extend(template::rust("else"));
+                <Token![else]>::new(Span::call_site()).to_tokens(out);
             }
-            out.extend(template::rust("if"));
+            <Token![if]>::new(Span::call_site()).to_tokens(out);
             branch.cond.to_tokens(out);
-            out.extend_one(template::brace_body(&branch.body.nodes));
+            out.extend_one(TokenTree::Group(Group::new(Delim::Brace, branch.body.to_token_stream())));
         }
 
         if let Some(else_b) = &self.else_body {
-            out.extend(template::rust("else"));
-            out.extend_one(template::brace_body(&else_b.nodes));
+            <Token![else]>::new(Span::call_site()).to_tokens(out);
+            out.extend_one(TokenTree::Group(Group::new(Delim::Brace, else_b.to_token_stream())));
         }
     }
 }

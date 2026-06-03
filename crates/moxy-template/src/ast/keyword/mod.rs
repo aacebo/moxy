@@ -12,7 +12,6 @@ pub use tmpl_match::*;
 
 #[doc = "A template `@`-directive: `@if`, `@for`, or `@match`."]
 #[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize), serde(tag = "name", rename_all = "lowercase"))]
 pub enum TmplKeyword {
     If(TmplIf),
     For(TmplFor),

@@ -48,7 +48,7 @@ token = ["moxy-token"]
 template = ["moxy-template"]
 diagnostic = ["moxy-diagnostic"]
 macros = ["moxy-macros"]
-serde = ["moxy-ast/serde", "moxy-token/serde", "moxy-template/serde"]
+serde = ["moxy-ast/serde", "moxy-token/serde"]
 proc-macro2 = ["moxy-token/proc-macro2"]
 
 [dependencies]

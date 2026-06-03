@@ -70,7 +70,6 @@ name = "moxy-template"
 version = "0.0.0"
 dependencies = [
  "moxy-token",
- "serde",
 ]
 
 [[package]]
