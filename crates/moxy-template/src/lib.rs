@@ -3,7 +3,8 @@ extern crate proc_macro;
 mod ast;
 mod template;
 
-use moxy_token::{Parse, ToTokenStream, ToTokens, TokenStream};
+use moxy_diagnostic::{Diagnostic};
+use moxy_token::{Parse, ToTokens, TokenStream};
 
 use crate::template::Template;
 
@@ -14,7 +15,7 @@ pub fn template(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 
     let expanded = match Template::parse(&mut ts.parse()) {
         Ok(tmpl) => tmpl.expand(),
-        Err(e) => e.into_token_stream(),
+        Err(e) => Diagnostic::from(e).emit(),
     };
 
     let mut out = proc_macro::TokenStream::new();

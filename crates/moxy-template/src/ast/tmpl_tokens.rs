@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use std::str::FromStr;
 
 use moxy_token::{Span, ToTokens, TokenStream};

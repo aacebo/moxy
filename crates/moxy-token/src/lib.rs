@@ -241,30 +241,30 @@ impl ToTokens<TokenStream> for proc_macro::TokenTree {
             }
             proc_macro::TokenTree::Literal(v) => tokens.extend_one(Token::Literal(v.clone().into()).into()),
             proc_macro::TokenTree::Group(v) => tokens.extend_one(TokenTree::Group(v.clone().into())),
-            proc_macro::TokenTree::Punct(p) => scan_puncts(&p.to_string(), tokens),
+            proc_macro::TokenTree::Punct(p) => scan_puncts_spanned(&[(p.as_char(), p.span().into())], tokens),
         }
     }
 }
 
 impl ToTokens<TokenStream> for proc_macro::TokenStream {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let mut punct_buf = String::new();
+        let mut punct_run: Vec<(char, Span)> = Vec::new();
 
         for tt in self.clone() {
             match tt {
-                proc_macro::TokenTree::Punct(p) => punct_buf.push(p.as_char()),
+                proc_macro::TokenTree::Punct(p) => punct_run.push((p.as_char(), p.span().into())),
                 other => {
-                    if !punct_buf.is_empty() {
-                        scan_puncts(&punct_buf, tokens);
-                        punct_buf.clear();
+                    if !punct_run.is_empty() {
+                        scan_puncts_spanned(&punct_run, tokens);
+                        punct_run.clear();
                     }
                     other.to_tokens(tokens);
                 }
             }
         }
 
-        if !punct_buf.is_empty() {
-            scan_puncts(&punct_buf, tokens);
+        if !punct_run.is_empty() {
+            scan_puncts_spanned(&punct_run, tokens);
         }
     }
 }
@@ -355,17 +355,28 @@ impl serde::Serialize for TokenTree {
     }
 }
 
-fn scan_puncts(s: &str, tokens: &mut TokenStream) {
+/// Lex a run of consecutive `proc_macro` punctuation chars into moxy
+/// [`Punctuation`] tokens, preserving each token's real compiler span.
+///
+/// `proc_macro` emits multi-char operators (`=>`, `::`, `&&`) as single-char
+/// puncts; moxy models them as one variant. We longest-match against the run's
+/// text (reusing `<Punctuation as Scan>`) and retag each matched variant with
+/// the joined spans of the chars it consumed.
+fn scan_puncts_spanned(run: &[(char, Span)], tokens: &mut TokenStream) {
     use crate::lex::{Cursor, Scan};
-    use crate::source::SourceMap;
 
-    let span = SourceMap::with_mut(|sm| sm.push(s));
-    let mut cursor = Cursor::new(s, span.byte_range().start as u32);
+    let text: String = run.iter().map(|(c, _)| *c).collect();
+    let mut cursor = Cursor::new(&text, 0);
+    let mut idx = 0usize;
 
     while !cursor.is_empty() {
         match <Punctuation as Scan>::scan(cursor) {
-            Ok((next, op)) => {
+            Ok((next, mut op)) => {
+                let consumed = op.as_str().chars().count();
+                let span = run[idx].1.join(run[idx + consumed - 1].1);
+                op.set_span(span);
                 tokens.extend_one(Token::Punct(op).into());
+                idx += consumed;
                 cursor = next;
             }
             Err(_) => break,
@@ -524,6 +535,47 @@ mod tests {
     fn token_display() {
         let t: Token = Ident::new("hello", Span::default()).into();
         assert_eq!(format!("{}", t), "hello");
+    }
+
+    // --- scan_puncts_spanned: multi-char assembly + span preservation ---
+
+    fn puncts(run: &[(char, Span)]) -> TokenStream {
+        let mut ts = TokenStream::new();
+        scan_puncts_spanned(run, &mut ts);
+        ts
+    }
+
+    #[test]
+    fn punct_run_longest_match() {
+        // `=>` is one FatArrow, not `=` + `>`.
+        let ts = puncts(&[('=', span(0, 1)), ('>', span(1, 2))]);
+        let trees: Vec<_> = ts.iter().cloned().collect();
+        assert_eq!(trees.len(), 1);
+        assert!(matches!(trees[0], TokenTree::Token(Token::Punct(Punctuation::FatArrow(_)))));
+    }
+
+    #[test]
+    fn punct_run_preserves_span() {
+        // The matched variant carries the joined span of the chars it consumed.
+        let ts = puncts(&[(':', span(4, 5)), (':', span(5, 6))]);
+        let trees: Vec<_> = ts.iter().cloned().collect();
+        assert_eq!(trees.len(), 1);
+        let TokenTree::Token(Token::Punct(p)) = &trees[0] else {
+            panic!("expected punct")
+        };
+        assert!(matches!(p, Punctuation::PathSep(_)));
+        assert_eq!(p.span().start().index(), 4);
+        assert_eq!(p.span().end().index(), 6);
+    }
+
+    #[test]
+    fn punct_run_splits_multiple() {
+        // `,;` is two separate single-char puncts, each keeping its own span.
+        let ts = puncts(&[(',', span(0, 1)), (';', span(1, 2))]);
+        let trees: Vec<_> = ts.iter().cloned().collect();
+        assert_eq!(trees.len(), 2);
+        assert!(matches!(trees[0], TokenTree::Token(Token::Punct(Punctuation::Comma(_)))));
+        assert!(matches!(trees[1], TokenTree::Token(Token::Punct(Punctuation::Semi(_)))));
     }
 
     #[cfg(feature = "serde")]

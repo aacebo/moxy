@@ -1,5 +1,5 @@
 use crate::parse::ParseError;
-use crate::{Delim, Group, Ident, Keyword, Literal, Punctuation, Spacing, Span, ToTokens, Token, TokenStream, TokenTree};
+use crate::{Delim, Group, Ident, Keyword, Literal, Spacing, Span, ToTokens, Token, TokenStream, TokenTree};
 
 // --- LexError ---
 
@@ -131,15 +131,15 @@ impl From<Group> for proc_macro2::Group {
 
 impl ToTokens<TokenStream> for proc_macro2::TokenStream {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let mut punct_buf = String::new();
+        let mut punct_run: Vec<(char, Span)> = Vec::new();
 
         for tt in self.clone() {
             match tt {
-                proc_macro2::TokenTree::Punct(p) => punct_buf.push(p.as_char()),
+                proc_macro2::TokenTree::Punct(p) => punct_run.push((p.as_char(), p.span().into())),
                 other => {
-                    if !punct_buf.is_empty() {
-                        scan_puncts(&punct_buf, tokens);
-                        punct_buf.clear();
+                    if !punct_run.is_empty() {
+                        crate::scan_puncts_spanned(&punct_run, tokens);
+                        punct_run.clear();
                     }
                     match other {
                         proc_macro2::TokenTree::Ident(v) => {
@@ -158,26 +158,8 @@ impl ToTokens<TokenStream> for proc_macro2::TokenStream {
             }
         }
 
-        if !punct_buf.is_empty() {
-            scan_puncts(&punct_buf, tokens);
-        }
-    }
-}
-
-fn scan_puncts(s: &str, tokens: &mut TokenStream) {
-    use crate::lex::{Cursor, Scan};
-    use crate::source::SourceMap;
-
-    let span = SourceMap::with_mut(|sm| sm.push(s));
-    let mut cursor = Cursor::new(s, span.byte_range().start as u32);
-
-    while !cursor.is_empty() {
-        match <Punctuation as Scan>::scan(cursor) {
-            Ok((next, op)) => {
-                tokens.extend_one(Token::Punct(op).into());
-                cursor = next;
-            }
-            Err(_) => break,
+        if !punct_run.is_empty() {
+            crate::scan_puncts_spanned(&punct_run, tokens);
         }
     }
 }

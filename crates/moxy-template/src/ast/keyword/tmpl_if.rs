@@ -1,3 +1,5 @@
+#![allow(unused)]
+
 use moxy_token::keyword::{Else, If};
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::At;
