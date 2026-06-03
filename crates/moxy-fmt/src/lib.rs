@@ -1,42 +1,48 @@
 mod config;
 mod error;
 mod node;
-mod rule;
+
+use std::fmt::Write;
 
 pub use config::*;
 pub use error::*;
 pub use node::*;
-pub use rule::*;
+
+pub fn fmt<T: Fmt>(value: &T, config: &FmtConfig) -> Result<String, FmtError> {
+    let mut f = Formatter::new(config);
+    f.write(value)?;
+    Ok(f.output)
+}
 
 pub trait Fmt {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FormatError>;
+    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError>;
 }
 
 pub struct Formatter<'a> {
-    config: &'a FormatConfig,
+    config: &'a FmtConfig,
     buffer: Vec<FmtNode>,
     output: String,
-    indent: usize,
+    depth: usize,
     column: usize,
 }
 
 impl<'a> Formatter<'a> {
-    pub fn new(config: &'a FormatConfig) -> Self {
+    pub fn new(config: &'a FmtConfig) -> Self {
         Self {
             config,
             buffer: Vec::new(),
             output: String::new(),
-            indent: 0,
+            depth: 0,
             column: 0,
         }
     }
 
-    pub fn config(&self) -> &FormatConfig {
+    pub fn config(&self) -> &FmtConfig {
         &self.config
     }
 
-    pub fn indent(&self) -> usize {
-        self.indent
+    pub fn depth(&self) -> usize {
+        self.depth
     }
 
     pub fn column(&self) -> usize {
@@ -45,7 +51,7 @@ impl<'a> Formatter<'a> {
 }
 
 impl<'a> Formatter<'a> {
-    pub fn write<T: Fmt>(&mut self, value: &T) -> Result<(), FormatError> {
+    pub fn write<T: Fmt>(&mut self, value: &T) -> Result<(), FmtError> {
         value.fmt(self)?;
         let nodes: Vec<_> = self.buffer.drain(0..).collect();
 
@@ -56,7 +62,7 @@ impl<'a> Formatter<'a> {
         Ok(())
     }
 
-    pub fn write_all<T: Fmt>(&mut self, iter: impl AsRef<[T]>) -> Result<(), FormatError> {
+    pub fn write_all<T: Fmt>(&mut self, iter: impl AsRef<[T]>) -> Result<(), FmtError> {
         for item in iter.as_ref() {
             self.write(item)?;
         }
@@ -64,14 +70,14 @@ impl<'a> Formatter<'a> {
         Ok(())
     }
 
-    pub fn write_node(&mut self, node: &FmtNode, mode: Mode) -> Result<(), FormatError> {
+    pub fn write_node(&mut self, node: &FmtNode, mode: Mode) -> Result<(), FmtError> {
         match node {
             FmtNode::Text(text) => {
                 self.output.push_str(&text);
                 self.column += text.len();
             }
             FmtNode::Line(line) => {
-                self.write_line(*line, mode);
+                self.write_line(*line, mode)?;
             }
             FmtNode::Concat(nodes) => {
                 for node in nodes {
@@ -88,9 +94,9 @@ impl<'a> Formatter<'a> {
                 }
             }
             FmtNode::Indent(node) => {
-                self.indent += self.config.indent.spaces();
+                self.depth += 1;
                 self.write_node(node, mode)?;
-                self.indent -= self.config.indent.spaces();
+                self.depth -= 1;
             }
             FmtNode::IfBreak { broken, flat } => match mode {
                 Mode::Flat => self.write_node(flat, mode)?,
@@ -102,26 +108,30 @@ impl<'a> Formatter<'a> {
         Ok(())
     }
 
-    pub fn write_line(&mut self, line: Line, mode: Mode) {
+    pub fn write_line(&mut self, line: Line, mode: Mode) -> Result<(), FmtError> {
         match (line, mode) {
             (Line::Space, Mode::Flat) => {
                 self.output.push(' ');
                 self.column += 1;
             }
-            (Line::Hard, _) => self.write_newline(),
-            (Line::Space | Line::Soft, Mode::Broken) => self.write_newline(),
+            (Line::Hard, _) => self.write_newline()?,
+            (Line::Space | Line::Soft, Mode::Broken) => self.write_newline()?,
             _ => {}
-        }
+        };
+
+        Ok(())
     }
 
-    pub fn write_newline(&mut self) {
-        self.output.push_str(&self.config.newline.to_string());
+    pub fn write_newline(&mut self) -> Result<(), FmtError> {
+        write!(
+            &mut self.output,
+            "{}{}",
+            self.config.newline,
+            self.config.indent.to_string().repeat(self.depth)
+        )?;
 
-        for _ in 0..self.indent {
-            self.output.push(' ');
-        }
-
-        self.column = self.indent;
+        self.column = self.depth * self.config.indent.spaces();
+        Ok(())
     }
 }
 

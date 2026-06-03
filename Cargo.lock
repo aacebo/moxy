@@ -74,6 +74,10 @@ dependencies = [
 ]
 
 [[package]]
+name = "moxy-test"
+version = "0.0.0"
+
+[[package]]
 name = "moxy-token"
 version = "0.0.0"
 dependencies = [

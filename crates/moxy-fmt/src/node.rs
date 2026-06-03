@@ -1,4 +1,45 @@
+pub fn nil() -> FmtNode {
+    FmtNode::Nil
+}
+
+pub fn text(value: impl std::fmt::Display) -> FmtNode {
+    FmtNode::Text(value.to_string())
+}
+
+pub fn line(value: impl Into<Line>) -> FmtNode {
+    FmtNode::Line(value.into())
+}
+
+pub fn concat(value: impl IntoIterator<Item = FmtNode>) -> FmtNode {
+    let nodes = value
+        .into_iter()
+        .filter(|node| !matches!(node, FmtNode::Nil))
+        .collect::<Vec<_>>();
+
+    match nodes.len() {
+        0 => FmtNode::Nil,
+        1 => nodes.into_iter().next().unwrap(),
+        _ => FmtNode::Concat(nodes),
+    }
+}
+
+pub fn group(value: FmtNode) -> FmtNode {
+    FmtNode::Group(Box::new(value))
+}
+
+pub fn indent(value: FmtNode) -> FmtNode {
+    FmtNode::Indent(Box::new(value))
+}
+
+pub fn if_break(broken: FmtNode, flat: FmtNode) -> FmtNode {
+    FmtNode::IfBreak {
+        broken: Box::new(broken),
+        flat: Box::new(flat),
+    }
+}
+
 #[derive(Debug, Default, Clone, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub enum FmtNode {
     #[default]
     Nil,
@@ -14,46 +55,6 @@ pub enum FmtNode {
 }
 
 impl FmtNode {
-    pub fn nil() -> Self {
-        Self::Nil
-    }
-
-    pub fn text(value: impl std::fmt::Display) -> Self {
-        Self::Text(value.to_string())
-    }
-
-    pub fn line(value: impl Into<Line>) -> Self {
-        Self::Line(value.into())
-    }
-
-    pub fn concat(value: impl IntoIterator<Item = Self>) -> Self {
-        let nodes = value
-            .into_iter()
-            .filter(|node| !matches!(node, Self::Nil))
-            .collect::<Vec<_>>();
-
-        match nodes.len() {
-            0 => Self::Nil,
-            1 => nodes.into_iter().next().unwrap(),
-            _ => Self::Concat(nodes),
-        }
-    }
-
-    pub fn group(value: Self) -> Self {
-        Self::Group(Box::new(value))
-    }
-
-    pub fn indent(value: Self) -> Self {
-        Self::Indent(Box::new(value))
-    }
-
-    pub fn if_break(broken: Self, flat: Self) -> Self {
-        Self::IfBreak {
-            broken: Box::new(broken),
-            flat: Box::new(flat),
-        }
-    }
-
     pub fn flat_width(&self) -> Option<usize> {
         match self {
             Self::Nil => Some(0),
@@ -74,6 +75,12 @@ impl FmtNode {
                 Some(width)
             }
         }
+    }
+}
+
+impl super::Fmt for FmtNode {
+    fn fmt(&self, f: &mut crate::Formatter) -> Result<(), crate::FmtError> {
+        f.write_node(self, super::Mode::Broken)
     }
 }
 

@@ -1,12 +1,12 @@
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
-pub struct FormatConfig {
+pub struct FmtConfig {
     pub indent: Indent,
     pub newline: NewlineStyle,
     pub max_width: usize,
 }
 
-impl FormatConfig {
+impl FmtConfig {
     pub fn with_indent(mut self, indent: Indent) -> Self {
         self.indent = indent;
         self
@@ -23,7 +23,7 @@ impl FormatConfig {
     }
 }
 
-impl Default for FormatConfig {
+impl Default for FmtConfig {
     fn default() -> Self {
         Self {
             indent: Indent::default(),
@@ -70,7 +70,7 @@ impl Indent {
 
 impl Default for Indent {
     fn default() -> Self {
-        Self::Tab(2)
+        Self::Tab(1)
     }
 }
 
