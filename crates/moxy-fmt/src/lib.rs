@@ -1,3 +1,4 @@
+pub mod ast;
 mod config;
 mod error;
 mod node;
@@ -38,7 +39,7 @@ impl<'a> Formatter<'a> {
     }
 
     pub fn config(&self) -> &FmtConfig {
-        &self.config
+        self.config
     }
 
     pub fn depth(&self) -> usize {
@@ -47,6 +48,44 @@ impl<'a> Formatter<'a> {
 
     pub fn column(&self) -> usize {
         self.column
+    }
+}
+
+impl<'a> Formatter<'a> {
+    pub fn text(&mut self, value: impl std::fmt::Display) -> Result<(), FmtError> {
+        self.buffer.push(text(value));
+        Ok(())
+    }
+
+    pub fn space(&mut self) -> Result<(), FmtError> {
+        self.buffer.push(line(Line::Space));
+        Ok(())
+    }
+
+    pub fn soft_break(&mut self) -> Result<(), FmtError> {
+        self.buffer.push(line(Line::Soft));
+        Ok(())
+    }
+
+    pub fn hard_break(&mut self) -> Result<(), FmtError> {
+        self.buffer.push(line(Line::Hard));
+        Ok(())
+    }
+
+    pub fn group(&mut self, f: impl FnOnce(&mut Self) -> Result<(), FmtError>) -> Result<(), FmtError> {
+        let start = self.buffer.len();
+        f(self)?;
+        let nodes = self.buffer.drain(start..).collect::<Vec<_>>();
+        self.buffer.push(group(concat(nodes)));
+        Ok(())
+    }
+
+    pub fn indent(&mut self, f: impl FnOnce(&mut Self) -> Result<(), FmtError>) -> Result<(), FmtError> {
+        let start = self.buffer.len();
+        f(self)?;
+        let nodes = self.buffer.drain(start..).collect::<Vec<_>>();
+        self.buffer.push(indent(concat(nodes)));
+        Ok(())
     }
 }
 
@@ -73,7 +112,7 @@ impl<'a> Formatter<'a> {
     pub fn write_node(&mut self, node: &FmtNode, mode: Mode) -> Result<(), FmtError> {
         match node {
             FmtNode::Text(text) => {
-                self.output.push_str(&text);
+                self.output.push_str(text);
                 self.column += text.len();
             }
             FmtNode::Line(line) => {
@@ -132,6 +171,27 @@ impl<'a> Formatter<'a> {
 
         self.column = self.depth * self.config.indent.spaces();
         Ok(())
+    }
+}
+
+impl<T: Fmt, P: std::fmt::Display> Fmt for moxy_ast::Punctuated<T, P> {
+    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        f.group(|f| {
+            for pair in self.pairs() {
+                match pair {
+                    moxy_ast::Pair::Punctuated(t, p) => {
+                        t.fmt(f)?;
+                        f.text(p)?;
+                        f.space()?;
+                    }
+                    moxy_ast::Pair::End(t) => {
+                        t.fmt(f)?;
+                    }
+                }
+            }
+
+            Ok(())
+        })
     }
 }
 

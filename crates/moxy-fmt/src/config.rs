@@ -109,11 +109,11 @@ impl NewlineStyle {
 impl std::fmt::Display for NewlineStyle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
-            Self::Unix => write!(f, "\n"),
+            Self::Unix => writeln!(f),
             Self::Windows => write!(f, "\r\n"),
             Self::Auto => {
                 if cfg!(unix) {
-                    write!(f, "\n")
+                    writeln!(f)
                 } else {
                     write!(f, "\r\n")
                 }

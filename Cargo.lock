@@ -54,6 +54,7 @@ name = "moxy-fmt"
 version = "0.0.0"
 dependencies = [
  "moxy-ast",
+ "moxy-token",
  "serde",
 ]
 
