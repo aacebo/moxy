@@ -1,9 +1,9 @@
 use moxy_token::keyword::Match;
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::{At, Comma, FatArrow};
-use moxy_token::{Delim, Group, LexError, Parse, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Delim, LexError, Parse, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
 
-use crate::template::Template;
+use crate::template::{self, Template};
 
 #[doc = "A template match directive: `@match (expr) { pat => { body }, … }`."]
 #[derive(Debug, Clone)]
@@ -34,6 +34,7 @@ impl TmplMatch {
         let arms_stream = stream.parse_group(Delim::Brace)?;
         let mut arms_ps = arms_stream.parse();
         let arms = arms_ps.parse::<Vec<TmplMatchArm>>()?;
+
         Ok(Self {
             span,
             at_punct,
@@ -76,25 +77,17 @@ impl Parse for TmplMatchArm {
 }
 
 impl ToTokens for TmplMatch {
-    fn to_tokens(&self, t: &mut TokenStream) {
-        self.match_keyword.to_tokens(t);
-        self.expr.to_tokens(t);
+    fn to_tokens(&self, out: &mut TokenStream) {
+        out.extend(template::rust("match"));
+        self.expr.to_tokens(out);
 
         let mut arms = TokenStream::new();
         for arm in &self.arms {
-            arm.to_tokens(&mut arms);
+            arm.pat.to_tokens(&mut arms);
+            arms.extend(template::rust("=>"));
+            arms.extend_one(template::brace_body(&arm.body.nodes));
+            arms.extend(template::rust(","));
         }
-        t.extend_one(TokenTree::Group(Group::new(Delim::Brace, arms)));
-    }
-}
-
-impl ToTokens for TmplMatchArm {
-    fn to_tokens(&self, t: &mut TokenStream) {
-        self.pat.to_tokens(t);
-        self.fat_arrow.to_tokens(t);
-        let mut body = TokenStream::new();
-        self.body.to_tokens(&mut body);
-        t.extend_one(TokenTree::Group(Group::new(Delim::Brace, body)));
-        self.comma.to_tokens(t);
+        out.extend_one(template::group(Delim::Brace, arms));
     }
 }

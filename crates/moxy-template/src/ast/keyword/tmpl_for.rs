@@ -1,9 +1,9 @@
 use moxy_token::keyword::{For, In};
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::At;
-use moxy_token::{Delim, Group, Ident, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Ident, Parse, Span, ToTokens, TokenStream};
 
-use crate::template::Template;
+use crate::template::{self, Template};
 
 #[doc = "A template for-loop directive: `@for (binding in iter) { body }`."]
 #[derive(Debug, Clone)]
@@ -48,14 +48,11 @@ impl TmplFor {
 }
 
 impl ToTokens for TmplFor {
-    fn to_tokens(&self, t: &mut TokenStream) {
-        self.for_keyword.to_tokens(t);
-        self.binding.to_tokens(t);
-        self.in_keyword.to_tokens(t);
-        self.iter.to_tokens(t);
-
-        let mut body = TokenStream::new();
-        self.body.to_tokens(&mut body);
-        t.extend_one(TokenTree::Group(Group::new(Delim::Brace, body)));
+    fn to_tokens(&self, out: &mut TokenStream) {
+        out.extend(template::rust("for"));
+        self.binding.to_tokens(out);
+        out.extend(template::rust("in"));
+        self.iter.to_tokens(out);
+        out.extend_one(template::brace_body(&self.body.nodes));
     }
 }

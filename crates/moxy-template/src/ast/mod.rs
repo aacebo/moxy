@@ -36,11 +36,11 @@ impl Parse for Node {
 }
 
 impl ToTokens for Node {
-    fn to_tokens(&self, t: &mut TokenStream) {
+    fn to_tokens(&self, out: &mut TokenStream) {
         match self {
-            Node::Tokens(v) => v.to_tokens(t),
-            Node::Interp(v) => v.to_tokens(t),
-            Node::Keyword(v) => v.to_tokens(t),
+            Node::Tokens(v) => v.to_tokens(out),
+            Node::Interp(v) => v.to_tokens(out),
+            Node::Keyword(v) => v.to_tokens(out),
         }
     }
 }

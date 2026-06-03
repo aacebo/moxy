@@ -1,9 +1,9 @@
 use moxy_token::keyword::{Else, If};
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::At;
-use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream};
 
-use crate::template::Template;
+use crate::template::{self, Template};
 
 #[doc = "A template if/else-if/else directive: `@if (cond) { body } @else if (cond) { body } @else { body }`."]
 #[derive(Debug, Clone)]
@@ -93,25 +93,19 @@ impl TmplIf {
 }
 
 impl ToTokens for TmplIf {
-    fn to_tokens(&self, t: &mut TokenStream) {
+    fn to_tokens(&self, out: &mut TokenStream) {
         for (i, branch) in self.branches.iter().enumerate() {
             if i > 0 {
-                branch.else_keyword.to_tokens(t);
+                out.extend(template::rust("else"));
             }
-
-            branch.if_keyword.to_tokens(t);
-            branch.cond.to_tokens(t);
-
-            let mut body = TokenStream::new();
-            branch.body.to_tokens(&mut body);
-            t.extend_one(TokenTree::Group(Group::new(Delim::Brace, body)));
+            out.extend(template::rust("if"));
+            branch.cond.to_tokens(out);
+            out.extend_one(template::brace_body(&branch.body.nodes));
         }
 
         if let Some(else_b) = &self.else_body {
-            self.else_keyword.to_tokens(t);
-            let mut body = TokenStream::new();
-            else_b.to_tokens(&mut body);
-            t.extend_one(TokenTree::Group(Group::new(Delim::Brace, body)));
+            out.extend(template::rust("else"));
+            out.extend_one(template::brace_body(&else_b.nodes));
         }
     }
 }

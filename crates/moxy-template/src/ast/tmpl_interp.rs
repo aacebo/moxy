@@ -1,6 +1,8 @@
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream};
 
+use crate::template;
+
 #[doc = "A template interpolation: `{{ expr }}`."]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -20,7 +22,7 @@ impl Parse for TmplInterp {
 }
 
 impl ToTokens for TmplInterp {
-    fn to_tokens(&self, t: &mut TokenStream) {
-        self.expr.to_tokens(t);
+    fn to_tokens(&self, out: &mut TokenStream) {
+        template::push_value(out, self.expr.clone());
     }
 }

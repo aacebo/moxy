@@ -42,11 +42,11 @@ impl Parse for TmplKeyword {
 }
 
 impl ToTokens for TmplKeyword {
-    fn to_tokens(&self, t: &mut TokenStream) {
+    fn to_tokens(&self, out: &mut TokenStream) {
         match self {
-            Self::If(v) => v.to_tokens(t),
-            Self::For(v) => v.to_tokens(t),
-            Self::Match(v) => v.to_tokens(t),
+            Self::If(v) => v.to_tokens(out),
+            Self::For(v) => v.to_tokens(out),
+            Self::Match(v) => v.to_tokens(out),
         }
     }
 }
