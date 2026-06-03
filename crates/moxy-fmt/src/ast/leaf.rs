@@ -23,7 +23,7 @@ impl Fmt for Abi {
         f.text("extern")?;
 
         if let Some(name) = &self.name {
-            f.space()?;
+            f.text(" ")?;
             f.text(format!("\"{}\"", name))?;
         }
 

@@ -72,7 +72,7 @@ impl Fmt for TypePredicate {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if let Some(lifetimes) = &self.lifetimes {
             lifetimes.fmt(f)?;
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.bounded_ty.fmt(f)?;
@@ -154,7 +154,7 @@ impl Fmt for TraitBound {
 
         if let Some(lifetimes) = &self.lifetimes {
             lifetimes.fmt(f)?;
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.modifier.fmt(f)?;

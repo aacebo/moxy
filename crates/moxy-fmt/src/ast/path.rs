@@ -74,9 +74,9 @@ impl Fmt for ReturnType {
         match self {
             Self::Default => Ok(()),
             Self::Type(ty) => {
-                f.space()?;
+                f.text(" ")?;
                 f.text("->")?;
-                f.space()?;
+                f.text(" ")?;
                 ty.fmt(f)
             }
         }

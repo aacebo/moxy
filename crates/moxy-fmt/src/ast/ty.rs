@@ -110,7 +110,7 @@ impl Fmt for TypeReference {
 
         if let Some(lt) = &self.lifetime {
             lt.fmt(f)?;
-            f.space()?;
+            f.text(" ")?;
         }
 
         if matches!(self.mutability, moxy_ast::Mutability::Mutable) {
@@ -138,18 +138,18 @@ impl Fmt for TypeBareFn {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if let Some(lifetimes) = &self.lifetimes {
             lifetimes.fmt(f)?;
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.unsafety.fmt(f)?;
 
         if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         if let Some(abi) = &self.abi {
             abi.fmt(f)?;
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("fn(")?;

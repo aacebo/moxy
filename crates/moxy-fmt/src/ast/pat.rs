@@ -43,7 +43,7 @@ impl Fmt for PatIdent {
         self.mutability.fmt(f)?;
 
         if matches!(self.mutability, moxy_ast::Mutability::Mutable) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.ident.fmt(f)?;
@@ -142,7 +142,7 @@ impl Fmt for PatReference {
         self.mutability.fmt(f)?;
 
         if matches!(self.mutability, moxy_ast::Mutability::Mutable) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.pat.fmt(f)

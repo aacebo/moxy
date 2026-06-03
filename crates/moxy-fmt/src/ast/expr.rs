@@ -160,25 +160,25 @@ impl Fmt for ExprClosure {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if let Some(lifetimes) = &self.lifetimes {
             lifetimes.fmt(f)?;
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.constness.fmt(f)?;
 
         if matches!(self.constness, moxy_ast::Constness::Const) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.movability.fmt(f)?;
 
         if matches!(self.movability, moxy_ast::Movability::Static) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.asyncness.fmt(f)?;
 
         if matches!(self.asyncness, moxy_ast::Asyncness::Async) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         if self.capture {
@@ -189,7 +189,7 @@ impl Fmt for ExprClosure {
         self.inputs.fmt(f)?;
         f.text("|")?;
         self.output.fmt(f)?;
-        f.space()?;
+        f.text(" ")?;
         self.body.fmt(f)
     }
 }
@@ -281,7 +281,7 @@ impl Fmt for ExprReference {
         self.mutability.fmt(f)?;
 
         if matches!(self.mutability, moxy_ast::Mutability::Mutable) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.expr.fmt(f)
@@ -327,9 +327,9 @@ impl Fmt for BinaryExpr {
 impl Fmt for ExprBinary {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.left.fmt(f)?;
-        f.space()?;
+        f.text(" ")?;
         self.op.fmt(f)?;
-        f.space()?;
+        f.text(" ")?;
         self.right.fmt(f)
     }
 }
@@ -345,9 +345,9 @@ impl Fmt for ExprAssign {
 impl Fmt for ExprAssignOp {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.left.fmt(f)?;
-        f.space()?;
+        f.text(" ")?;
         self.op.fmt(f)?;
-        f.space()?;
+        f.text(" ")?;
         self.right.fmt(f)
     }
 }
@@ -464,7 +464,7 @@ impl Fmt for ExprBrace {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if let Some(label) = &self.label {
             label.fmt(f)?;
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.block.fmt(f)
@@ -475,7 +475,7 @@ impl Fmt for ExprIf {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("if ")?;
         self.cond.fmt(f)?;
-        f.space()?;
+        f.text(" ")?;
         self.then_branch.fmt(f)?;
 
         if let Some(else_branch) = &self.else_branch {
@@ -491,12 +491,12 @@ impl Fmt for ExprWhile {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if let Some(label) = &self.label {
             label.fmt(f)?;
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("while ")?;
         self.cond.fmt(f)?;
-        f.space()?;
+        f.text(" ")?;
         self.body.fmt(f)
     }
 }
@@ -505,14 +505,14 @@ impl Fmt for ExprForLoop {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if let Some(label) = &self.label {
             label.fmt(f)?;
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("for ")?;
         self.pat.fmt(f)?;
         f.text(" in ")?;
         self.expr.fmt(f)?;
-        f.space()?;
+        f.text(" ")?;
         self.body.fmt(f)
     }
 }
@@ -521,7 +521,7 @@ impl Fmt for ExprLoop {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if let Some(label) = &self.label {
             label.fmt(f)?;
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("loop ")?;
@@ -570,7 +570,7 @@ impl Fmt for ExprAsync {
             f.text(" move")?;
         }
 
-        f.space()?;
+        f.text(" ")?;
         self.block.fmt(f)
     }
 }
@@ -614,7 +614,7 @@ impl Fmt for ExprReturn {
         f.text("return")?;
 
         if let Some(expr) = &self.expr {
-            f.space()?;
+            f.text(" ")?;
             expr.fmt(f)?;
         }
 
@@ -627,12 +627,12 @@ impl Fmt for ExprBreak {
         f.text("break")?;
 
         if let Some(label) = &self.label {
-            f.space()?;
+            f.text(" ")?;
             label.fmt(f)?;
         }
 
         if let Some(expr) = &self.expr {
-            f.space()?;
+            f.text(" ")?;
             expr.fmt(f)?;
         }
 
@@ -645,7 +645,7 @@ impl Fmt for ExprContinue {
         f.text("continue")?;
 
         if let Some(label) = &self.label {
-            f.space()?;
+            f.text(" ")?;
             label.fmt(f)?;
         }
 
@@ -658,7 +658,7 @@ impl Fmt for ExprYield {
         f.text("yield")?;
 
         if let Some(expr) = &self.expr {
-            f.space()?;
+            f.text(" ")?;
             expr.fmt(f)?;
         }
 

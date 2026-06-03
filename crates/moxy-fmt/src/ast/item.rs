@@ -17,24 +17,24 @@ impl Fmt for Signature {
         self.constness.fmt(f)?;
 
         if matches!(self.constness, moxy_ast::Constness::Const) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.asyncness.fmt(f)?;
 
         if matches!(self.asyncness, moxy_ast::Asyncness::Async) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.unsafety.fmt(f)?;
 
         if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         if let Some(abi) = &self.abi {
             abi.fmt(f)?;
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("fn ")?;
@@ -47,7 +47,7 @@ impl Fmt for Signature {
                     moxy_ast::Pair::Punctuated(param, _) => {
                         param.fmt(f)?;
                         f.text(",")?;
-                        f.space()?;
+                        f.text(" ")?;
                     }
                     moxy_ast::Pair::End(param) => {
                         param.fmt(f)?;
@@ -58,7 +58,7 @@ impl Fmt for Signature {
             if let Some(variadic) = &self.variadic {
                 if !self.inputs.is_empty() {
                     f.text(",")?;
-                    f.space()?;
+                    f.text(" ")?;
                 }
 
                 variadic.fmt(f)?;
@@ -87,19 +87,19 @@ impl Fmt for Receiver {
 
             if let Some(lt) = &self.lifetime {
                 lt.fmt(f)?;
-                f.space()?;
+                f.text(" ")?;
             }
 
             self.mutability.fmt(f)?;
 
             if matches!(self.mutability, moxy_ast::Mutability::Mutable) {
-                f.space()?;
+                f.text(" ")?;
             }
         } else {
             self.mutability.fmt(f)?;
 
             if matches!(self.mutability, moxy_ast::Mutability::Mutable) {
-                f.space()?;
+                f.text(" ")?;
             }
         }
 
@@ -173,7 +173,7 @@ impl Fmt for FieldDef {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         if let Some(ident) = &self.ident {
@@ -259,7 +259,7 @@ impl Fmt for ItemUse {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("use ")?;
@@ -273,7 +273,7 @@ impl Fmt for ItemExternCrate {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("extern crate ")?;
@@ -293,13 +293,13 @@ impl Fmt for ItemMod {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.unsafety.fmt(f)?;
 
         if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("mod ")?;
@@ -308,9 +308,11 @@ impl Fmt for ItemMod {
         if let Some(items) = &self.content {
             f.text(" {")?;
             f.indent(|f| {
-                for item in items {
+                for (i, item) in items.iter().enumerate() {
                     f.hard_break()?;
-                    f.hard_break()?;
+                    if i > 0 {
+                        f.hard_break()?;
+                    }
                     item.fmt(f)?;
                 }
 
@@ -333,17 +335,17 @@ impl Fmt for ItemFn {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.defaultness.fmt(f)?;
 
         if matches!(self.defaultness, moxy_ast::Defaultness::Default) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.sig.fmt(f)?;
-        f.space()?;
+        f.text(" ")?;
         self.body.fmt(f)
     }
 }
@@ -353,7 +355,7 @@ impl Fmt for ItemStruct {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("struct ")?;
@@ -374,7 +376,7 @@ impl Fmt for ItemEnum {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("enum ")?;
@@ -427,7 +429,7 @@ impl Fmt for ItemUnion {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("union ")?;
@@ -442,13 +444,13 @@ impl Fmt for ItemTrait {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.unsafety.fmt(f)?;
 
         if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         if self.auto_keyword.is_some() {
@@ -467,7 +469,6 @@ impl Fmt for ItemTrait {
         f.text(" {")?;
         f.indent(|f| {
             for item in &self.items {
-                f.hard_break()?;
                 f.hard_break()?;
                 item.fmt(f)?;
             }
@@ -488,7 +489,7 @@ impl Fmt for ItemTraitAlias {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("trait ")?;
@@ -505,18 +506,18 @@ impl Fmt for ItemImpl {
         self.defaultness.fmt(f)?;
 
         if matches!(self.defaultness, moxy_ast::Defaultness::Default) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.unsafety.fmt(f)?;
 
         if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("impl")?;
         self.generics.fmt(f)?;
-        f.space()?;
+        f.text(" ")?;
 
         if let Some(trait_ref) = &self.trait_ref {
             trait_ref.fmt(f)?;
@@ -527,9 +528,11 @@ impl Fmt for ItemImpl {
 
         f.text(" {")?;
         f.indent(|f| {
-            for item in &self.items {
+            for (i, item) in self.items.iter().enumerate() {
                 f.hard_break()?;
-                f.hard_break()?;
+                if i > 0 {
+                    f.hard_break()?;
+                }
                 item.fmt(f)?;
             }
 
@@ -549,7 +552,7 @@ impl Fmt for ItemTypeAlias {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("type ")?;
@@ -566,7 +569,7 @@ impl Fmt for ItemConst {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("const ")?;
@@ -585,14 +588,14 @@ impl Fmt for ItemStatic {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("static ")?;
         self.mutability.fmt(f)?;
 
         if matches!(self.mutability, moxy_ast::Mutability::Mutable) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.ident.fmt(f)?;
@@ -608,7 +611,7 @@ impl Fmt for ItemMacro {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if let Some(ident) = &self.ident {
             ident.fmt(f)?;
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.mac.fmt(f)?;
@@ -636,15 +639,17 @@ impl Fmt for ItemForeignMod {
         self.unsafety.fmt(f)?;
 
         if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.abi.fmt(f)?;
         f.text(" {")?;
         f.indent(|f| {
-            for item in &self.items {
+            for (i, item) in self.items.iter().enumerate() {
                 f.hard_break()?;
-                f.hard_break()?;
+                if i > 0 {
+                    f.hard_break()?;
+                }
                 item.fmt(f)?;
             }
 
@@ -677,17 +682,17 @@ impl Fmt for ImplItemFn {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.defaultness.fmt(f)?;
 
         if matches!(self.defaultness, moxy_ast::Defaultness::Default) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.sig.fmt(f)?;
-        f.space()?;
+        f.text(" ")?;
         self.body.fmt(f)
     }
 }
@@ -697,13 +702,13 @@ impl Fmt for ImplItemConst {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.defaultness.fmt(f)?;
 
         if matches!(self.defaultness, moxy_ast::Defaultness::Default) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("const ")?;
@@ -722,13 +727,13 @@ impl Fmt for ImplItemType {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.defaultness.fmt(f)?;
 
         if matches!(self.defaultness, moxy_ast::Defaultness::Default) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("type ")?;
@@ -770,7 +775,7 @@ impl Fmt for TraitItemFn {
         self.sig.fmt(f)?;
 
         if let Some(body) = &self.default_body {
-            f.space()?;
+            f.text(" ")?;
             body.fmt(f)?;
         } else {
             f.text(";")?;
@@ -847,7 +852,7 @@ impl Fmt for ForeignItemFn {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.sig.fmt(f)?;
@@ -860,14 +865,14 @@ impl Fmt for ForeignItemStatic {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("static ")?;
         self.mutability.fmt(f)?;
 
         if matches!(self.mutability, moxy_ast::Mutability::Mutable) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         self.ident.fmt(f)?;
@@ -882,7 +887,7 @@ impl Fmt for ForeignItemType {
         self.vis.fmt(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
-            f.space()?;
+            f.text(" ")?;
         }
 
         f.text("type ")?;
