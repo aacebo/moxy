@@ -15,3 +15,10 @@ doctest = false
 
 [lints]
 workspace = true
+
+[features]
+default = ["macros"]
+macros = ["moxy-test-macros"]
+
+[dependencies]
+moxy-test-macros = { path = "macros", optional = true }

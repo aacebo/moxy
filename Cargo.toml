@@ -48,6 +48,7 @@ token = ["moxy-token"]
 template = ["moxy-template"]
 diagnostic = ["moxy-diagnostic"]
 macros = ["moxy-macros"]
+test = ["moxy-test"]
 serde = ["moxy-ast/serde", "moxy-token/serde", "moxy-fmt/serde"]
 proc-macro2 = ["moxy-token/proc-macro2"]
 
@@ -58,3 +59,4 @@ moxy-fmt = { path = "crates/moxy-fmt", optional = true }
 moxy-macros = { path = "crates/moxy-macros", optional = true }
 moxy-token = { path = "crates/moxy-token", optional = true }
 moxy-template = { path = "crates/moxy-template", optional = true }
+moxy-test = { path = "crates/moxy-test", optional = true }
