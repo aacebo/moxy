@@ -11,6 +11,19 @@ use moxy_token::punct::Not;
 use moxy_token::{Delim, Group, Ident, Literal, Punctuation, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
 pub use span::*;
 
+/// Build a note-level [`Diagnostic`].
+///
+/// Returns a [`Diagnostic`] (not yet emitted) — call `.emit()` to turn it into a
+/// `TokenStream`, or nest it inside another diagnostic's `[ … ]` children list.
+///
+/// # Forms
+///
+/// ```ignore
+/// note!("message");
+/// note!("message", span = some_span);
+/// note!("message", [ help!("hint") ]);
+/// note!("message", span = some_span, [ help!("hint") ]);
+/// ```
 #[macro_export]
 macro_rules! note {
     ($message:expr) => {
@@ -18,7 +31,6 @@ macro_rules! note {
             .level($crate::Level::Note)
             .message($message)
             .build()
-            .emit()
     };
     ($message:expr, span = $span:expr) => {
         $crate::Diagnostic::new()
@@ -26,10 +38,37 @@ macro_rules! note {
             .span($span)
             .message($message)
             .build()
-            .emit()
     };
+    ($message:expr, [ $($child:expr),* $(,)? ]) => {{
+        let mut __diag = $crate::Diagnostic::new()
+            .level($crate::Level::Note)
+            .message($message);
+        $( __diag = __diag.child($child); )*
+        __diag.build()
+    }};
+    ($message:expr, span = $span:expr, [ $($child:expr),* $(,)? ]) => {{
+        let mut __diag = $crate::Diagnostic::new()
+            .level($crate::Level::Note)
+            .span($span)
+            .message($message);
+        $( __diag = __diag.child($child); )*
+        __diag.build()
+    }};
 }
 
+/// Build a warning-level [`Diagnostic`].
+///
+/// Returns a [`Diagnostic`] (not yet emitted) — call `.emit()` to turn it into a
+/// `TokenStream`, or nest it inside another diagnostic's `[ … ]` children list.
+///
+/// # Forms
+///
+/// ```ignore
+/// warn!("message");
+/// warn!("message", span = some_span);
+/// warn!("message", [ help!("hint") ]);
+/// warn!("message", span = some_span, [ help!("hint") ]);
+/// ```
 #[macro_export]
 macro_rules! warn {
     ($message:expr) => {
@@ -37,7 +76,6 @@ macro_rules! warn {
             .level($crate::Level::Warning)
             .message($message)
             .build()
-            .emit()
     };
     ($message:expr, span = $span:expr) => {
         $crate::Diagnostic::new()
@@ -45,10 +83,37 @@ macro_rules! warn {
             .span($span)
             .message($message)
             .build()
-            .emit()
     };
+    ($message:expr, [ $($child:expr),* $(,)? ]) => {{
+        let mut __diag = $crate::Diagnostic::new()
+            .level($crate::Level::Warning)
+            .message($message);
+        $( __diag = __diag.child($child); )*
+        __diag.build()
+    }};
+    ($message:expr, span = $span:expr, [ $($child:expr),* $(,)? ]) => {{
+        let mut __diag = $crate::Diagnostic::new()
+            .level($crate::Level::Warning)
+            .span($span)
+            .message($message);
+        $( __diag = __diag.child($child); )*
+        __diag.build()
+    }};
 }
 
+/// Build an error-level [`Diagnostic`].
+///
+/// Returns a [`Diagnostic`] (not yet emitted) — call `.emit()` to turn it into a
+/// `TokenStream`, or nest it inside another diagnostic's `[ … ]` children list.
+///
+/// # Forms
+///
+/// ```ignore
+/// error!("message");
+/// error!("message", span = some_span);
+/// error!("message", [ help!("hint") ]);
+/// error!("message", span = some_span, [ help!("hint") ]);
+/// ```
 #[macro_export]
 macro_rules! error {
     ($message:expr) => {
@@ -56,7 +121,6 @@ macro_rules! error {
             .level($crate::Level::Error)
             .message($message)
             .build()
-            .emit()
     };
     ($message:expr, span = $span:expr) => {
         $crate::Diagnostic::new()
@@ -64,8 +128,68 @@ macro_rules! error {
             .span($span)
             .message($message)
             .build()
-            .emit()
     };
+    ($message:expr, [ $($child:expr),* $(,)? ]) => {{
+        let mut __diag = $crate::Diagnostic::new()
+            .level($crate::Level::Error)
+            .message($message);
+        $( __diag = __diag.child($child); )*
+        __diag.build()
+    }};
+    ($message:expr, span = $span:expr, [ $($child:expr),* $(,)? ]) => {{
+        let mut __diag = $crate::Diagnostic::new()
+            .level($crate::Level::Error)
+            .span($span)
+            .message($message);
+        $( __diag = __diag.child($child); )*
+        __diag.build()
+    }};
+}
+
+/// Build a help-level [`Diagnostic`], typically nested as a child of another
+/// diagnostic.
+///
+/// Like the other macros it returns a [`Diagnostic`]; it carries supplementary
+/// guidance and is usually placed in a parent's `[ … ]` children list.
+///
+/// # Forms
+///
+/// ```ignore
+/// help!("try this instead");
+/// help!("try this instead", span = some_span);
+/// help!("try this instead", [ help!("and also this") ]);
+/// help!("try this instead", span = some_span, [ help!("and also this") ]);
+/// ```
+#[macro_export]
+macro_rules! help {
+    ($message:expr) => {
+        $crate::Diagnostic::new()
+            .level($crate::Level::Help)
+            .message($message)
+            .build()
+    };
+    ($message:expr, span = $span:expr) => {
+        $crate::Diagnostic::new()
+            .level($crate::Level::Help)
+            .span($span)
+            .message($message)
+            .build()
+    };
+    ($message:expr, [ $($child:expr),* $(,)? ]) => {{
+        let mut __diag = $crate::Diagnostic::new()
+            .level($crate::Level::Help)
+            .message($message);
+        $( __diag = __diag.child($child); )*
+        __diag.build()
+    }};
+    ($message:expr, span = $span:expr, [ $($child:expr),* $(,)? ]) => {{
+        let mut __diag = $crate::Diagnostic::new()
+            .level($crate::Level::Help)
+            .span($span)
+            .message($message);
+        $( __diag = __diag.child($child); )*
+        __diag.build()
+    }};
 }
 
 #[derive(Debug, Clone)]
@@ -478,5 +602,42 @@ mod tests {
         let d = span.help("help msg");
         assert_eq!(d.level(), Level::Help);
         assert_eq!(d.message(), Some("help msg"));
+    }
+
+    #[test]
+    fn help_macro_builds_diagnostic() {
+        let d: Diagnostic = crate::help!("do this");
+        assert_eq!(d.level(), Level::Help);
+        assert_eq!(d.message(), Some("do this"));
+    }
+
+    #[test]
+    fn help_macro_with_span() {
+        let d: Diagnostic = crate::help!("do this", span = Span::default());
+        assert_eq!(d.level(), Level::Help);
+        assert_eq!(d.spans().len(), 1);
+    }
+
+    #[test]
+    fn warn_macro_attaches_help_child() {
+        let span = Span::default();
+        let s = crate::warn!("testi", [crate::help!("do this...", span = span)]).to_string();
+        assert!(s.contains("testi"), "expected parent message in: {s}");
+        assert!(s.contains("do this..."), "expected child message in: {s}");
+    }
+
+    #[test]
+    fn error_macro_span_and_children() {
+        let s = crate::error!("e", span = Span::default(), [crate::help!("h")]).to_string();
+        assert!(s.contains("e"), "expected parent message in: {s}");
+        assert!(s.contains("h"), "expected child message in: {s}");
+    }
+
+    #[test]
+    fn nested_children() {
+        let s = crate::warn!("a", [crate::help!("b", [crate::help!("c")])]).to_string();
+        assert!(s.contains("a"));
+        assert!(s.contains("b"));
+        assert!(s.contains("c"));
     }
 }
