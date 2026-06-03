@@ -53,7 +53,8 @@ dependencies = [
 name = "moxy-fmt"
 version = "0.0.0"
 dependencies = [
- "moxy-token",
+ "moxy-ast",
+ "serde",
 ]
 
 [[package]]
