@@ -1,5 +1,5 @@
 <h1>
-    <img width="35px" style="margin-bottom:3px" valign="middle" src="https://raw.githubusercontent.com/aacebo/moxy/refs/heads/master/assets/logo.svg" />
+    <img width="35px" style="margin-bottom:5px;margin-right:3px" valign="middle" src="https://raw.githubusercontent.com/aacebo/moxy/refs/heads/master/assets/logo.svg" />
     Token
 </h1>
 
