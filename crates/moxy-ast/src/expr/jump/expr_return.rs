@@ -9,6 +9,7 @@ use crate::Attribute;
 pub struct ExprReturn {
     pub span: Span,
     pub attrs: Vec<Attribute>,
+    pub return_keyword: Return,
     pub expr: Option<Box<super::super::Expr>>,
 }
 
@@ -17,7 +18,7 @@ impl ToTokens for ExprReturn {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        Return::default().to_tokens(t);
+        self.return_keyword.to_tokens(t);
 
         if let Some(e) = &self.expr {
             e.to_tokens(t);

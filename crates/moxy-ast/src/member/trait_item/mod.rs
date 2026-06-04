@@ -16,7 +16,7 @@ pub use trait_item_type::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum TraitItem {
     Fn(TraitItemFn),
-    Const(TraitItemConst),
+    Const(Box<TraitItemConst>),
     Type(TraitItemType),
     Macro(TraitItemMacro),
 }
@@ -28,15 +28,20 @@ macro_rules! impl_from {
 }
 impl_from! {
     Fn => TraitItemFn,
-    Const => TraitItemConst,
     Type => TraitItemType,
     Macro => TraitItemMacro,
+}
+
+impl From<TraitItemConst> for TraitItem {
+    fn from(v: TraitItemConst) -> Self {
+        TraitItem::Const(Box::new(v))
+    }
 }
 
 impl Parse for TraitItem {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if stream.peek::<TraitItemConst>().is_some() {
-            return Ok(TraitItem::Const(stream.parse()?));
+            return Ok(TraitItem::Const(Box::new(stream.parse()?)));
         }
         if stream.peek::<TraitItemType>().is_some() {
             return Ok(TraitItem::Type(stream.parse()?));

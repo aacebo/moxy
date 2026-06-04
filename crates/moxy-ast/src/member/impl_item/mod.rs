@@ -16,7 +16,7 @@ pub use impl_item_type::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ImplItem {
     Fn(ImplItemFn),
-    Const(ImplItemConst),
+    Const(Box<ImplItemConst>),
     Type(ImplItemType),
     Macro(ImplItemMacro),
 }
@@ -28,15 +28,20 @@ macro_rules! impl_from {
 }
 impl_from! {
     Fn => ImplItemFn,
-    Const => ImplItemConst,
     Type => ImplItemType,
     Macro => ImplItemMacro,
+}
+
+impl From<ImplItemConst> for ImplItem {
+    fn from(v: ImplItemConst) -> Self {
+        ImplItem::Const(Box::new(v))
+    }
 }
 
 impl Parse for ImplItem {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if stream.peek::<ImplItemConst>().is_some() {
-            return Ok(ImplItem::Const(stream.parse()?));
+            return Ok(ImplItem::Const(Box::new(stream.parse()?)));
         }
         if stream.peek::<ImplItemType>().is_some() {
             return Ok(ImplItem::Type(stream.parse()?));

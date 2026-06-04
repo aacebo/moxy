@@ -10,6 +10,7 @@ pub struct ExprField {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub base: Box<super::super::Expr>,
+    pub dot: Dot,
     pub member: Member,
 }
 
@@ -19,7 +20,7 @@ impl ToTokens for ExprField {
             a.to_tokens(t);
         }
         self.base.to_tokens(t);
-        Dot::default().to_tokens(t);
+        self.dot.to_tokens(t);
         self.member.to_tokens(t);
     }
 }

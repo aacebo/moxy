@@ -13,6 +13,7 @@ pub struct ForeignItemFn {
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub sig: Signature,
+    pub semi: Option<Semi>,
 }
 
 impl Parse for ForeignItemFn {
@@ -26,12 +27,13 @@ impl Parse for ForeignItemFn {
         }
 
         let sig = stream.parse::<Signature>()?;
-        let _ = stream.parse::<Semi>();
+        let semi = stream.parse_if::<Semi>();
         Ok(ForeignItemFn {
             span: Span::default(),
             attrs,
             vis,
             sig,
+            semi,
         })
     }
 }
@@ -43,6 +45,6 @@ impl ToTokens for ForeignItemFn {
         }
         self.vis.to_tokens(t);
         self.sig.to_tokens(t);
-        Semi::default().to_tokens(t);
+        self.semi.to_tokens(t);
     }
 }

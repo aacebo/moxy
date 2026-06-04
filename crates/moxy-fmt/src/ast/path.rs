@@ -73,7 +73,7 @@ impl Fmt for ReturnType {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Default => Ok(()),
-            Self::Type(ty) => {
+            Self::Type(_, ty) => {
                 f.text(" ")?;
                 f.text("->")?;
                 f.text(" ")?;

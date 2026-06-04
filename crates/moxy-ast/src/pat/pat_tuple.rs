@@ -1,5 +1,5 @@
 use moxy_token::punct::Comma;
-use moxy_token::{Delim, Span, ToTokens, TokenStream};
+use moxy_token::{Paren, Span, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -9,6 +9,7 @@ use crate::*;
 pub struct PatTuple {
     pub span: Span,
     pub attrs: Vec<Attribute>,
+    pub paren: Paren,
     pub elems: Punctuated<Pattern, Comma>,
 }
 
@@ -17,11 +18,9 @@ impl ToTokens for PatTuple {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         let mut inner = TokenStream::new();
         self.elems.to_tokens(&mut inner);
-        t.extend_one(moxy_token::TokenTree::Group(moxy_token::Group::new(
-            moxy_token::Delim::Paren,
-            inner,
-        )));
+        self.paren.surround(t, inner);
     }
 }

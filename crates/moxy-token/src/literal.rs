@@ -75,6 +75,12 @@ impl Literal {
     }
 }
 
+impl crate::Spanner for Literal {
+    fn span(&self) -> Span {
+        self.span
+    }
+}
+
 impl From<proc_macro::Literal> for Literal {
     fn from(value: proc_macro::Literal) -> Self {
         Self {

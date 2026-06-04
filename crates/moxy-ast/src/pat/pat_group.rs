@@ -16,6 +16,7 @@ impl ToTokens for PatGroup {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         self.pat.to_tokens(t);
     }
 }

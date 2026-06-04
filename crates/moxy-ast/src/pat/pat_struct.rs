@@ -1,5 +1,5 @@
 use moxy_token::punct::{Comma, DotDot};
-use moxy_token::{Delim, Span, ToTokens, TokenStream};
+use moxy_token::{Brace, Span, ToTokens, TokenStream};
 
 use crate::pat::PatField;
 use crate::*;
@@ -12,8 +12,9 @@ pub struct PatStruct {
     pub attrs: Vec<Attribute>,
     pub qself: Option<QSelf>,
     pub path: Path,
+    pub brace: Brace,
     pub fields: Punctuated<PatField, Comma>,
-    pub rest: bool,
+    pub rest: Option<DotDot>,
 }
 
 impl ToTokens for PatStruct {
@@ -21,17 +22,15 @@ impl ToTokens for PatStruct {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         self.path.to_tokens(t);
         let mut inner = TokenStream::new();
         self.fields.to_tokens(&mut inner);
 
-        if self.rest {
-            DotDot::default().to_tokens(&mut inner);
+        if let Some(dotdot) = &self.rest {
+            dotdot.to_tokens(&mut inner);
         }
 
-        t.extend_one(moxy_token::TokenTree::Group(moxy_token::Group::new(
-            moxy_token::Delim::Brace,
-            inner,
-        )));
+        self.brace.surround(t, inner);
     }
 }

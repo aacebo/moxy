@@ -10,15 +10,17 @@ use crate::{Punctuated, TypeBound};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeImplTrait {
     pub span: Span,
+    pub impl_keyword: Impl,
     pub bounds: Punctuated<TypeBound, Plus>,
 }
 
 impl Parse for TypeImplTrait {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let _ = stream.parse::<Impl>()?;
+        let impl_keyword = stream.parse::<Impl>()?;
         let bounds = crate::TypeBound::parse_bounds(stream)?;
         Ok(Self {
             span: Span::default(),
+            impl_keyword,
             bounds,
         })
     }
@@ -26,7 +28,7 @@ impl Parse for TypeImplTrait {
 
 impl ToTokens for TypeImplTrait {
     fn to_tokens(&self, t: &mut TokenStream) {
-        Impl::default().to_tokens(t);
+        self.impl_keyword.to_tokens(t);
         self.bounds.to_tokens(t);
     }
 }

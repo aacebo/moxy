@@ -1,5 +1,5 @@
 use moxy_token::punct::Semi;
-use moxy_token::{Delim, Group, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Bracket, Span, ToTokens, TokenStream};
 
 use crate::Attribute;
 
@@ -9,7 +9,9 @@ use crate::Attribute;
 pub struct ExprRepeat {
     pub span: Span,
     pub attrs: Vec<Attribute>,
+    pub bracket: Bracket,
     pub elem: Box<super::super::Expr>,
+    pub semi: Semi,
     pub len: Box<super::super::Expr>,
 }
 
@@ -20,8 +22,8 @@ impl ToTokens for ExprRepeat {
         }
         let mut inner = TokenStream::new();
         self.elem.to_tokens(&mut inner);
-        Semi::default().to_tokens(&mut inner);
+        self.semi.to_tokens(&mut inner);
         self.len.to_tokens(&mut inner);
-        t.extend_one(TokenTree::Group(Group::new(Delim::Bracket, inner)));
+        self.bracket.surround(t, inner);
     }
 }

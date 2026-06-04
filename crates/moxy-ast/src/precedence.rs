@@ -37,15 +37,15 @@ impl Precedence {
 
     pub fn of(op: &BinOp) -> Self {
         match op {
-            BinOp::Add | BinOp::Sub => Self::Add,
-            BinOp::Mul | BinOp::Div | BinOp::Rem => Self::Mul,
-            BinOp::And => Self::And,
-            BinOp::Or => Self::Or,
-            BinOp::BitXor => Self::BitXor,
-            BinOp::BitAnd => Self::BitAnd,
-            BinOp::BitOr => Self::BitOr,
-            BinOp::Shl | BinOp::Shr => Self::Shift,
-            BinOp::Eq | BinOp::Lt | BinOp::Le | BinOp::Ne | BinOp::Ge | BinOp::Gt => Self::Compare,
+            BinOp::Add(_) | BinOp::Sub(_) => Self::Add,
+            BinOp::Mul(_) | BinOp::Div(_) | BinOp::Rem(_) => Self::Mul,
+            BinOp::And(_) => Self::And,
+            BinOp::Or(_) => Self::Or,
+            BinOp::BitXor(_) => Self::BitXor,
+            BinOp::BitAnd(_) => Self::BitAnd,
+            BinOp::BitOr(_) => Self::BitOr,
+            BinOp::Shl(_) | BinOp::Shr(_) => Self::Shift,
+            BinOp::Eq(_) | BinOp::Lt(_) | BinOp::Le(_) | BinOp::Ne(_) | BinOp::Ge(_) | BinOp::Gt(_) => Self::Compare,
         }
     }
 }

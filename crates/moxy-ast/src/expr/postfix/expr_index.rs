@@ -1,4 +1,4 @@
-use moxy_token::{Delim, Group, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Bracket, Span, ToTokens, TokenStream};
 
 use crate::Attribute;
 
@@ -9,6 +9,7 @@ pub struct ExprIndex {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub base: Box<super::super::Expr>,
+    pub bracket: Bracket,
     pub index: Box<super::super::Expr>,
 }
 
@@ -20,6 +21,6 @@ impl ToTokens for ExprIndex {
         self.base.to_tokens(t);
         let mut inner = TokenStream::new();
         self.index.to_tokens(&mut inner);
-        t.extend_one(TokenTree::Group(Group::new(Delim::Bracket, inner)));
+        self.bracket.surround(t, inner);
     }
 }

@@ -9,8 +9,8 @@ use super::{ConstParam, LifetimeParam, TypeParam};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum GenericParam {
     Lifetime(LifetimeParam),
-    Type(TypeParam),
-    Const(ConstParam),
+    Type(Box<TypeParam>),
+    Const(Box<ConstParam>),
 }
 
 impl From<LifetimeParam> for GenericParam {
@@ -21,13 +21,13 @@ impl From<LifetimeParam> for GenericParam {
 
 impl From<TypeParam> for GenericParam {
     fn from(v: TypeParam) -> Self {
-        GenericParam::Type(v)
+        GenericParam::Type(Box::new(v))
     }
 }
 
 impl From<ConstParam> for GenericParam {
     fn from(v: ConstParam) -> Self {
-        GenericParam::Const(v)
+        GenericParam::Const(Box::new(v))
     }
 }
 
@@ -46,10 +46,10 @@ impl Parse for GenericParam {
         fork.skip_while::<crate::Attribute>();
 
         if fork.peek::<Const>().is_some() {
-            return Ok(GenericParam::Const(stream.parse()?));
+            return Ok(GenericParam::Const(Box::new(stream.parse()?)));
         }
 
-        Ok(GenericParam::Type(stream.parse()?))
+        Ok(GenericParam::Type(Box::new(stream.parse()?)))
     }
 }
 

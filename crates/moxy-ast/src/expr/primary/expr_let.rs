@@ -10,7 +10,9 @@ use crate::*;
 pub struct ExprLet {
     pub span: Span,
     pub attrs: Vec<Attribute>,
+    pub let_keyword: Let,
     pub pat: Box<Pattern>,
+    pub eq: Eq,
     pub expr: Box<super::super::Expr>,
 }
 
@@ -19,9 +21,9 @@ impl ToTokens for ExprLet {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        Let::default().to_tokens(t);
+        self.let_keyword.to_tokens(t);
         self.pat.to_tokens(t);
-        Eq::default().to_tokens(t);
+        self.eq.to_tokens(t);
         self.expr.to_tokens(t);
     }
 }

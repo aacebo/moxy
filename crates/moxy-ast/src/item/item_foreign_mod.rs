@@ -1,5 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Brace, Parse, Span, ToTokens, TokenStream};
 
 use crate::{Abi, Attribute, ForeignItem, Unsafety};
 
@@ -11,6 +11,7 @@ pub struct ItemForeignMod {
     pub attrs: Vec<Attribute>,
     pub unsafety: Unsafety,
     pub abi: Abi,
+    pub brace: Brace,
     pub items: Vec<ForeignItem>,
 }
 
@@ -19,7 +20,7 @@ impl Parse for ItemForeignMod {
         let attrs = stream.parse::<Vec<Attribute>>()?;
         let unsafety = stream.parse::<Unsafety>()?;
         let abi = stream.parse::<Abi>()?;
-        let group = stream.parse_group(Delim::Brace)?;
+        let (brace, group) = stream.parse_brace()?;
         let mut inner = group.parse();
         let items = inner.parse::<Vec<ForeignItem>>()?;
         Ok(ItemForeignMod {
@@ -27,6 +28,7 @@ impl Parse for ItemForeignMod {
             attrs,
             unsafety,
             abi,
+            brace,
             items,
         })
     }
@@ -45,9 +47,6 @@ impl ToTokens for ItemForeignMod {
             it.to_tokens(&mut inner);
         }
 
-        t.extend_one(moxy_token::TokenTree::Group(moxy_token::Group::new(
-            moxy_token::Delim::Brace,
-            inner,
-        )));
+        self.brace.surround(t, inner);
     }
 }

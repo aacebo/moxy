@@ -13,6 +13,7 @@ extern crate proc_macro;
 
 pub mod bridge;
 mod delim;
+mod delim_token;
 mod group;
 mod ident;
 pub mod keyword;
@@ -27,6 +28,7 @@ pub mod span;
 mod stream;
 
 pub use delim::*;
+pub use delim_token::*;
 pub use group::*;
 pub use ident::*;
 pub use keyword::*;
@@ -35,7 +37,7 @@ pub use literal::*;
 pub use parse::Parse;
 pub use punct::*;
 pub use spacing::*;
-pub use span::Span;
+pub use span::{Span, Spanner};
 pub use stream::*;
 
 pub trait ToTokens<T = TokenStream> {
@@ -146,6 +148,12 @@ impl std::fmt::Display for Token {
 impl ToTokens for Token {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         tokens.extend_one(TokenTree::from(self.clone()));
+    }
+}
+
+impl Spanner for Token {
+    fn span(&self) -> Span {
+        self.span()
     }
 }
 
@@ -329,6 +337,12 @@ impl std::fmt::Display for TokenTree {
 impl ToTokens for TokenTree {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         tokens.extend_one(self.clone());
+    }
+}
+
+impl Spanner for TokenTree {
+    fn span(&self) -> Span {
+        self.span()
     }
 }
 

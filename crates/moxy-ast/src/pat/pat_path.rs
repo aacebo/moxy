@@ -17,6 +17,7 @@ impl ToTokens for PatPath {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         self.path.to_tokens(t);
     }
 }

@@ -5,6 +5,14 @@ use moxy_token::{Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::*;
 
+#[doc = "The pipe delimiters around a closure's parameters: either an empty `||` or a pair of `|`."]
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub enum ClosurePipes {
+    Empty(OrOr),
+    Params(Or, Or),
+}
+
 #[doc = "A closure expression: `|x| x`, `move || 1`, `async |x: u32| -> u32 { x }`."]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -15,7 +23,8 @@ pub struct ExprClosure {
     pub constness: Constness,
     pub movability: Movability,
     pub asyncness: Asyncness,
-    pub capture: bool,
+    pub capture: Option<Move>,
+    pub pipes: ClosurePipes,
     pub inputs: Punctuated<ClosureParam, Comma>,
     pub output: ReturnType,
     pub body: Box<super::super::Expr>,
@@ -50,12 +59,17 @@ impl ToTokens for ExprClosure {
         self.constness.to_tokens(t);
         self.movability.to_tokens(t);
         self.asyncness.to_tokens(t);
-        if self.capture {
-            Move::default().to_tokens(t);
+        self.capture.to_tokens(t);
+
+        match &self.pipes {
+            ClosurePipes::Empty(oror) => oror.to_tokens(t),
+            ClosurePipes::Params(open, close) => {
+                open.to_tokens(t);
+                self.inputs.to_tokens(t);
+                close.to_tokens(t);
+            }
         }
-        Or::default().to_tokens(t);
-        self.inputs.to_tokens(t);
-        Or::default().to_tokens(t);
+
         self.output.to_tokens(t);
         self.body.to_tokens(t);
     }

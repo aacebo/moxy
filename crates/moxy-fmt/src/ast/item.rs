@@ -16,19 +16,19 @@ impl Fmt for Signature {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.constness.fmt(f)?;
 
-        if matches!(self.constness, moxy_ast::Constness::Const) {
+        if matches!(self.constness, moxy_ast::Constness::Const(_)) {
             f.text(" ")?;
         }
 
         self.asyncness.fmt(f)?;
 
-        if matches!(self.asyncness, moxy_ast::Asyncness::Async) {
+        if matches!(self.asyncness, moxy_ast::Asyncness::Async(_)) {
             f.text(" ")?;
         }
 
         self.unsafety.fmt(f)?;
 
-        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe) {
+        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
             f.text(" ")?;
         }
 
@@ -82,7 +82,7 @@ impl Fmt for FnParam {
 
 impl Fmt for Receiver {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        if self.reference {
+        if self.reference.is_some() {
             f.text("&")?;
 
             if let Some(lt) = &self.lifetime {
@@ -92,13 +92,13 @@ impl Fmt for Receiver {
 
             self.mutability.fmt(f)?;
 
-            if matches!(self.mutability, moxy_ast::Mutability::Mutable) {
+            if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
                 f.text(" ")?;
             }
         } else {
             self.mutability.fmt(f)?;
 
-            if matches!(self.mutability, moxy_ast::Mutability::Mutable) {
+            if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
                 f.text(" ")?;
             }
         }
@@ -298,14 +298,14 @@ impl Fmt for ItemMod {
 
         self.unsafety.fmt(f)?;
 
-        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe) {
+        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
             f.text(" ")?;
         }
 
         f.text("mod ")?;
         self.ident.fmt(f)?;
 
-        if let Some(items) = &self.content {
+        if let Some((_, items)) = &self.content {
             f.text(" {")?;
             f.indent(|f| {
                 for (i, item) in items.iter().enumerate() {
@@ -340,7 +340,7 @@ impl Fmt for ItemFn {
 
         self.defaultness.fmt(f)?;
 
-        if matches!(self.defaultness, moxy_ast::Defaultness::Default) {
+        if matches!(self.defaultness, moxy_ast::Defaultness::Default(_)) {
             f.text(" ")?;
         }
 
@@ -449,7 +449,7 @@ impl Fmt for ItemTrait {
 
         self.unsafety.fmt(f)?;
 
-        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe) {
+        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
             f.text(" ")?;
         }
 
@@ -505,13 +505,13 @@ impl Fmt for ItemImpl {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.defaultness.fmt(f)?;
 
-        if matches!(self.defaultness, moxy_ast::Defaultness::Default) {
+        if matches!(self.defaultness, moxy_ast::Defaultness::Default(_)) {
             f.text(" ")?;
         }
 
         self.unsafety.fmt(f)?;
 
-        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe) {
+        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
             f.text(" ")?;
         }
 
@@ -594,7 +594,7 @@ impl Fmt for ItemStatic {
         f.text("static ")?;
         self.mutability.fmt(f)?;
 
-        if matches!(self.mutability, moxy_ast::Mutability::Mutable) {
+        if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
             f.text(" ")?;
         }
 
@@ -629,7 +629,7 @@ impl Fmt for ItemMacroRules {
         f.text("macro_rules! ")?;
         self.ident.fmt(f)?;
         f.text(" {")?;
-        f.text(&self.rules)?;
+        f.text(self.body.stream())?;
         f.text("}")
     }
 }
@@ -638,7 +638,7 @@ impl Fmt for ItemForeignMod {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.unsafety.fmt(f)?;
 
-        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe) {
+        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
             f.text(" ")?;
         }
 
@@ -687,7 +687,7 @@ impl Fmt for ImplItemFn {
 
         self.defaultness.fmt(f)?;
 
-        if matches!(self.defaultness, moxy_ast::Defaultness::Default) {
+        if matches!(self.defaultness, moxy_ast::Defaultness::Default(_)) {
             f.text(" ")?;
         }
 
@@ -707,7 +707,7 @@ impl Fmt for ImplItemConst {
 
         self.defaultness.fmt(f)?;
 
-        if matches!(self.defaultness, moxy_ast::Defaultness::Default) {
+        if matches!(self.defaultness, moxy_ast::Defaultness::Default(_)) {
             f.text(" ")?;
         }
 
@@ -732,7 +732,7 @@ impl Fmt for ImplItemType {
 
         self.defaultness.fmt(f)?;
 
-        if matches!(self.defaultness, moxy_ast::Defaultness::Default) {
+        if matches!(self.defaultness, moxy_ast::Defaultness::Default(_)) {
             f.text(" ")?;
         }
 
@@ -749,7 +749,7 @@ impl Fmt for ImplItemMacro {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.mac.fmt(f)?;
 
-        if self.semi {
+        if self.semi.is_some() {
             f.text(";")?;
         }
 
@@ -793,7 +793,7 @@ impl Fmt for TraitItemConst {
         f.text(": ")?;
         self.ty.fmt(f)?;
 
-        if let Some(default) = &self.default {
+        if let Some((_, default)) = &self.default {
             f.text(" = ")?;
             default.fmt(f)?;
         }
@@ -813,7 +813,7 @@ impl Fmt for TraitItemType {
             self.bounds.fmt(f)?;
         }
 
-        if let Some(default) = &self.default {
+        if let Some((_, default)) = &self.default {
             f.text(" = ")?;
             default.fmt(f)?;
         }
@@ -826,7 +826,7 @@ impl Fmt for TraitItemMacro {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.mac.fmt(f)?;
 
-        if self.semi {
+        if self.semi.is_some() {
             f.text(";")?;
         }
 
@@ -871,7 +871,7 @@ impl Fmt for ForeignItemStatic {
         f.text("static ")?;
         self.mutability.fmt(f)?;
 
-        if matches!(self.mutability, moxy_ast::Mutability::Mutable) {
+        if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
             f.text(" ")?;
         }
 
@@ -901,7 +901,7 @@ impl Fmt for ForeignItemMacro {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.mac.fmt(f)?;
 
-        if self.semi {
+        if self.semi.is_some() {
             f.text(";")?;
         }
 

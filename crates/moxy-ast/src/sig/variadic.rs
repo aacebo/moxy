@@ -11,16 +11,18 @@ pub struct Variadic {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub name: Option<Ident>,
+    pub dots: DotDotDot,
 }
 
 impl Parse for Variadic {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Vec<Attribute>>()?;
-        let _ = stream.parse::<DotDotDot>()?;
+        let dots = stream.parse::<DotDotDot>()?;
         Ok(Self {
             span: Span::default(),
             attrs,
             name: None,
+            dots,
         })
     }
 }
@@ -30,6 +32,6 @@ impl ToTokens for Variadic {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        DotDotDot::default().to_tokens(t);
+        self.dots.to_tokens(t);
     }
 }

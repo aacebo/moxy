@@ -11,30 +11,31 @@ use crate::{Attribute, Lifetime, Mutability};
 pub struct Receiver {
     pub span: Span,
     pub attrs: Vec<Attribute>,
-    pub reference: bool,
+    pub reference: Option<And>,
     pub lifetime: Option<Lifetime>,
     pub mutability: Mutability,
+    pub self_keyword: SelfValue,
 }
 
 impl Parse for Receiver {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Vec<Attribute>>()?;
-        let reference = if stream.peek::<And>().is_some() {
-            let _ = stream.parse::<And>()?;
-            true
-        } else {
-            false
-        };
+        let reference = stream.parse_if::<And>();
 
-        let lifetime = if reference { stream.parse_if::<Lifetime>() } else { None };
+        let lifetime = if reference.is_some() {
+            stream.parse_if::<Lifetime>()
+        } else {
+            None
+        };
         let mutability = stream.parse::<Mutability>()?;
-        let _ = stream.parse::<SelfValue>()?;
+        let self_keyword = stream.parse::<SelfValue>()?;
         Ok(Self {
             span: Span::default(),
             attrs,
             reference,
             lifetime,
             mutability,
+            self_keyword,
         })
     }
 }
@@ -45,8 +46,8 @@ impl ToTokens for Receiver {
             a.to_tokens(t);
         }
 
-        if self.reference {
-            And::default().to_tokens(t);
+        if let Some(amp) = &self.reference {
+            amp.to_tokens(t);
 
             if let Some(l) = &self.lifetime {
                 l.to_tokens(t);
@@ -54,6 +55,6 @@ impl ToTokens for Receiver {
         }
 
         self.mutability.to_tokens(t);
-        SelfValue::default().to_tokens(t);
+        self.self_keyword.to_tokens(t);
     }
 }

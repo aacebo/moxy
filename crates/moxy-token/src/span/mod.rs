@@ -7,6 +7,10 @@ pub use range::*;
 
 use crate::source::Location;
 
+pub trait Spanner {
+    fn span(&self) -> Span;
+}
+
 #[derive(Debug, Copy, Clone)]
 pub enum Span {
     Compiler(proc_macro::Span),

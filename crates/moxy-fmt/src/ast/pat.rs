@@ -36,19 +36,19 @@ impl Fmt for Pattern {
 
 impl Fmt for PatIdent {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        if self.by_ref {
+        if self.by_ref.is_some() {
             f.text("ref ")?;
         }
 
         self.mutability.fmt(f)?;
 
-        if matches!(self.mutability, moxy_ast::Mutability::Mutable) {
+        if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
             f.text(" ")?;
         }
 
         self.ident.fmt(f)?;
 
-        if let Some(subpat) = &self.subpat {
+        if let Some((_, subpat)) = &self.subpat {
             f.text(" @ ")?;
             subpat.fmt(f)?;
         }
@@ -100,7 +100,7 @@ impl Fmt for PatStruct {
                 }
             }
 
-            if self.rest {
+            if self.rest.is_some() {
                 f.hard_break()?;
                 f.text("..")?;
             }
@@ -108,7 +108,7 @@ impl Fmt for PatStruct {
             Ok(())
         })?;
 
-        if !self.fields.is_empty() || self.rest {
+        if !self.fields.is_empty() || self.rest.is_some() {
             f.hard_break()?;
         }
 
@@ -141,7 +141,7 @@ impl Fmt for PatReference {
         f.text("&")?;
         self.mutability.fmt(f)?;
 
-        if matches!(self.mutability, moxy_ast::Mutability::Mutable) {
+        if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
             f.text(" ")?;
         }
 

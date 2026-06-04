@@ -1,4 +1,4 @@
-use moxy_token::{Delim, Group, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Paren, Span, ToTokens, TokenStream};
 
 use crate::Attribute;
 
@@ -8,6 +8,7 @@ use crate::Attribute;
 pub struct ExprParen {
     pub span: Span,
     pub attrs: Vec<Attribute>,
+    pub paren: Paren,
     pub expr: Box<super::super::Expr>,
 }
 
@@ -18,6 +19,6 @@ impl ToTokens for ExprParen {
         }
         let mut inner = TokenStream::new();
         self.expr.to_tokens(&mut inner);
-        t.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));
+        self.paren.surround(t, inner);
     }
 }

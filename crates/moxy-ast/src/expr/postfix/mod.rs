@@ -76,14 +76,17 @@ impl PostfixExpr {
     pub fn parse_from(stream: &mut ParseStream, mut expr: Expr) -> Result<Expr, ParseError> {
         loop {
             if stream.peek::<Dot>().is_some() {
-                let _ = stream.parse::<Dot>()?;
+                let dot = stream.parse::<Dot>()?;
 
                 if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("await")) {
+                    let await_span = stream.span();
                     stream.advance();
                     expr = Expr::Postfix(PostfixExpr::Await(ExprAwait {
                         span: Span::default(),
                         attrs: Vec::new(),
                         base: Box::new(expr),
+                        dot,
+                        await_keyword: moxy_token::keyword::Await::new(await_span),
                     }));
                     continue;
                 }
@@ -96,15 +99,17 @@ impl PostfixExpr {
 
                     if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
                         let method = method.clone();
-                        let group = stream.parse_group(Delim::Paren)?;
+                        let (paren, group) = stream.parse_paren()?;
                         let mut inner = group.parse();
                         let args = Punctuated::parse_terminated(&mut inner)?;
                         expr = Expr::Postfix(PostfixExpr::MethodCall(ExprMethodCall {
                             span: Span::default(),
                             attrs: Vec::new(),
                             receiver: Box::new(expr),
+                            dot,
                             method,
                             turbofish,
+                            paren,
                             args,
                         }));
                         continue;
@@ -115,32 +120,35 @@ impl PostfixExpr {
                     span: Span::default(),
                     attrs: Vec::new(),
                     base: Box::new(expr),
+                    dot,
                     member,
                 }));
                 continue;
             }
 
             if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-                let group = stream.parse_group(Delim::Paren)?;
+                let (paren, group) = stream.parse_paren()?;
                 let mut inner = group.parse();
                 let args = Punctuated::parse_terminated(&mut inner)?;
                 expr = Expr::Postfix(PostfixExpr::Call(ExprCall {
                     span: Span::default(),
                     attrs: Vec::new(),
                     func: Box::new(expr),
+                    paren,
                     args,
                 }));
                 continue;
             }
 
             if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
-                let group = stream.parse_group(Delim::Bracket)?;
+                let (bracket, group) = stream.parse_bracket()?;
                 let mut inner = group.parse();
                 let index = Box::new(super::parse_expr(&mut inner, true)?);
                 expr = Expr::Postfix(PostfixExpr::Index(ExprIndex {
                     span: Span::default(),
                     attrs: Vec::new(),
                     base: Box::new(expr),
+                    bracket,
                     index,
                 }));
                 continue;

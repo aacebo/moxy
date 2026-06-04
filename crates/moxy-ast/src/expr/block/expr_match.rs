@@ -1,7 +1,7 @@
 use moxy_token::keyword::{If, Match};
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, FatArrow};
-use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Brace, Parse, Span, ToTokens, TokenStream};
 
 use crate::{Attribute, Expr, Pattern};
 
@@ -13,6 +13,7 @@ pub struct ExprMatch {
     pub attrs: Vec<Attribute>,
     pub match_keyword: Match,
     pub expr: Box<Expr>,
+    pub brace: Brace,
     pub arms: Vec<MatchArm>,
 }
 
@@ -20,7 +21,7 @@ impl ExprMatch {
     pub fn parse_from(stream: &mut ParseStream) -> Result<Expr, ParseError> {
         let match_keyword = stream.parse::<Match>()?;
         let expr = Box::new(super::super::parse_expr(stream, false)?);
-        let group = stream.parse_group(Delim::Brace)?;
+        let (brace, group) = stream.parse_brace()?;
         let mut inner = group.parse();
         let arms = inner.parse::<Vec<MatchArm>>()?;
         Ok(Expr::Block(super::BlockExpr::Match(Self {
@@ -28,6 +29,7 @@ impl ExprMatch {
             attrs: Vec::new(),
             match_keyword,
             expr,
+            brace,
             arms,
         })))
     }
@@ -44,7 +46,7 @@ impl ToTokens for ExprMatch {
         for arm in &self.arms {
             arm.to_tokens(&mut inner);
         }
-        t.extend_one(TokenTree::Group(Group::new(Delim::Brace, inner)));
+        self.brace.surround(t, inner);
     }
 }
 

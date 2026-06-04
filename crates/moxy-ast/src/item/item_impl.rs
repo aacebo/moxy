@@ -1,7 +1,7 @@
 use moxy_token::keyword::{For, Impl};
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::Not;
-use moxy_token::{Delim, LexError, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Brace, LexError, Parse, Span, ToTokens, TokenStream};
 
 use crate::{Attribute, BoundPolarity, Defaultness, Generics, ImplItem, TraitRef, Type, Unsafety};
 
@@ -18,6 +18,7 @@ pub struct ItemImpl {
     pub for_keyword: Option<For>,
     pub trait_ref: Option<TraitRef>,
     pub self_ty: Type,
+    pub brace: Brace,
     pub items: Vec<ImplItem>,
 }
 
@@ -44,8 +45,7 @@ impl Parse for ItemImpl {
 
         // Optional `!` for a negative impl (`impl !Trait for T`).
         let polarity = if stream.peek::<Not>().is_some() {
-            let _ = stream.parse::<Not>()?;
-            BoundPolarity::Negative
+            BoundPolarity::Negative(stream.parse::<Not>()?)
         } else {
             BoundPolarity::Positive
         };
@@ -71,7 +71,7 @@ impl Parse for ItemImpl {
             generics.where_clause = Some(stream.parse()?);
         }
 
-        let group = stream.parse_group(Delim::Brace)?;
+        let (brace, group) = stream.parse_brace()?;
         let mut inner = group.parse();
         let items = inner.parse::<Vec<ImplItem>>()?;
         Ok(ItemImpl {
@@ -84,6 +84,7 @@ impl Parse for ItemImpl {
             for_keyword,
             trait_ref,
             self_ty,
+            brace,
             items,
         })
     }
@@ -113,9 +114,6 @@ impl ToTokens for ItemImpl {
             it.to_tokens(&mut inner);
         }
 
-        t.extend_one(moxy_token::TokenTree::Group(moxy_token::Group::new(
-            moxy_token::Delim::Brace,
-            inner,
-        )));
+        self.brace.surround(t, inner);
     }
 }

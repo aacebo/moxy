@@ -39,8 +39,8 @@ pub use typed_param::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Type {
-    Never,
-    Infer,
+    Never(moxy_token::punct::Not),
+    Infer(moxy_token::Ident),
     Path(TypePath),
     Tuple(TypeTuple),
     Array(TypeArray),
@@ -123,14 +123,15 @@ impl Parse for Type {
 
         // Never `!`.
         if stream.peek::<moxy_token::punct::Not>().is_some() {
-            let _ = stream.parse::<moxy_token::punct::Not>()?;
-            return Ok(Type::Never);
+            let not = stream.parse::<moxy_token::punct::Not>()?;
+            return Ok(Type::Never(not));
         }
 
         // Infer `_`.
         if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("_")) {
+            let span = stream.span();
             stream.advance();
-            return Ok(Type::Infer);
+            return Ok(Type::Infer(moxy_token::Ident::new("_", span)));
         }
 
         // `[T]` slice or `[T; N]` array — decided by a `;` inside the brackets.
@@ -138,22 +139,25 @@ impl Parse for Type {
         // inside the group rather than calling `TypeArray::parse` or
         // `TypeSlice::parse` individually (which would each consume the group).
         if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
-            let group = stream.parse_group(Delim::Bracket)?;
+            let (bracket, group) = stream.parse_bracket()?;
             let mut inner = group.parse();
             let elem = Box::new(inner.parse::<Type>()?);
 
             if inner.peek::<moxy_token::punct::Semi>().is_some() {
-                let _ = inner.parse::<moxy_token::punct::Semi>()?;
+                let semi = inner.parse::<moxy_token::punct::Semi>()?;
                 let len = inner.parse::<crate::Expr>()?;
                 return Ok(Type::Array(TypeArray {
                     span: Span::default(),
+                    bracket,
                     elem,
+                    semi,
                     len,
                 }));
             }
 
             return Ok(Type::Slice(TypeSlice {
                 span: Span::default(),
+                bracket,
                 elem,
             }));
         }
@@ -180,18 +184,20 @@ impl Parse for Type {
         // anything else (empty, multiple, or trailing comma) is a tuple.
         // Both variants share the same `(` token so we disambiguate inline.
         if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-            let group = stream.parse_group(Delim::Paren)?;
+            let (paren, group) = stream.parse_paren()?;
             let mut inner = group.parse();
             let elems: Punctuated<Type, Comma> = Punctuated::parse_terminated(&mut inner)?;
 
             return if elems.len() == 1 && !elems.trailing_punct() {
                 Ok(Type::Paren(TypeParen {
                     span: Span::default(),
+                    paren,
                     elem: Box::new(elems.into_iter().next().unwrap()),
                 }))
             } else {
                 Ok(Type::Tuple(TypeTuple {
                     span: Span::default(),
+                    paren,
                     elems,
                 }))
             };
@@ -222,8 +228,8 @@ impl ToTokens for Type {
             Type::BareFn(value) => value.to_tokens(tokens),
             Type::Array(value) => value.to_tokens(tokens),
             Type::Macro(value) => value.to_tokens(tokens),
-            Type::Never => moxy_token::punct::Not::default().to_tokens(tokens),
-            Type::Infer => moxy_token::Ident::new("_", Span::default()).to_tokens(tokens),
+            Type::Never(not) => not.to_tokens(tokens),
+            Type::Infer(id) => id.to_tokens(tokens),
             // `Group` is only produced via the proc-macro bridge, never `from_str`.
             Type::Group(_) => {}
         }
@@ -249,8 +255,8 @@ mod tests {
 
     #[test]
     fn never_infer_array_macro() {
-        assert!(matches!(moxy_token::parse!("!" as Type).unwrap(), Type::Never));
-        assert!(matches!(moxy_token::parse!("_" as Type).unwrap(), Type::Infer));
+        assert!(matches!(moxy_token::parse!("!" as Type).unwrap(), Type::Never(_)));
+        assert!(matches!(moxy_token::parse!("_" as Type).unwrap(), Type::Infer(_)));
         assert!(matches!(moxy_token::parse!("[u8; 4]" as Type).unwrap(), Type::Array(_)));
         assert!(matches!(moxy_token::parse!("[u8]" as Type).unwrap(), Type::Slice(_)));
         assert!(matches!(moxy_token::parse!("m!(x)" as Type).unwrap(), Type::Macro(_)));
@@ -349,6 +355,7 @@ mod tests {
     fn from_variant() {
         let s = TypeSlice {
             span: Span::default(),
+            bracket: moxy_token::Bracket::default(),
             elem: Box::new(moxy_token::parse!("T" as Type).unwrap()),
         };
         assert!(matches!(Type::from(s), Type::Slice { .. }));

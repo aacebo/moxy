@@ -10,10 +10,9 @@ macro_rules! define_leaf {
     )+) => {
         $(
             $(#[doc = $doc])?
-            #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
-            #[cfg_attr(feature = "serde", derive(serde::Serialize))]
+            #[derive(Debug, Clone)]
             pub enum $name {
-                $($variant,)+
+                $($variant $(( $token ))? ,)+
             }
 
             impl Parse for $name {
@@ -31,15 +30,39 @@ macro_rules! define_leaf {
 
             impl ToTokens for $name {
                 fn to_tokens(&self, tokens: &mut TokenStream) {
-                    match self {
-                        $(Self::$variant => define_leaf!(@emit tokens, $($token)?),)+
-                    }
+                    define_leaf!(@emit_match self, tokens, () $($variant $(($token))?,)+);
                 }
             }
 
             impl std::fmt::Display for $name {
                 fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                     write!(f, "{}", self.to_token_stream())
+                }
+            }
+
+            // Equality/hashing ignore the contained token's span: two `BinOp::Add`
+            // parsed at different offsets are the same operator.
+            impl PartialEq for $name {
+                fn eq(&self, other: &Self) -> bool {
+                    ::std::mem::discriminant(self) == ::std::mem::discriminant(other)
+                }
+            }
+
+            impl Eq for $name {}
+
+            impl ::std::hash::Hash for $name {
+                fn hash<H: ::std::hash::Hasher>(&self, state: &mut H) {
+                    ::std::mem::discriminant(self).hash(state);
+                }
+            }
+
+            #[cfg(feature = "serde")]
+            impl serde::Serialize for $name {
+                fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+                where
+                    S: serde::Serializer,
+                {
+                    define_leaf!(@serialize_match self, s, () $($variant $(($token))?,)+)
                 }
             }
         )+
@@ -49,9 +72,9 @@ macro_rules! define_leaf {
         {
             let mut fork = $stream.fork();
 
-            if <$token as Parse>::parse(&mut fork).is_ok() {
+            if let Ok(tok) = <$token as Parse>::parse(&mut fork) {
                 $stream.seek(&fork);
-                return Ok($value);
+                return Ok($value(tok));
             }
         }
     };
@@ -60,12 +83,32 @@ macro_rules! define_leaf {
         return Ok($value);
     };
 
-    (@emit $tokens:ident, $token:ty) => {
-        <$token>::default().to_tokens($tokens)
+    // Build the `ToTokens` match by peeling variants into an accumulator, so the
+    // bound token `tok` and its use stay in one expansion (hygiene) and no macro
+    // call sits in match-arm position.
+    (@emit_match $self:ident, $tokens:ident, ($($arms:tt)*) $variant:ident ($token:ty), $($rest:tt)*) => {
+        define_leaf!(@emit_match $self, $tokens,
+            ($($arms)* Self::$variant(tok) => tok.to_tokens($tokens),) $($rest)*)
+    };
+    (@emit_match $self:ident, $tokens:ident, ($($arms:tt)*) $variant:ident, $($rest:tt)*) => {
+        define_leaf!(@emit_match $self, $tokens,
+            ($($arms)* Self::$variant => {},) $($rest)*)
+    };
+    (@emit_match $self:ident, $tokens:ident, ($($arms:tt)*)) => {
+        match $self { $($arms)* }
     };
 
-    (@emit $tokens:ident,) => {
-        {}
+    // Same accumulator approach for the serde `Serialize` impl.
+    (@serialize_match $self:ident, $s:ident, ($($arms:tt)*) $variant:ident ($token:ty), $($rest:tt)*) => {
+        define_leaf!(@serialize_match $self, $s,
+            ($($arms)* Self::$variant(_) => $s.serialize_str(stringify!($variant)),) $($rest)*)
+    };
+    (@serialize_match $self:ident, $s:ident, ($($arms:tt)*) $variant:ident, $($rest:tt)*) => {
+        define_leaf!(@serialize_match $self, $s,
+            ($($arms)* Self::$variant => $s.serialize_str(stringify!($variant)),) $($rest)*)
+    };
+    (@serialize_match $self:ident, $s:ident, ($($arms:tt)*)) => {
+        match $self { $($arms)* }
     };
 }
 
@@ -186,35 +229,35 @@ mod tests {
 
     #[test]
     fn bin_ops() {
-        assert_eq!(parse::<BinOp>("+").unwrap(), BinOp::Add);
-        assert_eq!(parse::<BinOp>("==").unwrap(), BinOp::Eq);
-        assert_eq!(parse::<BinOp>("&&").unwrap(), BinOp::And);
-        assert_eq!(parse::<BinOp>("&").unwrap(), BinOp::BitAnd);
-        assert_eq!(parse::<BinOp>("<<").unwrap(), BinOp::Shl);
+        assert!(matches!(parse::<BinOp>("+").unwrap(), BinOp::Add(_)));
+        assert!(matches!(parse::<BinOp>("==").unwrap(), BinOp::Eq(_)));
+        assert!(matches!(parse::<BinOp>("&&").unwrap(), BinOp::And(_)));
+        assert!(matches!(parse::<BinOp>("&").unwrap(), BinOp::BitAnd(_)));
+        assert!(matches!(parse::<BinOp>("<<").unwrap(), BinOp::Shl(_)));
         assert!(parse::<BinOp>("foo").is_err());
     }
 
     #[test]
     fn un_ops() {
-        assert_eq!(parse::<UnOp>("*").unwrap(), UnOp::Deref);
-        assert_eq!(parse::<UnOp>("!").unwrap(), UnOp::Not);
-        assert_eq!(parse::<UnOp>("-").unwrap(), UnOp::Neg);
+        assert!(matches!(parse::<UnOp>("*").unwrap(), UnOp::Deref(_)));
+        assert!(matches!(parse::<UnOp>("!").unwrap(), UnOp::Not(_)));
+        assert!(matches!(parse::<UnOp>("-").unwrap(), UnOp::Neg(_)));
     }
 
     #[test]
     fn assign_ops() {
-        assert_eq!(parse::<AssignOp>("+=").unwrap(), AssignOp::AddAssign);
-        assert_eq!(parse::<AssignOp>("<<=").unwrap(), AssignOp::ShlAssign);
+        assert!(matches!(parse::<AssignOp>("+=").unwrap(), AssignOp::AddAssign(_)));
+        assert!(matches!(parse::<AssignOp>("<<=").unwrap(), AssignOp::ShlAssign(_)));
     }
 
     #[test]
     fn markers_parse_from_present_and_absent() {
-        assert_eq!(parse::<Mutability>("mut").unwrap(), Mutability::Mutable);
-        assert_eq!(parse::<Mutability>("").unwrap(), Mutability::Immutable);
-        assert_eq!(parse::<Asyncness>("async").unwrap(), Asyncness::Async);
-        assert_eq!(parse::<Asyncness>("").unwrap(), Asyncness::Sync);
-        assert_eq!(parse::<Unsafety>("unsafe").unwrap(), Unsafety::Unsafe);
-        assert_eq!(parse::<Unsafety>("").unwrap(), Unsafety::Safe);
+        assert!(matches!(parse::<Mutability>("mut").unwrap(), Mutability::Mutable(_)));
+        assert!(matches!(parse::<Mutability>("").unwrap(), Mutability::Immutable));
+        assert!(matches!(parse::<Asyncness>("async").unwrap(), Asyncness::Async(_)));
+        assert!(matches!(parse::<Asyncness>("").unwrap(), Asyncness::Sync));
+        assert!(matches!(parse::<Unsafety>("unsafe").unwrap(), Unsafety::Unsafe(_)));
+        assert!(matches!(parse::<Unsafety>("").unwrap(), Unsafety::Safe));
     }
 
     #[test]
@@ -229,11 +272,20 @@ mod tests {
 
     #[test]
     fn range_and_modifiers() {
-        assert_eq!(parse::<RangeLimits>("..").unwrap(), RangeLimits::HalfOpen);
-        assert_eq!(parse::<RangeLimits>("..=").unwrap(), RangeLimits::Closed);
-        assert_eq!(parse::<TraitBoundModifier>("?").unwrap(), TraitBoundModifier::Maybe);
-        assert_eq!(parse::<TraitBoundModifier>("").unwrap(), TraitBoundModifier::None);
-        assert_eq!(parse::<BoundPolarity>("!").unwrap(), BoundPolarity::Negative);
-        assert_eq!(parse::<BoundPolarity>("").unwrap(), BoundPolarity::Positive);
+        assert!(matches!(parse::<RangeLimits>("..").unwrap(), RangeLimits::HalfOpen(_)));
+        assert!(matches!(parse::<RangeLimits>("..=").unwrap(), RangeLimits::Closed(_)));
+        assert!(matches!(
+            parse::<TraitBoundModifier>("?").unwrap(),
+            TraitBoundModifier::Maybe(_)
+        ));
+        assert!(matches!(parse::<TraitBoundModifier>("").unwrap(), TraitBoundModifier::None));
+        assert!(matches!(parse::<BoundPolarity>("!").unwrap(), BoundPolarity::Negative(_)));
+        assert!(matches!(parse::<BoundPolarity>("").unwrap(), BoundPolarity::Positive));
+    }
+
+    #[test]
+    fn equality_ignores_span() {
+        // Same operator parsed at different offsets compares equal.
+        assert_eq!(parse::<BinOp>("+ ").unwrap(), parse::<BinOp>(" +").unwrap());
     }
 }

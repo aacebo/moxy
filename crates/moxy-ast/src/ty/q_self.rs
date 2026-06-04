@@ -11,7 +11,9 @@ use crate::Path;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct QSelf {
     pub span: Span,
+    pub lt: Lt,
     pub ty: Box<Type>,
+    pub as_keyword: Option<As>,
     /// Number of leading path segments that belong inside the `<... as Trait>`.
     pub position: usize,
 }
@@ -44,14 +46,14 @@ impl QSelf {
     /// Parse `< Type ( as Path )? >`, returning the qself plus the trait path
     /// segments (if any) that the enclosing `TypePath` must prepend to its path.
     pub fn parse_with_trait(stream: &mut ParseStream) -> Result<(Self, Option<Path>), ParseError> {
-        let _ = stream.parse::<Lt>()?;
+        let lt = stream.parse::<Lt>()?;
         let ty = Box::new(stream.parse::<Type>()?);
 
-        let trait_path = if stream.peek::<As>().is_some() {
-            let _ = stream.parse::<As>()?;
-            Some(stream.parse::<Path>()?)
+        let (as_keyword, trait_path) = if stream.peek::<As>().is_some() {
+            let as_keyword = stream.parse::<As>()?;
+            (Some(as_keyword), Some(stream.parse::<Path>()?))
         } else {
-            None
+            (None, None)
         };
 
         stream.eat_angle_close()?;
@@ -61,7 +63,9 @@ impl QSelf {
         Ok((
             Self {
                 span: Span::default(),
+                lt,
                 ty,
+                as_keyword,
                 position,
             },
             trait_path,
@@ -73,7 +77,7 @@ impl ToTokens for QSelf {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         // Emits just `< ty >`; the `as Trait` portion is rendered by `TypePath`
         // (it owns the trait segments and the closing `>`/`::` placement).
-        Lt::default().to_tokens(tokens);
+        self.lt.to_tokens(tokens);
         self.ty.to_tokens(tokens);
         Gt::default().to_tokens(tokens);
     }

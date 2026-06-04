@@ -11,9 +11,11 @@ use crate::{Attribute, Expr, Pattern, Type};
 pub struct StmtLocal {
     pub span: Span,
     pub attrs: Vec<Attribute>,
+    pub let_keyword: Let,
     pub pat: Pattern,
-    pub ty: Option<Type>,
+    pub ty: Option<(Colon, Type)>,
     pub init: Option<StmtLocalInit>,
+    pub semi: Option<Semi>,
 }
 
 #[doc = "The initializer of a `let` binding."]
@@ -21,36 +23,38 @@ pub struct StmtLocal {
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StmtLocalInit {
     pub span: Span,
+    pub eq: Eq,
     pub expr: Expr,
-    pub diverge: Option<Box<Expr>>,
+    pub diverge: Option<(Else, Box<Expr>)>,
 }
 
 impl Parse for StmtLocal {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Vec<Attribute>>()?;
-        let _ = stream.parse::<Let>()?;
+        let let_keyword = stream.parse::<Let>()?;
         let pat = stream.parse::<Pattern>()?;
 
         let ty = if stream.peek::<Colon>().is_some() {
-            let _ = stream.parse::<Colon>()?;
-            Some(stream.parse::<Type>()?)
+            let colon = stream.parse::<Colon>()?;
+            Some((colon, stream.parse::<Type>()?))
         } else {
             None
         };
 
         let init = if stream.peek::<Eq>().is_some() {
-            let _ = stream.parse::<Eq>()?;
+            let eq = stream.parse::<Eq>()?;
             let expr = stream.parse::<Expr>()?;
 
             let diverge = if stream.peek::<Else>().is_some() {
-                let _ = stream.parse::<Else>()?;
-                Some(Box::new(stream.parse::<Expr>()?))
+                let else_keyword = stream.parse::<Else>()?;
+                Some((else_keyword, Box::new(stream.parse::<Expr>()?)))
             } else {
                 None
             };
 
             Some(StmtLocalInit {
                 span: Span::default(),
+                eq,
                 expr,
                 diverge,
             })
@@ -58,13 +62,15 @@ impl Parse for StmtLocal {
             None
         };
 
-        let _ = stream.parse::<Semi>();
+        let semi = stream.parse_if::<Semi>();
         Ok(Self {
             span: Span::default(),
             attrs,
+            let_keyword,
             pat,
             ty,
             init,
+            semi,
         })
     }
 }
@@ -74,24 +80,24 @@ impl ToTokens for StmtLocal {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        Let::default().to_tokens(t);
+        self.let_keyword.to_tokens(t);
         self.pat.to_tokens(t);
 
-        if let Some(ty) = &self.ty {
-            Colon::default().to_tokens(t);
+        if let Some((colon, ty)) = &self.ty {
+            colon.to_tokens(t);
             ty.to_tokens(t);
         }
 
         if let Some(init) = &self.init {
-            Eq::default().to_tokens(t);
+            init.eq.to_tokens(t);
             init.expr.to_tokens(t);
 
-            if let Some(div) = &init.diverge {
-                Else::default().to_tokens(t);
+            if let Some((else_keyword, div)) = &init.diverge {
+                else_keyword.to_tokens(t);
                 div.to_tokens(t);
             }
         }
 
-        Semi::default().to_tokens(t);
+        self.semi.to_tokens(t);
     }
 }

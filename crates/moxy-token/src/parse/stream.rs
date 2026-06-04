@@ -1,5 +1,6 @@
 use super::{ParseError, Peek};
-use crate::{Delim, LexError, Parse, Punctuation, Span, Token, TokenStream, TokenTree};
+use crate::span::DelimSpan;
+use crate::{Brace, Bracket, Delim, LexError, Paren, Parse, Punctuation, Span, Token, TokenStream, TokenTree};
 
 pub struct ParseStream<'a> {
     input: &'a TokenStream,
@@ -193,6 +194,42 @@ impl<'a> ParseStream<'a> {
                 .message(format!("expected `{}` delimiter", delim.as_str()))
                 .into()),
         }
+    }
+
+    /// Like [`parse_group`](Self::parse_group), but also returns the group's
+    /// `DelimSpan` (the open/close spans of its delimiters).
+    pub fn parse_group_spanned(&mut self, delim: Delim) -> Result<(DelimSpan, TokenStream), ParseError> {
+        let at = self.span();
+
+        match self.curr() {
+            Some(TokenTree::Group(g)) if g.delim() == delim => {
+                let span = g.span();
+                let stream = g.stream();
+                self.advance();
+                Ok((span, stream))
+            }
+            _ => Err(LexError::new(at)
+                .message(format!("expected `{}` delimiter", delim.as_str()))
+                .into()),
+        }
+    }
+
+    /// Consume a `(...)` group, returning its `Paren` delimiter token and inner stream.
+    pub fn parse_paren(&mut self) -> Result<(Paren, TokenStream), ParseError> {
+        let (span, stream) = self.parse_group_spanned(Delim::Paren)?;
+        Ok((Paren::new(span), stream))
+    }
+
+    /// Consume a `{...}` group, returning its `Brace` delimiter token and inner stream.
+    pub fn parse_brace(&mut self) -> Result<(Brace, TokenStream), ParseError> {
+        let (span, stream) = self.parse_group_spanned(Delim::Brace)?;
+        Ok((Brace::new(span), stream))
+    }
+
+    /// Consume a `[...]` group, returning its `Bracket` delimiter token and inner stream.
+    pub fn parse_bracket(&mut self) -> Result<(Bracket, TokenStream), ParseError> {
+        let (span, stream) = self.parse_group_spanned(Delim::Bracket)?;
+        Ok((Bracket::new(span), stream))
     }
 }
 

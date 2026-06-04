@@ -11,6 +11,7 @@ use crate::Ident;
 pub struct UseRename {
     pub span: Span,
     pub ident: Ident,
+    pub as_keyword: As,
     pub rename: Ident,
 }
 
@@ -27,7 +28,7 @@ impl Parse for UseRename {
 impl ToTokens for UseRename {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.ident.to_tokens(t);
-        As::default().to_tokens(t);
+        self.as_keyword.to_tokens(t);
         self.rename.to_tokens(t);
     }
 }

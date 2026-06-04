@@ -7,8 +7,8 @@ use crate::{Fmt, FmtError, Formatter};
 impl Fmt for Type {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Never => f.text("!"),
-            Self::Infer => f.text("_"),
+            Self::Never(_) => f.text("!"),
+            Self::Infer(_) => f.text("_"),
             Self::Path(v) => v.fmt(f),
             Self::Tuple(v) => v.fmt(f),
             Self::Array(v) => v.fmt(f),
@@ -113,7 +113,7 @@ impl Fmt for TypeReference {
             f.text(" ")?;
         }
 
-        if matches!(self.mutability, moxy_ast::Mutability::Mutable) {
+        if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
             f.text("mut ")?;
         }
 
@@ -126,8 +126,8 @@ impl Fmt for TypePointer {
         f.text("*")?;
 
         match self.mutability {
-            moxy_ast::Mutability::Mutable => f.text("mut ")?,
-            moxy_ast::Mutability::Immutable => f.text("const ")?,
+            PointerMutability::Mut(_) => f.text("mut ")?,
+            PointerMutability::Const(_) => f.text("const ")?,
         }
 
         self.elem.fmt(f)
@@ -143,7 +143,7 @@ impl Fmt for TypeBareFn {
 
         self.unsafety.fmt(f)?;
 
-        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe) {
+        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
             f.text(" ")?;
         }
 
@@ -170,7 +170,7 @@ impl Fmt for TypeBareFn {
 
 impl Fmt for BareFnArg {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        if let Some(name) = &self.name {
+        if let Some((name, _)) = &self.name {
             name.fmt(f)?;
             f.text(": ")?;
         }
@@ -188,7 +188,7 @@ impl Fmt for TypeImplTrait {
 
 impl Fmt for TypeTraitObject {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        if self.dyn_token {
+        if self.dyn_token.is_some() {
             f.text("dyn ")?;
         }
 

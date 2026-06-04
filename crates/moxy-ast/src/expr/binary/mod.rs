@@ -91,12 +91,13 @@ impl BinaryExpr {
 
             if min == Precedence::Min {
                 if stream.peek::<Eq>().is_some() {
-                    let _ = stream.parse::<Eq>()?;
+                    let eq = stream.parse::<Eq>()?;
                     let right = Box::new(super::parse_expr(stream, allow_struct)?);
                     lhs = Expr::Binary(BinaryExpr::Assign(ExprAssign {
                         span: Span::default(),
                         attrs: Vec::new(),
                         left: Box::new(lhs),
+                        eq,
                         right,
                     }));
                     continue;

@@ -9,6 +9,7 @@ use crate::*;
 pub struct ExprContinue {
     pub span: Span,
     pub attrs: Vec<Attribute>,
+    pub continue_keyword: Continue,
     pub label: Option<Label>,
 }
 
@@ -17,7 +18,7 @@ impl ToTokens for ExprContinue {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        Continue::default().to_tokens(t);
+        self.continue_keyword.to_tokens(t);
 
         if let Some(l) = &self.label {
             l.name.to_tokens(t);

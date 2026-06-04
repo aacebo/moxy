@@ -1,5 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Brace, Parse, Span, ToTokens, TokenStream};
 
 use super::Stmt;
 
@@ -8,17 +8,19 @@ use super::Stmt;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StmtBlock {
     pub span: Span,
+    pub brace: Brace,
     pub stmts: Vec<Stmt>,
 }
 
 impl Parse for StmtBlock {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let group = stream.parse_group(Delim::Brace)?;
+        let (brace, group) = stream.parse_brace()?;
         let mut inner = group.parse();
         let stmts = inner.parse_until_empty::<Stmt>()?;
 
         Ok(Self {
             span: Span::default(),
+            brace,
             stmts,
         })
     }
@@ -32,6 +34,6 @@ impl ToTokens for StmtBlock {
             s.to_tokens(&mut inner);
         }
 
-        t.extend_one(TokenTree::Group(Group::new(Delim::Brace, inner)));
+        self.brace.surround(t, inner);
     }
 }

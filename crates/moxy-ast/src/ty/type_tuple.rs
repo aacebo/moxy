@@ -1,6 +1,6 @@
 use moxy_macros::{Parse, ToTokens};
-use moxy_token::Span;
 use moxy_token::punct::Comma;
+use moxy_token::{Paren, Span};
 
 use super::Type;
 use crate::Punctuated;
@@ -11,6 +11,7 @@ use crate::Punctuated;
 pub struct TypeTuple {
     #[parse(skip)]
     pub span: Span,
-    #[parse(paren, terminated)]
+    pub paren: Paren,
+    #[parse(paren = paren, terminated)]
     pub elems: Punctuated<Type, Comma>,
 }

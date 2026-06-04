@@ -1,6 +1,6 @@
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, Lt, PathSep};
-use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Paren, Parse, Span, ToTokens, TokenStream};
 
 use crate::{AngleArgs, Punctuated, ReturnType, Type};
 
@@ -9,6 +9,7 @@ use crate::{AngleArgs, Punctuated, ReturnType, Type};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ParenthesizedArgs {
     pub span: Span,
+    pub paren: Paren,
     pub inputs: Punctuated<Type, Comma>,
     pub output: ReturnType,
 }
@@ -60,12 +61,13 @@ impl PathArguments {
     /// Parse a parenthesized argument list (`(A, B) -> C`) for `Fn`-family paths.
     /// Used by type/bound parsing, not by expression paths.
     pub fn parse_parenthesized(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let group = stream.parse_group(Delim::Paren)?;
+        let (paren, group) = stream.parse_paren()?;
         let mut inner = group.parse();
         let inputs = Punctuated::parse_terminated(&mut inner)?;
         let output = stream.parse::<ReturnType>()?;
         Ok(PathArguments::Parenthesized(ParenthesizedArgs {
             span: Span::default(),
+            paren,
             inputs,
             output,
         }))
@@ -80,7 +82,7 @@ impl ToTokens for PathArguments {
             PathArguments::Parenthesized(p) => {
                 let mut inner = TokenStream::new();
                 p.inputs.to_tokens(&mut inner);
-                tokens.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));
+                p.paren.surround(tokens, inner);
                 p.output.to_tokens(tokens);
             }
         }

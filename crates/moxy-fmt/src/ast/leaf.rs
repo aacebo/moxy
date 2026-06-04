@@ -69,7 +69,7 @@ impl Fmt for UnOp {
 impl Fmt for Asyncness {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Async => f.text("async"),
+            Self::Async(_) => f.text("async"),
             Self::Sync => Ok(()),
         }
     }
@@ -78,7 +78,7 @@ impl Fmt for Asyncness {
 impl Fmt for Constness {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Const => f.text("const"),
+            Self::Const(_) => f.text("const"),
             Self::NoConst => Ok(()),
         }
     }
@@ -87,7 +87,7 @@ impl Fmt for Constness {
 impl Fmt for Unsafety {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Unsafe => f.text("unsafe"),
+            Self::Unsafe(_) => f.text("unsafe"),
             Self::Safe => Ok(()),
         }
     }
@@ -96,7 +96,7 @@ impl Fmt for Unsafety {
 impl Fmt for Defaultness {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Default => f.text("default"),
+            Self::Default(_) => f.text("default"),
             Self::Final => Ok(()),
         }
     }
@@ -105,7 +105,7 @@ impl Fmt for Defaultness {
 impl Fmt for Mutability {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Mutable => f.text("mut"),
+            Self::Mutable(_) => f.text("mut"),
             Self::Immutable => Ok(()),
         }
     }
@@ -114,7 +114,7 @@ impl Fmt for Mutability {
 impl Fmt for Movability {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Static => f.text("static"),
+            Self::Static(_) => f.text("static"),
             Self::Movable => Ok(()),
         }
     }
@@ -123,8 +123,8 @@ impl Fmt for Movability {
 impl Fmt for RangeLimits {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Closed => f.text("..="),
-            Self::HalfOpen => f.text(".."),
+            Self::Closed(_) => f.text("..="),
+            Self::HalfOpen(_) => f.text(".."),
         }
     }
 }
@@ -132,7 +132,7 @@ impl Fmt for RangeLimits {
 impl Fmt for TraitBoundModifier {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Maybe => f.text("?"),
+            Self::Maybe(_) => f.text("?"),
             Self::None => Ok(()),
         }
     }
@@ -141,7 +141,7 @@ impl Fmt for TraitBoundModifier {
 impl Fmt for BoundPolarity {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Negative => f.text("!"),
+            Self::Negative(_) => f.text("!"),
             Self::Positive => Ok(()),
         }
     }

@@ -1,4 +1,5 @@
 use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::punct::Colon;
 use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
 use crate::{Attribute, Ident, Type};
@@ -9,7 +10,7 @@ use crate::{Attribute, Ident, Type};
 pub struct BareFnArg {
     pub span: Span,
     pub attrs: Vec<Attribute>,
-    pub name: Option<Ident>,
+    pub name: Option<(Ident, Colon)>,
     pub ty: Type,
 }
 
@@ -20,10 +21,10 @@ impl Parse for BareFnArg {
         let name = {
             let mut fork = stream.fork();
             if let Ok(id) = fork.parse::<Ident>() {
-                if fork.peek::<moxy_token::punct::Colon>().is_some() {
+                if fork.peek::<Colon>().is_some() {
                     stream.seek(&fork);
-                    let _ = stream.parse::<moxy_token::punct::Colon>()?;
-                    Some(id)
+                    let colon = stream.parse::<Colon>()?;
+                    Some((id, colon))
                 } else {
                     None
                 }
@@ -48,9 +49,9 @@ impl ToTokens for BareFnArg {
             a.to_tokens(t);
         }
 
-        if let Some(n) = &self.name {
+        if let Some((n, colon)) = &self.name {
             n.to_tokens(t);
-            moxy_token::punct::Colon::default().to_tokens(t);
+            colon.to_tokens(t);
         }
 
         self.ty.to_tokens(t);

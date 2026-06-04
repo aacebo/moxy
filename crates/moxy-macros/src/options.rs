@@ -1,5 +1,13 @@
 use syn::{Expr, Path, Type};
 
+/// A delimiter group annotation: the delimiter kind (`Paren`/`Bracket`/`Brace`)
+/// and, optionally, the sibling field that stores the delimiter token.
+#[derive(Clone)]
+pub struct GroupOption {
+    pub delim: &'static str,
+    pub token_field: Option<syn::Ident>,
+}
+
 /// Options read by the `Parse` derive from `#[parse(...)]`.
 #[derive(Default)]
 pub struct ParseOptions {
@@ -11,7 +19,7 @@ pub struct ParseOptions {
     pub terminated: bool,
     pub prefix: Option<Path>,
     pub suffix: Option<Path>,
-    pub group: Option<&'static str>,
+    pub group: Option<GroupOption>,
 }
 
 impl ParseOptions {
@@ -23,9 +31,9 @@ impl ParseOptions {
                 "skip" => opts.skip = true,
                 "separated" => opts.separated = true,
                 "terminated" => opts.terminated = true,
-                "paren" => opts.group = Some("Paren"),
-                "bracket" => opts.group = Some("Bracket"),
-                "brace" => opts.group = Some("Brace"),
+                "paren" => opts.group = Some(group_option("Paren", meta)?),
+                "bracket" => opts.group = Some(group_option("Bracket", meta)?),
+                "brace" => opts.group = Some(group_option("Brace", meta)?),
                 "value" => opts.value = Some(meta.value()?.parse()?),
                 "call" => opts.call = Some(meta.value()?.parse()?),
                 "peek" => opts.peek = Some(meta.value()?.parse()?),
@@ -50,7 +58,7 @@ pub struct ToTokenOptions {
     pub peek: Option<Path>,
     pub prefix: Option<Path>,
     pub suffix: Option<Path>,
-    pub group: Option<&'static str>,
+    pub group: Option<GroupOption>,
 }
 
 impl ToTokenOptions {
@@ -61,9 +69,9 @@ impl ToTokenOptions {
             match key {
                 "skip" => opts.skip = true,
                 "value" => opts.value = true,
-                "paren" => opts.group = Some("Paren"),
-                "bracket" => opts.group = Some("Bracket"),
-                "brace" => opts.group = Some("Brace"),
+                "paren" => opts.group = Some(group_option("Paren", meta)?),
+                "bracket" => opts.group = Some(group_option("Bracket", meta)?),
+                "brace" => opts.group = Some(group_option("Brace", meta)?),
                 "peek" => opts.peek = Some(meta.value()?.parse()?),
                 "prefix" => opts.prefix = Some(meta.value()?.parse()?),
                 "suffix" => opts.suffix = Some(meta.value()?.parse()?),
@@ -81,6 +89,19 @@ impl ToTokenOptions {
 
         Ok(opts)
     }
+}
+
+/// Parse a `paren`/`bracket`/`brace` option, optionally with an `= field`
+/// payload naming the sibling field that stores the delimiter token.
+fn group_option(delim: &'static str, meta: syn::meta::ParseNestedMeta) -> syn::Result<GroupOption> {
+    let token_field = if meta.input.peek(syn::Token![=]) {
+        let ident: syn::Ident = meta.value()?.parse()?;
+        Some(ident)
+    } else {
+        None
+    };
+
+    Ok(GroupOption { delim, token_field })
 }
 
 fn each_meta(

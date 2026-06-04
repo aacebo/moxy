@@ -1,7 +1,7 @@
 use moxy_token::keyword::Enum;
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, Eq};
-use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream as TS, TokenStream, TokenTree};
+use moxy_token::{Brace, Parse, Span, ToTokens, TokenStream};
 
 use crate::{Attribute, Expr, Fields, Generics, Ident, Punctuated, Visibility};
 
@@ -15,6 +15,7 @@ pub struct ItemEnum {
     pub enum_keyword: Enum,
     pub ident: Ident,
     pub generics: Generics,
+    pub brace: Brace,
     pub variants: Punctuated<Variant, Comma>,
 }
 
@@ -30,7 +31,7 @@ impl Parse for ItemEnum {
             generics.where_clause = Some(stream.parse()?);
         }
 
-        let group = stream.parse_group(Delim::Brace)?;
+        let (brace, group) = stream.parse_brace()?;
         let mut inner = group.parse();
         let variants = Punctuated::parse_terminated(&mut inner)?;
         Ok(ItemEnum {
@@ -40,6 +41,7 @@ impl Parse for ItemEnum {
             enum_keyword,
             ident,
             generics,
+            brace,
             variants,
         })
     }
@@ -54,9 +56,9 @@ impl ToTokens for ItemEnum {
         self.enum_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);
-        let mut inner = TS::new();
+        let mut inner = TokenStream::new();
         self.variants.to_tokens(&mut inner);
-        t.extend_one(TokenTree::Group(Group::new(Delim::Brace, inner)));
+        self.brace.surround(t, inner);
     }
 }
 

@@ -10,10 +10,10 @@ use crate::*;
 pub struct PatIdent {
     pub span: Span,
     pub attrs: Vec<Attribute>,
-    pub by_ref: bool,
+    pub by_ref: Option<Ref>,
     pub mutability: Mutability,
     pub ident: Ident,
-    pub subpat: Option<Box<Pattern>>,
+    pub subpat: Option<(At, Box<Pattern>)>,
 }
 
 impl ToTokens for PatIdent {
@@ -22,15 +22,12 @@ impl ToTokens for PatIdent {
             a.to_tokens(t);
         }
 
-        if self.by_ref {
-            Ref::default().to_tokens(t);
-        }
-
+        self.by_ref.to_tokens(t);
         self.mutability.to_tokens(t);
         self.ident.to_tokens(t);
 
-        if let Some(sub) = &self.subpat {
-            At::default().to_tokens(t);
+        if let Some((at, sub)) = &self.subpat {
+            at.to_tokens(t);
             sub.to_tokens(t);
         }
     }

@@ -1,5 +1,5 @@
 use moxy_token::punct::{Comma, DotDot};
-use moxy_token::{Delim, Group, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Brace, Span, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -11,8 +11,9 @@ pub struct ExprStruct {
     pub attrs: Vec<Attribute>,
     pub qself: Option<QSelf>,
     pub path: Path,
+    pub brace: Brace,
     pub fields: Punctuated<FieldValue, Comma>,
-    pub rest: Option<Box<super::super::Expr>>,
+    pub rest: Option<(DotDot, Box<super::super::Expr>)>,
 }
 
 impl ToTokens for ExprStruct {
@@ -24,11 +25,11 @@ impl ToTokens for ExprStruct {
         let mut inner = TokenStream::new();
         self.fields.to_tokens(&mut inner);
 
-        if let Some(rest) = &self.rest {
-            DotDot::default().to_tokens(&mut inner);
+        if let Some((dotdot, rest)) = &self.rest {
+            dotdot.to_tokens(&mut inner);
             rest.to_tokens(&mut inner);
         }
 
-        t.extend_one(TokenTree::Group(Group::new(Delim::Brace, inner)));
+        self.brace.surround(t, inner);
     }
 }

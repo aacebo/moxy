@@ -1,7 +1,7 @@
 use moxy_token::keyword::{Extern, Fn};
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::Comma;
-use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Paren, Parse, Span, ToTokens, TokenStream};
 
 use crate::{Abi, BareFnArg, BoundLifetimes, Punctuated, ReturnType, Unsafety, Variadic};
 
@@ -13,6 +13,8 @@ pub struct TypeBareFn {
     pub lifetimes: Option<BoundLifetimes>,
     pub unsafety: Unsafety,
     pub abi: Option<Abi>,
+    pub fn_keyword: Fn,
+    pub paren: Paren,
     pub inputs: Punctuated<BareFnArg, Comma>,
     pub variadic: Option<Variadic>,
     pub output: ReturnType,
@@ -28,8 +30,8 @@ impl Parse for TypeBareFn {
             None
         };
 
-        let _ = stream.parse::<Fn>()?;
-        let group = stream.parse_group(Delim::Paren)?;
+        let fn_keyword = stream.parse::<Fn>()?;
+        let (paren, group) = stream.parse_paren()?;
         let mut inner = group.parse();
         let inputs = Punctuated::parse_terminated(&mut inner)?;
         let output = stream.parse::<ReturnType>()?;
@@ -38,6 +40,8 @@ impl Parse for TypeBareFn {
             lifetimes,
             unsafety,
             abi,
+            fn_keyword,
+            paren,
             inputs,
             variadic: None,
             output,
@@ -57,10 +61,10 @@ impl ToTokens for TypeBareFn {
             abi.to_tokens(t);
         }
 
-        Fn::default().to_tokens(t);
+        self.fn_keyword.to_tokens(t);
         let mut inner = TokenStream::new();
         self.inputs.to_tokens(&mut inner);
-        t.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));
+        self.paren.surround(t, inner);
         self.output.to_tokens(t);
     }
 }

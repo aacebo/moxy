@@ -48,7 +48,7 @@ impl Fmt for StmtLocal {
         f.text("let ")?;
         self.pat.fmt(f)?;
 
-        if let Some(ty) = &self.ty {
+        if let Some((_, ty)) = &self.ty {
             f.text(": ")?;
             ty.fmt(f)?;
         }
@@ -57,7 +57,7 @@ impl Fmt for StmtLocal {
             f.text(" = ")?;
             init.expr.fmt(f)?;
 
-            if let Some(diverge) = &init.diverge {
+            if let Some((_, diverge)) = &init.diverge {
                 f.text(" else ")?;
                 diverge.fmt(f)?;
             }
@@ -71,7 +71,7 @@ impl Fmt for StmtMacro {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.mac.fmt(f)?;
 
-        if self.semi {
+        if self.semi.is_some() {
             f.text(";")?;
         }
 

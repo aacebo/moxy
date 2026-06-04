@@ -80,8 +80,27 @@ fn fields(fields: &Fields, stream: &syn::Ident) -> syn::Result<(Vec<proc_macro2:
         Fields::Named(named) => {
             let mut names = Vec::new();
 
+            // Fields that store a delimiter token (named via `#[parse(paren = field)]`
+            // on a sibling) are filled by the group arm, not parsed on their own.
+            let mut delim_token_fields = Vec::new();
+            for field in &named.named {
+                let opts = ParseOptions::parse(&field.attrs)?;
+                if let Some(group) = &opts.group {
+                    if let Some(tok) = &group.token_field {
+                        delim_token_fields.push(tok.clone());
+                    }
+                }
+            }
+
             for field in &named.named {
                 let ident = field.ident.clone().unwrap();
+
+                if delim_token_fields.contains(&ident) {
+                    // Bound by the group arm of its content field; still listed in the ctor.
+                    names.push(ident);
+                    continue;
+                }
+
                 let opts = ParseOptions::parse(&field.attrs)?;
                 stmts.push(one(&ident, &field.ty, &opts, stream)?);
                 names.push(ident);
@@ -126,15 +145,26 @@ fn one(binding: &syn::Ident, ty: &Type, opts: &ParseOptions, stream: &syn::Ident
                 false
             };
         }
-    } else if let Some(delim) = opts.group {
+    } else if let Some(group) = &opts.group {
         // Parse the field from inside the delimiter; honor separated/terminated
-        // for a `Punctuated` field, else parse a single `T`.
-        let delim = format_ident!("{delim}");
+        // for a `Punctuated` field, else parse a single `T`. When a sibling token
+        // field is named, capture the group's DelimSpan into it.
+        let delim = format_ident!("{}", group.delim);
         let inner = value_expr(opts, ty, stream);
+
+        let span_binding = match &group.token_field {
+            Some(tok) => {
+                let token_ty = format_ident!("{}", group.delim);
+                quote! { let #tok = ::moxy_token::#token_ty::new(__group_span); }
+            }
+            None => quote! { let _ = __group_span; },
+        };
+
         quote! {
+            let (__group_span, __group_tokens) = #stream.parse_group_spanned(::moxy_token::Delim::#delim)?;
+            #span_binding
             let #binding = {
-                let group = #stream.parse_group(::moxy_token::Delim::#delim)?;
-                let mut group_stream = group.parse();
+                let mut group_stream = __group_tokens.parse();
                 let #stream = &mut group_stream;
                 #inner
             };

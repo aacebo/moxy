@@ -9,6 +9,7 @@ use crate::Attribute;
 pub struct ExprYield {
     pub span: Span,
     pub attrs: Vec<Attribute>,
+    pub yield_keyword: Yield,
     pub expr: Option<Box<super::super::Expr>>,
 }
 
@@ -17,7 +18,7 @@ impl ToTokens for ExprYield {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        Yield::default().to_tokens(t);
+        self.yield_keyword.to_tokens(t);
 
         if let Some(e) = &self.expr {
             e.to_tokens(t);

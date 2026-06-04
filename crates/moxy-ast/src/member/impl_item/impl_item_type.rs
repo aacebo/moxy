@@ -14,9 +14,12 @@ pub struct ImplItemType {
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub defaultness: Defaultness,
+    pub type_keyword: KwType,
     pub ident: Ident,
     pub generics: Generics,
+    pub eq: Eq,
     pub ty: Type,
+    pub semi: Option<Semi>,
 }
 
 impl Parse for ImplItemType {
@@ -30,20 +33,23 @@ impl Parse for ImplItemType {
             return Err(LexError::new(at).message("expected impl type").into());
         }
 
-        let _ = stream.parse::<KwType>()?;
+        let type_keyword = stream.parse::<KwType>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
-        let _ = stream.parse::<Eq>()?;
+        let eq = stream.parse::<Eq>()?;
         let ty = stream.parse::<Type>()?;
-        let _ = stream.parse::<Semi>();
+        let semi = stream.parse_if::<Semi>();
         Ok(ImplItemType {
             span: Span::default(),
             attrs,
             vis,
             defaultness,
+            type_keyword,
             ident,
             generics,
+            eq,
             ty,
+            semi,
         })
     }
 }
@@ -55,11 +61,11 @@ impl ToTokens for ImplItemType {
         }
         self.vis.to_tokens(t);
         self.defaultness.to_tokens(t);
-        KwType::default().to_tokens(t);
+        self.type_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);
-        Eq::default().to_tokens(t);
+        self.eq.to_tokens(t);
         self.ty.to_tokens(t);
-        Semi::default().to_tokens(t);
+        self.semi.to_tokens(t);
     }
 }

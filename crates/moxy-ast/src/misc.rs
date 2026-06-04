@@ -9,7 +9,7 @@ use crate::{Attribute, Lifetime, Pattern, Punctuated, Type};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ClosureParam {
-    Typed { pat: Box<Pattern>, ty: Box<Type> },
+    Typed { pat: Box<Pattern>, colon: Colon, ty: Box<Type> },
     Inferred { pat: Box<Pattern> },
 }
 
@@ -17,9 +17,9 @@ impl Parse for ClosureParam {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let pat = Box::new(Pattern::parse_single(stream)?);
         if stream.peek::<Colon>().is_some() {
-            let _ = stream.parse::<Colon>()?;
+            let colon = stream.parse::<Colon>()?;
             let ty = Box::new(stream.parse::<Type>()?);
-            Ok(ClosureParam::Typed { pat, ty })
+            Ok(ClosureParam::Typed { pat, colon, ty })
         } else {
             Ok(ClosureParam::Inferred { pat })
         }
@@ -29,9 +29,9 @@ impl Parse for ClosureParam {
 impl ToTokens for ClosureParam {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            ClosureParam::Typed { pat, ty } => {
+            ClosureParam::Typed { pat, colon, ty } => {
                 pat.to_tokens(t);
-                Colon::default().to_tokens(t);
+                colon.to_tokens(t);
                 ty.to_tokens(t);
             }
             ClosureParam::Inferred { pat } => pat.to_tokens(t),
@@ -44,14 +44,14 @@ impl ToTokens for ClosureParam {
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ReturnType {
     Default,
-    Type(Box<Type>),
+    Type(RArrow, Box<Type>),
 }
 
 impl Parse for ReturnType {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if stream.peek::<RArrow>().is_some() {
-            let _ = stream.parse::<RArrow>()?;
-            Ok(ReturnType::Type(Box::new(stream.parse::<crate::Type>()?)))
+            let arrow = stream.parse::<RArrow>()?;
+            Ok(ReturnType::Type(arrow, Box::new(stream.parse::<crate::Type>()?)))
         } else {
             Ok(ReturnType::Default)
         }
@@ -60,8 +60,8 @@ impl Parse for ReturnType {
 
 impl ToTokens for ReturnType {
     fn to_tokens(&self, t: &mut TokenStream) {
-        if let ReturnType::Type(ty) = self {
-            RArrow::default().to_tokens(t);
+        if let ReturnType::Type(arrow, ty) = self {
+            arrow.to_tokens(t);
             ty.to_tokens(t);
         }
     }
@@ -72,13 +72,16 @@ impl ToTokens for ReturnType {
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct BoundLifetimes {
     pub span: Span,
+    pub for_keyword: For,
+    pub lt: Lt,
     pub params: Punctuated<Lifetime, Comma>,
+    pub gt: Gt,
 }
 
 impl Parse for BoundLifetimes {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let _ = stream.parse::<For>()?;
-        let _ = stream.parse::<Lt>()?;
+        let for_keyword = stream.parse::<For>()?;
+        let lt = stream.parse::<Lt>()?;
         let mut params = Punctuated::new();
 
         while stream.peek::<Gt>().is_none() && !stream.is_empty() {
@@ -90,19 +93,22 @@ impl Parse for BoundLifetimes {
             }
         }
 
-        let _ = stream.parse::<Gt>()?;
+        let gt = stream.parse::<Gt>()?;
         Ok(Self {
             span: Span::default(),
+            for_keyword,
+            lt,
             params,
+            gt,
         })
     }
 }
 
 impl ToTokens for BoundLifetimes {
     fn to_tokens(&self, t: &mut TokenStream) {
-        For::default().to_tokens(t);
-        Lt::default().to_tokens(t);
+        self.for_keyword.to_tokens(t);
+        self.lt.to_tokens(t);
         self.params.to_tokens(t);
-        Gt::default().to_tokens(t);
+        self.gt.to_tokens(t);
     }
 }

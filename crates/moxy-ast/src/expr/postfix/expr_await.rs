@@ -11,6 +11,8 @@ pub struct ExprAwait {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub base: Box<super::super::Expr>,
+    pub dot: Dot,
+    pub await_keyword: KwAwait,
 }
 
 impl ToTokens for ExprAwait {
@@ -19,7 +21,7 @@ impl ToTokens for ExprAwait {
             a.to_tokens(t);
         }
         self.base.to_tokens(t);
-        Dot::default().to_tokens(t);
-        KwAwait::default().to_tokens(t);
+        self.dot.to_tokens(t);
+        self.await_keyword.to_tokens(t);
     }
 }

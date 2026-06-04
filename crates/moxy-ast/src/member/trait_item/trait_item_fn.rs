@@ -13,6 +13,7 @@ pub struct TraitItemFn {
     pub attrs: Vec<Attribute>,
     pub sig: Signature,
     pub default_body: Option<StmtBlock>,
+    pub semi: Option<Semi>,
 }
 
 impl Parse for TraitItemFn {
@@ -26,11 +27,10 @@ impl Parse for TraitItemFn {
 
         let sig = stream.parse::<Signature>()?;
 
-        let default_body = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
-            Some(stream.parse::<StmtBlock>()?)
+        let (default_body, semi) = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
+            (Some(stream.parse::<StmtBlock>()?), None)
         } else {
-            let _ = stream.parse::<Semi>();
-            None
+            (None, stream.parse_if::<Semi>())
         };
 
         Ok(TraitItemFn {
@@ -38,6 +38,7 @@ impl Parse for TraitItemFn {
             attrs,
             sig,
             default_body,
+            semi,
         })
     }
 }
@@ -50,7 +51,7 @@ impl ToTokens for TraitItemFn {
         self.sig.to_tokens(t);
         match &self.default_body {
             Some(b) => b.to_tokens(t),
-            None => Semi::default().to_tokens(t),
+            None => self.semi.to_tokens(t),
         }
     }
 }

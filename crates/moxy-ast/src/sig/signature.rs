@@ -1,7 +1,7 @@
 use moxy_token::keyword::{Extern, Fn};
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, Gt, Lt};
-use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Paren, Parse, Span, ToTokens, TokenStream};
 
 use super::{Abi, FnParam, Variadic};
 use crate::{Asyncness, Constness, Generics, Ident, Punctuated, ReturnType, Unsafety};
@@ -15,8 +15,10 @@ pub struct Signature {
     pub asyncness: Asyncness,
     pub unsafety: Unsafety,
     pub abi: Option<Abi>,
+    pub fn_keyword: Fn,
     pub ident: Ident,
     pub generics: Generics,
+    pub paren: Paren,
     pub inputs: Punctuated<FnParam, Comma>,
     pub variadic: Option<Variadic>,
     pub output: ReturnType,
@@ -33,11 +35,11 @@ impl Parse for Signature {
             None
         };
 
-        let _ = stream.parse::<Fn>()?;
+        let fn_keyword = stream.parse::<Fn>()?;
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
 
-        let group = stream.parse_group(Delim::Paren)?;
+        let (paren, group) = stream.parse_paren()?;
         let mut inner = group.parse();
         let mut inputs = Punctuated::new();
         let mut variadic = None;
@@ -66,8 +68,10 @@ impl Parse for Signature {
             asyncness,
             unsafety,
             abi,
+            fn_keyword,
             ident,
             generics,
+            paren,
             inputs,
             variadic,
             output,
@@ -106,7 +110,7 @@ impl ToTokens for Signature {
         if let Some(abi) = &self.abi {
             abi.to_tokens(t);
         }
-        Fn::default().to_tokens(t);
+        self.fn_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         let mut params = TokenStream::new();
         Signature::emit_angle_params(&self.generics, &mut params);
@@ -121,7 +125,7 @@ impl ToTokens for Signature {
             v.to_tokens(&mut inner);
         }
 
-        t.extend_one(TokenTree::Group(moxy_token::Group::new(Delim::Paren, inner)));
+        self.paren.surround(t, inner);
         self.output.to_tokens(t);
 
         if let Some(w) = &self.generics.where_clause {

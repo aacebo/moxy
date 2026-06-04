@@ -8,7 +8,7 @@ impl Fmt for MacroCall {
         self.path.fmt(f)?;
         f.text("!")?;
 
-        let (open, close) = match self.delim {
+        let (open, close) = match self.delim() {
             Delim::Paren => ("(", ")"),
             Delim::Bracket => ("[", "]"),
             Delim::Brace => ("{", "}"),
@@ -16,7 +16,7 @@ impl Fmt for MacroCall {
         };
 
         f.text(open)?;
-        f.text(self.tokens.to_token_stream())?;
+        f.text(self.tokens().to_token_stream())?;
         f.text(close)
     }
 }

@@ -1,7 +1,7 @@
 use moxy_token::keyword::MacroRules;
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::Not;
-use moxy_token::{Delim, Group, LexError, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Group, LexError, Parse, Span, ToTokens, TokenStream, TokenTree};
 
 use crate::{Attribute, Ident};
 
@@ -14,7 +14,7 @@ pub struct ItemMacroRules {
     pub macro_rules_keyword: MacroRules,
     pub not_punct: Not,
     pub ident: Ident,
-    pub rules: TokenStream,
+    pub body: Group,
 }
 
 impl Parse for ItemMacroRules {
@@ -24,11 +24,11 @@ impl Parse for ItemMacroRules {
         let not_punct = stream.parse::<Not>()?;
         let ident = stream.parse::<Ident>()?;
 
-        let rules = match stream.curr() {
+        let body = match stream.curr() {
             Some(TokenTree::Group(g)) => {
-                let s = g.stream();
+                let g = g.clone();
                 stream.advance();
-                s
+                g
             }
             _ => {
                 return Err(LexError::new(stream.span()).message("expected macro body").into());
@@ -41,7 +41,7 @@ impl Parse for ItemMacroRules {
             macro_rules_keyword,
             not_punct,
             ident,
-            rules,
+            body,
         })
     }
 }
@@ -54,6 +54,6 @@ impl ToTokens for ItemMacroRules {
         self.macro_rules_keyword.to_tokens(t);
         self.not_punct.to_tokens(t);
         self.ident.to_tokens(t);
-        t.extend_one(TokenTree::Group(Group::new(Delim::Brace, self.rules.clone())));
+        t.extend_one(TokenTree::Group(self.body.clone()));
     }
 }

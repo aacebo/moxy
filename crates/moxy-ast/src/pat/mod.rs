@@ -50,7 +50,7 @@ pub enum Pattern {
     Reference(PatReference),
     Or(PatOr),
     Lit(PatLit),
-    Range(PatRange),
+    Range(Box<PatRange>),
     Macro(crate::MacroCall),
     Type(PatType),
     Group(PatGroup),
@@ -115,7 +115,7 @@ impl From<PatLit> for Pattern {
 
 impl From<PatRange> for Pattern {
     fn from(value: PatRange) -> Self {
-        Pattern::Range(value)
+        Pattern::Range(Box::new(value))
     }
 }
 
@@ -211,19 +211,14 @@ impl ToTokens for Pattern {
 
 impl PatIdent {
     pub fn parse_from(stream: &mut ParseStream, attrs: Vec<Attribute>) -> Result<Self, ParseError> {
-        let by_ref = if stream.peek::<Ref>().is_some() {
-            let _ = stream.parse::<Ref>()?;
-            true
-        } else {
-            false
-        };
+        let by_ref = stream.parse_if::<Ref>();
 
         let mutability = stream.parse::<Mutability>()?;
         let ident = stream.parse::<Ident>()?;
 
         let subpat = if stream.peek::<At>().is_some() {
-            let _ = stream.parse::<At>()?;
-            Some(Box::new(Pattern::parse(stream)?))
+            let at = stream.parse::<At>()?;
+            Some((at, Box::new(Pattern::parse(stream)?)))
         } else {
             None
         };
@@ -240,22 +235,21 @@ impl PatIdent {
 }
 
 impl PatStruct {
-    pub fn parse_body(stream: &mut ParseStream) -> Result<(Punctuated<PatField, Comma>, bool), ParseError> {
+    pub fn parse_body(stream: &mut ParseStream) -> Result<(Punctuated<PatField, Comma>, Option<DotDot>), ParseError> {
         let mut fields = Punctuated::new();
-        let mut rest = false;
+        let mut rest = None;
 
         while !stream.is_empty() {
             if stream.peek::<DotDot>().is_some() {
-                let _ = stream.parse::<DotDot>()?;
-                rest = true;
+                rest = Some(stream.parse::<DotDot>()?);
                 break;
             }
 
             let member = stream.parse::<Member>()?;
 
-            let (pat, shorthand) = if stream.peek::<Colon>().is_some() {
-                let _ = stream.parse::<Colon>()?;
-                (stream.parse::<Pattern>()?, false)
+            let (colon, pat, shorthand) = if stream.peek::<Colon>().is_some() {
+                let colon = stream.parse::<Colon>()?;
+                (Some(colon), stream.parse::<Pattern>()?, false)
             } else {
                 // shorthand `{ field }`
                 let ident = match &member {
@@ -265,10 +259,11 @@ impl PatStruct {
                     }
                 };
                 (
+                    None,
                     Pattern::Ident(PatIdent {
                         span: Span::default(),
                         attrs: Vec::new(),
-                        by_ref: false,
+                        by_ref: None,
                         mutability: Mutability::Immutable,
                         ident,
                         subpat: None,
@@ -281,6 +276,7 @@ impl PatStruct {
                 span: Span::default(),
                 attrs: Vec::new(),
                 member,
+                colon,
                 pat,
                 shorthand,
             });
@@ -328,12 +324,13 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
 
     // Reference `&`/`&mut`
     if stream.peek::<And>().is_some() {
-        let _ = stream.parse::<And>()?;
+        let and = stream.parse::<And>()?;
         let mutability = stream.parse::<Mutability>()?;
         let pat = Box::new(Pattern::parse(stream)?);
         return Ok(Pattern::Reference(PatReference {
             span: Span::default(),
             attrs,
+            and,
             mutability,
             pat,
         }));
@@ -341,24 +338,26 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
 
     // Tuple/paren `(...)`
     if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-        let group = stream.parse_group(Delim::Paren)?;
+        let (paren, group) = stream.parse_paren()?;
         let mut inner = group.parse();
         let elems = Punctuated::parse_terminated(&mut inner)?;
         return Ok(Pattern::Tuple(PatTuple {
             span: Span::default(),
             attrs,
+            paren,
             elems,
         }));
     }
 
     // Slice `[...]`
     if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
-        let group = stream.parse_group(Delim::Bracket)?;
+        let (bracket, group) = stream.parse_bracket()?;
         let mut inner = group.parse();
         let elems = Punctuated::parse_terminated(&mut inner)?;
         return Ok(Pattern::Slice(PatSlice {
             span: Span::default(),
             attrs,
+            bracket,
             elems,
         }));
     }
@@ -393,7 +392,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
 
         if matches!(fork.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
             stream.seek(&fork);
-            let group = stream.parse_group(Delim::Paren)?;
+            let (paren, group) = stream.parse_paren()?;
             let mut inner = group.parse();
             let elems = Punctuated::parse_terminated(&mut inner)?;
             return Ok(Pattern::TupleStruct(PatTupleStruct {
@@ -401,13 +400,14 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
                 attrs,
                 qself: None,
                 path,
+                paren,
                 elems,
             }));
         }
 
         if matches!(fork.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
             stream.seek(&fork);
-            let group = stream.parse_group(Delim::Brace)?;
+            let (brace, group) = stream.parse_brace()?;
             let mut inner = group.parse();
             let (fields, rest) = PatStruct::parse_body(&mut inner)?;
             return Ok(Pattern::Struct(PatStruct {
@@ -415,6 +415,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
                 attrs,
                 qself: None,
                 path,
+                brace,
                 fields,
                 rest,
             }));
@@ -430,7 +431,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
             return Ok(Pattern::Ident(PatIdent {
                 span: Span::default(),
                 attrs,
-                by_ref: false,
+                by_ref: None,
                 mutability: Mutability::Immutable,
                 ident,
                 subpat: None,

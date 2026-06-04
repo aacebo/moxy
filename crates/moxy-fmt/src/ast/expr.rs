@@ -127,7 +127,7 @@ impl Fmt for ExprStruct {
                 }
             }
 
-            if let Some(rest) = &self.rest {
+            if let Some((_, rest)) = &self.rest {
                 f.hard_break()?;
                 f.text("..")?;
                 rest.fmt(f)?;
@@ -165,23 +165,23 @@ impl Fmt for ExprClosure {
 
         self.constness.fmt(f)?;
 
-        if matches!(self.constness, moxy_ast::Constness::Const) {
+        if matches!(self.constness, moxy_ast::Constness::Const(_)) {
             f.text(" ")?;
         }
 
         self.movability.fmt(f)?;
 
-        if matches!(self.movability, moxy_ast::Movability::Static) {
+        if matches!(self.movability, moxy_ast::Movability::Static(_)) {
             f.text(" ")?;
         }
 
         self.asyncness.fmt(f)?;
 
-        if matches!(self.asyncness, moxy_ast::Asyncness::Async) {
+        if matches!(self.asyncness, moxy_ast::Asyncness::Async(_)) {
             f.text(" ")?;
         }
 
-        if self.capture {
+        if self.capture.is_some() {
             f.text("move ")?;
         }
 
@@ -197,7 +197,7 @@ impl Fmt for ExprClosure {
 impl Fmt for ClosureParam {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Typed { pat, ty } => {
+            Self::Typed { pat, ty, .. } => {
                 pat.fmt(f)?;
                 f.text(": ")?;
                 ty.fmt(f)
@@ -280,7 +280,7 @@ impl Fmt for ExprReference {
         f.text("&")?;
         self.mutability.fmt(f)?;
 
-        if matches!(self.mutability, moxy_ast::Mutability::Mutable) {
+        if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
             f.text(" ")?;
         }
 

@@ -1,6 +1,6 @@
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::Comma;
-use moxy_token::{Delim, Group, LexError, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Brace, LexError, Parse, Span, ToTokens, TokenStream};
 
 use super::UseTree;
 use crate::Punctuated;
@@ -10,6 +10,7 @@ use crate::Punctuated;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseGroup {
     pub span: Span,
+    pub brace: Brace,
     pub items: Punctuated<UseTree, Comma>,
 }
 
@@ -27,6 +28,6 @@ impl ToTokens for UseGroup {
     fn to_tokens(&self, t: &mut TokenStream) {
         let mut inner = TokenStream::new();
         self.items.to_tokens(&mut inner);
-        t.extend_one(TokenTree::Group(Group::new(Delim::Brace, inner)));
+        self.brace.surround(t, inner);
     }
 }

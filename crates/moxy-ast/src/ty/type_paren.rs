@@ -1,5 +1,5 @@
 use moxy_macros::{Parse, ToTokens};
-use moxy_token::Span;
+use moxy_token::{Paren, Span};
 
 use super::Type;
 
@@ -9,6 +9,7 @@ use super::Type;
 pub struct TypeParen {
     #[parse(skip)]
     pub span: Span,
-    #[parse(paren)]
+    pub paren: Paren,
+    #[parse(paren = paren)]
     pub elem: Box<Type>,
 }

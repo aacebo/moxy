@@ -24,8 +24,8 @@ pub use expr_struct::*;
 pub use expr_tuple::*;
 use moxy_token::keyword::{Break, Const, Continue, Let, Return, Try, Unsafe, Yield};
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::punct::{Comma, Eq, Or, OrOr, Semi};
-use moxy_token::{Delim, LexError, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::punct::{Comma, DotDot, Eq, Or, OrOr, Semi};
+use moxy_token::{Bracket, Delim, LexError, Paren, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
 
 use super::block::{
     ExprAsync, ExprBrace, ExprConst, ExprForLoop, ExprIf, ExprLoop, ExprMatch, ExprTryBlock, ExprUnsafe, ExprWhile,
@@ -142,18 +142,13 @@ impl ExprClosure {
         use moxy_token::keyword::Move;
         let constness = stream.parse::<Constness>()?;
         let asyncness = stream.parse::<Asyncness>()?;
-        let capture = if stream.peek::<Move>().is_some() {
-            let _ = stream.parse::<Move>()?;
-            true
-        } else {
-            false
-        };
+        let capture = stream.parse_if::<Move>();
 
-        let inputs = if stream.peek::<OrOr>().is_some() {
-            let _ = stream.parse::<OrOr>()?;
-            Punctuated::new()
+        let (pipes, inputs) = if stream.peek::<OrOr>().is_some() {
+            let oror = stream.parse::<OrOr>()?;
+            (ClosurePipes::Empty(oror), Punctuated::new())
         } else {
-            let _ = stream.parse::<Or>()?;
+            let open = stream.parse::<Or>()?;
             let mut params = Punctuated::new();
 
             while stream.peek::<Or>().is_none() && !stream.is_empty() {
@@ -165,8 +160,8 @@ impl ExprClosure {
                 }
             }
 
-            let _ = stream.parse::<Or>()?;
-            params
+            let close = stream.parse::<Or>()?;
+            (ClosurePipes::Params(open, close), params)
         };
 
         let output = stream.parse::<ReturnType>()?;
@@ -180,6 +175,7 @@ impl ExprClosure {
             movability: Movability::Movable,
             asyncness,
             capture,
+            pipes,
             inputs,
             output,
             body,
@@ -188,15 +184,16 @@ impl ExprClosure {
 }
 
 impl ExprStruct {
-    pub fn parse_body(stream: &mut ParseStream) -> Result<(Punctuated<FieldValue, Comma>, Option<Box<Expr>>), ParseError> {
-        use moxy_token::punct::DotDot;
+    pub fn parse_body(
+        stream: &mut ParseStream,
+    ) -> Result<(Punctuated<FieldValue, Comma>, Option<(DotDot, Box<Expr>)>), ParseError> {
         let mut fields = Punctuated::new();
         let mut rest = None;
 
         while !stream.is_empty() {
             if stream.peek::<DotDot>().is_some() {
-                let _ = stream.parse::<DotDot>()?;
-                rest = Some(Box::new(super::parse_expr(stream, true)?));
+                let dotdot = stream.parse::<DotDot>()?;
+                rest = Some((dotdot, Box::new(super::parse_expr(stream, true)?)));
                 break;
             }
             fields.push_value(stream.parse::<FieldValue>()?);
@@ -212,7 +209,7 @@ impl ExprStruct {
 }
 
 impl ExprRepeat {
-    pub fn try_parse(stream: &mut ParseStream) -> Result<Option<Self>, ParseError> {
+    pub fn try_parse(stream: &mut ParseStream, bracket: Bracket) -> Result<Option<Self>, ParseError> {
         let mut fork = stream.fork();
         let Ok(elem) = super::parse_expr(&mut fork, true) else {
             return Ok(None);
@@ -222,13 +219,15 @@ impl ExprRepeat {
             return Ok(None);
         }
 
-        let _ = fork.parse::<Semi>()?;
+        let semi = fork.parse::<Semi>()?;
         let len = super::parse_expr(&mut fork, true)?;
         stream.seek(&fork);
         Ok(Some(Self {
             span: Span::default(),
             attrs: Vec::new(),
+            bracket,
             elem: Box::new(elem),
+            semi,
             len: Box::new(len),
         }))
     }
@@ -256,34 +255,37 @@ impl PrimaryExpr {
         let at = stream.span();
 
         if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-            let group = stream.parse_group(Delim::Paren)?;
+            let (paren, group) = stream.parse_paren()?;
             let mut inner = group.parse();
             let elems: Punctuated<Expr, Comma> = Punctuated::parse_terminated(&mut inner)?;
             return Ok(if elems.len() == 1 && !elems.trailing_punct() {
                 Expr::Primary(PrimaryExpr::Paren(ExprParen {
                     span: Span::default(),
                     attrs: Vec::new(),
+                    paren,
                     expr: Box::new(elems.into_iter().next().unwrap()),
                 }))
             } else {
                 Expr::Primary(PrimaryExpr::Tuple(ExprTuple {
                     span: Span::default(),
                     attrs: Vec::new(),
+                    paren,
                     elems,
                 }))
             });
         }
 
         if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
-            let group = stream.parse_group(Delim::Bracket)?;
+            let (bracket, group) = stream.parse_bracket()?;
             let mut inner = group.parse();
-            if let Some(rep) = ExprRepeat::try_parse(&mut inner)? {
+            if let Some(rep) = ExprRepeat::try_parse(&mut inner, bracket)? {
                 return Ok(Expr::Primary(PrimaryExpr::Repeat(rep)));
             }
             let elems = Punctuated::parse_terminated(&mut inner)?;
             return Ok(Expr::Primary(PrimaryExpr::Array(ExprArray {
                 span: Span::default(),
                 attrs: Vec::new(),
+                bracket,
                 elems,
             })));
         }
@@ -358,53 +360,59 @@ impl PrimaryExpr {
         }
 
         if stream.peek::<Return>().is_some() {
-            let _ = stream.parse::<Return>()?;
+            let return_keyword = stream.parse::<Return>()?;
             return Ok(Expr::Jump(JumpExpr::Return(ExprReturn {
                 span: Span::default(),
                 attrs: Vec::new(),
+                return_keyword,
                 expr: Expr::parse_if(stream)?,
             })));
         }
 
         if stream.peek::<Yield>().is_some() {
-            let _ = stream.parse::<Yield>()?;
+            let yield_keyword = stream.parse::<Yield>()?;
             return Ok(Expr::Jump(JumpExpr::Yield(ExprYield {
                 span: Span::default(),
                 attrs: Vec::new(),
+                yield_keyword,
                 expr: Expr::parse_if(stream)?,
             })));
         }
 
         if stream.peek::<Break>().is_some() {
-            let _ = stream.parse::<Break>()?;
+            let break_keyword = stream.parse::<Break>()?;
             let label = Label::parse_opt_break(stream);
             return Ok(Expr::Jump(JumpExpr::Break(ExprBreak {
                 span: Span::default(),
                 attrs: Vec::new(),
+                break_keyword,
                 label,
                 expr: Expr::parse_if(stream)?,
             })));
         }
 
         if stream.peek::<Continue>().is_some() {
-            let _ = stream.parse::<Continue>()?;
+            let continue_keyword = stream.parse::<Continue>()?;
             let label = Label::parse_opt_break(stream);
             return Ok(Expr::Jump(JumpExpr::Continue(ExprContinue {
                 span: Span::default(),
                 attrs: Vec::new(),
+                continue_keyword,
                 label,
             })));
         }
 
         if stream.peek::<Let>().is_some() {
-            let _ = stream.parse::<Let>()?;
+            let let_keyword = stream.parse::<Let>()?;
             let pat = Box::new(stream.parse::<Pattern>()?);
-            let _ = stream.parse::<Eq>()?;
+            let eq = stream.parse::<Eq>()?;
             let expr = Box::new(super::parse_expr(stream, false)?);
             return Ok(Expr::Primary(PrimaryExpr::Let(ExprLet {
                 span: Span::default(),
                 attrs: Vec::new(),
+                let_keyword,
                 pat,
+                eq,
                 expr,
             })));
         }
@@ -452,7 +460,7 @@ impl PrimaryExpr {
             let path = stream.parse::<Path>()?;
 
             if allow_struct && matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
-                let group = stream.parse_group(Delim::Brace)?;
+                let (brace, group) = stream.parse_brace()?;
                 let mut inner = group.parse();
                 let (fields, rest) = ExprStruct::parse_body(&mut inner)?;
                 return Ok(Expr::Primary(PrimaryExpr::Struct(ExprStruct {
@@ -460,6 +468,7 @@ impl PrimaryExpr {
                     attrs: Vec::new(),
                     qself: None,
                     path,
+                    brace,
                     fields,
                     rest,
                 })));

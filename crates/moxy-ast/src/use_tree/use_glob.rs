@@ -9,6 +9,7 @@ use super::UseTree;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseGlob {
     pub span: Span,
+    pub star: Star,
 }
 
 impl Parse for UseGlob {
@@ -23,6 +24,6 @@ impl Parse for UseGlob {
 
 impl ToTokens for UseGlob {
     fn to_tokens(&self, t: &mut TokenStream) {
-        Star::default().to_tokens(t);
+        self.star.to_tokens(t);
     }
 }

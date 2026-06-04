@@ -9,6 +9,7 @@ use crate::*;
 pub struct PatReference {
     pub span: Span,
     pub attrs: Vec<Attribute>,
+    pub and: And,
     pub mutability: Mutability,
     pub pat: Box<Pattern>,
 }
@@ -18,7 +19,8 @@ impl ToTokens for PatReference {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        And::default().to_tokens(t);
+
+        self.and.to_tokens(t);
         self.mutability.to_tokens(t);
         self.pat.to_tokens(t);
     }

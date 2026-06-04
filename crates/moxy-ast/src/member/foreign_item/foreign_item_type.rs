@@ -13,8 +13,10 @@ pub struct ForeignItemType {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
+    pub type_keyword: KwType,
     pub ident: Ident,
     pub generics: Generics,
+    pub semi: Option<Semi>,
 }
 
 impl Parse for ForeignItemType {
@@ -27,16 +29,18 @@ impl Parse for ForeignItemType {
             return Err(LexError::new(at).message("expected foreign type").into());
         }
 
-        let _ = stream.parse::<KwType>()?;
+        let type_keyword = stream.parse::<KwType>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
-        let _ = stream.parse::<Semi>();
+        let semi = stream.parse_if::<Semi>();
         Ok(ForeignItemType {
             span: Span::default(),
             attrs,
             vis,
+            type_keyword,
             ident,
             generics,
+            semi,
         })
     }
 }
@@ -47,9 +51,9 @@ impl ToTokens for ForeignItemType {
             a.to_tokens(t);
         }
         self.vis.to_tokens(t);
-        KwType::default().to_tokens(t);
+        self.type_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);
-        Semi::default().to_tokens(t);
+        self.semi.to_tokens(t);
     }
 }

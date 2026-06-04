@@ -5,7 +5,7 @@ pub use attr_args::*;
 pub use attr_style::*;
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::{Not, Pound};
-use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Bracket, Parse, Span, ToTokens, TokenStream};
 
 use crate::Path;
 
@@ -15,22 +15,23 @@ use crate::Path;
 pub struct Attribute {
     pub span: Span,
     pub style: AttrStyle,
+    pub bracket: Bracket,
     pub path: Path,
     pub args: AttrArgs,
 }
 
 impl Parse for Attribute {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let _ = stream.parse::<Pound>()?;
+        let pound = stream.parse::<Pound>()?;
 
         let style = if stream.peek::<Not>().is_some() {
-            let _ = stream.parse::<Not>()?;
-            AttrStyle::Inner
+            let not = stream.parse::<Not>()?;
+            AttrStyle::Inner(pound, not)
         } else {
-            AttrStyle::Outer
+            AttrStyle::Outer(pound)
         };
 
-        let inner = stream.parse_group(Delim::Bracket)?;
+        let (bracket, inner) = stream.parse_bracket()?;
         let mut inner = inner.parse();
         let path = inner.parse::<Path>()?;
         let args = inner.parse::<AttrArgs>()?;
@@ -38,6 +39,7 @@ impl Parse for Attribute {
         Ok(Self {
             span: Span::default(),
             style,
+            bracket,
             path,
             args,
         })
@@ -46,14 +48,11 @@ impl Parse for Attribute {
 
 impl ToTokens for Attribute {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        Pound::default().to_tokens(tokens);
-        if self.style == AttrStyle::Inner {
-            Not::default().to_tokens(tokens);
-        }
+        self.style.to_tokens(tokens);
 
         let mut inner = TokenStream::new();
         self.path.to_tokens(&mut inner);
         self.args.to_tokens(&mut inner);
-        tokens.extend_one(TokenTree::Group(Group::new(Delim::Bracket, inner)));
+        self.bracket.surround(tokens, inner);
     }
 }

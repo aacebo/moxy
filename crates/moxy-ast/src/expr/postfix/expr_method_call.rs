@@ -1,6 +1,6 @@
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, Dot};
-use moxy_token::{Delim, Group, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Paren, Span, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -11,8 +11,10 @@ pub struct ExprMethodCall {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub receiver: Box<super::super::Expr>,
+    pub dot: Dot,
     pub method: Ident,
     pub turbofish: Option<AngleArgs>,
+    pub paren: Paren,
     pub args: Punctuated<super::super::Expr, Comma>,
 }
 
@@ -43,7 +45,7 @@ impl ToTokens for ExprMethodCall {
             a.to_tokens(t);
         }
         self.receiver.to_tokens(t);
-        Dot::default().to_tokens(t);
+        self.dot.to_tokens(t);
         self.method.to_tokens(t);
 
         if let Some(tf) = &self.turbofish {
@@ -52,6 +54,6 @@ impl ToTokens for ExprMethodCall {
 
         let mut inner = TokenStream::new();
         self.args.to_tokens(&mut inner);
-        t.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));
+        self.paren.surround(t, inner);
     }
 }

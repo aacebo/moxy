@@ -38,6 +38,12 @@ macro_rules! define_punct {
             }
         }
 
+        impl crate::Spanner for Punctuation {
+            fn span(&self) -> Span {
+                self.span()
+            }
+        }
+
         impl std::fmt::Display for Punctuation {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 match self {
@@ -137,6 +143,12 @@ macro_rules! define_punct {
             impl ToTokens for $name {
                 fn to_tokens(&self, tokens: &mut TokenStream) {
                     tokens.extend_one(Token::Punct(Punctuation::$name(*self)).into());
+                }
+            }
+
+            impl crate::Spanner for $name {
+                fn span(&self) -> Span {
+                    self.span
                 }
             }
 

@@ -11,6 +11,7 @@ use crate::Ident;
 pub struct UsePath {
     pub span: Span,
     pub ident: Ident,
+    pub path_sep: PathSep,
     pub tree: Box<UseTree>,
 }
 
@@ -27,7 +28,7 @@ impl Parse for UsePath {
 impl ToTokens for UsePath {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.ident.to_tokens(t);
-        PathSep::default().to_tokens(t);
+        self.path_sep.to_tokens(t);
         self.tree.to_tokens(t);
     }
 }

@@ -11,19 +11,14 @@ pub struct StmtMacro {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub mac: MacroCall,
-    pub semi: bool,
+    pub semi: Option<Semi>,
 }
 
 impl Parse for StmtMacro {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Vec<Attribute>>()?;
         let mac = stream.parse::<MacroCall>()?;
-        let semi = if stream.peek::<Semi>().is_some() {
-            let _ = stream.parse::<Semi>()?;
-            true
-        } else {
-            false
-        };
+        let semi = stream.parse_if::<Semi>();
         Ok(Self {
             span: Span::default(),
             attrs,
@@ -39,8 +34,6 @@ impl ToTokens for StmtMacro {
             a.to_tokens(t);
         }
         self.mac.to_tokens(t);
-        if self.semi {
-            Semi::default().to_tokens(t);
-        }
+        self.semi.to_tokens(t);
     }
 }

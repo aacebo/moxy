@@ -339,7 +339,7 @@ mod tests {
     #[test]
     fn unsafe_auto_trait() {
         match moxy_token::parse!("unsafe trait T {}" as Item).unwrap() {
-            Item::Trait(t) => assert!(matches!(t.unsafety, crate::Unsafety::Unsafe)),
+            Item::Trait(t) => assert!(matches!(t.unsafety, crate::Unsafety::Unsafe(_))),
             _ => panic!("expected trait"),
         }
         match moxy_token::parse!("auto trait T {}" as Item).unwrap() {
@@ -357,7 +357,7 @@ mod tests {
         match moxy_token::parse!("impl !Send for S {}" as Item).unwrap() {
             Item::Impl(i) => {
                 let tr = i.trait_ref.unwrap();
-                assert!(matches!(tr.polarity, crate::BoundPolarity::Negative));
+                assert!(matches!(tr.polarity, crate::BoundPolarity::Negative(_)));
             }
             _ => panic!("expected impl"),
         }

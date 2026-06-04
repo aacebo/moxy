@@ -366,11 +366,13 @@ mod tests {
         let e = moxy_token::parse!("a + b * c" as Expr).unwrap();
         match e {
             Expr::Binary(BinaryExpr::Binary(ExprBinary {
-                op: BinOp::Add, right, ..
+                op: BinOp::Add(_),
+                right,
+                ..
             })) => {
                 assert!(matches!(
                     *right,
-                    Expr::Binary(BinaryExpr::Binary(ExprBinary { op: BinOp::Mul, .. }))
+                    Expr::Binary(BinaryExpr::Binary(ExprBinary { op: BinOp::Mul(_), .. }))
                 ));
             }
             _ => panic!("expected top-level Add"),
@@ -382,11 +384,11 @@ mod tests {
         let e = moxy_token::parse!("a - b - c" as Expr).unwrap();
         match e {
             Expr::Binary(BinaryExpr::Binary(ExprBinary {
-                op: BinOp::Sub, left, ..
+                op: BinOp::Sub(_), left, ..
             })) => {
                 assert!(matches!(
                     *left,
-                    Expr::Binary(BinaryExpr::Binary(ExprBinary { op: BinOp::Sub, .. }))
+                    Expr::Binary(BinaryExpr::Binary(ExprBinary { op: BinOp::Sub(_), .. }))
                 ));
             }
             _ => panic!("expected left-assoc Sub"),

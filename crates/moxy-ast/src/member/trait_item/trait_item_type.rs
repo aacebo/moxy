@@ -12,10 +12,13 @@ use crate::{Attribute, Generics, Ident, Punctuated, Type, TypeBound};
 pub struct TraitItemType {
     pub span: Span,
     pub attrs: Vec<Attribute>,
+    pub type_keyword: KwType,
     pub ident: Ident,
     pub generics: Generics,
+    pub colon: Option<Colon>,
     pub bounds: Punctuated<TypeBound, Plus>,
-    pub default: Option<Type>,
+    pub default: Option<(Eq, Type)>,
+    pub semi: Option<Semi>,
 }
 
 impl Parse for TraitItemType {
@@ -27,32 +30,35 @@ impl Parse for TraitItemType {
             return Err(LexError::new(at).message("expected trait type").into());
         }
 
-        let _ = stream.parse::<KwType>()?;
+        let type_keyword = stream.parse::<KwType>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
 
-        let bounds = if stream.peek::<Colon>().is_some() {
-            let _ = stream.parse::<Colon>()?;
-            crate::TypeBound::parse_bounds(stream)?
+        let (colon, bounds) = if stream.peek::<Colon>().is_some() {
+            let colon = stream.parse::<Colon>()?;
+            (Some(colon), crate::TypeBound::parse_bounds(stream)?)
         } else {
-            Punctuated::new()
+            (None, Punctuated::new())
         };
 
         let default = if stream.peek::<Eq>().is_some() {
-            let _ = stream.parse::<Eq>()?;
-            Some(stream.parse::<Type>()?)
+            let eq = stream.parse::<Eq>()?;
+            Some((eq, stream.parse::<Type>()?))
         } else {
             None
         };
 
-        let _ = stream.parse::<Semi>();
+        let semi = stream.parse_if::<Semi>();
         Ok(TraitItemType {
             span: Span::default(),
             attrs,
+            type_keyword,
             ident,
             generics,
+            colon,
             bounds,
             default,
+            semi,
         })
     }
 }
@@ -62,20 +68,20 @@ impl ToTokens for TraitItemType {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        KwType::default().to_tokens(t);
+        self.type_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);
 
         if !self.bounds.is_empty() {
-            Colon::default().to_tokens(t);
+            self.colon.to_tokens(t);
             self.bounds.to_tokens(t);
         }
 
-        if let Some(d) = &self.default {
-            Eq::default().to_tokens(t);
+        if let Some((eq, d)) = &self.default {
+            eq.to_tokens(t);
             d.to_tokens(t);
         }
 
-        Semi::default().to_tokens(t);
+        self.semi.to_tokens(t);
     }
 }

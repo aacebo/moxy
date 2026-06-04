@@ -39,8 +39,25 @@ fn fields(fields: &Fields, tokens: &syn::Ident, via_self: bool) -> syn::Result<p
 
     match fields {
         Fields::Named(named) => {
+            // Delimiter token fields are emitted by their content field's
+            // `surround`, so they must not also emit themselves.
+            let mut delim_token_fields = Vec::new();
+            for field in &named.named {
+                let opts = ToTokenOptions::parse(&field.attrs)?;
+                if let Some(group) = &opts.group {
+                    if let Some(tok) = &group.token_field {
+                        delim_token_fields.push(tok.clone());
+                    }
+                }
+            }
+
             for field in &named.named {
                 let ident = field.ident.clone().unwrap();
+
+                if delim_token_fields.contains(&ident) {
+                    continue;
+                }
+
                 let opts = ToTokenOptions::parse(&field.attrs)?;
                 let access = if via_self {
                     quote! { &self.#ident }
@@ -121,16 +138,24 @@ fn one(access: &proc_macro2::TokenStream, ty: &Type, opts: &ToTokenOptions, toke
                 <#tok as ::core::default::Default>::default().to_tokens(#tokens);
             }
         }
-    } else if let Some(delim) = opts.group {
+    } else if let Some(group) = &opts.group {
         // Re-wrap the field's tokens in its delimiter, mirroring the parse side.
-        let delim = format_ident!("{delim}");
+        // With a sibling token field, `surround` carries the captured DelimSpan;
+        // otherwise fall back to a fresh `call_site`-spanned group.
+        let delim = format_ident!("{}", group.delim);
+        let wrap = match &group.token_field {
+            Some(tok) => quote! { self.#tok.surround(#tokens, inner); },
+            None => quote! {
+                #tokens.extend_one(::moxy_token::TokenTree::Group(
+                    ::moxy_token::Group::new(::moxy_token::Delim::#delim, inner),
+                ));
+            },
+        };
         quote! {
             {
                 let mut inner = ::moxy_token::TokenStream::new();
                 ::moxy_token::ToTokens::to_tokens(#access, &mut inner);
-                #tokens.extend_one(::moxy_token::TokenTree::Group(
-                    ::moxy_token::Group::new(::moxy_token::Delim::#delim, inner),
-                ));
+                #wrap
             }
         }
     } else if type_is(ty, "Option") {

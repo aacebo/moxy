@@ -13,9 +13,12 @@ pub struct ForeignItemStatic {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
+    pub static_keyword: Static,
     pub mutability: Mutability,
     pub ident: Ident,
+    pub colon: Colon,
     pub ty: Type,
+    pub semi: Option<Semi>,
 }
 
 impl Parse for ForeignItemStatic {
@@ -28,19 +31,22 @@ impl Parse for ForeignItemStatic {
             return Err(LexError::new(at).message("expected foreign static").into());
         }
 
-        let _ = stream.parse::<Static>()?;
+        let static_keyword = stream.parse::<Static>()?;
         let mutability = stream.parse::<Mutability>()?;
         let ident = stream.parse::<Ident>()?;
-        let _ = stream.parse::<Colon>()?;
+        let colon = stream.parse::<Colon>()?;
         let ty = stream.parse::<Type>()?;
-        let _ = stream.parse::<Semi>();
+        let semi = stream.parse_if::<Semi>();
         Ok(ForeignItemStatic {
             span: Span::default(),
             attrs,
             vis,
+            static_keyword,
             mutability,
             ident,
+            colon,
             ty,
+            semi,
         })
     }
 }
@@ -51,11 +57,11 @@ impl ToTokens for ForeignItemStatic {
             a.to_tokens(t);
         }
         self.vis.to_tokens(t);
-        Static::default().to_tokens(t);
+        self.static_keyword.to_tokens(t);
         self.mutability.to_tokens(t);
         self.ident.to_tokens(t);
-        Colon::default().to_tokens(t);
+        self.colon.to_tokens(t);
         self.ty.to_tokens(t);
-        Semi::default().to_tokens(t);
+        self.semi.to_tokens(t);
     }
 }

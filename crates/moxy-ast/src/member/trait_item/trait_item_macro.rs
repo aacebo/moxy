@@ -12,7 +12,7 @@ pub struct TraitItemMacro {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub mac: MacroCall,
-    pub semi: bool,
+    pub semi: Option<Semi>,
 }
 
 impl Parse for TraitItemMacro {
@@ -34,9 +34,6 @@ impl ToTokens for TraitItemMacro {
             a.to_tokens(t);
         }
         self.mac.to_tokens(t);
-
-        if self.semi {
-            Semi::default().to_tokens(t);
-        }
+        self.semi.to_tokens(t);
     }
 }

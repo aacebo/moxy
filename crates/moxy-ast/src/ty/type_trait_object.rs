@@ -10,19 +10,13 @@ use crate::{Punctuated, TypeBound};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeTraitObject {
     pub span: Span,
-    pub dyn_token: bool,
+    pub dyn_token: Option<Dyn>,
     pub bounds: Punctuated<TypeBound, Plus>,
 }
 
 impl Parse for TypeTraitObject {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let dyn_token = if stream.peek::<Dyn>().is_some() {
-            let _ = stream.parse::<Dyn>()?;
-            true
-        } else {
-            false
-        };
-
+        let dyn_token = stream.parse_if::<Dyn>();
         let bounds = crate::TypeBound::parse_bounds(stream)?;
         Ok(Self {
             span: Span::default(),
@@ -34,10 +28,7 @@ impl Parse for TypeTraitObject {
 
 impl ToTokens for TypeTraitObject {
     fn to_tokens(&self, t: &mut TokenStream) {
-        if self.dyn_token {
-            Dyn::default().to_tokens(t);
-        }
-
+        self.dyn_token.to_tokens(t);
         self.bounds.to_tokens(t);
     }
 }

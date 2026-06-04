@@ -95,6 +95,12 @@ impl crate::ToTokens for Group {
     }
 }
 
+impl crate::Spanner for Group {
+    fn span(&self) -> Span {
+        self.span.span()
+    }
+}
+
 impl crate::Parse for Group {
     fn parse(stream: &mut crate::parse::ParseStream) -> Result<Self, crate::parse::ParseError> {
         match stream.advance() {

@@ -86,6 +86,12 @@ impl ToTokens for Ident {
     }
 }
 
+impl crate::Spanner for Ident {
+    fn span(&self) -> Span {
+        self.span
+    }
+}
+
 impl crate::Parse for Ident {
     fn parse(stream: &mut crate::parse::ParseStream) -> Result<Self, crate::parse::ParseError> {
         match stream.advance() {

@@ -1,7 +1,7 @@
 use moxy_token::keyword::Mod;
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
-use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Brace, Delim, Parse, Span, ToTokens, TokenStream, TokenTree};
 
 use super::Item;
 use crate::{Attribute, Ident, Unsafety, Visibility};
@@ -16,8 +16,8 @@ pub struct ItemMod {
     pub unsafety: Unsafety,
     pub mod_keyword: Mod,
     pub ident: Ident,
-    pub semi_punct: Semi,
-    pub content: Option<Vec<Item>>,
+    pub content: Option<(Brace, Vec<Item>)>,
+    pub semi_punct: Option<Semi>,
 }
 
 impl Parse for ItemMod {
@@ -28,14 +28,14 @@ impl Parse for ItemMod {
         let mod_keyword = stream.parse::<Mod>()?;
         let ident = stream.parse::<Ident>()?;
 
-        let (semi_punct, content) = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
-            let group = stream.parse_group(Delim::Brace)?;
+        let (content, semi_punct) = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
+            let (brace, group) = stream.parse_brace()?;
             let mut inner = group.parse();
             let items = inner.parse::<Vec<Item>>()?;
-            (Semi::default(), Some(items))
+            (Some((brace, items)), None)
         } else {
             let semi_punct = stream.parse::<Semi>()?;
-            (semi_punct, None)
+            (None, Some(semi_punct))
         };
 
         Ok(ItemMod {
@@ -45,8 +45,8 @@ impl Parse for ItemMod {
             unsafety,
             mod_keyword,
             ident,
-            semi_punct,
             content,
+            semi_punct,
         })
     }
 }
@@ -60,12 +60,12 @@ impl ToTokens for ItemMod {
         self.mod_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         match &self.content {
-            Some(items) => {
+            Some((brace, items)) => {
                 let mut inner = TokenStream::new();
                 for it in items {
                     it.to_tokens(&mut inner);
                 }
-                t.extend_one(TokenTree::Group(Group::new(Delim::Brace, inner)));
+                brace.surround(t, inner);
             }
             None => self.semi_punct.to_tokens(t),
         }

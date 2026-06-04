@@ -1,6 +1,6 @@
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::Comma;
-use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Paren, Parse, Span, ToTokens, TokenStream};
 
 use super::FieldDef;
 use crate::Punctuated;
@@ -10,16 +10,18 @@ use crate::Punctuated;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldsUnnamed {
     pub span: Span,
+    pub paren: Paren,
     pub fields: Punctuated<FieldDef, Comma>,
 }
 
 impl Parse for FieldsUnnamed {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let group = stream.parse_group(Delim::Paren)?;
+        let (paren, group) = stream.parse_paren()?;
         let mut inner = group.parse();
         let fields = Punctuated::parse_terminated(&mut inner)?;
         Ok(Self {
             span: Span::default(),
+            paren,
             fields,
         })
     }
@@ -29,6 +31,6 @@ impl ToTokens for FieldsUnnamed {
     fn to_tokens(&self, t: &mut TokenStream) {
         let mut inner = TokenStream::new();
         self.fields.to_tokens(&mut inner);
-        t.extend_one(TokenTree::Group(Group::new(Delim::Paren, inner)));
+        self.paren.surround(t, inner);
     }
 }

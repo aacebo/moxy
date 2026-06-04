@@ -10,6 +10,7 @@ pub struct ExprAssign {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub left: Box<super::super::Expr>,
+    pub eq: Eq,
     pub right: Box<super::super::Expr>,
 }
 
@@ -19,7 +20,7 @@ impl ToTokens for ExprAssign {
             a.to_tokens(t);
         }
         self.left.to_tokens(t);
-        Eq::default().to_tokens(t);
+        self.eq.to_tokens(t);
         self.right.to_tokens(t);
     }
 }

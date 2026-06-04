@@ -16,6 +16,7 @@ impl ToTokens for PatLit {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         self.expr.to_tokens(t);
     }
 }

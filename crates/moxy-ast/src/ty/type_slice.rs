@@ -1,5 +1,5 @@
 use moxy_macros::{Parse, ToTokens};
-use moxy_token::Span;
+use moxy_token::{Bracket, Span};
 
 use super::Type;
 
@@ -9,6 +9,7 @@ use super::Type;
 pub struct TypeSlice {
     #[parse(skip)]
     pub span: Span,
-    #[parse(bracket)]
+    pub bracket: Bracket,
+    #[parse(bracket = bracket)]
     pub elem: Box<Type>,
 }

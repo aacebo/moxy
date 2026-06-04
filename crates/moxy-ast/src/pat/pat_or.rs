@@ -17,6 +17,7 @@ impl ToTokens for PatOr {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         self.cases.to_tokens(t);
     }
 }

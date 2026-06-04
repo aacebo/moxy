@@ -32,16 +32,17 @@ impl Parse for UseTree {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if stream.peek::<Star>().is_some() {
             let span = stream.span();
-            let _ = stream.parse::<Star>()?;
-            return Ok(UseTree::Glob(UseGlob { span }));
+            let star = stream.parse::<Star>()?;
+            return Ok(UseTree::Glob(UseGlob { span, star }));
         }
 
         if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
-            let group = stream.parse_group(Delim::Brace)?;
+            let (brace, group) = stream.parse_brace()?;
             let mut inner = group.parse();
             let items = crate::Punctuated::parse_terminated(&mut inner)?;
             return Ok(UseTree::Group(UseGroup {
                 span: Span::default(),
+                brace,
                 items,
             }));
         }
@@ -49,21 +50,23 @@ impl Parse for UseTree {
         let ident = stream.parse::<Ident>()?;
 
         if stream.peek::<PathSep>().is_some() {
-            let _ = stream.parse::<PathSep>()?;
+            let path_sep = stream.parse::<PathSep>()?;
             let tree = Box::new(stream.parse::<UseTree>()?);
             return Ok(UseTree::Path(UsePath {
                 span: Span::default(),
                 ident,
+                path_sep,
                 tree,
             }));
         }
 
         if stream.peek::<As>().is_some() {
-            let _ = stream.parse::<As>()?;
+            let as_keyword = stream.parse::<As>()?;
             let rename = stream.parse::<Ident>()?;
             return Ok(UseTree::Rename(UseRename {
                 span: Span::default(),
                 ident,
+                as_keyword,
                 rename,
             }));
         }
