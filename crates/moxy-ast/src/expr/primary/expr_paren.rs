@@ -1,6 +1,6 @@
-use moxy_token::{Paren, Span, ToTokens, TokenStream};
+use moxy_token::{Span, ToTokens, TokenStream};
 
-use crate::Attribute;
+use crate::{Attribute, Delimited};
 
 #[doc = "A parenthesized expression: `(x + y)`."]
 #[derive(Debug, Clone)]
@@ -8,8 +8,7 @@ use crate::Attribute;
 pub struct ExprParen {
     pub span: Span,
     pub attrs: Vec<Attribute>,
-    pub paren: Paren,
-    pub expr: Box<super::super::Expr>,
+    pub paren: Delimited<Box<super::super::Expr>>,
 }
 
 impl ToTokens for ExprParen {
@@ -17,8 +16,6 @@ impl ToTokens for ExprParen {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        let mut inner = TokenStream::new();
-        self.expr.to_tokens(&mut inner);
-        self.paren.surround(t, inner);
+        self.paren.to_tokens(t);
     }
 }

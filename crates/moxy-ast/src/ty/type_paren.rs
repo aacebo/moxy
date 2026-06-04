@@ -1,7 +1,8 @@
 use moxy_macros::{Parse, ToTokens};
-use moxy_token::{Paren, Span};
+use moxy_token::Span;
 
 use super::Type;
+use crate::Delimited;
 
 #[doc = "A parenthesized type (e.g. `(T)`)."]
 #[derive(Debug, Clone, Parse, ToTokens)]
@@ -9,7 +10,6 @@ use super::Type;
 pub struct TypeParen {
     #[parse(skip)]
     pub span: Span,
-    pub paren: Paren,
-    #[parse(paren = paren)]
-    pub elem: Box<Type>,
+    #[parse(paren)]
+    pub paren: Delimited<Box<Type>>,
 }

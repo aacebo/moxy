@@ -42,7 +42,7 @@ impl Fmt for Signature {
         self.generics.fmt(f)?;
         f.text("(")?;
         f.group(|f| {
-            for pair in self.inputs.pairs() {
+            for pair in self.paren.inner.inputs.pairs() {
                 match pair {
                     moxy_ast::Pair::Punctuated(param, _) => {
                         param.fmt(f)?;
@@ -55,8 +55,8 @@ impl Fmt for Signature {
                 }
             }
 
-            if let Some(variadic) = &self.variadic {
-                if !self.inputs.is_empty() {
+            if let Some(variadic) = &self.paren.inner.variadic {
+                if !self.paren.inner.inputs.is_empty() {
                     f.text(",")?;
                     f.text(" ")?;
                 }
@@ -134,7 +134,7 @@ impl Fmt for FieldsNamed {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text(" {")?;
         f.indent(|f| {
-            for pair in self.fields.pairs() {
+            for pair in self.brace.inner.pairs() {
                 f.hard_break()?;
 
                 match pair {
@@ -152,7 +152,7 @@ impl Fmt for FieldsNamed {
             Ok(())
         })?;
 
-        if !self.fields.is_empty() {
+        if !self.brace.inner.is_empty() {
             f.hard_break()?;
         }
 
@@ -163,7 +163,7 @@ impl Fmt for FieldsNamed {
 impl Fmt for FieldsUnnamed {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("(")?;
-        self.fields.fmt(f)?;
+        self.paren.inner.fmt(f)?;
         f.text(")")
     }
 }
@@ -224,7 +224,7 @@ impl Fmt for UseRename {
 impl Fmt for UseGroup {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("{")?;
-        self.items.fmt(f)?;
+        self.brace.inner.fmt(f)?;
         f.text("}")
     }
 }
@@ -305,10 +305,10 @@ impl Fmt for ItemMod {
         f.text("mod ")?;
         self.ident.fmt(f)?;
 
-        if let Some((_, items)) = &self.content {
+        if let Some(content) = &self.content {
             f.text(" {")?;
             f.indent(|f| {
-                for (i, item) in items.iter().enumerate() {
+                for (i, item) in content.inner.iter().enumerate() {
                     f.hard_break()?;
                     if i > 0 {
                         f.hard_break()?;
@@ -319,7 +319,7 @@ impl Fmt for ItemMod {
                 Ok(())
             })?;
 
-            if !items.is_empty() {
+            if !content.inner.is_empty() {
                 f.hard_break()?;
             }
 
@@ -384,7 +384,7 @@ impl Fmt for ItemEnum {
         self.generics.fmt(f)?;
         f.text(" {")?;
         f.indent(|f| {
-            for pair in self.variants.pairs() {
+            for pair in self.brace.inner.pairs() {
                 f.hard_break()?;
 
                 match pair {
@@ -402,7 +402,7 @@ impl Fmt for ItemEnum {
             Ok(())
         })?;
 
-        if !self.variants.is_empty() {
+        if !self.brace.inner.is_empty() {
             f.hard_break()?;
         }
 
@@ -468,7 +468,7 @@ impl Fmt for ItemTrait {
 
         f.text(" {")?;
         f.indent(|f| {
-            for item in &self.items {
+            for item in &self.brace.inner {
                 f.hard_break()?;
                 item.fmt(f)?;
             }
@@ -476,7 +476,7 @@ impl Fmt for ItemTrait {
             Ok(())
         })?;
 
-        if !self.items.is_empty() {
+        if !self.brace.inner.is_empty() {
             f.hard_break()?;
         }
 
@@ -528,7 +528,7 @@ impl Fmt for ItemImpl {
 
         f.text(" {")?;
         f.indent(|f| {
-            for (i, item) in self.items.iter().enumerate() {
+            for (i, item) in self.brace.inner.iter().enumerate() {
                 f.hard_break()?;
                 if i > 0 {
                     f.hard_break()?;
@@ -539,7 +539,7 @@ impl Fmt for ItemImpl {
             Ok(())
         })?;
 
-        if !self.items.is_empty() {
+        if !self.brace.inner.is_empty() {
             f.hard_break()?;
         }
 
@@ -645,7 +645,7 @@ impl Fmt for ItemForeignMod {
         self.abi.fmt(f)?;
         f.text(" {")?;
         f.indent(|f| {
-            for (i, item) in self.items.iter().enumerate() {
+            for (i, item) in self.brace.inner.iter().enumerate() {
                 f.hard_break()?;
                 if i > 0 {
                     f.hard_break()?;
@@ -656,7 +656,7 @@ impl Fmt for ItemForeignMod {
             Ok(())
         })?;
 
-        if !self.items.is_empty() {
+        if !self.brace.inner.is_empty() {
             f.hard_break()?;
         }
 

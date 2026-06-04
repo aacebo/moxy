@@ -1,9 +1,28 @@
 use moxy_token::keyword::{Extern, Fn};
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::Comma;
-use moxy_token::{Paren, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
-use crate::{Abi, BareFnArg, BoundLifetimes, Punctuated, ReturnType, Unsafety, Variadic};
+use crate::{Abi, BareFnArg, BoundLifetimes, Delimited, Punctuated, ReturnType, Unsafety, Variadic};
+
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct BareFnParams {
+    pub inputs: Punctuated<BareFnArg, Comma>,
+    pub variadic: Option<Variadic>,
+}
+
+impl ToTokens for BareFnParams {
+    fn to_tokens(&self, t: &mut TokenStream) {
+        self.inputs.to_tokens(t);
+        if let Some(v) = &self.variadic {
+            if !self.inputs.is_empty() && !self.inputs.trailing_punct() {
+                Comma::default().to_tokens(t);
+            }
+            v.to_tokens(t);
+        }
+    }
+}
 
 #[doc = "A bare function pointer type (e.g. `fn(u8) -> u8`, `extern \"C\" fn()`)."]
 #[derive(Debug, Clone)]
@@ -14,9 +33,7 @@ pub struct TypeBareFn {
     pub unsafety: Unsafety,
     pub abi: Option<Abi>,
     pub fn_keyword: Fn,
-    pub paren: Paren,
-    pub inputs: Punctuated<BareFnArg, Comma>,
-    pub variadic: Option<Variadic>,
+    pub paren: Delimited<BareFnParams>,
     pub output: ReturnType,
 }
 
@@ -31,9 +48,10 @@ impl Parse for TypeBareFn {
         };
 
         let fn_keyword = stream.parse::<Fn>()?;
-        let (paren, group) = stream.parse_paren()?;
-        let mut inner = group.parse();
-        let inputs = Punctuated::parse_terminated(&mut inner)?;
+        let paren = Delimited::parse_paren_with(stream, |inner| {
+            let inputs = Punctuated::parse_terminated(inner)?;
+            Ok(BareFnParams { inputs, variadic: None })
+        })?;
         let output = stream.parse::<ReturnType>()?;
         Ok(Self {
             span: Span::default(),
@@ -42,8 +60,6 @@ impl Parse for TypeBareFn {
             abi,
             fn_keyword,
             paren,
-            inputs,
-            variadic: None,
             output,
         })
     }
@@ -54,17 +70,12 @@ impl ToTokens for TypeBareFn {
         if let Some(l) = &self.lifetimes {
             l.to_tokens(t);
         }
-
         self.unsafety.to_tokens(t);
-
         if let Some(abi) = &self.abi {
             abi.to_tokens(t);
         }
-
         self.fn_keyword.to_tokens(t);
-        let mut inner = TokenStream::new();
-        self.inputs.to_tokens(&mut inner);
-        self.paren.surround(t, inner);
+        self.paren.to_tokens(t);
         self.output.to_tokens(t);
     }
 }

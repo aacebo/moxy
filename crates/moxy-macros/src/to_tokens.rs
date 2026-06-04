@@ -39,8 +39,8 @@ fn fields(fields: &Fields, tokens: &syn::Ident, via_self: bool) -> syn::Result<p
 
     match fields {
         Fields::Named(named) => {
-            // Delimiter token fields are emitted by their content field's
-            // `surround`, so they must not also emit themselves.
+            // Old-style: delimiter token fields are emitted by the content field's
+            // surround call, so skip them here.
             let mut delim_token_fields = Vec::new();
             for field in &named.named {
                 let opts = ToTokenOptions::parse(&field.attrs)?;
@@ -139,23 +139,26 @@ fn one(access: &proc_macro2::TokenStream, ty: &Type, opts: &ToTokenOptions, toke
             }
         }
     } else if let Some(group) = &opts.group {
-        // Re-wrap the field's tokens in its delimiter, mirroring the parse side.
-        // With a sibling token field, `surround` carries the captured DelimSpan;
-        // otherwise fall back to a fresh `call_site`-spanned group.
-        let delim = format_ident!("{}", group.delim);
-        let wrap = match &group.token_field {
-            Some(tok) => quote! { self.#tok.surround(#tokens, inner); },
-            None => quote! {
-                #tokens.extend_one(::moxy_token::TokenTree::Group(
-                    ::moxy_token::Group::new(::moxy_token::Delim::#delim, inner),
-                ));
-            },
-        };
-        quote! {
-            {
-                let mut inner = ::moxy_token::TokenStream::new();
-                ::moxy_token::ToTokens::to_tokens(#access, &mut inner);
-                #wrap
+        // New-style: the field is Delimited<T> — it already implements ToTokens.
+        if group.token_field.is_none() && type_is(ty, "Delimited") {
+            quote! { ::moxy_token::ToTokens::to_tokens(#access, #tokens); }
+        } else {
+            // Old-style: separate token field + content field via surround.
+            let delim = format_ident!("{}", group.delim);
+            let wrap = match &group.token_field {
+                Some(tok) => quote! { self.#tok.surround(#tokens, inner); },
+                None => quote! {
+                    #tokens.extend_one(::moxy_token::TokenTree::Group(
+                        ::moxy_token::Group::new(::moxy_token::Delim::#delim, inner),
+                    ));
+                },
+            };
+            quote! {
+                {
+                    let mut inner = ::moxy_token::TokenStream::new();
+                    ::moxy_token::ToTokens::to_tokens(#access, &mut inner);
+                    #wrap
+                }
             }
         }
     } else if type_is(ty, "Option") {

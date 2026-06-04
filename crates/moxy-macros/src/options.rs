@@ -1,7 +1,8 @@
 use syn::{Expr, Path, Type};
 
 /// A delimiter group annotation: the delimiter kind (`Paren`/`Bracket`/`Brace`)
-/// and, optionally, the sibling field that stores the delimiter token.
+/// and, optionally, the sibling field that stores the old-style delimiter token.
+/// When `token_field` is `None` the annotated field is itself a `Delimited<T>`.
 #[derive(Clone)]
 pub struct GroupOption {
     pub delim: &'static str,
@@ -91,8 +92,6 @@ impl ToTokenOptions {
     }
 }
 
-/// Parse a `paren`/`bracket`/`brace` option, optionally with an `= field`
-/// payload naming the sibling field that stores the delimiter token.
 fn group_option(delim: &'static str, meta: syn::meta::ParseNestedMeta) -> syn::Result<GroupOption> {
     let token_field = if meta.input.peek(syn::Token![=]) {
         let ident: syn::Ident = meta.value()?.parse()?;

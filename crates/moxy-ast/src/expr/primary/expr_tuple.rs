@@ -1,5 +1,5 @@
 use moxy_token::punct::Comma;
-use moxy_token::{Paren, Span, ToTokens, TokenStream};
+use moxy_token::{Span, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -9,8 +9,7 @@ use crate::*;
 pub struct ExprTuple {
     pub span: Span,
     pub attrs: Vec<Attribute>,
-    pub paren: Paren,
-    pub elems: Punctuated<super::super::Expr, Comma>,
+    pub paren: Delimited<Punctuated<super::super::Expr, Comma>>,
 }
 
 impl ToTokens for ExprTuple {
@@ -18,8 +17,6 @@ impl ToTokens for ExprTuple {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        let mut inner = TokenStream::new();
-        self.elems.to_tokens(&mut inner);
-        self.paren.surround(t, inner);
+        self.paren.to_tokens(t);
     }
 }

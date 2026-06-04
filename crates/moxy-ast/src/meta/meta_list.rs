@@ -1,7 +1,6 @@
-use moxy_token::span::DelimSpan;
-use moxy_token::{Delim, Group, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Span, ToTokens, TokenStream};
 
-use crate::Path;
+use crate::{Delimited, Path};
 
 #[doc = "A list-style meta item (`name(tokens)`)."]
 #[derive(Debug, Clone)]
@@ -9,16 +8,12 @@ use crate::Path;
 pub struct MetaList {
     pub span: Span,
     pub path: Path,
-    pub delim: Delim,
-    pub delim_span: DelimSpan,
-    pub tokens: TokenStream,
+    pub tokens: Delimited<TokenStream>,
 }
 
 impl ToTokens for MetaList {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.path.to_tokens(t);
-        let mut group = Group::new(self.delim, self.tokens.clone());
-        group.set_span(self.delim_span);
-        t.extend_one(TokenTree::Group(group));
+        self.tokens.to_tokens(t);
     }
 }

@@ -1,6 +1,6 @@
 use super::{ParseError, Peek};
 use crate::span::DelimSpan;
-use crate::{Brace, Bracket, Delim, LexError, Paren, Parse, Punctuation, Span, Token, TokenStream, TokenTree};
+use crate::{Delim, LexError, Parse, Punctuation, Span, Token, TokenStream, TokenTree};
 
 pub struct ParseStream<'a> {
     input: &'a TokenStream,
@@ -212,24 +212,6 @@ impl<'a> ParseStream<'a> {
                 .message(format!("expected `{}` delimiter", delim.as_str()))
                 .into()),
         }
-    }
-
-    /// Consume a `(...)` group, returning its `Paren` delimiter token and inner stream.
-    pub fn parse_paren(&mut self) -> Result<(Paren, TokenStream), ParseError> {
-        let (span, stream) = self.parse_group_spanned(Delim::Paren)?;
-        Ok((Paren::new(span), stream))
-    }
-
-    /// Consume a `{...}` group, returning its `Brace` delimiter token and inner stream.
-    pub fn parse_brace(&mut self) -> Result<(Brace, TokenStream), ParseError> {
-        let (span, stream) = self.parse_group_spanned(Delim::Brace)?;
-        Ok((Brace::new(span), stream))
-    }
-
-    /// Consume a `[...]` group, returning its `Bracket` delimiter token and inner stream.
-    pub fn parse_bracket(&mut self) -> Result<(Bracket, TokenStream), ParseError> {
-        let (span, stream) = self.parse_group_spanned(Delim::Bracket)?;
-        Ok((Bracket::new(span), stream))
     }
 }
 

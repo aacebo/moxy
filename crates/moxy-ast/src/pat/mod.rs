@@ -3,7 +3,7 @@ use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::{And, At, Colon, Comma, DotDot, Or as OrPunct};
 use moxy_token::{Delim, LexError, Parse, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
 
-use crate::{Attribute, Expr, Ident, Member, Mutability, Path, Punctuated, RangeLimits, Type};
+use crate::{Attribute, Delimited, Expr, Ident, Member, Mutability, Path, Punctuated, RangeLimits, Type};
 
 mod pat_field;
 mod pat_group;
@@ -338,27 +338,21 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
 
     // Tuple/paren `(...)`
     if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-        let (paren, group) = stream.parse_paren()?;
-        let mut inner = group.parse();
-        let elems = Punctuated::parse_terminated(&mut inner)?;
+        let paren = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
         return Ok(Pattern::Tuple(PatTuple {
             span: Span::default(),
             attrs,
             paren,
-            elems,
         }));
     }
 
     // Slice `[...]`
     if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
-        let (bracket, group) = stream.parse_bracket()?;
-        let mut inner = group.parse();
-        let elems = Punctuated::parse_terminated(&mut inner)?;
+        let bracket = Delimited::parse_bracket_with(stream, Punctuated::parse_terminated)?;
         return Ok(Pattern::Slice(PatSlice {
             span: Span::default(),
             attrs,
             bracket,
-            elems,
         }));
     }
 
@@ -392,32 +386,28 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
 
         if matches!(fork.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
             stream.seek(&fork);
-            let (paren, group) = stream.parse_paren()?;
-            let mut inner = group.parse();
-            let elems = Punctuated::parse_terminated(&mut inner)?;
+            let paren = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
             return Ok(Pattern::TupleStruct(PatTupleStruct {
                 span: Span::default(),
                 attrs,
                 qself: None,
                 path,
                 paren,
-                elems,
             }));
         }
 
         if matches!(fork.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
             stream.seek(&fork);
-            let (brace, group) = stream.parse_brace()?;
-            let mut inner = group.parse();
-            let (fields, rest) = PatStruct::parse_body(&mut inner)?;
+            let brace = Delimited::parse_brace_with(stream, |inner| {
+                let (fields, rest) = PatStruct::parse_body(inner)?;
+                Ok(PatStructBody { fields, rest })
+            })?;
             return Ok(Pattern::Struct(PatStruct {
                 span: Span::default(),
                 attrs,
                 qself: None,
                 path,
                 brace,
-                fields,
-                rest,
             }));
         }
 

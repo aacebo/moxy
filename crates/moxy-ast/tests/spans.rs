@@ -53,8 +53,8 @@ fn leaf_equality_ignores_span() {
 fn delimiter_preserves_span() {
     // `{` is at index 1, `}` at index 9 in "S { a: A }" → fields group `{ a: A }`.
     let fields = parse::<FieldsNamed>("{ a: A }");
-    let open = fields.brace.span().open().start().index();
-    let close = fields.brace.span().close().start().index();
+    let open = fields.brace.open().start().index();
+    let close = fields.brace.close().start().index();
     assert!(close > open, "brace close span should follow its open span");
     assert_ne!(
         (open, close),

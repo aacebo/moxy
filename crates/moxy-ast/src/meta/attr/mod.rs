@@ -5,9 +5,31 @@ pub use attr_args::*;
 pub use attr_style::*;
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::{Not, Pound};
-use moxy_token::{Bracket, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
-use crate::Path;
+use crate::{Delimited, Path};
+
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct AttrContent {
+    pub path: Path,
+    pub args: AttrArgs,
+}
+
+impl Parse for AttrContent {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let path = stream.parse::<Path>()?;
+        let args = stream.parse::<AttrArgs>()?;
+        Ok(Self { path, args })
+    }
+}
+
+impl ToTokens for AttrContent {
+    fn to_tokens(&self, t: &mut TokenStream) {
+        self.path.to_tokens(t);
+        self.args.to_tokens(t);
+    }
+}
 
 #[doc = "A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement."]
 #[derive(Debug, Clone)]
@@ -15,9 +37,7 @@ use crate::Path;
 pub struct Attribute {
     pub span: Span,
     pub style: AttrStyle,
-    pub bracket: Bracket,
-    pub path: Path,
-    pub args: AttrArgs,
+    pub bracket: Delimited<AttrContent>,
 }
 
 impl Parse for Attribute {
@@ -31,17 +51,12 @@ impl Parse for Attribute {
             AttrStyle::Outer(pound)
         };
 
-        let (bracket, inner) = stream.parse_bracket()?;
-        let mut inner = inner.parse();
-        let path = inner.parse::<Path>()?;
-        let args = inner.parse::<AttrArgs>()?;
+        let bracket = Delimited::<AttrContent>::parse_bracket(stream)?;
 
         Ok(Self {
             span: Span::default(),
             style,
             bracket,
-            path,
-            args,
         })
     }
 }
@@ -49,10 +64,6 @@ impl Parse for Attribute {
 impl ToTokens for Attribute {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.style.to_tokens(tokens);
-
-        let mut inner = TokenStream::new();
-        self.path.to_tokens(&mut inner);
-        self.args.to_tokens(&mut inner);
-        self.bracket.surround(tokens, inner);
+        self.bracket.to_tokens(tokens);
     }
 }

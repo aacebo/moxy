@@ -1,44 +1,55 @@
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
-use moxy_token::{Bracket, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
 use super::Type;
-use crate::Expr;
+use crate::{Delimited, Expr};
+
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct ArrayInner {
+    pub elem: Box<Type>,
+    pub semi: Semi,
+    pub len: Expr,
+}
+
+impl Parse for ArrayInner {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let elem = Box::new(stream.parse::<Type>()?);
+        let semi = stream.parse::<Semi>()?;
+        let len = stream.parse::<Expr>()?;
+        Ok(Self { elem, semi, len })
+    }
+}
+
+impl ToTokens for ArrayInner {
+    fn to_tokens(&self, t: &mut TokenStream) {
+        self.elem.to_tokens(t);
+        self.semi.to_tokens(t);
+        self.len.to_tokens(t);
+    }
+}
 
 #[doc = "A fixed-size array type (`[T; N]`)."]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeArray {
     pub span: Span,
-    pub bracket: Bracket,
-    pub elem: Box<Type>,
-    pub semi: Semi,
-    pub len: Expr,
+    pub bracket: Delimited<ArrayInner>,
 }
 
 impl Parse for TypeArray {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let (bracket, group) = stream.parse_bracket()?;
-        let mut inner = group.parse();
-        let elem = Box::new(inner.parse::<Type>()?);
-        let semi = inner.parse::<Semi>()?;
-        let len = inner.parse::<Expr>()?;
+        let bracket = Delimited::<ArrayInner>::parse_bracket(stream)?;
         Ok(Self {
             span: Span::default(),
             bracket,
-            elem,
-            semi,
-            len,
         })
     }
 }
 
 impl ToTokens for TypeArray {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let mut inner = TokenStream::new();
-        self.elem.to_tokens(&mut inner);
-        self.semi.to_tokens(&mut inner);
-        self.len.to_tokens(&mut inner);
-        self.bracket.surround(tokens, inner);
+        self.bracket.to_tokens(tokens);
     }
 }

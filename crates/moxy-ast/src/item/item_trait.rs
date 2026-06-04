@@ -1,9 +1,9 @@
 use moxy_token::keyword::{Auto, Trait};
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Plus};
-use moxy_token::{Brace, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
-use crate::{Attribute, Generics, Ident, Punctuated, TraitItem, TypeBound, Unsafety, Visibility};
+use crate::{Attribute, Delimited, Generics, Ident, Punctuated, TraitItem, TypeBound, Unsafety, Visibility};
 
 #[doc = "A trait definition item (`trait Name: Super { ... }`)."]
 #[derive(Debug, Clone)]
@@ -19,8 +19,7 @@ pub struct ItemTrait {
     pub generics: Generics,
     pub colon_punct: Option<Colon>,
     pub supertraits: Punctuated<TypeBound, Plus>,
-    pub brace: Brace,
-    pub items: Vec<TraitItem>,
+    pub brace: Delimited<Vec<TraitItem>>,
 }
 
 impl Parse for ItemTrait {
@@ -50,9 +49,7 @@ impl Parse for ItemTrait {
             generics.where_clause = Some(stream.parse()?);
         }
 
-        let (brace, group) = stream.parse_brace()?;
-        let mut inner = group.parse();
-        let items = inner.parse::<Vec<TraitItem>>()?;
+        let brace = Delimited::<Vec<TraitItem>>::parse_brace(stream)?;
         Ok(ItemTrait {
             span: Span::default(),
             attrs,
@@ -65,7 +62,6 @@ impl Parse for ItemTrait {
             colon_punct,
             supertraits,
             brace,
-            items,
         })
     }
 }
@@ -92,12 +88,6 @@ impl ToTokens for ItemTrait {
             self.supertraits.to_tokens(t);
         }
 
-        let mut inner = TokenStream::new();
-
-        for it in &self.items {
-            it.to_tokens(&mut inner);
-        }
-
-        self.brace.surround(t, inner);
+        self.brace.to_tokens(t);
     }
 }

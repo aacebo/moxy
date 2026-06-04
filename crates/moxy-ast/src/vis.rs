@@ -1,8 +1,8 @@
 use moxy_token::keyword::{Crate, In, Pub, SelfValue, Super};
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::{Delim, Paren, Parse, ToTokens, TokenStream};
+use moxy_token::{Delim, Parse, ToTokens, TokenStream, TokenTree};
 
-use crate::Path;
+use crate::{Delimited, Path};
 
 #[doc = "The visibility of an item (`pub`, `pub`, `pub(in path)`, or inherited)."]
 #[derive(Debug, Clone)]
@@ -14,24 +14,21 @@ pub enum Visibility {
     },
     Crate {
         pub_keyword: Pub,
-        paren: Paren,
-        crate_keyword: Crate,
+        paren: Delimited<Crate>,
     },
     SelfValue {
         pub_keyword: Pub,
-        paren: Paren,
-        self_keyword: SelfValue,
+        paren: Delimited<SelfValue>,
     },
     Super {
         pub_keyword: Pub,
-        paren: Paren,
-        super_keyword: Super,
+        paren: Delimited<Super>,
     },
     Restricted {
         pub_keyword: Pub,
-        paren: Paren,
         in_keyword: Option<In>,
         path: Path,
+        paren_span: moxy_token::span::DelimSpan,
     },
 }
 
@@ -44,15 +41,14 @@ impl Parse for Visibility {
 
         // `pub(...)` restricted forms.
         if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-            let (paren, group) = stream.parse_paren()?;
-            let mut inner = group.parse();
+            let (span, group_tokens) = stream.parse_group_spanned(Delim::Paren)?;
+            let mut inner = group_tokens.parse();
 
             if inner.peek::<Crate>().is_some() {
                 let crate_keyword = inner.parse::<Crate>()?;
                 return Ok(Visibility::Crate {
                     pub_keyword,
-                    paren,
-                    crate_keyword,
+                    paren: Delimited::paren(span, crate_keyword),
                 });
             }
 
@@ -60,8 +56,7 @@ impl Parse for Visibility {
                 let self_keyword = inner.parse::<SelfValue>()?;
                 return Ok(Visibility::SelfValue {
                     pub_keyword,
-                    paren,
-                    self_keyword,
+                    paren: Delimited::paren(span, self_keyword),
                 });
             }
 
@@ -69,12 +64,10 @@ impl Parse for Visibility {
                 let super_keyword = inner.parse::<Super>()?;
                 return Ok(Visibility::Super {
                     pub_keyword,
-                    paren,
-                    super_keyword,
+                    paren: Delimited::paren(span, super_keyword),
                 });
             }
 
-            // `pub(in path)`
             let in_keyword = if inner.peek::<In>().is_some() {
                 Some(inner.parse::<In>()?)
             } else {
@@ -84,9 +77,9 @@ impl Parse for Visibility {
             let path = inner.parse::<Path>()?;
             return Ok(Visibility::Restricted {
                 pub_keyword,
-                paren,
                 in_keyword,
                 path,
+                paren_span: span,
             });
         }
 
@@ -99,51 +92,33 @@ impl ToTokens for Visibility {
         match self {
             Visibility::Inherited => {}
             Visibility::Public { pub_keyword } => pub_keyword.to_tokens(t),
-            Visibility::Crate {
-                pub_keyword,
-                paren,
-                crate_keyword,
-            } => {
+            Visibility::Crate { pub_keyword, paren } => {
                 pub_keyword.to_tokens(t);
-                let mut inner = TokenStream::new();
-                crate_keyword.to_tokens(&mut inner);
-                paren.surround(t, inner);
+                paren.to_tokens(t);
             }
-            Visibility::SelfValue {
-                pub_keyword,
-                paren,
-                self_keyword,
-            } => {
+            Visibility::SelfValue { pub_keyword, paren } => {
                 pub_keyword.to_tokens(t);
-                let mut inner = TokenStream::new();
-                self_keyword.to_tokens(&mut inner);
-                paren.surround(t, inner);
+                paren.to_tokens(t);
             }
-            Visibility::Super {
-                pub_keyword,
-                paren,
-                super_keyword,
-            } => {
+            Visibility::Super { pub_keyword, paren } => {
                 pub_keyword.to_tokens(t);
-                let mut inner = TokenStream::new();
-                super_keyword.to_tokens(&mut inner);
-                paren.surround(t, inner);
+                paren.to_tokens(t);
             }
             Visibility::Restricted {
                 pub_keyword,
-                paren,
                 in_keyword,
                 path,
+                paren_span,
             } => {
                 pub_keyword.to_tokens(t);
                 let mut inner = TokenStream::new();
-
                 if let Some(in_kw) = in_keyword {
                     in_kw.to_tokens(&mut inner);
                 }
-
                 path.to_tokens(&mut inner);
-                paren.surround(t, inner);
+                let mut group = moxy_token::Group::new(Delim::Paren, inner);
+                group.set_span(*paren_span);
+                t.extend_one(moxy_token::TokenTree::Group(group));
             }
         }
     }

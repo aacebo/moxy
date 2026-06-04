@@ -1,10 +1,29 @@
 use moxy_token::keyword::{Extern, Fn};
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, Gt, Lt};
-use moxy_token::{Paren, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
 use super::{Abi, FnParam, Variadic};
-use crate::{Asyncness, Constness, Generics, Ident, Punctuated, ReturnType, Unsafety};
+use crate::{Asyncness, Constness, Delimited, Generics, Ident, Punctuated, ReturnType, Unsafety};
+
+#[derive(Debug, Clone)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct FnParams {
+    pub inputs: Punctuated<FnParam, Comma>,
+    pub variadic: Option<Variadic>,
+}
+
+impl ToTokens for FnParams {
+    fn to_tokens(&self, t: &mut TokenStream) {
+        self.inputs.to_tokens(t);
+        if let Some(v) = &self.variadic {
+            if !self.inputs.is_empty() && !self.inputs.trailing_punct() {
+                Comma::default().to_tokens(t);
+            }
+            v.to_tokens(t);
+        }
+    }
+}
 
 #[doc = "A function signature."]
 #[derive(Debug, Clone)]
@@ -18,9 +37,7 @@ pub struct Signature {
     pub fn_keyword: Fn,
     pub ident: Ident,
     pub generics: Generics,
-    pub paren: Paren,
-    pub inputs: Punctuated<FnParam, Comma>,
-    pub variadic: Option<Variadic>,
+    pub paren: Delimited<FnParams>,
     pub output: ReturnType,
 }
 
@@ -39,22 +56,23 @@ impl Parse for Signature {
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
 
-        let (paren, group) = stream.parse_paren()?;
-        let mut inner = group.parse();
-        let mut inputs = Punctuated::new();
-        let mut variadic = None;
-        while !inner.is_empty() {
-            if let Some(v) = inner.parse_if::<Variadic>() {
-                variadic = Some(v);
-                break;
+        let paren = Delimited::parse_paren_with(stream, |inner| {
+            let mut inputs = Punctuated::new();
+            let mut variadic = None;
+            while !inner.is_empty() {
+                if let Some(v) = inner.parse_if::<Variadic>() {
+                    variadic = Some(v);
+                    break;
+                }
+                inputs.push_value(inner.parse::<FnParam>()?);
+                if inner.peek::<Comma>().is_some() {
+                    inputs.push_punct(inner.parse::<Comma>()?);
+                } else {
+                    break;
+                }
             }
-            inputs.push_value(inner.parse::<FnParam>()?);
-            if inner.peek::<Comma>().is_some() {
-                inputs.push_punct(inner.parse::<Comma>()?);
-            } else {
-                break;
-            }
-        }
+            Ok(FnParams { inputs, variadic })
+        })?;
 
         let output = stream.parse::<ReturnType>()?;
 
@@ -72,8 +90,6 @@ impl Parse for Signature {
             ident,
             generics,
             paren,
-            inputs,
-            variadic,
             output,
         })
     }
@@ -115,17 +131,7 @@ impl ToTokens for Signature {
         let mut params = TokenStream::new();
         Signature::emit_angle_params(&self.generics, &mut params);
         t.extend(params);
-        let mut inner = TokenStream::new();
-        self.inputs.to_tokens(&mut inner);
-
-        if let Some(v) = &self.variadic {
-            if !self.inputs.is_empty() && !self.inputs.trailing_punct() {
-                Comma::default().to_tokens(&mut inner);
-            }
-            v.to_tokens(&mut inner);
-        }
-
-        self.paren.surround(t, inner);
+        self.paren.to_tokens(t);
         self.output.to_tokens(t);
 
         if let Some(w) = &self.generics.where_clause {

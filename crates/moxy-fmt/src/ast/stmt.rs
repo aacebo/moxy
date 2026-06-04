@@ -7,7 +7,7 @@ impl Fmt for StmtBlock {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("{")?;
         f.indent(|f| {
-            for stmt in &self.stmts {
+            for stmt in &self.brace.inner {
                 f.hard_break()?;
                 stmt.fmt(f)?;
             }
@@ -15,7 +15,7 @@ impl Fmt for StmtBlock {
             Ok(())
         })?;
 
-        if !self.stmts.is_empty() {
+        if !self.brace.inner.is_empty() {
             f.hard_break()?;
         }
 

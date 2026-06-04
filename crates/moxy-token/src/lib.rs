@@ -13,7 +13,6 @@ extern crate proc_macro;
 
 pub mod bridge;
 mod delim;
-mod delim_token;
 mod group;
 mod ident;
 pub mod keyword;
@@ -28,7 +27,6 @@ pub mod span;
 mod stream;
 
 pub use delim::*;
-pub use delim_token::*;
 pub use group::*;
 pub use ident::*;
 pub use keyword::*;

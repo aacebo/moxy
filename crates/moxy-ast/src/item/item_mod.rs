@@ -1,10 +1,10 @@
 use moxy_token::keyword::Mod;
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
-use moxy_token::{Brace, Delim, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream, TokenTree};
 
 use super::Item;
-use crate::{Attribute, Ident, Unsafety, Visibility};
+use crate::{Attribute, Delimited, Ident, Unsafety, Visibility};
 
 #[doc = "A module item (`mod foo;` or `mod foo { ... }`)."]
 #[derive(Debug, Clone)]
@@ -16,7 +16,7 @@ pub struct ItemMod {
     pub unsafety: Unsafety,
     pub mod_keyword: Mod,
     pub ident: Ident,
-    pub content: Option<(Brace, Vec<Item>)>,
+    pub content: Option<Delimited<Vec<Item>>>,
     pub semi_punct: Option<Semi>,
 }
 
@@ -29,10 +29,8 @@ impl Parse for ItemMod {
         let ident = stream.parse::<Ident>()?;
 
         let (content, semi_punct) = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
-            let (brace, group) = stream.parse_brace()?;
-            let mut inner = group.parse();
-            let items = inner.parse::<Vec<Item>>()?;
-            (Some((brace, items)), None)
+            let brace = Delimited::<Vec<Item>>::parse_brace(stream)?;
+            (Some(brace), None)
         } else {
             let semi_punct = stream.parse::<Semi>()?;
             (None, Some(semi_punct))
@@ -60,13 +58,7 @@ impl ToTokens for ItemMod {
         self.mod_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         match &self.content {
-            Some((brace, items)) => {
-                let mut inner = TokenStream::new();
-                for it in items {
-                    it.to_tokens(&mut inner);
-                }
-                brace.surround(t, inner);
-            }
+            Some(brace) => brace.to_tokens(t),
             None => self.semi_punct.to_tokens(t),
         }
     }

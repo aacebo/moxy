@@ -1,5 +1,5 @@
 use moxy_token::punct::Comma;
-use moxy_token::{Bracket, Span, ToTokens, TokenStream};
+use moxy_token::{Span, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -9,8 +9,7 @@ use crate::*;
 pub struct PatSlice {
     pub span: Span,
     pub attrs: Vec<Attribute>,
-    pub bracket: Bracket,
-    pub elems: Punctuated<Pattern, Comma>,
+    pub bracket: Delimited<Punctuated<Pattern, Comma>>,
 }
 
 impl ToTokens for PatSlice {
@@ -18,9 +17,6 @@ impl ToTokens for PatSlice {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-
-        let mut inner = TokenStream::new();
-        self.elems.to_tokens(&mut inner);
-        self.bracket.surround(t, inner);
+        self.bracket.to_tokens(t);
     }
 }

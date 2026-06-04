@@ -1,6 +1,6 @@
-use moxy_token::{Bracket, Span, ToTokens, TokenStream};
+use moxy_token::{Span, ToTokens, TokenStream};
 
-use crate::Attribute;
+use crate::{Attribute, Delimited};
 
 #[doc = "An index expression: `a[0]`."]
 #[derive(Debug, Clone)]
@@ -9,8 +9,7 @@ pub struct ExprIndex {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub base: Box<super::super::Expr>,
-    pub bracket: Bracket,
-    pub index: Box<super::super::Expr>,
+    pub bracket: Delimited<Box<super::super::Expr>>,
 }
 
 impl ToTokens for ExprIndex {
@@ -19,8 +18,6 @@ impl ToTokens for ExprIndex {
             a.to_tokens(t);
         }
         self.base.to_tokens(t);
-        let mut inner = TokenStream::new();
-        self.index.to_tokens(&mut inner);
-        self.bracket.surround(t, inner);
+        self.bracket.to_tokens(t);
     }
 }

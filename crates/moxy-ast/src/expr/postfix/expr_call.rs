@@ -1,5 +1,5 @@
 use moxy_token::punct::Comma;
-use moxy_token::{Paren, Span, ToTokens, TokenStream};
+use moxy_token::{Span, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -10,8 +10,7 @@ pub struct ExprCall {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub func: Box<super::super::Expr>,
-    pub paren: Paren,
-    pub args: Punctuated<super::super::Expr, Comma>,
+    pub paren: Delimited<Punctuated<super::super::Expr, Comma>>,
 }
 
 impl ToTokens for ExprCall {
@@ -20,8 +19,6 @@ impl ToTokens for ExprCall {
             a.to_tokens(t);
         }
         self.func.to_tokens(t);
-        let mut inner = TokenStream::new();
-        self.args.to_tokens(&mut inner);
-        self.paren.surround(t, inner);
+        self.paren.to_tokens(t);
     }
 }

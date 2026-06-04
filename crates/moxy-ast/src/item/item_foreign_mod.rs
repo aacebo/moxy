@@ -1,7 +1,7 @@
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::{Brace, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
-use crate::{Abi, Attribute, ForeignItem, Unsafety};
+use crate::{Abi, Attribute, Delimited, ForeignItem, Unsafety};
 
 #[doc = "An `extern` block (`extern \"C\" { ... }`)."]
 #[derive(Debug, Clone)]
@@ -11,8 +11,7 @@ pub struct ItemForeignMod {
     pub attrs: Vec<Attribute>,
     pub unsafety: Unsafety,
     pub abi: Abi,
-    pub brace: Brace,
-    pub items: Vec<ForeignItem>,
+    pub brace: Delimited<Vec<ForeignItem>>,
 }
 
 impl Parse for ItemForeignMod {
@@ -20,16 +19,13 @@ impl Parse for ItemForeignMod {
         let attrs = stream.parse::<Vec<Attribute>>()?;
         let unsafety = stream.parse::<Unsafety>()?;
         let abi = stream.parse::<Abi>()?;
-        let (brace, group) = stream.parse_brace()?;
-        let mut inner = group.parse();
-        let items = inner.parse::<Vec<ForeignItem>>()?;
+        let brace = Delimited::<Vec<ForeignItem>>::parse_brace(stream)?;
         Ok(ItemForeignMod {
             span: Span::default(),
             attrs,
             unsafety,
             abi,
             brace,
-            items,
         })
     }
 }
@@ -41,12 +37,6 @@ impl ToTokens for ItemForeignMod {
         }
         self.unsafety.to_tokens(t);
         self.abi.to_tokens(t);
-        let mut inner = TokenStream::new();
-
-        for it in &self.items {
-            it.to_tokens(&mut inner);
-        }
-
-        self.brace.surround(t, inner);
+        self.brace.to_tokens(t);
     }
 }

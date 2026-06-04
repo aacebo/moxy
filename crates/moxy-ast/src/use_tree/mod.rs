@@ -3,7 +3,7 @@ use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::{PathSep, Star};
 use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream, TokenTree};
 
-use crate::Ident;
+use crate::{Delimited, Ident};
 
 mod use_glob;
 mod use_group;
@@ -37,13 +37,10 @@ impl Parse for UseTree {
         }
 
         if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
-            let (brace, group) = stream.parse_brace()?;
-            let mut inner = group.parse();
-            let items = crate::Punctuated::parse_terminated(&mut inner)?;
+            let brace = Delimited::parse_brace_with(stream, crate::Punctuated::parse_terminated)?;
             return Ok(UseTree::Group(UseGroup {
                 span: Span::default(),
                 brace,
-                items,
             }));
         }
 

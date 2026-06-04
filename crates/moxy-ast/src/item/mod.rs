@@ -267,7 +267,7 @@ mod tests {
     fn item_enum() {
         let i = moxy_token::parse!("enum E { A, B(u8), C { x: i32 } }" as Item).unwrap();
         match i {
-            Item::Enum(e) => assert_eq!(e.variants.len(), 3),
+            Item::Enum(e) => assert_eq!(e.brace.inner.len(), 3),
             _ => panic!("expected enum"),
         }
     }
@@ -285,7 +285,7 @@ mod tests {
     fn item_trait() {
         let i = moxy_token::parse!("trait T: Clone { fn m(&self); type Out; }" as Item).unwrap();
         match i {
-            Item::Trait(t) => assert_eq!(t.items.len(), 2),
+            Item::Trait(t) => assert_eq!(t.brace.inner.len(), 2),
             _ => panic!("expected trait"),
         }
     }
@@ -366,7 +366,7 @@ mod tests {
     #[test]
     fn variadic_fn() {
         let sig = moxy_token::parse!("fn printf(fmt: u8, ...)" as crate::Signature).unwrap();
-        assert!(sig.variadic.is_some());
+        assert!(sig.paren.inner.variadic.is_some());
     }
 
     #[test]

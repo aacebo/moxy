@@ -1,7 +1,8 @@
 use moxy_macros::{Parse, ToTokens};
-use moxy_token::{Bracket, Span};
+use moxy_token::Span;
 
 use super::Type;
+use crate::Delimited;
 
 #[doc = "A slice type (e.g. `[T]`)."]
 #[derive(Debug, Clone, Parse, ToTokens)]
@@ -9,7 +10,6 @@ use super::Type;
 pub struct TypeSlice {
     #[parse(skip)]
     pub span: Span,
-    pub bracket: Bracket,
-    #[parse(bracket = bracket)]
-    pub elem: Box<Type>,
+    #[parse(bracket)]
+    pub bracket: Delimited<Box<Type>>,
 }

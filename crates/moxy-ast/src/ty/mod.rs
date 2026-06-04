@@ -3,7 +3,7 @@ use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::{And, Comma, Star};
 use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream};
 
-use crate::Punctuated;
+use crate::{Delimited, Punctuated};
 
 mod q_self;
 mod type_array;
@@ -139,8 +139,8 @@ impl Parse for Type {
         // inside the group rather than calling `TypeArray::parse` or
         // `TypeSlice::parse` individually (which would each consume the group).
         if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
-            let (bracket, group) = stream.parse_bracket()?;
-            let mut inner = group.parse();
+            let (bracket_span, group_tokens) = stream.parse_group_spanned(Delim::Bracket)?;
+            let mut inner = group_tokens.parse();
             let elem = Box::new(inner.parse::<Type>()?);
 
             if inner.peek::<moxy_token::punct::Semi>().is_some() {
@@ -148,17 +148,13 @@ impl Parse for Type {
                 let len = inner.parse::<crate::Expr>()?;
                 return Ok(Type::Array(TypeArray {
                     span: Span::default(),
-                    bracket,
-                    elem,
-                    semi,
-                    len,
+                    bracket: Delimited::bracket(bracket_span, type_array::ArrayInner { elem, semi, len }),
                 }));
             }
 
             return Ok(Type::Slice(TypeSlice {
                 span: Span::default(),
-                bracket,
-                elem,
+                bracket: Delimited::bracket(bracket_span, elem),
             }));
         }
 
@@ -184,21 +180,19 @@ impl Parse for Type {
         // anything else (empty, multiple, or trailing comma) is a tuple.
         // Both variants share the same `(` token so we disambiguate inline.
         if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-            let (paren, group) = stream.parse_paren()?;
-            let mut inner = group.parse();
+            let (paren_span, group_tokens) = stream.parse_group_spanned(Delim::Paren)?;
+            let mut inner = group_tokens.parse();
             let elems: Punctuated<Type, Comma> = Punctuated::parse_terminated(&mut inner)?;
 
             return if elems.len() == 1 && !elems.trailing_punct() {
                 Ok(Type::Paren(TypeParen {
                     span: Span::default(),
-                    paren,
-                    elem: Box::new(elems.into_iter().next().unwrap()),
+                    paren: Delimited::paren(paren_span, Box::new(elems.into_iter().next().unwrap())),
                 }))
             } else {
                 Ok(Type::Tuple(TypeTuple {
                     span: Span::default(),
-                    paren,
-                    elems,
+                    paren: Delimited::paren(paren_span, elems),
                 }))
             };
         }
@@ -353,10 +347,13 @@ mod tests {
 
     #[test]
     fn from_variant() {
+        use crate::Delimited;
         let s = TypeSlice {
             span: Span::default(),
-            bracket: moxy_token::Bracket::default(),
-            elem: Box::new(moxy_token::parse!("T" as Type).unwrap()),
+            bracket: Delimited::bracket(
+                moxy_token::span::DelimSpan::default(),
+                Box::new(moxy_token::parse!("T" as Type).unwrap()),
+            ),
         };
         assert!(matches!(Type::from(s), Type::Slice { .. }));
     }

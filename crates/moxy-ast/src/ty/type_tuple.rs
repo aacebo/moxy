@@ -1,9 +1,9 @@
 use moxy_macros::{Parse, ToTokens};
+use moxy_token::Span;
 use moxy_token::punct::Comma;
-use moxy_token::{Paren, Span};
 
 use super::Type;
-use crate::Punctuated;
+use crate::{Delimited, Punctuated};
 
 #[doc = "A tuple type (e.g. `()`, `(A, B)`, `(T,)`)."]
 #[derive(Debug, Clone, Parse, ToTokens)]
@@ -11,7 +11,6 @@ use crate::Punctuated;
 pub struct TypeTuple {
     #[parse(skip)]
     pub span: Span,
-    pub paren: Paren,
-    #[parse(paren = paren, terminated)]
-    pub elems: Punctuated<Type, Comma>,
+    #[parse(paren, terminated)]
+    pub paren: Delimited<Punctuated<Type, Comma>>,
 }

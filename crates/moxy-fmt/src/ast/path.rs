@@ -63,7 +63,7 @@ impl Fmt for AngleArgs {
 impl Fmt for ParenthesizedArgs {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("(")?;
-        self.inputs.fmt(f)?;
+        self.paren.inner.fmt(f)?;
         f.text(")")?;
         self.output.fmt(f)
     }

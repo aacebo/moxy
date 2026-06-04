@@ -711,13 +711,13 @@ mod tests {
     #[test]
     fn statements_and_blocks() {
         let b = moxy_token::parse!("{ let x = 1; x + 1 }" as StmtBlock).unwrap();
-        assert_eq!(b.stmts.len(), 2);
-        assert!(matches!(b.stmts[0], Stmt::Local(_)));
-        assert!(matches!(b.stmts[1], Stmt::Expr(..)));
+        assert_eq!(b.brace.inner.len(), 2);
+        assert!(matches!(b.brace.inner[0], Stmt::Local(_)));
+        assert!(matches!(b.brace.inner[1], Stmt::Expr(..)));
 
         let b2 = moxy_token::parse!("{ foo(); bar(); }" as StmtBlock).unwrap();
-        assert_eq!(b2.stmts.len(), 2);
-        assert!(matches!(b2.stmts[0], Stmt::Expr(_, Some(_))));
+        assert_eq!(b2.brace.inner.len(), 2);
+        assert!(matches!(b2.brace.inner[0], Stmt::Expr(_, Some(_))));
     }
 
     #[test]

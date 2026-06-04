@@ -72,7 +72,6 @@ pub fn expand(input: &DeriveInput) -> syn::Result<proc_macro2::TokenStream> {
     })
 }
 
-/// Returns (per-field binding statements, constructor body).
 fn fields(fields: &Fields, stream: &syn::Ident) -> syn::Result<(Vec<proc_macro2::TokenStream>, proc_macro2::TokenStream)> {
     let mut stmts = Vec::new();
 
@@ -80,8 +79,8 @@ fn fields(fields: &Fields, stream: &syn::Ident) -> syn::Result<(Vec<proc_macro2:
         Fields::Named(named) => {
             let mut names = Vec::new();
 
-            // Fields that store a delimiter token (named via `#[parse(paren = field)]`
-            // on a sibling) are filled by the group arm, not parsed on their own.
+            // Old-style: fields that store a sibling delimiter token are filled
+            // by the group arm of their content field, not parsed on their own.
             let mut delim_token_fields = Vec::new();
             for field in &named.named {
                 let opts = ParseOptions::parse(&field.attrs)?;
@@ -96,7 +95,6 @@ fn fields(fields: &Fields, stream: &syn::Ident) -> syn::Result<(Vec<proc_macro2:
                 let ident = field.ident.clone().unwrap();
 
                 if delim_token_fields.contains(&ident) {
-                    // Bound by the group arm of its content field; still listed in the ctor.
                     names.push(ident);
                     continue;
                 }
@@ -146,28 +144,36 @@ fn one(binding: &syn::Ident, ty: &Type, opts: &ParseOptions, stream: &syn::Ident
             };
         }
     } else if let Some(group) = &opts.group {
-        // Parse the field from inside the delimiter; honor separated/terminated
-        // for a `Punctuated` field, else parse a single `T`. When a sibling token
-        // field is named, capture the group's DelimSpan into it.
         let delim = format_ident!("{}", group.delim);
-        let inner = value_expr(opts, ty, stream);
 
-        let span_binding = match &group.token_field {
-            Some(tok) => {
-                let token_ty = format_ident!("{}", group.delim);
-                quote! { let #tok = ::moxy_token::#token_ty::new(__group_span); }
+        // New-style: the field itself is Delimited<T> — no sibling token field.
+        if group.token_field.is_none() && type_is(ty, "Delimited") {
+            let parse_fn = format_ident!("parse_{}_with", group.delim.to_lowercase());
+            let inner = value_expr_for_delimited(opts, ty, stream);
+            quote! {
+                let #binding = ::moxy_ast::Delimited::#parse_fn(#stream, |#stream| { #inner })?;
             }
-            None => quote! { let _ = __group_span; },
-        };
+        } else {
+            // Old-style: separate token field + content field.
+            let inner = value_expr(opts, ty, stream);
 
-        quote! {
-            let (__group_span, __group_tokens) = #stream.parse_group_spanned(::moxy_token::Delim::#delim)?;
-            #span_binding
-            let #binding = {
-                let mut group_stream = __group_tokens.parse();
-                let #stream = &mut group_stream;
-                #inner
+            let span_binding = match &group.token_field {
+                Some(tok) => {
+                    let token_ty = format_ident!("{}", group.delim);
+                    quote! { let #tok = ::moxy_token::#token_ty::new(__group_span); }
+                }
+                None => quote! { let _ = __group_span; },
             };
+
+            quote! {
+                let (__group_span, __group_tokens) = #stream.parse_group_spanned(::moxy_token::Delim::#delim)?;
+                #span_binding
+                let #binding = {
+                    let mut group_stream = __group_tokens.parse();
+                    let #stream = &mut group_stream;
+                    #inner
+                };
+            }
         }
     } else {
         let value = value_expr(opts, ty, stream);
@@ -177,8 +183,49 @@ fn one(binding: &syn::Ident, ty: &Type, opts: &ParseOptions, stream: &syn::Ident
     Ok(quote! { #prefix #core #suffix })
 }
 
-/// The expression that produces a field's value from `stream`, honoring
-/// `call`/`separated`/`terminated` and the `Option<T>`/`Box<T>` field shapes.
+/// For a `Delimited<T>` field, produce the inner parse expression
+/// (what goes inside the group). Honours `separated`/`terminated`/`call`.
+fn value_expr_for_delimited(opts: &ParseOptions, ty: &Type, stream: &syn::Ident) -> proc_macro2::TokenStream {
+    // Extract the inner type T from Delimited<T>.
+    let inner_ty = delimited_inner_ty(ty);
+    value_expr_for_ty(opts, inner_ty.as_ref(), stream)
+}
+
+/// Produces a Result-returning expression suitable for a closure body.
+fn value_expr_for_ty(opts: &ParseOptions, ty: Option<&Type>, stream: &syn::Ident) -> proc_macro2::TokenStream {
+    if let Some(path) = &opts.call {
+        return quote! { #path(#stream) };
+    }
+    if opts.separated {
+        return quote! { ::moxy_ast::Punctuated::parse_separated_nonempty(#stream) };
+    }
+    if opts.terminated {
+        return quote! { ::moxy_ast::Punctuated::parse_terminated(#stream) };
+    }
+    match ty {
+        Some(t) if type_is(t, "Option") => quote! { Ok({
+            let mut fork = #stream.fork();
+            match ::moxy_token::Parse::parse(&mut fork) {
+                Ok(v) => { #stream.seek(&fork); Some(v) }
+                Err(_) => None,
+            }
+        })},
+        Some(t) if type_is(t, "Vec") => quote! { Ok({
+            let mut items = ::std::vec::Vec::new();
+            loop {
+                let mut fork = #stream.fork();
+                match ::moxy_token::Parse::parse(&mut fork) {
+                    Ok(v) => { #stream.seek(&fork); items.push(v); }
+                    Err(_) => break,
+                }
+            }
+            items
+        })},
+        Some(t) if type_is(t, "Box") => quote! { Ok(::std::boxed::Box::new(#stream.parse()?)) },
+        _ => quote! { #stream.parse() },
+    }
+}
+
 fn value_expr(opts: &ParseOptions, ty: &Type, stream: &syn::Ident) -> proc_macro2::TokenStream {
     if let Some(path) = &opts.call {
         quote! { #path(#stream)? }
@@ -195,7 +242,6 @@ fn value_expr(opts: &ParseOptions, ty: &Type, stream: &syn::Ident) -> proc_macro
             }
         }}
     } else if type_is(ty, "Vec") {
-        // Greedily parse elements until one stops matching.
         quote! {{
             let mut items = ::std::vec::Vec::new();
             loop {
@@ -212,4 +258,20 @@ fn value_expr(opts: &ParseOptions, ty: &Type, stream: &syn::Ident) -> proc_macro
     } else {
         quote! { #stream.parse()? }
     }
+}
+
+/// Extract the first generic argument type from `Delimited<T>`, if present.
+fn delimited_inner_ty(ty: &Type) -> Option<Type> {
+    if let Type::Path(tp) = ty {
+        if let Some(seg) = tp.path.segments.last() {
+            if seg.ident == "Delimited" {
+                if let syn::PathArguments::AngleBracketed(ab) = &seg.arguments {
+                    if let Some(syn::GenericArgument::Type(t)) = ab.args.first() {
+                        return Some(t.clone());
+                    }
+                }
+            }
+        }
+    }
+    None
 }

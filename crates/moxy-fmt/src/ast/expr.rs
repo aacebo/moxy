@@ -112,7 +112,7 @@ impl Fmt for ExprStruct {
         self.path.fmt(f)?;
         f.text(" {")?;
         f.indent(|f| {
-            for pair in self.fields.pairs() {
+            for pair in self.brace.inner.fields.pairs() {
                 f.hard_break()?;
 
                 match pair {
@@ -127,7 +127,7 @@ impl Fmt for ExprStruct {
                 }
             }
 
-            if let Some((_, rest)) = &self.rest {
+            if let Some((_, rest)) = &self.brace.inner.rest {
                 f.hard_break()?;
                 f.text("..")?;
                 rest.fmt(f)?;
@@ -136,7 +136,7 @@ impl Fmt for ExprStruct {
             Ok(())
         })?;
 
-        if !self.fields.is_empty() || self.rest.is_some() {
+        if !self.brace.inner.fields.is_empty() || self.brace.inner.rest.is_some() {
             f.hard_break()?;
         }
 
@@ -210,7 +210,7 @@ impl Fmt for ClosureParam {
 impl Fmt for ExprTuple {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("(")?;
-        self.elems.fmt(f)?;
+        self.paren.inner.fmt(f)?;
         f.text(")")
     }
 }
@@ -218,7 +218,7 @@ impl Fmt for ExprTuple {
 impl Fmt for ExprArray {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("[")?;
-        self.elems.fmt(f)?;
+        self.bracket.inner.fmt(f)?;
         f.text("]")
     }
 }
@@ -226,9 +226,9 @@ impl Fmt for ExprArray {
 impl Fmt for ExprRepeat {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("[")?;
-        self.elem.fmt(f)?;
+        self.bracket.inner.elem.fmt(f)?;
         f.text("; ")?;
-        self.len.fmt(f)?;
+        self.bracket.inner.len.fmt(f)?;
         f.text("]")
     }
 }
@@ -245,7 +245,7 @@ impl Fmt for ExprLet {
 impl Fmt for ExprParen {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("(")?;
-        self.expr.fmt(f)?;
+        self.paren.inner.fmt(f)?;
         f.text(")")
     }
 }
@@ -394,7 +394,7 @@ impl Fmt for ExprCall {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.func.fmt(f)?;
         f.text("(")?;
-        self.args.fmt(f)?;
+        self.paren.inner.fmt(f)?;
         f.text(")")
     }
 }
@@ -412,7 +412,7 @@ impl Fmt for ExprMethodCall {
         }
 
         f.text("(")?;
-        self.args.fmt(f)?;
+        self.paren.inner.fmt(f)?;
         f.text(")")
     }
 }
@@ -429,7 +429,7 @@ impl Fmt for ExprIndex {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.base.fmt(f)?;
         f.text("[")?;
-        self.index.fmt(f)?;
+        self.bracket.inner.fmt(f)?;
         f.text("]")
     }
 }
@@ -535,7 +535,7 @@ impl Fmt for ExprMatch {
         self.expr.fmt(f)?;
         f.text(" {")?;
         f.indent(|f| {
-            for arm in &self.arms {
+            for arm in &self.brace.inner {
                 f.hard_break()?;
                 arm.fmt(f)?;
             }

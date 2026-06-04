@@ -1,9 +1,9 @@
 use moxy_token::keyword::{For, Impl};
 use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::Not;
-use moxy_token::{Brace, LexError, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
 
-use crate::{Attribute, BoundPolarity, Defaultness, Generics, ImplItem, TraitRef, Type, Unsafety};
+use crate::{Attribute, BoundPolarity, Defaultness, Delimited, Generics, ImplItem, TraitRef, Type, Unsafety};
 
 #[doc = "An `impl` block, optionally implementing a trait (`impl Trait for Type { ... }`)."]
 #[derive(Debug, Clone)]
@@ -18,8 +18,7 @@ pub struct ItemImpl {
     pub for_keyword: Option<For>,
     pub trait_ref: Option<TraitRef>,
     pub self_ty: Type,
-    pub brace: Brace,
-    pub items: Vec<ImplItem>,
+    pub brace: Delimited<Vec<ImplItem>>,
 }
 
 impl ItemImpl {
@@ -43,14 +42,12 @@ impl Parse for ItemImpl {
         let impl_keyword = stream.parse::<Impl>()?;
         let generics = stream.parse::<Generics>()?;
 
-        // Optional `!` for a negative impl (`impl !Trait for T`).
         let polarity = if stream.peek::<Not>().is_some() {
             BoundPolarity::Negative(stream.parse::<Not>()?)
         } else {
             BoundPolarity::Positive
         };
 
-        // `impl Trait for Type` vs `impl Type`. Parse a type; if `for` follows, it was the trait.
         let first = stream.parse::<Type>()?;
 
         let (for_keyword, trait_ref, self_ty) = if stream.peek::<For>().is_some() {
@@ -71,9 +68,7 @@ impl Parse for ItemImpl {
             generics.where_clause = Some(stream.parse()?);
         }
 
-        let (brace, group) = stream.parse_brace()?;
-        let mut inner = group.parse();
-        let items = inner.parse::<Vec<ImplItem>>()?;
+        let brace = Delimited::<Vec<ImplItem>>::parse_brace(stream)?;
         Ok(ItemImpl {
             span: Span::default(),
             attrs,
@@ -85,7 +80,6 @@ impl Parse for ItemImpl {
             trait_ref,
             self_ty,
             brace,
-            items,
         })
     }
 }
@@ -108,12 +102,6 @@ impl ToTokens for ItemImpl {
         }
 
         self.self_ty.to_tokens(t);
-        let mut inner = TokenStream::new();
-
-        for it in &self.items {
-            it.to_tokens(&mut inner);
-        }
-
-        self.brace.surround(t, inner);
+        self.brace.to_tokens(t);
     }
 }
