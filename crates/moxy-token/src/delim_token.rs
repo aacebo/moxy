@@ -25,8 +25,6 @@ macro_rules! define_delim {
                     self.span = span;
                 }
 
-                /// Emit `inner` wrapped in this delimiter, preserving the stored
-                /// open/close spans.
                 pub fn surround(&self, tokens: &mut TokenStream, inner: TokenStream) {
                     let mut group = Group::new(Delim::$delim, inner);
                     group.set_span(self.span);
@@ -34,8 +32,6 @@ macro_rules! define_delim {
                 }
             }
 
-            // Equality ignores the span so AST nodes embedding a delimiter token
-            // compare structurally.
             impl PartialEq for $name {
                 fn eq(&self, _: &Self) -> bool {
                     true
