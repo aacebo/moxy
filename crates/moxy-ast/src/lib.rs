@@ -4,6 +4,7 @@ extern crate self as moxy_ast;
 
 mod _crate;
 pub mod args;
+pub mod attr;
 mod delimited;
 pub mod expr;
 pub mod fields;
@@ -17,7 +18,6 @@ mod macro_call;
 #[macro_use]
 mod macros;
 pub mod member;
-pub mod meta;
 mod misc;
 pub mod pat;
 pub mod path;
@@ -33,6 +33,8 @@ pub mod vis;
 pub use _crate::Crate;
 #[doc(inline)]
 pub use args::{AngleArgs, GenericArgument};
+#[doc(inline)]
+pub use attr::{Attribute, Meta};
 #[doc(inline)]
 pub use delimited::Delimited;
 #[doc(inline)]
@@ -55,8 +57,6 @@ pub use lit::Lit;
 pub use macro_call::*;
 #[doc(inline)]
 pub use member::{ForeignItem, ImplItem, Member, TraitItem};
-#[doc(inline)]
-pub use meta::{Attribute, Meta};
 #[doc(inline)]
 pub use misc::*;
 #[doc(inline)]

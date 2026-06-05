@@ -1,8 +1,6 @@
-pub mod attr;
 mod meta_list;
 mod meta_name_value;
 
-pub use attr::Attribute;
 pub use meta_list::*;
 pub use meta_name_value::*;
 use moxy_token::parse::{Parse, ParseError, ParseStream};
@@ -66,7 +64,7 @@ mod tests {
 
     use moxy_token::{Parse, ToTokenStream, TokenStream};
 
-    use super::attr::*;
+    use super::super::*;
     use super::*;
 
     fn render<T: ToTokenStream>(v: &T) -> String {

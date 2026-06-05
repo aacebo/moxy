@@ -41,7 +41,7 @@ doctest = false
 workspace = true
 
 [features]
-default = []
+default = ["ast", "token", "fmt", "template", "diagnostic", "test"]
 ast = ["moxy-ast"]
 fmt = ["moxy-fmt"]
 token = ["moxy-token"]
