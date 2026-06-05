@@ -57,20 +57,13 @@ impl std::fmt::Display for Ident {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
     use moxy_token::ToTokenStream;
 
     use super::*;
 
-    fn parse(src: &str) -> Ident {
-        let ts = TokenStream::from_str(src).unwrap();
-        ts.parse().parse::<Ident>().unwrap()
-    }
-
     #[test]
     fn plain() {
-        let id = parse("foo");
+        let id = moxy_token::parse!("foo" as Ident).unwrap();
         assert_eq!(id.text, "foo");
         assert!(!id.raw);
         assert_eq!(id.to_token_stream().to_string(), "foo");
@@ -78,7 +71,7 @@ mod tests {
 
     #[test]
     fn raw() {
-        let id = parse("r#fn");
+        let id = moxy_token::parse!("r#fn" as Ident).unwrap();
         assert_eq!(id.text, "fn");
         assert!(id.raw);
         assert_eq!(id.to_token_stream().to_string(), "r#fn");
@@ -86,7 +79,6 @@ mod tests {
 
     #[test]
     fn not_an_ident() {
-        let ts = TokenStream::from_str("+").unwrap();
-        assert!(ts.parse().parse::<Ident>().is_err());
+        assert!(moxy_token::parse!("+" as Ident).is_err());
     }
 }

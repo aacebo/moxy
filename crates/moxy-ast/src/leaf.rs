@@ -215,77 +215,116 @@ define_leaf! {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
-    use moxy_token::{ToTokenStream, TokenStream};
+    use moxy_token::ToTokenStream;
 
     use super::*;
 
-    fn parse<T: Parse>(src: &str) -> Result<T, ParseError> {
-        let ts = TokenStream::from_str(src).unwrap();
-        let mut ps = ts.parse();
-        ps.parse::<T>()
-    }
-
     #[test]
     fn bin_ops() {
-        assert!(matches!(parse::<BinOp>("+").unwrap(), BinOp::Add(_)));
-        assert!(matches!(parse::<BinOp>("==").unwrap(), BinOp::Eq(_)));
-        assert!(matches!(parse::<BinOp>("&&").unwrap(), BinOp::And(_)));
-        assert!(matches!(parse::<BinOp>("&").unwrap(), BinOp::BitAnd(_)));
-        assert!(matches!(parse::<BinOp>("<<").unwrap(), BinOp::Shl(_)));
-        assert!(parse::<BinOp>("foo").is_err());
+        assert!(matches!(moxy_token::parse!("+" as BinOp).unwrap(), BinOp::Add(_)));
+        assert!(matches!(moxy_token::parse!("==" as BinOp).unwrap(), BinOp::Eq(_)));
+        assert!(matches!(moxy_token::parse!("&&" as BinOp).unwrap(), BinOp::And(_)));
+        assert!(matches!(moxy_token::parse!("&" as BinOp).unwrap(), BinOp::BitAnd(_)));
+        assert!(matches!(moxy_token::parse!("<<" as BinOp).unwrap(), BinOp::Shl(_)));
+        assert!(moxy_token::parse!("foo" as BinOp).is_err());
     }
 
     #[test]
     fn un_ops() {
-        assert!(matches!(parse::<UnOp>("*").unwrap(), UnOp::Deref(_)));
-        assert!(matches!(parse::<UnOp>("!").unwrap(), UnOp::Not(_)));
-        assert!(matches!(parse::<UnOp>("-").unwrap(), UnOp::Neg(_)));
+        assert!(matches!(moxy_token::parse!("*" as UnOp).unwrap(), UnOp::Deref(_)));
+        assert!(matches!(moxy_token::parse!("!" as UnOp).unwrap(), UnOp::Not(_)));
+        assert!(matches!(moxy_token::parse!("-" as UnOp).unwrap(), UnOp::Neg(_)));
     }
 
     #[test]
     fn assign_ops() {
-        assert!(matches!(parse::<AssignOp>("+=").unwrap(), AssignOp::AddAssign(_)));
-        assert!(matches!(parse::<AssignOp>("<<=").unwrap(), AssignOp::ShlAssign(_)));
+        assert!(matches!(
+            moxy_token::parse!("+=" as AssignOp).unwrap(),
+            AssignOp::AddAssign(_)
+        ));
+        assert!(matches!(
+            moxy_token::parse!("<<=" as AssignOp).unwrap(),
+            AssignOp::ShlAssign(_)
+        ));
     }
 
     #[test]
     fn markers_parse_from_present_and_absent() {
-        assert!(matches!(parse::<Mutability>("mut").unwrap(), Mutability::Mutable(_)));
-        assert!(matches!(parse::<Mutability>("").unwrap(), Mutability::Immutable));
-        assert!(matches!(parse::<Asyncness>("async").unwrap(), Asyncness::Async(_)));
-        assert!(matches!(parse::<Asyncness>("").unwrap(), Asyncness::Sync));
-        assert!(matches!(parse::<Unsafety>("unsafe").unwrap(), Unsafety::Unsafe(_)));
-        assert!(matches!(parse::<Unsafety>("").unwrap(), Unsafety::Safe));
+        assert!(matches!(
+            moxy_token::parse!("mut" as Mutability).unwrap(),
+            Mutability::Mutable(_)
+        ));
+        assert!(matches!(moxy_token::parse!("" as Mutability).unwrap(), Mutability::Immutable));
+        assert!(matches!(
+            moxy_token::parse!("async" as Asyncness).unwrap(),
+            Asyncness::Async(_)
+        ));
+        assert!(matches!(moxy_token::parse!("" as Asyncness).unwrap(), Asyncness::Sync));
+        assert!(matches!(
+            moxy_token::parse!("unsafe" as Unsafety).unwrap(),
+            Unsafety::Unsafe(_)
+        ));
+        assert!(matches!(moxy_token::parse!("" as Unsafety).unwrap(), Unsafety::Safe));
     }
 
     #[test]
     fn roundtrips() {
-        assert_eq!(parse::<BinOp>("+").unwrap().to_token_stream().to_string(), "+");
-        assert_eq!(parse::<BinOp>("==").unwrap().to_token_stream().to_string(), "==");
-        assert_eq!(parse::<AssignOp>("<<=").unwrap().to_token_stream().to_string(), "<<=");
-        assert_eq!(parse::<RangeLimits>("..=").unwrap().to_token_stream().to_string(), "..=");
-        assert_eq!(parse::<Mutability>("mut").unwrap().to_token_stream().to_string(), "mut");
-        assert_eq!(parse::<Mutability>("").unwrap().to_token_stream().to_string(), "");
+        assert_eq!(moxy_token::parse!("+" as BinOp).unwrap().to_token_stream().to_string(), "+");
+        assert_eq!(moxy_token::parse!("==" as BinOp).unwrap().to_token_stream().to_string(), "==");
+        assert_eq!(
+            moxy_token::parse!("<<=" as AssignOp).unwrap().to_token_stream().to_string(),
+            "<<="
+        );
+        assert_eq!(
+            moxy_token::parse!("..=" as RangeLimits)
+                .unwrap()
+                .to_token_stream()
+                .to_string(),
+            "..="
+        );
+        assert_eq!(
+            moxy_token::parse!("mut" as Mutability).unwrap().to_token_stream().to_string(),
+            "mut"
+        );
+        assert_eq!(
+            moxy_token::parse!("" as Mutability).unwrap().to_token_stream().to_string(),
+            ""
+        );
     }
 
     #[test]
     fn range_and_modifiers() {
-        assert!(matches!(parse::<RangeLimits>("..").unwrap(), RangeLimits::HalfOpen(_)));
-        assert!(matches!(parse::<RangeLimits>("..=").unwrap(), RangeLimits::Closed(_)));
         assert!(matches!(
-            parse::<TraitBoundModifier>("?").unwrap(),
+            moxy_token::parse!(".." as RangeLimits).unwrap(),
+            RangeLimits::HalfOpen(_)
+        ));
+        assert!(matches!(
+            moxy_token::parse!("..=" as RangeLimits).unwrap(),
+            RangeLimits::Closed(_)
+        ));
+        assert!(matches!(
+            moxy_token::parse!("?" as TraitBoundModifier).unwrap(),
             TraitBoundModifier::Maybe(_)
         ));
-        assert!(matches!(parse::<TraitBoundModifier>("").unwrap(), TraitBoundModifier::None));
-        assert!(matches!(parse::<BoundPolarity>("!").unwrap(), BoundPolarity::Negative(_)));
-        assert!(matches!(parse::<BoundPolarity>("").unwrap(), BoundPolarity::Positive));
+        assert!(matches!(
+            moxy_token::parse!("" as TraitBoundModifier).unwrap(),
+            TraitBoundModifier::None
+        ));
+        assert!(matches!(
+            moxy_token::parse!("!" as BoundPolarity).unwrap(),
+            BoundPolarity::Negative(_)
+        ));
+        assert!(matches!(
+            moxy_token::parse!("" as BoundPolarity).unwrap(),
+            BoundPolarity::Positive
+        ));
     }
 
     #[test]
     fn equality_ignores_span() {
-        // Same operator parsed at different offsets compares equal.
-        assert_eq!(parse::<BinOp>("+ ").unwrap(), parse::<BinOp>(" +").unwrap());
+        assert_eq!(
+            moxy_token::parse!("+ " as BinOp).unwrap(),
+            moxy_token::parse!(" +" as BinOp).unwrap()
+        );
     }
 }

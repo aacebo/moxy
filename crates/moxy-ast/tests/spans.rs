@@ -1,30 +1,20 @@
+use moxy_ast::attr::{AttrArgs, AttrStyle};
 use moxy_ast::{Attribute, BinOp, Expr, FieldsNamed, Type};
-use moxy_token::parse::Parse;
-use moxy_token::{Span, Spanner, ToTokenStream, TokenStream};
-
-fn parse<T: Parse>(src: &str) -> T {
-    let ts: TokenStream = src.parse().unwrap();
-    let mut ps = ts.parse();
-    ps.parse::<T>().unwrap()
-}
-
-fn span_of<T: Spanner>(value: &T) -> Span {
-    value.span()
-}
+use moxy_token::ToTokenStream;
 
 #[test]
 fn token_types_implement_spanner() {
-    let plus = parse::<BinOp>("    +");
+    let plus = moxy_token::parse!("    +" as BinOp).unwrap();
     let BinOp::Add(plus) = plus else { panic!("expected Add") };
-    assert_eq!(span_of(&plus).start().index(), 4);
+    assert_eq!(plus.span().start().index(), 4);
 
-    let fields = parse::<FieldsNamed>("{ a: A }");
-    assert!(span_of(&fields.fields).start().index() <= span_of(&fields.fields).end().index());
+    let fields = moxy_token::parse!("{ a: A }" as FieldsNamed).unwrap();
+    assert!(fields.fields.open().start().index() <= fields.fields.close().start().index());
 }
 
 #[test]
 fn leaf_op_preserves_span() {
-    let op = parse::<BinOp>("    +");
+    let op = moxy_token::parse!("    +" as BinOp).unwrap();
     let BinOp::Add(plus) = op else { panic!("expected Add") };
     assert_eq!(
         plus.span().start().index(),
@@ -35,12 +25,15 @@ fn leaf_op_preserves_span() {
 
 #[test]
 fn leaf_equality_ignores_span() {
-    assert_eq!(parse::<BinOp>("+  "), parse::<BinOp>("  +"));
+    assert_eq!(
+        moxy_token::parse!("+  " as BinOp).unwrap(),
+        moxy_token::parse!("  +" as BinOp).unwrap(),
+    );
 }
 
 #[test]
 fn delimiter_preserves_span() {
-    let fields = parse::<FieldsNamed>("{ a: A }");
+    let fields = moxy_token::parse!("{ a: A }" as FieldsNamed).unwrap();
     let open = fields.fields.open().start().index();
     let close = fields.fields.close().start().index();
     assert!(close > open, "brace close span should follow its open span");
@@ -53,16 +46,16 @@ fn delimiter_preserves_span() {
 
 #[test]
 fn attribute_roundtrips_with_stored_tokens() {
-    let outer = parse::<Attribute>("#[inline]");
+    let outer = moxy_token::parse!("#[inline]" as Attribute).unwrap();
     assert_eq!(outer.to_token_stream().to_string(), "# [inline]");
 
-    let inner = parse::<Attribute>("#![no_std]");
+    let inner = moxy_token::parse!("#![no_std]" as Attribute).unwrap();
     assert_eq!(inner.to_token_stream().to_string(), "# ! [no_std]");
 }
 
 #[test]
 fn assign_eq_preserves_span() {
-    let e = parse::<Expr>("a = b");
+    let e = moxy_token::parse!("a = b" as Expr).unwrap();
     let Expr::Binary(moxy_ast::BinaryExpr::Assign(assign)) = e else {
         panic!("expected assignment");
     };
@@ -71,7 +64,20 @@ fn assign_eq_preserves_span() {
 
 #[test]
 fn never_type_preserves_span() {
-    let ty = parse::<Type>("  !");
+    let ty = moxy_token::parse!("  !" as Type).unwrap();
     let Type::Never(not) = ty else { panic!("expected never type") };
     assert_eq!(not.span().start().index(), 2);
+}
+
+#[test]
+fn doc_comments_desugar_to_doc_attributes() {
+    let attr = moxy_token::parse!("/// outer doc\nfn f() {}" as Attribute).unwrap();
+    assert!(matches!(attr.style, AttrStyle::Outer(_)));
+    assert_eq!(attr.content.inner.path.segments.first().unwrap().ident.text, "doc");
+    assert!(matches!(attr.content.inner.args, AttrArgs::NameValue { .. }));
+
+    let attr = moxy_token::parse!("//! inner doc\n" as Attribute).unwrap();
+    assert!(matches!(attr.style, AttrStyle::Inner(..)));
+    assert_eq!(attr.content.inner.path.segments.first().unwrap().ident.text, "doc");
+    assert!(matches!(attr.content.inner.args, AttrArgs::NameValue { .. }));
 }
