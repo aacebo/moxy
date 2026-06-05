@@ -25,6 +25,5 @@ moxy-token = { path = "../moxy-token" }
 serde = { version = "1", features = ["derive"], optional = true }
 
 [dev-dependencies]
-moxy-token = { path = "../moxy-token", features = ["serde", "proc-macro2"] }
+moxy-token = { path = "../moxy-token", features = ["serde"] }
 serde_json = "1"
-proc-macro2 = { version = "1", features = ["span-locations"] }

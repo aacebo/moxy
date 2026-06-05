@@ -31,7 +31,6 @@ name = "moxy-ast"
 version = "0.0.0"
 dependencies = [
  "moxy-token",
- "proc-macro2",
  "serde",
  "serde_json",
 ]
