@@ -10,21 +10,21 @@ use crate::{Delimited, Punctuated};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldsNamed {
     pub span: Span,
-    pub brace: Delimited<Punctuated<FieldDef, Comma>>,
+    pub fields: Delimited<Punctuated<FieldDef, Comma>>,
 }
 
 impl Parse for FieldsNamed {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let brace = Delimited::parse_brace_with(stream, Punctuated::parse_terminated)?;
+        let fields = Delimited::parse_brace_with(stream, Punctuated::parse_terminated)?;
         Ok(Self {
             span: Span::default(),
-            brace,
+            fields,
         })
     }
 }
 
 impl ToTokens for FieldsNamed {
     fn to_tokens(&self, t: &mut TokenStream) {
-        self.brace.to_tokens(t);
+        self.fields.to_tokens(t);
     }
 }

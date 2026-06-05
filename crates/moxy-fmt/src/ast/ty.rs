@@ -81,7 +81,7 @@ impl Fmt for TypePath {
 impl Fmt for TypeTuple {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("(")?;
-        self.paren.inner.fmt(f)?;
+        self.elems.inner.fmt(f)?;
         f.text(")")
     }
 }
@@ -89,9 +89,9 @@ impl Fmt for TypeTuple {
 impl Fmt for TypeArray {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("[")?;
-        self.bracket.inner.elem.fmt(f)?;
+        self.content.inner.elem.fmt(f)?;
         f.text("; ")?;
-        self.bracket.inner.len.fmt(f)?;
+        self.content.inner.len.fmt(f)?;
         f.text("]")
     }
 }
@@ -99,7 +99,7 @@ impl Fmt for TypeArray {
 impl Fmt for TypeSlice {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("[")?;
-        self.bracket.inner.fmt(f)?;
+        self.elem.inner.fmt(f)?;
         f.text("]")
     }
 }
@@ -153,10 +153,10 @@ impl Fmt for TypeBareFn {
         }
 
         f.text("fn(")?;
-        self.paren.inner.inputs.fmt(f)?;
+        self.params.inner.inputs.fmt(f)?;
 
-        if self.paren.inner.variadic.is_some() {
-            if !self.paren.inner.inputs.is_empty() {
+        if self.params.inner.variadic.is_some() {
+            if !self.params.inner.inputs.is_empty() {
                 f.text(", ")?;
             }
 
@@ -199,7 +199,7 @@ impl Fmt for TypeTraitObject {
 impl Fmt for TypeParen {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("(")?;
-        self.paren.inner.fmt(f)?;
+        self.content.inner.fmt(f)?;
         f.text(")")
     }
 }

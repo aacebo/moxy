@@ -2,13 +2,13 @@ use moxy_token::{Span, ToTokens, TokenStream};
 
 use crate::{Attribute, Delimited};
 
-#[doc = "A parenthesized expression: `(x + y)`."]
+#[doc = "A contentthesized expression: `(x + y)`."]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprParen {
     pub span: Span,
     pub attrs: Vec<Attribute>,
-    pub paren: Delimited<Box<super::super::Expr>>,
+    pub content: Delimited<Box<super::super::Expr>>,
 }
 
 impl ToTokens for ExprParen {
@@ -16,6 +16,6 @@ impl ToTokens for ExprParen {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        self.paren.to_tokens(t);
+        self.content.to_tokens(t);
     }
 }

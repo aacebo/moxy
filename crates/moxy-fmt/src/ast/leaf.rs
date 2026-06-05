@@ -41,7 +41,7 @@ impl Fmt for Visibility {
             Self::Super { .. } => f.text("pub(super)"),
             Self::Restricted { path, .. } => {
                 f.text("pub(in ")?;
-                path.fmt(f)?;
+                path.inner.1.fmt(f)?;
                 f.text(")")
             }
         }

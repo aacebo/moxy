@@ -11,7 +11,7 @@ pub struct PatTupleStruct {
     pub attrs: Vec<Attribute>,
     pub qself: Option<QSelf>,
     pub path: Path,
-    pub paren: Delimited<Punctuated<Pattern, Comma>>,
+    pub elems: Delimited<Punctuated<Pattern, Comma>>,
 }
 
 impl ToTokens for PatTupleStruct {
@@ -20,6 +20,6 @@ impl ToTokens for PatTupleStruct {
             a.to_tokens(t);
         }
         self.path.to_tokens(t);
-        self.paren.to_tokens(t);
+        self.elems.to_tokens(t);
     }
 }

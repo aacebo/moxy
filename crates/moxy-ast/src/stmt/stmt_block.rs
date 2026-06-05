@@ -9,21 +9,21 @@ use crate::Delimited;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StmtBlock {
     pub span: Span,
-    pub brace: Delimited<Vec<Stmt>>,
+    pub stmts: Delimited<Vec<Stmt>>,
 }
 
 impl Parse for StmtBlock {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let brace = Delimited::<Vec<Stmt>>::parse_brace(stream)?;
+        let stmts = Delimited::<Vec<Stmt>>::parse_brace(stream)?;
         Ok(Self {
             span: Span::default(),
-            brace,
+            stmts,
         })
     }
 }
 
 impl ToTokens for StmtBlock {
     fn to_tokens(&self, t: &mut TokenStream) {
-        self.brace.to_tokens(t);
+        self.stmts.to_tokens(t);
     }
 }

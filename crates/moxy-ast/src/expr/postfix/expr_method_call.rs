@@ -14,7 +14,7 @@ pub struct ExprMethodCall {
     pub dot: Dot,
     pub method: Ident,
     pub turbofish: Option<AngleArgs>,
-    pub paren: Delimited<Punctuated<super::super::Expr, Comma>>,
+    pub args: Delimited<Punctuated<super::super::Expr, Comma>>,
 }
 
 impl ExprMethodCall {
@@ -51,6 +51,6 @@ impl ToTokens for ExprMethodCall {
             tf.to_tokens(t);
         }
 
-        self.paren.to_tokens(t);
+        self.args.to_tokens(t);
     }
 }

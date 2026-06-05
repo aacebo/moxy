@@ -10,7 +10,7 @@ pub struct ExprCall {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub func: Box<super::super::Expr>,
-    pub paren: Delimited<Punctuated<super::super::Expr, Comma>>,
+    pub args: Delimited<Punctuated<super::super::Expr, Comma>>,
 }
 
 impl ToTokens for ExprCall {
@@ -19,6 +19,6 @@ impl ToTokens for ExprCall {
             a.to_tokens(t);
         }
         self.func.to_tokens(t);
-        self.paren.to_tokens(t);
+        self.args.to_tokens(t);
     }
 }

@@ -28,7 +28,7 @@ pub struct ExprStruct {
     pub attrs: Vec<Attribute>,
     pub qself: Option<QSelf>,
     pub path: Path,
-    pub brace: Delimited<StructBody>,
+    pub body: Delimited<StructBody>,
 }
 
 impl ToTokens for ExprStruct {
@@ -37,6 +37,6 @@ impl ToTokens for ExprStruct {
             a.to_tokens(t);
         }
         self.path.to_tokens(t);
-        self.brace.to_tokens(t);
+        self.body.to_tokens(t);
     }
 }

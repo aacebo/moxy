@@ -227,7 +227,7 @@ impl ExprRepeat {
         Ok(Some(Self {
             span: Span::default(),
             attrs: Vec::new(),
-            bracket: Delimited::bracket(
+            content: Delimited::bracket(
                 bracket_span,
                 RepeatInner {
                     elem: Box::new(elem),
@@ -269,13 +269,13 @@ impl PrimaryExpr {
                 Expr::Primary(PrimaryExpr::Paren(ExprParen {
                     span: Span::default(),
                     attrs: Vec::new(),
-                    paren: Delimited::paren(paren_span, expr),
+                    content: Delimited::paren(paren_span, expr),
                 }))
             } else {
                 Expr::Primary(PrimaryExpr::Tuple(ExprTuple {
                     span: Span::default(),
                     attrs: Vec::new(),
-                    paren: Delimited::paren(paren_span, elems),
+                    elems: Delimited::paren(paren_span, elems),
                 }))
             });
         }
@@ -290,7 +290,7 @@ impl PrimaryExpr {
             return Ok(Expr::Primary(PrimaryExpr::Array(ExprArray {
                 span: Span::default(),
                 attrs: Vec::new(),
-                bracket: Delimited::bracket(bracket_span, elems),
+                elems: Delimited::bracket(bracket_span, elems),
             })));
         }
 
@@ -464,7 +464,7 @@ impl PrimaryExpr {
             let path = stream.parse::<Path>()?;
 
             if allow_struct && matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
-                let brace = Delimited::parse_brace_with(stream, |inner| {
+                let body = Delimited::parse_brace_with(stream, |inner| {
                     let (fields, rest) = ExprStruct::parse_body(inner)?;
                     Ok(StructBody { fields, rest })
                 })?;
@@ -473,7 +473,7 @@ impl PrimaryExpr {
                     attrs: Vec::new(),
                     qself: None,
                     path,
-                    brace,
+                    body,
                 })));
             }
 

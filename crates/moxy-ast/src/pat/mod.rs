@@ -338,21 +338,21 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
 
     // Tuple/paren `(...)`
     if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-        let paren = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
+        let elems = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
         return Ok(Pattern::Tuple(PatTuple {
             span: Span::default(),
             attrs,
-            paren,
+            elems,
         }));
     }
 
     // Slice `[...]`
     if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
-        let bracket = Delimited::parse_bracket_with(stream, Punctuated::parse_terminated)?;
+        let elems = Delimited::parse_bracket_with(stream, Punctuated::parse_terminated)?;
         return Ok(Pattern::Slice(PatSlice {
             span: Span::default(),
             attrs,
-            bracket,
+            elems,
         }));
     }
 
@@ -386,19 +386,19 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
 
         if matches!(fork.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
             stream.seek(&fork);
-            let paren = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
+            let elems = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
             return Ok(Pattern::TupleStruct(PatTupleStruct {
                 span: Span::default(),
                 attrs,
                 qself: None,
                 path,
-                paren,
+                elems,
             }));
         }
 
         if matches!(fork.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
             stream.seek(&fork);
-            let brace = Delimited::parse_brace_with(stream, |inner| {
+            let body = Delimited::parse_brace_with(stream, |inner| {
                 let (fields, rest) = PatStruct::parse_body(inner)?;
                 Ok(PatStructBody { fields, rest })
             })?;
@@ -407,7 +407,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
                 attrs,
                 qself: None,
                 path,
-                brace,
+                body,
             }));
         }
 

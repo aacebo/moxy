@@ -10,21 +10,21 @@ use crate::Delimited;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeParen {
     pub span: Span,
-    pub paren: Delimited<Box<Type>>,
+    pub content: Delimited<Box<Type>>,
 }
 
 impl Parse for TypeParen {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let paren = Delimited::parse_paren_with(stream, |stream| Ok(Box::new(stream.parse::<Type>()?)))?;
+        let content = Delimited::parse_paren_with(stream, |stream| Ok(Box::new(stream.parse::<Type>()?)))?;
         Ok(Self {
-            span: paren.span(),
-            paren,
+            span: content.span(),
+            content,
         })
     }
 }
 
 impl ToTokens for TypeParen {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.paren.to_tokens(tokens);
+        self.content.to_tokens(tokens);
     }
 }

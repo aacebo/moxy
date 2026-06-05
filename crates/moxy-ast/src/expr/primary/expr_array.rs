@@ -9,7 +9,7 @@ use crate::*;
 pub struct ExprArray {
     pub span: Span,
     pub attrs: Vec<Attribute>,
-    pub bracket: Delimited<Punctuated<super::super::Expr, Comma>>,
+    pub elems: Delimited<Punctuated<super::super::Expr, Comma>>,
 }
 
 impl ToTokens for ExprArray {
@@ -17,6 +17,6 @@ impl ToTokens for ExprArray {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        self.bracket.to_tokens(t);
+        self.elems.to_tokens(t);
     }
 }

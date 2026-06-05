@@ -35,7 +35,7 @@ impl ToTokens for RepeatInner {
 pub struct ExprRepeat {
     pub span: Span,
     pub attrs: Vec<Attribute>,
-    pub bracket: Delimited<RepeatInner>,
+    pub content: Delimited<RepeatInner>,
 }
 
 impl ToTokens for ExprRepeat {
@@ -43,6 +43,6 @@ impl ToTokens for ExprRepeat {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        self.bracket.to_tokens(t);
+        self.content.to_tokens(t);
     }
 }

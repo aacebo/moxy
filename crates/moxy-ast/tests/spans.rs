@@ -26,7 +26,7 @@ fn token_types_implement_spanner() {
 
     let fields = parse::<FieldsNamed>("{ a: A }");
     // `Bracket`/`Brace`/`Paren` also implement `Spanner`.
-    assert!(span_of(&fields.brace).start().index() <= span_of(&fields.brace).end().index());
+    assert!(span_of(&fields.fields).start().index() <= span_of(&fields.fields).end().index());
 }
 
 /// A leaf operator parsed at a non-zero offset keeps that offset in its span.
@@ -53,8 +53,8 @@ fn leaf_equality_ignores_span() {
 fn delimiter_preserves_span() {
     // `{` is at index 1, `}` at index 9 in "S { a: A }" → fields group `{ a: A }`.
     let fields = parse::<FieldsNamed>("{ a: A }");
-    let open = fields.brace.open().start().index();
-    let close = fields.brace.close().start().index();
+    let open = fields.fields.open().start().index();
+    let close = fields.fields.close().start().index();
     assert!(close > open, "brace close span should follow its open span");
     assert_ne!(
         (open, close),

@@ -15,7 +15,7 @@ pub struct ItemEnum {
     pub enum_keyword: Enum,
     pub ident: Ident,
     pub generics: Generics,
-    pub brace: Delimited<Punctuated<Variant, Comma>>,
+    pub variants: Delimited<Punctuated<Variant, Comma>>,
 }
 
 impl Parse for ItemEnum {
@@ -30,7 +30,7 @@ impl Parse for ItemEnum {
             generics.where_clause = Some(stream.parse()?);
         }
 
-        let brace = Delimited::parse_brace_with(stream, Punctuated::parse_terminated)?;
+        let variants = Delimited::parse_brace_with(stream, Punctuated::parse_terminated)?;
         Ok(ItemEnum {
             span: Span::default(),
             attrs,
@@ -38,7 +38,7 @@ impl Parse for ItemEnum {
             enum_keyword,
             ident,
             generics,
-            brace,
+            variants,
         })
     }
 }
@@ -52,7 +52,7 @@ impl ToTokens for ItemEnum {
         self.enum_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);
-        self.brace.to_tokens(t);
+        self.variants.to_tokens(t);
     }
 }
 

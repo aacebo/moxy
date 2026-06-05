@@ -99,7 +99,7 @@ impl PostfixExpr {
 
                     if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
                         let method = method.clone();
-                        let paren = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
+                        let args = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
                         expr = Expr::Postfix(PostfixExpr::MethodCall(ExprMethodCall {
                             span: Span::default(),
                             attrs: Vec::new(),
@@ -107,7 +107,7 @@ impl PostfixExpr {
                             dot,
                             method,
                             turbofish,
-                            paren,
+                            args,
                         }));
                         continue;
                     }
@@ -124,23 +124,23 @@ impl PostfixExpr {
             }
 
             if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-                let paren = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
+                let args = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
                 expr = Expr::Postfix(PostfixExpr::Call(ExprCall {
                     span: Span::default(),
                     attrs: Vec::new(),
                     func: Box::new(expr),
-                    paren,
+                    args,
                 }));
                 continue;
             }
 
             if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
-                let bracket = Delimited::parse_bracket_with(stream, |s| super::parse_expr(s, true).map(Box::new))?;
+                let index = Delimited::parse_bracket_with(stream, |s| super::parse_expr(s, true).map(Box::new))?;
                 expr = Expr::Postfix(PostfixExpr::Index(ExprIndex {
                     span: Span::default(),
                     attrs: Vec::new(),
                     base: Box::new(expr),
-                    bracket,
+                    index,
                 }));
                 continue;
             }

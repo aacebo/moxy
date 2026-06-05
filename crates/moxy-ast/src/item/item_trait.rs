@@ -19,7 +19,7 @@ pub struct ItemTrait {
     pub generics: Generics,
     pub colon_punct: Option<Colon>,
     pub supertraits: Punctuated<TypeBound, Plus>,
-    pub brace: Delimited<Vec<TraitItem>>,
+    pub items: Delimited<Vec<TraitItem>>,
 }
 
 impl Parse for ItemTrait {
@@ -49,7 +49,7 @@ impl Parse for ItemTrait {
             generics.where_clause = Some(stream.parse()?);
         }
 
-        let brace = Delimited::<Vec<TraitItem>>::parse_brace(stream)?;
+        let items = Delimited::<Vec<TraitItem>>::parse_brace(stream)?;
         Ok(ItemTrait {
             span: Span::default(),
             attrs,
@@ -61,7 +61,7 @@ impl Parse for ItemTrait {
             generics,
             colon_punct,
             supertraits,
-            brace,
+            items,
         })
     }
 }
@@ -88,6 +88,6 @@ impl ToTokens for ItemTrait {
             self.supertraits.to_tokens(t);
         }
 
-        self.brace.to_tokens(t);
+        self.items.to_tokens(t);
     }
 }

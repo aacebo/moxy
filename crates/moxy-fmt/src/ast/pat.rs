@@ -66,7 +66,7 @@ impl Fmt for PatPath {
 impl Fmt for PatTuple {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("(")?;
-        self.paren.inner.fmt(f)?;
+        self.elems.inner.fmt(f)?;
         f.text(")")
     }
 }
@@ -75,7 +75,7 @@ impl Fmt for PatTupleStruct {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.path.fmt(f)?;
         f.text("(")?;
-        self.paren.inner.fmt(f)?;
+        self.elems.inner.fmt(f)?;
         f.text(")")
     }
 }
@@ -85,7 +85,7 @@ impl Fmt for PatStruct {
         self.path.fmt(f)?;
         f.text(" {")?;
         f.indent(|f| {
-            for pair in self.brace.inner.fields.pairs() {
+            for pair in self.body.inner.fields.pairs() {
                 f.hard_break()?;
 
                 match pair {
@@ -100,7 +100,7 @@ impl Fmt for PatStruct {
                 }
             }
 
-            if self.brace.inner.rest.is_some() {
+            if self.body.inner.rest.is_some() {
                 f.hard_break()?;
                 f.text("..")?;
             }
@@ -108,7 +108,7 @@ impl Fmt for PatStruct {
             Ok(())
         })?;
 
-        if !self.brace.inner.fields.is_empty() || self.brace.inner.rest.is_some() {
+        if !self.body.inner.fields.is_empty() || self.body.inner.rest.is_some() {
             f.hard_break()?;
         }
 
@@ -131,7 +131,7 @@ impl Fmt for PatField {
 impl Fmt for PatSlice {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("[")?;
-        self.bracket.inner.fmt(f)?;
+        self.elems.inner.fmt(f)?;
         f.text("]")
     }
 }
@@ -206,7 +206,7 @@ impl Fmt for PatGroup {
 impl Fmt for PatParen {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("(")?;
-        self.paren.inner.fmt(f)?;
+        self.content.inner.fmt(f)?;
         f.text(")")
     }
 }

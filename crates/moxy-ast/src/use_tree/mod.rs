@@ -37,10 +37,10 @@ impl Parse for UseTree {
         }
 
         if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
-            let brace = Delimited::parse_brace_with(stream, crate::Punctuated::parse_terminated)?;
+            let items = Delimited::parse_brace_with(stream, crate::Punctuated::parse_terminated)?;
             return Ok(UseTree::Group(UseGroup {
                 span: Span::default(),
-                brace,
+                items,
             }));
         }
 

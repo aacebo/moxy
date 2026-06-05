@@ -24,7 +24,7 @@ mod tests {
     fn signature_basic() {
         let s = moxy_token::parse!("fn foo(x: u8) -> u8" as Signature).unwrap();
         assert_eq!(s.ident.text, "foo");
-        assert_eq!(s.paren.inner.inputs.len(), 1);
+        assert_eq!(s.params.inner.inputs.len(), 1);
         assert!(matches!(s.output, crate::ReturnType::Type(..)));
     }
 
@@ -38,7 +38,7 @@ mod tests {
     #[test]
     fn receiver_param() {
         let s = moxy_token::parse!("fn m(&self, x: u8)" as Signature).unwrap();
-        assert!(matches!(s.paren.inner.inputs.first().unwrap(), FnParam::Receiver(_)));
+        assert!(matches!(s.params.inner.inputs.first().unwrap(), FnParam::Receiver(_)));
     }
 
     #[test]

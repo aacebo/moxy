@@ -18,7 +18,7 @@ pub struct ItemImpl {
     pub for_keyword: Option<For>,
     pub trait_ref: Option<TraitRef>,
     pub self_ty: Type,
-    pub brace: Delimited<Vec<ImplItem>>,
+    pub items: Delimited<Vec<ImplItem>>,
 }
 
 impl ItemImpl {
@@ -68,7 +68,7 @@ impl Parse for ItemImpl {
             generics.where_clause = Some(stream.parse()?);
         }
 
-        let brace = Delimited::<Vec<ImplItem>>::parse_brace(stream)?;
+        let items = Delimited::<Vec<ImplItem>>::parse_brace(stream)?;
         Ok(ItemImpl {
             span: Span::default(),
             attrs,
@@ -79,7 +79,7 @@ impl Parse for ItemImpl {
             for_keyword,
             trait_ref,
             self_ty,
-            brace,
+            items,
         })
     }
 }
@@ -102,6 +102,6 @@ impl ToTokens for ItemImpl {
         }
 
         self.self_ty.to_tokens(t);
-        self.brace.to_tokens(t);
+        self.items.to_tokens(t);
     }
 }

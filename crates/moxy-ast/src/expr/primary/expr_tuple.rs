@@ -9,7 +9,7 @@ use crate::*;
 pub struct ExprTuple {
     pub span: Span,
     pub attrs: Vec<Attribute>,
-    pub paren: Delimited<Punctuated<super::super::Expr, Comma>>,
+    pub elems: Delimited<Punctuated<super::super::Expr, Comma>>,
 }
 
 impl ToTokens for ExprTuple {
@@ -17,6 +17,6 @@ impl ToTokens for ExprTuple {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        self.paren.to_tokens(t);
+        self.elems.to_tokens(t);
     }
 }

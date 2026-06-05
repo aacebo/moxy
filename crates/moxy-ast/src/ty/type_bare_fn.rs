@@ -33,7 +33,7 @@ pub struct TypeBareFn {
     pub unsafety: Unsafety,
     pub abi: Option<Abi>,
     pub fn_keyword: Fn,
-    pub paren: Delimited<BareFnParams>,
+    pub params: Delimited<BareFnParams>,
     pub output: ReturnType,
 }
 
@@ -48,7 +48,7 @@ impl Parse for TypeBareFn {
         };
 
         let fn_keyword = stream.parse::<Fn>()?;
-        let paren = Delimited::parse_paren_with(stream, |inner| {
+        let params = Delimited::parse_paren_with(stream, |inner| {
             let inputs = Punctuated::parse_terminated(inner)?;
             Ok(BareFnParams { inputs, variadic: None })
         })?;
@@ -59,7 +59,7 @@ impl Parse for TypeBareFn {
             unsafety,
             abi,
             fn_keyword,
-            paren,
+            params,
             output,
         })
     }
@@ -75,7 +75,7 @@ impl ToTokens for TypeBareFn {
             abi.to_tokens(t);
         }
         self.fn_keyword.to_tokens(t);
-        self.paren.to_tokens(t);
+        self.params.to_tokens(t);
         self.output.to_tokens(t);
     }
 }

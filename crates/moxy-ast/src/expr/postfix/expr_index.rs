@@ -9,7 +9,7 @@ pub struct ExprIndex {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub base: Box<super::super::Expr>,
-    pub bracket: Delimited<Box<super::super::Expr>>,
+    pub index: Delimited<Box<super::super::Expr>>,
 }
 
 impl ToTokens for ExprIndex {
@@ -18,6 +18,6 @@ impl ToTokens for ExprIndex {
             a.to_tokens(t);
         }
         self.base.to_tokens(t);
-        self.bracket.to_tokens(t);
+        self.index.to_tokens(t);
     }
 }

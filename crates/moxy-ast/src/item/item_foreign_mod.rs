@@ -11,7 +11,7 @@ pub struct ItemForeignMod {
     pub attrs: Vec<Attribute>,
     pub unsafety: Unsafety,
     pub abi: Abi,
-    pub brace: Delimited<Vec<ForeignItem>>,
+    pub items: Delimited<Vec<ForeignItem>>,
 }
 
 impl Parse for ItemForeignMod {
@@ -19,13 +19,13 @@ impl Parse for ItemForeignMod {
         let attrs = stream.parse::<Vec<Attribute>>()?;
         let unsafety = stream.parse::<Unsafety>()?;
         let abi = stream.parse::<Abi>()?;
-        let brace = Delimited::<Vec<ForeignItem>>::parse_brace(stream)?;
+        let items = Delimited::<Vec<ForeignItem>>::parse_brace(stream)?;
         Ok(ItemForeignMod {
             span: Span::default(),
             attrs,
             unsafety,
             abi,
-            brace,
+            items,
         })
     }
 }
@@ -37,6 +37,6 @@ impl ToTokens for ItemForeignMod {
         }
         self.unsafety.to_tokens(t);
         self.abi.to_tokens(t);
-        self.brace.to_tokens(t);
+        self.items.to_tokens(t);
     }
 }

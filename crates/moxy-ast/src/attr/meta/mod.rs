@@ -75,7 +75,7 @@ mod tests {
     fn outer_empty() {
         let a = moxy_token::parse!("#[inline]" as Attribute).unwrap();
         assert!(matches!(a.style, AttrStyle::Outer(_)));
-        assert!(matches!(a.bracket.inner.args, AttrArgs::Empty));
+        assert!(matches!(a.content.inner.args, AttrArgs::Empty));
         assert_eq!(render(&a), "# [inline]");
     }
 
@@ -83,7 +83,7 @@ mod tests {
     fn outer_delimited() {
         let a = moxy_token::parse!("#[derive(Clone, Debug)]" as Attribute).unwrap();
         assert!(matches!(a.style, AttrStyle::Outer(_)));
-        assert!(matches!(a.bracket.inner.args, AttrArgs::Delimited(_)));
+        assert!(matches!(a.content.inner.args, AttrArgs::Delimited(_)));
         assert_eq!(render(&a), "# [derive (Clone , Debug)]");
     }
 
@@ -111,14 +111,14 @@ mod tests {
     #[test]
     fn name_value() {
         let a = moxy_token::parse!("#[path = \"x.rs\"]" as Attribute).unwrap();
-        assert!(matches!(a.bracket.inner.args, AttrArgs::NameValue { .. }));
+        assert!(matches!(a.content.inner.args, AttrArgs::NameValue { .. }));
         assert_eq!(render(&a), "# [path = \"x.rs\"]");
     }
 
     #[test]
     fn cfg_delimited() {
         let a = moxy_token::parse!("#[cfg(feature = \"x\")]" as Attribute).unwrap();
-        assert!(matches!(a.bracket.inner.args, AttrArgs::Delimited(_)));
+        assert!(matches!(a.content.inner.args, AttrArgs::Delimited(_)));
     }
 
     #[test]

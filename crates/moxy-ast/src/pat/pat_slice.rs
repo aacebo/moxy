@@ -9,7 +9,7 @@ use crate::*;
 pub struct PatSlice {
     pub span: Span,
     pub attrs: Vec<Attribute>,
-    pub bracket: Delimited<Punctuated<Pattern, Comma>>,
+    pub elems: Delimited<Punctuated<Pattern, Comma>>,
 }
 
 impl ToTokens for PatSlice {
@@ -17,6 +17,6 @@ impl ToTokens for PatSlice {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        self.bracket.to_tokens(t);
+        self.elems.to_tokens(t);
     }
 }

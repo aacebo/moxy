@@ -28,7 +28,7 @@ pub struct PatStruct {
     pub attrs: Vec<Attribute>,
     pub qself: Option<QSelf>,
     pub path: Path,
-    pub brace: Delimited<PatStructBody>,
+    pub body: Delimited<PatStructBody>,
 }
 
 impl ToTokens for PatStruct {
@@ -37,6 +37,6 @@ impl ToTokens for PatStruct {
             a.to_tokens(t);
         }
         self.path.to_tokens(t);
-        self.brace.to_tokens(t);
+        self.body.to_tokens(t);
     }
 }

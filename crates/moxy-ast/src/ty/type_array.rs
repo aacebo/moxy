@@ -35,21 +35,21 @@ impl ToTokens for ArrayInner {
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeArray {
     pub span: Span,
-    pub bracket: Delimited<ArrayInner>,
+    pub content: Delimited<ArrayInner>,
 }
 
 impl Parse for TypeArray {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let bracket = Delimited::<ArrayInner>::parse_bracket(stream)?;
+        let content = Delimited::<ArrayInner>::parse_bracket(stream)?;
         Ok(Self {
             span: Span::default(),
-            bracket,
+            content,
         })
     }
 }
 
 impl ToTokens for TypeArray {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.bracket.to_tokens(tokens);
+        self.content.to_tokens(tokens);
     }
 }

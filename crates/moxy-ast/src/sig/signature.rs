@@ -37,7 +37,7 @@ pub struct Signature {
     pub fn_keyword: Fn,
     pub ident: Ident,
     pub generics: Generics,
-    pub paren: Delimited<FnParams>,
+    pub params: Delimited<FnParams>,
     pub output: ReturnType,
 }
 
@@ -56,7 +56,7 @@ impl Parse for Signature {
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
 
-        let paren = Delimited::parse_paren_with(stream, |inner| {
+        let params = Delimited::parse_paren_with(stream, |inner| {
             let mut inputs = Punctuated::new();
             let mut variadic = None;
             while !inner.is_empty() {
@@ -89,7 +89,7 @@ impl Parse for Signature {
             fn_keyword,
             ident,
             generics,
-            paren,
+            params,
             output,
         })
     }
@@ -131,7 +131,7 @@ impl ToTokens for Signature {
         let mut params = TokenStream::new();
         Signature::emit_angle_params(&self.generics, &mut params);
         t.extend(params);
-        self.paren.to_tokens(t);
+        self.params.to_tokens(t);
         self.output.to_tokens(t);
 
         if let Some(w) = &self.generics.where_clause {

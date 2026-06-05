@@ -13,20 +13,20 @@ pub struct ExprMatch {
     pub attrs: Vec<Attribute>,
     pub match_keyword: Match,
     pub expr: Box<Expr>,
-    pub brace: Delimited<Vec<MatchArm>>,
+    pub arms: Delimited<Vec<MatchArm>>,
 }
 
 impl ExprMatch {
     pub fn parse_from(stream: &mut ParseStream) -> Result<Expr, ParseError> {
         let match_keyword = stream.parse::<Match>()?;
         let expr = Box::new(super::super::parse_expr(stream, false)?);
-        let brace = Delimited::<Vec<MatchArm>>::parse_brace(stream)?;
+        let arms = Delimited::<Vec<MatchArm>>::parse_brace(stream)?;
         Ok(Expr::Block(super::BlockExpr::Match(Self {
             span: Span::default(),
             attrs: Vec::new(),
             match_keyword,
             expr,
-            brace,
+            arms,
         })))
     }
 }
@@ -38,7 +38,7 @@ impl ToTokens for ExprMatch {
         }
         self.match_keyword.to_tokens(t);
         self.expr.to_tokens(t);
-        self.brace.to_tokens(t);
+        self.arms.to_tokens(t);
     }
 }
 

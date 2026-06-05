@@ -9,7 +9,7 @@ use crate::*;
 pub struct PatTuple {
     pub span: Span,
     pub attrs: Vec<Attribute>,
-    pub paren: Delimited<Punctuated<Pattern, Comma>>,
+    pub elems: Delimited<Punctuated<Pattern, Comma>>,
 }
 
 impl ToTokens for PatTuple {
@@ -17,6 +17,6 @@ impl ToTokens for PatTuple {
         for a in &self.attrs {
             a.to_tokens(t);
         }
-        self.paren.to_tokens(t);
+        self.elems.to_tokens(t);
     }
 }

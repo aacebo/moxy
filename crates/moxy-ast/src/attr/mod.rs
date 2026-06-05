@@ -17,7 +17,7 @@ use crate::{Delimited, Path};
 pub struct Attribute {
     pub span: Span,
     pub style: AttrStyle,
-    pub bracket: Delimited<AttrContent>,
+    pub content: Delimited<AttrContent>,
 }
 
 impl Parse for Attribute {
@@ -31,12 +31,12 @@ impl Parse for Attribute {
             AttrStyle::Outer(pound)
         };
 
-        let bracket = Delimited::<AttrContent>::parse_bracket(stream)?;
+        let content = Delimited::<AttrContent>::parse_bracket(stream)?;
 
         Ok(Self {
             span: Span::default(),
             style,
-            bracket,
+            content,
         })
     }
 }
@@ -44,7 +44,7 @@ impl Parse for Attribute {
 impl ToTokens for Attribute {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.style.to_tokens(tokens);
-        self.bracket.to_tokens(tokens);
+        self.content.to_tokens(tokens);
     }
 }
 

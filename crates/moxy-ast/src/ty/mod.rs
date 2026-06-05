@@ -148,13 +148,13 @@ impl Parse for Type {
                 let len = inner.parse::<crate::Expr>()?;
                 return Ok(Type::Array(TypeArray {
                     span: Span::default(),
-                    bracket: Delimited::bracket(bracket_span, type_array::ArrayInner { elem, semi, len }),
+                    content: Delimited::bracket(bracket_span, type_array::ArrayInner { elem, semi, len }),
                 }));
             }
 
             return Ok(Type::Slice(TypeSlice {
                 span: Span::default(),
-                bracket: Delimited::bracket(bracket_span, elem),
+                elem: Delimited::bracket(bracket_span, elem),
             }));
         }
 
@@ -187,12 +187,12 @@ impl Parse for Type {
             return if elems.len() == 1 && !elems.trailing_punct() {
                 Ok(Type::Paren(TypeParen {
                     span: Span::default(),
-                    paren: Delimited::paren(paren_span, Box::new(elems.into_iter().next().unwrap())),
+                    content: Delimited::paren(paren_span, Box::new(elems.into_iter().next().unwrap())),
                 }))
             } else {
                 Ok(Type::Tuple(TypeTuple {
                     span: Span::default(),
-                    paren: Delimited::paren(paren_span, elems),
+                    elems: Delimited::paren(paren_span, elems),
                 }))
             };
         }
@@ -350,7 +350,7 @@ mod tests {
         use crate::Delimited;
         let s = TypeSlice {
             span: Span::default(),
-            bracket: Delimited::bracket(
+            elem: Delimited::bracket(
                 moxy_token::span::DelimSpan::default(),
                 Box::new(moxy_token::parse!("T" as Type).unwrap()),
             ),

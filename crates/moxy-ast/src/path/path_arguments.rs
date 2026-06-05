@@ -9,7 +9,7 @@ use crate::{AngleArgs, Delimited, Punctuated, ReturnType, Type};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ParenthesizedArgs {
     pub span: Span,
-    pub paren: Delimited<Punctuated<Type, Comma>>,
+    pub params: Delimited<Punctuated<Type, Comma>>,
     pub output: ReturnType,
 }
 
@@ -54,11 +54,11 @@ impl Parse for PathArguments {
 
 impl PathArguments {
     pub fn parse_parenthesized(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let paren = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
+        let params = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
         let output = stream.parse::<ReturnType>()?;
         Ok(PathArguments::Parenthesized(ParenthesizedArgs {
             span: Span::default(),
-            paren,
+            params,
             output,
         }))
     }
@@ -70,7 +70,7 @@ impl ToTokens for PathArguments {
             PathArguments::None => {}
             PathArguments::AngleBracketed(args) => args.to_tokens(tokens),
             PathArguments::Parenthesized(p) => {
-                p.paren.to_tokens(tokens);
+                p.params.to_tokens(tokens);
                 p.output.to_tokens(tokens);
             }
         }

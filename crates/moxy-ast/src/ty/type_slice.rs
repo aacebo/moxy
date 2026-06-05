@@ -10,21 +10,18 @@ use crate::Delimited;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeSlice {
     pub span: Span,
-    pub bracket: Delimited<Box<Type>>,
+    pub elem: Delimited<Box<Type>>,
 }
 
 impl Parse for TypeSlice {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let bracket = Delimited::parse_bracket_with(stream, |stream| Ok(Box::new(stream.parse::<Type>()?)))?;
-        Ok(Self {
-            span: bracket.span(),
-            bracket,
-        })
+        let elem = Delimited::parse_bracket_with(stream, |stream| Ok(Box::new(stream.parse::<Type>()?)))?;
+        Ok(Self { span: elem.span(), elem })
     }
 }
 
 impl ToTokens for TypeSlice {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.bracket.to_tokens(tokens);
+        self.elem.to_tokens(tokens);
     }
 }

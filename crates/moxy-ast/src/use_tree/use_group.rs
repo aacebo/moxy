@@ -10,7 +10,7 @@ use crate::{Delimited, Punctuated};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseGroup {
     pub span: Span,
-    pub brace: Delimited<Punctuated<UseTree, Comma>>,
+    pub items: Delimited<Punctuated<UseTree, Comma>>,
 }
 
 impl Parse for UseGroup {
@@ -25,6 +25,6 @@ impl Parse for UseGroup {
 
 impl ToTokens for UseGroup {
     fn to_tokens(&self, t: &mut TokenStream) {
-        self.brace.to_tokens(t);
+        self.items.to_tokens(t);
     }
 }
