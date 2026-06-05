@@ -14,7 +14,7 @@ pub struct Config {
 
 impl Config {
     /// Creates a config that auto-detects the installed rustc version (via
-    /// [`Version::read`]).
+    /// [`version::read`]).
     pub fn new() -> Self {
         Self {
             version: version::read(),
