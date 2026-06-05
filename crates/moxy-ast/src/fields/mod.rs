@@ -1,4 +1,4 @@
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Delim, Group, Parse, ToTokens, TokenStream, TokenTree};
 
 mod field_def;

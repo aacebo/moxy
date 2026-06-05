@@ -5,7 +5,7 @@ pub mod meta;
 pub use attr_args::*;
 pub use attr_style::*;
 pub use meta::Meta;
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Not, Pound};
 use moxy_token::{Parse, Span, ToTokens, TokenStream};
 

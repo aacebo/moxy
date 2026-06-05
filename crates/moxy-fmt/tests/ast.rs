@@ -6,7 +6,7 @@ where
     T: moxy_token::Parse,
 {
     let value: T = moxy_token::parse!(src).unwrap();
-    fmt(&value, &FmtConfig::default().with_newline(NewlineStyle::Unix)).unwrap()
+    fmt!(&value, FmtConfig::default().with_newline(NewlineStyle::Unix)).unwrap()
 }
 
 fn idempotent<T: moxy_fmt::Fmt>(src: &str)

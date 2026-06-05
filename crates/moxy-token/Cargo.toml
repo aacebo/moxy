@@ -11,7 +11,7 @@ keywords.workspace = true
 categories.workspace = true
 
 [lib]
-doctest = false
+doctest = true
 
 [lints]
 workspace = true

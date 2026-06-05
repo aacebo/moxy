@@ -7,7 +7,7 @@ pub use expr_cast::*;
 pub use expr_reference::*;
 pub use expr_try::*;
 pub use expr_unary::*;
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::And;
 use moxy_token::{Span, ToTokens, TokenStream};
 

@@ -1,11 +1,9 @@
 extern crate proc_macro;
 
 mod ast;
-mod template;
 
-use moxy_token::{Parse, ToTokens, TokenStream};
-
-use crate::template::Template;
+use moxy_token::parser::{ParseError, ParseStream};
+use moxy_token::{Delim, Group, Parse, ToTokens, TokenStream, TokenTree};
 
 /// Build a [`moxy_token::TokenStream`] at runtime from a template, in the style
 /// of `quote!`.
@@ -45,4 +43,36 @@ pub fn template(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut out = proc_macro::TokenStream::new();
     expanded.to_tokens(&mut out);
     out
+}
+
+#[doc = "A parsed template: a sequence of nodes (literal tokens, interpolations, and control flow)."]
+#[derive(Debug, Clone)]
+struct Template {
+    pub nodes: Vec<ast::Node>,
+}
+
+impl Template {
+    pub fn expand(&self) -> TokenStream {
+        use std::str::FromStr;
+
+        let mut body = TokenStream::from_str("let mut __moxy_tmpl = ::moxy_token::TokenStream::new();").unwrap();
+        self.to_tokens(&mut body);
+        body.extend(TokenStream::from_str("__moxy_tmpl").unwrap());
+        TokenStream::from(vec![TokenTree::Group(Group::new(Delim::Brace, body))])
+    }
+}
+
+impl Parse for Template {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let nodes = stream.parse::<Vec<ast::Node>>()?;
+        Ok(Self { nodes })
+    }
+}
+
+impl ToTokens for Template {
+    fn to_tokens(&self, out: &mut TokenStream) {
+        for node in &self.nodes {
+            node.to_tokens(out);
+        }
+    }
 }

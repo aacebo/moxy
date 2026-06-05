@@ -1,4 +1,4 @@
-use crate::parse::ParseError;
+use crate::parser::ParseError;
 use crate::{Delim, Group, Ident, Keyword, Literal, Spacing, Span, ToTokens, Token, TokenStream, TokenTree};
 
 // --- LexError ---

@@ -1,5 +1,5 @@
 use moxy_token::keyword::{Mut, Ref};
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{And, At, Colon, Comma, DotDot, Or as OrPunct};
 use moxy_token::{Delim, LexError, Parse, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
 

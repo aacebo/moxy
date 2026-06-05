@@ -3,7 +3,7 @@ mod tmpl_if;
 mod tmpl_match;
 
 use moxy_token::keyword::{For, If, Match};
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::At;
 use moxy_token::{LexError, Parse, ToTokens, TokenStream};
 pub use tmpl_for::*;

@@ -109,7 +109,7 @@ impl crate::Spanner for Group {
 }
 
 impl crate::Parse for Group {
-    fn parse(stream: &mut crate::parse::ParseStream) -> Result<Self, crate::parse::ParseError> {
+    fn parse(stream: &mut crate::parser::ParseStream) -> Result<Self, crate::parser::ParseError> {
         match stream.advance() {
             Some(crate::TokenTree::Group(v)) => Ok(v.clone()),
             _ => Err(crate::lex::LexError::new(stream.span()).message("expected Group").into()),

@@ -23,7 +23,7 @@ pub use expr_repeat::*;
 pub use expr_struct::*;
 pub use expr_tuple::*;
 use moxy_token::keyword::{Break, Const, Continue, Let, Return, Try, Unsafe, Yield};
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, DotDot, Eq, Or, OrOr, Semi};
 use moxy_token::{Delim, LexError, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
 

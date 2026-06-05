@@ -1,5 +1,5 @@
 use moxy_token::keyword::Const;
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Span, ToTokens, TokenStream};
 
 use crate::*;

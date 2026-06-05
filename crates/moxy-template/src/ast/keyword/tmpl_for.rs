@@ -1,11 +1,11 @@
 #![allow(unused)]
 
 use moxy_token::keyword::{For, In};
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::At;
 use moxy_token::{Delim, Group, Ident, Parse, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
 
-use crate::template::Template;
+use crate::Template;
 
 #[doc = "A template for-loop directive: `@for (binding in iter) { body }`."]
 #[derive(Debug, Clone)]

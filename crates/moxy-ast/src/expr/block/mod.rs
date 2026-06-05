@@ -19,7 +19,7 @@ pub use expr_match::*;
 pub use expr_try_block::*;
 pub use expr_unsafe::*;
 pub use expr_while::*;
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::{Label, Lifetime};

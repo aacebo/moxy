@@ -1,5 +1,5 @@
 use moxy_token::keyword::For;
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Comma, Gt, Lt, RArrow};
 use moxy_token::{Parse, Span, ToTokens, TokenStream};
 

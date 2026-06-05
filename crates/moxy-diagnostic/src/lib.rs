@@ -7,7 +7,7 @@ mod span;
 
 #[doc(inline)]
 pub use level::*;
-use moxy_token::parse::ParseError;
+use moxy_token::parser::ParseError;
 use moxy_token::punct::Not;
 use moxy_token::{Delim, Group, Ident, Literal, Punctuation, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
 #[doc(inline)]
@@ -415,7 +415,7 @@ pub mod build {
 #[cfg(test)]
 mod tests {
     use moxy_token::Span;
-    use moxy_token::parse::ParseError;
+    use moxy_token::parser::ParseError;
 
     use super::*;
     use crate::SpanExt;

@@ -1,11 +1,11 @@
 #![allow(unused)]
 
 use moxy_token::keyword::{Else, If};
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::At;
 use moxy_token::{Delim, Group, Parse, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
 
-use crate::template::Template;
+use crate::Template;
 
 #[doc = "A template if/else-if/else directive: `@if (cond) { body } @else if (cond) { body } @else { body }`."]
 #[derive(Debug, Clone)]

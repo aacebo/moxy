@@ -1,5 +1,5 @@
 use moxy_token::keyword::{Crate, In, Pub, SelfValue, Super};
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Delim, Parse, ToTokens, TokenStream, TokenTree};
 
 use crate::{Delimited, Path};

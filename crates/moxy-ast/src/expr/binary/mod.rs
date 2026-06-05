@@ -9,7 +9,7 @@ pub use expr_assign_op::*;
 pub use expr_binary::*;
 pub use expr_range::*;
 pub use expr_type::*;
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{DotDot, Eq};
 use moxy_token::{Span, ToTokens, TokenStream};
 

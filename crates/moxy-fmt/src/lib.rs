@@ -12,26 +12,67 @@ pub use error::*;
 #[doc(inline)]
 pub use node::*;
 
-pub fn fmt<T: Fmt>(value: &T, config: &FmtConfig) -> Result<String, FmtError> {
-    let mut f = Formatter::new(config);
-    f.write(value)?;
-    Ok(f.output)
+/// Format a value that implements [`Fmt`] into a `String`.
+///
+/// Accepts an optional [`FmtConfig`] as a second argument. When omitted,
+/// [`FmtConfig::default`] is used.
+///
+/// Returns `Result<String, FmtError>`.
+///
+/// The intended pipeline is `template!` → `parse!` → `fmt!`: generate tokens,
+/// parse them into an AST node, then format it.
+///
+/// # Examples
+///
+/// ```ignore
+/// use moxy_ast::Item;
+///
+/// let name = "Greeter";
+/// let tokens = moxy::template! {
+///     pub struct {{ name }} {
+///         message: String,
+///     }
+/// };
+///
+/// let item = moxy::parse!(tokens as Item)?;
+/// let output = moxy::fmt!(&item)?;
+///
+/// assert_eq!(output, "pub struct Greeter {\n    message: String,\n}");
+/// ```
+#[macro_export]
+macro_rules! fmt {
+    ($value:expr, $config:expr) => {{
+        let mut f = $crate::Formatter::new($config);
+
+        match f.write($value) {
+            Err(err) => Err(err),
+            Ok(_) => Ok(f.done()),
+        }
+    }};
+    ($value:expr) => {{
+        let mut f = $crate::Formatter::new($crate::FmtConfig::default());
+
+        match f.write($value) {
+            Err(err) => Err(err),
+            Ok(_) => Ok(f.done()),
+        }
+    }};
 }
 
 pub trait Fmt {
     fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError>;
 }
 
-pub struct Formatter<'a> {
-    config: &'a FmtConfig,
+pub struct Formatter {
+    config: FmtConfig,
     buffer: Vec<FmtNode>,
     output: String,
     depth: usize,
     column: usize,
 }
 
-impl<'a> Formatter<'a> {
-    pub fn new(config: &'a FmtConfig) -> Self {
+impl Formatter {
+    pub fn new(config: FmtConfig) -> Self {
         Self {
             config,
             buffer: Vec::new(),
@@ -42,7 +83,7 @@ impl<'a> Formatter<'a> {
     }
 
     pub fn config(&self) -> &FmtConfig {
-        self.config
+        &self.config
     }
 
     pub fn depth(&self) -> usize {
@@ -52,9 +93,13 @@ impl<'a> Formatter<'a> {
     pub fn column(&self) -> usize {
         self.column
     }
+
+    pub fn done(self) -> String {
+        self.output
+    }
 }
 
-impl<'a> Formatter<'a> {
+impl Formatter {
     pub fn text(&mut self, value: impl std::fmt::Display) -> Result<(), FmtError> {
         self.buffer.push(text(value));
         Ok(())
@@ -92,7 +137,7 @@ impl<'a> Formatter<'a> {
     }
 }
 
-impl<'a> Formatter<'a> {
+impl Formatter {
     pub fn write<T: Fmt>(&mut self, value: &T) -> Result<(), FmtError> {
         value.fmt(self)?;
         let nodes: Vec<_> = self.buffer.drain(0..).collect();
@@ -204,7 +249,7 @@ impl<T: Fmt, P: std::fmt::Display> Fmt for moxy_ast::Punctuated<T, P> {
     }
 }
 
-impl<'a> Extend<FmtNode> for Formatter<'a> {
+impl Extend<FmtNode> for Formatter {
     fn extend<T: IntoIterator<Item = FmtNode>>(&mut self, iter: T) {
         self.buffer.extend(iter);
     }
@@ -238,12 +283,12 @@ mod tests {
     fn run(node: FmtNode) -> String {
         let config = FmtConfig::default().with_newline(NewlineStyle::Unix);
         let node_clone = node.clone();
-        fmt(&node_clone, &config).unwrap()
+        fmt!(&node_clone, config).unwrap()
     }
 
     fn run_with(node: FmtNode, config: FmtConfig) -> String {
         let node_clone = node.clone();
-        fmt(&node_clone, &config.with_newline(NewlineStyle::Unix)).unwrap()
+        fmt!(&node_clone, config.with_newline(NewlineStyle::Unix)).unwrap()
     }
 
     #[test]
@@ -345,7 +390,6 @@ mod tests {
     #[test]
     fn fmt_fn_returns_string() {
         let node = text("hello");
-        let config = FmtConfig::default();
-        assert_eq!(fmt(&node, &config).unwrap(), "hello");
+        assert_eq!(fmt!(&node).unwrap(), "hello");
     }
 }

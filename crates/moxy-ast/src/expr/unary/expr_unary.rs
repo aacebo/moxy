@@ -1,4 +1,4 @@
-use moxy_token::parse::ParseStream;
+use moxy_token::parser::ParseStream;
 use moxy_token::punct::{Not, Star};
 use moxy_token::{Span, ToTokens, TokenStream};
 

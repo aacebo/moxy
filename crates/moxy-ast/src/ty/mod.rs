@@ -1,5 +1,5 @@
 use moxy_token::keyword::{Dyn, Impl};
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{And, Comma, Star};
 use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream};
 

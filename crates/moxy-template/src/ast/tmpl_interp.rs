@@ -2,7 +2,7 @@
 
 use std::str::FromStr;
 
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream, TokenTree};
 
 #[doc = "A template interpolation: `{{ expr }}`."]

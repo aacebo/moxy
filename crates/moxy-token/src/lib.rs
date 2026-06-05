@@ -19,7 +19,7 @@ pub mod keyword;
 pub mod lex;
 mod literal;
 mod macros;
-pub mod parse;
+pub mod parser;
 pub mod punct;
 pub mod source;
 mod spacing;
@@ -39,7 +39,7 @@ pub use lex::{LexError, Scan};
 #[doc(inline)]
 pub use literal::*;
 #[doc(inline)]
-pub use parse::Parse;
+pub use parser::Parse;
 #[doc(inline)]
 pub use punct::*;
 #[doc(inline)]

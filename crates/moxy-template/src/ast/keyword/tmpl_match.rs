@@ -1,11 +1,11 @@
 #![allow(unused)]
 
 use moxy_token::keyword::Match;
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{At, Comma, FatArrow};
 use moxy_token::{Delim, Group, LexError, Parse, Punctuation, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
 
-use crate::template::Template;
+use crate::Template;
 
 #[doc = "A template match directive: `@match (expr) { pat => { body }, … }`."]
 #[derive(Debug, Clone)]

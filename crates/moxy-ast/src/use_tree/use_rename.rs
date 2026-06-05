@@ -1,5 +1,5 @@
 use moxy_token::keyword::As;
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
 
 use super::UseTree;

@@ -1,6 +1,6 @@
 use super::ToTokens;
 use super::lex::{Cursor, LexError, Scan};
-use crate::parse::{ParseError, ParseStream};
+use crate::parser::{ParseError, ParseStream};
 use crate::{Parse, Span, Token, TokenStream, TokenTree};
 
 macro_rules! define_keyword {

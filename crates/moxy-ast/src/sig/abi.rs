@@ -1,5 +1,5 @@
 use moxy_token::keyword::Extern;
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Parse, Span, ToTokens, Token, TokenStream, TokenTree};
 
 #[doc = "An ABI string (`extern \"C\"`)."]

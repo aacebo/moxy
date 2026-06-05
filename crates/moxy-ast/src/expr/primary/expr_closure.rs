@@ -1,5 +1,5 @@
 use moxy_token::keyword::Move;
-use moxy_token::parse::ParseStream;
+use moxy_token::parser::ParseStream;
 use moxy_token::punct::{Comma, Or, OrOr};
 use moxy_token::{Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
 

@@ -1,4 +1,4 @@
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{LexError, Parse, Span, ToTokens, Token, TokenStream, TokenTree};
 
 #[doc = "An identifier token (e.g. a variable name, type name, or keyword-like ident)."]

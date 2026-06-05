@@ -1,4 +1,4 @@
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream, TokenTree};
 
 use super::PathArguments;

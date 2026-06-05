@@ -1,5 +1,5 @@
 use moxy_token::keyword::{Extern, Fn};
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, Gt, Lt};
 use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
@@ -104,7 +104,7 @@ impl Signature {
         }
     }
 
-    pub fn is_start(stream: &mut moxy_token::parse::ParseStream) -> bool {
+    pub fn is_start(stream: &mut moxy_token::parser::ParseStream) -> bool {
         let mut fork = stream.fork();
         let _ = fork.parse::<crate::Constness>();
         let _ = fork.parse::<crate::Asyncness>();

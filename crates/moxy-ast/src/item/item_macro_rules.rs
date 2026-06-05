@@ -1,5 +1,5 @@
 use moxy_token::keyword::MacroRules;
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Not;
 use moxy_token::{Group, LexError, Parse, Span, ToTokens, TokenStream, TokenTree};
 

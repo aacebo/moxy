@@ -1,5 +1,5 @@
 use moxy_token::keyword::Const;
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Parse, ToTokens, TokenStream};
 
 use super::{ConstParam, LifetimeParam, TypeParam};

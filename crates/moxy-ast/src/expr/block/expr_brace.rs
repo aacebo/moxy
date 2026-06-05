@@ -1,4 +1,4 @@
-use moxy_token::parse::ParseStream;
+use moxy_token::parser::ParseStream;
 use moxy_token::{Delim, Span, ToTokens, TokenStream, TokenTree};
 
 use crate::*;

@@ -1,5 +1,5 @@
 use moxy_token::keyword::{If, Match};
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, FatArrow};
 use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
@@ -57,7 +57,7 @@ pub struct MatchArm {
 }
 
 impl Parse for MatchArm {
-    fn parse(stream: &mut moxy_token::parse::ParseStream) -> Result<Self, moxy_token::parse::ParseError> {
+    fn parse(stream: &mut moxy_token::parser::ParseStream) -> Result<Self, moxy_token::parser::ParseError> {
         let attrs = stream.parse::<Vec<Attribute>>()?;
         let pat = stream.parse::<Pattern>()?;
 

@@ -1,5 +1,5 @@
 use moxy_token::keyword::Mod;
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
 use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream, TokenTree};
 

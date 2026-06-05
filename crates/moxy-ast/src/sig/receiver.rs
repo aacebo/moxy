@@ -1,5 +1,5 @@
 use moxy_token::keyword::SelfValue;
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::And;
 use moxy_token::{Parse, Span, ToTokens, TokenStream};
 

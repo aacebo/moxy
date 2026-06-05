@@ -1,7 +1,7 @@
 use std::ops::{Index, IndexMut};
 use std::{slice, vec};
 
-use moxy_token::parse::{ParseError, ParseStream};
+use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Parse, ToTokens, TokenStream};
 
 pub struct Punctuated<T, P> {

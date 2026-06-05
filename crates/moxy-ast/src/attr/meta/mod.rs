@@ -3,7 +3,7 @@ mod meta_name_value;
 
 pub use meta_list::*;
 pub use meta_name_value::*;
-use moxy_token::parse::{Parse, ParseError, ParseStream};
+use moxy_token::parser::{Parse, ParseError, ParseStream};
 use moxy_token::{Eq, Span, ToTokens, TokenStream};
 
 use crate::{Expr, Path};

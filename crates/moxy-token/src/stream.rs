@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use super::ToTokens;
 use crate::lex::{Cursor, LexError, Scan};
-use crate::parse::{ParseError, ParseStream};
+use crate::parser::{ParseError, ParseStream};
 use crate::span::DelimSpan;
 use crate::{Span, TokenTree};
 

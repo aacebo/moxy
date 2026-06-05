@@ -98,7 +98,7 @@ impl crate::Spanner for Ident {
 }
 
 impl crate::Parse for Ident {
-    fn parse(stream: &mut crate::parse::ParseStream) -> Result<Self, crate::parse::ParseError> {
+    fn parse(stream: &mut crate::parser::ParseStream) -> Result<Self, crate::parser::ParseError> {
         match stream.advance() {
             Some(crate::TokenTree::Token(crate::Token::Ident(v))) => Ok(v.clone()),
             _ => Err(crate::lex::LexError::new(stream.span()).message("expected Ident").into()),

@@ -1,10 +1,27 @@
-//! The [`Token!`] macro: maps a punctuation/keyword symbol to its token type,
-//! mirroring syn's `Token![...]`.
-//!
-//! `Token![=>]` resolves to the type [`crate::FatArrow`]; construct a value with
-//! the type's `::new(span)` / `::default()`. The arms here are the single flat
-//! artifact (as in syn); keep them in sync with the `define_punct!` table in
-//! [`crate::punct`] and the `define_keyword!` table in [`crate::keyword`].
+/// Parse a source string into a typed AST node, returning `Result<T, ParseError>`.
+///
+/// The type can be given explicitly with `as T` or inferred from context.
+///
+/// # Example
+/// ```ignore
+/// let item: Item = moxy_token::parse!("fn foo() {}");
+/// let item = moxy_token::parse!("fn foo() {}" as Item);
+/// ```
+#[macro_export]
+macro_rules! parse {
+    ($src:literal as $ty:ty) => {{
+        use ::std::str::FromStr;
+        $crate::TokenStream::from_str($src)
+            .map_err($crate::parser::ParseError::from)
+            .and_then(|ts| <$ty as $crate::Parse>::parse(&mut ts.parse()))
+    }};
+    ($src:expr) => {{
+        use ::std::str::FromStr;
+        $crate::TokenStream::from_str(::std::convert::AsRef::<str>::as_ref(&$src))
+            .map_err($crate::parser::ParseError::from)
+            .and_then(|ts| $crate::Parse::parse(&mut ts.parse()))
+    }};
+}
 
 /// Map a Rust punctuation or keyword symbol to its [`crate`] token type.
 ///
