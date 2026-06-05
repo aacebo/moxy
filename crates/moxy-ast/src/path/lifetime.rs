@@ -25,6 +25,7 @@ impl Lifetime {
 
             loop {
                 bounds.push_value(stream.parse::<Lifetime>()?);
+
                 if stream.peek::<Plus>().is_some() {
                     bounds.push_punct(stream.parse::<Plus>()?);
                 } else {
