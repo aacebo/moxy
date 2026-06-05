@@ -32,24 +32,6 @@ impl Ident {
     }
 }
 
-impl From<proc_macro::Ident> for Ident {
-    #[inline]
-    fn from(value: proc_macro::Ident) -> Self {
-        Self::new(&value.to_string(), value.span().into())
-    }
-}
-
-impl From<Ident> for proc_macro::Ident {
-    fn from(value: Ident) -> Self {
-        let span: proc_macro::Span = value.span.into();
-
-        match value.name.strip_prefix("r#") {
-            Some(name) => proc_macro::Ident::new_raw(name, span),
-            None => proc_macro::Ident::new(&value.name, span),
-        }
-    }
-}
-
 impl Scan for Ident {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
         // Raw ident: r#ident

@@ -87,24 +87,6 @@ impl crate::Spanner for Literal {
     }
 }
 
-impl From<proc_macro::Literal> for Literal {
-    fn from(value: proc_macro::Literal) -> Self {
-        Self {
-            repr: value.to_string().into_boxed_str(),
-            span: value.span().into(),
-        }
-    }
-}
-
-impl From<Literal> for proc_macro::Literal {
-    fn from(value: Literal) -> Self {
-        value
-            .repr
-            .parse()
-            .unwrap_or_else(|_| proc_macro::Literal::string(&value.repr))
-    }
-}
-
 impl std::fmt::Display for Literal {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.repr)

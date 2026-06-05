@@ -22,26 +22,6 @@ impl std::fmt::Display for Spacing {
     }
 }
 
-impl From<proc_macro::Spacing> for Spacing {
-    #[inline]
-    fn from(value: proc_macro::Spacing) -> Self {
-        match value {
-            proc_macro::Spacing::Alone => Self::Alone,
-            proc_macro::Spacing::Joint => Self::Joint,
-        }
-    }
-}
-
-impl From<Spacing> for proc_macro::Spacing {
-    #[inline]
-    fn from(value: Spacing) -> Self {
-        match value {
-            Spacing::Alone => proc_macro::Spacing::Alone,
-            Spacing::Joint => proc_macro::Spacing::Joint,
-        }
-    }
-}
-
 #[cfg(test)]
 mod tests {
     mod display {

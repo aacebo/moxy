@@ -2,7 +2,6 @@
 resolver = "3"
 members = [".", "crates/*"]
 default-members = [".", "crates/*"]
-exclude = ["archive/*"]
 
 [workspace.package]
 version = "0.0.0"
@@ -14,6 +13,13 @@ homepage = "https://www.github.com/aacebo/moxy"
 repository = "https://www.github.com/aacebo/moxy"
 keywords = ["macro", "framework", "proc", "rust"]
 categories = ["development-tools::procedural-macro-helpers", "rust-patterns", "no-std"]
+include = [
+    "Cargo.toml",
+    "README.md",
+    "LICENSE*",
+    "src/**",
+    "build.rs",
+]
 
 [workspace.lints.clippy]
 collapsible-if = "allow"
@@ -33,6 +39,7 @@ homepage.workspace = true
 repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
+include.workspace = true
 
 [lib]
 doctest = false

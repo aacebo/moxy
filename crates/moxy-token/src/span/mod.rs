@@ -201,36 +201,10 @@ impl std::hash::Hash for Span {
     }
 }
 
-impl From<proc_macro::Span> for Span {
-    #[inline]
-    fn from(value: proc_macro::Span) -> Self {
-        Self::Compiler(value)
-    }
-}
-
 impl From<fallback::Span> for Span {
     #[inline]
     fn from(value: fallback::Span) -> Self {
         Self::Fallback(value)
-    }
-}
-
-impl From<Span> for proc_macro::Span {
-    fn from(value: Span) -> Self {
-        match value {
-            Span::Compiler(s) => s,
-            Span::Fallback(_) => proc_macro::Span::call_site(),
-        }
-    }
-}
-
-#[cfg(nightly)]
-impl proc_macro::MultiSpan for Span {
-    fn into_spans(self) -> Vec<proc_macro::Span> {
-        match self {
-            Self::Compiler(s) => vec![s],
-            Self::Fallback(_) => vec![proc_macro::Span::call_site()],
-        }
     }
 }
 

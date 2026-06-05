@@ -54,12 +54,6 @@ impl ParseError {
     }
 }
 
-impl From<proc_macro::LexError> for ParseError {
-    fn from(e: proc_macro::LexError) -> Self {
-        Self::new(Span::default(), e)
-    }
-}
-
 impl From<LexError> for ParseError {
     fn from(e: LexError) -> Self {
         Self::new(e.span(), e)

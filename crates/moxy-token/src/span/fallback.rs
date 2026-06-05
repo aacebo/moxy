@@ -69,20 +69,3 @@ impl Span {
         Self { start, end }
     }
 }
-
-impl From<proc_macro::Span> for Span {
-    fn from(value: proc_macro::Span) -> Self {
-        if cfg!(nightly) {
-            let r = value.byte_range();
-            return Self::new(r.start as u32, r.end as u32);
-        }
-
-        Self::default()
-    }
-}
-
-impl From<Span> for proc_macro::Span {
-    fn from(_value: Span) -> Self {
-        proc_macro::Span::call_site()
-    }
-}

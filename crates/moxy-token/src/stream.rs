@@ -122,24 +122,6 @@ impl From<TokenStream> for Vec<TokenTree> {
     }
 }
 
-impl From<proc_macro::TokenStream> for TokenStream {
-    fn from(value: proc_macro::TokenStream) -> Self {
-        let mut out = Self::new();
-        value.to_tokens(&mut out);
-        out
-    }
-}
-
-impl From<TokenStream> for proc_macro::TokenStream {
-    fn from(value: TokenStream) -> Self {
-        let mut out = proc_macro::TokenStream::new();
-        for t in value.0 {
-            t.to_tokens(&mut out);
-        }
-        out
-    }
-}
-
 impl Scan for TokenStream {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
         let mut tokens = Vec::new();
