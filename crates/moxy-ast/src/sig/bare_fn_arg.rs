@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Colon;
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Ident, Type};
 
@@ -8,7 +8,6 @@ use crate::{Attribute, Ident, Type};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct BareFnArg {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub name: Option<(Ident, Colon)>,
     pub ty: Type,
@@ -34,12 +33,20 @@ impl Parse for BareFnArg {
         };
 
         let ty = stream.parse::<Type>()?;
-        Ok(Self {
-            span: Span::default(),
-            attrs,
-            name,
-            ty,
-        })
+        Ok(Self { attrs, name, ty })
+    }
+}
+
+impl Spanner for BareFnArg {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if let Some((id, _)) = &self.name {
+            id.span
+        } else {
+            self.ty.span()
+        };
+        start.join(self.ty.span())
     }
 }
 

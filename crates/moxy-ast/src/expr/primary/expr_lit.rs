@@ -1,5 +1,5 @@
 use moxy_token::parser::ParseStream;
-use moxy_token::{Span, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::*;
 
@@ -7,9 +7,19 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprLit {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub lit: Lit,
+}
+
+impl Spanner for ExprLit {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.lit.span()
+        };
+        start.join(self.lit.span())
+    }
 }
 
 impl ExprLit {

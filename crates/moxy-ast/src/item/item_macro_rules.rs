@@ -1,7 +1,7 @@
 use moxy_token::keyword::MacroRules;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Not;
-use moxy_token::{Group, LexError, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Group, LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Attribute, Ident};
 
@@ -9,7 +9,6 @@ use crate::{Attribute, Ident};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemMacroRules {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub macro_rules_keyword: MacroRules,
     pub not_punct: Not,
@@ -36,13 +35,23 @@ impl Parse for ItemMacroRules {
         };
 
         Ok(ItemMacroRules {
-            span: Span::default(),
             attrs,
             macro_rules_keyword,
             not_punct,
             ident,
             body,
         })
+    }
+}
+
+impl Spanner for ItemMacroRules {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.macro_rules_keyword.span()
+        };
+        start.join(self.body.span().into())
     }
 }
 

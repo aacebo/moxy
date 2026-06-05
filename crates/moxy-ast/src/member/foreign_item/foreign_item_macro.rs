@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::ForeignItem;
 use crate::{Attribute, MacroCall};
@@ -9,7 +9,6 @@ use crate::{Attribute, MacroCall};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ForeignItemMacro {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub mac: MacroCall,
     pub semi: Option<Semi>,
@@ -19,12 +18,19 @@ impl Parse for ForeignItemMacro {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Vec<Attribute>>()?;
         let (mac, semi) = crate::MacroCall::parse_semi(stream)?;
-        Ok(ForeignItemMacro {
-            span: Span::default(),
-            attrs,
-            mac,
-            semi,
-        })
+        Ok(ForeignItemMacro { attrs, mac, semi })
+    }
+}
+
+impl Spanner for ForeignItemMacro {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.mac.span()
+        };
+        let end = self.semi.as_ref().map(|s| s.span()).unwrap_or_else(|| self.mac.span());
+        start.join(end)
     }
 }
 

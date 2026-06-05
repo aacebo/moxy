@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Lt, Plus};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::AngleArgs;
 use crate::{Ident, Punctuated, TypeBound};
@@ -9,7 +9,6 @@ use crate::{Ident, Punctuated, TypeBound};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ConstraintArg {
-    pub span: Span,
     pub ident: Ident,
     pub generics: Option<AngleArgs>,
     pub colon_punct: Colon,
@@ -41,12 +40,22 @@ impl Parse for ConstraintArg {
 
         stream.seek(&fork);
         Ok(Self {
-            span: Span::default(),
             ident,
             generics,
             colon_punct,
             bounds,
         })
+    }
+}
+
+impl Spanner for ConstraintArg {
+    fn span(&self) -> Span {
+        let end = self
+            .bounds
+            .last()
+            .map(|b| b.span())
+            .unwrap_or_else(|| self.colon_punct.span());
+        self.ident.span.join(end)
     }
 }
 

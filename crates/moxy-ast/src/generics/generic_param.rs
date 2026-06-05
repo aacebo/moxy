@@ -1,6 +1,6 @@
 use moxy_token::keyword::Const;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::{ConstParam, LifetimeParam, TypeParam};
 
@@ -28,6 +28,16 @@ impl From<TypeParam> for GenericParam {
 impl From<ConstParam> for GenericParam {
     fn from(v: ConstParam) -> Self {
         GenericParam::Const(Box::new(v))
+    }
+}
+
+impl Spanner for GenericParam {
+    fn span(&self) -> Span {
+        match self {
+            GenericParam::Lifetime(v) => v.span(),
+            GenericParam::Type(v) => v.span(),
+            GenericParam::Const(v) => v.span(),
+        }
     }
 }
 

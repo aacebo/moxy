@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 mod foreign_item_fn;
 mod foreign_item_macro;
@@ -19,6 +19,17 @@ pub enum ForeignItem {
     Static(ForeignItemStatic),
     Type(ForeignItemType),
     Macro(ForeignItemMacro),
+}
+
+impl Spanner for ForeignItem {
+    fn span(&self) -> Span {
+        match self {
+            ForeignItem::Fn(v) => v.span(),
+            ForeignItem::Static(v) => v.span(),
+            ForeignItem::Type(v) => v.span(),
+            ForeignItem::Macro(v) => v.span(),
+        }
+    }
 }
 
 macro_rules! impl_from {

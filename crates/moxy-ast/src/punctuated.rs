@@ -2,7 +2,7 @@ use std::ops::{Index, IndexMut};
 use std::{slice, vec};
 
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 pub struct Punctuated<T, P> {
     inner: Vec<(T, P)>,
@@ -384,6 +384,14 @@ impl<'a, T, P> IntoIterator for &'a mut Punctuated<T, P> {
 
     fn into_iter(self) -> Self::IntoIter {
         self.iter_mut()
+    }
+}
+
+impl<T: Spanner, P> Punctuated<T, P> {
+    pub fn span(&self) -> Option<Span> {
+        let first = self.first()?.span();
+        let last = self.last()?.span();
+        Some(first.join(last))
     }
 }
 

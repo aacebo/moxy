@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::Type;
 use crate::{Delimited, Expr};
@@ -34,17 +34,19 @@ impl ToTokens for ArrayInner {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeArray {
-    pub span: Span,
     pub content: Delimited<ArrayInner>,
 }
 
 impl Parse for TypeArray {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let content = Delimited::<ArrayInner>::parse_bracket(stream)?;
-        Ok(Self {
-            span: Span::default(),
-            content,
-        })
+        Ok(Self { content })
+    }
+}
+
+impl Spanner for TypeArray {
+    fn span(&self) -> Span {
+        self.content.span()
     }
 }
 

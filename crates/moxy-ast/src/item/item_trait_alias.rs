@@ -1,7 +1,7 @@
 use moxy_token::keyword::{Auto, Trait};
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Eq, Plus, Semi};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Generics, Ident, Punctuated, TypeBound, Unsafety, Visibility};
 
@@ -9,7 +9,6 @@ use crate::{Attribute, Generics, Ident, Punctuated, TypeBound, Unsafety, Visibil
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemTraitAlias {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub trait_keyword: Trait,
@@ -38,7 +37,6 @@ impl Parse for ItemTraitAlias {
         let bounds = crate::TypeBound::parse_bounds(stream)?;
         let semi_punct = stream.parse::<Semi>()?;
         Ok(ItemTraitAlias {
-            span: Span::default(),
             attrs,
             vis,
             trait_keyword,
@@ -48,6 +46,19 @@ impl Parse for ItemTraitAlias {
             bounds,
             semi_punct,
         })
+    }
+}
+
+impl Spanner for ItemTraitAlias {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if !matches!(self.vis, Visibility::Inherited) {
+            self.vis.span()
+        } else {
+            self.trait_keyword.span()
+        };
+        start.join(self.semi_punct.span())
     }
 }
 

@@ -1,7 +1,7 @@
 use moxy_token::keyword::Struct;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Fields, Generics, Ident, Visibility};
 
@@ -9,7 +9,6 @@ use crate::{Attribute, Fields, Generics, Ident, Visibility};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemStruct {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub struct_keyword: Struct,
@@ -34,7 +33,6 @@ impl Parse for ItemStruct {
         let fields = stream.parse::<Fields>()?;
         let _ = stream.parse::<Semi>();
         Ok(ItemStruct {
-            span: Span::default(),
             attrs,
             vis,
             struct_keyword: Struct::default(),
@@ -43,6 +41,19 @@ impl Parse for ItemStruct {
             fields,
             semi_punct: Semi::default(),
         })
+    }
+}
+
+impl Spanner for ItemStruct {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if !matches!(self.vis, Visibility::Inherited) {
+            self.vis.span()
+        } else {
+            self.struct_keyword.span()
+        };
+        start.join(self.fields.span())
     }
 }
 

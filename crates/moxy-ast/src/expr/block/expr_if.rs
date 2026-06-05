@@ -1,6 +1,6 @@
 use moxy_token::keyword::{Else, If};
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -8,13 +8,28 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprIf {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub if_keyword: If,
     pub cond: Box<super::super::Expr>,
     pub then_branch: StmtBlock,
     pub else_keyword: Option<Else>,
     pub else_branch: Option<Box<super::super::Expr>>,
+}
+
+impl Spanner for ExprIf {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.if_keyword.span()
+        };
+        let end = if let Some(e) = &self.else_branch {
+            e.span()
+        } else {
+            self.then_branch.span()
+        };
+        start.join(end)
+    }
 }
 
 impl ExprIf {
@@ -32,7 +47,6 @@ impl ExprIf {
         };
 
         Ok(super::super::Expr::Block(super::BlockExpr::If(Self {
-            span: Span::default(),
             attrs: Vec::new(),
             if_keyword,
             cond,

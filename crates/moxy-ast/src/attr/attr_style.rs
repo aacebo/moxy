@@ -1,5 +1,5 @@
 use moxy_token::punct::{Not, Pound};
-use moxy_token::{ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 #[doc = "Whether an attribute is outer (`#[...]`) or inner (`#![...]`)."]
 #[derive(Debug, Clone)]
@@ -33,6 +33,15 @@ impl Eq for AttrStyle {}
 impl std::hash::Hash for AttrStyle {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         std::mem::discriminant(self).hash(state);
+    }
+}
+
+impl Spanner for AttrStyle {
+    fn span(&self) -> Span {
+        match self {
+            AttrStyle::Outer(pound) => pound.span(),
+            AttrStyle::Inner(pound, not) => pound.span().join(not.span()),
+        }
     }
 }
 

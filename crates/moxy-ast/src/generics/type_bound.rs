@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::{TraitBound, UseBound};
 use crate::Lifetime;
@@ -31,6 +31,16 @@ impl TypeBound {
         }
 
         Ok(bounds)
+    }
+}
+
+impl Spanner for TypeBound {
+    fn span(&self) -> Span {
+        match self {
+            TypeBound::Trait(v) => v.span(),
+            TypeBound::Lifetime(v) => v.span(),
+            TypeBound::Use(v) => v.span(),
+        }
     }
 }
 

@@ -11,7 +11,7 @@ pub use expr_index::*;
 pub use expr_method_call::*;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Dot, Question};
-use moxy_token::{Delim, Span, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
 use super::unary::ExprTry;
 use super::{Expr, UnaryExpr};
@@ -26,6 +26,18 @@ pub enum PostfixExpr {
     Field(ExprField),
     Index(ExprIndex),
     Await(ExprAwait),
+}
+
+impl Spanner for PostfixExpr {
+    fn span(&self) -> Span {
+        match self {
+            PostfixExpr::Call(v) => v.span(),
+            PostfixExpr::MethodCall(v) => v.span(),
+            PostfixExpr::Field(v) => v.span(),
+            PostfixExpr::Index(v) => v.span(),
+            PostfixExpr::Await(v) => v.span(),
+        }
+    }
 }
 
 impl ToTokens for PostfixExpr {
@@ -82,7 +94,6 @@ impl PostfixExpr {
                     let await_span = stream.span();
                     stream.advance();
                     expr = Expr::Postfix(PostfixExpr::Await(ExprAwait {
-                        span: Span::default(),
                         attrs: Vec::new(),
                         base: Box::new(expr),
                         dot,
@@ -101,7 +112,6 @@ impl PostfixExpr {
                         let method = method.clone();
                         let args = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
                         expr = Expr::Postfix(PostfixExpr::MethodCall(ExprMethodCall {
-                            span: Span::default(),
                             attrs: Vec::new(),
                             receiver: Box::new(expr),
                             dot,
@@ -114,7 +124,6 @@ impl PostfixExpr {
                 }
 
                 expr = Expr::Postfix(PostfixExpr::Field(ExprField {
-                    span: Span::default(),
                     attrs: Vec::new(),
                     base: Box::new(expr),
                     dot,
@@ -126,7 +135,6 @@ impl PostfixExpr {
             if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
                 let args = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
                 expr = Expr::Postfix(PostfixExpr::Call(ExprCall {
-                    span: Span::default(),
                     attrs: Vec::new(),
                     func: Box::new(expr),
                     args,
@@ -137,7 +145,6 @@ impl PostfixExpr {
             if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
                 let index = Delimited::parse_bracket_with(stream, |s| super::parse_expr(s, true).map(Box::new))?;
                 expr = Expr::Postfix(PostfixExpr::Index(ExprIndex {
-                    span: Span::default(),
                     attrs: Vec::new(),
                     base: Box::new(expr),
                     index,
@@ -148,7 +155,6 @@ impl PostfixExpr {
             if stream.peek::<Question>().is_some() {
                 let question_punct = stream.parse::<Question>()?;
                 expr = Expr::Unary(UnaryExpr::Try(ExprTry {
-                    span: Span::default(),
                     attrs: Vec::new(),
                     expr: Box::new(expr),
                     question_punct,

@@ -1,7 +1,7 @@
 use moxy_token::keyword::Type as KwType;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Eq, Semi};
-use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::ImplItem;
 use crate::{Attribute, Defaultness, Generics, Ident, Type, Visibility};
@@ -10,7 +10,6 @@ use crate::{Attribute, Defaultness, Generics, Ident, Type, Visibility};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ImplItemType {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub defaultness: Defaultness,
@@ -40,7 +39,6 @@ impl Parse for ImplItemType {
         let ty = stream.parse::<Type>()?;
         let semi = stream.parse_if::<Semi>();
         Ok(ImplItemType {
-            span: Span::default(),
             attrs,
             vis,
             defaultness,
@@ -51,6 +49,20 @@ impl Parse for ImplItemType {
             ty,
             semi,
         })
+    }
+}
+
+impl Spanner for ImplItemType {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if !matches!(self.vis, Visibility::Inherited) {
+            self.vis.span()
+        } else {
+            self.type_keyword.span()
+        };
+        let end = self.semi.as_ref().map(|s| s.span()).unwrap_or_else(|| self.ty.span());
+        start.join(end)
     }
 }
 

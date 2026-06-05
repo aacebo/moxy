@@ -1,7 +1,7 @@
 use moxy_token::keyword::Move;
 use moxy_token::parser::ParseStream;
 use moxy_token::punct::{Comma, Or, OrOr};
-use moxy_token::{Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Punctuation, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::*;
 
@@ -17,7 +17,6 @@ pub enum ClosurePipes {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprClosure {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub lifetimes: Option<BoundLifetimes>,
     pub constness: Constness,
@@ -28,6 +27,26 @@ pub struct ExprClosure {
     pub inputs: Punctuated<ClosureParam, Comma>,
     pub output: ReturnType,
     pub body: Box<super::super::Expr>,
+}
+
+impl Spanner for ExprClosure {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if let Some(l) = &self.lifetimes {
+            l.span()
+        } else if !matches!(self.constness, Constness::NoConst) {
+            self.constness.span()
+        } else if !matches!(self.asyncness, Asyncness::Sync) {
+            self.asyncness.span()
+        } else {
+            match &self.pipes {
+                ClosurePipes::Empty(oror) => oror.span(),
+                ClosurePipes::Params(open, _) => open.span(),
+            }
+        };
+        start.join(self.body.span())
+    }
 }
 
 impl ExprClosure {

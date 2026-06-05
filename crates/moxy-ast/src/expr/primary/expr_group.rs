@@ -1,4 +1,4 @@
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::Attribute;
 
@@ -9,6 +9,12 @@ pub struct ExprGroup {
     pub span: Span,
     pub attrs: Vec<Attribute>,
     pub expr: Box<super::super::Expr>,
+}
+
+impl Spanner for ExprGroup {
+    fn span(&self) -> Span {
+        self.span
+    }
 }
 
 impl ToTokens for ExprGroup {

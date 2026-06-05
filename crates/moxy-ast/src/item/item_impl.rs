@@ -1,7 +1,7 @@
 use moxy_token::keyword::{For, Impl};
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Not;
-use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, BoundPolarity, Defaultness, Delimited, Generics, ImplItem, TraitRef, Type, Unsafety};
 
@@ -9,7 +9,6 @@ use crate::{Attribute, BoundPolarity, Defaultness, Delimited, Generics, ImplItem
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemImpl {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub defaultness: Defaultness,
     pub unsafety: Unsafety,
@@ -25,7 +24,7 @@ impl ItemImpl {
     fn type_to_trait_ref(ty: Type, polarity: BoundPolarity) -> Result<TraitRef, ParseError> {
         match ty {
             Type::Path(tp) => Ok(TraitRef {
-                span: Span::default(),
+                span: tp.path.span,
                 polarity,
                 path: tp.path,
             }),
@@ -70,7 +69,6 @@ impl Parse for ItemImpl {
 
         let items = Delimited::<Vec<ImplItem>>::parse_brace(stream)?;
         Ok(ItemImpl {
-            span: Span::default(),
             attrs,
             defaultness,
             unsafety,
@@ -81,6 +79,21 @@ impl Parse for ItemImpl {
             self_ty,
             items,
         })
+    }
+}
+
+impl Spanner for ItemImpl {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if !matches!(self.defaultness, Defaultness::Final) {
+            self.defaultness.span()
+        } else if !matches!(self.unsafety, Unsafety::Safe) {
+            self.unsafety.span()
+        } else {
+            self.impl_keyword.span()
+        };
+        start.join(self.items.span())
     }
 }
 

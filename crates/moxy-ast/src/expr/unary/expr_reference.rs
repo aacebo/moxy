@@ -1,5 +1,5 @@
 use moxy_token::punct::And;
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -7,11 +7,21 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprReference {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub and_punct: And,
     pub mutability: Mutability,
     pub expr: Box<super::super::Expr>,
+}
+
+impl Spanner for ExprReference {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.and_punct.span()
+        };
+        start.join(self.expr.span())
+    }
 }
 
 impl ToTokens for ExprReference {

@@ -20,6 +20,12 @@ impl Parse for TypeSlice {
     }
 }
 
+impl Spanner for TypeSlice {
+    fn span(&self) -> Span {
+        self.span
+    }
+}
+
 impl ToTokens for TypeSlice {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.elem.to_tokens(tokens);

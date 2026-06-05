@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Delimited};
 
@@ -33,9 +33,14 @@ impl ToTokens for RepeatInner {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprRepeat {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub content: Delimited<RepeatInner>,
+}
+
+impl Spanner for ExprRepeat {
+    fn span(&self) -> Span {
+        self.content.span()
+    }
 }
 
 impl ToTokens for ExprRepeat {

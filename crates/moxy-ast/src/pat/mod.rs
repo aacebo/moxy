@@ -1,7 +1,7 @@
 use moxy_token::keyword::{Mut, Ref};
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{And, At, Colon, Comma, DotDot, Or as OrPunct};
-use moxy_token::{Delim, LexError, Parse, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Delim, LexError, Parse, Punctuation, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::{Attribute, Delimited, Expr, Ident, Member, Mutability, Path, Punctuated, RangeLimits, Type};
 
@@ -57,6 +57,30 @@ pub enum Pattern {
     Paren(PatParen),
     Box(Box<Pattern>),
     Const(crate::StmtBlock),
+}
+
+impl Spanner for Pattern {
+    fn span(&self) -> Span {
+        match self {
+            Pattern::Wild | Pattern::Rest => Span::call_site(),
+            Pattern::Ident(v) => v.span(),
+            Pattern::Path(v) => v.span(),
+            Pattern::Tuple(v) => v.span(),
+            Pattern::TupleStruct(v) => v.span(),
+            Pattern::Struct(v) => v.span(),
+            Pattern::Slice(v) => v.span(),
+            Pattern::Reference(v) => v.span(),
+            Pattern::Or(v) => v.span(),
+            Pattern::Lit(v) => v.span(),
+            Pattern::Range(v) => v.span(),
+            Pattern::Macro(v) => v.span(),
+            Pattern::Type(v) => v.span(),
+            Pattern::Group(v) => v.span(),
+            Pattern::Paren(v) => v.span(),
+            Pattern::Box(p) => p.span(),
+            Pattern::Const(b) => b.span(),
+        }
+    }
 }
 
 impl From<PatIdent> for Pattern {
@@ -161,7 +185,6 @@ impl Parse for Pattern {
         }
 
         Ok(Pattern::Or(PatOr {
-            span: Span::default(),
             attrs: Vec::new(),
             cases,
         }))
@@ -224,7 +247,6 @@ impl PatIdent {
         };
 
         Ok(Self {
-            span: Span::default(),
             attrs,
             by_ref,
             mutability,
@@ -261,7 +283,6 @@ impl PatStruct {
                 (
                     None,
                     Pattern::Ident(PatIdent {
-                        span: Span::default(),
                         attrs: Vec::new(),
                         by_ref: None,
                         mutability: Mutability::Immutable,
@@ -273,7 +294,6 @@ impl PatStruct {
             };
 
             fields.push_value(PatField {
-                span: Span::default(),
                 attrs: Vec::new(),
                 member,
                 colon,
@@ -328,7 +348,6 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
         let mutability = stream.parse::<Mutability>()?;
         let pat = Box::new(Pattern::parse(stream)?);
         return Ok(Pattern::Reference(PatReference {
-            span: Span::default(),
             attrs,
             and,
             mutability,
@@ -339,21 +358,13 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     // Tuple/paren `(...)`
     if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
         let elems = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
-        return Ok(Pattern::Tuple(PatTuple {
-            span: Span::default(),
-            attrs,
-            elems,
-        }));
+        return Ok(Pattern::Tuple(PatTuple { attrs, elems }));
     }
 
     // Slice `[...]`
     if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
         let elems = Delimited::parse_bracket_with(stream, Punctuated::parse_terminated)?;
-        return Ok(Pattern::Slice(PatSlice {
-            span: Span::default(),
-            attrs,
-            elems,
-        }));
+        return Ok(Pattern::Slice(PatSlice { attrs, elems }));
     }
 
     // `ref`/`mut`-led binding
@@ -364,11 +375,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     // Literal pattern
     if matches!(stream.curr(), Some(tt) if matches!(tt, TokenTree::Token(Token::Literal(_)))) {
         let expr = stream.parse::<Expr>()?;
-        return Ok(Pattern::Lit(PatLit {
-            span: Span::default(),
-            attrs,
-            expr,
-        }));
+        return Ok(Pattern::Lit(PatLit { attrs, expr }));
     }
 
     // Path-led: ident binding, path, tuple-struct, or struct pattern.
@@ -388,7 +395,6 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
             stream.seek(&fork);
             let elems = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
             return Ok(Pattern::TupleStruct(PatTupleStruct {
-                span: Span::default(),
                 attrs,
                 qself: None,
                 path,
@@ -403,7 +409,6 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
                 Ok(PatStructBody { fields, rest })
             })?;
             return Ok(Pattern::Struct(PatStruct {
-                span: Span::default(),
                 attrs,
                 qself: None,
                 path,
@@ -419,7 +424,6 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
                 None => return Err(LexError::new(at).message("expected pattern").into()),
             };
             return Ok(Pattern::Ident(PatIdent {
-                span: Span::default(),
                 attrs,
                 by_ref: None,
                 mutability: Mutability::Immutable,
@@ -430,7 +434,6 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
 
         stream.seek(&fork);
         return Ok(Pattern::Path(PatPath {
-            span: Span::default(),
             attrs,
             qself: None,
             path,

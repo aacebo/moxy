@@ -1,7 +1,7 @@
 use moxy_token::keyword::Where;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, Gt, Lt};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::Punctuated;
 
@@ -35,7 +35,6 @@ pub use where_predicate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Generics {
-    pub span: Span,
     pub lt_punct: Lt,
     pub gt_punct: Gt,
     pub params: Punctuated<GenericParam, Comma>,
@@ -70,12 +69,25 @@ impl Parse for Generics {
         };
 
         Ok(Self {
-            span: Span::default(),
             lt_punct: Lt::default(),
             gt_punct: Gt::default(),
             params,
             where_clause,
         })
+    }
+}
+
+impl Spanner for Generics {
+    fn span(&self) -> Span {
+        if self.params.is_empty() {
+            return Span::call_site();
+        }
+        let end = if let Some(w) = &self.where_clause {
+            w.span()
+        } else {
+            self.gt_punct.span()
+        };
+        self.lt_punct.span().join(end)
     }
 }
 

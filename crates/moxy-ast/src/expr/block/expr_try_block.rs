@@ -1,6 +1,6 @@
 use moxy_token::keyword::Try;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -8,10 +8,20 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprTryBlock {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub try_keyword: Try,
     pub block: StmtBlock,
+}
+
+impl Spanner for ExprTryBlock {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.try_keyword.span()
+        };
+        start.join(self.block.span())
+    }
 }
 
 impl ExprTryBlock {
@@ -19,7 +29,6 @@ impl ExprTryBlock {
         let try_keyword = stream.parse::<Try>()?;
         let block = stream.parse::<StmtBlock>()?;
         Ok(Self {
-            span: Span::default(),
             attrs: Vec::new(),
             try_keyword,
             block,

@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Plus};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Lifetime, Punctuated};
 
@@ -8,7 +8,6 @@ use crate::{Attribute, Lifetime, Punctuated};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LifetimeParam {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub lifetime: Lifetime,
     pub colon_punct: Option<Colon>,
@@ -22,12 +21,23 @@ impl Parse for LifetimeParam {
         let bounds = Lifetime::parse_bounds(stream)?;
         let colon_punct = if !bounds.is_empty() { Some(Colon::default()) } else { None };
         Ok(Self {
-            span: Span::default(),
             attrs,
             lifetime,
             colon_punct,
             bounds,
         })
+    }
+}
+
+impl Spanner for LifetimeParam {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.lifetime.span()
+        };
+        let end = self.bounds.last().map(|b| b.span()).unwrap_or_else(|| self.lifetime.span());
+        start.join(end)
     }
 }
 

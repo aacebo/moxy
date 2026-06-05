@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{BoundLifetimes, BoundPolarity, Path, TraitBoundModifier};
 
@@ -28,6 +28,12 @@ impl Parse for TraitBound {
             modifier,
             path,
         })
+    }
+}
+
+impl Spanner for TraitBound {
+    fn span(&self) -> Span {
+        self.span
     }
 }
 

@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Colon;
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::expr::{ExprPath, PrimaryExpr};
 use crate::{Attribute, Expr, Member};
@@ -9,7 +9,6 @@ use crate::{Attribute, Expr, Member};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldValue {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub member: Member,
     pub colon_punct: Option<Colon>,
@@ -25,7 +24,6 @@ impl Parse for FieldValue {
             let colon_punct = Some(stream.parse::<Colon>()?);
             let expr = stream.parse::<Expr>()?;
             Ok(Self {
-                span: Span::default(),
                 attrs,
                 member,
                 colon_punct,
@@ -35,7 +33,6 @@ impl Parse for FieldValue {
         } else {
             let expr = match &member {
                 Member::Named(id) => Expr::Primary(PrimaryExpr::Path(ExprPath {
-                    span: Span::default(),
                     attrs: Vec::new(),
                     qself: None,
                     path: id.clone().into(),
@@ -47,7 +44,6 @@ impl Parse for FieldValue {
                 }
             };
             Ok(Self {
-                span: Span::default(),
                 attrs,
                 member,
                 colon_punct: None,
@@ -55,6 +51,17 @@ impl Parse for FieldValue {
                 shorthand: true,
             })
         }
+    }
+}
+
+impl Spanner for FieldValue {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.member.span()
+        };
+        start.join(self.expr.span())
     }
 }
 

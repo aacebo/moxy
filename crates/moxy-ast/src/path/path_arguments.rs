@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, Lt, PathSep};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{AngleArgs, Delimited, Punctuated, ReturnType, Type};
 
@@ -8,7 +8,6 @@ use crate::{AngleArgs, Delimited, Punctuated, ReturnType, Type};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ParenthesizedArgs {
-    pub span: Span,
     pub params: Delimited<Punctuated<Type, Comma>>,
     pub output: ReturnType,
 }
@@ -56,11 +55,23 @@ impl PathArguments {
     pub fn parse_parenthesized(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let params = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
         let output = stream.parse::<ReturnType>()?;
-        Ok(PathArguments::Parenthesized(ParenthesizedArgs {
-            span: Span::default(),
-            params,
-            output,
-        }))
+        Ok(PathArguments::Parenthesized(ParenthesizedArgs { params, output }))
+    }
+}
+
+impl Spanner for ParenthesizedArgs {
+    fn span(&self) -> Span {
+        self.params.span()
+    }
+}
+
+impl Spanner for PathArguments {
+    fn span(&self) -> Span {
+        match self {
+            PathArguments::None => Span::call_site(),
+            PathArguments::AngleBracketed(v) => v.span(),
+            PathArguments::Parenthesized(v) => v.span(),
+        }
     }
 }
 

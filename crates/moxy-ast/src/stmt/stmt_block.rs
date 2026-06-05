@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::Stmt;
 use crate::Delimited;
@@ -8,17 +8,19 @@ use crate::Delimited;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StmtBlock {
-    pub span: Span,
     pub stmts: Delimited<Vec<Stmt>>,
 }
 
 impl Parse for StmtBlock {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let stmts = Delimited::<Vec<Stmt>>::parse_brace(stream)?;
-        Ok(Self {
-            span: Span::default(),
-            stmts,
-        })
+        Ok(Self { stmts })
+    }
+}
+
+impl Spanner for StmtBlock {
+    fn span(&self) -> Span {
+        self.stmts.span()
     }
 }
 

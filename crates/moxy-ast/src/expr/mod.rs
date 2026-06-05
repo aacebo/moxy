@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 pub mod binary;
 pub mod block;
@@ -27,6 +27,21 @@ pub enum Expr {
     Primary(PrimaryExpr),
     Infer,
     Verbatim(TokenStream),
+}
+
+impl Spanner for Expr {
+    fn span(&self) -> Span {
+        match self {
+            Expr::Unary(v) => v.span(),
+            Expr::Binary(v) => v.span(),
+            Expr::Postfix(v) => v.span(),
+            Expr::Block(v) => v.span(),
+            Expr::Jump(v) => v.span(),
+            Expr::Primary(v) => v.span(),
+            Expr::Infer => Span::call_site(),
+            Expr::Verbatim(_) => Span::call_site(),
+        }
+    }
 }
 
 impl From<UnaryExpr> for Expr {

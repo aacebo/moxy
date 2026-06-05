@@ -25,7 +25,7 @@ pub use expr_tuple::*;
 use moxy_token::keyword::{Break, Const, Continue, Let, Return, Try, Unsafe, Yield};
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, DotDot, Eq, Or, OrOr, Semi};
-use moxy_token::{Delim, LexError, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Delim, LexError, Punctuation, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
 use super::block::{
     ExprAsync, ExprBrace, ExprConst, ExprForLoop, ExprIf, ExprLoop, ExprMatch, ExprTryBlock, ExprUnsafe, ExprWhile,
@@ -51,6 +51,24 @@ pub enum PrimaryExpr {
     Paren(ExprParen),
     Group(ExprGroup),
     Macro(ExprMacro),
+}
+
+impl Spanner for PrimaryExpr {
+    fn span(&self) -> Span {
+        match self {
+            PrimaryExpr::Lit(v) => v.span(),
+            PrimaryExpr::Path(v) => v.span(),
+            PrimaryExpr::Struct(v) => v.span(),
+            PrimaryExpr::Closure(v) => v.span(),
+            PrimaryExpr::Tuple(v) => v.span(),
+            PrimaryExpr::Array(v) => v.span(),
+            PrimaryExpr::Repeat(v) => v.span(),
+            PrimaryExpr::Let(v) => v.span(),
+            PrimaryExpr::Paren(v) => v.span(),
+            PrimaryExpr::Group(v) => v.span(),
+            PrimaryExpr::Macro(v) => v.span(),
+        }
+    }
 }
 
 impl ToTokens for PrimaryExpr {
@@ -170,7 +188,6 @@ impl ExprClosure {
         let body = Box::new(super::parse_expr(stream, true)?);
 
         Ok(Self {
-            span: Span::default(),
             attrs: Vec::new(),
             lifetimes: None,
             constness,
@@ -225,7 +242,6 @@ impl ExprRepeat {
         let len = super::parse_expr(&mut fork, true)?;
         stream.seek(&fork);
         Ok(Some(Self {
-            span: Span::default(),
             attrs: Vec::new(),
             content: Delimited::bracket(
                 bracket_span,
@@ -267,13 +283,11 @@ impl PrimaryExpr {
             return Ok(if elems.len() == 1 && !elems.trailing_punct() {
                 let expr = Box::new(elems.into_iter().next().unwrap());
                 Expr::Primary(PrimaryExpr::Paren(ExprParen {
-                    span: Span::default(),
                     attrs: Vec::new(),
                     content: Delimited::paren(paren_span, expr),
                 }))
             } else {
                 Expr::Primary(PrimaryExpr::Tuple(ExprTuple {
-                    span: Span::default(),
                     attrs: Vec::new(),
                     elems: Delimited::paren(paren_span, elems),
                 }))
@@ -288,7 +302,6 @@ impl PrimaryExpr {
             }
             let elems = Punctuated::parse_terminated(&mut inner)?;
             return Ok(Expr::Primary(PrimaryExpr::Array(ExprArray {
-                span: Span::default(),
                 attrs: Vec::new(),
                 elems: Delimited::bracket(bracket_span, elems),
             })));
@@ -311,7 +324,6 @@ impl PrimaryExpr {
             }
 
             return Ok(Expr::Block(BlockExpr::Brace(ExprBrace {
-                span: Span::default(),
                 attrs: Vec::new(),
                 label,
                 block: stream.parse()?,
@@ -320,7 +332,6 @@ impl PrimaryExpr {
 
         if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
             return Ok(Expr::Block(BlockExpr::Brace(ExprBrace {
-                span: Span::default(),
                 attrs: Vec::new(),
                 label: None,
                 block: stream.parse()?,
@@ -366,7 +377,6 @@ impl PrimaryExpr {
         if stream.peek::<Return>().is_some() {
             let return_keyword = stream.parse::<Return>()?;
             return Ok(Expr::Jump(JumpExpr::Return(ExprReturn {
-                span: Span::default(),
                 attrs: Vec::new(),
                 return_keyword,
                 expr: Expr::parse_if(stream)?,
@@ -376,7 +386,6 @@ impl PrimaryExpr {
         if stream.peek::<Yield>().is_some() {
             let yield_keyword = stream.parse::<Yield>()?;
             return Ok(Expr::Jump(JumpExpr::Yield(ExprYield {
-                span: Span::default(),
                 attrs: Vec::new(),
                 yield_keyword,
                 expr: Expr::parse_if(stream)?,
@@ -387,7 +396,6 @@ impl PrimaryExpr {
             let break_keyword = stream.parse::<Break>()?;
             let label = Label::parse_opt_break(stream);
             return Ok(Expr::Jump(JumpExpr::Break(ExprBreak {
-                span: Span::default(),
                 attrs: Vec::new(),
                 break_keyword,
                 label,
@@ -399,7 +407,6 @@ impl PrimaryExpr {
             let continue_keyword = stream.parse::<Continue>()?;
             let label = Label::parse_opt_break(stream);
             return Ok(Expr::Jump(JumpExpr::Continue(ExprContinue {
-                span: Span::default(),
                 attrs: Vec::new(),
                 continue_keyword,
                 label,
@@ -412,7 +419,6 @@ impl PrimaryExpr {
             let eq = stream.parse::<Eq>()?;
             let expr = Box::new(super::parse_expr(stream, false)?);
             return Ok(Expr::Primary(PrimaryExpr::Let(ExprLet {
-                span: Span::default(),
                 attrs: Vec::new(),
                 let_keyword,
                 pat,
@@ -427,25 +433,19 @@ impl PrimaryExpr {
 
         if matches!(stream.curr(), Some(tt) if ExprLit::is_literal(tt)) || ExprLit::is_bool_ident(stream) {
             return Ok(Expr::Primary(PrimaryExpr::Lit(ExprLit {
-                span: Span::default(),
                 attrs: Vec::new(),
                 lit: stream.parse()?,
             })));
         }
 
         if let Some(mac) = stream.parse_if::<crate::MacroCall>() {
-            return Ok(Expr::Primary(PrimaryExpr::Macro(ExprMacro {
-                span: moxy_token::Span::default(),
-                attrs: Vec::new(),
-                mac,
-            })));
+            return Ok(Expr::Primary(PrimaryExpr::Macro(ExprMacro { attrs: Vec::new(), mac })));
         }
 
         // Qualified path `<T as Trait>::assoc` in expression position.
         if stream.peek::<moxy_token::punct::Lt>().is_some() {
             let (qself, path) = crate::ty::QSelf::parse_qualified(stream)?;
             return Ok(Expr::Primary(PrimaryExpr::Path(ExprPath {
-                span: Span::default(),
                 attrs: Vec::new(),
                 qself: Some(qself),
                 path,
@@ -469,7 +469,6 @@ impl PrimaryExpr {
                     Ok(StructBody { fields, rest })
                 })?;
                 return Ok(Expr::Primary(PrimaryExpr::Struct(ExprStruct {
-                    span: Span::default(),
                     attrs: Vec::new(),
                     qself: None,
                     path,
@@ -478,7 +477,6 @@ impl PrimaryExpr {
             }
 
             return Ok(Expr::Primary(PrimaryExpr::Path(ExprPath {
-                span: Span::default(),
                 attrs: Vec::new(),
                 qself: None,
                 path,

@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Parse, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::{Lifetime, Type};
 
@@ -23,6 +23,19 @@ pub enum GenericArgument {
     AssocType(AssocTypeArg),
     AssocConst(AssocConstArg),
     Constraint(ConstraintArg),
+}
+
+impl Spanner for GenericArgument {
+    fn span(&self) -> Span {
+        match self {
+            GenericArgument::Lifetime(v) => v.span(),
+            GenericArgument::Type(v) => v.span(),
+            GenericArgument::Const(v) => v.span(),
+            GenericArgument::AssocType(v) => v.span(),
+            GenericArgument::AssocConst(v) => v.span(),
+            GenericArgument::Constraint(v) => v.span(),
+        }
+    }
 }
 
 impl Parse for GenericArgument {

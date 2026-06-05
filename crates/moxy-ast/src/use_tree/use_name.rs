@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::UseTree;
 use crate::Ident;
@@ -8,7 +8,6 @@ use crate::Ident;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseName {
-    pub span: Span,
     pub ident: Ident,
 }
 
@@ -19,6 +18,12 @@ impl Parse for UseName {
             UseTree::Name(v) => Ok(v),
             _ => Err(LexError::new(at).message("expected use name").into()),
         }
+    }
+}
+
+impl Spanner for UseName {
+    fn span(&self) -> Span {
+        self.ident.span
     }
 }
 

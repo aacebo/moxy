@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::And;
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::Type;
 use crate::{Lifetime, Mutability};
@@ -28,6 +28,12 @@ impl Parse for TypeReference {
             mutability,
             elem,
         })
+    }
+}
+
+impl Spanner for TypeReference {
+    fn span(&self) -> Span {
+        self.span.join(self.elem.span())
     }
 }
 

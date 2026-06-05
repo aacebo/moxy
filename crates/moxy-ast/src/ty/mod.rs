@@ -1,7 +1,7 @@
 use moxy_token::keyword::{Dyn, Impl};
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{And, Comma, Star};
-use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Delimited, Punctuated};
 
@@ -53,6 +53,27 @@ pub enum Type {
     Paren(TypeParen),
     Group(TypeGroup),
     Macro(TypeMacro),
+}
+
+impl Spanner for Type {
+    fn span(&self) -> Span {
+        match self {
+            Type::Never(not) => not.span(),
+            Type::Infer(id) => id.span(),
+            Type::Path(v) => v.span(),
+            Type::Tuple(v) => v.span(),
+            Type::Array(v) => v.span(),
+            Type::Slice(v) => v.span(),
+            Type::Reference(v) => v.span(),
+            Type::Pointer(v) => v.span(),
+            Type::BareFn(v) => v.span(),
+            Type::ImplTrait(v) => v.span(),
+            Type::TraitObject(v) => v.span(),
+            Type::Paren(v) => v.span(),
+            Type::Group(v) => v.span(),
+            Type::Macro(v) => v.span(),
+        }
+    }
 }
 
 impl From<TypePath> for Type {
@@ -147,15 +168,14 @@ impl Parse for Type {
                 let semi = inner.parse::<moxy_token::punct::Semi>()?;
                 let len = inner.parse::<crate::Expr>()?;
                 return Ok(Type::Array(TypeArray {
-                    span: Span::default(),
                     content: Delimited::bracket(bracket_span, type_array::ArrayInner { elem, semi, len }),
                 }));
             }
 
-            return Ok(Type::Slice(TypeSlice {
-                span: Span::default(),
-                elem: Delimited::bracket(bracket_span, elem),
-            }));
+            {
+                let elem = Delimited::bracket(bracket_span, elem);
+                return Ok(Type::Slice(TypeSlice { span: elem.span(), elem }));
+            }
         }
 
         // `impl Trait`.
@@ -185,14 +205,16 @@ impl Parse for Type {
             let elems: Punctuated<Type, Comma> = Punctuated::parse_terminated(&mut inner)?;
 
             return if elems.len() == 1 && !elems.trailing_punct() {
+                let content = Delimited::paren(paren_span, Box::new(elems.into_iter().next().unwrap()));
                 Ok(Type::Paren(TypeParen {
-                    span: Span::default(),
-                    content: Delimited::paren(paren_span, Box::new(elems.into_iter().next().unwrap())),
+                    span: content.span(),
+                    content,
                 }))
             } else {
+                let elems_del = Delimited::paren(paren_span, elems);
                 Ok(Type::Tuple(TypeTuple {
-                    span: Span::default(),
-                    elems: Delimited::paren(paren_span, elems),
+                    span: elems_del.span(),
+                    elems: elems_del,
                 }))
             };
         }
@@ -348,13 +370,11 @@ mod tests {
     #[test]
     fn from_variant() {
         use crate::Delimited;
-        let s = TypeSlice {
-            span: Span::default(),
-            elem: Delimited::bracket(
-                moxy_token::span::DelimSpan::default(),
-                Box::new(moxy_token::parse!("T" as Type).unwrap()),
-            ),
-        };
+        let elem = Delimited::bracket(
+            moxy_token::span::DelimSpan::default(),
+            Box::new(moxy_token::parse!("T" as Type).unwrap()),
+        );
+        let s = TypeSlice { span: elem.span(), elem };
         assert!(matches!(Type::from(s), Type::Slice { .. }));
     }
 }

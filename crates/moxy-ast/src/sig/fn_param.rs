@@ -1,7 +1,7 @@
 use moxy_token::keyword::SelfValue;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::And;
-use moxy_token::{Parse, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::Receiver;
 use crate::{Lifetime, Mutability, TypedParam};
@@ -31,6 +31,15 @@ impl FnParam {
         }
 
         false
+    }
+}
+
+impl Spanner for FnParam {
+    fn span(&self) -> Span {
+        match self {
+            FnParam::Receiver(v) => v.span(),
+            FnParam::Typed(v) => v.span(),
+        }
     }
 }
 

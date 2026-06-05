@@ -1,5 +1,5 @@
 use moxy_token::keyword::Continue;
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -7,10 +7,25 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprContinue {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub continue_keyword: Continue,
     pub label: Option<Label>,
+}
+
+impl Spanner for ExprContinue {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.continue_keyword.span()
+        };
+        let end = if let Some(l) = &self.label {
+            l.span()
+        } else {
+            self.continue_keyword.span()
+        };
+        start.join(end)
+    }
 }
 
 impl ToTokens for ExprContinue {

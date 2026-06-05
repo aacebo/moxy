@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::PathSep;
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::Punctuated;
 
@@ -33,12 +33,18 @@ impl Parse for Path {
             false
         };
         let segments = Punctuated::parse_separated_nonempty(stream)?;
-        let end = segments.last().map(|s: &PathSegment| s.span).unwrap_or(start);
+        let end = segments.last().map(|s: &PathSegment| s.span()).unwrap_or(start);
         Ok(Self {
             span: start.join(end),
             leading_colon,
             segments,
         })
+    }
+}
+
+impl Spanner for Path {
+    fn span(&self) -> Span {
+        self.span
     }
 }
 
@@ -56,7 +62,6 @@ impl From<crate::Ident> for Path {
         let span = ident.span;
         let mut segments = Punctuated::new();
         segments.push_value(PathSegment {
-            span,
             ident,
             args: PathArguments::None,
         });

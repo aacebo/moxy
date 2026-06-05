@@ -1,7 +1,7 @@
 use moxy_token::keyword::Mod;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
-use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use super::Item;
 use crate::{Attribute, Delimited, Ident, Unsafety, Visibility};
@@ -10,7 +10,6 @@ use crate::{Attribute, Delimited, Ident, Unsafety, Visibility};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemMod {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub unsafety: Unsafety,
@@ -37,7 +36,6 @@ impl Parse for ItemMod {
         };
 
         Ok(ItemMod {
-            span: Span::default(),
             attrs,
             vis,
             unsafety,
@@ -46,6 +44,26 @@ impl Parse for ItemMod {
             content,
             semi_punct,
         })
+    }
+}
+
+impl Spanner for ItemMod {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if !matches!(self.vis, Visibility::Inherited) {
+            self.vis.span()
+        } else {
+            self.mod_keyword.span()
+        };
+        let end = if let Some(c) = &self.content {
+            c.span()
+        } else if let Some(s) = &self.semi_punct {
+            s.span()
+        } else {
+            self.mod_keyword.span()
+        };
+        start.join(end)
     }
 }
 

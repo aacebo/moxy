@@ -1,7 +1,7 @@
 use moxy_token::keyword::As;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Gt, Lt};
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::Type;
 use crate::Path;
@@ -10,7 +10,6 @@ use crate::Path;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct QSelf {
-    pub span: Span,
     pub lt: Lt,
     pub ty: Box<Type>,
     pub as_keyword: Option<As>,
@@ -33,10 +32,12 @@ impl QSelf {
             segments.push(seg);
         }
 
+        let span = segments.first().map(|s| s.span()).unwrap_or_else(Span::call_site);
+        let end_span = segments.last().map(|s| s.span()).unwrap_or(span);
         Ok((
             qself,
             Path {
-                span: Span::default(),
+                span: span.join(end_span),
                 leading_colon: false,
                 segments,
             },
@@ -62,7 +63,6 @@ impl QSelf {
 
         Ok((
             Self {
-                span: Span::default(),
                 lt,
                 ty,
                 as_keyword,
@@ -70,6 +70,12 @@ impl QSelf {
             },
             trait_path,
         ))
+    }
+}
+
+impl Spanner for QSelf {
+    fn span(&self) -> Span {
+        self.lt.span().join(self.ty.span())
     }
 }
 

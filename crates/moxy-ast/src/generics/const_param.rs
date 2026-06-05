@@ -1,7 +1,7 @@
 use moxy_token::keyword::Const;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Eq};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Expr, Ident, Type};
 
@@ -9,7 +9,6 @@ use crate::{Attribute, Expr, Ident, Type};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ConstParam {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub const_keyword: Const,
     pub ident: Ident,
@@ -36,7 +35,6 @@ impl Parse for ConstParam {
         };
 
         Ok(Self {
-            span: Span::default(),
             attrs,
             const_keyword,
             ident,
@@ -45,6 +43,22 @@ impl Parse for ConstParam {
             default_eq_punct,
             default,
         })
+    }
+}
+
+impl Spanner for ConstParam {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.const_keyword.span()
+        };
+        let end = if let Some(d) = &self.default {
+            d.span()
+        } else {
+            self.ty.span()
+        };
+        start.join(end)
     }
 }
 

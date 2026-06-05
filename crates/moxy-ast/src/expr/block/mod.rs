@@ -20,7 +20,7 @@ pub use expr_try_block::*;
 pub use expr_unsafe::*;
 pub use expr_while::*;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Punctuation, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::{Label, Lifetime};
 
@@ -38,6 +38,23 @@ pub enum BlockExpr {
     Unsafe(ExprUnsafe),
     Const(ExprConst),
     TryBlock(ExprTryBlock),
+}
+
+impl Spanner for BlockExpr {
+    fn span(&self) -> Span {
+        match self {
+            BlockExpr::Brace(v) => v.span(),
+            BlockExpr::If(v) => v.span(),
+            BlockExpr::While(v) => v.span(),
+            BlockExpr::ForLoop(v) => v.span(),
+            BlockExpr::Loop(v) => v.span(),
+            BlockExpr::Match(v) => v.span(),
+            BlockExpr::Async(v) => v.span(),
+            BlockExpr::Unsafe(v) => v.span(),
+            BlockExpr::Const(v) => v.span(),
+            BlockExpr::TryBlock(v) => v.span(),
+        }
+    }
 }
 
 impl ToTokens for BlockExpr {
@@ -124,9 +141,7 @@ impl Label {
         }
 
         let name = stream.parse_if::<Lifetime>()?;
-        Some(Label {
-            span: Span::default(),
-            name,
-        })
+        use moxy_token::Spanner;
+        Some(Label { span: name.span(), name })
     }
 }

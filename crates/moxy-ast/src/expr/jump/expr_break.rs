@@ -1,5 +1,5 @@
 use moxy_token::keyword::Break;
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -7,11 +7,28 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprBreak {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub break_keyword: Break,
     pub label: Option<Label>,
     pub expr: Option<Box<super::super::Expr>>,
+}
+
+impl Spanner for ExprBreak {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.break_keyword.span()
+        };
+        let end = if let Some(e) = &self.expr {
+            e.span()
+        } else if let Some(l) = &self.label {
+            l.span()
+        } else {
+            self.break_keyword.span()
+        };
+        start.join(end)
+    }
 }
 
 impl ToTokens for ExprBreak {

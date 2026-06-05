@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Not;
-use moxy_token::{Delim, Group, LexError, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Attribute, Path};
 
@@ -8,7 +8,6 @@ use crate::{Attribute, Path};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MacroCall {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub path: Path,
     pub bang: Not,
@@ -51,13 +50,18 @@ impl Parse for MacroCall {
             }
         };
 
-        Ok(Self {
-            span: Span::default(),
-            attrs,
-            path,
-            bang,
-            body,
-        })
+        Ok(Self { attrs, path, bang, body })
+    }
+}
+
+impl Spanner for MacroCall {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.path.span()
+        };
+        start.join(self.body.span().into())
     }
 }
 

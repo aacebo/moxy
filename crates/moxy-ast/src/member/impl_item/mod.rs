@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 mod impl_item_const;
 mod impl_item_fn;
@@ -19,6 +19,17 @@ pub enum ImplItem {
     Const(Box<ImplItemConst>),
     Type(ImplItemType),
     Macro(ImplItemMacro),
+}
+
+impl Spanner for ImplItem {
+    fn span(&self) -> Span {
+        match self {
+            ImplItem::Fn(v) => v.span(),
+            ImplItem::Const(v) => v.span(),
+            ImplItem::Type(v) => v.span(),
+            ImplItem::Macro(v) => v.span(),
+        }
+    }
 }
 
 macro_rules! impl_from {

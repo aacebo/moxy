@@ -1,6 +1,6 @@
 use moxy_token::keyword::Let;
 use moxy_token::punct::Eq;
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -8,12 +8,22 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprLet {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub let_keyword: Let,
     pub pat: Box<Pattern>,
     pub eq: Eq,
     pub expr: Box<super::super::Expr>,
+}
+
+impl Spanner for ExprLet {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.let_keyword.span()
+        };
+        start.join(self.expr.span())
+    }
 }
 
 impl ToTokens for ExprLet {

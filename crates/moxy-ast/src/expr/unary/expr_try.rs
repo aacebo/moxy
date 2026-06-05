@@ -1,5 +1,5 @@
 use moxy_token::punct::Question;
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::Attribute;
 
@@ -7,10 +7,20 @@ use crate::Attribute;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprTry {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub expr: Box<super::super::Expr>,
     pub question_punct: Question,
+}
+
+impl Spanner for ExprTry {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.expr.span()
+        };
+        start.join(self.question_punct.span())
+    }
 }
 
 impl ToTokens for ExprTry {

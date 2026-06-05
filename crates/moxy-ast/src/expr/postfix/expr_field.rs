@@ -1,5 +1,5 @@
 use moxy_token::punct::Dot;
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -7,11 +7,21 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprField {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub base: Box<super::super::Expr>,
     pub dot: Dot,
     pub member: Member,
+}
+
+impl Spanner for ExprField {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.base.span()
+        };
+        start.join(self.member.span())
+    }
 }
 
 impl ToTokens for ExprField {

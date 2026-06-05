@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Eq, Lt};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::AngleArgs;
 use crate::{Ident, Type};
@@ -9,7 +9,6 @@ use crate::{Ident, Type};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct AssocTypeArg {
-    pub span: Span,
     pub ident: Ident,
     pub generics: Option<AngleArgs>,
     pub eq_punct: Eq,
@@ -32,12 +31,17 @@ impl Parse for AssocTypeArg {
         let ty = fork.parse::<Type>()?;
         stream.seek(&fork);
         Ok(Self {
-            span: Span::default(),
             ident,
             generics,
             eq_punct,
             ty,
         })
+    }
+}
+
+impl Spanner for AssocTypeArg {
+    fn span(&self) -> Span {
+        self.ident.span.join(self.ty.span())
     }
 }
 

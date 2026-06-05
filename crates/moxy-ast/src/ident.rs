@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
 #[doc = "An identifier token (e.g. a variable name, type name, or keyword-like ident)."]
 #[derive(Debug, Clone)]
@@ -30,6 +30,12 @@ impl Parse for Ident {
             }
             _ => Err(LexError::new(at).message("expected identifier").into()),
         }
+    }
+}
+
+impl Spanner for Ident {
+    fn span(&self) -> Span {
+        self.span
     }
 }
 

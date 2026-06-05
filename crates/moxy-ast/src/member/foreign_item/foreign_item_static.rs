@@ -1,7 +1,7 @@
 use moxy_token::keyword::Static;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Semi};
-use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::ForeignItem;
 use crate::{Attribute, Ident, Mutability, Type, Visibility};
@@ -10,7 +10,6 @@ use crate::{Attribute, Ident, Mutability, Type, Visibility};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ForeignItemStatic {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub static_keyword: Static,
@@ -38,7 +37,6 @@ impl Parse for ForeignItemStatic {
         let ty = stream.parse::<Type>()?;
         let semi = stream.parse_if::<Semi>();
         Ok(ForeignItemStatic {
-            span: Span::default(),
             attrs,
             vis,
             static_keyword,
@@ -48,6 +46,20 @@ impl Parse for ForeignItemStatic {
             ty,
             semi,
         })
+    }
+}
+
+impl Spanner for ForeignItemStatic {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if !matches!(self.vis, Visibility::Inherited) {
+            self.vis.span()
+        } else {
+            self.static_keyword.span()
+        };
+        let end = self.semi.as_ref().map(|s| s.span()).unwrap_or_else(|| self.ty.span());
+        start.join(end)
     }
 }
 

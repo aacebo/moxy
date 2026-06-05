@@ -1,7 +1,7 @@
 use moxy_token::keyword::{Const, Mut};
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Star;
-use moxy_token::{LexError, Parse, Span, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
 use super::Type;
 
@@ -17,7 +17,6 @@ pub enum PointerMutability {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypePointer {
-    pub span: Span,
     pub star: Star,
     pub mutability: PointerMutability,
     pub elem: Box<Type>,
@@ -40,11 +39,25 @@ impl Parse for TypePointer {
         };
 
         Ok(Self {
-            span: Span::default(),
             star,
             mutability,
             elem: Box::new(stream.parse()?),
         })
+    }
+}
+
+impl Spanner for PointerMutability {
+    fn span(&self) -> Span {
+        match self {
+            PointerMutability::Const(k) => k.span(),
+            PointerMutability::Mut(k) => k.span(),
+        }
+    }
+}
+
+impl Spanner for TypePointer {
+    fn span(&self) -> Span {
+        self.star.span().join(self.elem.span())
     }
 }
 

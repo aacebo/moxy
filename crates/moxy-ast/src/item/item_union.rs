@@ -1,6 +1,6 @@
 use moxy_token::keyword::Union;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, FieldsNamed, Generics, Ident, Visibility};
 
@@ -8,7 +8,6 @@ use crate::{Attribute, FieldsNamed, Generics, Ident, Visibility};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemUnion {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub union_keyword: Union,
@@ -26,7 +25,6 @@ impl Parse for ItemUnion {
         let generics = stream.parse::<Generics>()?;
         let fields = stream.parse::<FieldsNamed>()?;
         Ok(ItemUnion {
-            span: Span::default(),
             attrs,
             vis,
             union_keyword,
@@ -34,6 +32,19 @@ impl Parse for ItemUnion {
             generics,
             fields,
         })
+    }
+}
+
+impl Spanner for ItemUnion {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if !matches!(self.vis, Visibility::Inherited) {
+            self.vis.span()
+        } else {
+            self.union_keyword.span()
+        };
+        start.join(self.fields.span())
     }
 }
 

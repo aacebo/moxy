@@ -1,7 +1,7 @@
 use moxy_token::keyword::{Extern, Fn};
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Comma;
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Abi, BareFnArg, BoundLifetimes, Delimited, Punctuated, ReturnType, Unsafety, Variadic};
 
@@ -28,7 +28,6 @@ impl ToTokens for BareFnParams {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeBareFn {
-    pub span: Span,
     pub lifetimes: Option<BoundLifetimes>,
     pub unsafety: Unsafety,
     pub abi: Option<Abi>,
@@ -54,7 +53,6 @@ impl Parse for TypeBareFn {
         })?;
         let output = stream.parse::<ReturnType>()?;
         Ok(Self {
-            span: Span::default(),
             lifetimes,
             unsafety,
             abi,
@@ -62,6 +60,25 @@ impl Parse for TypeBareFn {
             params,
             output,
         })
+    }
+}
+
+impl Spanner for TypeBareFn {
+    fn span(&self) -> Span {
+        let start = if let Some(l) = &self.lifetimes {
+            l.span()
+        } else if !matches!(self.unsafety, crate::Unsafety::Safe) {
+            self.unsafety.span()
+        } else if let Some(abi) = &self.abi {
+            abi.span()
+        } else {
+            self.fn_keyword.span()
+        };
+        let end = match &self.output {
+            ReturnType::Type(_, ty) => ty.span(),
+            ReturnType::Default => self.params.span(),
+        };
+        start.join(end)
     }
 }
 

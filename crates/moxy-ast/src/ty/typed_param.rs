@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Colon;
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::Type;
 use crate::{Attribute, Pattern};
@@ -28,6 +28,17 @@ impl Parse for TypedParam {
             pat,
             ty,
         })
+    }
+}
+
+impl Spanner for TypedParam {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.pat.span()
+        };
+        start.join(self.ty.span())
     }
 }
 

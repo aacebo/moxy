@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Expr, MacroCall};
 
@@ -7,9 +7,19 @@ use crate::{Attribute, Expr, MacroCall};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprMacro {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub mac: MacroCall,
+}
+
+impl Spanner for ExprMacro {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.mac.span()
+        };
+        start.join(self.mac.span())
+    }
 }
 
 impl Parse for ExprMacro {

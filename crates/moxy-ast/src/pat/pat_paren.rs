@@ -1,14 +1,19 @@
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A contentthesized pattern, e.g. `(A | B)`."]
+#[doc = "A parenthesized pattern, e.g. `(A | B)`."]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatParen {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub content: Delimited<Box<Pattern>>,
+}
+
+impl Spanner for PatParen {
+    fn span(&self) -> Span {
+        self.content.span()
+    }
 }
 
 impl ToTokens for PatParen {

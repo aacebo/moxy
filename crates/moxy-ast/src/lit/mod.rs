@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
 mod lit_bool;
 mod lit_byte;
@@ -93,6 +93,22 @@ impl From<LitBool> for Lit {
 impl From<moxy_token::Literal> for Lit {
     fn from(value: moxy_token::Literal) -> Self {
         Lit::Verbatim(value)
+    }
+}
+
+impl Spanner for Lit {
+    fn span(&self) -> Span {
+        match self {
+            Lit::Str(v) => v.span(),
+            Lit::ByteStr(v) => v.span(),
+            Lit::CStr(v) => v.span(),
+            Lit::Byte(v) => v.span(),
+            Lit::Char(v) => v.span(),
+            Lit::Int(v) => v.span(),
+            Lit::Float(v) => v.span(),
+            Lit::Bool(v) => v.span(),
+            Lit::Verbatim(v) => v.span(),
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 use moxy_token::keyword::Await as KwAwait;
 use moxy_token::punct::Dot;
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::Attribute;
 
@@ -8,11 +8,21 @@ use crate::Attribute;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprAwait {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub base: Box<super::super::Expr>,
     pub dot: Dot,
     pub await_keyword: KwAwait,
+}
+
+impl Spanner for ExprAwait {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.base.span()
+        };
+        start.join(self.await_keyword.span())
+    }
 }
 
 impl ToTokens for ExprAwait {

@@ -23,6 +23,12 @@ impl Parse for TypeParen {
     }
 }
 
+impl Spanner for TypeParen {
+    fn span(&self) -> Span {
+        self.span
+    }
+}
+
 impl ToTokens for TypeParen {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.content.to_tokens(tokens);

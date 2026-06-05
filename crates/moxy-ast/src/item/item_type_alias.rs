@@ -1,7 +1,7 @@
 use moxy_token::keyword::Type as KwType;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Eq, Semi};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Generics, Ident, Type, Visibility};
 
@@ -9,7 +9,6 @@ use crate::{Attribute, Generics, Ident, Type, Visibility};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemTypeAlias {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub type_keyword: KwType,
@@ -31,7 +30,6 @@ impl Parse for ItemTypeAlias {
         let ty = stream.parse::<Type>()?;
         let semi_punct = stream.parse::<Semi>()?;
         Ok(ItemTypeAlias {
-            span: Span::default(),
             attrs,
             vis,
             type_keyword,
@@ -41,6 +39,19 @@ impl Parse for ItemTypeAlias {
             ty,
             semi_punct,
         })
+    }
+}
+
+impl Spanner for ItemTypeAlias {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if !matches!(self.vis, Visibility::Inherited) {
+            self.vis.span()
+        } else {
+            self.type_keyword.span()
+        };
+        start.join(self.semi_punct.span())
     }
 }
 

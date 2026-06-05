@@ -1,4 +1,4 @@
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Delimited};
 
@@ -6,10 +6,20 @@ use crate::{Attribute, Delimited};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprIndex {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub base: Box<super::super::Expr>,
     pub index: Delimited<Box<super::super::Expr>>,
+}
+
+impl Spanner for ExprIndex {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.base.span()
+        };
+        start.join(self.index.span())
+    }
 }
 
 impl ToTokens for ExprIndex {

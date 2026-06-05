@@ -1,7 +1,7 @@
 use moxy_token::keyword::Const;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Eq, Semi};
-use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::TraitItem;
 use crate::{Attribute, Expr, Generics, Ident, Type};
@@ -10,7 +10,6 @@ use crate::{Attribute, Expr, Generics, Ident, Type};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitItemConst {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub const_keyword: Const,
     pub ident: Ident,
@@ -45,7 +44,6 @@ impl Parse for TraitItemConst {
 
         let semi = stream.parse_if::<Semi>();
         Ok(TraitItemConst {
-            span: Span::default(),
             attrs,
             const_keyword,
             ident,
@@ -55,6 +53,23 @@ impl Parse for TraitItemConst {
             default,
             semi,
         })
+    }
+}
+
+impl Spanner for TraitItemConst {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.const_keyword.span()
+        };
+        let end = self
+            .semi
+            .as_ref()
+            .map(|s| s.span())
+            .or_else(|| self.default.as_ref().map(|(_, e)| e.span()))
+            .unwrap_or_else(|| self.ty.span());
+        start.join(end)
     }
 }
 

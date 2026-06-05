@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Eq, Plus};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::TypeBound;
 use crate::{Attribute, Ident, Punctuated, Type};
@@ -9,7 +9,6 @@ use crate::{Attribute, Ident, Punctuated, Type};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeParam {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub ident: Ident,
     pub colon_punct: Option<Colon>,
@@ -40,7 +39,6 @@ impl Parse for TypeParam {
         };
 
         Ok(Self {
-            span: Span::default(),
             attrs,
             ident,
             colon_punct,
@@ -48,6 +46,24 @@ impl Parse for TypeParam {
             eq_punct,
             default,
         })
+    }
+}
+
+impl Spanner for TypeParam {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.ident.span
+        };
+        let end = if let Some(d) = &self.default {
+            d.span()
+        } else if let Some(b) = self.bounds.last() {
+            b.span()
+        } else {
+            self.ident.span
+        };
+        start.join(end)
     }
 }
 

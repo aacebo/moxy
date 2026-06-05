@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Plus};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::TypeBound;
 use crate::{BoundLifetimes, Punctuated, Type};
@@ -9,7 +9,6 @@ use crate::{BoundLifetimes, Punctuated, Type};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypePredicate {
-    pub span: Span,
     pub lifetimes: Option<BoundLifetimes>,
     pub bounded_ty: Type,
     pub colon_punct: Colon,
@@ -23,12 +22,27 @@ impl Parse for TypePredicate {
         let colon_punct = stream.parse::<Colon>()?;
         let bounds = TypeBound::parse_bounds(stream)?;
         Ok(Self {
-            span: Span::default(),
             lifetimes,
             bounded_ty,
             colon_punct,
             bounds,
         })
+    }
+}
+
+impl Spanner for TypePredicate {
+    fn span(&self) -> Span {
+        let start = if let Some(l) = &self.lifetimes {
+            l.span()
+        } else {
+            self.bounded_ty.span()
+        };
+        let end = self
+            .bounds
+            .last()
+            .map(|b| b.span())
+            .unwrap_or_else(|| self.colon_punct.span());
+        start.join(end)
     }
 }
 

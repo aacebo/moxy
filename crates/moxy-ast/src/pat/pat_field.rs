@@ -1,5 +1,5 @@
 use moxy_token::punct::Colon;
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -7,12 +7,22 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatField {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub member: Member,
     pub colon: Option<Colon>,
     pub pat: Pattern,
     pub shorthand: bool,
+}
+
+impl Spanner for PatField {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.member.span()
+        };
+        start.join(self.pat.span())
+    }
 }
 
 impl ToTokens for PatField {

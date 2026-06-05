@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, Dot};
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -8,13 +8,23 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprMethodCall {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub receiver: Box<super::super::Expr>,
     pub dot: Dot,
     pub method: Ident,
     pub turbofish: Option<AngleArgs>,
     pub args: Delimited<Punctuated<super::super::Expr, Comma>>,
+}
+
+impl Spanner for ExprMethodCall {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.receiver.span()
+        };
+        start.join(self.args.span())
+    }
 }
 
 impl ExprMethodCall {

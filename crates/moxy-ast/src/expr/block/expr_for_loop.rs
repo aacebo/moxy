@@ -1,6 +1,6 @@
 use moxy_token::keyword::{For, In};
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -8,7 +8,6 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprForLoop {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub label: Option<Label>,
     pub for_keyword: For,
@@ -16,6 +15,19 @@ pub struct ExprForLoop {
     pub in_keyword: In,
     pub expr: Box<super::super::Expr>,
     pub body: StmtBlock,
+}
+
+impl Spanner for ExprForLoop {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if let Some(l) = &self.label {
+            l.span()
+        } else {
+            self.for_keyword.span()
+        };
+        start.join(self.body.span())
+    }
 }
 
 impl ExprForLoop {
@@ -26,7 +38,6 @@ impl ExprForLoop {
         let expr = Box::new(super::super::parse_expr(stream, false)?);
         let body = stream.parse::<StmtBlock>()?;
         Ok(Self {
-            span: Span::default(),
             attrs: Vec::new(),
             label,
             for_keyword,

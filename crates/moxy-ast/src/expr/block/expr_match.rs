@@ -1,7 +1,7 @@
 use moxy_token::keyword::{If, Match};
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, FatArrow};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Delimited, Expr, Pattern};
 
@@ -9,11 +9,21 @@ use crate::{Attribute, Delimited, Expr, Pattern};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprMatch {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub match_keyword: Match,
     pub expr: Box<Expr>,
     pub arms: Delimited<Vec<MatchArm>>,
+}
+
+impl Spanner for ExprMatch {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.match_keyword.span()
+        };
+        start.join(self.arms.span())
+    }
 }
 
 impl ExprMatch {
@@ -22,7 +32,6 @@ impl ExprMatch {
         let expr = Box::new(super::super::parse_expr(stream, false)?);
         let arms = Delimited::<Vec<MatchArm>>::parse_brace(stream)?;
         Ok(Expr::Block(super::BlockExpr::Match(Self {
-            span: Span::default(),
             attrs: Vec::new(),
             match_keyword,
             expr,
@@ -46,7 +55,6 @@ impl ToTokens for ExprMatch {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MatchArm {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub pat: Pattern,
     pub if_keyword: Option<If>,
@@ -54,6 +62,18 @@ pub struct MatchArm {
     pub fat_arrow: FatArrow,
     pub body: Expr,
     pub comma: Option<Comma>,
+}
+
+impl Spanner for MatchArm {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.pat.span()
+        };
+        let end = self.comma.as_ref().map(|c| c.span()).unwrap_or_else(|| self.body.span());
+        start.join(end)
+    }
 }
 
 impl Parse for MatchArm {
@@ -72,7 +92,6 @@ impl Parse for MatchArm {
         let comma = stream.parse_if::<Comma>();
 
         Ok(Self {
-            span: Span::default(),
             attrs,
             pat,
             if_keyword,

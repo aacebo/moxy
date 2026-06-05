@@ -1,6 +1,6 @@
 use moxy_token::keyword::{Crate, In, Pub, SelfValue, Super};
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Parse, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Delimited, Path};
 
@@ -80,6 +80,28 @@ impl Parse for Visibility {
         }
 
         Ok(Visibility::Public { pub_keyword })
+    }
+}
+
+impl Spanner for Visibility {
+    fn span(&self) -> Span {
+        match self {
+            Visibility::Inherited => Span::call_site(),
+            Visibility::Public { pub_keyword } => pub_keyword.span(),
+            Visibility::Crate {
+                pub_keyword,
+                crate_keyword,
+            } => pub_keyword.span().join(crate_keyword.span()),
+            Visibility::SelfValue {
+                pub_keyword,
+                self_keyword,
+            } => pub_keyword.span().join(self_keyword.span()),
+            Visibility::Super {
+                pub_keyword,
+                super_keyword,
+            } => pub_keyword.span().join(super_keyword.span()),
+            Visibility::Restricted { pub_keyword, path } => pub_keyword.span().join(path.close()),
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-use moxy_token::{Eq, Span, ToTokens, TokenStream};
+use moxy_token::{Eq, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Expr, Path};
 
@@ -6,10 +6,15 @@ use crate::{Expr, Path};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MetaNameValue {
-    pub span: Span,
     pub path: Path,
     pub eq: Eq,
     pub value: Expr,
+}
+
+impl Spanner for MetaNameValue {
+    fn span(&self) -> Span {
+        self.path.span().join(self.value.span())
+    }
 }
 
 impl ToTokens for MetaNameValue {

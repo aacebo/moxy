@@ -1,5 +1,5 @@
 use moxy_token::keyword::Yield;
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::Attribute;
 
@@ -7,10 +7,25 @@ use crate::Attribute;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprYield {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub yield_keyword: Yield,
     pub expr: Option<Box<super::super::Expr>>,
+}
+
+impl Spanner for ExprYield {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.yield_keyword.span()
+        };
+        let end = if let Some(e) = &self.expr {
+            e.span()
+        } else {
+            self.yield_keyword.span()
+        };
+        start.join(end)
+    }
 }
 
 impl ToTokens for ExprYield {

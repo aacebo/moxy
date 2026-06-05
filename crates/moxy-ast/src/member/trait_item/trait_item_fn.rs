@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
-use moxy_token::{Delim, LexError, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use super::TraitItem;
 use crate::{Attribute, Signature, StmtBlock};
@@ -9,7 +9,6 @@ use crate::{Attribute, Signature, StmtBlock};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitItemFn {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub sig: Signature,
     pub default_body: Option<StmtBlock>,
@@ -34,12 +33,28 @@ impl Parse for TraitItemFn {
         };
 
         Ok(TraitItemFn {
-            span: Span::default(),
             attrs,
             sig,
             default_body,
             semi,
         })
+    }
+}
+
+impl Spanner for TraitItemFn {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.sig.span()
+        };
+        let end = self
+            .default_body
+            .as_ref()
+            .map(|b| b.span())
+            .or_else(|| self.semi.as_ref().map(|s| s.span()))
+            .unwrap_or_else(|| self.sig.span());
+        start.join(end)
     }
 }
 

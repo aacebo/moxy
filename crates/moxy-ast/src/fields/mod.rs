@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, Parse, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 mod field_def;
 mod field_value;
@@ -29,6 +29,16 @@ impl From<FieldsNamed> for Fields {
 impl From<FieldsUnnamed> for Fields {
     fn from(v: FieldsUnnamed) -> Self {
         Fields::Unnamed(v)
+    }
+}
+
+impl Spanner for Fields {
+    fn span(&self) -> Span {
+        match self {
+            Fields::Named(v) => v.span(),
+            Fields::Unnamed(v) => v.span(),
+            Fields::Unit => Span::call_site(),
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Quote;
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::LifetimeName;
 
@@ -21,6 +21,12 @@ impl Parse for Lifetime {
             span: start.join(ident.span),
             ident,
         })
+    }
+}
+
+impl Spanner for Lifetime {
+    fn span(&self) -> Span {
+        self.span
     }
 }
 

@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
-use moxy_token::{Parse, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::Expr;
 
@@ -21,6 +21,21 @@ pub enum Stmt {
     Item(Box<crate::Item>),
     Expr(Box<Expr>, Option<Semi>),
     Macro(StmtMacro),
+}
+
+impl Spanner for Stmt {
+    fn span(&self) -> Span {
+        match self {
+            Stmt::Local(v) => v.span(),
+            Stmt::Block(v) => v.span(),
+            Stmt::Item(v) => v.span(),
+            Stmt::Expr(v, semi) => {
+                let end = semi.as_ref().map(|s| s.span()).unwrap_or_else(|| v.span());
+                v.span().join(end)
+            }
+            Stmt::Macro(v) => v.span(),
+        }
+    }
 }
 
 impl Parse for Stmt {

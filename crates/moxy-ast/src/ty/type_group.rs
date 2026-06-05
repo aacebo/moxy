@@ -8,3 +8,9 @@ pub struct TypeGroup {
     pub span: moxy_token::Span,
     pub elem: Box<Type>,
 }
+
+impl moxy_token::Spanner for TypeGroup {
+    fn span(&self) -> moxy_token::Span {
+        self.span
+    }
+}

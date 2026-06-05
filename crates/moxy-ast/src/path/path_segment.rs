@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use super::PathArguments;
 use crate::Ident;
@@ -8,7 +8,6 @@ use crate::Ident;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PathSegment {
-    pub span: Span,
     pub ident: Ident,
     pub args: PathArguments,
 }
@@ -33,11 +32,13 @@ impl Parse for PathSegment {
             stream.parse::<PathArguments>()?
         };
 
-        Ok(Self {
-            span: ident.span,
-            ident,
-            args,
-        })
+        Ok(Self { ident, args })
+    }
+}
+
+impl Spanner for PathSegment {
+    fn span(&self) -> Span {
+        self.ident.span
     }
 }
 

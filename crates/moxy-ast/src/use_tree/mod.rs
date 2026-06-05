@@ -1,7 +1,7 @@
 use moxy_token::keyword::As;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{PathSep, Star};
-use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Delimited, Ident};
 
@@ -28,6 +28,18 @@ pub enum UseTree {
     Group(UseGroup),
 }
 
+impl Spanner for UseTree {
+    fn span(&self) -> Span {
+        match self {
+            UseTree::Path(v) => v.span(),
+            UseTree::Name(v) => v.span(),
+            UseTree::Rename(v) => v.span(),
+            UseTree::Glob(v) => v.span(),
+            UseTree::Group(v) => v.span(),
+        }
+    }
+}
+
 impl Parse for UseTree {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if stream.peek::<Star>().is_some() {
@@ -38,10 +50,7 @@ impl Parse for UseTree {
 
         if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
             let items = Delimited::parse_brace_with(stream, crate::Punctuated::parse_terminated)?;
-            return Ok(UseTree::Group(UseGroup {
-                span: Span::default(),
-                items,
-            }));
+            return Ok(UseTree::Group(UseGroup { items }));
         }
 
         let ident = stream.parse::<Ident>()?;
@@ -49,29 +58,20 @@ impl Parse for UseTree {
         if stream.peek::<PathSep>().is_some() {
             let path_sep = stream.parse::<PathSep>()?;
             let tree = Box::new(stream.parse::<UseTree>()?);
-            return Ok(UseTree::Path(UsePath {
-                span: Span::default(),
-                ident,
-                path_sep,
-                tree,
-            }));
+            return Ok(UseTree::Path(UsePath { ident, path_sep, tree }));
         }
 
         if stream.peek::<As>().is_some() {
             let as_keyword = stream.parse::<As>()?;
             let rename = stream.parse::<Ident>()?;
             return Ok(UseTree::Rename(UseRename {
-                span: Span::default(),
                 ident,
                 as_keyword,
                 rename,
             }));
         }
 
-        Ok(UseTree::Name(UseName {
-            span: Span::default(),
-            ident,
-        }))
+        Ok(UseTree::Name(UseName { ident }))
     }
 }
 

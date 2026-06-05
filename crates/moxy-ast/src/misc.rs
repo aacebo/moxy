@@ -1,7 +1,7 @@
 use moxy_token::keyword::For;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Comma, Gt, Lt, RArrow};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Lifetime, Pattern, Punctuated, Type};
 
@@ -22,6 +22,15 @@ impl Parse for ClosureParam {
             Ok(ClosureParam::Typed { pat, colon, ty })
         } else {
             Ok(ClosureParam::Inferred { pat })
+        }
+    }
+}
+
+impl Spanner for ClosureParam {
+    fn span(&self) -> Span {
+        match self {
+            ClosureParam::Typed { pat, ty, .. } => pat.span().join(ty.span()),
+            ClosureParam::Inferred { pat } => pat.span(),
         }
     }
 }
@@ -58,6 +67,15 @@ impl Parse for ReturnType {
     }
 }
 
+impl Spanner for ReturnType {
+    fn span(&self) -> Span {
+        match self {
+            ReturnType::Default => Span::call_site(),
+            ReturnType::Type(arrow, ty) => arrow.span().join(ty.span()),
+        }
+    }
+}
+
 impl ToTokens for ReturnType {
     fn to_tokens(&self, t: &mut TokenStream) {
         if let ReturnType::Type(arrow, ty) = self {
@@ -71,7 +89,6 @@ impl ToTokens for ReturnType {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct BoundLifetimes {
-    pub span: Span,
     pub for_keyword: For,
     pub lt: Lt,
     pub params: Punctuated<Lifetime, Comma>,
@@ -95,12 +112,17 @@ impl Parse for BoundLifetimes {
 
         let gt = stream.parse::<Gt>()?;
         Ok(Self {
-            span: Span::default(),
             for_keyword,
             lt,
             params,
             gt,
         })
+    }
+}
+
+impl Spanner for BoundLifetimes {
+    fn span(&self) -> Span {
+        self.for_keyword.span().join(self.gt.span())
     }
 }
 

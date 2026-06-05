@@ -1,7 +1,7 @@
 use moxy_token::keyword::{Else, Let};
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Eq, Semi};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Expr, Pattern, Type};
 
@@ -9,7 +9,6 @@ use crate::{Attribute, Expr, Pattern, Type};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StmtLocal {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub let_keyword: Let,
     pub pat: Pattern,
@@ -22,7 +21,6 @@ pub struct StmtLocal {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StmtLocalInit {
-    pub span: Span,
     pub eq: Eq,
     pub expr: Expr,
     pub diverge: Option<(Else, Box<Expr>)>,
@@ -52,19 +50,13 @@ impl Parse for StmtLocal {
                 None
             };
 
-            Some(StmtLocalInit {
-                span: Span::default(),
-                eq,
-                expr,
-                diverge,
-            })
+            Some(StmtLocalInit { eq, expr, diverge })
         } else {
             None
         };
 
         let semi = stream.parse_if::<Semi>();
         Ok(Self {
-            span: Span::default(),
             attrs,
             let_keyword,
             pat,
@@ -72,6 +64,30 @@ impl Parse for StmtLocal {
             init,
             semi,
         })
+    }
+}
+
+impl Spanner for StmtLocalInit {
+    fn span(&self) -> Span {
+        self.eq.span().join(self.expr.span())
+    }
+}
+
+impl Spanner for StmtLocal {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.let_keyword.span()
+        };
+        let end = if let Some(s) = &self.semi {
+            s.span()
+        } else if let Some(init) = &self.init {
+            init.span()
+        } else {
+            self.pat.span()
+        };
+        start.join(end)
     }
 }
 

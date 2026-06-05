@@ -9,7 +9,7 @@ pub use expr_try::*;
 pub use expr_unary::*;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::And;
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::binary::ExprRange;
 use super::{BinaryExpr, Expr};
@@ -23,6 +23,17 @@ pub enum UnaryExpr {
     Unary(ExprUnary),
     Cast(ExprCast),
     Try(ExprTry),
+}
+
+impl Spanner for UnaryExpr {
+    fn span(&self) -> Span {
+        match self {
+            UnaryExpr::Reference(v) => v.span(),
+            UnaryExpr::Unary(v) => v.span(),
+            UnaryExpr::Cast(v) => v.span(),
+            UnaryExpr::Try(v) => v.span(),
+        }
+    }
 }
 
 impl ToTokens for UnaryExpr {
@@ -70,7 +81,6 @@ impl UnaryExpr {
             let limits = stream.parse::<RangeLimits>()?;
             let end = super::binary::ExprRange::maybe_end(stream, allow_struct)?;
             return Ok(Expr::Binary(BinaryExpr::Range(ExprRange {
-                span: Span::default(),
                 attrs: Vec::new(),
                 start: None,
                 limits,
@@ -83,7 +93,6 @@ impl UnaryExpr {
             let mutability = stream.parse::<Mutability>()?;
             let expr = Box::new(UnaryExpr::parse_from(stream, allow_struct)?);
             return Ok(Expr::Unary(UnaryExpr::Reference(ExprReference {
-                span: Span::default(),
                 attrs: Vec::new(),
                 and_punct,
                 mutability,
@@ -95,7 +104,6 @@ impl UnaryExpr {
             let op = stream.parse::<UnOp>()?;
             let expr = Box::new(UnaryExpr::parse_from(stream, allow_struct)?);
             return Ok(Expr::Unary(UnaryExpr::Unary(ExprUnary {
-                span: Span::default(),
                 attrs: Vec::new(),
                 op,
                 expr,

@@ -1,5 +1,5 @@
 use moxy_token::punct::Comma;
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -7,9 +7,14 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprTuple {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub elems: Delimited<Punctuated<super::super::Expr, Comma>>,
+}
+
+impl Spanner for ExprTuple {
+    fn span(&self) -> Span {
+        self.elems.span()
+    }
 }
 
 impl ToTokens for ExprTuple {

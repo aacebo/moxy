@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, ToTokenStream, ToTokens, TokenStream};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 macro_rules! define_leaf {
     ($(
@@ -31,6 +31,12 @@ macro_rules! define_leaf {
             impl ToTokens for $name {
                 fn to_tokens(&self, tokens: &mut TokenStream) {
                     define_leaf!(@emit_match self, tokens, () $($variant $(($token))?,)+);
+                }
+            }
+
+            impl Spanner for $name {
+                fn span(&self) -> Span {
+                    define_leaf!(@span_match self, () $($variant $(($token))?,)+)
                 }
             }
 
@@ -108,6 +114,16 @@ macro_rules! define_leaf {
             ($($arms)* Self::$variant => $s.serialize_str(stringify!($variant)),) $($rest)*)
     };
     (@serialize_match $self:ident, $s:ident, ($($arms:tt)*)) => {
+        match $self { $($arms)* }
+    };
+
+    (@span_match $self:ident, ($($arms:tt)*) $variant:ident ($token:ty), $($rest:tt)*) => {
+        define_leaf!(@span_match $self, ($($arms)* Self::$variant(tok) => tok.span(),) $($rest)*)
+    };
+    (@span_match $self:ident, ($($arms:tt)*) $variant:ident, $($rest:tt)*) => {
+        define_leaf!(@span_match $self, ($($arms)* Self::$variant => Span::call_site(),) $($rest)*)
+    };
+    (@span_match $self:ident, ($($arms:tt)*)) => {
         match $self { $($arms)* }
     };
 }

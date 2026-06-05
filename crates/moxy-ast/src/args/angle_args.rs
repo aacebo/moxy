@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, Gt, Lt};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::GenericArgument;
 use crate::Punctuated;
@@ -9,7 +9,6 @@ use crate::Punctuated;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct AngleArgs {
-    pub span: Span,
     pub lt_punct: Lt,
     pub args: Punctuated<GenericArgument, Comma>,
     pub gt_punct: Gt,
@@ -31,11 +30,16 @@ impl Parse for AngleArgs {
 
         stream.eat_angle_close()?;
         Ok(Self {
-            span: Span::default(),
             lt_punct,
             args,
             gt_punct: Gt::default(),
         })
+    }
+}
+
+impl Spanner for AngleArgs {
+    fn span(&self) -> Span {
+        self.lt_punct.span().join(self.gt_punct.span())
     }
 }
 

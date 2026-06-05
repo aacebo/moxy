@@ -1,23 +1,26 @@
-mod attr_args;
 mod attr_style;
 pub mod meta;
 
-pub use attr_args::*;
 pub use attr_style::*;
 pub use meta::Meta;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Not, Pound};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Delimited, Path};
+use crate::Delimited;
 
 #[doc = "A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement."]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Attribute {
-    pub span: Span,
     pub style: AttrStyle,
-    pub content: Delimited<AttrContent>,
+    pub meta: Delimited<Meta>,
+}
+
+impl Spanner for Attribute {
+    fn span(&self) -> Span {
+        self.style.span().join(self.meta.span())
+    }
 }
 
 impl Parse for Attribute {
@@ -31,41 +34,15 @@ impl Parse for Attribute {
             AttrStyle::Outer(pound)
         };
 
-        let content = Delimited::<AttrContent>::parse_bracket(stream)?;
+        let meta = Delimited::<Meta>::parse_bracket(stream)?;
 
-        Ok(Self {
-            span: Span::default(),
-            style,
-            content,
-        })
+        Ok(Self { style, meta })
     }
 }
 
 impl ToTokens for Attribute {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.style.to_tokens(tokens);
-        self.content.to_tokens(tokens);
-    }
-}
-
-#[derive(Debug, Clone)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
-pub struct AttrContent {
-    pub path: Path,
-    pub args: AttrArgs,
-}
-
-impl Parse for AttrContent {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let path = stream.parse::<Path>()?;
-        let args = stream.parse::<AttrArgs>()?;
-        Ok(Self { path, args })
-    }
-}
-
-impl ToTokens for AttrContent {
-    fn to_tokens(&self, t: &mut TokenStream) {
-        self.path.to_tokens(t);
-        self.args.to_tokens(t);
+        self.meta.to_tokens(tokens);
     }
 }

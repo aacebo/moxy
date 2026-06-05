@@ -1,7 +1,7 @@
 use moxy_token::keyword::As;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Gt, Lt, PathSep};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::QSelf;
 use crate::{Path, PathSegment};
@@ -10,7 +10,6 @@ use crate::{Path, PathSegment};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypePath {
-    pub span: Span,
     pub qself: Option<QSelf>,
     pub path: Path,
 }
@@ -20,17 +19,25 @@ impl Parse for TypePath {
         if stream.peek::<Lt>().is_some() {
             let (qself, path) = super::QSelf::parse_qualified(stream)?;
             return Ok(Self {
-                span: Span::default(),
                 qself: Some(qself),
                 path,
             });
         }
 
         Ok(Self {
-            span: Span::default(),
             qself: None,
             path: stream.parse()?,
         })
+    }
+}
+
+impl Spanner for TypePath {
+    fn span(&self) -> Span {
+        if let Some(q) = &self.qself {
+            q.span().join(self.path.span())
+        } else {
+            self.path.span()
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Colon;
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Ident, Mutability, Type, Visibility};
 
@@ -8,7 +8,6 @@ use crate::{Attribute, Ident, Mutability, Type, Visibility};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldDef {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub mutability: Mutability,
@@ -40,7 +39,6 @@ impl Parse for FieldDef {
 
         let ty = stream.parse::<Type>()?;
         Ok(Self {
-            span: Span::default(),
             attrs,
             vis,
             mutability,
@@ -48,6 +46,23 @@ impl Parse for FieldDef {
             colon_punct,
             ty,
         })
+    }
+}
+
+impl Spanner for FieldDef {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if !matches!(self.vis, Visibility::Inherited) {
+            self.vis.span()
+        } else if !matches!(self.mutability, Mutability::Immutable) {
+            self.mutability.span()
+        } else if let Some(id) = &self.ident {
+            id.span
+        } else {
+            self.ty.span()
+        };
+        start.join(self.ty.span())
     }
 }
 

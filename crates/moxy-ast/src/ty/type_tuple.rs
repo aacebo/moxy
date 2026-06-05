@@ -24,6 +24,12 @@ impl Parse for TypeTuple {
     }
 }
 
+impl Spanner for TypeTuple {
+    fn span(&self) -> Span {
+        self.span
+    }
+}
+
 impl ToTokens for TypeTuple {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.elems.to_tokens(tokens);

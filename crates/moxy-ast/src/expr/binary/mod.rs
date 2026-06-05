@@ -11,7 +11,7 @@ pub use expr_range::*;
 pub use expr_type::*;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{DotDot, Eq};
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::unary::ExprCast;
 use super::{Expr, UnaryExpr};
@@ -27,6 +27,18 @@ pub enum BinaryExpr {
     AssignOp(ExprAssignOp),
     Range(ExprRange),
     Type(ExprType),
+}
+
+impl Spanner for BinaryExpr {
+    fn span(&self) -> Span {
+        match self {
+            BinaryExpr::Binary(v) => v.span(),
+            BinaryExpr::Assign(v) => v.span(),
+            BinaryExpr::AssignOp(v) => v.span(),
+            BinaryExpr::Range(v) => v.span(),
+            BinaryExpr::Type(v) => v.span(),
+        }
+    }
 }
 
 impl ToTokens for BinaryExpr {
@@ -80,7 +92,6 @@ impl BinaryExpr {
                 let as_keyword = stream.parse::<moxy_token::keyword::As>()?;
                 let ty = Box::new(stream.parse::<Type>()?);
                 lhs = Expr::Unary(UnaryExpr::Cast(ExprCast {
-                    span: Span::default(),
                     attrs: Vec::new(),
                     expr: Box::new(lhs),
                     as_keyword,
@@ -94,7 +105,6 @@ impl BinaryExpr {
                     let eq = stream.parse::<Eq>()?;
                     let right = Box::new(super::parse_expr(stream, allow_struct)?);
                     lhs = Expr::Binary(BinaryExpr::Assign(ExprAssign {
-                        span: Span::default(),
                         attrs: Vec::new(),
                         left: Box::new(lhs),
                         eq,
@@ -107,7 +117,6 @@ impl BinaryExpr {
                     let _ = stream.parse::<AssignOp>()?;
                     let right = Box::new(super::parse_expr(stream, allow_struct)?);
                     lhs = Expr::Binary(BinaryExpr::AssignOp(ExprAssignOp {
-                        span: Span::default(),
                         attrs: Vec::new(),
                         left: Box::new(lhs),
                         op,
@@ -124,7 +133,6 @@ impl BinaryExpr {
                 let limits = stream.parse::<RangeLimits>()?;
                 let end = ExprRange::maybe_end(stream, allow_struct)?;
                 lhs = Expr::Binary(BinaryExpr::Range(ExprRange {
-                    span: Span::default(),
                     attrs: Vec::new(),
                     start: Some(Box::new(lhs)),
                     limits,
@@ -140,7 +148,6 @@ impl BinaryExpr {
                     let mut rhs = super::unary::UnaryExpr::parse_from(stream, allow_struct)?;
                     rhs = BinaryExpr::parse_from(stream, rhs, prec.next(), allow_struct)?;
                     lhs = Expr::Binary(BinaryExpr::Binary(ExprBinary {
-                        span: Span::default(),
                         attrs: Vec::new(),
                         left: Box::new(lhs),
                         op,

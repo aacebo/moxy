@@ -1,5 +1,5 @@
 use moxy_token::punct::Or as OrPunct;
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -7,9 +7,22 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatOr {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub cases: Punctuated<Pattern, OrPunct>,
+}
+
+impl Spanner for PatOr {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if let Some(c) = self.cases.first() {
+            c.span()
+        } else {
+            Span::call_site()
+        };
+        let end = self.cases.last().map(|c| c.span()).unwrap_or(start);
+        start.join(end)
+    }
 }
 
 impl ToTokens for PatOr {

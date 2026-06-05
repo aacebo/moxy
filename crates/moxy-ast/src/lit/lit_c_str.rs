@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::Lit;
 
@@ -19,6 +19,12 @@ impl Parse for LitCStr {
             Lit::CStr(v) => Ok(v),
             _ => Err(LexError::new(at).message("expected C-string literal").into()),
         }
+    }
+}
+
+impl Spanner for LitCStr {
+    fn span(&self) -> Span {
+        self.span
     }
 }
 

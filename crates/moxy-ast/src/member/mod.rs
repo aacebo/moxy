@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::Ident;
 
@@ -17,6 +17,15 @@ pub use trait_item::*;
 pub enum Member {
     Named(Ident),
     Unnamed(u32),
+}
+
+impl Spanner for Member {
+    fn span(&self) -> Span {
+        match self {
+            Member::Named(id) => id.span,
+            Member::Unnamed(_) => Span::call_site(),
+        }
+    }
 }
 
 impl Parse for Member {

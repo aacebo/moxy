@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
-use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::ForeignItem;
 use crate::{Attribute, Signature, Visibility};
@@ -9,7 +9,6 @@ use crate::{Attribute, Signature, Visibility};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ForeignItemFn {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub sig: Signature,
@@ -28,13 +27,21 @@ impl Parse for ForeignItemFn {
 
         let sig = stream.parse::<Signature>()?;
         let semi = stream.parse_if::<Semi>();
-        Ok(ForeignItemFn {
-            span: Span::default(),
-            attrs,
-            vis,
-            sig,
-            semi,
-        })
+        Ok(ForeignItemFn { attrs, vis, sig, semi })
+    }
+}
+
+impl Spanner for ForeignItemFn {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if !matches!(self.vis, Visibility::Inherited) {
+            self.vis.span()
+        } else {
+            self.sig.span()
+        };
+        let end = self.semi.as_ref().map(|s| s.span()).unwrap_or_else(|| self.sig.span());
+        start.join(end)
     }
 }
 

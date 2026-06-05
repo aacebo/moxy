@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, ToTokens, TokenStream};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 mod item_const;
 mod item_enum;
@@ -55,6 +55,29 @@ pub enum Item {
     Macro(ItemMacro),
     Macro2(ItemMacroRules),
     ForeignMod(ItemForeignMod),
+}
+
+impl Spanner for Item {
+    fn span(&self) -> Span {
+        match self {
+            Item::Use(v) => v.span(),
+            Item::ExternCrate(v) => v.span(),
+            Item::Mod(v) => v.span(),
+            Item::Fn(v) => v.span(),
+            Item::Struct(v) => v.span(),
+            Item::Enum(v) => v.span(),
+            Item::Union(v) => v.span(),
+            Item::Trait(v) => v.span(),
+            Item::TraitAlias(v) => v.span(),
+            Item::Impl(v) => v.span(),
+            Item::TypeAlias(v) => v.span(),
+            Item::Const(v) => v.span(),
+            Item::Static(v) => v.span(),
+            Item::Macro(v) => v.span(),
+            Item::Macro2(v) => v.span(),
+            Item::ForeignMod(v) => v.span(),
+        }
+    }
 }
 
 impl From<ItemUse> for Item {

@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Comma;
-use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::UseTree;
 use crate::{Delimited, Punctuated};
@@ -9,7 +9,6 @@ use crate::{Delimited, Punctuated};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseGroup {
-    pub span: Span,
     pub items: Delimited<Punctuated<UseTree, Comma>>,
 }
 
@@ -20,6 +19,12 @@ impl Parse for UseGroup {
             UseTree::Group(v) => Ok(v),
             _ => Err(LexError::new(at).message("expected use group").into()),
         }
+    }
+}
+
+impl Spanner for UseGroup {
+    fn span(&self) -> Span {
+        self.items.span()
     }
 }
 

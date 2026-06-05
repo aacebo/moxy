@@ -1,12 +1,11 @@
 use moxy_token::keyword::Extern;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Parse, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
 #[doc = "An ABI string (`extern \"C\"`)."]
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Abi {
-    pub span: Span,
     pub extern_keyword: Extern,
     pub name: Option<String>,
 }
@@ -24,11 +23,13 @@ impl Parse for Abi {
             _ => None,
         };
 
-        Ok(Self {
-            span: Span::default(),
-            extern_keyword,
-            name,
-        })
+        Ok(Self { extern_keyword, name })
+    }
+}
+
+impl Spanner for Abi {
+    fn span(&self) -> Span {
+        self.extern_keyword.span()
     }
 }
 

@@ -1,4 +1,4 @@
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -6,11 +6,28 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatRange {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub start: Option<Expr>,
     pub limits: RangeLimits,
     pub end: Option<Expr>,
+}
+
+impl Spanner for PatRange {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if let Some(s) = &self.start {
+            s.span()
+        } else {
+            self.limits.span()
+        };
+        let end = if let Some(e) = &self.end {
+            e.span()
+        } else {
+            self.limits.span()
+        };
+        start.join(end)
+    }
 }
 
 impl ToTokens for PatRange {

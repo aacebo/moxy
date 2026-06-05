@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 mod trait_item_const;
 mod trait_item_fn;
@@ -19,6 +19,17 @@ pub enum TraitItem {
     Const(Box<TraitItemConst>),
     Type(TraitItemType),
     Macro(TraitItemMacro),
+}
+
+impl Spanner for TraitItem {
+    fn span(&self) -> Span {
+        match self {
+            TraitItem::Fn(v) => v.span(),
+            TraitItem::Const(v) => v.span(),
+            TraitItem::Type(v) => v.span(),
+            TraitItem::Macro(v) => v.span(),
+        }
+    }
 }
 
 macro_rules! impl_from {

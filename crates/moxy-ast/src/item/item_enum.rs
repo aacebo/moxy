@@ -1,7 +1,7 @@
 use moxy_token::keyword::Enum;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, Eq};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Delimited, Expr, Fields, Generics, Ident, Punctuated, Visibility};
 
@@ -9,7 +9,6 @@ use crate::{Attribute, Delimited, Expr, Fields, Generics, Ident, Punctuated, Vis
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemEnum {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub enum_keyword: Enum,
@@ -32,7 +31,6 @@ impl Parse for ItemEnum {
 
         let variants = Delimited::parse_brace_with(stream, Punctuated::parse_terminated)?;
         Ok(ItemEnum {
-            span: Span::default(),
             attrs,
             vis,
             enum_keyword,
@@ -40,6 +38,35 @@ impl Parse for ItemEnum {
             generics,
             variants,
         })
+    }
+}
+
+impl Spanner for ItemEnum {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if !matches!(self.vis, Visibility::Inherited) {
+            self.vis.span()
+        } else {
+            self.enum_keyword.span()
+        };
+        start.join(self.variants.span())
+    }
+}
+
+impl Spanner for Variant {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.ident.span
+        };
+        let end = if let Some(d) = &self.discriminant {
+            d.span()
+        } else {
+            self.fields.span()
+        };
+        start.join(end)
     }
 }
 
@@ -60,7 +87,6 @@ impl ToTokens for ItemEnum {
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Variant {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub ident: Ident,
     pub fields: Fields,
@@ -83,7 +109,6 @@ impl Parse for Variant {
         };
 
         Ok(Self {
-            span: Span::default(),
             attrs,
             ident,
             fields,

@@ -1,5 +1,5 @@
 use moxy_token::keyword::As;
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -7,11 +7,21 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprCast {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub expr: Box<super::super::Expr>,
     pub as_keyword: As,
     pub ty: Box<Type>,
+}
+
+impl Spanner for ExprCast {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.expr.span()
+        };
+        start.join(self.ty.span())
+    }
 }
 
 impl ToTokens for ExprCast {

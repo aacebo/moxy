@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::{LifetimePredicate, TypePredicate};
 
@@ -9,6 +9,15 @@ use super::{LifetimePredicate, TypePredicate};
 pub enum WherePredicate {
     Lifetime(LifetimePredicate),
     Type(Box<TypePredicate>),
+}
+
+impl Spanner for WherePredicate {
+    fn span(&self) -> Span {
+        match self {
+            WherePredicate::Lifetime(v) => v.span(),
+            WherePredicate::Type(v) => v.span(),
+        }
+    }
 }
 
 impl Parse for WherePredicate {

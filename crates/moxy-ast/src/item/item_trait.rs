@@ -1,7 +1,7 @@
 use moxy_token::keyword::{Auto, Trait};
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Plus};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Delimited, Generics, Ident, Punctuated, TraitItem, TypeBound, Unsafety, Visibility};
 
@@ -9,7 +9,6 @@ use crate::{Attribute, Delimited, Generics, Ident, Punctuated, TraitItem, TypeBo
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemTrait {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub unsafety: Unsafety,
@@ -51,7 +50,6 @@ impl Parse for ItemTrait {
 
         let items = Delimited::<Vec<TraitItem>>::parse_brace(stream)?;
         Ok(ItemTrait {
-            span: Span::default(),
             attrs,
             vis,
             unsafety,
@@ -63,6 +61,21 @@ impl Parse for ItemTrait {
             supertraits,
             items,
         })
+    }
+}
+
+impl Spanner for ItemTrait {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if !matches!(self.vis, Visibility::Inherited) {
+            self.vis.span()
+        } else if !matches!(self.unsafety, Unsafety::Safe) {
+            self.unsafety.span()
+        } else {
+            self.trait_keyword.span()
+        };
+        start.join(self.items.span())
     }
 }
 

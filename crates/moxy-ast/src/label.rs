@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Colon;
-use moxy_token::{Parse, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Parse, Punctuation, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::Lifetime;
 
@@ -21,6 +21,12 @@ impl Parse for Label {
             span: start.join(colon.span()),
             name,
         })
+    }
+}
+
+impl Spanner for Label {
+    fn span(&self) -> Span {
+        self.span
     }
 }
 

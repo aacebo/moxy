@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::MacroCall;
 
@@ -7,16 +7,20 @@ use crate::MacroCall;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeMacro {
-    pub span: Span,
     pub mac: MacroCall,
 }
 
 impl Parse for TypeMacro {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         Ok(Self {
-            span: Span::default(),
             mac: stream.parse::<MacroCall>()?,
         })
+    }
+}
+
+impl Spanner for TypeMacro {
+    fn span(&self) -> Span {
+        self.mac.span()
     }
 }
 

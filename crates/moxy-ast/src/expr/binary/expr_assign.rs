@@ -1,5 +1,5 @@
 use moxy_token::punct::Eq;
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::Attribute;
 
@@ -7,11 +7,21 @@ use crate::Attribute;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprAssign {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub left: Box<super::super::Expr>,
     pub eq: Eq,
     pub right: Box<super::super::Expr>,
+}
+
+impl Spanner for ExprAssign {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.left.span()
+        };
+        start.join(self.right.span())
+    }
 }
 
 impl ToTokens for ExprAssign {

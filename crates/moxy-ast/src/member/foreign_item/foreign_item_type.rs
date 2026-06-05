@@ -1,7 +1,7 @@
 use moxy_token::keyword::Type as KwType;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
-use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::ForeignItem;
 use crate::{Attribute, Generics, Ident, Visibility};
@@ -10,7 +10,6 @@ use crate::{Attribute, Generics, Ident, Visibility};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ForeignItemType {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub type_keyword: KwType,
@@ -34,7 +33,6 @@ impl Parse for ForeignItemType {
         let generics = stream.parse::<Generics>()?;
         let semi = stream.parse_if::<Semi>();
         Ok(ForeignItemType {
-            span: Span::default(),
             attrs,
             vis,
             type_keyword,
@@ -42,6 +40,20 @@ impl Parse for ForeignItemType {
             generics,
             semi,
         })
+    }
+}
+
+impl Spanner for ForeignItemType {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if !matches!(self.vis, Visibility::Inherited) {
+            self.vis.span()
+        } else {
+            self.type_keyword.span()
+        };
+        let end = self.semi.as_ref().map(|s| s.span()).unwrap_or_else(|| self.ident.span);
+        start.join(end)
     }
 }
 

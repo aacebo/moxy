@@ -1,6 +1,6 @@
 use moxy_token::keyword::While;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -8,12 +8,24 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprWhile {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub label: Option<Label>,
     pub while_keyword: While,
     pub cond: Box<super::super::Expr>,
     pub body: StmtBlock,
+}
+
+impl Spanner for ExprWhile {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if let Some(l) = &self.label {
+            l.span()
+        } else {
+            self.while_keyword.span()
+        };
+        start.join(self.body.span())
+    }
 }
 
 impl ExprWhile {
@@ -22,7 +34,6 @@ impl ExprWhile {
         let cond = Box::new(super::super::parse_expr(stream, false)?);
         let body = stream.parse::<StmtBlock>()?;
         Ok(Self {
-            span: Span::default(),
             attrs: Vec::new(),
             label,
             while_keyword,

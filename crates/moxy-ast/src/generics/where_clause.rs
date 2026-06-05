@@ -1,7 +1,7 @@
 use moxy_token::keyword::Where;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Comma;
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::WherePredicate;
 use crate::Punctuated;
@@ -10,7 +10,6 @@ use crate::Punctuated;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct WhereClause {
-    pub span: Span,
     pub where_keyword: Where,
     pub predicates: Punctuated<WherePredicate, Comma>,
 }
@@ -30,10 +29,20 @@ impl Parse for WhereClause {
         }
 
         Ok(Self {
-            span: Span::default(),
             where_keyword,
             predicates,
         })
+    }
+}
+
+impl Spanner for WhereClause {
+    fn span(&self) -> Span {
+        let end = self
+            .predicates
+            .last()
+            .map(|p| p.span())
+            .unwrap_or_else(|| self.where_keyword.span());
+        self.where_keyword.span().join(end)
     }
 }
 

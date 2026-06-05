@@ -1,6 +1,6 @@
 use moxy_token::parser::ParseStream;
 use moxy_token::punct::{Not, Star};
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -8,10 +8,20 @@ use crate::*;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprUnary {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub op: UnOp,
     pub expr: Box<super::super::Expr>,
+}
+
+impl Spanner for ExprUnary {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else {
+            self.op.span()
+        };
+        start.join(self.expr.span())
+    }
 }
 
 impl ExprUnary {

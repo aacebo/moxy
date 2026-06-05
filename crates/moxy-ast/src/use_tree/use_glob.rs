@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Star;
-use moxy_token::{LexError, Parse, Span, ToTokens, TokenStream};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::UseTree;
 
@@ -19,6 +19,12 @@ impl Parse for UseGlob {
             UseTree::Glob(v) => Ok(v),
             _ => Err(LexError::new(at).message("expected `*`").into()),
         }
+    }
+}
+
+impl Spanner for UseGlob {
+    fn span(&self) -> Span {
+        self.span
     }
 }
 

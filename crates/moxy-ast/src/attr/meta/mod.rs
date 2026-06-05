@@ -4,7 +4,7 @@ mod meta_name_value;
 pub use meta_list::*;
 pub use meta_name_value::*;
 use moxy_token::parser::{Parse, ParseError, ParseStream};
-use moxy_token::{Eq, Span, ToTokens, TokenStream};
+use moxy_token::{Eq, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Expr, Path};
 
@@ -12,7 +12,7 @@ use crate::{Expr, Path};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Meta {
-    Path(super::Path),
+    Path(Path),
     List(MetaList),
     NameValue(Box<MetaNameValue>),
 }
@@ -26,7 +26,6 @@ impl Parse for Meta {
             let (span, inner_tokens) = stream.parse_group_spanned(delim)?;
 
             return Ok(Self::List(MetaList {
-                span: Span::default(),
                 path,
                 tokens: crate::Delimited::new(delim, span, inner_tokens),
             }));
@@ -36,15 +35,20 @@ impl Parse for Meta {
             let eq = stream.parse::<Eq>()?;
             let value = stream.parse::<Expr>()?;
 
-            return Ok(Meta::NameValue(Box::new(MetaNameValue {
-                span: Span::default(),
-                path,
-                eq,
-                value,
-            })));
+            return Ok(Meta::NameValue(Box::new(MetaNameValue { path, eq, value })));
         }
 
         Ok(Self::Path(path))
+    }
+}
+
+impl Spanner for Meta {
+    fn span(&self) -> Span {
+        match self {
+            Self::Path(p) => p.span(),
+            Self::List(l) => l.span(),
+            Self::NameValue(nv) => nv.span(),
+        }
     }
 }
 
@@ -75,7 +79,7 @@ mod tests {
     fn outer_empty() {
         let a = moxy_token::parse!("#[inline]" as Attribute).unwrap();
         assert!(matches!(a.style, AttrStyle::Outer(_)));
-        assert!(matches!(a.content.inner.args, AttrArgs::Empty));
+        assert!(matches!(a.meta.inner, Meta::Path(_)));
         assert_eq!(render(&a), "# [inline]");
     }
 
@@ -83,7 +87,7 @@ mod tests {
     fn outer_delimited() {
         let a = moxy_token::parse!("#[derive(Clone, Debug)]" as Attribute).unwrap();
         assert!(matches!(a.style, AttrStyle::Outer(_)));
-        assert!(matches!(a.content.inner.args, AttrArgs::Delimited(_)));
+        assert!(matches!(a.meta.inner, Meta::List(_)));
         assert_eq!(render(&a), "# [derive (Clone , Debug)]");
     }
 
@@ -111,14 +115,14 @@ mod tests {
     #[test]
     fn name_value() {
         let a = moxy_token::parse!("#[path = \"x.rs\"]" as Attribute).unwrap();
-        assert!(matches!(a.content.inner.args, AttrArgs::NameValue { .. }));
+        assert!(matches!(a.meta.inner, Meta::NameValue(_)));
         assert_eq!(render(&a), "# [path = \"x.rs\"]");
     }
 
     #[test]
     fn cfg_delimited() {
         let a = moxy_token::parse!("#[cfg(feature = \"x\")]" as Attribute).unwrap();
-        assert!(matches!(a.content.inner.args, AttrArgs::Delimited(_)));
+        assert!(matches!(a.meta.inner, Meta::List(_)));
     }
 
     #[test]

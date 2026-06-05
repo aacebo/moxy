@@ -1,7 +1,7 @@
 use moxy_token::keyword::Const;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Eq, Semi};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Expr, Generics, Ident, Type, Visibility};
 
@@ -9,7 +9,6 @@ use crate::{Attribute, Expr, Generics, Ident, Type, Visibility};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemConst {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub vis: Visibility,
     pub const_keyword: Const,
@@ -35,7 +34,6 @@ impl Parse for ItemConst {
         let expr = stream.parse::<Expr>()?;
         let semi_punct = stream.parse::<Semi>()?;
         Ok(ItemConst {
-            span: Span::default(),
             attrs,
             vis,
             const_keyword,
@@ -47,6 +45,19 @@ impl Parse for ItemConst {
             expr,
             semi_punct,
         })
+    }
+}
+
+impl Spanner for ItemConst {
+    fn span(&self) -> Span {
+        let start = if let Some(a) = self.attrs.first() {
+            a.span()
+        } else if !matches!(self.vis, Visibility::Inherited) {
+            self.vis.span()
+        } else {
+            self.const_keyword.span()
+        };
+        start.join(self.semi_punct.span())
     }
 }
 
