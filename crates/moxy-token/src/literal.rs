@@ -19,6 +19,7 @@ macro_rules! lit_constructor {
 }
 
 impl Literal {
+    #[inline]
     pub fn string(value: &str) -> Self {
         Self {
             repr: format!("{:?}", value).into_boxed_str(),
@@ -26,6 +27,7 @@ impl Literal {
         }
     }
 
+    #[inline]
     pub fn character(value: char) -> Self {
         Self {
             repr: format!("{:?}", value).into_boxed_str(),
@@ -58,18 +60,22 @@ impl Literal {
     lit_constructor!(f32_unsuffixed, f32, "{}");
     lit_constructor!(f64_unsuffixed, f64, "{}");
 
+    #[inline]
     pub fn from_repr(repr: &str, span: Span) -> Self {
         Self { repr: repr.into(), span }
     }
 
+    #[inline]
     pub fn repr(&self) -> &str {
         &self.repr
     }
 
+    #[inline]
     pub fn span(&self) -> Span {
         self.span
     }
 
+    #[inline]
     pub fn set_span(&mut self, span: Span) {
         self.span = span;
     }

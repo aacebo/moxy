@@ -23,7 +23,11 @@ use crate::template::Template;
 ///
 /// ```ignore
 /// let items = vec!["a", "b", "c"];
-/// let tokens = template! { @for (item in items) { {{ item }} } };
+/// let tokens = template! {
+///     @for (item in items) {
+///         {{ item }}
+///     }
+/// };
 /// assert_eq!(tokens.to_string(), "a b c");
 /// ```
 ///

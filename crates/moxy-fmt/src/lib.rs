@@ -1,12 +1,15 @@
-pub mod ast;
+mod ast;
 mod config;
 mod error;
 mod node;
 
 use std::fmt::Write;
 
+#[doc(inline)]
 pub use config::*;
+#[doc(inline)]
 pub use error::*;
+#[doc(inline)]
 pub use node::*;
 
 pub fn fmt<T: Fmt>(value: &T, config: &FmtConfig) -> Result<String, FmtError> {

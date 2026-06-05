@@ -2,7 +2,9 @@ mod delim;
 pub(crate) mod fallback;
 mod range;
 
+#[doc(inline)]
 pub use delim::*;
+#[doc(inline)]
 pub use range::*;
 
 use crate::source::Location;
@@ -18,6 +20,7 @@ pub enum Span {
 }
 
 impl Span {
+    #[inline]
     pub fn call_site() -> Self {
         if proc_macro::is_available() {
             Self::Compiler(proc_macro::Span::call_site())
@@ -26,6 +29,7 @@ impl Span {
         }
     }
 
+    #[inline]
     pub fn mixed_site() -> Self {
         if proc_macro::is_available() {
             Self::Compiler(proc_macro::Span::mixed_site())
@@ -86,6 +90,7 @@ impl Span {
         }
     }
 
+    #[inline]
     pub fn len(&self) -> usize {
         match self {
             Self::Compiler(_) => 0,
@@ -93,6 +98,7 @@ impl Span {
         }
     }
 
+    #[inline]
     pub fn is_empty(&self) -> bool {
         match self {
             Self::Compiler(_) => true,
@@ -100,6 +106,7 @@ impl Span {
         }
     }
 
+    #[inline]
     pub fn contains(&self, i: usize) -> bool {
         match self {
             Self::Compiler(_) => false,
@@ -107,6 +114,7 @@ impl Span {
         }
     }
 
+    #[inline]
     pub fn is_subset(&self, other: &Self) -> bool {
         match (self, other) {
             (Self::Fallback(a), Self::Fallback(b)) => a.is_subset(b),
@@ -131,6 +139,7 @@ impl Span {
 }
 
 impl Default for Span {
+    #[inline]
     fn default() -> Self {
         Self::call_site()
     }
@@ -193,12 +202,14 @@ impl std::hash::Hash for Span {
 }
 
 impl From<proc_macro::Span> for Span {
+    #[inline]
     fn from(value: proc_macro::Span) -> Self {
         Self::Compiler(value)
     }
 }
 
 impl From<fallback::Span> for Span {
+    #[inline]
     fn from(value: fallback::Span) -> Self {
         Self::Fallback(value)
     }

@@ -5,10 +5,12 @@ extern crate proc_macro;
 mod level;
 mod span;
 
+#[doc(inline)]
 pub use level::*;
 use moxy_token::parse::ParseError;
 use moxy_token::punct::Not;
 use moxy_token::{Delim, Group, Ident, Literal, Punctuation, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
+#[doc(inline)]
 pub use span::*;
 
 /// Build a note-level [`Diagnostic`].

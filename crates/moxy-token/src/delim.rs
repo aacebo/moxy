@@ -9,6 +9,7 @@ pub enum Delim {
 }
 
 impl Delim {
+    #[inline]
     pub fn from_char(ch: char) -> Option<Self> {
         match ch {
             '(' | ')' => Some(Self::Paren),
@@ -18,6 +19,7 @@ impl Delim {
         }
     }
 
+    #[inline]
     pub fn from_open(ch: char) -> Option<Self> {
         match ch {
             '(' => Some(Self::Paren),
@@ -27,6 +29,7 @@ impl Delim {
         }
     }
 
+    #[inline]
     pub fn from_close(ch: char) -> Option<Self> {
         match ch {
             ')' => Some(Self::Paren),
@@ -36,6 +39,7 @@ impl Delim {
         }
     }
 
+    #[inline]
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Paren => "paren",
@@ -45,6 +49,7 @@ impl Delim {
         }
     }
 
+    #[inline]
     pub fn open(&self) -> char {
         match self {
             Self::None => ' ',
@@ -54,6 +59,7 @@ impl Delim {
         }
     }
 
+    #[inline]
     pub fn close(&self) -> char {
         match self {
             Self::None => ' ',
@@ -65,6 +71,7 @@ impl Delim {
 }
 
 impl From<proc_macro::Delimiter> for Delim {
+    #[inline]
     fn from(value: proc_macro::Delimiter) -> Self {
         match value {
             proc_macro::Delimiter::Parenthesis => Self::Paren,
@@ -76,6 +83,7 @@ impl From<proc_macro::Delimiter> for Delim {
 }
 
 impl From<Delim> for proc_macro::Delimiter {
+    #[inline]
     fn from(value: Delim) -> Self {
         match value {
             Delim::Paren => proc_macro::Delimiter::Parenthesis,

@@ -22,6 +22,7 @@ pub enum Link {
 }
 
 impl Link {
+    #[inline]
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Arg(_) => "rustc-link-arg",

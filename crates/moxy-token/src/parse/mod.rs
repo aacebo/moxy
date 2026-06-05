@@ -1,7 +1,9 @@
 mod error;
 mod stream;
 
+#[doc(inline)]
 pub use error::*;
+#[doc(inline)]
 pub use stream::*;
 
 pub trait Parse: Sized {

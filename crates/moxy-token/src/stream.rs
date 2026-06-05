@@ -10,46 +10,57 @@ use crate::{Span, TokenTree};
 pub struct TokenStream(Vec<TokenTree>);
 
 impl TokenStream {
+    #[inline]
     pub fn new() -> Self {
         Self(vec![])
     }
 
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
 
+    #[inline]
     pub fn iter(&self) -> impl Iterator<Item = &TokenTree> {
         self.0.iter()
     }
 
+    #[inline]
     pub fn first(&self) -> Span {
         self.0.first().map(|v| v.span()).unwrap_or_default()
     }
 
+    #[inline]
     pub fn last(&self) -> Span {
         self.0.last().map(|v| v.span()).unwrap_or_default()
     }
 
+    #[inline]
     pub fn span(&self) -> Span {
         self.first().join(self.last())
     }
 
+    #[inline]
     pub fn delim(&self) -> DelimSpan {
         DelimSpan::new(self.first(), self.last())
     }
 
+    #[inline]
     pub fn extend_one(&mut self, token: TokenTree) {
         self.0.push(token);
     }
 
+    #[inline]
     pub fn parse(&self) -> ParseStream<'_> {
         ParseStream::new(self)
     }
 
+    #[inline]
     pub fn into_inner(self) -> Vec<TokenTree> {
         self.0
     }
 
+    #[inline]
     pub fn to_vec(self) -> Vec<TokenTree> {
         self.0
     }
@@ -91,18 +102,21 @@ impl IntoIterator for TokenStream {
 }
 
 impl From<Vec<TokenTree>> for TokenStream {
+    #[inline]
     fn from(value: Vec<TokenTree>) -> Self {
         Self(value)
     }
 }
 
 impl From<&[TokenTree]> for TokenStream {
+    #[inline]
     fn from(value: &[TokenTree]) -> Self {
         Self(value.to_vec())
     }
 }
 
 impl From<TokenStream> for Vec<TokenTree> {
+    #[inline]
     fn from(value: TokenStream) -> Self {
         value.0
     }

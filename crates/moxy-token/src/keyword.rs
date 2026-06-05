@@ -11,24 +11,28 @@ macro_rules! define_keyword {
         }
 
         impl Keyword {
+            #[inline]
             pub fn as_str(&self) -> &'static str {
                 match self {
                     $(Self::$name(v) => v.as_str(),)*
                 }
             }
 
+            #[inline]
             pub fn span(&self) -> Span {
                 match self {
                     $(Self::$name(v) => v.span(),)*
                 }
             }
 
+            #[inline]
             pub fn set_span(&mut self, span: Span) {
                 match self {
                     $(Self::$name(v) => v.set_span(span),)*
                 }
             }
 
+            #[inline]
             pub fn from_str(text: &str, span: Span) -> Option<Self> {
                 match text {
                     $($text => Some(Self::$name($name::new(span))),)*
@@ -89,18 +93,22 @@ macro_rules! define_keyword {
             impl $name {
                 pub const TEXT: &'static str = $text;
 
+                #[inline]
                 pub fn new(span: Span) -> Self {
                     Self { span }
                 }
 
+                #[inline]
                 pub fn span(&self) -> Span {
                     self.span
                 }
 
+                #[inline]
                 pub fn set_span(&mut self, span: Span) {
                     self.span = span;
                 }
 
+                #[inline]
                 pub fn as_str(&self) -> &'static str {
                     Self::TEXT
                 }

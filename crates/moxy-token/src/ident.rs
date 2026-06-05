@@ -11,24 +11,29 @@ pub struct Ident {
 }
 
 impl Ident {
+    #[inline]
     pub fn new(name: &str, span: Span) -> Self {
         Self { name: name.into(), span }
     }
 
+    #[inline]
     pub fn name(&self) -> Cow<'_, str> {
         Cow::Borrowed(self.name.as_ref())
     }
 
+    #[inline]
     pub fn span(&self) -> Span {
         self.span
     }
 
+    #[inline]
     pub fn set_span(&mut self, span: Span) {
         self.span = span;
     }
 }
 
 impl From<proc_macro::Ident> for Ident {
+    #[inline]
     fn from(value: proc_macro::Ident) -> Self {
         Self::new(&value.to_string(), value.span().into())
     }

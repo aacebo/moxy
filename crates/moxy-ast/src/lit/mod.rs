@@ -10,13 +10,21 @@ mod lit_float;
 mod lit_int;
 mod lit_str;
 
+#[doc(inline)]
 pub use lit_bool::*;
+#[doc(inline)]
 pub use lit_byte::*;
+#[doc(inline)]
 pub use lit_byte_str::*;
+#[doc(inline)]
 pub use lit_c_str::*;
+#[doc(inline)]
 pub use lit_char::*;
+#[doc(inline)]
 pub use lit_float::*;
+#[doc(inline)]
 pub use lit_int::*;
+#[doc(inline)]
 pub use lit_str::*;
 
 #[doc = "A literal value in source code (string, integer, float, byte, char, or boolean)."]

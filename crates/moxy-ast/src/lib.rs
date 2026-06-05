@@ -29,26 +29,49 @@ pub mod ty;
 pub mod use_tree;
 pub mod vis;
 
+#[doc(inline)]
 pub use _crate::Crate;
+#[doc(inline)]
 pub use args::{AngleArgs, GenericArgument};
+#[doc(inline)]
 pub use delimited::Delimited;
+#[doc(inline)]
 pub use expr::{BinaryExpr, BlockExpr, Expr, JumpExpr, MatchArm, PostfixExpr, PrimaryExpr, UnaryExpr};
+#[doc(inline)]
 pub use fields::{FieldValue, Fields, FieldsNamed};
+#[doc(inline)]
 pub use generics::{Generics, TraitRef, TypeBound, WhereClause, WherePredicate};
+#[doc(inline)]
 pub use ident::*;
+#[doc(inline)]
 pub use item::{Item, Variant};
+#[doc(inline)]
 pub use label::*;
+#[doc(inline)]
 pub use leaf::*;
+#[doc(inline)]
 pub use lit::Lit;
+#[doc(inline)]
 pub use macro_call::*;
+#[doc(inline)]
 pub use member::{ForeignItem, ImplItem, Member, TraitItem};
+#[doc(inline)]
 pub use meta::{Attribute, Meta};
+#[doc(inline)]
 pub use misc::*;
+#[doc(inline)]
 pub use pat::Pattern;
+#[doc(inline)]
 pub use path::{Lifetime, Path, PathSegment};
+#[doc(inline)]
 pub use punctuated::*;
+#[doc(inline)]
 pub use sig::{Abi, BareFnArg, Signature, Variadic};
+#[doc(inline)]
 pub use stmt::{Stmt, StmtBlock};
+#[doc(inline)]
 pub use ty::{QSelf, Type, TypeMacro, TypedParam};
+#[doc(inline)]
 pub use use_tree::UseTree;
+#[doc(inline)]
 pub use vis::*;

@@ -8,6 +8,7 @@ pub enum Cfg {
 }
 
 impl Cfg {
+    #[inline]
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Set(_) => "rustc-cfg",

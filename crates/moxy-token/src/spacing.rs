@@ -7,6 +7,7 @@ pub enum Spacing {
 }
 
 impl Spacing {
+    #[inline]
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Alone => "alone",
@@ -22,6 +23,7 @@ impl std::fmt::Display for Spacing {
 }
 
 impl From<proc_macro::Spacing> for Spacing {
+    #[inline]
     fn from(value: proc_macro::Spacing) -> Self {
         match value {
             proc_macro::Spacing::Alone => Self::Alone,
@@ -31,6 +33,7 @@ impl From<proc_macro::Spacing> for Spacing {
 }
 
 impl From<Spacing> for proc_macro::Spacing {
+    #[inline]
     fn from(value: Spacing) -> Self {
         match value {
             Spacing::Alone => proc_macro::Spacing::Alone,

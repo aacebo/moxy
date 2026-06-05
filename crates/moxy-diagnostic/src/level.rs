@@ -8,30 +8,37 @@ pub enum Level {
 }
 
 impl Level {
+    #[inline]
     pub fn is_unknown(&self) -> bool {
         matches!(self, Self::Unknown)
     }
 
+    #[inline]
     pub fn is_note(&self) -> bool {
         matches!(self, Self::Note)
     }
 
+    #[inline]
     pub fn is_help(&self) -> bool {
         matches!(self, Self::Help)
     }
 
+    #[inline]
     pub fn is_warning(&self) -> bool {
         matches!(self, Self::Warning)
     }
 
+    #[inline]
     pub fn is_error(&self) -> bool {
         matches!(self, Self::Error)
     }
 
+    #[inline]
     pub fn as_u8(&self) -> u8 {
         *self as u8
     }
 
+    #[inline]
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Error => "error",

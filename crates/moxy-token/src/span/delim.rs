@@ -28,24 +28,29 @@ impl std::hash::Hash for DelimSpan {
 }
 
 impl DelimSpan {
+    #[inline]
     pub fn new(open: Span, close: Span) -> Self {
         Self { open, close }
     }
 
+    #[inline]
     pub fn open(&self) -> Span {
         self.open
     }
 
+    #[inline]
     pub fn close(&self) -> Span {
         self.close
     }
 
+    #[inline]
     pub fn span(&self) -> Span {
         self.open.join(self.close)
     }
 }
 
 impl From<DelimSpan> for Span {
+    #[inline]
     fn from(value: DelimSpan) -> Self {
         value.span()
     }

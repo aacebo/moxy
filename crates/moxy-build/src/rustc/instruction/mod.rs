@@ -2,8 +2,11 @@ mod cfg;
 mod link;
 mod rerun;
 
+#[doc(inline)]
 pub use cfg::*;
+#[doc(inline)]
 pub use link::*;
+#[doc(inline)]
 pub use rerun::*;
 
 /// A cargo build-script output instruction.
@@ -32,6 +35,7 @@ pub enum Instruction {
 }
 
 impl Instruction {
+    #[inline]
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Link(link) => link.as_str(),

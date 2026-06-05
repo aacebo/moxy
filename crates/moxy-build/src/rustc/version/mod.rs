@@ -1,7 +1,9 @@
 mod channel;
 mod error;
 
+#[doc(inline)]
 pub use channel::*;
+#[doc(inline)]
 pub use error::*;
 
 /// Reads the version of the installed rustc by invoking it.
@@ -67,11 +69,13 @@ impl Version {
     }
 
     /// The `(major, minor, patch)` triple, ignoring channel.
+    #[inline]
     pub fn triple(&self) -> (u16, u16, u16) {
         (self.major, self.minor, self.patch)
     }
 
     /// True if this version is at least `other` (compares the semver triple only).
+    #[inline]
     pub fn at_least(&self, other: &Version) -> bool {
         self.triple() >= other.triple()
     }

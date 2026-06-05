@@ -26,16 +26,27 @@ mod spacing;
 pub mod span;
 mod stream;
 
+#[doc(inline)]
 pub use delim::*;
+#[doc(inline)]
 pub use group::*;
+#[doc(inline)]
 pub use ident::*;
+#[doc(inline)]
 pub use keyword::*;
+#[doc(inline)]
 pub use lex::{LexError, Scan};
+#[doc(inline)]
 pub use literal::*;
+#[doc(inline)]
 pub use parse::Parse;
+#[doc(inline)]
 pub use punct::*;
+#[doc(inline)]
 pub use spacing::*;
+#[doc(inline)]
 pub use span::{Span, Spanner};
+#[doc(inline)]
 pub use stream::*;
 
 pub trait ToTokens<T = TokenStream> {
@@ -109,24 +120,28 @@ impl Token {
 }
 
 impl From<Ident> for Token {
+    #[inline]
     fn from(value: Ident) -> Self {
         Self::Ident(value)
     }
 }
 
 impl From<Keyword> for Token {
+    #[inline]
     fn from(value: Keyword) -> Self {
         Self::Keyword(value)
     }
 }
 
 impl From<Punctuation> for Token {
+    #[inline]
     fn from(value: Punctuation) -> Self {
         Self::Punct(value)
     }
 }
 
 impl From<Literal> for Token {
+    #[inline]
     fn from(value: Literal) -> Self {
         Self::Literal(value)
     }
@@ -200,36 +215,42 @@ impl TokenTree {
 }
 
 impl From<Token> for TokenTree {
+    #[inline]
     fn from(value: Token) -> Self {
         Self::Token(value)
     }
 }
 
 impl From<Ident> for TokenTree {
+    #[inline]
     fn from(value: Ident) -> Self {
         Self::Token(Token::from(value))
     }
 }
 
 impl From<Keyword> for TokenTree {
+    #[inline]
     fn from(value: Keyword) -> Self {
         Self::Token(Token::from(value))
     }
 }
 
 impl From<Punctuation> for TokenTree {
+    #[inline]
     fn from(value: Punctuation) -> Self {
         Self::Token(Token::from(value))
     }
 }
 
 impl From<Literal> for TokenTree {
+    #[inline]
     fn from(value: Literal) -> Self {
         Self::Token(Token::from(value))
     }
 }
 
 impl From<Group> for TokenTree {
+    #[inline]
     fn from(value: Group) -> Self {
         Self::Group(value)
     }

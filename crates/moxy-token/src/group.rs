@@ -10,6 +10,7 @@ pub struct Group {
 }
 
 impl Group {
+    #[inline]
     pub fn new(delim: Delim, stream: TokenStream) -> Self {
         Self {
             delim,
@@ -18,24 +19,29 @@ impl Group {
         }
     }
 
+    #[inline]
     pub fn delim(&self) -> Delim {
         self.delim
     }
 
+    #[inline]
     pub fn span(&self) -> DelimSpan {
         self.span
     }
 
+    #[inline]
     pub fn stream(&self) -> TokenStream {
         self.tokens.clone()
     }
 
+    #[inline]
     pub fn set_span(&mut self, span: DelimSpan) {
         self.span = span;
     }
 }
 
 impl From<proc_macro::Group> for Group {
+    #[inline]
     fn from(value: proc_macro::Group) -> Self {
         let mut group = Self::new(value.delimiter().into(), value.stream().into());
         group.set_span(DelimSpan::new(value.span_open().into(), value.span_close().into()));
@@ -44,6 +50,7 @@ impl From<proc_macro::Group> for Group {
 }
 
 impl From<Group> for proc_macro::Group {
+    #[inline]
     fn from(value: Group) -> Self {
         proc_macro::Group::new(value.delim.into(), value.tokens.into())
     }
