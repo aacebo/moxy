@@ -21,7 +21,6 @@ dependencies = [
  "moxy-ast",
  "moxy-diagnostic",
  "moxy-fmt",
- "moxy-macros",
  "moxy-template",
  "moxy-test",
  "moxy-token",
@@ -31,7 +30,6 @@ dependencies = [
 name = "moxy-ast"
 version = "0.0.0"
 dependencies = [
- "moxy-macros",
  "moxy-token",
  "proc-macro2",
  "serde",
@@ -57,15 +55,6 @@ dependencies = [
  "moxy-ast",
  "moxy-token",
  "serde",
-]
-
-[[package]]
-name = "moxy-macros"
-version = "0.0.0"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
 ]
 
 [[package]]

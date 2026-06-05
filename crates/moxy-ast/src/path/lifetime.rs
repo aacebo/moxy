@@ -1,17 +1,34 @@
-use moxy_macros::{Parse, ToTokens};
-use moxy_token::Span;
+use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::Quote;
+use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
 use super::LifetimeName;
 
 #[doc = "A named lifetime (e.g. `'a`, `'static`)."]
-#[derive(Debug, Clone, Parse, ToTokens)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Lifetime {
-    #[parse(skip)]
     pub span: Span,
-    #[parse(prefix = Quote)]
     pub ident: LifetimeName,
+}
+
+impl Parse for Lifetime {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let start = stream.span();
+        let _ = stream.parse::<Quote>()?;
+        let ident = stream.parse::<LifetimeName>()?;
+        Ok(Self {
+            span: start.join(ident.span),
+            ident,
+        })
+    }
+}
+
+impl ToTokens for Lifetime {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        Quote::default().to_tokens(tokens);
+        self.ident.to_tokens(tokens);
+    }
 }
 
 impl Lifetime {

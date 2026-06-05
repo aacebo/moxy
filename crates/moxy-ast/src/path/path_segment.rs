@@ -1,15 +1,13 @@
-use moxy_macros::ToTokens;
 use moxy_token::parse::{ParseError, ParseStream};
-use moxy_token::{Delim, Parse, Span, TokenTree};
+use moxy_token::{Delim, Parse, Span, ToTokens, TokenStream, TokenTree};
 
 use super::PathArguments;
 use crate::Ident;
 
 #[doc = "A single segment of a path (an identifier optionally followed by generic arguments)."]
-#[derive(Debug, Clone, ToTokens)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PathSegment {
-    #[parse(skip)]
     pub span: Span,
     pub ident: Ident,
     pub args: PathArguments,
@@ -36,9 +34,16 @@ impl Parse for PathSegment {
         };
 
         Ok(Self {
-            span: Span::default(),
+            span: ident.span,
             ident,
             args,
         })
+    }
+}
+
+impl ToTokens for PathSegment {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.ident.to_tokens(tokens);
+        self.args.to_tokens(tokens);
     }
 }

@@ -1,19 +1,34 @@
-use moxy_macros::{Parse, ToTokens};
-use moxy_token::parse::ParseStream;
+use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::Colon;
-use moxy_token::{Punctuation, Span, Token, TokenTree};
+use moxy_token::{Parse, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::Lifetime;
 
 #[doc = "A loop label (`'outer:`)."]
-#[derive(Debug, Clone, Parse, ToTokens)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Label {
-    #[parse(skip)]
     pub span: Span,
-
-    #[parse(suffix = Colon)]
     pub name: Lifetime,
+}
+
+impl Parse for Label {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let start = stream.span();
+        let name = stream.parse::<Lifetime>()?;
+        let colon = stream.parse::<Colon>()?;
+        Ok(Self {
+            span: start.join(colon.span()),
+            name,
+        })
+    }
+}
+
+impl ToTokens for Label {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.name.to_tokens(tokens);
+        Colon::default().to_tokens(tokens);
+    }
 }
 
 impl Label {

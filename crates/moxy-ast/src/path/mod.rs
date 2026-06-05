@@ -1,6 +1,6 @@
-use moxy_macros::{Parse, ToTokens};
-use moxy_token::Span;
+use moxy_token::parse::{ParseError, ParseStream};
 use moxy_token::punct::PathSep;
+use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
 use crate::Punctuated;
 
@@ -15,27 +15,53 @@ pub use path_arguments::*;
 pub use path_segment::*;
 
 #[doc = "A path expression or type path (e.g. `std::collections::HashMap`, `crate::Foo`)."]
-#[derive(Debug, Clone, Parse, ToTokens)]
+#[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Path {
-    #[parse(skip)]
     pub span: Span,
-    #[parse(peek = PathSep)]
     pub leading_colon: bool,
-    #[parse(separated)]
     pub segments: Punctuated<PathSegment, PathSep>,
+}
+
+impl Parse for Path {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let start = stream.span();
+        let leading_colon = if stream.peek::<PathSep>().is_some() {
+            let _ = stream.parse::<PathSep>()?;
+            true
+        } else {
+            false
+        };
+        let segments = Punctuated::parse_separated_nonempty(stream)?;
+        let end = segments.last().map(|s: &PathSegment| s.span).unwrap_or(start);
+        Ok(Self {
+            span: start.join(end),
+            leading_colon,
+            segments,
+        })
+    }
+}
+
+impl ToTokens for Path {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        if self.leading_colon {
+            PathSep::default().to_tokens(tokens);
+        }
+        self.segments.to_tokens(tokens);
+    }
 }
 
 impl From<crate::Ident> for Path {
     fn from(ident: crate::Ident) -> Self {
+        let span = ident.span;
         let mut segments = Punctuated::new();
         segments.push_value(PathSegment {
-            span: Span::default(),
+            span,
             ident,
             args: PathArguments::None,
         });
         Path {
-            span: Span::default(),
+            span,
             leading_colon: false,
             segments,
         }

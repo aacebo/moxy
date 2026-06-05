@@ -10,9 +10,6 @@ pub use moxy_diagnostic::{error, help, note, warn};
 #[cfg(feature = "fmt")]
 #[doc(inline)]
 pub use moxy_fmt as fmt;
-#[cfg(feature = "macros")]
-#[doc(inline)]
-pub use moxy_macros as macros;
 #[cfg(feature = "template")]
 #[doc(inline)]
 pub use moxy_template as template;
