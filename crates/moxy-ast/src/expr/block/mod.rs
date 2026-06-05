@@ -141,7 +141,7 @@ impl Label {
         }
 
         let name = stream.parse_if::<Lifetime>()?;
-        use moxy_token::Spanner;
-        Some(Label { span: name.span(), name })
+        let colon = stream.parse_if::<moxy_token::punct::Colon>().unwrap_or_default();
+        Some(Label { name, colon })
     }
 }

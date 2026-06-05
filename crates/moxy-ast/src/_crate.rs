@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Item};
 
@@ -7,20 +7,36 @@ use crate::{Attribute, Item};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Crate {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub items: Vec<Item>,
+}
+
+impl Spanner for Crate {
+    fn span(&self) -> Span {
+        let start = self
+            .attrs
+            .first()
+            .map(|a| a.span())
+            .or_else(|| self.items.first().map(|i| i.span()));
+        let end = self
+            .items
+            .last()
+            .map(|i| i.span())
+            .or_else(|| self.attrs.last().map(|a| a.span()));
+        match (start, end) {
+            (Some(s), Some(e)) => s.join(e),
+            (Some(s), None) => s,
+            (None, Some(e)) => e,
+            (None, None) => Span::call_site(),
+        }
+    }
 }
 
 impl Parse for Crate {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Vec<Attribute>>()?;
         let items = stream.parse::<Vec<Item>>()?;
-        Ok(Self {
-            span: Span::default(),
-            attrs,
-            items,
-        })
+        Ok(Self { attrs, items })
     }
 }
 
@@ -29,6 +45,7 @@ impl ToTokens for Crate {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         for it in &self.items {
             it.to_tokens(t);
         }

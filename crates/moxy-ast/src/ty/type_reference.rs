@@ -9,7 +9,7 @@ use crate::{Lifetime, Mutability};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeReference {
-    pub span: Span,
+    pub and: And,
     pub lifetime: Option<Lifetime>,
     pub mutability: Mutability,
     pub elem: Box<Type>,
@@ -17,13 +17,12 @@ pub struct TypeReference {
 
 impl Parse for TypeReference {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let start = stream.span();
-        let _ = stream.parse::<And>()?;
+        let and = stream.parse::<And>()?;
         let lifetime = stream.parse::<Option<Lifetime>>()?;
         let mutability = stream.parse::<Mutability>()?;
         let elem = Box::new(stream.parse::<Type>()?);
         Ok(Self {
-            span: start,
+            and,
             lifetime,
             mutability,
             elem,
@@ -33,13 +32,13 @@ impl Parse for TypeReference {
 
 impl Spanner for TypeReference {
     fn span(&self) -> Span {
-        self.span.join(self.elem.span())
+        self.and.span().join(self.elem.span())
     }
 }
 
 impl ToTokens for TypeReference {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        And::default().to_tokens(tokens);
+        self.and.to_tokens(tokens);
         self.lifetime.to_tokens(tokens);
         self.mutability.to_tokens(tokens);
         self.elem.to_tokens(tokens);

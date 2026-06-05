@@ -7,7 +7,6 @@ use crate::{BoundLifetimes, BoundPolarity, Path, TraitBoundModifier};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitBound {
-    pub span: Span,
     pub polarity: BoundPolarity,
     pub lifetimes: Option<BoundLifetimes>,
     pub modifier: TraitBoundModifier,
@@ -16,13 +15,11 @@ pub struct TraitBound {
 
 impl Parse for TraitBound {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let start = stream.span();
         let polarity = stream.parse::<BoundPolarity>()?;
         let lifetimes = stream.parse::<Option<BoundLifetimes>>()?;
         let modifier = stream.parse::<TraitBoundModifier>()?;
         let path = stream.parse::<Path>()?;
         Ok(Self {
-            span: start.join(path.span),
             polarity,
             lifetimes,
             modifier,
@@ -33,7 +30,20 @@ impl Parse for TraitBound {
 
 impl Spanner for TraitBound {
     fn span(&self) -> Span {
-        self.span
+        let start = match &self.polarity {
+            BoundPolarity::Negative(t) => t.span(),
+            BoundPolarity::Positive => {
+                if let Some(l) = &self.lifetimes {
+                    l.span()
+                } else {
+                    match &self.modifier {
+                        TraitBoundModifier::Maybe(t) => t.span(),
+                        TraitBoundModifier::None => self.path.span(),
+                    }
+                }
+            }
+        };
+        start.join(self.path.span())
     }
 }
 

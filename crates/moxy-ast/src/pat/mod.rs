@@ -1,6 +1,6 @@
 use moxy_token::keyword::{Mut, Ref};
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{And, At, Colon, Comma, DotDot, Or as OrPunct};
+use moxy_token::punct::{And, At, Colon, Comma, DotDot, Or};
 use moxy_token::{Delim, LexError, Parse, Punctuation, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::{Attribute, Delimited, Expr, Ident, Member, Mutability, Path, Punctuated, RangeLimits, Type};
@@ -164,23 +164,23 @@ impl From<PatParen> for Pattern {
 impl Parse for Pattern {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         // Optional leading `|`, then one-or-more `|`-separated alternatives.
-        let leading = stream.peek::<OrPunct>().is_some();
+        let leading = stream.peek::<Or>().is_some();
 
         if leading {
-            let _ = stream.parse::<OrPunct>()?;
+            let _ = stream.parse::<Or>()?;
         }
 
         let first = parse_single(stream)?;
 
-        if !leading && stream.peek::<OrPunct>().is_none() {
+        if !leading && stream.peek::<Or>().is_none() {
             return Ok(first);
         }
 
         let mut cases = Punctuated::new();
         cases.push_value(first);
 
-        while stream.peek::<OrPunct>().is_some() {
-            cases.push_punct(stream.parse::<OrPunct>()?);
+        while stream.peek::<Or>().is_some() {
+            cases.push_punct(stream.parse::<Or>()?);
             cases.push_value(parse_single(stream)?);
         }
 

@@ -8,7 +8,6 @@ use super::UseTree;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseGlob {
-    pub span: Span,
     pub star: Star,
 }
 
@@ -24,7 +23,7 @@ impl Parse for UseGlob {
 
 impl Spanner for UseGlob {
     fn span(&self) -> Span {
-        self.span
+        self.star.span()
     }
 }
 

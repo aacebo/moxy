@@ -8,31 +8,27 @@ use super::LifetimeName;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Lifetime {
-    pub span: Span,
+    pub quote: Quote,
     pub ident: LifetimeName,
 }
 
 impl Parse for Lifetime {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let start = stream.span();
-        let _ = stream.parse::<Quote>()?;
+        let quote = stream.parse::<Quote>()?;
         let ident = stream.parse::<LifetimeName>()?;
-        Ok(Self {
-            span: start.join(ident.span),
-            ident,
-        })
+        Ok(Self { quote, ident })
     }
 }
 
 impl Spanner for Lifetime {
     fn span(&self) -> Span {
-        self.span
+        self.quote.span().join(self.ident.span())
     }
 }
 
 impl ToTokens for Lifetime {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        Quote::default().to_tokens(tokens);
+        self.quote.to_tokens(tokens);
         self.ident.to_tokens(tokens);
     }
 }

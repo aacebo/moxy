@@ -43,9 +43,8 @@ impl Spanner for UseTree {
 impl Parse for UseTree {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if stream.peek::<Star>().is_some() {
-            let span = stream.span();
             let star = stream.parse::<Star>()?;
-            return Ok(UseTree::Glob(UseGlob { span, star }));
+            return Ok(UseTree::Glob(UseGlob { star }));
         }
 
         if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {

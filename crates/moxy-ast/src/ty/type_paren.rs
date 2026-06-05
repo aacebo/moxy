@@ -9,23 +9,19 @@ use crate::Delimited;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeParen {
-    pub span: Span,
     pub content: Delimited<Box<Type>>,
 }
 
 impl Parse for TypeParen {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let content = Delimited::parse_paren_with(stream, |stream| Ok(Box::new(stream.parse::<Type>()?)))?;
-        Ok(Self {
-            span: content.span(),
-            content,
-        })
+        Ok(Self { content })
     }
 }
 
 impl Spanner for TypeParen {
     fn span(&self) -> Span {
-        self.span
+        self.content.span()
     }
 }
 

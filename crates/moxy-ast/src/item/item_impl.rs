@@ -23,11 +23,7 @@ pub struct ItemImpl {
 impl ItemImpl {
     fn type_to_trait_ref(ty: Type, polarity: BoundPolarity) -> Result<TraitRef, ParseError> {
         match ty {
-            Type::Path(tp) => Ok(TraitRef {
-                span: tp.path.span,
-                polarity,
-                path: tp.path,
-            }),
+            Type::Path(tp) => Ok(TraitRef { polarity, path: tp.path }),
             _ => Err(LexError::new(Span::default()).message("expected trait path").into()),
         }
     }

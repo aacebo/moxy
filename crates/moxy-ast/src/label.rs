@@ -8,32 +8,28 @@ use crate::Lifetime;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Label {
-    pub span: Span,
     pub name: Lifetime,
+    pub colon: Colon,
 }
 
 impl Parse for Label {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let start = stream.span();
         let name = stream.parse::<Lifetime>()?;
         let colon = stream.parse::<Colon>()?;
-        Ok(Self {
-            span: start.join(colon.span()),
-            name,
-        })
+        Ok(Self { name, colon })
     }
 }
 
 impl Spanner for Label {
     fn span(&self) -> Span {
-        self.span
+        self.name.span().join(self.colon.span())
     }
 }
 
 impl ToTokens for Label {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.name.to_tokens(tokens);
-        Colon::default().to_tokens(tokens);
+        self.colon.to_tokens(tokens);
     }
 }
 

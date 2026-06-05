@@ -6,14 +6,14 @@ use crate::Attribute;
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprGroup {
-    pub span: Span,
     pub attrs: Vec<Attribute>,
     pub expr: Box<super::super::Expr>,
 }
 
 impl Spanner for ExprGroup {
     fn span(&self) -> Span {
-        self.span
+        let start = self.attrs.first().map(|a| a.span()).unwrap_or_else(|| self.expr.span());
+        start.join(self.expr.span())
     }
 }
 

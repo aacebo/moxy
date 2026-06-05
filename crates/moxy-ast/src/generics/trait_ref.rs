@@ -7,27 +7,25 @@ use crate::{BoundPolarity, Path};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitRef {
-    pub span: Span,
     pub polarity: BoundPolarity,
     pub path: Path,
 }
 
 impl Parse for TraitRef {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let start = stream.span();
         let polarity = stream.parse::<BoundPolarity>()?;
         let path = stream.parse::<Path>()?;
-        Ok(Self {
-            span: start.join(path.span),
-            polarity,
-            path,
-        })
+        Ok(Self { polarity, path })
     }
 }
 
 impl Spanner for TraitRef {
     fn span(&self) -> Span {
-        self.span
+        let start = match &self.polarity {
+            BoundPolarity::Negative(t) => t.span(),
+            BoundPolarity::Positive => self.path.span(),
+        };
+        start.join(self.path.span())
     }
 }
 

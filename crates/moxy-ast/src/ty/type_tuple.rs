@@ -10,23 +10,19 @@ use crate::{Delimited, Punctuated};
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeTuple {
-    pub span: Span,
     pub elems: Delimited<Punctuated<Type, Comma>>,
 }
 
 impl Parse for TypeTuple {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let elems = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
-        Ok(Self {
-            span: elems.span(),
-            elems,
-        })
+        Ok(Self { elems })
     }
 }
 
 impl Spanner for TypeTuple {
     fn span(&self) -> Span {
-        self.span
+        self.elems.span()
     }
 }
 

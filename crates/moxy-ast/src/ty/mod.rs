@@ -174,7 +174,7 @@ impl Parse for Type {
 
             {
                 let elem = Delimited::bracket(bracket_span, elem);
-                return Ok(Type::Slice(TypeSlice { span: elem.span(), elem }));
+                return Ok(Type::Slice(TypeSlice { elem }));
             }
         }
 
@@ -206,16 +206,10 @@ impl Parse for Type {
 
             return if elems.len() == 1 && !elems.trailing_punct() {
                 let content = Delimited::paren(paren_span, Box::new(elems.into_iter().next().unwrap()));
-                Ok(Type::Paren(TypeParen {
-                    span: content.span(),
-                    content,
-                }))
+                Ok(Type::Paren(TypeParen { content }))
             } else {
                 let elems_del = Delimited::paren(paren_span, elems);
-                Ok(Type::Tuple(TypeTuple {
-                    span: elems_del.span(),
-                    elems: elems_del,
-                }))
+                Ok(Type::Tuple(TypeTuple { elems: elems_del }))
             };
         }
 
@@ -374,7 +368,7 @@ mod tests {
             moxy_token::span::DelimSpan::default(),
             Box::new(moxy_token::parse!("T" as Type).unwrap()),
         );
-        let s = TypeSlice { span: elem.span(), elem };
+        let s = TypeSlice { elem };
         assert!(matches!(Type::from(s), Type::Slice { .. }));
     }
 }
