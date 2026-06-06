@@ -76,3 +76,8 @@ impl ToTokens for Template {
         }
     }
 }
+
+#[proc_macro_attribute]
+pub fn expand(_args: proc_macro::TokenStream, target: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    target
+}

@@ -5,6 +5,7 @@ extern crate self as moxy_ast;
 mod _crate;
 pub mod args;
 pub mod attr;
+mod declaration;
 mod delimited;
 pub mod expr;
 pub mod fields;
@@ -35,6 +36,8 @@ pub use _crate::Crate;
 pub use args::{AngleArgs, GenericArgument};
 #[doc(inline)]
 pub use attr::{Attribute, Meta};
+#[doc(inline)]
+pub use declaration::*;
 #[doc(inline)]
 pub use delimited::Delimited;
 #[doc(inline)]
