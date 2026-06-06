@@ -22,7 +22,6 @@ dependencies = [
  "moxy-diagnostic",
  "moxy-fmt",
  "moxy-template",
- "moxy-test",
  "moxy-token",
 ]
 
@@ -62,17 +61,6 @@ version = "0.0.0"
 dependencies = [
  "moxy-token",
 ]
-
-[[package]]
-name = "moxy-test"
-version = "0.0.0"
-dependencies = [
- "moxy-test-macros",
-]
-
-[[package]]
-name = "moxy-test-macros"
-version = "0.0.0"
 
 [[package]]
 name = "moxy-token"

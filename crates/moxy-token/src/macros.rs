@@ -17,7 +17,7 @@ macro_rules! parse {
     }};
     ($src:expr) => {{
         use ::std::str::FromStr;
-        $crate::TokenStream::from_str(::std::convert::AsRef::<str>::as_ref(&$src))
+        $crate::TokenStream::from_str(&$src.to_string())
             .map_err($crate::parser::ParseError::from)
             .and_then(|ts| $crate::Parse::parse(&mut ts.parse()))
     }};

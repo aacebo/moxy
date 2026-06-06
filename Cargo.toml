@@ -48,13 +48,12 @@ doctest = false
 workspace = true
 
 [features]
-default = ["ast", "token", "fmt", "template", "diagnostic", "test"]
+default = ["ast", "token", "fmt", "template", "diagnostic"]
 ast = ["moxy-ast"]
 fmt = ["moxy-fmt"]
 token = ["moxy-token"]
 template = ["moxy-template"]
 diagnostic = ["moxy-diagnostic"]
-test = ["moxy-test"]
 serde = ["moxy-ast/serde", "moxy-token/serde", "moxy-fmt/serde"]
 proc-macro2 = ["moxy-token/proc-macro2"]
 
@@ -64,4 +63,3 @@ moxy-diagnostic = { path = "crates/moxy-diagnostic", optional = true }
 moxy-fmt = { path = "crates/moxy-fmt", optional = true }
 moxy-token = { path = "crates/moxy-token", optional = true }
 moxy-template = { path = "crates/moxy-template", optional = true }
-moxy-test = { path = "crates/moxy-test", optional = true }

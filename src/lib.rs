@@ -19,9 +19,6 @@ pub use moxy_template as template;
 #[cfg(feature = "template")]
 #[doc(inline)]
 pub use moxy_template::template;
-#[cfg(feature = "test")]
-#[doc(inline)]
-pub use moxy_test as test;
 #[cfg(feature = "token")]
 #[doc(inline)]
 pub use moxy_token as token;
