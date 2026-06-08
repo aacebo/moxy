@@ -189,10 +189,12 @@ macro_rules! define_punct {
             }
 
             $(
+                #[doc = concat!("**", stringify!($name), "** (\"", $text, "\")")]
                 pub fn $is_method(&self) -> bool {
                     matches!(self, Self::Punct(Punctuation::$name(_)))
                 }
 
+                #[doc = concat!("**", stringify!($name), "** (\"", $text, "\")")]
                 pub fn $as_method(&self) -> Option<&$name> {
                     match self {
                         Self::Punct(Punctuation::$name(v)) => Some(v),
@@ -218,10 +220,12 @@ macro_rules! define_punct {
             }
 
             $(
+                #[doc = concat!("**", stringify!($name), "** (\"", $text, "\")")]
                 pub fn $is_method(&self) -> bool {
                     matches!(self, Self::Token(Token::Punct(Punctuation::$name(_))))
                 }
 
+                #[doc = concat!("**", stringify!($name), "** (\"", $text, "\")")]
                 pub fn $as_method(&self) -> Option<&$name> {
                     match self {
                         Self::Token(Token::Punct(Punctuation::$name(v))) => Some(v),

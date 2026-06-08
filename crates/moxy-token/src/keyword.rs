@@ -209,10 +209,12 @@ macro_rules! define_keyword {
             }
 
             $(
+                #[doc = concat!("**", stringify!($name), "** (\"", $text, "\")")]
                 pub fn $is_method(&self) -> bool {
                     matches!(self, Self::Keyword(Keyword::$name(_)))
                 }
 
+                #[doc = concat!("**", stringify!($name), "** (\"", $text, "\")")]
                 pub fn $as_method(&self) -> Option<&$name> {
                     match self {
                         Self::Keyword(Keyword::$name(v)) => Some(v),
@@ -238,10 +240,12 @@ macro_rules! define_keyword {
             }
 
             $(
+                #[doc = concat!("**", stringify!($name), "** (\"", $text, "\")")]
                 pub fn $is_method(&self) -> bool {
                     matches!(self, Self::Token(Token::Keyword(Keyword::$name(_))))
                 }
 
+                #[doc = concat!("**", stringify!($name), "** (\"", $text, "\")")]
                 pub fn $as_method(&self) -> Option<&$name> {
                     match self {
                         Self::Token(Token::Keyword(Keyword::$name(v))) => Some(v),
