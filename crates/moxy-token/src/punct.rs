@@ -95,7 +95,7 @@ macro_rules! define_punct {
         $(
             #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
             pub struct $name {
-                pub span: Span,
+                span: Span,
             }
 
             impl $name {

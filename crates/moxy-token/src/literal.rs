@@ -28,7 +28,7 @@ impl Literal {
     }
 
     #[inline]
-    pub fn character(value: char) -> Self {
+    pub fn char(value: char) -> Self {
         Self {
             repr: format!("{:?}", value).into_boxed_str(),
             span: Span::default(),

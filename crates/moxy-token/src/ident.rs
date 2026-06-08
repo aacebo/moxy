@@ -4,11 +4,11 @@ use crate::{Span, TokenTree};
 
 #[macro_export]
 macro_rules! ident {
-    ($fmt:expr) => {{
-        $crate::Ident::lex($fmt).expect("invalid syntax")
+    ($fmt:ident) => {{
+        $crate::Ident::lex(stringify!($fmt)).expect("invalid syntax")
     }};
-    ($fmt:expr, $($token:tt)*) => {{
-        $crate::Ident::lex(format!($fmt, $($token)*)).expect("invalid syntax")
+    ($fmt:ident $(,$token:tt)*) => {{
+        $crate::Ident::lex(format!(stringify!($fmt), $($token)*)).expect("invalid syntax")
     }};
 }
 
@@ -162,19 +162,24 @@ impl PartialEq<&str> for Ident {
 #[cfg(test)]
 mod tests {
     #[test]
-    fn text_plain() {
-        let id = ident!("foo");
+    fn ident_plain() {
+        let id = ident!(foo);
         assert_eq!(id, "foo");
         assert!(!id.is_raw());
         assert_eq!(id, "foo");
     }
 
     #[test]
-    fn text_raw() {
-        let id = ident!("r#fn");
+    fn ident_raw() {
+        let id = ident!(r#fn);
         assert_eq!(id.text(), "fn");
         assert!(id.is_raw());
         assert_eq!(id, "r#fn");
+    }
+
+    #[test]
+    fn text_append() {
+        let id = ident!(a, "_", "b");
     }
 
     #[cfg(feature = "serde")]

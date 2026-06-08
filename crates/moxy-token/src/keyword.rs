@@ -101,7 +101,7 @@ macro_rules! define_keyword {
         $(
             #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
             pub struct $name {
-                pub span: Span,
+                span: Span,
             }
 
             impl $name {
