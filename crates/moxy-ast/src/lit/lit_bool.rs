@@ -31,7 +31,7 @@ impl Spanner for LitBool {
 impl ToTokens for LitBool {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let text = if self.value { "true" } else { "false" };
-        moxy_token::Ident::new(text, self.span).to_tokens(tokens);
+        moxy_token::Ident::new(text).with_span(self.span).to_tokens(tokens);
     }
 }
 

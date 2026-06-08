@@ -152,7 +152,7 @@ impl Parse for Type {
         if matches!(stream.curr(), Some(tt) if tt.text() == Some("_")) {
             let span = stream.span();
             stream.advance();
-            return Ok(Type::Infer(moxy_token::Ident::new("_", span)));
+            return Ok(Type::Infer(moxy_token::Ident::new("_").with_span(span)));
         }
 
         // `[T]` slice or `[T; N]` array — decided by a `;` inside the brackets.

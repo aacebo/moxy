@@ -240,7 +240,7 @@ impl Diagnostic {
 
     pub fn to_compile_error(&self) -> TokenStream {
         let span = self.spans.first().copied().unwrap_or_default();
-        let ident = Ident::new("compile_error", span);
+        let ident = Ident::new("compile_error").with_span(span);
         let bang = Not::new(span);
         let mut lit = Literal::string(&self.to_string());
         lit.set_span(span);

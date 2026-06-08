@@ -110,7 +110,7 @@ impl From<Spacing> for proc_macro::Spacing {
 impl From<proc_macro::Ident> for Ident {
     #[inline]
     fn from(value: proc_macro::Ident) -> Self {
-        Self::new(value.to_string(), value.span().into())
+        Self::new(value.to_string()).with_span(value.span().into())
     }
 }
 

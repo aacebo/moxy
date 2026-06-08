@@ -203,7 +203,7 @@ impl ToTokens for Pattern {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
             Pattern::Wild => {
-                moxy_token::Ident::new("_", Span::default()).to_tokens(t);
+                moxy_token::Ident::new("_").to_tokens(t);
             }
             Pattern::Rest => DotDot::default().to_tokens(t),
             Pattern::Ident(v) => v.to_tokens(t),

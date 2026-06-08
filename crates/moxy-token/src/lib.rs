@@ -220,13 +220,13 @@ mod tests {
 
     #[test]
     fn ident_new_and_name() {
-        let id = Ident::new("foo", Span::default());
+        let id = Ident::new("foo");
         assert_eq!(id.text(), "foo");
     }
 
     #[test]
     fn ident_span_and_set_span() {
-        let mut id = Ident::new("x", span(0, 1));
+        let mut id = Ident::new("x").with_span(span(0, 1));
         assert_eq!(id.span().start().index(), 0);
         id.set_span(span(5, 6));
         assert_eq!(id.span().start().index(), 5);
@@ -234,7 +234,7 @@ mod tests {
 
     #[test]
     fn ident_display() {
-        let id = Ident::new("hello", Span::default());
+        let id = Ident::new("hello");
         assert_eq!(format!("{}", id), "hello");
     }
 
@@ -296,14 +296,14 @@ mod tests {
     #[test]
     fn token_stream_extend_one() {
         let mut ts = TokenStream::new();
-        ts.extend_one(Ident::new("a", Span::default()).into());
+        ts.extend_one(Ident::new("a").into());
         assert_eq!(ts.len(), 1);
     }
 
     #[test]
     fn token_stream_iter() {
         let mut ts = TokenStream::new();
-        ts.extend_one(Ident::new("x", Span::default()).into());
+        ts.extend_one(Ident::new("x").into());
         ts.extend_one(Punctuation::from(crate::punct::Plus::default()).into());
         let count = ts.iter().count();
         assert_eq!(count, 2);
@@ -320,7 +320,7 @@ mod tests {
 
     #[test]
     fn token_from_ident() {
-        let t: TokenTree = Ident::new("foo", Span::default()).into();
+        let t: TokenTree = Ident::new("foo").into();
         assert!(matches!(t, TokenTree::Ident(_)));
     }
 
@@ -344,13 +344,13 @@ mod tests {
 
     #[test]
     fn token_span() {
-        let t: TokenTree = Ident::new("x", span(3, 4)).into();
+        let t: TokenTree = Ident::new("x").with_span(span(3, 4)).into();
         assert_eq!(t.span().start().index(), 3);
     }
 
     #[test]
     fn token_display() {
-        let t: TokenTree = Ident::new("hello", Span::default()).into();
+        let t: TokenTree = Ident::new("hello").into();
         assert_eq!(format!("{}", t), "hello");
     }
 

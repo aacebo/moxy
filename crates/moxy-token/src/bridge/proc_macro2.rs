@@ -73,7 +73,7 @@ impl From<Spacing> for proc_macro2::Spacing {
 impl From<proc_macro2::Ident> for Ident {
     fn from(value: proc_macro2::Ident) -> Self {
         let span: Span = value.span().into();
-        Ident::new(value.to_string(), span)
+        Ident::new(value.to_string()).with_span(span)
     }
 }
 

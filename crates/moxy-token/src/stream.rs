@@ -253,7 +253,7 @@ fn push_doc_attr(tokens: &mut Vec<TokenTree>, inner: bool, text: &str, span: Spa
     }
 
     let mut body = TokenStream::new();
-    body.extend_one(crate::TokenTree::Ident(Ident::new("doc", span)));
+    body.extend_one(crate::TokenTree::Ident(Ident::new("doc").with_span(span)));
     body.extend_one(crate::TokenTree::Punct(Punctuation::Eq(Eq::new(span))));
     body.extend_one(crate::TokenTree::Literal(Literal::string(text)));
 

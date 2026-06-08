@@ -881,13 +881,13 @@ mod tests {
         let mut p: Punctuated<Ident, Comma> = Punctuated::new();
         assert!(p.is_empty());
         assert_eq!(p.len(), 0);
-        p.push_value(Ident::new("a", Span::default()));
+        p.push_value(Ident::new("a"));
         assert_eq!(p.len(), 1);
         assert!(!p.is_trailing());
         p.push_punct(Comma::default());
         assert_eq!(p.len(), 1);
         assert!(p.is_trailing());
-        p.push_value(Ident::new("b", Span::default()));
+        p.push_value(Ident::new("b"));
         assert_eq!(p.len(), 2);
         assert!(!p.is_trailing());
     }
@@ -916,9 +916,9 @@ mod tests {
     #[test]
     fn pop_and_pop_punct() {
         let mut p: Punctuated<Ident, Comma> = Punctuated::new();
-        p.push_value(Ident::new("a", Span::default()));
+        p.push_value(Ident::new("a"));
         p.push_punct(Comma::default());
-        p.push_value(Ident::new("b", Span::default()));
+        p.push_value(Ident::new("b"));
 
         // pop trailing value
         let last = p.pop().unwrap();

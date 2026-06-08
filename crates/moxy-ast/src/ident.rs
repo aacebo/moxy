@@ -47,7 +47,7 @@ impl ToTokens for Ident {
             self.text.clone()
         };
 
-        moxy_token::Ident::new(&name, self.span).to_tokens(tokens);
+        moxy_token::Ident::new(&name).with_span(self.span).to_tokens(tokens);
     }
 }
 

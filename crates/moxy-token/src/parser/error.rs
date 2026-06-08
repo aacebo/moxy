@@ -36,7 +36,7 @@ impl ParseError {
     }
 
     pub fn to_compile_error(&self) -> TokenStream {
-        let ident = Ident::new("compile_error", self.span);
+        let ident = Ident::new("compile_error").with_span(self.span);
         let bang = Not::new(self.span);
         let mut lit = Literal::string(&self.to_string());
 

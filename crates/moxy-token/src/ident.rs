@@ -20,11 +20,16 @@ pub struct Ident {
 
 impl Ident {
     #[inline]
-    pub fn new(text: impl std::fmt::Display, span: Span) -> Self {
+    pub fn new(text: impl std::fmt::Display) -> Self {
         Self {
             text: text.to_string().into_boxed_str(),
-            span,
+            span: Span::default(),
         }
+    }
+
+    pub fn with_span(mut self, span: Span) -> Self {
+        self.span = span;
+        self
     }
 
     #[inline]
@@ -79,7 +84,7 @@ impl Scan for Ident {
 
             let span = cursor.span_to(&end);
             let name = &cursor.rest()[..end.offset() as usize - cursor.offset() as usize];
-            return Ok((end, Self::new(name, span)));
+            return Ok((end, Self::new(name).with_span(span)));
         }
 
         let first = cursor.first().ok_or(cursor.error())?;
@@ -91,7 +96,7 @@ impl Scan for Ident {
         let end = cursor.advance(first.len_utf8()).skip_while(unicode_ident::is_xid_continue);
         let span = cursor.span_to(&end);
         let text = &cursor.rest()[..end.offset() as usize - cursor.offset() as usize];
-        Ok((end, Self::new(text, span)))
+        Ok((end, Self::new(text).with_span(span)))
     }
 }
 
