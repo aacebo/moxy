@@ -17,6 +17,11 @@ impl Ident {
     }
 
     #[inline]
+    pub fn lex(input: impl std::fmt::Display) -> Result<Self, LexError> {
+        std::str::FromStr::from_str(&input.to_string())
+    }
+
+    #[inline]
     pub fn name(&self) -> Cow<'_, str> {
         Cow::Borrowed(self.name.as_ref())
     }
@@ -108,6 +113,16 @@ impl crate::Parse for Ident {
     }
 }
 
+impl std::str::FromStr for Ident {
+    type Err = LexError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let cursor = Cursor::new(s, 0);
+        let (_, ident) = Self::scan(cursor)?;
+        Ok(ident)
+    }
+}
+
 #[cfg(feature = "serde")]
 impl serde::Serialize for Ident {
     fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
@@ -115,6 +130,18 @@ impl serde::Serialize for Ident {
         S: serde::Serializer,
     {
         self.name.serialize(s)
+    }
+}
+
+impl PartialEq<str> for Ident {
+    fn eq(&self, other: &str) -> bool {
+        self.name.as_ref() == other
+    }
+}
+
+impl PartialEq<&str> for Ident {
+    fn eq(&self, other: &&str) -> bool {
+        self.name.as_ref() == *other
     }
 }
 
