@@ -2,6 +2,16 @@ use super::{ToTokens, TokenStream};
 use crate::lex::{Cursor, LexError, Scan};
 use crate::{Span, Token, TokenTree};
 
+#[macro_export]
+macro_rules! ident {
+    ($fmt:expr) => {{
+        $crate::Ident::lex($fmt).expect("invalid syntax")
+    }};
+    ($fmt:expr, $($token:tt)*) => {{
+        $crate::Ident::lex(format!($fmt, $($token)*)).expect("invalid syntax")
+    }};
+}
+
 #[derive(Debug, Clone)]
 pub struct Ident {
     text: Box<str>,
@@ -156,24 +166,20 @@ impl PartialEq<&str> for Ident {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
-    use super::*;
-
     #[test]
     fn text_plain() {
-        let id = Ident::from_str("foo").unwrap();
-        assert_eq!(id.text(), "foo");
+        let id = ident!("foo");
+        assert_eq!(id, "foo");
         assert!(!id.is_raw());
-        assert_eq!(id.text(), "foo");
+        assert_eq!(id, "foo");
     }
 
     #[test]
     fn text_raw() {
-        let id = Ident::from_str("r#fn").unwrap();
+        let id = ident!("r#fn");
         assert_eq!(id.text(), "fn");
         assert!(id.is_raw());
-        assert_eq!(id.to_string(), "r#fn");
+        assert_eq!(id, "r#fn");
     }
 
     #[cfg(feature = "serde")]
