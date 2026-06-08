@@ -1,6 +1,6 @@
 use super::{ParseError, Peek};
 use crate::span::{DelimSpan, fallback};
-use crate::{Delim, LexError, Parse, Span, Token, TokenStream, TokenTree};
+use crate::{Delim, LexError, Parse, Span, TokenStream, TokenTree};
 
 /// Split a span at `head_len` characters from its start, returning
 /// `(head_span, rest_span)`. Only `Fallback` spans carry offsets we can split;
@@ -186,10 +186,8 @@ impl<'a> ParseStream<'a> {
     /// split token. Returns the span for the consumed head punct, or `None` if
     /// the next token isn't a punct starting with `head`.
     pub fn eat_punct_head(&mut self, head: &str) -> Option<Span> {
-        use crate::Punctuation;
-
         let punct = match self.curr() {
-            Some(TokenTree::Token(Token::Punct(p))) => *p,
+            Some(TokenTree::Punct(p)) => *p,
             _ => return None,
         };
 
@@ -214,7 +212,7 @@ impl<'a> ParseStream<'a> {
         remainder.set_span(rest_span);
 
         self.advance();
-        self.pending = Some(Punctuation::into_token_tree(remainder));
+        self.pending = Some(TokenTree::Punct(remainder));
         Some(head_span)
     }
 
@@ -265,7 +263,7 @@ impl<'a> ParseStream<'a> {
 
 #[cfg(test)]
 mod tests {
-    use crate::{Ident, Token, TokenStream, TokenTree};
+    use crate::{Ident, TokenStream, TokenTree};
 
     #[test]
     fn empty_stream() {
@@ -279,9 +277,9 @@ mod tests {
         let stream = "a + b".parse::<TokenStream>().unwrap();
         let mut ps = stream.parse();
 
-        assert!(matches!(ps.advance().unwrap(), TokenTree::Token(Token::Ident(_))));
-        assert!(matches!(ps.advance().unwrap(), TokenTree::Token(Token::Punct(_))));
-        assert!(matches!(ps.advance().unwrap(), TokenTree::Token(Token::Ident(_))));
+        assert!(matches!(ps.advance().unwrap(), TokenTree::Ident(_)));
+        assert!(matches!(ps.advance().unwrap(), TokenTree::Punct(_)));
+        assert!(matches!(ps.advance().unwrap(), TokenTree::Ident(_)));
         assert!(ps.is_empty());
     }
 
@@ -332,7 +330,7 @@ mod tests {
         if let TokenTree::Group(g) = group {
             let tokens = g.stream();
             let mut inner = tokens.parse();
-            debug_assert!(matches!(inner.advance().unwrap(), TokenTree::Token(Token::Ident(_)))); // "a"
+            debug_assert!(matches!(inner.advance().unwrap(), TokenTree::Ident(_))); // "a"
         }
     }
 }

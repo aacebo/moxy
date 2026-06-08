@@ -136,7 +136,7 @@ impl From<ExprTryBlock> for BlockExpr {
 
 impl Label {
     pub fn parse_opt_break(stream: &mut ParseStream) -> Option<Self> {
-        if !matches!(stream.curr(), Some(TokenTree::Token(Token::Punct(Punctuation::Quote(_))))) {
+        if !matches!(stream.curr(), Some(TokenTree::Punct(Punctuation::Quote(_)))) {
             return None;
         }
 

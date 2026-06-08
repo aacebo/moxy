@@ -30,7 +30,7 @@ impl ExprLit {
 
     /// Returns `true` when the given token tree is a literal token.
     pub fn is_literal(tt: &TokenTree) -> bool {
-        matches!(tt, TokenTree::Token(Token::Literal(_)))
+        matches!(tt, TokenTree::Literal(_))
     }
 }
 

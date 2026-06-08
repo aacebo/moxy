@@ -15,7 +15,7 @@ impl Parse for Abi {
         let extern_keyword = stream.parse::<Extern>()?;
 
         let name = match stream.curr() {
-            Some(TokenTree::Token(Token::Literal(lit))) if lit.repr().starts_with('"') => {
+            Some(TokenTree::Literal(lit)) if lit.repr().starts_with('"') => {
                 let repr = lit.repr().to_string();
                 stream.advance();
                 Some(repr.trim_matches('"').to_string())

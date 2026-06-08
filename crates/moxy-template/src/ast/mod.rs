@@ -4,7 +4,7 @@ mod tmpl_tokens;
 
 pub use keyword::TmplKeyword;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, LexError, Parse, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, LexError, Parse, Punctuation, Span, ToTokens, TokenStream, TokenTree};
 pub use tmpl_interp::*;
 pub use tmpl_tokens::*;
 
@@ -51,7 +51,7 @@ pub enum Node {
 impl Parse for Node {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         match stream.curr() {
-            Some(TokenTree::Token(Token::Punct(Punctuation::At(_)))) => Ok(Node::Keyword(stream.parse::<TmplKeyword>()?)),
+            Some(TokenTree::Punct(Punctuation::At(_))) => Ok(Node::Keyword(stream.parse::<TmplKeyword>()?)),
             Some(TokenTree::Group(g)) if g.delim() == Delim::Brace => {
                 let inner = g.stream();
                 if matches!(inner.get(0), Some(TokenTree::Group(ig)) if ig.delim() == Delim::Brace) {
@@ -83,7 +83,7 @@ fn collect_tokens(stream: &mut ParseStream) -> Result<Node, ParseError> {
     loop {
         match stream.curr() {
             None => break,
-            Some(TokenTree::Token(Token::Punct(Punctuation::At(_)))) => break,
+            Some(TokenTree::Punct(Punctuation::At(_))) => break,
             Some(TokenTree::Group(g)) if g.delim() == Delim::Brace => {
                 let inner = g.stream();
                 if matches!(inner.get(0), Some(TokenTree::Group(ig)) if ig.delim() == Delim::Brace) {

@@ -29,10 +29,8 @@ impl Parse for TypePointer {
 
         // A raw pointer requires an explicit `const` or `mut` after the `*`.
         let mutability = match stream.advance() {
-            Some(TokenTree::Token(Token::Keyword(kw))) if kw.as_str() == "mut" => PointerMutability::Mut(Mut::new(kw.span())),
-            Some(TokenTree::Token(Token::Keyword(kw))) if kw.as_str() == "const" => {
-                PointerMutability::Const(Const::new(kw.span()))
-            }
+            Some(TokenTree::Keyword(kw)) if kw.as_str() == "mut" => PointerMutability::Mut(Mut::new(kw.span())),
+            Some(TokenTree::Keyword(kw)) if kw.as_str() == "const" => PointerMutability::Const(Const::new(kw.span())),
             _ => {
                 return Err(LexError::new(at).message("expected `const` or `mut` after `*`").into());
             }

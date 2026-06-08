@@ -18,13 +18,13 @@ mod ident;
 pub mod keyword;
 pub mod lex;
 mod literal;
-mod macros;
 pub mod parser;
 pub mod punct;
 pub mod source;
 mod spacing;
 pub mod span;
 mod stream;
+mod token_tree;
 
 #[doc(inline)]
 pub use delim::*;
@@ -48,6 +48,8 @@ pub use spacing::*;
 pub use span::{Span, Spanner};
 #[doc(inline)]
 pub use stream::*;
+#[doc(inline)]
+pub use token_tree::*;
 
 pub trait ToTokens<T = TokenStream> {
     fn to_tokens(&self, tokens: &mut T);
@@ -92,330 +94,111 @@ impl<T: ToTokens> ToTokens for Vec<T> {
     }
 }
 
-#[derive(Debug, Clone)]
-pub enum Token {
-    Ident(Ident),
-    Keyword(Keyword),
-    Punct(Punctuation),
-    Literal(Literal),
-}
+/// Map a Rust punctuation or keyword symbol to its [`crate`] token type.
+#[macro_export]
+macro_rules! Token {
+    // --- punctuation: single char ---
+    [&]     => { $crate::And };
+    [|]     => { $crate::Or };
+    [!]     => { $crate::Not };
+    [~]     => { $crate::Tilde };
+    [+]     => { $crate::Plus };
+    [-]     => { $crate::Minus };
+    [*]     => { $crate::Star };
+    [/]     => { $crate::Slash };
+    [%]     => { $crate::Percent };
+    [^]     => { $crate::Caret };
+    [=]     => { $crate::Eq };
+    [<]     => { $crate::Lt };
+    [>]     => { $crate::Gt };
+    [@]     => { $crate::At };
+    [.]     => { $crate::Dot };
+    [,]     => { $crate::Comma };
+    [;]     => { $crate::Semi };
+    [:]     => { $crate::Colon };
+    [#]     => { $crate::Pound };
+    [?]     => { $crate::Question };
 
-impl Token {
-    pub fn span(&self) -> Span {
-        match self {
-            Self::Ident(v) => v.span(),
-            Self::Keyword(v) => v.span(),
-            Self::Punct(v) => v.span(),
-            Self::Literal(v) => v.span(),
-        }
-    }
+    // --- punctuation: multi char ---
+    [&&]    => { $crate::AndAnd };
+    [||]    => { $crate::OrOr };
+    [<<]    => { $crate::Shl };
+    [>>]    => { $crate::Shr };
+    [==]    => { $crate::EqEq };
+    [!=]    => { $crate::Ne };
+    [<=]    => { $crate::Le };
+    [>=]    => { $crate::Ge };
+    [&=]    => { $crate::AndEq };
+    [|=]    => { $crate::OrEq };
+    [+=]    => { $crate::PlusEq };
+    [-=]    => { $crate::MinusEq };
+    [*=]    => { $crate::StarEq };
+    [/=]    => { $crate::SlashEq };
+    [%=]    => { $crate::PercentEq };
+    [^=]    => { $crate::CaretEq };
+    [=>]    => { $crate::FatArrow };
+    [->]    => { $crate::RArrow };
+    [<-]    => { $crate::LArrow };
+    [::]    => { $crate::PathSep };
+    [..]    => { $crate::DotDot };
+    [<<=]   => { $crate::ShlEq };
+    [>>=]   => { $crate::ShrEq };
+    [...]   => { $crate::DotDotDot };
+    [..=]   => { $crate::DotDotEq };
 
-    pub fn text(&self) -> Option<&str> {
-        match self {
-            Self::Ident(v) => Some(v.text()),
-            Self::Keyword(v) => Some(v.as_str()),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    pub fn is_ident(&self) -> bool {
-        matches!(self, Self::Ident(_))
-    }
-
-    #[inline]
-    pub fn as_ident(&self) -> Option<&Ident> {
-        match self {
-            Self::Ident(v) => Some(v),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    pub fn is_literal(&self) -> bool {
-        matches!(self, Self::Literal(_))
-    }
-
-    #[inline]
-    pub fn as_literal(&self) -> Option<&Literal> {
-        match self {
-            Self::Literal(v) => Some(v),
-            _ => None,
-        }
-    }
-
-    #[inline]
-    pub fn to_token_tree(&self) -> TokenTree {
-        TokenTree::Token(self.clone())
-    }
-
-    #[inline]
-    pub fn into_token_tree(self) -> TokenTree {
-        TokenTree::Token(self)
-    }
-}
-
-impl From<Ident> for Token {
-    #[inline]
-    fn from(value: Ident) -> Self {
-        Self::Ident(value)
-    }
-}
-
-impl From<Keyword> for Token {
-    #[inline]
-    fn from(value: Keyword) -> Self {
-        Self::Keyword(value)
-    }
-}
-
-impl From<Punctuation> for Token {
-    #[inline]
-    fn from(value: Punctuation) -> Self {
-        Self::Punct(value)
-    }
-}
-
-impl From<Literal> for Token {
-    #[inline]
-    fn from(value: Literal) -> Self {
-        Self::Literal(value)
-    }
-}
-
-impl std::fmt::Display for Token {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Ident(v) => write!(f, "{}", v),
-            Self::Keyword(v) => write!(f, "{}", v),
-            Self::Punct(v) => write!(f, "{}", v),
-            Self::Literal(v) => write!(f, "{}", v),
-        }
-    }
-}
-
-impl ToTokens for Token {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        tokens.extend_one(TokenTree::from(self.clone()));
-    }
-}
-
-impl Spanner for Token {
-    fn span(&self) -> Span {
-        self.span()
-    }
-}
-
-#[cfg(feature = "serde")]
-impl serde::Serialize for Token {
-    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        match self {
-            Self::Ident(v) => v.serialize(s),
-            Self::Keyword(v) => v.serialize(s),
-            Self::Punct(v) => v.serialize(s),
-            Self::Literal(v) => v.serialize(s),
-        }
-    }
-}
-
-#[derive(Debug, Clone)]
-pub enum TokenTree {
-    Token(Token),
-    Group(Group),
-}
-
-impl TokenTree {
-    pub fn span(&self) -> Span {
-        match self {
-            Self::Token(v) => v.span(),
-            Self::Group(v) => v.span().into(),
-        }
-    }
-
-    pub fn text(&self) -> Option<&str> {
-        match self {
-            Self::Token(t) => t.text(),
-            Self::Group(_) => None,
-        }
-    }
-
-    pub fn delim(&self) -> Option<Delim> {
-        match self {
-            Self::Group(g) => Some(g.delim()),
-            Self::Token(_) => None,
-        }
-    }
-
-    pub fn is_token(&self) -> bool {
-        matches!(self, Self::Token(_))
-    }
-
-    pub fn as_token(&self) -> Option<&Token> {
-        match self {
-            Self::Token(v) => Some(v),
-            _ => None,
-        }
-    }
-
-    pub fn is_group(&self) -> bool {
-        matches!(self, Self::Group(_))
-    }
-
-    pub fn as_group(&self) -> Option<&Group> {
-        match self {
-            Self::Group(v) => Some(v),
-            _ => None,
-        }
-    }
-
-    pub fn is_ident(&self) -> bool {
-        matches!(self, Self::Token(Token::Ident(_)))
-    }
-
-    pub fn as_ident(&self) -> Option<&Ident> {
-        match self {
-            Self::Token(Token::Ident(v)) => Some(v),
-            _ => None,
-        }
-    }
-
-    pub fn is_literal(&self) -> bool {
-        matches!(self, Self::Token(Token::Literal(_)))
-    }
-
-    pub fn as_literal(&self) -> Option<&Literal> {
-        match self {
-            Self::Token(Token::Literal(v)) => Some(v),
-            _ => None,
-        }
-    }
-}
-
-impl From<Token> for TokenTree {
-    #[inline]
-    fn from(value: Token) -> Self {
-        Self::Token(value)
-    }
-}
-
-impl From<Ident> for TokenTree {
-    #[inline]
-    fn from(value: Ident) -> Self {
-        Self::Token(Token::from(value))
-    }
-}
-
-impl From<Keyword> for TokenTree {
-    #[inline]
-    fn from(value: Keyword) -> Self {
-        Self::Token(Token::from(value))
-    }
-}
-
-impl From<Punctuation> for TokenTree {
-    #[inline]
-    fn from(value: Punctuation) -> Self {
-        Self::Token(Token::from(value))
-    }
-}
-
-impl From<Literal> for TokenTree {
-    #[inline]
-    fn from(value: Literal) -> Self {
-        Self::Token(Token::from(value))
-    }
-}
-
-impl From<Group> for TokenTree {
-    #[inline]
-    fn from(value: Group) -> Self {
-        Self::Group(value)
-    }
-}
-
-impl IntoIterator for TokenTree {
-    type Item = TokenTree;
-    type IntoIter = std::iter::Once<TokenTree>;
-
-    fn into_iter(self) -> Self::IntoIter {
-        std::iter::once(self)
-    }
-}
-
-impl std::fmt::Display for TokenTree {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Token(v) => write!(f, "{}", v),
-            Self::Group(v) => write!(f, "{}", v),
-        }
-    }
-}
-
-impl ToTokens for TokenTree {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        tokens.extend_one(self.clone());
-    }
-}
-
-impl Spanner for TokenTree {
-    fn span(&self) -> Span {
-        self.span()
-    }
-}
-
-impl ToTokens for &str {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        use std::str::FromStr;
-
-        if let Ok(ts) = TokenStream::from_str(self) {
-            ts.to_tokens(tokens);
-        }
-    }
-}
-
-#[cfg(feature = "serde")]
-impl serde::Serialize for TokenTree {
-    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        match self {
-            Self::Token(v) => v.serialize(s),
-            Self::Group(v) => v.serialize(s),
-        }
-    }
-}
-
-/// Lex a run of consecutive `proc_macro` punctuation chars into moxy
-/// [`Punctuation`] tokens, preserving each token's real compiler span.
-///
-/// `proc_macro` emits multi-char operators (`=>`, `::`, `&&`) as single-char
-/// puncts; moxy models them as one variant. We longest-match against the run's
-/// text (reusing `<Punctuation as Scan>`) and retag each matched variant with
-/// the joined spans of the chars it consumed.
-fn scan_puncts_spanned(run: &[(char, Span)], tokens: &mut TokenStream) {
-    use crate::lex::{Cursor, Scan};
-
-    let text: String = run.iter().map(|(c, _)| *c).collect();
-    let mut cursor = Cursor::new(&text, 0);
-    let mut idx = 0usize;
-
-    while !cursor.is_empty() {
-        match <Punctuation as Scan>::scan(cursor) {
-            Ok((next, mut op)) => {
-                let consumed = op.as_str().chars().count();
-                let span = run[idx].1.join(run[idx + consumed - 1].1);
-                op.set_span(span);
-                tokens.extend_one(Token::Punct(op).into());
-                idx += consumed;
-                cursor = next;
-            }
-            Err(_) => break,
-        }
-    }
+    // --- keywords ---
+    [as]          => { $crate::As };
+    [async]       => { $crate::Async };
+    [auto]        => { $crate::Auto };
+    [await]       => { $crate::Await };
+    [become]      => { $crate::Become };
+    [box]         => { $crate::Box };
+    [break]       => { $crate::Break };
+    [const]       => { $crate::Const };
+    [continue]    => { $crate::Continue };
+    [crate]       => { $crate::Crate };
+    [default]     => { $crate::Default };
+    [do]          => { $crate::Do };
+    [dyn]         => { $crate::Dyn };
+    [else]        => { $crate::Else };
+    [enum]        => { $crate::Enum };
+    [extern]      => { $crate::Extern };
+    [final]       => { $crate::Final };
+    [fn]          => { $crate::Fn };
+    [for]         => { $crate::For };
+    [if]          => { $crate::If };
+    [impl]        => { $crate::Impl };
+    [in]          => { $crate::In };
+    [let]         => { $crate::Let };
+    [loop]        => { $crate::Loop };
+    [macro]       => { $crate::Macro };
+    [match]       => { $crate::Match };
+    [mod]         => { $crate::Mod };
+    [move]        => { $crate::Move };
+    [mut]         => { $crate::Mut };
+    [override]    => { $crate::Override };
+    [priv]        => { $crate::Priv };
+    [pub]         => { $crate::Pub };
+    [raw]         => { $crate::Raw };
+    [ref]         => { $crate::Ref };
+    [return]      => { $crate::Return };
+    [Self]        => { $crate::SelfType };
+    [self]        => { $crate::SelfValue };
+    [static]      => { $crate::Static };
+    [struct]      => { $crate::Struct };
+    [super]       => { $crate::Super };
+    [trait]       => { $crate::Trait };
+    [try]         => { $crate::Try };
+    [type]        => { $crate::Type };
+    [typeof]      => { $crate::Typeof };
+    [union]       => { $crate::Union };
+    [unsafe]      => { $crate::Unsafe };
+    [unsized]     => { $crate::Unsized };
+    [use]         => { $crate::Use };
+    [virtual]     => { $crate::Virtual };
+    [where]       => { $crate::Where };
+    [while]       => { $crate::While };
+    [yield]       => { $crate::Yield };
 }
 
 #[cfg(test)]
@@ -474,8 +257,8 @@ mod tests {
     #[test]
     fn op_is_a_token() {
         use crate::punct::Plus;
-        let t: Token = Punctuation::from(Plus::default()).into();
-        assert!(matches!(t, Token::Punct(Punctuation::Plus(_))));
+        let t: TokenTree = Punctuation::from(Plus::default()).into();
+        assert!(matches!(t, TokenTree::Punct(Punctuation::Plus(_))));
     }
 
     // --- Literal ---
@@ -533,24 +316,24 @@ mod tests {
         assert!(!ts.is_empty());
     }
 
-    // --- Token enum ---
+    // --- TokenTree ---
 
     #[test]
     fn token_from_ident() {
-        let t: Token = Ident::new("foo", Span::default()).into();
-        assert!(matches!(t, Token::Ident(_)));
+        let t: TokenTree = Ident::new("foo", Span::default()).into();
+        assert!(matches!(t, TokenTree::Ident(_)));
     }
 
     #[test]
     fn token_from_punct() {
-        let t: Token = Punctuation::from(crate::punct::Plus::default()).into();
-        assert!(matches!(t, Token::Punct(_)));
+        let t: TokenTree = Punctuation::from(crate::punct::Plus::default()).into();
+        assert!(matches!(t, TokenTree::Punct(_)));
     }
 
     #[test]
     fn token_from_literal() {
-        let t: Token = Literal::string("x").into();
-        assert!(matches!(t, Token::Literal(_)));
+        let t: TokenTree = Literal::string("x").into();
+        assert!(matches!(t, TokenTree::Literal(_)));
     }
 
     #[test]
@@ -561,13 +344,13 @@ mod tests {
 
     #[test]
     fn token_span() {
-        let t: Token = Ident::new("x", span(3, 4)).into();
+        let t: TokenTree = Ident::new("x", span(3, 4)).into();
         assert_eq!(t.span().start().index(), 3);
     }
 
     #[test]
     fn token_display() {
-        let t: Token = Ident::new("hello", Span::default()).into();
+        let t: TokenTree = Ident::new("hello", Span::default()).into();
         assert_eq!(format!("{}", t), "hello");
     }
 
@@ -575,26 +358,24 @@ mod tests {
 
     fn puncts(run: &[(char, Span)]) -> TokenStream {
         let mut ts = TokenStream::new();
-        scan_puncts_spanned(run, &mut ts);
+        crate::token_tree::scan_puncts_spanned(run, &mut ts);
         ts
     }
 
     #[test]
     fn punct_run_longest_match() {
-        // `=>` is one FatArrow, not `=` + `>`.
         let ts = puncts(&[('=', span(0, 1)), ('>', span(1, 2))]);
         let trees: Vec<_> = ts.iter().cloned().collect();
         assert_eq!(trees.len(), 1);
-        assert!(matches!(trees[0], TokenTree::Token(Token::Punct(Punctuation::FatArrow(_)))));
+        assert!(matches!(trees[0], TokenTree::Punct(Punctuation::FatArrow(_))));
     }
 
     #[test]
     fn punct_run_preserves_span() {
-        // The matched variant carries the joined span of the chars it consumed.
         let ts = puncts(&[(':', span(4, 5)), (':', span(5, 6))]);
         let trees: Vec<_> = ts.iter().cloned().collect();
         assert_eq!(trees.len(), 1);
-        let TokenTree::Token(Token::Punct(p)) = &trees[0] else {
+        let TokenTree::Punct(p) = &trees[0] else {
             panic!("expected punct")
         };
         assert!(matches!(p, Punctuation::PathSep(_)));
@@ -604,12 +385,43 @@ mod tests {
 
     #[test]
     fn punct_run_splits_multiple() {
-        // `,;` is two separate single-char puncts, each keeping its own span.
         let ts = puncts(&[(',', span(0, 1)), (';', span(1, 2))]);
         let trees: Vec<_> = ts.iter().cloned().collect();
         assert_eq!(trees.len(), 2);
-        assert!(matches!(trees[0], TokenTree::Token(Token::Punct(Punctuation::Comma(_)))));
-        assert!(matches!(trees[1], TokenTree::Token(Token::Punct(Punctuation::Semi(_)))));
+        assert!(matches!(trees[0], TokenTree::Punct(Punctuation::Comma(_))));
+        assert!(matches!(trees[1], TokenTree::Punct(Punctuation::Semi(_))));
+    }
+
+    // --- Token! macro ---
+
+    fn render<T: ToTokens>(tok: T) -> String {
+        let mut ts = TokenStream::new();
+        tok.to_tokens(&mut ts);
+        ts.to_string()
+    }
+
+    #[test]
+    fn punct_single() {
+        assert_eq!(render(<Token![&]>::new(Span::call_site())), "&");
+        assert_eq!(render(<Token![,]>::new(Span::call_site())), ",");
+    }
+
+    #[test]
+    fn punct_multi() {
+        assert_eq!(render(<Token![=>]>::new(Span::call_site())), "=>");
+        assert_eq!(render(<Token![::]>::new(Span::call_site())), "::");
+    }
+
+    #[test]
+    fn keyword() {
+        assert_eq!(render(<Token![for]>::new(Span::call_site())), "for");
+        assert_eq!(render(<Token![match]>::default()), "match");
+    }
+
+    #[test]
+    fn resolves_to_type() {
+        let _: Token![=>] = crate::FatArrow::default();
+        let _: Token![for] = crate::For::default();
     }
 
     #[cfg(feature = "serde")]

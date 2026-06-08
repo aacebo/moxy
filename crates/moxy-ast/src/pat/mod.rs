@@ -373,7 +373,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     }
 
     // Literal pattern
-    if matches!(stream.curr(), Some(tt) if matches!(tt, TokenTree::Token(Token::Literal(_)))) {
+    if matches!(stream.curr(), Some(tt) if matches!(tt, TokenTree::Literal(_))) {
         let expr = stream.parse::<Expr>()?;
         return Ok(Pattern::Lit(PatLit { attrs, expr }));
     }
@@ -381,11 +381,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     // Path-led: ident binding, path, tuple-struct, or struct pattern.
     if matches!(
         stream.curr(),
-        Some(
-            TokenTree::Token(Token::Ident(_))
-                | TokenTree::Token(Token::Keyword(_))
-                | TokenTree::Token(Token::Punct(Punctuation::PathSep(_)))
-        )
+        Some(TokenTree::Ident(_) | TokenTree::Keyword(_) | TokenTree::Punct(Punctuation::PathSep(_)))
     ) {
         // Single bare ident with no `::`/`(`/`{` → binding.
         let mut fork = stream.fork();

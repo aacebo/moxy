@@ -1,6 +1,6 @@
 use super::{ToTokens, TokenStream};
 use crate::lex::{Cursor, LexError, Scan};
-use crate::{Span, Token, TokenTree};
+use crate::{Span, TokenTree};
 
 #[macro_export]
 macro_rules! ident {
@@ -56,23 +56,13 @@ impl Ident {
     }
 
     #[inline]
-    pub fn to_token(&self) -> Token {
-        Token::Ident(self.clone())
-    }
-
-    #[inline]
-    pub fn into_token(self) -> Token {
-        Token::Ident(self)
-    }
-
-    #[inline]
     pub fn to_token_tree(&self) -> TokenTree {
-        TokenTree::Token(self.to_token())
+        TokenTree::Ident(self.clone())
     }
 
     #[inline]
     pub fn into_token_tree(self) -> TokenTree {
-        TokenTree::Token(self.into_token())
+        TokenTree::Ident(self)
     }
 }
 
@@ -113,7 +103,7 @@ impl std::fmt::Display for Ident {
 
 impl ToTokens for Ident {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        tokens.extend_one(crate::Token::Ident(self.clone()).into());
+        tokens.extend_one(TokenTree::Ident(self.clone()));
     }
 }
 
@@ -126,7 +116,7 @@ impl crate::Spanner for Ident {
 impl crate::Parse for Ident {
     fn parse(stream: &mut crate::parser::ParseStream) -> Result<Self, crate::parser::ParseError> {
         match stream.advance() {
-            Some(crate::TokenTree::Token(crate::Token::Ident(v))) => Ok(v.clone()),
+            Some(crate::TokenTree::Ident(v)) => Ok(v.clone()),
             _ => Err(crate::lex::LexError::new(stream.span()).message("expected Ident").into()),
         }
     }

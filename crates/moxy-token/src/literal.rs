@@ -1,5 +1,5 @@
 use crate::lex::{Cursor, LexError};
-use crate::{Span, Token, TokenTree};
+use crate::{Span, TokenTree};
 
 #[derive(Debug, Clone)]
 pub struct Literal {
@@ -81,23 +81,13 @@ impl Literal {
     }
 
     #[inline]
-    pub fn to_token(&self) -> Token {
-        Token::Literal(self.clone())
-    }
-
-    #[inline]
-    pub fn into_token(self) -> Token {
-        Token::Literal(self)
-    }
-
-    #[inline]
     pub fn to_token_tree(&self) -> TokenTree {
-        TokenTree::Token(self.to_token())
+        TokenTree::Literal(self.clone())
     }
 
     #[inline]
     pub fn into_token_tree(self) -> TokenTree {
-        TokenTree::Token(self.into_token())
+        TokenTree::Literal(self)
     }
 }
 
@@ -135,14 +125,14 @@ impl crate::lex::Scan for Literal {
 
 impl crate::ToTokens for Literal {
     fn to_tokens(&self, tokens: &mut crate::TokenStream) {
-        tokens.extend_one(crate::Token::Literal(self.clone()).into());
+        tokens.extend_one(crate::TokenTree::Literal(self.clone()));
     }
 }
 
 impl crate::Parse for Literal {
     fn parse(stream: &mut crate::parser::ParseStream) -> Result<Self, crate::parser::ParseError> {
         match stream.advance() {
-            Some(crate::TokenTree::Token(crate::Token::Literal(v))) => Ok(v.clone()),
+            Some(crate::TokenTree::Literal(v)) => Ok(v.clone()),
             _ => Err(crate::lex::LexError::new(stream.span()).message("expected Literal").into()),
         }
     }

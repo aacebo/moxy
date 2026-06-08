@@ -1,7 +1,7 @@
 use super::ToTokens;
 use super::lex::{Cursor, LexError, Scan};
 use crate::parser::{ParseError, ParseStream};
-use crate::{Parse, Span, Spanner, Token, TokenStream, TokenTree};
+use crate::{Parse, Span, Spanner, TokenStream, TokenTree};
 
 macro_rules! define_keyword {
     ($($name:ident[$is_method:ident, $as_method:ident] => $text:literal),+ $(,)?) => {
@@ -41,23 +41,13 @@ macro_rules! define_keyword {
             }
 
             #[inline]
-            pub fn to_token(&self) -> Token {
-                Token::Keyword(self.clone())
-            }
-
-            #[inline]
-            pub fn into_token(self) -> Token {
-                Token::Keyword(self)
-            }
-
-            #[inline]
             pub fn to_token_tree(&self) -> TokenTree {
-                TokenTree::Token(self.to_token())
+                TokenTree::Keyword(self.clone())
             }
 
             #[inline]
             pub fn into_token_tree(self) -> TokenTree {
-                TokenTree::Token(self.into_token())
+                TokenTree::Keyword(self)
             }
         }
 
@@ -161,7 +151,7 @@ macro_rules! define_keyword {
                     let at = stream.span();
 
                     match stream.advance() {
-                        Some(TokenTree::Token(Token::Keyword(Keyword::$name(kw)))) => {
+                        Some(TokenTree::Keyword(Keyword::$name(kw))) => {
                             Ok(Self::new(kw.span()))
                         }
                         _ => Err(LexError::new(at)
@@ -173,7 +163,7 @@ macro_rules! define_keyword {
 
             impl ToTokens for $name {
                 fn to_tokens(&self, tokens: &mut TokenStream) {
-                    tokens.extend_one(Token::Keyword(Keyword::$name(*self)).into());
+                    tokens.extend_one(TokenTree::Keyword(Keyword::$name(*self)));
                 }
             }
 
@@ -200,7 +190,7 @@ macro_rules! define_keyword {
             }
         )+
 
-        impl Token {
+        impl TokenTree {
             pub fn is_keyword(&self) -> bool {
                 matches!(self, Self::Keyword(_))
             }
@@ -222,37 +212,6 @@ macro_rules! define_keyword {
                 pub fn $as_method(&self) -> Option<&$name> {
                     match self {
                         Self::Keyword(Keyword::$name(v)) => Some(v),
-                        _ => None,
-                    }
-                }
-            )*
-        }
-
-        impl TokenTree {
-            pub fn is_keyword(&self) -> bool {
-                match self {
-                    Self::Token(v) => v.is_keyword(),
-                    _ => false,
-                }
-            }
-
-            pub fn as_keyword(&self) -> Option<&Keyword> {
-                match self {
-                    Self::Token(v) => v.as_keyword(),
-                    _ => None,
-                }
-            }
-
-            $(
-                #[doc = concat!("**", stringify!($name), "** (\"", $text, "\")")]
-                pub fn $is_method(&self) -> bool {
-                    matches!(self, Self::Token(Token::Keyword(Keyword::$name(_))))
-                }
-
-                #[doc = concat!("**", stringify!($name), "** (\"", $text, "\")")]
-                pub fn $as_method(&self) -> Option<&$name> {
-                    match self {
-                        Self::Token(Token::Keyword(Keyword::$name(v))) => Some(v),
                         _ => None,
                     }
                 }
@@ -345,13 +304,13 @@ mod tests {
         }
 
         fn assert_ident(tree: TokenTree, name: &str) {
-            let TokenTree::Token(Token::Ident(id)) = tree else {
+            let TokenTree::Ident(id) = tree else {
                 panic!("expected an ident");
             };
             assert_eq!(id.text(), name);
         }
 
-        assert!(matches!(first("fn"), TokenTree::Token(Token::Keyword(Keyword::Fn(_)))));
+        assert!(matches!(first("fn"), TokenTree::Keyword(Keyword::Fn(_))));
 
         assert_ident(first("fnord"), "fnord");
         assert_ident(first("_"), "_");

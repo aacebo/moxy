@@ -117,7 +117,7 @@ impl Parse for Lit {
         let at = stream.span();
 
         match stream.advance() {
-            Some(TokenTree::Token(Token::Literal(lit))) => {
+            Some(TokenTree::Literal(lit)) => {
                 let span = lit.span();
                 let repr = lit.repr().to_string();
 
@@ -146,7 +146,7 @@ impl Parse for Lit {
                     },
                 )
             }
-            Some(TokenTree::Token(Token::Ident(id))) if id.text() == "true" || id.text() == "false" => Ok(Lit::Bool(LitBool {
+            Some(TokenTree::Ident(id)) if id.text() == "true" || id.text() == "false" => Ok(Lit::Bool(LitBool {
                 span: id.span(),
                 value: id.text() == "true",
             })),

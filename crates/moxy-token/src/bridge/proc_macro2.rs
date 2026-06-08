@@ -1,5 +1,5 @@
 use crate::parser::ParseError;
-use crate::{Delim, Group, Ident, Keyword, Literal, Spacing, Span, ToTokens, Token, TokenStream, TokenTree};
+use crate::{Delim, Group, Ident, Keyword, Literal, Spacing, Span, ToTokens, TokenStream, TokenTree};
 
 // --- LexError ---
 
@@ -144,13 +144,13 @@ impl ToTokens<TokenStream> for proc_macro2::TokenStream {
                     match other {
                         proc_macro2::TokenTree::Ident(v) => {
                             let span: Span = v.span().into();
-                            let token = match Keyword::from_str(&v.to_string(), span) {
-                                Some(kw) => Token::Keyword(kw),
-                                None => Token::Ident(v.into()),
+                            let tt = match Keyword::from_str(&v.to_string(), span) {
+                                Some(kw) => TokenTree::Keyword(kw),
+                                None => TokenTree::Ident(v.into()),
                             };
-                            tokens.extend_one(token.into())
+                            tokens.extend_one(tt)
                         }
-                        proc_macro2::TokenTree::Literal(v) => tokens.extend_one(Token::Literal(v.into()).into()),
+                        proc_macro2::TokenTree::Literal(v) => tokens.extend_one(TokenTree::Literal(v.into())),
                         proc_macro2::TokenTree::Group(v) => tokens.extend_one(TokenTree::Group(v.into())),
                         proc_macro2::TokenTree::Punct(_) => unreachable!(),
                     }
@@ -168,13 +168,13 @@ impl ToTokens<proc_macro2::TokenStream> for TokenTree {
     fn to_tokens(&self, out: &mut proc_macro2::TokenStream) {
         match self {
             TokenTree::Group(g) => out.extend([proc_macro2::TokenTree::Group(g.clone().into())]),
-            TokenTree::Token(Token::Ident(v)) => out.extend([proc_macro2::TokenTree::Ident(v.clone().into())]),
-            TokenTree::Token(Token::Keyword(kw)) => {
+            TokenTree::Ident(v) => out.extend([proc_macro2::TokenTree::Ident(v.clone().into())]),
+            TokenTree::Keyword(kw) => {
                 let id = proc_macro2::Ident::new(kw.as_str(), proc_macro2::Span::call_site());
                 out.extend([proc_macro2::TokenTree::Ident(id)])
             }
-            TokenTree::Token(Token::Literal(v)) => out.extend([proc_macro2::TokenTree::Literal(v.clone().into())]),
-            TokenTree::Token(Token::Punct(op)) => {
+            TokenTree::Literal(v) => out.extend([proc_macro2::TokenTree::Literal(v.clone().into())]),
+            TokenTree::Punct(op) => {
                 let text = op.as_str();
                 let last = text.chars().count() - 1;
                 let joint_last = text == "'";
@@ -220,14 +220,14 @@ impl From<TokenStream> for proc_macro2::TokenStream {
 mod tests {
     use std::str::FromStr;
 
-    use crate::{Punctuation, Token, TokenStream, TokenTree};
+    use crate::{Punctuation, TokenStream, TokenTree};
 
     #[test]
     fn coalesces_joint_puncts_inbound() {
         let pm2: proc_macro2::TokenStream = "a == b".parse().unwrap();
         let ours: TokenStream = pm2.into();
         let trees: Vec<TokenTree> = ours.into_iter().collect();
-        assert!(matches!(trees[1], TokenTree::Token(Token::Punct(Punctuation::EqEq(_)))));
+        assert!(matches!(trees[1], TokenTree::Punct(Punctuation::EqEq(_))));
     }
 
     #[test]
@@ -236,22 +236,19 @@ mod tests {
         let ours: TokenStream = pm2.into();
         let trees: Vec<TokenTree> = ours.into_iter().collect();
 
-        let TokenTree::Token(Token::Ident(id)) = &trees[0] else {
+        let TokenTree::Ident(id) = &trees[0] else {
             panic!("expected ident, got {:?}", trees[0]);
         };
 
         assert_eq!(id.text(), "foo");
-        assert!(matches!(trees[1], TokenTree::Token(Token::Literal(_))));
+        assert!(matches!(trees[1], TokenTree::Literal(_)));
 
         let TokenTree::Group(g) = &trees[2] else {
             panic!("expected group, got {:?}", trees[2]);
         };
 
         assert_eq!(g.delim(), crate::Delim::Paren);
-        assert!(matches!(
-            g.stream().into_iter().next().unwrap(),
-            TokenTree::Token(Token::Ident(_))
-        ));
+        assert!(matches!(g.stream().into_iter().next().unwrap(), TokenTree::Ident(_)));
     }
 
     #[test]

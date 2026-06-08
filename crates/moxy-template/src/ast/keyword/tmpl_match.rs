@@ -53,7 +53,7 @@ impl Parse for TmplMatchArm {
         loop {
             match stream.curr() {
                 None => return Err(LexError::new(span).message("unexpected end of match arm").into()),
-                Some(TokenTree::Token(Token::Punct(Punctuation::FatArrow(_)))) => break,
+                Some(TokenTree::Punct(Punctuation::FatArrow(_))) => break,
                 _ => {
                     pat.extend_one(stream.advance().unwrap().clone());
                 }

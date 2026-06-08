@@ -154,24 +154,24 @@ impl Scan for TokenStream {
             }
 
             if let Ok((next, lit)) = crate::Literal::scan(c) {
-                tokens.push(crate::Token::Literal(lit).into());
+                tokens.push(crate::TokenTree::Literal(lit));
                 c = next;
                 continue;
             }
 
             if let Ok((next, ident)) = crate::Ident::scan(c) {
-                let token = match crate::Keyword::from_str(ident.text(), ident.span()) {
-                    Some(kw) if !ident.is_raw() => crate::Token::Keyword(kw),
-                    _ => crate::Token::Ident(ident),
+                let tt = match crate::Keyword::from_str(ident.text(), ident.span()) {
+                    Some(kw) if !ident.is_raw() => crate::TokenTree::Keyword(kw),
+                    _ => crate::TokenTree::Ident(ident),
                 };
 
-                tokens.push(token.into());
+                tokens.push(tt);
                 c = next;
                 continue;
             }
 
             if let Ok((next, op)) = <crate::Punctuation as Scan>::scan(c) {
-                tokens.push(crate::Token::Punct(op).into());
+                tokens.push(crate::TokenTree::Punct(op));
                 c = next;
                 continue;
             }
@@ -206,7 +206,7 @@ impl FromStr for TokenStream {
 
 impl std::fmt::Display for TokenStream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use crate::{Punctuation, Token};
+        use crate::Punctuation;
 
         let mut first = true;
         let mut prev_was_tick = false;
@@ -219,7 +219,7 @@ impl std::fmt::Display for TokenStream {
             write!(f, "{}", tt)?;
             first = false;
             // A `'` glues to the following token to form a lifetime (`'a`).
-            prev_was_tick = matches!(tt, TokenTree::Token(Token::Punct(Punctuation::Quote(_))));
+            prev_was_tick = matches!(tt, TokenTree::Punct(Punctuation::Quote(_)));
         }
 
         Ok(())
@@ -246,16 +246,16 @@ fn push_doc_attr(tokens: &mut Vec<TokenTree>, inner: bool, text: &str, span: Spa
     use crate::punct::{Eq, Not, Pound};
     use crate::{Delim, Group, Ident, Literal, Punctuation};
 
-    tokens.push(crate::Token::Punct(Punctuation::Pound(Pound::new(span))).into());
+    tokens.push(crate::TokenTree::Punct(Punctuation::Pound(Pound::new(span))));
 
     if inner {
-        tokens.push(crate::Token::Punct(Punctuation::Not(Not::new(span))).into());
+        tokens.push(crate::TokenTree::Punct(Punctuation::Not(Not::new(span))));
     }
 
     let mut body = TokenStream::new();
-    body.extend_one(crate::Token::Ident(Ident::new("doc", span)).into());
-    body.extend_one(crate::Token::Punct(Punctuation::Eq(Eq::new(span))).into());
-    body.extend_one(crate::Token::Literal(Literal::string(text)).into());
+    body.extend_one(crate::TokenTree::Ident(Ident::new("doc", span)));
+    body.extend_one(crate::TokenTree::Punct(Punctuation::Eq(Eq::new(span))));
+    body.extend_one(crate::TokenTree::Literal(Literal::string(text)));
 
     tokens.push(TokenTree::Group(Group::new(Delim::Bracket, body)));
 }
@@ -322,7 +322,7 @@ mod tests {
     mod lex {
         use std::str::FromStr;
 
-        use crate::{Punctuation, Token, TokenStream, TokenTree};
+        use crate::{Punctuation, TokenStream, TokenTree};
 
         fn trees(src: &str) -> Vec<TokenTree> {
             TokenStream::from_str(src).unwrap().into_iter().collect()
@@ -332,32 +332,29 @@ mod tests {
         fn doc_comment_becomes_attr() {
             // `/// x` → `# [doc = "x"]`; plain `//` is still skipped.
             let t = trees("/// hello\nfn f() {}");
-            assert!(matches!(t[0], TokenTree::Token(Token::Punct(Punctuation::Pound(_)))));
+            assert!(matches!(t[0], TokenTree::Punct(Punctuation::Pound(_))));
             assert!(matches!(t[1], TokenTree::Group(_)));
             // inner doc `//!`
             let inner = trees("//! crate doc\n");
-            assert!(matches!(inner[1], TokenTree::Token(Token::Punct(Punctuation::Not(_)))));
+            assert!(matches!(inner[1], TokenTree::Punct(Punctuation::Not(_))));
             // plain comment still skipped
             assert_eq!(trees("// plain\nx").len(), 1);
             // block doc
-            assert!(matches!(
-                trees("/** b */ x")[0],
-                TokenTree::Token(Token::Punct(Punctuation::Pound(_)))
-            ));
+            assert!(matches!(trees("/** b */ x")[0], TokenTree::Punct(Punctuation::Pound(_))));
         }
 
         #[test]
         fn lifetime_lexes_as_quote_then_ident() {
             let t = trees("&'a str");
-            assert!(matches!(t[1], TokenTree::Token(Token::Punct(Punctuation::Quote(_)))));
-            assert!(matches!(t[2], TokenTree::Token(Token::Ident(_))));
+            assert!(matches!(t[1], TokenTree::Punct(Punctuation::Quote(_))));
+            assert!(matches!(t[2], TokenTree::Ident(_)));
         }
 
         #[test]
         fn char_literal_still_lexes_as_literal() {
             let t = trees("'c'");
             assert_eq!(t.len(), 1);
-            assert!(matches!(t[0], TokenTree::Token(Token::Literal(_))));
+            assert!(matches!(t[0], TokenTree::Literal(_)));
         }
     }
 

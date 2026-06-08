@@ -1,6 +1,6 @@
 use crate::parser::ParseError;
 use crate::span::fallback;
-use crate::{Delim, Group, Ident, Keyword, Literal, Spacing, Span, ToTokens, Token, TokenStream, TokenTree};
+use crate::{Delim, Group, Ident, Keyword, Literal, Spacing, Span, ToTokens, TokenStream, TokenTree};
 
 // --- LexError ---
 
@@ -171,13 +171,13 @@ impl ToTokens<TokenStream> for proc_macro::TokenTree {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
             proc_macro::TokenTree::Ident(v) => {
-                let token = match Keyword::from_str(&v.to_string(), v.span().into()) {
-                    Some(kw) => Token::Keyword(kw),
-                    None => Token::Ident(v.clone().into()),
+                let tt = match Keyword::from_str(&v.to_string(), v.span().into()) {
+                    Some(kw) => TokenTree::Keyword(kw),
+                    None => TokenTree::Ident(v.clone().into()),
                 };
-                tokens.extend_one(token.into())
+                tokens.extend_one(tt)
             }
-            proc_macro::TokenTree::Literal(v) => tokens.extend_one(Token::Literal(v.clone().into()).into()),
+            proc_macro::TokenTree::Literal(v) => tokens.extend_one(TokenTree::Literal(v.clone().into())),
             proc_macro::TokenTree::Group(v) => tokens.extend_one(TokenTree::Group(v.clone().into())),
             proc_macro::TokenTree::Punct(p) => crate::scan_puncts_spanned(&[(p.as_char(), p.span().into())], tokens),
         }
@@ -211,13 +211,13 @@ impl ToTokens<proc_macro::TokenStream> for TokenTree {
     fn to_tokens(&self, out: &mut proc_macro::TokenStream) {
         match self {
             TokenTree::Group(g) => out.extend_one(proc_macro::TokenTree::Group(g.clone().into())),
-            TokenTree::Token(Token::Ident(v)) => out.extend_one(proc_macro::TokenTree::Ident(v.clone().into())),
-            TokenTree::Token(Token::Keyword(kw)) => {
+            TokenTree::Ident(v) => out.extend_one(proc_macro::TokenTree::Ident(v.clone().into())),
+            TokenTree::Keyword(kw) => {
                 let id = proc_macro::Ident::new(kw.as_str(), kw.span().into());
                 out.extend_one(proc_macro::TokenTree::Ident(id))
             }
-            TokenTree::Token(Token::Literal(v)) => out.extend_one(proc_macro::TokenTree::Literal(v.clone().into())),
-            TokenTree::Token(Token::Punct(op)) => {
+            TokenTree::Literal(v) => out.extend_one(proc_macro::TokenTree::Literal(v.clone().into())),
+            TokenTree::Punct(op) => {
                 let text = op.as_str();
                 let span: proc_macro::Span = op.span().into();
                 let last = text.chars().count() - 1;

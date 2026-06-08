@@ -33,7 +33,7 @@ impl Parse for Member {
         let at = stream.span();
 
         match stream.curr() {
-            Some(TokenTree::Token(Token::Literal(lit))) => {
+            Some(TokenTree::Literal(lit)) => {
                 let index = lit
                     .repr()
                     .parse::<u32>()

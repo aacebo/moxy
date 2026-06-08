@@ -1,7 +1,7 @@
 use super::ToTokens;
 use super::lex::{Cursor, LexError, Scan};
 use crate::parser::{ParseError, ParseStream};
-use crate::{Parse, Span, Spanner, Token, TokenStream, TokenTree};
+use crate::{Parse, Span, Spanner, TokenStream, TokenTree};
 
 macro_rules! define_punct {
     ($($name:ident[$is_method:ident, $as_method:ident] $($split:ident)? => $text:literal),+ $(,)?) => {
@@ -30,23 +30,13 @@ macro_rules! define_punct {
             }
 
             #[inline]
-            pub fn to_token(&self) -> Token {
-                Token::Punct(self.clone())
-            }
-
-            #[inline]
-            pub fn into_token(self) -> Token {
-                Token::Punct(self)
-            }
-
-            #[inline]
             pub fn to_token_tree(&self) -> TokenTree {
-                TokenTree::Token(self.to_token())
+                TokenTree::Punct(self.clone())
             }
 
             #[inline]
             pub fn into_token_tree(self) -> TokenTree {
-                TokenTree::Token(self.into_token())
+                TokenTree::Punct(self)
             }
         }
 
@@ -149,7 +139,7 @@ macro_rules! define_punct {
 
             impl ToTokens for $name {
                 fn to_tokens(&self, tokens: &mut TokenStream) {
-                    tokens.extend_one(Token::Punct(Punctuation::$name(*self)).into());
+                    tokens.extend_one(TokenTree::Punct(Punctuation::$name(*self)));
                 }
             }
 
@@ -176,7 +166,7 @@ macro_rules! define_punct {
             }
         )+
 
-        impl Token {
+        impl TokenTree {
             pub fn is_punct(&self) -> bool {
                 matches!(self, Self::Punct(_))
             }
@@ -198,37 +188,6 @@ macro_rules! define_punct {
                 pub fn $as_method(&self) -> Option<&$name> {
                     match self {
                         Self::Punct(Punctuation::$name(v)) => Some(v),
-                        _ => None,
-                    }
-                }
-            )*
-        }
-
-        impl TokenTree {
-            pub fn is_punct(&self) -> bool {
-                match self {
-                    Self::Token(v) => v.is_punct(),
-                    _ => false,
-                }
-            }
-
-            pub fn as_punct(&self) -> Option<&Punctuation> {
-                match self {
-                    Self::Token(v) => v.as_punct(),
-                    _ => None,
-                }
-            }
-
-            $(
-                #[doc = concat!("**", stringify!($name), "** (\"", $text, "\")")]
-                pub fn $is_method(&self) -> bool {
-                    matches!(self, Self::Token(Token::Punct(Punctuation::$name(_))))
-                }
-
-                #[doc = concat!("**", stringify!($name), "** (\"", $text, "\")")]
-                pub fn $as_method(&self) -> Option<&$name> {
-                    match self {
-                        Self::Token(Token::Punct(Punctuation::$name(v))) => Some(v),
                         _ => None,
                     }
                 }
@@ -263,7 +222,7 @@ macro_rules! define_punct {
                 let at = stream.span();
 
                 match stream.curr() {
-                    Some(TokenTree::Token(Token::Punct(Punctuation::$name(op)))) => {
+                    Some(TokenTree::Punct(Punctuation::$name(op))) => {
                         let span = op.span();
                         stream.advance();
                         Ok(Self::new(span))
@@ -373,13 +332,11 @@ mod tests {
 
     #[test]
     fn lexes_whole_operators() {
-        use crate::Token;
-
         let ops: Vec<Punctuation> = TokenStream::from_str("a == b => c :: d ..= e")
             .unwrap()
             .into_iter()
             .filter_map(|tt| match tt {
-                TokenTree::Token(Token::Punct(op)) => Some(op),
+                TokenTree::Punct(op) => Some(op),
                 _ => None,
             })
             .collect();
@@ -392,12 +349,10 @@ mod tests {
 
     #[test]
     fn shr_is_one_whole_op() {
-        use crate::Token;
-
         let toks: Vec<TokenTree> = TokenStream::from_str("a >> b").unwrap().into_iter().collect();
-        let op_count = toks.iter().filter(|t| matches!(t, TokenTree::Token(Token::Punct(_)))).count();
+        let op_count = toks.iter().filter(|t| matches!(t, TokenTree::Punct(_))).count();
         assert_eq!(op_count, 1);
-        assert!(matches!(toks[1], TokenTree::Token(Token::Punct(Punctuation::Shr(_)))));
+        assert!(matches!(toks[1], TokenTree::Punct(Punctuation::Shr(_))));
     }
 
     #[test]
@@ -436,7 +391,7 @@ mod tests {
 
         let ts = TokenStream::from_str("_").unwrap();
         let tree = ts.into_iter().next().unwrap();
-        let TokenTree::Token(Token::Ident(id)) = tree else {
+        let TokenTree::Ident(id) = tree else {
             panic!("expected `_` to lex as an ident");
         };
         assert_eq!(id.text(), "_");
@@ -504,13 +459,12 @@ mod tests {
     #[cfg(feature = "serde")]
     mod serde {
         use super::*;
-        use crate::Token;
 
         #[test]
         fn punct_serializes_as_string() {
             let ts = TokenStream::from_str("+").unwrap();
             let tree = ts.into_iter().next().unwrap();
-            let TokenTree::Token(Token::Punct(p)) = tree else {
+            let TokenTree::Punct(p) = tree else {
                 panic!("expected punct");
             };
             assert_eq!(serde_json::to_value(&p).unwrap(), serde_json::json!("+"));

@@ -16,11 +16,11 @@ impl Parse for LifetimeName {
 
         // A lifetime name may be an identifier (`'a`) or a keyword (`'static`).
         match stream.advance() {
-            Some(TokenTree::Token(Token::Ident(id))) => {
-                let name = id.text();
-                let (raw, text) = match name.strip_prefix("r#") {
-                    Some(rest) => (true, rest.to_string()),
-                    None => (false, name.to_string()),
+            Some(TokenTree::Ident(id)) => {
+                let (raw, text) = if id.is_raw() {
+                    (true, id.text().to_string())
+                } else {
+                    (false, id.text().to_string())
                 };
 
                 Ok(Self {
@@ -29,7 +29,7 @@ impl Parse for LifetimeName {
                     raw,
                 })
             }
-            Some(TokenTree::Token(Token::Keyword(kw))) => Ok(Self {
+            Some(TokenTree::Keyword(kw)) => Ok(Self {
                 span: kw.span(),
                 text: kw.as_str().to_string(),
                 raw: false,

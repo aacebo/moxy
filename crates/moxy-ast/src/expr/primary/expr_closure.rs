@@ -61,8 +61,7 @@ impl ExprClosure {
 
         let leads_closure = matches!(
             stream.nth(1),
-            Some(TokenTree::Token(Token::Punct(Punctuation::Or(_) | Punctuation::OrOr(_))))
-                | Some(TokenTree::Token(Token::Keyword(_)))
+            Some(TokenTree::Punct(Punctuation::Or(_) | Punctuation::OrOr(_))) | Some(TokenTree::Keyword(_))
         );
 
         (stream.peek::<Const>() || stream.peek::<moxy_token::keyword::Async>()) && leads_closure && !ExprBrace::is_next(stream)

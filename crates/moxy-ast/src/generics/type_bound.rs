@@ -60,9 +60,7 @@ impl Parse for TypeBound {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if matches!(
             stream.curr(),
-            Some(moxy_token::TokenTree::Token(moxy_token::Token::Punct(
-                moxy_token::Punctuation::Quote(_)
-            )))
+            Some(moxy_token::TokenTree::Punct(moxy_token::Punctuation::Quote(_)))
         ) {
             return Ok(TypeBound::Lifetime(stream.parse()?));
         }

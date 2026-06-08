@@ -454,11 +454,7 @@ impl PrimaryExpr {
 
         if matches!(
             stream.curr(),
-            Some(
-                TokenTree::Token(Token::Ident(_))
-                    | TokenTree::Token(Token::Keyword(_))
-                    | TokenTree::Token(Token::Punct(Punctuation::PathSep(_)))
-            )
+            Some(TokenTree::Ident(_) | TokenTree::Keyword(_) | TokenTree::Punct(Punctuation::PathSep(_)))
         ) {
             use crate::Path;
             let path = stream.parse::<Path>()?;
