@@ -17,10 +17,10 @@ impl Parse for LifetimeName {
         // A lifetime name may be an identifier (`'a`) or a keyword (`'static`).
         match stream.advance() {
             Some(TokenTree::Token(Token::Ident(id))) => {
-                let name = id.name();
+                let name = id.text();
                 let (raw, text) = match name.strip_prefix("r#") {
                     Some(rest) => (true, rest.to_string()),
-                    None => (false, name.into_owned()),
+                    None => (false, name.to_string()),
                 };
 
                 Ok(Self {

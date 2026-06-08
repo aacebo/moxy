@@ -59,7 +59,7 @@ impl ToTokens for Path {
 
 impl From<crate::Ident> for Path {
     fn from(ident: crate::Ident) -> Self {
-        let span = ident.span;
+        let span = ident.span();
         let mut segments = Punctuated::new();
         segments.push_value(PathSegment {
             ident,

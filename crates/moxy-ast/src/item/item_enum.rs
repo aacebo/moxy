@@ -59,7 +59,7 @@ impl Spanner for Variant {
         let start = if let Some(a) = self.attrs.first() {
             a.span()
         } else {
-            self.ident.span
+            self.ident.span()
         };
         let end = if let Some(d) = &self.discriminant {
             d.span()

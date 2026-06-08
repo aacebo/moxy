@@ -1,19 +1,20 @@
-use std::borrow::Cow;
-
 use super::{ToTokens, TokenStream};
 use crate::lex::{Cursor, LexError, Scan};
 use crate::{Span, Token, TokenTree};
 
 #[derive(Debug, Clone)]
 pub struct Ident {
-    name: Box<str>,
+    text: Box<str>,
     span: Span,
 }
 
 impl Ident {
     #[inline]
-    pub fn new(name: &str, span: Span) -> Self {
-        Self { name: name.into(), span }
+    pub fn new(text: impl std::fmt::Display, span: Span) -> Self {
+        Self {
+            text: text.to_string().into_boxed_str(),
+            span,
+        }
     }
 
     #[inline]
@@ -22,8 +23,16 @@ impl Ident {
     }
 
     #[inline]
-    pub fn name(&self) -> Cow<'_, str> {
-        Cow::Borrowed(self.name.as_ref())
+    pub fn text(&self) -> &str {
+        match self.text.strip_prefix("r#") {
+            Some(rest) => rest,
+            None => &self.text,
+        }
+    }
+
+    #[inline]
+    pub fn is_raw(&self) -> bool {
+        self.text.starts_with("r#")
     }
 
     #[inline]
@@ -81,14 +90,14 @@ impl Scan for Ident {
 
         let end = cursor.advance(first.len_utf8()).skip_while(unicode_ident::is_xid_continue);
         let span = cursor.span_to(&end);
-        let name = &cursor.rest()[..end.offset() as usize - cursor.offset() as usize];
-        Ok((end, Self::new(name, span)))
+        let text = &cursor.rest()[..end.offset() as usize - cursor.offset() as usize];
+        Ok((end, Self::new(text, span)))
     }
 }
 
 impl std::fmt::Display for Ident {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "{}", self.name)
+        write!(f, "{}", self.text)
     }
 }
 
@@ -129,24 +138,44 @@ impl serde::Serialize for Ident {
     where
         S: serde::Serializer,
     {
-        self.name.serialize(s)
+        self.text.serialize(s)
     }
 }
 
 impl PartialEq<str> for Ident {
     fn eq(&self, other: &str) -> bool {
-        self.name.as_ref() == other
+        self.text.as_ref() == other
     }
 }
 
 impl PartialEq<&str> for Ident {
     fn eq(&self, other: &&str) -> bool {
-        self.name.as_ref() == *other
+        self.text.as_ref() == *other
     }
 }
 
 #[cfg(test)]
 mod tests {
+    use std::str::FromStr;
+
+    use super::*;
+
+    #[test]
+    fn text_plain() {
+        let id = Ident::from_str("foo").unwrap();
+        assert_eq!(id.text(), "foo");
+        assert!(!id.is_raw());
+        assert_eq!(id.text(), "foo");
+    }
+
+    #[test]
+    fn text_raw() {
+        let id = Ident::from_str("r#fn").unwrap();
+        assert_eq!(id.text(), "fn");
+        assert!(id.is_raw());
+        assert_eq!(id.to_string(), "r#fn");
+    }
+
     #[cfg(feature = "serde")]
     mod serde {
         use std::str::FromStr;

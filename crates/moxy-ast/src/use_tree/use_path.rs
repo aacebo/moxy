@@ -26,7 +26,7 @@ impl Parse for UsePath {
 
 impl Spanner for UsePath {
     fn span(&self) -> Span {
-        self.ident.span.join(self.tree.span())
+        self.ident.span().join(self.tree.span())
     }
 }
 

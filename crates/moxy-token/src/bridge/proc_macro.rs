@@ -110,18 +110,18 @@ impl From<Spacing> for proc_macro::Spacing {
 impl From<proc_macro::Ident> for Ident {
     #[inline]
     fn from(value: proc_macro::Ident) -> Self {
-        Self::new(&value.to_string(), value.span().into())
+        Self::new(value.to_string(), value.span().into())
     }
 }
 
 impl From<Ident> for proc_macro::Ident {
     fn from(value: Ident) -> Self {
         let span: proc_macro::Span = value.span().into();
-        let name = value.name();
+        let name = value.text();
 
         match name.strip_prefix("r#") {
             Some(raw) => proc_macro::Ident::new_raw(raw, span),
-            None => proc_macro::Ident::new(&name, span),
+            None => proc_macro::Ident::new(name, span),
         }
     }
 }

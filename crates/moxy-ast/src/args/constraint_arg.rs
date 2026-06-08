@@ -43,7 +43,7 @@ impl Spanner for ConstraintArg {
             .last()
             .map(|b| b.span())
             .unwrap_or_else(|| self.colon_punct.span());
-        self.ident.span.join(end)
+        self.ident.span().join(end)
     }
 }
 

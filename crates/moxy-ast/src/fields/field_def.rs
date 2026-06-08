@@ -58,7 +58,7 @@ impl Spanner for FieldDef {
         } else if !matches!(self.mutability, Mutability::Immutable) {
             self.mutability.span()
         } else if let Some(id) = &self.ident {
-            id.span
+            id.span()
         } else {
             self.ty.span()
         };

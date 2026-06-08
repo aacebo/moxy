@@ -25,7 +25,7 @@ impl Spanner for ExprLit {
 impl ExprLit {
     /// Returns `true` when the stream is positioned at an identifier `true` or `false`.
     pub fn is_bool_ident(stream: &mut ParseStream) -> bool {
-        matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("true") || tt.name().as_deref() == Some("false"))
+        matches!(stream.curr(), Some(tt) if tt.text() == Some("true") || tt.text() == Some("false"))
     }
 
     /// Returns `true` when the given token tree is a literal token.

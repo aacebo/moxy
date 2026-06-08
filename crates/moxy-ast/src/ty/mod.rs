@@ -149,7 +149,7 @@ impl Parse for Type {
         }
 
         // Infer `_`.
-        if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("_")) {
+        if matches!(stream.curr(), Some(tt) if tt.text() == Some("_")) {
             let span = stream.span();
             stream.advance();
             return Ok(Type::Infer(moxy_token::Ident::new("_", span)));

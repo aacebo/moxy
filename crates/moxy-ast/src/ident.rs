@@ -16,7 +16,7 @@ impl Parse for Ident {
 
         match stream.advance() {
             Some(TokenTree::Token(Token::Ident(id))) => {
-                let name = id.name();
+                let name = id.text();
                 let (raw, text) = match name.strip_prefix("r#") {
                     Some(rest) => (true, rest.to_string()),
                     None => (false, name.into_owned()),

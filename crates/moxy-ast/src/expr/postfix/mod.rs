@@ -90,7 +90,7 @@ impl PostfixExpr {
             if stream.peek::<Dot>() {
                 let dot = stream.parse::<Dot>()?;
 
-                if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("await")) {
+                if matches!(stream.curr(), Some(tt) if tt.text() == Some("await")) {
                     let await_span = stream.span();
                     stream.advance();
                     expr = Expr::Postfix(PostfixExpr::Await(ExprAwait {

@@ -26,7 +26,7 @@ impl Parse for UseRename {
 
 impl Spanner for UseRename {
     fn span(&self) -> Span {
-        self.ident.span.join(self.rename.span)
+        self.ident.span().join(self.rename.span())
     }
 }
 

@@ -897,7 +897,7 @@ mod tests {
         let ts = parse_stream("a , b , c");
         let mut ps = ts.parse();
         let p: Punctuated<Ident, Comma> = Punctuated::parse_terminated(&mut ps).unwrap();
-        let names: Vec<_> = p.iter().map(|id| id.name().as_ref().to_owned()).collect();
+        let names: Vec<_> = p.iter().map(|id| id.text().to_owned()).collect();
         assert_eq!(names, vec!["a", "b", "c"]);
     }
 
@@ -938,8 +938,8 @@ mod tests {
         let ts = parse_stream("a , b , c");
         let mut ps = ts.parse();
         let p: Punctuated<Ident, Comma> = Punctuated::parse_terminated(&mut ps).unwrap();
-        assert_eq!(p[0].name().as_ref(), "a");
-        assert_eq!(p[1].name().as_ref(), "b");
-        assert_eq!(p[2].name().as_ref(), "c");
+        assert_eq!(p[0].text(), "a");
+        assert_eq!(p[1].text(), "b");
+        assert_eq!(p[2].text(), "c");
     }
 }

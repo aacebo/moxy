@@ -23,7 +23,7 @@ impl Parse for UseName {
 
 impl Spanner for UseName {
     fn span(&self) -> Span {
-        self.ident.span
+        self.ident.span()
     }
 }
 

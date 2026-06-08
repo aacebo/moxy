@@ -22,7 +22,7 @@ pub enum Member {
 impl Spanner for Member {
     fn span(&self) -> Span {
         match self {
-            Member::Named(id) => id.span,
+            Member::Named(id) => id.span(),
             Member::Unnamed(_) => Span::call_site(),
         }
     }

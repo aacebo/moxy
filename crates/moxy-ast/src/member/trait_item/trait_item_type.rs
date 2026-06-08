@@ -25,7 +25,7 @@ impl Parse for TraitItemType {
         let at = stream.span();
         let attrs = stream.parse::<Vec<Attribute>>()?;
 
-        if stream.curr().and_then(|t| t.name()).as_deref() != Some("type") {
+        if stream.curr().and_then(|t| t.text()) != Some("type") {
             return Err(LexError::new(at).message("expected trait type").into());
         }
 
@@ -74,7 +74,7 @@ impl Spanner for TraitItemType {
                 .as_ref()
                 .map(|s| s.span())
                 .or_else(|| self.default.as_ref().map(|(_, t)| t.span()))
-                .unwrap_or(self.ident.span),
+                .unwrap_or(self.ident.span()),
         )
     }
 }

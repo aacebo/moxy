@@ -439,7 +439,7 @@ mod tests {
         let TokenTree::Token(Token::Ident(id)) = tree else {
             panic!("expected `_` to lex as an ident");
         };
-        assert_eq!(id.name().as_ref(), "_");
+        assert_eq!(id.text(), "_");
 
         let ts = TokenStream::from_str("_").unwrap();
         let mut ps = ts.parse();

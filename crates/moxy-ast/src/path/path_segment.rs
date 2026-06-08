@@ -14,7 +14,7 @@ pub struct PathSegment {
 
 impl PathSegment {
     pub fn is_fn_family(ident: &Ident) -> bool {
-        matches!(ident.text.as_str(), "Fn" | "FnMut" | "FnOnce")
+        matches!(ident.text(), "Fn" | "FnMut" | "FnOnce")
     }
 }
 
@@ -38,7 +38,7 @@ impl Parse for PathSegment {
 
 impl Spanner for PathSegment {
     fn span(&self) -> Span {
-        self.ident.span
+        self.ident.span()
     }
 }
 

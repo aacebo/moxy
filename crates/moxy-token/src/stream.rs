@@ -160,10 +160,11 @@ impl Scan for TokenStream {
             }
 
             if let Ok((next, ident)) = crate::Ident::scan(c) {
-                let token = match crate::Keyword::from_str(ident.name().as_ref(), ident.span()) {
-                    Some(kw) => crate::Token::Keyword(kw),
-                    None => crate::Token::Ident(ident),
+                let token = match crate::Keyword::from_str(ident.text(), ident.span()) {
+                    Some(kw) if !ident.is_raw() => crate::Token::Keyword(kw),
+                    _ => crate::Token::Ident(ident),
                 };
+
                 tokens.push(token.into());
                 c = next;
                 continue;

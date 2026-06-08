@@ -25,7 +25,7 @@ impl Parse for TraitItemConst {
         let at = stream.span();
         let attrs = stream.parse::<Vec<Attribute>>()?;
 
-        if stream.curr().and_then(|t| t.name()).as_deref() != Some("const") {
+        if stream.curr().and_then(|t| t.text()) != Some("const") {
             return Err(LexError::new(at).message("expected trait const").into());
         }
 

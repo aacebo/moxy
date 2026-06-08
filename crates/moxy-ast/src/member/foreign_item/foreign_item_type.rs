@@ -24,7 +24,7 @@ impl Parse for ForeignItemType {
         let attrs = stream.parse::<Vec<Attribute>>()?;
         let vis = stream.parse::<Visibility>()?;
 
-        if stream.curr().and_then(|t| t.name()).as_deref() != Some("type") {
+        if stream.curr().and_then(|t| t.text()) != Some("type") {
             return Err(LexError::new(at).message("expected foreign type").into());
         }
 
@@ -52,7 +52,7 @@ impl Spanner for ForeignItemType {
         } else {
             self.type_keyword.span()
         };
-        let end = self.semi.as_ref().map(|s| s.span()).unwrap_or_else(|| self.ident.span);
+        let end = self.semi.as_ref().map(|s| s.span()).unwrap_or_else(|| self.ident.span());
         start.join(end)
     }
 }

@@ -73,18 +73,18 @@ impl From<Spacing> for proc_macro2::Spacing {
 impl From<proc_macro2::Ident> for Ident {
     fn from(value: proc_macro2::Ident) -> Self {
         let span: Span = value.span().into();
-        Ident::new(&value.to_string(), span)
+        Ident::new(value.to_string(), span)
     }
 }
 
 impl From<Ident> for proc_macro2::Ident {
     fn from(value: Ident) -> Self {
-        let name = value.name();
+        let name = value.text();
         let span = proc_macro2::Span::call_site();
 
         match name.strip_prefix("r#") {
             Some(name) => proc_macro2::Ident::new_raw(name, span),
-            None => proc_macro2::Ident::new(&name, span),
+            None => proc_macro2::Ident::new(name, span),
         }
     }
 }
@@ -239,13 +239,14 @@ mod tests {
         let TokenTree::Token(Token::Ident(id)) = &trees[0] else {
             panic!("expected ident, got {:?}", trees[0]);
         };
-        assert_eq!(id.name().as_ref(), "foo");
 
+        assert_eq!(id.text(), "foo");
         assert!(matches!(trees[1], TokenTree::Token(Token::Literal(_))));
 
         let TokenTree::Group(g) = &trees[2] else {
             panic!("expected group, got {:?}", trees[2]);
         };
+
         assert_eq!(g.delim(), crate::Delim::Paren);
         assert!(matches!(
             g.stream().into_iter().next().unwrap(),

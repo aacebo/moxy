@@ -33,7 +33,7 @@ impl ExprAsync {
             return true;
         }
 
-        matches!(stream.nth(1), Some(tt) if tt.name().as_deref() == Some("move"))
+        matches!(stream.nth(1), Some(tt) if tt.text() == Some("move"))
             && matches!(stream.nth(2), Some(moxy_token::TokenTree::Group(g)) if g.delim() == moxy_token::Delim::Brace)
     }
 

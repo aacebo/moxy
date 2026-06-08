@@ -28,7 +28,7 @@ impl Parse for ImplItemType {
         let vis = stream.parse::<Visibility>()?;
         let defaultness = stream.parse::<Defaultness>()?;
 
-        if stream.curr().and_then(|t| t.name()).as_deref() != Some("type") {
+        if stream.curr().and_then(|t| t.text()) != Some("type") {
             return Err(LexError::new(at).message("expected impl type").into());
         }
 

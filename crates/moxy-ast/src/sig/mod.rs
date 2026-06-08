@@ -23,7 +23,7 @@ mod tests {
     #[test]
     fn signature_basic() {
         let s = moxy_token::parse!("fn foo(x: u8) -> u8" as Signature).unwrap();
-        assert_eq!(s.ident.text, "foo");
+        assert_eq!(s.ident.text(), "foo");
         assert_eq!(s.params.inner.inputs.len(), 1);
         assert!(matches!(s.output, crate::ReturnType::Type(..)));
     }

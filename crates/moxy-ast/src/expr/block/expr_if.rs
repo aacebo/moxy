@@ -40,7 +40,7 @@ impl ExprIf {
         let if_keyword = stream.parse::<If>()?;
         let cond = Box::new(parse_expr(stream, false)?);
         let then_branch = stream.parse::<StmtBlock>()?;
-        let (else_keyword, else_branch) = if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("else")) {
+        let (else_keyword, else_branch) = if matches!(stream.curr(), Some(tt) if tt.text() == Some("else")) {
             let else_kw = stream.parse::<Else>()?;
             let branch = Some(Box::new(PrimaryExpr::parse_from(stream, true)?));
             (Some(else_kw), branch)

@@ -146,9 +146,9 @@ impl Parse for Lit {
                     },
                 )
             }
-            Some(TokenTree::Token(Token::Ident(id))) if id.name() == "true" || id.name() == "false" => Ok(Lit::Bool(LitBool {
+            Some(TokenTree::Token(Token::Ident(id))) if id.text() == "true" || id.text() == "false" => Ok(Lit::Bool(LitBool {
                 span: id.span(),
-                value: id.name() == "true",
+                value: id.text() == "true",
             })),
             _ => Err(LexError::new(at).message("expected literal").into()),
         }

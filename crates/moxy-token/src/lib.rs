@@ -110,10 +110,10 @@ impl Token {
         }
     }
 
-    pub fn name(&self) -> Option<std::borrow::Cow<'_, str>> {
+    pub fn text(&self) -> Option<&str> {
         match self {
-            Self::Ident(v) => Some(v.name()),
-            Self::Keyword(v) => Some(std::borrow::Cow::Borrowed(v.as_str())),
+            Self::Ident(v) => Some(v.text()),
+            Self::Keyword(v) => Some(v.as_str()),
             _ => None,
         }
     }
@@ -235,9 +235,9 @@ impl TokenTree {
         }
     }
 
-    pub fn name(&self) -> Option<std::borrow::Cow<'_, str>> {
+    pub fn text(&self) -> Option<&str> {
         match self {
-            Self::Token(t) => t.name(),
+            Self::Token(t) => t.text(),
             Self::Group(_) => None,
         }
     }
@@ -438,7 +438,7 @@ mod tests {
     #[test]
     fn ident_new_and_name() {
         let id = Ident::new("foo", Span::default());
-        assert_eq!(id.name().as_ref(), "foo");
+        assert_eq!(id.text(), "foo");
     }
 
     #[test]

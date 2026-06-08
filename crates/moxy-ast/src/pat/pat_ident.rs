@@ -24,12 +24,12 @@ impl Spanner for PatIdent {
         } else if !matches!(self.mutability, Mutability::Immutable) {
             self.mutability.span()
         } else {
-            self.ident.span
+            self.ident.span()
         };
         let end = if let Some((_, sub)) = &self.subpat {
             sub.span()
         } else {
-            self.ident.span
+            self.ident.span()
         };
         start.join(end)
     }

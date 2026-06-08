@@ -54,14 +54,14 @@ impl Spanner for TypeParam {
         let start = if let Some(a) = self.attrs.first() {
             a.span()
         } else {
-            self.ident.span
+            self.ident.span()
         };
         let end = if let Some(d) = &self.default {
             d.span()
         } else if let Some(b) = self.bounds.last() {
             b.span()
         } else {
-            self.ident.span
+            self.ident.span()
         };
         start.join(end)
     }

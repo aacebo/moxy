@@ -10,7 +10,6 @@ mod delimited;
 pub mod expr;
 pub mod fields;
 pub mod generics;
-mod ident;
 pub mod item;
 mod label;
 mod leaf;
@@ -47,8 +46,6 @@ pub use fields::{FieldValue, Fields, FieldsNamed};
 #[doc(inline)]
 pub use generics::{Generics, TraitRef, TypeBound, WhereClause, WherePredicate};
 #[doc(inline)]
-pub use ident::*;
-#[doc(inline)]
 pub use item::{Item, Variant};
 #[doc(inline)]
 pub use label::*;
@@ -62,6 +59,8 @@ pub use macro_call::*;
 pub use member::{ForeignItem, ImplItem, Member, TraitItem};
 #[doc(inline)]
 pub use misc::*;
+#[doc(inline)]
+pub use moxy_token::Ident;
 #[doc(inline)]
 pub use pat::Pattern;
 #[doc(inline)]

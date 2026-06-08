@@ -42,7 +42,7 @@ impl Spanner for BareFnArg {
         let start = if let Some(a) = self.attrs.first() {
             a.span()
         } else if let Some((id, _)) = &self.name {
-            id.span
+            id.span()
         } else {
             self.ty.span()
         };

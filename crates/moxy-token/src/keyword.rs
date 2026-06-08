@@ -65,7 +65,11 @@ macro_rules! define_keyword {
             fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
                 let (end, id) = super::Ident::scan(cursor)?;
 
-                match id.name().as_ref() {
+                if id.is_raw() {
+                    return cursor.error().into();
+                }
+
+                match id.text() {
                     $($text => Ok((end, Self::$name($name::new(id.span())))),)*
                     _ => cursor.error().into(),
                 }
@@ -144,7 +148,7 @@ macro_rules! define_keyword {
                 fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
                     let (end, id) = super::Ident::scan(cursor)?;
 
-                    if id.name().as_ref() == $text {
+                    if !id.is_raw() && id.text() == $text {
                         Ok((end, Self::new(id.span())))
                     } else {
                         cursor.error().into()
@@ -344,14 +348,14 @@ mod tests {
             let TokenTree::Token(Token::Ident(id)) = tree else {
                 panic!("expected an ident");
             };
-            assert_eq!(id.name().as_ref(), name);
+            assert_eq!(id.text(), name);
         }
 
         assert!(matches!(first("fn"), TokenTree::Token(Token::Keyword(Keyword::Fn(_)))));
 
         assert_ident(first("fnord"), "fnord");
         assert_ident(first("_"), "_");
-        assert_ident(first("r#fn"), "r#fn");
+        assert_ident(first("r#fn"), "fn");
     }
 
     #[test]

@@ -38,7 +38,7 @@ impl Parse for AssocTypeArg {
 
 impl Spanner for AssocTypeArg {
     fn span(&self) -> Span {
-        self.ident.span.join(self.ty.span())
+        self.ident.span().join(self.ty.span())
     }
 }
 

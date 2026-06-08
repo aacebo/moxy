@@ -30,7 +30,7 @@ impl Parse for ImplItemConst {
         let vis = stream.parse::<Visibility>()?;
         let defaultness = stream.parse::<Defaultness>()?;
 
-        if stream.curr().and_then(|t| t.name()).as_deref() != Some("const") {
+        if stream.curr().and_then(|t| t.text()) != Some("const") {
             return Err(LexError::new(at).message("expected impl const").into());
         }
 
@@ -42,6 +42,7 @@ impl Parse for ImplItemConst {
         let eq = stream.parse::<Eq>()?;
         let expr = stream.parse::<Expr>()?;
         let semi = stream.parse_if::<Semi>();
+
         Ok(ImplItemConst {
             attrs,
             vis,

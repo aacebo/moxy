@@ -317,7 +317,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     let attrs = stream.parse::<Vec<Attribute>>()?;
 
     // Wildcard `_`
-    if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("_")) {
+    if matches!(stream.curr(), Some(tt) if tt.text() == Some("_")) {
         stream.advance();
         return Ok(Pattern::Wild);
     }
@@ -329,13 +329,13 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     }
 
     // `box pat`
-    if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("box")) {
+    if matches!(stream.curr(), Some(tt) if tt.text() == Some("box")) {
         stream.advance();
         return Ok(Pattern::Box(Box::new(parse_single(stream)?)));
     }
 
     // `const { ... }` block pattern
-    if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("const"))
+    if matches!(stream.curr(), Some(tt) if tt.text() == Some("const"))
         && matches!(stream.nth(1), Some(moxy_token::TokenTree::Group(g)) if g.delim() == Delim::Brace)
     {
         stream.advance();
