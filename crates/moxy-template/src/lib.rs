@@ -44,24 +44,3 @@ pub fn template(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     expanded.to_tokens(&mut out);
     out
 }
-
-// #[proc_macro_attribute]
-// pub fn expand(_args: proc_macro::TokenStream, target: proc_macro::TokenStream) -> proc_macro::TokenStream {
-//     let stream = target.into_token_stream();
-//     let mut stream = stream.parse();
-//     let mut target: item::ItemFn = match stream.parse() {
-//         Err(err) => return err.to_compile_error().into(),
-//         Ok(v) => v,
-//     };
-
-//     for param in &mut target.sig.params.inputs {
-//         if let FnParam::Typed(p) = param {
-//             p.attrs.retain(|attr| match &attr.meta.inner {
-//                 Meta::Path(v) => v.to_token_stream().to_string() != "parse",
-//                 _ => true,
-//             });
-//         }
-//     }
-
-//     target.into_token_stream().into()
-// }
