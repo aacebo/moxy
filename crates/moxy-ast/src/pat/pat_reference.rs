@@ -3,7 +3,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A reference pattern, e.g. `&x` or `&mut x`."]
+/// A reference pattern, e.g. `&x` or `&mut x`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatReference {

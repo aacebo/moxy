@@ -3,12 +3,12 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A type ascription expression: `expr: Type`."]
+/// A type ascription expression: `expr: Type`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprType {
     pub attrs: Vec<Attribute>,
-    pub expr: Box<super::super::Expr>,
+    pub expr: Box<Expr>,
     pub colon_punct: Colon,
     pub ty: Box<Type>,
 }
@@ -20,6 +20,7 @@ impl Spanner for ExprType {
         } else {
             self.expr.span()
         };
+
         start.join(self.ty.span())
     }
 }
@@ -29,6 +30,7 @@ impl ToTokens for ExprType {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         self.expr.to_tokens(t);
         self.colon_punct.to_tokens(t);
         self.ty.to_tokens(t);

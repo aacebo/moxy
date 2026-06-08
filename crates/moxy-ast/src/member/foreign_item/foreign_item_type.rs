@@ -6,7 +6,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use super::ForeignItem;
 use crate::{Attribute, Generics, Ident, Visibility};
 
-#[doc = "A foreign opaque type declaration inside an `extern` block (`type Name;`)."]
+/// A foreign opaque type declaration inside an `extern` block (`type Name;`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ForeignItemType {

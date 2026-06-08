@@ -2,7 +2,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A range pattern, e.g. `0..=255` or `'a'..'z'`."]
+/// A range pattern, e.g. `0..=255` or `'a'..'z'`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatRange {

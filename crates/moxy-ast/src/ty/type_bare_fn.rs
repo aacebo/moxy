@@ -16,7 +16,7 @@ impl ToTokens for BareFnParams {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.inputs.to_tokens(t);
         if let Some(v) = &self.variadic {
-            if !self.inputs.is_empty() && !self.inputs.trailing_punct() {
+            if !self.inputs.is_empty() && !self.inputs.is_trailing() {
                 Comma::default().to_tokens(t);
             }
             v.to_tokens(t);
@@ -24,7 +24,7 @@ impl ToTokens for BareFnParams {
     }
 }
 
-#[doc = "A bare function pointer type (e.g. `fn(u8) -> u8`, `extern \"C\" fn()`)."]
+/// A bare function pointer type (e.g. `fn(u8) -> u8`, `extern "C" fn()`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeBareFn {
@@ -40,7 +40,7 @@ impl Parse for TypeBareFn {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let lifetimes = stream.parse_if::<BoundLifetimes>();
         let unsafety = stream.parse::<Unsafety>()?;
-        let abi = if stream.peek::<Extern>().is_some() {
+        let abi = if stream.peek::<Extern>() {
             Some(stream.parse::<Abi>()?)
         } else {
             None

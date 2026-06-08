@@ -4,7 +4,7 @@ use moxy_token::{Parse, Punctuation, Span, Spanner, ToTokens, Token, TokenStream
 
 use crate::Lifetime;
 
-#[doc = "A loop label (`'outer:`)."]
+/// A loop label (`'outer:`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Label {

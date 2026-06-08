@@ -1,16 +1,16 @@
 use moxy_token::punct::Eq;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::Attribute;
+use crate::{Attribute, Expr};
 
-#[doc = "An assignment expression: `a = b`."]
+/// An assignment expression: `a = b`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprAssign {
     pub attrs: Vec<Attribute>,
-    pub left: Box<super::super::Expr>,
+    pub left: Box<Expr>,
     pub eq: Eq,
-    pub right: Box<super::super::Expr>,
+    pub right: Box<Expr>,
 }
 
 impl Spanner for ExprAssign {
@@ -20,6 +20,7 @@ impl Spanner for ExprAssign {
         } else {
             self.left.span()
         };
+
         start.join(self.right.span())
     }
 }
@@ -29,6 +30,7 @@ impl ToTokens for ExprAssign {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         self.left.to_tokens(t);
         self.eq.to_tokens(t);
         self.right.to_tokens(t);

@@ -117,6 +117,42 @@ impl Token {
             _ => None,
         }
     }
+
+    #[inline]
+    pub fn is_ident(&self) -> bool {
+        matches!(self, Self::Ident(_))
+    }
+
+    #[inline]
+    pub fn as_ident(&self) -> Option<&Ident> {
+        match self {
+            Self::Ident(v) => Some(v),
+            _ => None,
+        }
+    }
+
+    #[inline]
+    pub fn is_literal(&self) -> bool {
+        matches!(self, Self::Literal(_))
+    }
+
+    #[inline]
+    pub fn as_literal(&self) -> Option<&Literal> {
+        match self {
+            Self::Literal(v) => Some(v),
+            _ => None,
+        }
+    }
+
+    #[inline]
+    pub fn to_token_tree(&self) -> TokenTree {
+        TokenTree::Token(self.clone())
+    }
+
+    #[inline]
+    pub fn into_token_tree(self) -> TokenTree {
+        TokenTree::Token(self)
+    }
 }
 
 impl From<Ident> for Token {
@@ -210,6 +246,50 @@ impl TokenTree {
         match self {
             Self::Group(g) => Some(g.delim()),
             Self::Token(_) => None,
+        }
+    }
+
+    pub fn is_token(&self) -> bool {
+        matches!(self, Self::Token(_))
+    }
+
+    pub fn as_token(&self) -> Option<&Token> {
+        match self {
+            Self::Token(v) => Some(v),
+            _ => None,
+        }
+    }
+
+    pub fn is_group(&self) -> bool {
+        matches!(self, Self::Group(_))
+    }
+
+    pub fn as_group(&self) -> Option<&Group> {
+        match self {
+            Self::Group(v) => Some(v),
+            _ => None,
+        }
+    }
+
+    pub fn is_ident(&self) -> bool {
+        matches!(self, Self::Token(Token::Ident(_)))
+    }
+
+    pub fn as_ident(&self) -> Option<&Ident> {
+        match self {
+            Self::Token(Token::Ident(v)) => Some(v),
+            _ => None,
+        }
+    }
+
+    pub fn is_literal(&self) -> bool {
+        matches!(self, Self::Token(Token::Literal(_)))
+    }
+
+    pub fn as_literal(&self) -> Option<&Literal> {
+        match self {
+            Self::Token(Token::Literal(v)) => Some(v),
+            _ => None,
         }
     }
 }

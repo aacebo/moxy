@@ -4,7 +4,7 @@ use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 use super::PathArguments;
 use crate::Ident;
 
-#[doc = "A single segment of a path (an identifier optionally followed by generic arguments)."]
+/// A single segment of a path (an identifier optionally followed by generic arguments).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PathSegment {

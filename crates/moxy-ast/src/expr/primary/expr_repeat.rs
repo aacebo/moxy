@@ -2,21 +2,22 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Delimited};
+use crate::expr::parse_expr;
+use crate::*;
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct RepeatInner {
-    pub elem: Box<super::super::Expr>,
+    pub elem: Box<Expr>,
     pub semi: Semi,
-    pub len: Box<super::super::Expr>,
+    pub len: Box<Expr>,
 }
 
 impl Parse for RepeatInner {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let elem = Box::new(super::super::parse_expr(stream, true)?);
+        let elem = Box::new(parse_expr(stream, true)?);
         let semi = stream.parse::<Semi>()?;
-        let len = Box::new(super::super::parse_expr(stream, true)?);
+        let len = Box::new(parse_expr(stream, true)?);
         Ok(Self { elem, semi, len })
     }
 }
@@ -29,7 +30,7 @@ impl ToTokens for RepeatInner {
     }
 }
 
-#[doc = "A repeat expression: `[0u8; 16]`."]
+/// A repeat expression: `[0u8; 16]`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprRepeat {

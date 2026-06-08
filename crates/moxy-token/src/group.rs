@@ -1,6 +1,6 @@
 use crate::lex::{Cursor, LexError, Scan};
 use crate::span::DelimSpan;
-use crate::{Delim, Span, TokenStream};
+use crate::{Delim, Span, TokenStream, TokenTree};
 
 #[derive(Debug, Clone)]
 pub struct Group {
@@ -37,6 +37,16 @@ impl Group {
     #[inline]
     pub fn set_span(&mut self, span: DelimSpan) {
         self.span = span;
+    }
+
+    #[inline]
+    pub fn to_token_tree(&self) -> TokenTree {
+        TokenTree::Group(self.clone())
+    }
+
+    #[inline]
+    pub fn into_token_tree(self) -> TokenTree {
+        TokenTree::Group(self)
     }
 }
 

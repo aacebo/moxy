@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Expr, Pattern, Type};
 
-#[doc = "A `let` binding statement."]
+/// A `let` binding statement.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StmtLocal {
@@ -17,7 +17,7 @@ pub struct StmtLocal {
     pub semi: Option<Semi>,
 }
 
-#[doc = "The initializer of a `let` binding."]
+/// The initializer of a `let` binding.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StmtLocalInit {
@@ -32,18 +32,18 @@ impl Parse for StmtLocal {
         let let_keyword = stream.parse::<Let>()?;
         let pat = stream.parse::<Pattern>()?;
 
-        let ty = if stream.peek::<Colon>().is_some() {
+        let ty = if stream.peek::<Colon>() {
             let colon = stream.parse::<Colon>()?;
             Some((colon, stream.parse::<Type>()?))
         } else {
             None
         };
 
-        let init = if stream.peek::<Eq>().is_some() {
+        let init = if stream.peek::<Eq>() {
             let eq = stream.parse::<Eq>()?;
             let expr = stream.parse::<Expr>()?;
 
-            let diverge = if stream.peek::<Else>().is_some() {
+            let diverge = if stream.peek::<Else>() {
                 let else_keyword = stream.parse::<Else>()?;
                 Some((else_keyword, Box::new(stream.parse::<Expr>()?)))
             } else {

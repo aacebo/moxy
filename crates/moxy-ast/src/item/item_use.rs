@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, UseTree, Visibility};
 
-#[doc = "A `use` item (`use path::to::Name;`)."]
+/// A `use` item (`use path::to::Name;`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemUse {

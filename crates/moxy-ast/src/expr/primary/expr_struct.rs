@@ -7,7 +7,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StructBody {
     pub fields: Punctuated<FieldValue, Comma>,
-    pub rest: Option<(DotDot, Box<super::super::Expr>)>,
+    pub rest: Option<(DotDot, Box<Expr>)>,
 }
 
 impl ToTokens for StructBody {
@@ -20,7 +20,7 @@ impl ToTokens for StructBody {
     }
 }
 
-#[doc = "A struct literal expression: `Foo { a: 1, b, ..rest }`."]
+/// A struct literal expression: `Foo { a: 1, b, ..rest }`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprStruct {

@@ -4,7 +4,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use super::{TraitBound, UseBound};
 use crate::Lifetime;
 
-#[doc = "A bound on a type parameter (`Trait`, `'a`, `use<>`)."]
+/// A bound on a type parameter (`Trait`, `'a`, `use<>`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum TypeBound {
@@ -23,7 +23,7 @@ impl TypeBound {
         loop {
             bounds.push_value(stream.parse::<TypeBound>()?);
 
-            if stream.peek::<Plus>().is_some() {
+            if stream.peek::<Plus>() {
                 bounds.push_punct(stream.parse::<Plus>()?);
             } else {
                 break;
@@ -67,7 +67,7 @@ impl Parse for TypeBound {
             return Ok(TypeBound::Lifetime(stream.parse()?));
         }
 
-        if stream.peek::<moxy_token::keyword::Use>().is_some() {
+        if stream.peek::<moxy_token::keyword::Use>() {
             return Ok(TypeBound::Use(stream.parse()?));
         }
 

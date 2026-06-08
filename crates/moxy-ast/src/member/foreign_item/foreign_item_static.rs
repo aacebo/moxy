@@ -6,7 +6,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use super::ForeignItem;
 use crate::{Attribute, Ident, Mutability, Type, Visibility};
 
-#[doc = "A foreign static declaration inside an `extern` block (`static NAME: Type;`)."]
+/// A foreign static declaration inside an `extern` block (`static NAME: Type;`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ForeignItemStatic {

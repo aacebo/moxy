@@ -1,13 +1,30 @@
 use super::{ParseError, Peek};
-use crate::span::DelimSpan;
-use crate::{Delim, LexError, Parse, Punctuation, Span, Token, TokenStream, TokenTree};
+use crate::span::{DelimSpan, fallback};
+use crate::{Delim, LexError, Parse, Span, Token, TokenStream, TokenTree};
+
+/// Split a span at `head_len` characters from its start, returning
+/// `(head_span, rest_span)`. Only `Fallback` spans carry offsets we can split;
+/// for compiler spans we reuse the whole span for both halves.
+fn split_span(span: Span, head_len: usize) -> (Span, Span) {
+    match span {
+        Span::Fallback(s) => {
+            let range = s.byte_range();
+            let mid = (range.start + head_len) as u32;
+            let head = fallback::Span::new(range.start as u32, mid);
+            let rest = fallback::Span::new(mid, range.end as u32);
+            (Span::Fallback(head), Span::Fallback(rest))
+        }
+        other => (other, other),
+    }
+}
 
 pub struct ParseStream<'a> {
     input: &'a TokenStream,
     index: usize,
-    /// A "half-consumed" `>>`: after `eat_angle_close` splits a `Shr`, one `>`
-    /// remains for the enclosing angle level, exposed here as a virtual `Gt`.
-    pending_gt: Option<Span>,
+    /// The leftover half of a glued punct (`>>`, `>=`, ...) after `Gt`/`Lt`
+    /// peeled off its first character. Acts as a virtual "current" token that is
+    /// consumed before `index` advances again.
+    pending: Option<TokenTree>,
 }
 
 impl<'a> ParseStream<'a> {
@@ -15,18 +32,19 @@ impl<'a> ParseStream<'a> {
         Self {
             input,
             index: 0,
-            pending_gt: None,
+            pending: None,
         }
     }
 
     pub fn is_empty(&self) -> bool {
-        self.pending_gt.is_none() && self.index >= self.input.len()
+        self.pending.is_none() && self.index >= self.input.len()
     }
 
     pub fn span(&self) -> Span {
-        if let Some(span) = self.pending_gt {
-            return span;
+        if let Some(t) = &self.pending {
+            return t.span();
         }
+
         self.input.get(self.index).map(|t| t.span()).unwrap_or_default()
     }
 
@@ -34,51 +52,13 @@ impl<'a> ParseStream<'a> {
         Self {
             input: self.input,
             index: self.index,
-            pending_gt: self.pending_gt,
+            pending: self.pending.clone(),
         }
     }
 
     pub fn seek(&mut self, other: &Self) {
         self.index = other.index;
-        self.pending_gt = other.pending_gt;
-    }
-
-    /// True if the next token closes an angle-bracket group: `>` (`Gt`) or the
-    /// first `>` of a `>>` (`Shr`), or a pending split `>`.
-    pub fn peek_angle_close(&mut self) -> bool {
-        if self.pending_gt.is_some() {
-            return true;
-        }
-
-        matches!(
-            self.curr(),
-            Some(TokenTree::Token(Token::Punct(Punctuation::Gt(_) | Punctuation::Shr(_))))
-        )
-    }
-
-    /// Consume a single `>`, splitting a `>>` (`Shr`) so the second `>` remains
-    /// available to the enclosing angle level.
-    pub fn eat_angle_close(&mut self) -> Result<(), ParseError> {
-        if self.pending_gt.take().is_some() {
-            return Ok(());
-        }
-
-        let at = self.span();
-
-        match self.curr() {
-            Some(TokenTree::Token(Token::Punct(Punctuation::Gt(_)))) => {
-                self.advance();
-                Ok(())
-            }
-
-            Some(TokenTree::Token(Token::Punct(Punctuation::Shr(op)))) => {
-                let span = op.span();
-                self.advance();
-                self.pending_gt = Some(span);
-                Ok(())
-            }
-            _ => Err(LexError::new(at).message("expected `>`").into()),
-        }
+        self.pending = other.pending.clone();
     }
 }
 
@@ -88,12 +68,21 @@ impl<'a> ParseStream<'a> {
     }
 
     pub fn curr(&self) -> Option<&TokenTree> {
+        if let Some(t) = &self.pending {
+            return Some(t);
+        }
+
         self.input.get(self.index)
     }
 
-    /// Look ahead `n` tokens without consuming (`nth(0)` == `curr`). Ignores the
-    /// `pending_gt` split state (callers using this aren't mid-angle-close).
+    /// Look ahead `n` tokens without consuming (`nth(0)` == `curr`). When a glued
+    /// punct has been split, the pending half is `nth(0)` and the real stream
+    /// follows it.
     pub fn nth(&self, n: usize) -> Option<&TokenTree> {
+        if let Some(t) = &self.pending {
+            return if n == 0 { Some(t) } else { self.input.get(self.index + n - 1) };
+        }
+
         self.input.get(self.index + n)
     }
 
@@ -101,15 +90,20 @@ impl<'a> ParseStream<'a> {
         self.input.get(self.index - 1)
     }
 
-    pub fn peek<T: Peek>(&mut self) -> Option<T> {
+    pub fn peek<T: Peek>(&mut self) -> bool {
         let index = self.index;
+        let pending = self.pending.clone();
         let res = T::peek(self);
         self.index = index;
+        self.pending = pending;
         res
     }
 
     pub fn parse<T: Parse>(&mut self) -> Result<T, ParseError> {
-        T::parse(self)
+        let mut fork = self.fork();
+        let value = T::parse(&mut fork)?;
+        self.seek(&fork);
+        Ok(value)
     }
 
     /// Parse `T` if it matches; leave the stream unchanged otherwise.
@@ -174,9 +168,63 @@ impl<'a> ParseStream<'a> {
         Some(&self.input[start..self.index])
     }
 
-    /// move the iterator forward and return the token.
+    /// move the iterator forward and return the token. Consumes a pending split
+    /// half first if one is present.
     pub fn advance(&mut self) -> Option<&TokenTree> {
+        if self.pending.is_some() {
+            self.pending = None;
+            // The split half has been consumed; report the real token it came from.
+            return self.input.get(self.index - 1);
+        }
+
         self.advance_by(1)?.first()
+    }
+
+    /// Consume the next token as the single-char punct spelled `head`. If the
+    /// next token is a longer glued punct that starts with `head` (e.g. `>>`,
+    /// `>=`, `>>=`), peel off the first char and leave the remainder as a pending
+    /// split token. Returns the span for the consumed head punct, or `None` if
+    /// the next token isn't a punct starting with `head`.
+    pub fn eat_punct_head(&mut self, head: &str) -> Option<Span> {
+        use crate::Punctuation;
+
+        let punct = match self.curr() {
+            Some(TokenTree::Token(Token::Punct(p))) => *p,
+            _ => return None,
+        };
+
+        let text = punct.as_str();
+
+        if text == head {
+            let span = punct.span();
+            self.advance();
+            return Some(span);
+        }
+
+        if !text.starts_with(head) {
+            return None;
+        }
+
+        let rest = &text[head.len()..];
+        let remainder = Self::scan_punct(rest)?;
+        let full = punct.span();
+        let (head_span, rest_span) = split_span(full, head.len());
+
+        let mut remainder = remainder;
+        remainder.set_span(rest_span);
+
+        self.advance();
+        self.pending = Some(Punctuation::into_token_tree(remainder));
+        Some(head_span)
+    }
+
+    /// Lex a single punctuation token from `text` (must be exactly one punct).
+    fn scan_punct(text: &str) -> Option<crate::Punctuation> {
+        use crate::Punctuation;
+        use crate::lex::{Cursor, Scan};
+
+        let cursor = Cursor::new(text, 0);
+        <Punctuation as Scan>::scan(cursor).ok().map(|(_, op)| op)
     }
 
     /// Consume a group with the given delimiter and return its inner token stream.
@@ -242,9 +290,9 @@ mod tests {
         let stream = "a b".parse::<TokenStream>().unwrap();
         let mut ps = stream.parse();
 
-        assert!(matches!(ps.peek::<Ident>(), Some(_),));
-        assert!(matches!(ps.peek::<Ident>(), Some(_),));
-        assert!(matches!(ps.parse::<Ident>(), Ok(_)));
+        assert!(matches!(ps.peek::<Ident>(), true,));
+        assert!(matches!(ps.peek::<Ident>(), true,));
+        assert!(matches!(ps.parse::<Ident>(), Ok(_),));
         assert!(!ps.is_empty()); // "b" remains
     }
 
@@ -255,7 +303,7 @@ mod tests {
         let mut fork = ps.fork();
 
         assert!(matches!(fork.parse::<Ident>(), Ok(_),)); // "a"
-        assert!(matches!(ps.peek::<Ident>(), Some(_),)); // still "a"
+        assert!(matches!(ps.peek::<Ident>(), true,)); // still "a"
     }
 
     #[test]
@@ -271,7 +319,7 @@ mod tests {
 
         // commit fork progress to original
         ps.seek(&fork);
-        assert!(matches!(ps.peek::<Ident>(), Some(_),)); // now at "b"
+        assert!(matches!(ps.peek::<Ident>(), true,)); // now at "b"
     }
 
     #[test]

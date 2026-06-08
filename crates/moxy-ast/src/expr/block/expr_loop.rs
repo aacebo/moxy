@@ -4,7 +4,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A loop expression: `loop { ... }`, `'label: loop { ... }`."]
+/// A loop expression: `loop { ... }`, `'label: loop { ... }`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprLoop {
@@ -23,6 +23,7 @@ impl Spanner for ExprLoop {
         } else {
             self.loop_keyword.span()
         };
+
         start.join(self.body.span())
     }
 }
@@ -31,6 +32,7 @@ impl ExprLoop {
     pub fn parse_from(stream: &mut ParseStream, label: Option<Label>) -> Result<Self, ParseError> {
         let loop_keyword = stream.parse::<Loop>()?;
         let body = stream.parse::<StmtBlock>()?;
+
         Ok(Self {
             attrs: Vec::new(),
             label,

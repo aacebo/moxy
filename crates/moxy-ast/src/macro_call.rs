@@ -4,7 +4,7 @@ use moxy_token::{Delim, Group, LexError, Parse, Span, Spanner, ToTokens, TokenSt
 
 use crate::{Attribute, Path};
 
-#[doc = "A macro invocation (`path!(...)`, `path![...]`, `path!{...}`)."]
+/// A macro invocation (`path!(...)`, `path![...]`, `path!{...}`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MacroCall {

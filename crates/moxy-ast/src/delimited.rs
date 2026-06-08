@@ -134,6 +134,20 @@ impl<T: Default> Default for Delimited<T> {
     }
 }
 
+impl<T> std::ops::Deref for Delimited<T> {
+    type Target = T;
+
+    fn deref(&self) -> &Self::Target {
+        &self.inner
+    }
+}
+
+impl<T> std::ops::DerefMut for Delimited<T> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.inner
+    }
+}
+
 #[cfg(feature = "serde")]
 impl<T: serde::Serialize> serde::Serialize for Delimited<T> {
     fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {

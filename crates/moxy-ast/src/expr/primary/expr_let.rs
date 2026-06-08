@@ -4,7 +4,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A let guard expression used in `if let` / `while let`: `let pat = expr`."]
+/// A let guard expression used in `if let` / `while let`: `let pat = expr`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprLet {
@@ -12,7 +12,7 @@ pub struct ExprLet {
     pub let_keyword: Let,
     pub pat: Box<Pattern>,
     pub eq: Eq,
-    pub expr: Box<super::super::Expr>,
+    pub expr: Box<Expr>,
 }
 
 impl Spanner for ExprLet {

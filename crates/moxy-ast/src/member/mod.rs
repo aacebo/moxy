@@ -11,7 +11,7 @@ pub use foreign_item::*;
 pub use impl_item::*;
 pub use trait_item::*;
 
-#[doc = "A struct/tuple field accessor — a named field (`.field`) or a tuple index (`.0`)."]
+/// A struct/tuple field accessor — a named field (`.field`) or a tuple index (`.0`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Member {

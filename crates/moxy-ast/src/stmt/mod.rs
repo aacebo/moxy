@@ -12,7 +12,7 @@ pub use stmt_block::*;
 pub use stmt_local::*;
 pub use stmt_macro::*;
 
-#[doc = "A statement in a block."]
+/// A statement in a block.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Stmt {
@@ -40,16 +40,16 @@ impl Spanner for Stmt {
 
 impl Parse for Stmt {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<StmtLocal>().is_some() {
+        if stream.peek::<StmtLocal>() {
             return Ok(Stmt::Local(Box::new(stream.parse()?)));
         }
-        if stream.peek::<StmtBlock>().is_some() {
+        if stream.peek::<StmtBlock>() {
             return Ok(Stmt::Block(stream.parse()?));
         }
-        if stream.peek::<crate::Item>().is_some() {
+        if stream.peek::<crate::Item>() {
             return Ok(Stmt::Item(Box::new(stream.parse()?)));
         }
-        if stream.peek::<StmtMacro>().is_some() {
+        if stream.peek::<StmtMacro>() {
             return Ok(Stmt::Macro(stream.parse()?));
         }
         let expr = stream.parse::<Expr>()?;

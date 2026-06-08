@@ -131,7 +131,7 @@ macro_rules! define_leaf {
 use moxy_token::{keyword, punct};
 
 define_leaf! {
-    #[doc = "A binary operator (`+`, `==`, `&&`, ...)."]
+    /// A binary operator (`+`, `==`, `&&`, ...).
     pub enum BinOp {
         And => punct::AndAnd,
         Or => punct::OrOr,
@@ -153,14 +153,14 @@ define_leaf! {
         Gt => punct::Gt,
     }
 
-    #[doc = "A unary operator (`*`, `!`, `-`)."]
+    /// A unary operator (`*`, `!`, `-`).
     pub enum UnOp {
         Deref => punct::Star,
         Not => punct::Not,
         Neg => punct::Minus,
     }
 
-    #[doc = "A compound assignment operator (`+=`, `<<=`, ...)."]
+    /// A compound assignment operator (`+=`, `<<=`, ...).
     pub enum AssignOp {
         ShlAssign => punct::ShlEq,
         ShrAssign => punct::ShrEq,
@@ -174,55 +174,55 @@ define_leaf! {
         BitOrAssign => punct::OrEq,
     }
 
-    #[doc = "Whether a function is `async`."]
+    /// Whether a function is `async`.
     pub enum Asyncness {
         Async => keyword::Async,
         Sync,
     }
 
-    #[doc = "Whether an item is `const`."]
+    /// Whether an item is `const`.
     pub enum Constness {
         Const => keyword::Const,
         NoConst,
     }
 
-    #[doc = "Whether an item is `unsafe`."]
+    /// Whether an item is `unsafe`.
     pub enum Unsafety {
         Unsafe => keyword::Unsafe,
         Safe,
     }
 
-    #[doc = "Whether an impl item is `default`."]
+    /// Whether an impl item is `default`.
     pub enum Defaultness {
         Default => keyword::Default,
         Final,
     }
 
-    #[doc = "Whether a binding, reference, or pointer is `mut`."]
+    /// Whether a binding, reference, or pointer is `mut`.
     pub enum Mutability {
         Mutable => keyword::Mut,
         Immutable,
     }
 
-    #[doc = "Whether a closure is `static` (immovable)."]
+    /// Whether a closure is `static` (immovable).
     pub enum Movability {
         Static => keyword::Static,
         Movable,
     }
 
-    #[doc = "The limits of a range expression (`..` or `..=`)."]
+    /// The limits of a range expression (`..` or `..=`).
     pub enum RangeLimits {
         Closed => punct::DotDotEq,
         HalfOpen => punct::DotDot,
     }
 
-    #[doc = "A trait bound modifier (`?Sized`)."]
+    /// A trait bound modifier (`?Sized`).
     pub enum TraitBoundModifier {
         Maybe => punct::Question,
         None,
     }
 
-    #[doc = "The polarity of a trait bound (`Trait` or `!Trait`)."]
+    /// The polarity of a trait bound (`Trait` or `!Trait`).
     pub enum BoundPolarity {
         Negative => punct::Not,
         Positive,

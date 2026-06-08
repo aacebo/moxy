@@ -5,7 +5,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use super::UseTree;
 use crate::Ident;
 
-#[doc = "A use path segment (`foo::<rest>`)."]
+/// A use path segment (`foo::<rest>`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UsePath {

@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use super::ImplItem;
 use crate::{Attribute, MacroCall};
 
-#[doc = "A macro invocation inside an `impl` block."]
+/// A macro invocation inside an `impl` block.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ImplItemMacro {

@@ -1,13 +1,13 @@
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Delimited};
+use crate::*;
 
-#[doc = "A parenthesized expression: `(x + y)`."]
+/// A parenthesized expression: `(x + y)`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprParen {
     pub attrs: Vec<Attribute>,
-    pub content: Delimited<Box<super::super::Expr>>,
+    pub content: Delimited<Box<Expr>>,
 }
 
 impl Spanner for ExprParen {

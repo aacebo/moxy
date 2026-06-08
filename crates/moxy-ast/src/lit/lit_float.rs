@@ -3,7 +3,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::Lit;
 
-#[doc = "A floating-point literal (`1.0`, `3.14f64`)."]
+/// A floating-point literal (`1.0`, `3.14f64`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LitFloat {

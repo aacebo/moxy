@@ -3,7 +3,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{BoundPolarity, Path};
 
-#[doc = "A trait reference (`Trait`, `!Trait`)."]
+/// A trait reference (`Trait`, `!Trait`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitRef {

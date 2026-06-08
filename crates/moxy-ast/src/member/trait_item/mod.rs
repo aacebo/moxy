@@ -11,7 +11,7 @@ pub use trait_item_fn::*;
 pub use trait_item_macro::*;
 pub use trait_item_type::*;
 
-#[doc = "An item inside a `trait` definition."]
+/// An item inside a `trait` definition.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum TraitItem {
@@ -51,13 +51,13 @@ impl From<TraitItemConst> for TraitItem {
 
 impl Parse for TraitItem {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<TraitItemConst>().is_some() {
+        if stream.peek::<TraitItemConst>() {
             return Ok(TraitItem::Const(Box::new(stream.parse()?)));
         }
-        if stream.peek::<TraitItemType>().is_some() {
+        if stream.peek::<TraitItemType>() {
             return Ok(TraitItem::Type(stream.parse()?));
         }
-        if stream.peek::<TraitItemFn>().is_some() {
+        if stream.peek::<TraitItemFn>() {
             return Ok(TraitItem::Fn(stream.parse()?));
         }
         Ok(TraitItem::Macro(stream.parse()?))

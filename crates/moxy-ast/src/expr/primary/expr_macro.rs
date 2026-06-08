@@ -3,7 +3,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Expr, MacroCall};
 
-#[doc = "A macro invocation expression (`path!(...)`, `path![...]`, `path!{...}`)."]
+/// A macro invocation expression (`path!(...)`, `path![...]`, `path!{...}`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprMacro {

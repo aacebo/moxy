@@ -3,12 +3,12 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A field access expression: `x.field`, `tuple.0`."]
+/// A field access expression: `x.field`, `tuple.0`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprField {
     pub attrs: Vec<Attribute>,
-    pub base: Box<super::super::Expr>,
+    pub base: Box<Expr>,
     pub dot: Dot,
     pub member: Member,
 }

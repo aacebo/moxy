@@ -1,10 +1,10 @@
 use super::ToTokens;
 use super::lex::{Cursor, LexError, Scan};
 use crate::parser::{ParseError, ParseStream};
-use crate::{Parse, Span, Token, TokenStream, TokenTree};
+use crate::{Parse, Span, Spanner, Token, TokenStream, TokenTree};
 
 macro_rules! define_punct {
-    ($($name:ident => $text:literal),+ $(,)?) => {
+    ($($name:ident[$is_method:ident, $as_method:ident] $($split:ident)? => $text:literal),+ $(,)?) => {
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
         pub enum Punctuation {
             $($name($name),)*
@@ -28,6 +28,26 @@ macro_rules! define_punct {
                     $(Self::$name(v) => v.set_span(span),)*
                 }
             }
+
+            #[inline]
+            pub fn to_token(&self) -> Token {
+                Token::Punct(self.clone())
+            }
+
+            #[inline]
+            pub fn into_token(self) -> Token {
+                Token::Punct(self)
+            }
+
+            #[inline]
+            pub fn to_token_tree(&self) -> TokenTree {
+                TokenTree::Token(self.to_token())
+            }
+
+            #[inline]
+            pub fn into_token_tree(self) -> TokenTree {
+                TokenTree::Token(self.into_token())
+            }
         }
 
         impl ToTokens for Punctuation {
@@ -38,7 +58,7 @@ macro_rules! define_punct {
             }
         }
 
-        impl crate::Spanner for Punctuation {
+        impl Spanner for Punctuation {
             fn span(&self) -> Span {
                 self.span()
             }
@@ -125,20 +145,7 @@ macro_rules! define_punct {
                 }
             }
 
-            impl Parse for $name {
-                fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-                    let at = stream.span();
-
-                    match stream.advance() {
-                        Some(TokenTree::Token(Token::Punct(Punctuation::$name(op)))) => {
-                            Ok(Self::new(op.span()))
-                        }
-                        _ => Err(LexError::new(at)
-                            .message(concat!("expected `", $text, "`"))
-                            .into()),
-                    }
-                }
-            }
+            define_punct!(@parse $name, $text $(, $split)?);
 
             impl ToTokens for $name {
                 fn to_tokens(&self, tokens: &mut TokenStream) {
@@ -146,7 +153,7 @@ macro_rules! define_punct {
                 }
             }
 
-            impl crate::Spanner for $name {
+            impl Spanner for $name {
                 fn span(&self) -> Span {
                     self.span
                 }
@@ -168,59 +175,154 @@ macro_rules! define_punct {
                 }
             }
         )+
+
+        impl Token {
+            pub fn is_punct(&self) -> bool {
+                matches!(self, Self::Punct(_))
+            }
+
+            pub fn as_punct(&self) -> Option<&Punctuation> {
+                match self {
+                    Self::Punct(v) => Some(v),
+                    _ => None,
+                }
+            }
+
+            $(
+                pub fn $is_method(&self) -> bool {
+                    matches!(self, Self::Punct(Punctuation::$name(_)))
+                }
+
+                pub fn $as_method(&self) -> Option<&$name> {
+                    match self {
+                        Self::Punct(Punctuation::$name(v)) => Some(v),
+                        _ => None,
+                    }
+                }
+            )*
+        }
+
+        impl TokenTree {
+            pub fn is_punct(&self) -> bool {
+                match self {
+                    Self::Token(v) => v.is_punct(),
+                    _ => false,
+                }
+            }
+
+            pub fn as_punct(&self) -> Option<&Punctuation> {
+                match self {
+                    Self::Token(v) => v.as_punct(),
+                    _ => None,
+                }
+            }
+
+            $(
+                pub fn $is_method(&self) -> bool {
+                    matches!(self, Self::Token(Token::Punct(Punctuation::$name(_))))
+                }
+
+                pub fn $as_method(&self) -> Option<&$name> {
+                    match self {
+                        Self::Token(Token::Punct(Punctuation::$name(v))) => Some(v),
+                        _ => None,
+                    }
+                }
+            )*
+        }
+    };
+
+    // Splitting parse: accept a glued punct (`>>`, `>=`, ...) by peeling off the
+    // first char and leaving the remainder pending. Used by `Gt`/`Lt` so nested
+    // generics like `Vec<Box<T>>` parse without the lexer pre-splitting `>>`.
+    (@parse $name:ident, $text:literal, split) => {
+        impl Parse for $name {
+            fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+                let at = stream.span();
+
+                match stream.eat_punct_head($text) {
+                    Some(span) => Ok(Self::new(span)),
+                    None => Err(LexError::new(at)
+                        .message(concat!("expected `", $text, "`"))
+                        .into()),
+                }
+            }
+        }
+    };
+
+    // Exact-match parse: consume the next token only if it is exactly this punct.
+    // Reads via `curr` so a pending split half (e.g. the `>=` left after a `>`
+    // was peeled from `>>=`) is matched and consumed correctly.
+    (@parse $name:ident, $text:literal) => {
+        impl Parse for $name {
+            fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+                let at = stream.span();
+
+                match stream.curr() {
+                    Some(TokenTree::Token(Token::Punct(Punctuation::$name(op)))) => {
+                        let span = op.span();
+                        stream.advance();
+                        Ok(Self::new(span))
+                    }
+                    _ => Err(LexError::new(at)
+                        .message(concat!("expected `", $text, "`"))
+                        .into()),
+                }
+            }
+        }
     };
 }
 
 define_punct! {
-    And        => "&",
-    Or         => "|",
-    Not        => "!",
-    Tilde      => "~",
-    Plus       => "+",
-    Minus      => "-",
-    Star       => "*",
-    Slash      => "/",
-    Percent    => "%",
-    Caret      => "^",
-    Eq         => "=",
-    Lt         => "<",
-    Gt         => ">",
-    At         => "@",
-    Dot        => ".",
-    Comma      => ",",
-    Semi       => ";",
-    Colon      => ":",
-    Pound      => "#",
-    Dollar     => "$",
-    Question   => "?",
-    Quote      => "'",
+    And[is_punct_and, as_punct_and]                         => "&",
+    Or[is_punct_or, as_punct_or]                            => "|",
+    Not[is_punct_not, as_punct_not]                         => "!",
+    Tilde[is_punct_tilde, as_punct_tilde]                   => "~",
+    Plus[is_punct_plus, as_punct_plus]                      => "+",
+    Minus[is_punct_minus, as_punct_minus]                   => "-",
+    Star[is_punct_star, as_punct_star]                      => "*",
+    Slash[is_punct_slash, as_punct_slash]                   => "/",
+    Percent[is_punct_percent, as_punct_percent]             => "%",
+    Caret[is_punct_caret, as_punct_caret]                   => "^",
+    Eq[is_punct_eq, as_punct_eq]                            => "=",
+    Lt[is_punct_lt, as_punct_lt] split                      => "<",
+    Gt[is_punct_gt, as_punct_gt] split                      => ">",
+    At[is_punct_at, as_punct_at]                            => "@",
+    Dot[is_punct_dot, as_punct_dot]                         => ".",
+    Comma[is_punct_comma, as_punct_comma]                   => ",",
+    Semi[is_punct_semi, as_punct_semi]                      => ";",
+    Colon[is_punct_colon, as_punct_colon]                   => ":",
+    Pound[is_punct_pound, as_punct_pound]                   => "#",
+    Dollar[is_punct_dollar, as_punct_dollar]                => "$",
+    Question[is_punct_question, as_punct_question]          => "?",
+    Quote[is_punct_quote, as_punct_quote]                   => "'",
 
-    AndAnd     => "&&",
-    OrOr       => "||",
-    Shl        => "<<",
-    Shr        => ">>",
-    EqEq       => "==",
-    Ne         => "!=",
-    Le         => "<=",
-    Ge         => ">=",
-    AndEq      => "&=",
-    OrEq       => "|=",
-    PlusEq     => "+=",
-    MinusEq    => "-=",
-    StarEq     => "*=",
-    SlashEq    => "/=",
-    PercentEq  => "%=",
-    CaretEq    => "^=",
-    FatArrow   => "=>",
-    RArrow     => "->",
-    LArrow     => "<-",
-    PathSep    => "::",
-    DotDot     => "..",
+    AndAnd[is_punct_and_and, as_punct_and_and]              => "&&",
+    OrOr[is_punct_or_or, as_punct_or_or]                    => "||",
+    Shl[is_punct_shl, as_punct_shl]                         => "<<",
+    Shr[is_punct_shr, as_punct_shr]                         => ">>",
+    EqEq[is_punct_eq_eq, as_punct_eq_eq]                    => "==",
+    Ne[is_punct_ne, as_punct_ne]                            => "!=",
+    Le[is_punct_le, as_punct_le]                            => "<=",
+    Ge[is_punct_ge, as_punct_ge]                            => ">=",
+    AndEq[is_punct_and_eq, as_punct_and_eq]                 => "&=",
+    OrEq[is_punct_or_eq, as_punct_or_eq]                    => "|=",
+    PlusEq[is_punct_plus_eq, as_punct_plus_eq]              => "+=",
+    MinusEq[is_punct_minus_eq, as_punct_minus_eq]           => "-=",
+    StarEq[is_punct_star_eq, as_punct_star_eq]              => "*=",
+    SlashEq[is_punct_slash_eq, as_punct_slash_eq]           => "/=",
+    PercentEq[is_punct_percent_eq, as_punct_percent_eq]     => "%=",
+    CaretEq[is_punct_caret_eq, as_punct_caret_eq]           => "^=",
+    FatArrow[is_punct_fat_arrow, as_punct_fat_arrow]        => "=>",
+    RArrow[is_punct_rarrow, as_punct_rarrow]                => "->",
+    LArrow[is_punct_larrow, as_punct_larrow]                => "<-",
+    PathSep[is_punct_path_sep, as_punct_path_sep]           => "::",
+    DotDot[is_punct_dot_dot, as_punct_dot_dot]              => "..",
 
-    ShlEq      => "<<=",
-    ShrEq      => ">>=",
-    DotDotDot  => "...",
-    DotDotEq   => "..=",
+    ShlEq[is_punct_shl_eq, as_punct_shl_eq]                 => "<<=",
+    ShrEq[is_punct_shr_eq, as_punct_shr_eq]                 => ">>=",
+    DotDotDot[is_punct_dot_dot_dot, as_punct_dot_dot_dot]   => "...",
+    DotDotEq[is_punct_dot_dot_eq, as_punct_dot_dot_eq]      => "..=",
 }
 
 #[cfg(test)]
@@ -345,6 +447,54 @@ mod tests {
         assert_eq!(format!("{}", Comma::default()), ",");
         assert_eq!(format!("{}", EqEq::default()), "==");
         assert_eq!(format!("{}", DotDotEq::default()), "..=");
+    }
+
+    #[test]
+    fn gt_splits_shr() {
+        // `>>` lexes as one `Shr`, but two `Gt` parses peel it apart (nested generics).
+        let ts = TokenStream::from_str(">>").unwrap();
+        let mut ps = ts.parse();
+        assert!(ps.parse::<Gt>().is_ok());
+        assert!(!ps.is_empty());
+        assert!(ps.parse::<Gt>().is_ok());
+        assert!(ps.is_empty());
+    }
+
+    #[test]
+    fn gt_splits_shr_eq() {
+        // `>>=` -> `>` then leftover `>=`.
+        let ts = TokenStream::from_str(">>=").unwrap();
+        let mut ps = ts.parse();
+        assert!(ps.parse::<Gt>().is_ok());
+        assert!(ps.parse::<Ge>().is_ok());
+        assert!(ps.is_empty());
+    }
+
+    #[test]
+    fn lt_splits_shl() {
+        let ts = TokenStream::from_str("<<").unwrap();
+        let mut ps = ts.parse();
+        assert!(ps.parse::<Lt>().is_ok());
+        assert!(ps.parse::<Lt>().is_ok());
+        assert!(ps.is_empty());
+    }
+
+    #[test]
+    fn shr_still_parses_whole() {
+        // Requesting `Shr` directly still consumes the whole glued op (binary `>>`).
+        let ts = TokenStream::from_str(">>").unwrap();
+        let mut ps = ts.parse();
+        assert!(ps.parse::<Shr>().is_ok());
+        assert!(ps.is_empty());
+    }
+
+    #[test]
+    fn peek_gt_sees_shr() {
+        let ts = TokenStream::from_str(">>").unwrap();
+        let mut ps = ts.parse();
+        assert!(ps.peek::<Gt>());
+        // peek does not consume: `Shr` is still wholly parseable afterwards.
+        assert!(ps.parse::<Shr>().is_ok());
     }
 
     #[cfg(feature = "serde")]

@@ -68,4 +68,24 @@ impl Delim {
             Self::Paren => ')',
         }
     }
+
+    #[inline]
+    pub fn is_none(&self) -> bool {
+        matches!(self, Self::None)
+    }
+
+    #[inline]
+    pub fn is_brace(&self) -> bool {
+        matches!(self, Self::Brace)
+    }
+
+    #[inline]
+    pub fn is_bracket(&self) -> bool {
+        matches!(self, Self::Bracket)
+    }
+
+    #[inline]
+    pub fn is_paren(&self) -> bool {
+        matches!(self, Self::Paren)
+    }
 }

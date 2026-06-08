@@ -6,7 +6,7 @@ use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 use super::Item;
 use crate::{Attribute, Delimited, Ident, Unsafety, Visibility};
 
-#[doc = "A module item (`mod foo;` or `mod foo { ... }`)."]
+/// A module item (`mod foo;` or `mod foo { ... }`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemMod {

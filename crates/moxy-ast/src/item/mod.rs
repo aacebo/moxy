@@ -35,7 +35,7 @@ pub use item_type_alias::*;
 pub use item_union::*;
 pub use item_use::*;
 
-#[doc = "A top-level item (fn, struct, enum, trait, impl, use, ...)."]
+/// A top-level item (fn, struct, enum, trait, impl, use, ...).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Item {
@@ -180,52 +180,52 @@ impl Parse for Item {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
 
-        if stream.peek::<ItemMacroRules>().is_some() {
+        if stream.peek::<ItemMacroRules>() {
             return Ok(Item::Macro2(stream.parse()?));
         }
-        if stream.peek::<ItemUse>().is_some() {
+        if stream.peek::<ItemUse>() {
             return Ok(Item::Use(stream.parse()?));
         }
-        if stream.peek::<ItemExternCrate>().is_some() {
+        if stream.peek::<ItemExternCrate>() {
             return Ok(Item::ExternCrate(stream.parse()?));
         }
-        if stream.peek::<ItemForeignMod>().is_some() {
+        if stream.peek::<ItemForeignMod>() {
             return Ok(Item::ForeignMod(stream.parse()?));
         }
-        if stream.peek::<ItemMod>().is_some() {
+        if stream.peek::<ItemMod>() {
             return Ok(Item::Mod(stream.parse()?));
         }
-        if stream.peek::<ItemStruct>().is_some() {
+        if stream.peek::<ItemStruct>() {
             return Ok(Item::Struct(stream.parse()?));
         }
-        if stream.peek::<ItemEnum>().is_some() {
+        if stream.peek::<ItemEnum>() {
             return Ok(Item::Enum(stream.parse()?));
         }
-        if stream.peek::<ItemUnion>().is_some() {
+        if stream.peek::<ItemUnion>() {
             return Ok(Item::Union(stream.parse()?));
         }
-        if stream.peek::<ItemTraitAlias>().is_some() {
+        if stream.peek::<ItemTraitAlias>() {
             return Ok(Item::TraitAlias(stream.parse()?));
         }
-        if stream.peek::<ItemTrait>().is_some() {
+        if stream.peek::<ItemTrait>() {
             return Ok(Item::Trait(stream.parse()?));
         }
-        if stream.peek::<ItemImpl>().is_some() {
+        if stream.peek::<ItemImpl>() {
             return Ok(Item::Impl(stream.parse()?));
         }
-        if stream.peek::<ItemTypeAlias>().is_some() {
+        if stream.peek::<ItemTypeAlias>() {
             return Ok(Item::TypeAlias(stream.parse()?));
         }
-        if stream.peek::<ItemConst>().is_some() {
+        if stream.peek::<ItemConst>() {
             return Ok(Item::Const(stream.parse()?));
         }
-        if stream.peek::<ItemStatic>().is_some() {
+        if stream.peek::<ItemStatic>() {
             return Ok(Item::Static(stream.parse()?));
         }
-        if stream.peek::<ItemFn>().is_some() {
+        if stream.peek::<ItemFn>() {
             return Ok(Item::Fn(stream.parse()?));
         }
-        if stream.peek::<ItemMacro>().is_some() {
+        if stream.peek::<ItemMacro>() {
             return Ok(Item::Macro(stream.parse()?));
         }
 

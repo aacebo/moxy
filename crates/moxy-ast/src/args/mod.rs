@@ -1,7 +1,7 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Parse, Quote, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
-use crate::{Lifetime, Type};
+use crate::{Expr, Lifetime, Type};
 
 mod angle_args;
 mod assoc_const_arg;
@@ -13,13 +13,13 @@ pub use assoc_const_arg::*;
 pub use assoc_type_arg::*;
 pub use constraint_arg::*;
 
-#[doc = "A single generic argument inside `<...>`."]
+/// A single generic argument inside `<...>`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum GenericArgument {
     Lifetime(Lifetime),
     Type(Type),
-    Const(crate::Expr),
+    Const(Expr),
     AssocType(AssocTypeArg),
     AssocConst(AssocConstArg),
     Constraint(ConstraintArg),
@@ -40,33 +40,35 @@ impl Spanner for GenericArgument {
 
 impl Parse for GenericArgument {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let token = match stream.curr() {
+            None => return Err(ParseError::new(stream.span(), "eof")),
+            Some(v) => v.clone(),
+        };
+
         // Lifetime: starts with `'`.
-        if matches!(
-            stream.curr(),
-            Some(TokenTree::Token(Token::Punct(moxy_token::Punctuation::Quote(_))))
-        ) {
+        if token.is_punct_quote() {
             return Ok(GenericArgument::Lifetime(stream.parse()?));
         }
 
         // Constraint `ident [generics] : bounds` — must come before AssocType/AssocConst
         // because `:` is unambiguous.
-        if stream.peek::<ConstraintArg>().is_some() {
-            return Ok(GenericArgument::Constraint(stream.parse()?));
+        if let Ok(v) = stream.parse::<ConstraintArg>() {
+            return Ok(v.into_generic_argument());
         }
 
         // Associated type binding `ident [generics] = Type`.
-        if stream.peek::<AssocTypeArg>().is_some() {
-            return Ok(GenericArgument::AssocType(stream.parse()?));
+        if let Ok(v) = stream.parse::<AssocTypeArg>() {
+            return Ok(v.into_generic_argument());
         }
 
         // Associated const binding `ident [generics] = expr`.
-        if stream.peek::<AssocConstArg>().is_some() {
-            return Ok(GenericArgument::AssocConst(stream.parse()?));
+        if let Ok(v) = stream.parse::<AssocConstArg>() {
+            return Ok(v.into_generic_argument());
         }
 
         // Literal or block expression const argument.
-        let is_const = matches!(stream.curr(), Some(TokenTree::Token(Token::Literal(_))))
-            || matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == moxy_token::Delim::Brace);
+        let is_const = token.is_literal() || token.as_group().map(|g| g.delim().is_brace()).unwrap_or(false);
+        // matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == moxy_token::Delim::Brace);
 
         if is_const {
             return Ok(GenericArgument::Const(stream.parse()?));

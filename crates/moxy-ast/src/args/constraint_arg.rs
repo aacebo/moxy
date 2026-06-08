@@ -3,9 +3,9 @@ use moxy_token::punct::{Colon, Lt, Plus};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::AngleArgs;
-use crate::{Ident, Punctuated, TypeBound};
+use crate::{GenericArgument, Ident, Punctuated, TypeBound};
 
-#[doc = "An associated type bound constraint (`Item: Bound`)."]
+/// An associated type bound constraint (`Item: Bound`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ConstraintArg {
@@ -15,35 +15,23 @@ pub struct ConstraintArg {
     pub bounds: Punctuated<TypeBound, Plus>,
 }
 
+impl ConstraintArg {
+    pub fn to_generic_argument(&self) -> GenericArgument {
+        GenericArgument::Constraint(self.clone())
+    }
+
+    pub fn into_generic_argument(self) -> GenericArgument {
+        GenericArgument::Constraint(self)
+    }
+}
+
 impl Parse for ConstraintArg {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let mut fork = stream.fork();
-        let ident = fork.parse::<Ident>()?;
-
-        let generics = if fork.peek::<Lt>().is_some() {
-            Some(fork.parse::<AngleArgs>()?)
-        } else {
-            None
-        };
-
-        let colon_punct = fork.parse::<Colon>()?;
-        let mut bounds = Punctuated::new();
-
-        loop {
-            bounds.push_value(fork.parse::<TypeBound>()?);
-            if fork.peek::<Plus>().is_some() {
-                bounds.push_punct(fork.parse::<Plus>()?);
-            } else {
-                break;
-            }
-        }
-
-        stream.seek(&fork);
         Ok(Self {
-            ident,
-            generics,
-            colon_punct,
-            bounds,
+            ident: stream.parse()?,
+            generics: stream.parse_if(),
+            colon_punct: stream.parse()?,
+            bounds: Punctuated::parse_separated_nonempty(stream)?,
         })
     }
 }

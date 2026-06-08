@@ -2,7 +2,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A path pattern, e.g. `Some` or `std::option::Option::None`."]
+/// A path pattern, e.g. `Some` or `std::option::Option::None`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatPath {

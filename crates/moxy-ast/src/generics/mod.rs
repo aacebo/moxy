@@ -31,7 +31,7 @@ pub use use_bound::*;
 pub use where_clause::*;
 pub use where_predicate::*;
 
-#[doc = "Generic parameters and an optional `where` clause."]
+/// Generic parameters and an optional `where` clause.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Generics {
@@ -43,26 +43,16 @@ pub struct Generics {
 
 impl Parse for Generics {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let params = if stream.peek::<Lt>().is_some() {
+        let params = if stream.peek::<Lt>() {
             let _ = stream.parse::<Lt>()?;
-            let mut params = Punctuated::new();
-
-            while !stream.peek_angle_close() && !stream.is_empty() {
-                params.push_value(stream.parse::<GenericParam>()?);
-                if stream.peek::<Comma>().is_some() {
-                    params.push_punct(stream.parse::<Comma>()?);
-                } else {
-                    break;
-                }
-            }
-
-            stream.eat_angle_close()?;
+            let params = Punctuated::parse_separated_nonempty(stream)?;
+            let _ = stream.parse::<Gt>()?;
             params
         } else {
             Punctuated::new()
         };
 
-        let where_clause = if stream.peek::<Where>().is_some() {
+        let where_clause = if stream.peek::<Where>() {
             Some(stream.parse::<WhereClause>()?)
         } else {
             None

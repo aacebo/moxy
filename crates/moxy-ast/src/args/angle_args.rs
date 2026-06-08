@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use super::GenericArgument;
 use crate::Punctuated;
 
-#[doc = "A `<...>` argument list."]
+/// A `<...>` argument list.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct AngleArgs {
@@ -16,23 +16,10 @@ pub struct AngleArgs {
 
 impl Parse for AngleArgs {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let lt_punct = stream.parse::<Lt>()?;
-        let mut args = Punctuated::new();
-
-        while !stream.peek_angle_close() && !stream.is_empty() {
-            args.push_value(stream.parse::<GenericArgument>()?);
-            if stream.peek::<Comma>().is_some() {
-                args.push_punct(stream.parse::<Comma>()?);
-            } else {
-                break;
-            }
-        }
-
-        stream.eat_angle_close()?;
         Ok(Self {
-            lt_punct,
-            args,
-            gt_punct: Gt::default(),
+            lt_punct: stream.parse()?,
+            args: Punctuated::parse_separated_nonempty(stream)?,
+            gt_punct: stream.parse()?,
         })
     }
 }

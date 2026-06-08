@@ -3,7 +3,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A tuple-struct pattern, e.g. `Point(x, y)`."]
+/// A tuple-struct pattern, e.g. `Point(x, y)`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatTupleStruct {

@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Fields, Generics, Ident, Visibility};
 
-#[doc = "A struct item (`struct Name<T> { ... }` or `struct Name(T);`)."]
+/// A struct item (`struct Name<T> { ... }` or `struct Name(T);`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemStruct {
@@ -26,7 +26,7 @@ impl Parse for ItemStruct {
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
 
-        if stream.peek::<moxy_token::keyword::Where>().is_some() {
+        if stream.peek::<moxy_token::keyword::Where>() {
             generics.where_clause = Some(stream.parse()?);
         }
 

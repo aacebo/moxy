@@ -3,7 +3,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Defaultness, Signature, StmtBlock, Visibility};
 
-#[doc = "A free function item (`fn name(...) -> T { ... }`)."]
+/// A free function item (`fn name(...) -> T { ... }`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemFn {

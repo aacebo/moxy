@@ -11,7 +11,7 @@ pub use impl_item_fn::*;
 pub use impl_item_macro::*;
 pub use impl_item_type::*;
 
-#[doc = "An item inside an `impl` block."]
+/// An item inside an `impl` block.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ImplItem {
@@ -51,13 +51,13 @@ impl From<ImplItemConst> for ImplItem {
 
 impl Parse for ImplItem {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<ImplItemConst>().is_some() {
+        if stream.peek::<ImplItemConst>() {
             return Ok(ImplItem::Const(Box::new(stream.parse()?)));
         }
-        if stream.peek::<ImplItemType>().is_some() {
+        if stream.peek::<ImplItemType>() {
             return Ok(ImplItem::Type(stream.parse()?));
         }
-        if stream.peek::<ImplItemFn>().is_some() {
+        if stream.peek::<ImplItemFn>() {
             return Ok(ImplItem::Fn(stream.parse()?));
         }
         Ok(ImplItem::Macro(stream.parse()?))

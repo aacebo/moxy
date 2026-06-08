@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Delimited, Expr, Fields, Generics, Ident, Punctuated, Visibility};
 
-#[doc = "An enum item (`enum Name<T> { Variant, ... }`)."]
+/// An enum item (`enum Name<T> { Variant, ... }`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemEnum {
@@ -25,7 +25,7 @@ impl Parse for ItemEnum {
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
 
-        if stream.peek::<moxy_token::keyword::Where>().is_some() {
+        if stream.peek::<moxy_token::keyword::Where>() {
             generics.where_clause = Some(stream.parse()?);
         }
 
@@ -83,7 +83,7 @@ impl ToTokens for ItemEnum {
     }
 }
 
-#[doc = "An enum variant (`Name`, `Name(T)`, `Name { x: T }`, `Name = 1`)."]
+/// An enum variant (`Name`, `Name(T)`, `Name { x: T }`, `Name = 1`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Variant {
@@ -100,7 +100,7 @@ impl Parse for Variant {
         let ident = stream.parse::<Ident>()?;
         let fields = stream.parse::<Fields>()?;
 
-        let (eq_punct, discriminant) = if stream.peek::<Eq>().is_some() {
+        let (eq_punct, discriminant) = if stream.peek::<Eq>() {
             let eq_punct = stream.parse::<Eq>()?;
             let discriminant = stream.parse::<Expr>()?;
             (Some(eq_punct), Some(discriminant))

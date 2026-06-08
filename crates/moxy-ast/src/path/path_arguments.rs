@@ -4,7 +4,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{AngleArgs, Delimited, Punctuated, ReturnType, Type};
 
-#[doc = "Parenthesized path arguments (`Fn(A, B) -> C`)."]
+/// Parenthesized path arguments (`Fn(A, B) -> C`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ParenthesizedArgs {
@@ -12,7 +12,7 @@ pub struct ParenthesizedArgs {
     pub output: ReturnType,
 }
 
-#[doc = "The arguments of a path segment: none, angle-bracketed (`<T>`), or parenthesized (`Fn(A) -> B`)."]
+/// The arguments of a path segment: none, angle-bracketed (`<T>`), or parenthesized (`Fn(A) -> B`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum PathArguments {
@@ -36,14 +36,14 @@ impl From<ParenthesizedArgs> for PathArguments {
 impl Parse for PathArguments {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let mut fork = stream.fork();
-        if fork.peek::<PathSep>().is_some() {
+        if fork.peek::<PathSep>() {
             let _ = fork.parse::<PathSep>()?;
-            if fork.peek::<Lt>().is_some() {
+            if fork.peek::<Lt>() {
                 stream.seek(&fork);
             }
         }
 
-        if stream.peek::<Lt>().is_some() {
+        if stream.peek::<Lt>() {
             return Ok(PathArguments::AngleBracketed(stream.parse()?));
         }
 

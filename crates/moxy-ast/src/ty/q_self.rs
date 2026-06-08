@@ -6,7 +6,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use super::Type;
 use crate::Path;
 
-#[doc = "The `<T as Trait>` qualifier of a qualified path."]
+/// The `<T as Trait>` qualifier of a qualified path.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct QSelf {
@@ -50,14 +50,14 @@ impl QSelf {
         let lt = stream.parse::<Lt>()?;
         let ty = Box::new(stream.parse::<Type>()?);
 
-        let (as_keyword, trait_path) = if stream.peek::<As>().is_some() {
+        let (as_keyword, trait_path) = if stream.peek::<As>() {
             let as_keyword = stream.parse::<As>()?;
             (Some(as_keyword), Some(stream.parse::<Path>()?))
         } else {
             (None, None)
         };
 
-        stream.eat_angle_close()?;
+        let _ = stream.parse::<Gt>()?;
 
         let position = trait_path.as_ref().map(|p| p.segments.len()).unwrap_or(0);
 

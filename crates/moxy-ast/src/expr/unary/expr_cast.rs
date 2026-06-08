@@ -3,12 +3,12 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A cast expression: `x as u32`."]
+/// A cast expression: `x as u32`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprCast {
     pub attrs: Vec<Attribute>,
-    pub expr: Box<super::super::Expr>,
+    pub expr: Box<Expr>,
     pub as_keyword: As,
     pub ty: Box<Type>,
 }

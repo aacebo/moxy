@@ -4,7 +4,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Lifetime, Punctuated};
 
-#[doc = "A lifetime parameter (`'a: 'b + 'c`)."]
+/// A lifetime parameter (`'a: 'b + 'c`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LifetimeParam {

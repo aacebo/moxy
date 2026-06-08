@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Lifetime, Punctuated};
 
-#[doc = "A `use<'a, T>` bound (precise capturing)."]
+/// A `use<'a, T>` bound (precise capturing).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseBound {
@@ -17,25 +17,11 @@ pub struct UseBound {
 
 impl Parse for UseBound {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let use_keyword = stream.parse::<Use>()?;
-        let lt_punct = stream.parse::<Lt>()?;
-        let mut lifetimes = Punctuated::new();
-
-        while !stream.peek_angle_close() && !stream.is_empty() {
-            lifetimes.push_value(stream.parse::<Lifetime>()?);
-            if stream.peek::<Comma>().is_some() {
-                lifetimes.push_punct(stream.parse::<Comma>()?);
-            } else {
-                break;
-            }
-        }
-
-        stream.eat_angle_close()?;
         Ok(Self {
-            use_keyword,
-            lt_punct,
-            lifetimes,
-            gt_punct: Gt::default(),
+            use_keyword: stream.parse()?,
+            lt_punct: stream.parse()?,
+            lifetimes: Punctuated::parse_separated_nonempty(stream)?,
+            gt_punct: stream.parse()?,
         })
     }
 }

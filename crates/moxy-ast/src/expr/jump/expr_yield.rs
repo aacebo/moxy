@@ -1,15 +1,15 @@
 use moxy_token::keyword::Yield;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::Attribute;
+use crate::*;
 
-#[doc = "A yield expression: `yield`, `yield expr`."]
+/// A yield expression: `yield`, `yield expr`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprYield {
     pub attrs: Vec<Attribute>,
     pub yield_keyword: Yield,
-    pub expr: Option<Box<super::super::Expr>>,
+    pub expr: Option<Box<Expr>>,
 }
 
 impl Spanner for ExprYield {

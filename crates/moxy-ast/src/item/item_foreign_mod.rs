@@ -3,7 +3,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Abi, Attribute, Delimited, ForeignItem, Unsafety};
 
-#[doc = "An `extern` block (`extern \"C\" { ... }`)."]
+/// An `extern` block (`extern "C" { ... }`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemForeignMod {

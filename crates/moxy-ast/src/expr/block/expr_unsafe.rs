@@ -4,7 +4,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "An unsafe block expression: `unsafe { ... }`."]
+/// An unsafe block expression: `unsafe { ... }`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprUnsafe {
@@ -20,6 +20,7 @@ impl Spanner for ExprUnsafe {
         } else {
             self.unsafe_keyword.span()
         };
+
         start.join(self.block.span())
     }
 }
@@ -28,6 +29,7 @@ impl ExprUnsafe {
     pub fn parse_from(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let unsafe_keyword = stream.parse::<Unsafe>()?;
         let block = stream.parse::<StmtBlock>()?;
+
         Ok(Self {
             attrs: Vec::new(),
             unsafe_keyword,
@@ -41,6 +43,7 @@ impl ToTokens for ExprUnsafe {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         self.unsafe_keyword.to_tokens(t);
         self.block.to_tokens(t);
     }

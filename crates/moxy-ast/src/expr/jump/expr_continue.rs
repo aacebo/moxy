@@ -3,7 +3,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A continue expression: `continue`, `continue 'label`."]
+/// A continue expression: `continue`, `continue 'label`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprContinue {

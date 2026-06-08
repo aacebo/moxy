@@ -6,7 +6,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use super::WherePredicate;
 use crate::Punctuated;
 
-#[doc = "A `where` clause."]
+/// A `where` clause.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct WhereClause {
@@ -21,7 +21,7 @@ impl Parse for WhereClause {
 
         while !stream.is_empty() && !matches!(stream.curr(), Some(moxy_token::TokenTree::Group(_))) {
             predicates.push_value(stream.parse::<WherePredicate>()?);
-            if stream.peek::<Comma>().is_some() {
+            if stream.peek::<Comma>() {
                 predicates.push_punct(stream.parse::<Comma>()?);
             } else {
                 break;

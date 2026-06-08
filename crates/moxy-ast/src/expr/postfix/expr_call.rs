@@ -3,13 +3,13 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A function call expression: `f(a, b)`."]
+/// A function call expression: `f(a, b)`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprCall {
     pub attrs: Vec<Attribute>,
-    pub func: Box<super::super::Expr>,
-    pub args: Delimited<Punctuated<super::super::Expr, Comma>>,
+    pub func: Box<Expr>,
+    pub args: Delimited<Punctuated<Expr, Comma>>,
 }
 
 impl Spanner for ExprCall {

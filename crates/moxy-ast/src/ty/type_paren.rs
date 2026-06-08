@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, ToTokens, TokenStream};
 use super::Type;
 use crate::Delimited;
 
-#[doc = "A parenthesized type (e.g. `(T)`)."]
+/// A parenthesized type (e.g. `(T)`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeParen {

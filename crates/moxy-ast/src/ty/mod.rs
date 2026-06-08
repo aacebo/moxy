@@ -35,7 +35,7 @@ pub use type_trait_object::*;
 pub use type_tuple::*;
 pub use typed_param::*;
 
-#[doc = "A Rust type expression. Covers all positions where a type can appear in source code."]
+/// A Rust type expression. Covers all positions where a type can appear in source code.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Type {
@@ -133,17 +133,17 @@ impl From<TypeBareFn> for Type {
 impl Parse for Type {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         // `&` reference.
-        if stream.peek::<And>().is_some() {
+        if stream.peek::<And>() {
             return Ok(Type::Reference(stream.parse()?));
         }
 
         // `*` raw pointer.
-        if stream.peek::<Star>().is_some() {
+        if stream.peek::<Star>() {
             return Ok(Type::Pointer(stream.parse()?));
         }
 
         // Never `!`.
-        if stream.peek::<moxy_token::punct::Not>().is_some() {
+        if stream.peek::<moxy_token::punct::Not>() {
             let not = stream.parse::<moxy_token::punct::Not>()?;
             return Ok(Type::Never(not));
         }
@@ -164,7 +164,7 @@ impl Parse for Type {
             let mut inner = group_tokens.parse();
             let elem = Box::new(inner.parse::<Type>()?);
 
-            if inner.peek::<moxy_token::punct::Semi>().is_some() {
+            if inner.peek::<moxy_token::punct::Semi>() {
                 let semi = inner.parse::<moxy_token::punct::Semi>()?;
                 let len = inner.parse::<crate::Expr>()?;
                 return Ok(Type::Array(TypeArray {
@@ -179,19 +179,19 @@ impl Parse for Type {
         }
 
         // `impl Trait`.
-        if stream.peek::<Impl>().is_some() {
+        if stream.peek::<Impl>() {
             return Ok(Type::ImplTrait(stream.parse()?));
         }
 
         // `dyn Trait`.
-        if stream.peek::<Dyn>().is_some() {
+        if stream.peek::<Dyn>() {
             return Ok(Type::TraitObject(stream.parse()?));
         }
 
         // Bare fn pointer: `fn(...)`, `extern "C" fn(...)`, `unsafe fn(...)`.
-        if stream.peek::<moxy_token::keyword::Fn>().is_some()
-            || stream.peek::<moxy_token::keyword::Extern>().is_some()
-            || stream.peek::<moxy_token::keyword::Unsafe>().is_some()
+        if stream.peek::<moxy_token::keyword::Fn>()
+            || stream.peek::<moxy_token::keyword::Extern>()
+            || stream.peek::<moxy_token::keyword::Unsafe>()
         {
             return Ok(Type::BareFn(stream.parse()?));
         }
@@ -204,7 +204,7 @@ impl Parse for Type {
             let mut inner = group_tokens.parse();
             let elems: Punctuated<Type, Comma> = Punctuated::parse_terminated(&mut inner)?;
 
-            return if elems.len() == 1 && !elems.trailing_punct() {
+            return if elems.len() == 1 && !elems.is_trailing() {
                 let content = Delimited::paren(paren_span, Box::new(elems.into_iter().next().unwrap()));
                 Ok(Type::Paren(TypeParen { content }))
             } else {

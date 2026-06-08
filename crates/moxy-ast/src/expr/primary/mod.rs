@@ -36,7 +36,7 @@ use crate::{
     Asyncness, ClosureParam, Constness, Delimited, FieldValue, Label, Movability, Pattern, Punctuated, QSelf, ReturnType,
 };
 
-#[doc = "Primary/leaf expressions (literals, paths, closures, collections, struct literals, macros)."]
+/// Primary/leaf expressions (literals, paths, closures, collections, struct literals, macros).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum PrimaryExpr {
@@ -164,16 +164,16 @@ impl ExprClosure {
         let asyncness = stream.parse::<Asyncness>()?;
         let capture = stream.parse_if::<Move>();
 
-        let (pipes, inputs) = if stream.peek::<OrOr>().is_some() {
+        let (pipes, inputs) = if stream.peek::<OrOr>() {
             let oror = stream.parse::<OrOr>()?;
             (ClosurePipes::Empty(oror), Punctuated::new())
         } else {
             let open = stream.parse::<Or>()?;
             let mut params = Punctuated::new();
 
-            while stream.peek::<Or>().is_none() && !stream.is_empty() {
+            while !stream.peek::<Or>() && !stream.is_empty() {
                 params.push_value(stream.parse::<ClosureParam>()?);
-                if stream.peek::<Comma>().is_some() {
+                if stream.peek::<Comma>() {
                     params.push_punct(stream.parse::<Comma>()?);
                 } else {
                     break;
@@ -210,13 +210,13 @@ impl ExprStruct {
         let mut rest = None;
 
         while !stream.is_empty() {
-            if stream.peek::<DotDot>().is_some() {
+            if stream.peek::<DotDot>() {
                 let dotdot = stream.parse::<DotDot>()?;
                 rest = Some((dotdot, Box::new(super::parse_expr(stream, true)?)));
                 break;
             }
             fields.push_value(stream.parse::<FieldValue>()?);
-            if stream.peek::<Comma>().is_some() {
+            if stream.peek::<Comma>() {
                 fields.push_punct(stream.parse::<Comma>()?);
             } else {
                 break;
@@ -234,7 +234,7 @@ impl ExprRepeat {
             return Ok(None);
         };
 
-        if fork.peek::<Semi>().is_none() {
+        if !fork.peek::<Semi>() {
             return Ok(None);
         }
 
@@ -257,7 +257,7 @@ impl ExprRepeat {
 
 impl Expr {
     pub fn parse_if(stream: &mut ParseStream) -> Result<Option<Box<Self>>, ParseError> {
-        if stream.is_empty() || stream.peek::<Semi>().is_some() || stream.peek::<Comma>().is_some() {
+        if stream.is_empty() || stream.peek::<Semi>() || stream.peek::<Comma>() {
             return Ok(None);
         }
         let mut fork = stream.fork();
@@ -280,7 +280,7 @@ impl PrimaryExpr {
             let (paren_span, group_tokens) = stream.parse_group_spanned(Delim::Paren)?;
             let mut inner = group_tokens.parse();
             let elems: Punctuated<Expr, Comma> = Punctuated::parse_terminated(&mut inner)?;
-            return Ok(if elems.len() == 1 && !elems.trailing_punct() {
+            return Ok(if elems.len() == 1 && !elems.is_trailing() {
                 let expr = Box::new(elems.into_iter().next().unwrap());
                 Expr::Primary(PrimaryExpr::Paren(ExprParen {
                     attrs: Vec::new(),
@@ -311,15 +311,15 @@ impl PrimaryExpr {
         if Label::is_prefix(stream) {
             let label = Some(stream.parse::<Label>()?);
 
-            if stream.peek::<moxy_token::keyword::While>().is_some() {
+            if stream.peek::<moxy_token::keyword::While>() {
                 return Ok(Expr::Block(BlockExpr::While(ExprWhile::parse_from(stream, label)?)));
             }
 
-            if stream.peek::<moxy_token::keyword::For>().is_some() {
+            if stream.peek::<moxy_token::keyword::For>() {
                 return Ok(Expr::Block(BlockExpr::ForLoop(ExprForLoop::parse_from(stream, label)?)));
             }
 
-            if stream.peek::<moxy_token::keyword::Loop>().is_some() {
+            if stream.peek::<moxy_token::keyword::Loop>() {
                 return Ok(Expr::Block(BlockExpr::Loop(ExprLoop::parse_from(stream, label)?)));
             }
 
@@ -338,43 +338,43 @@ impl PrimaryExpr {
             })));
         }
 
-        if stream.peek::<moxy_token::keyword::If>().is_some() {
+        if stream.peek::<moxy_token::keyword::If>() {
             return ExprIf::parse_from(stream);
         }
 
-        if stream.peek::<moxy_token::keyword::While>().is_some() {
+        if stream.peek::<moxy_token::keyword::While>() {
             return Ok(Expr::Block(BlockExpr::While(ExprWhile::parse_from(stream, None)?)));
         }
 
-        if stream.peek::<moxy_token::keyword::For>().is_some() {
+        if stream.peek::<moxy_token::keyword::For>() {
             return Ok(Expr::Block(BlockExpr::ForLoop(ExprForLoop::parse_from(stream, None)?)));
         }
 
-        if stream.peek::<moxy_token::keyword::Loop>().is_some() {
+        if stream.peek::<moxy_token::keyword::Loop>() {
             return Ok(Expr::Block(BlockExpr::Loop(ExprLoop::parse_from(stream, None)?)));
         }
 
-        if stream.peek::<moxy_token::keyword::Match>().is_some() {
+        if stream.peek::<moxy_token::keyword::Match>() {
             return ExprMatch::parse_from(stream);
         }
 
-        if stream.peek::<Unsafe>().is_some() {
+        if stream.peek::<Unsafe>() {
             return Ok(Expr::Block(BlockExpr::Unsafe(ExprUnsafe::parse_from(stream)?)));
         }
 
-        if stream.peek::<Const>().is_some() && ExprBrace::is_next(stream) {
+        if stream.peek::<Const>() && ExprBrace::is_next(stream) {
             return Ok(Expr::Block(BlockExpr::Const(ExprConst::parse_from(stream)?)));
         }
 
-        if stream.peek::<moxy_token::keyword::Async>().is_some() && ExprAsync::is_block(stream) {
+        if stream.peek::<moxy_token::keyword::Async>() && ExprAsync::is_block(stream) {
             return Ok(Expr::Block(BlockExpr::Async(ExprAsync::parse_from(stream)?)));
         }
 
-        if stream.peek::<Try>().is_some() && ExprBrace::is_next(stream) {
+        if stream.peek::<Try>() && ExprBrace::is_next(stream) {
             return Ok(Expr::Block(BlockExpr::TryBlock(ExprTryBlock::parse_from(stream)?)));
         }
 
-        if stream.peek::<Return>().is_some() {
+        if stream.peek::<Return>() {
             let return_keyword = stream.parse::<Return>()?;
             return Ok(Expr::Jump(JumpExpr::Return(ExprReturn {
                 attrs: Vec::new(),
@@ -383,7 +383,7 @@ impl PrimaryExpr {
             })));
         }
 
-        if stream.peek::<Yield>().is_some() {
+        if stream.peek::<Yield>() {
             let yield_keyword = stream.parse::<Yield>()?;
             return Ok(Expr::Jump(JumpExpr::Yield(ExprYield {
                 attrs: Vec::new(),
@@ -392,7 +392,7 @@ impl PrimaryExpr {
             })));
         }
 
-        if stream.peek::<Break>().is_some() {
+        if stream.peek::<Break>() {
             let break_keyword = stream.parse::<Break>()?;
             let label = Label::parse_opt_break(stream);
             return Ok(Expr::Jump(JumpExpr::Break(ExprBreak {
@@ -403,7 +403,7 @@ impl PrimaryExpr {
             })));
         }
 
-        if stream.peek::<Continue>().is_some() {
+        if stream.peek::<Continue>() {
             let continue_keyword = stream.parse::<Continue>()?;
             let label = Label::parse_opt_break(stream);
             return Ok(Expr::Jump(JumpExpr::Continue(ExprContinue {
@@ -413,7 +413,7 @@ impl PrimaryExpr {
             })));
         }
 
-        if stream.peek::<Let>().is_some() {
+        if stream.peek::<Let>() {
             let let_keyword = stream.parse::<Let>()?;
             let pat = Box::new(stream.parse::<Pattern>()?);
             let eq = stream.parse::<Eq>()?;
@@ -443,7 +443,7 @@ impl PrimaryExpr {
         }
 
         // Qualified path `<T as Trait>::assoc` in expression position.
-        if stream.peek::<moxy_token::punct::Lt>().is_some() {
+        if stream.peek::<moxy_token::punct::Lt>() {
             let (qself, path) = crate::ty::QSelf::parse_qualified(stream)?;
             return Ok(Expr::Primary(PrimaryExpr::Path(ExprPath {
                 attrs: Vec::new(),

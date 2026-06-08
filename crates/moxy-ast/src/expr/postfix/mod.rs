@@ -17,7 +17,7 @@ use super::unary::ExprTry;
 use super::{Expr, UnaryExpr};
 use crate::{Delimited, Member, Punctuated};
 
-#[doc = "Postfix/suffix expressions (calls, field access, indexing, await, try-propagation)."]
+/// Postfix/suffix expressions (calls, field access, indexing, await, try-propagation).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum PostfixExpr {
@@ -87,7 +87,7 @@ impl From<ExprAwait> for PostfixExpr {
 impl PostfixExpr {
     pub fn parse_from(stream: &mut ParseStream, mut expr: Expr) -> Result<Expr, ParseError> {
         loop {
-            if stream.peek::<Dot>().is_some() {
+            if stream.peek::<Dot>() {
                 let dot = stream.parse::<Dot>()?;
 
                 if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("await")) {
@@ -99,6 +99,7 @@ impl PostfixExpr {
                         dot,
                         await_keyword: moxy_token::keyword::Await::new(await_span),
                     }));
+
                     continue;
                 }
 
@@ -129,6 +130,7 @@ impl PostfixExpr {
                     dot,
                     member,
                 }));
+
                 continue;
             }
 
@@ -139,6 +141,7 @@ impl PostfixExpr {
                     func: Box::new(expr),
                     args,
                 }));
+
                 continue;
             }
 
@@ -149,16 +152,18 @@ impl PostfixExpr {
                     base: Box::new(expr),
                     index,
                 }));
+
                 continue;
             }
 
-            if stream.peek::<Question>().is_some() {
+            if stream.peek::<Question>() {
                 let question_punct = stream.parse::<Question>()?;
                 expr = Expr::Unary(UnaryExpr::Try(ExprTry {
                     attrs: Vec::new(),
                     expr: Box::new(expr),
                     question_punct,
                 }));
+
                 continue;
             }
 

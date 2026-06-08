@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Punctuated, TypeBound};
 
-#[doc = "An `impl Trait` type (e.g. `impl Iterator<Item = u8>`)."]
+/// An `impl Trait` type (e.g. `impl Iterator<Item = u8>`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeImplTrait {

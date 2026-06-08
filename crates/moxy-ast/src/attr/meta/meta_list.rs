@@ -2,7 +2,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Delimited, Path};
 
-#[doc = "A list-style meta item (`name(tokens)`)."]
+/// A list-style meta item (`name(tokens)`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MetaList {

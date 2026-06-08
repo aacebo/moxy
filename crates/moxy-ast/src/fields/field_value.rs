@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::expr::{ExprPath, PrimaryExpr};
 use crate::{Attribute, Expr, Member};
 
-#[doc = "A struct literal field (`member: expr` or shorthand `member`)."]
+/// A struct literal field (`member: expr` or shorthand `member`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldValue {
@@ -20,7 +20,7 @@ impl Parse for FieldValue {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Vec<Attribute>>()?;
         let member = stream.parse::<Member>()?;
-        if stream.peek::<Colon>().is_some() {
+        if stream.peek::<Colon>() {
             let colon_punct = Some(stream.parse::<Colon>()?);
             let expr = stream.parse::<Expr>()?;
             Ok(Self {

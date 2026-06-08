@@ -15,7 +15,7 @@ use super::binary::ExprRange;
 use super::{BinaryExpr, Expr};
 use crate::{Mutability, UnOp};
 
-#[doc = "Unary prefix expressions (reference, unary op, cast, try-propagation)."]
+/// Unary prefix expressions (reference, unary op, cast, try-propagation).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum UnaryExpr {
@@ -76,7 +76,7 @@ impl From<ExprTry> for UnaryExpr {
 impl UnaryExpr {
     pub fn parse_from(stream: &mut ParseStream, allow_struct: bool) -> Result<Expr, ParseError> {
         // Prefix range: `..b`, `..=b`, `..`.
-        if stream.peek::<moxy_token::punct::DotDot>().is_some() || stream.peek::<moxy_token::punct::DotDotEq>().is_some() {
+        if stream.peek::<moxy_token::punct::DotDot>() || stream.peek::<moxy_token::punct::DotDotEq>() {
             use crate::RangeLimits;
             let limits = stream.parse::<RangeLimits>()?;
             let end = super::binary::ExprRange::maybe_end(stream, allow_struct)?;
@@ -88,7 +88,7 @@ impl UnaryExpr {
             })));
         }
 
-        if stream.peek::<And>().is_some() {
+        if stream.peek::<And>() {
             let and_punct = stream.parse::<And>()?;
             let mutability = stream.parse::<Mutability>()?;
             let expr = Box::new(UnaryExpr::parse_from(stream, allow_struct)?);

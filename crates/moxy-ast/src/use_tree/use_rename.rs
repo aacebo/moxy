@@ -5,7 +5,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use super::UseTree;
 use crate::Ident;
 
-#[doc = "A renamed use leaf (`foo as bar`)."]
+/// A renamed use leaf (`foo as bar`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseRename {

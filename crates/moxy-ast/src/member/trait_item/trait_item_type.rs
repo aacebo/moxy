@@ -6,7 +6,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use super::TraitItem;
 use crate::{Attribute, Generics, Ident, Punctuated, Type, TypeBound};
 
-#[doc = "An associated type inside a trait definition (`type Name: Bound = Default;`)."]
+/// An associated type inside a trait definition (`type Name: Bound = Default;`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitItemType {
@@ -33,14 +33,14 @@ impl Parse for TraitItemType {
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
 
-        let (colon, bounds) = if stream.peek::<Colon>().is_some() {
+        let (colon, bounds) = if stream.peek::<Colon>() {
             let colon = stream.parse::<Colon>()?;
             (Some(colon), crate::TypeBound::parse_bounds(stream)?)
         } else {
             (None, Punctuated::new())
         };
 
-        let default = if stream.peek::<Eq>().is_some() {
+        let default = if stream.peek::<Eq>() {
             let eq = stream.parse::<Eq>()?;
             Some((eq, stream.parse::<Type>()?))
         } else {

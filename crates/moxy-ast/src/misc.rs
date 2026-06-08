@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Lifetime, Pattern, Punctuated, Type};
 
-#[doc = "A closure parameter, either type-annotated (`pat: ty`) or inferred (`pat`)."]
+/// A closure parameter, either type-annotated (`pat: ty`) or inferred (`pat`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ClosureParam {
@@ -16,7 +16,7 @@ pub enum ClosureParam {
 impl Parse for ClosureParam {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let pat = Box::new(Pattern::parse_single(stream)?);
-        if stream.peek::<Colon>().is_some() {
+        if stream.peek::<Colon>() {
             let colon = stream.parse::<Colon>()?;
             let ty = Box::new(stream.parse::<Type>()?);
             Ok(ClosureParam::Typed { pat, colon, ty })
@@ -48,7 +48,7 @@ impl ToTokens for ClosureParam {
     }
 }
 
-#[doc = "The optional return type of a function (`-> Type` or nothing)."]
+/// The optional return type of a function (`-> Type` or nothing).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ReturnType {
@@ -58,7 +58,7 @@ pub enum ReturnType {
 
 impl Parse for ReturnType {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<RArrow>().is_some() {
+        if stream.peek::<RArrow>() {
             let arrow = stream.parse::<RArrow>()?;
             Ok(ReturnType::Type(arrow, Box::new(stream.parse::<crate::Type>()?)))
         } else {
@@ -85,7 +85,7 @@ impl ToTokens for ReturnType {
     }
 }
 
-#[doc = "A `for<'a, 'b>` higher-ranked lifetime binder."]
+/// A `for<'a, 'b>` higher-ranked lifetime binder.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct BoundLifetimes {
@@ -101,9 +101,9 @@ impl Parse for BoundLifetimes {
         let lt = stream.parse::<Lt>()?;
         let mut params = Punctuated::new();
 
-        while stream.peek::<Gt>().is_none() && !stream.is_empty() {
+        while !stream.peek::<Gt>() && !stream.is_empty() {
             params.push_value(stream.parse::<Lifetime>()?);
-            if stream.peek::<Comma>().is_some() {
+            if stream.peek::<Comma>() {
                 params.push_punct(stream.parse::<Comma>()?);
             } else {
                 break;

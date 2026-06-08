@@ -4,7 +4,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A pattern that binds a name, optionally with `ref`/`mut` and a subpattern (`@ pat`)."]
+/// A pattern that binds a name, optionally with `ref`/`mut` and a subpattern (`@ pat`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatIdent {

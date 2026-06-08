@@ -8,7 +8,7 @@ use moxy_token::{Eq, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Expr, Path};
 
-#[doc = "A structured attribute meta item (`name`, `name(...)`, `name = expr`)."]
+/// A structured attribute meta item (`name`, `name(...)`, `name = expr`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Meta {
@@ -21,7 +21,7 @@ impl Parse for Meta {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let path = stream.parse::<Path>()?;
 
-        if let Some(moxy_token::TokenTree::Group(group)) = stream.curr() {
+        if let Some(group) = stream.curr().and_then(|t| t.as_group()) {
             let delim = group.delim();
             let (span, inner_tokens) = stream.parse_group_spanned(delim)?;
 
@@ -31,7 +31,7 @@ impl Parse for Meta {
             }));
         }
 
-        if stream.peek::<Eq>().is_some() {
+        if stream.peek::<Eq>() {
             let eq = stream.parse::<Eq>()?;
             let value = stream.parse::<Expr>()?;
 

@@ -5,7 +5,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, Token, TokenStream, T
 
 use super::Type;
 
-#[doc = "Whether a raw pointer is `*const` or `*mut`."]
+/// Whether a raw pointer is `*const` or `*mut`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum PointerMutability {
@@ -13,7 +13,7 @@ pub enum PointerMutability {
     Mut(Mut),
 }
 
-#[doc = "A raw pointer type (e.g. `*const T`, `*mut T`)."]
+/// A raw pointer type (e.g. `*const T`, `*mut T`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypePointer {

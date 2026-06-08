@@ -4,13 +4,13 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A unary expression: `!x`, `-x`, `*x`."]
+/// A unary expression: `!x`, `-x`, `*x`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprUnary {
     pub attrs: Vec<Attribute>,
     pub op: UnOp,
-    pub expr: Box<super::super::Expr>,
+    pub expr: Box<Expr>,
 }
 
 impl Spanner for ExprUnary {
@@ -27,7 +27,7 @@ impl Spanner for ExprUnary {
 impl ExprUnary {
     /// Returns `true` if the stream starts with a prefix unary operator (`!`, `-`, `*`).
     pub fn is_prefix(stream: &mut ParseStream) -> bool {
-        stream.peek::<Not>().is_some() || stream.peek::<moxy_token::punct::Minus>().is_some() || stream.peek::<Star>().is_some()
+        stream.peek::<Not>() || stream.peek::<moxy_token::punct::Minus>() || stream.peek::<Star>()
     }
 }
 

@@ -2,18 +2,19 @@ use moxy_token::keyword::{Else, If};
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
+use crate::expr::parse_expr;
 use crate::*;
 
-#[doc = "An if expression: `if cond { ... } else { ... }`."]
+/// An if expression: `if cond { ... } else { ... }`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprIf {
     pub attrs: Vec<Attribute>,
     pub if_keyword: If,
-    pub cond: Box<super::super::Expr>,
+    pub cond: Box<Expr>,
     pub then_branch: StmtBlock,
     pub else_keyword: Option<Else>,
-    pub else_branch: Option<Box<super::super::Expr>>,
+    pub else_branch: Option<Box<Expr>>,
 }
 
 impl Spanner for ExprIf {
@@ -23,30 +24,31 @@ impl Spanner for ExprIf {
         } else {
             self.if_keyword.span()
         };
+
         let end = if let Some(e) = &self.else_branch {
             e.span()
         } else {
             self.then_branch.span()
         };
+
         start.join(end)
     }
 }
 
 impl ExprIf {
-    pub fn parse_from(stream: &mut ParseStream) -> Result<super::super::Expr, ParseError> {
+    pub fn parse_from(stream: &mut ParseStream) -> Result<Expr, ParseError> {
         let if_keyword = stream.parse::<If>()?;
-        let cond = Box::new(super::super::parse_expr(stream, false)?);
+        let cond = Box::new(parse_expr(stream, false)?);
         let then_branch = stream.parse::<StmtBlock>()?;
-
         let (else_keyword, else_branch) = if matches!(stream.curr(), Some(tt) if tt.name().as_deref() == Some("else")) {
             let else_kw = stream.parse::<Else>()?;
-            let branch = Some(Box::new(crate::PrimaryExpr::parse_from(stream, true)?));
+            let branch = Some(Box::new(PrimaryExpr::parse_from(stream, true)?));
             (Some(else_kw), branch)
         } else {
             (None, None)
         };
 
-        Ok(super::super::Expr::Block(super::BlockExpr::If(Self {
+        Ok(Expr::Block(BlockExpr::If(Self {
             attrs: Vec::new(),
             if_keyword,
             cond,
@@ -62,6 +64,7 @@ impl ToTokens for ExprIf {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         self.if_keyword.to_tokens(t);
         self.cond.to_tokens(t);
         self.then_branch.to_tokens(t);

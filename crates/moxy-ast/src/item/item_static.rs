@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Expr, Ident, Mutability, Type, Visibility};
 
-#[doc = "A static item (`static [mut] NAME: Type = expr;`)."]
+/// A static item (`static [mut] NAME: Type = expr;`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemStatic {

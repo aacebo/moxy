@@ -3,9 +3,10 @@ use moxy_token::parser::ParseStream;
 use moxy_token::punct::{Comma, Or, OrOr};
 use moxy_token::{Punctuation, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
+use crate::expr::block::ExprBrace;
 use crate::*;
 
-#[doc = "The pipe delimiters around a closure's parameters: either an empty `||` or a pair of `|`."]
+/// The pipe delimiters around a closure's parameters: either an empty `||` or a pair of `|`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ClosurePipes {
@@ -13,7 +14,7 @@ pub enum ClosurePipes {
     Params(Or, Or),
 }
 
-#[doc = "A closure expression: `|x| x`, `move || 1`, `async |x: u32| -> u32 { x }`."]
+/// A closure expression: `|x| x`, `move || 1`, `async |x: u32| -> u32 { x }`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprClosure {
@@ -26,7 +27,7 @@ pub struct ExprClosure {
     pub pipes: ClosurePipes,
     pub inputs: Punctuated<ClosureParam, Comma>,
     pub output: ReturnType,
-    pub body: Box<super::super::Expr>,
+    pub body: Box<Expr>,
 }
 
 impl Spanner for ExprClosure {
@@ -54,7 +55,7 @@ impl ExprClosure {
     /// expression (`|...|`, `||`, `move`, or a `const`/`async` not followed by a block).
     pub fn is_start(stream: &mut ParseStream) -> bool {
         use moxy_token::keyword::Const;
-        if stream.peek::<Or>().is_some() || stream.peek::<OrOr>().is_some() || stream.peek::<Move>().is_some() {
+        if stream.peek::<Or>() || stream.peek::<OrOr>() || stream.peek::<Move>() {
             return true;
         }
 
@@ -64,9 +65,7 @@ impl ExprClosure {
                 | Some(TokenTree::Token(Token::Keyword(_)))
         );
 
-        (stream.peek::<Const>().is_some() || stream.peek::<moxy_token::keyword::Async>().is_some())
-            && leads_closure
-            && !super::super::block::ExprBrace::is_next(stream)
+        (stream.peek::<Const>() || stream.peek::<moxy_token::keyword::Async>()) && leads_closure && !ExprBrace::is_next(stream)
     }
 }
 

@@ -4,7 +4,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Ident};
 
-#[doc = "A C-style variadic marker (`...`)."]
+/// A C-style variadic marker (`...`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Variadic {

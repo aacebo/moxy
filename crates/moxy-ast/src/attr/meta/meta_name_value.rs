@@ -2,7 +2,7 @@ use moxy_token::{Eq, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Expr, Path};
 
-#[doc = "A name-value meta item (`name = expr`)."]
+/// A name-value meta item (`name = expr`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MetaNameValue {

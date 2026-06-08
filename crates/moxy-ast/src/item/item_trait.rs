@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Delimited, Generics, Ident, Punctuated, TraitItem, TypeBound, Unsafety, Visibility};
 
-#[doc = "A trait definition item (`trait Name: Super { ... }`)."]
+/// A trait definition item (`trait Name: Super { ... }`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemTrait {
@@ -26,7 +26,7 @@ impl Parse for ItemTrait {
         let attrs = stream.parse::<Vec<Attribute>>()?;
         let vis = stream.parse::<Visibility>()?;
         let unsafety = stream.parse::<Unsafety>()?;
-        let auto_keyword = if stream.peek::<Auto>().is_some() {
+        let auto_keyword = if stream.peek::<Auto>() {
             Some(stream.parse::<Auto>()?)
         } else {
             None
@@ -36,7 +36,7 @@ impl Parse for ItemTrait {
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
 
-        let (colon_punct, supertraits) = if stream.peek::<Colon>().is_some() {
+        let (colon_punct, supertraits) = if stream.peek::<Colon>() {
             let colon_punct = stream.parse::<Colon>()?;
             let supertraits = crate::TypeBound::parse_bounds(stream)?;
             (Some(colon_punct), supertraits)
@@ -44,7 +44,7 @@ impl Parse for ItemTrait {
             (None, Punctuated::new())
         };
 
-        if stream.peek::<moxy_token::keyword::Where>().is_some() {
+        if stream.peek::<moxy_token::keyword::Where>() {
             generics.where_clause = Some(stream.parse()?);
         }
 

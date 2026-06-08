@@ -1,7 +1,7 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
-#[doc = "The name part of a lifetime (e.g. the `a` in `'a`, or the `static` in `'static`)."]
+/// The name part of a lifetime (e.g. the `a` in `'a`, or the `static` in `'static`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LifetimeName {

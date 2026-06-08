@@ -3,7 +3,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::Lit;
 
-#[doc = "A byte string literal (`b\"hello\"`)."]
+/// A byte string literal (`b"hello"`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LitByteStr {

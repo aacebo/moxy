@@ -1,7 +1,7 @@
 #[allow(unused)]
 use crate::*;
 
-#[doc = "A type wrapped in an invisible group delimiter (produced during macro expansion)."]
+/// A type wrapped in an invisible group delimiter (produced during macro expansion).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeGroup {

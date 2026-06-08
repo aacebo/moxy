@@ -3,7 +3,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "An or-pattern, e.g. `A | B | C`."]
+/// An or-pattern, e.g. `A | B | C`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatOr {

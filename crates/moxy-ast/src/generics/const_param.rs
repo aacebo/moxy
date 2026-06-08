@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Expr, Ident, Type};
 
-#[doc = "A const generic parameter (`const N: usize = 0`)."]
+/// A const generic parameter (`const N: usize = 0`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ConstParam {
@@ -26,7 +26,7 @@ impl Parse for ConstParam {
         let colon_punct = stream.parse::<Colon>()?;
         let ty = stream.parse::<Type>()?;
 
-        let (default_eq_punct, default) = if stream.peek::<Eq>().is_some() {
+        let (default_eq_punct, default) = if stream.peek::<Eq>() {
             let eq_punct = stream.parse::<Eq>()?;
             let expr = stream.parse::<Expr>()?;
             (Some(eq_punct), Some(expr))

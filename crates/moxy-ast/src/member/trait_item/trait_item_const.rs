@@ -6,7 +6,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use super::TraitItem;
 use crate::{Attribute, Expr, Generics, Ident, Type};
 
-#[doc = "A constant item inside a trait definition (`const NAME: Type;` or `const NAME: Type = expr;`)."]
+/// A constant item inside a trait definition (`const NAME: Type;` or `const NAME: Type = expr;`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitItemConst {
@@ -35,7 +35,7 @@ impl Parse for TraitItemConst {
         let colon = stream.parse::<Colon>()?;
         let ty = stream.parse::<Type>()?;
 
-        let default = if stream.peek::<Eq>().is_some() {
+        let default = if stream.peek::<Eq>() {
             let eq = stream.parse::<Eq>()?;
             Some((eq, stream.parse::<Expr>()?))
         } else {

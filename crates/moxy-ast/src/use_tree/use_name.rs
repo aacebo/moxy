@@ -4,7 +4,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use super::UseTree;
 use crate::Ident;
 
-#[doc = "A leaf name in a use tree (`foo`)."]
+/// A leaf name in a use tree (`foo`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseName {

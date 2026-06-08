@@ -3,9 +3,10 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, FatArrow};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Delimited, Expr, Pattern};
+use crate::expr::parse_expr;
+use crate::{Attribute, BlockExpr, Delimited, Expr, Pattern};
 
-#[doc = "A match expression: `match x { pat => expr, ... }`."]
+/// A match expression: `match x { pat => expr, ... }`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprMatch {
@@ -22,6 +23,7 @@ impl Spanner for ExprMatch {
         } else {
             self.match_keyword.span()
         };
+
         start.join(self.arms.span())
     }
 }
@@ -29,9 +31,10 @@ impl Spanner for ExprMatch {
 impl ExprMatch {
     pub fn parse_from(stream: &mut ParseStream) -> Result<Expr, ParseError> {
         let match_keyword = stream.parse::<Match>()?;
-        let expr = Box::new(super::super::parse_expr(stream, false)?);
+        let expr = Box::new(parse_expr(stream, false)?);
         let arms = Delimited::<Vec<MatchArm>>::parse_brace(stream)?;
-        Ok(Expr::Block(super::BlockExpr::Match(Self {
+
+        Ok(Expr::Block(BlockExpr::Match(Self {
             attrs: Vec::new(),
             match_keyword,
             expr,
@@ -45,13 +48,14 @@ impl ToTokens for ExprMatch {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         self.match_keyword.to_tokens(t);
         self.expr.to_tokens(t);
         self.arms.to_tokens(t);
     }
 }
 
-#[doc = "A single arm of a `match` expression (`pat (if guard)? => body`)."]
+/// A single arm of a `match` expression (`pat (if guard)? => body`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MatchArm {
@@ -71,6 +75,7 @@ impl Spanner for MatchArm {
         } else {
             self.pat.span()
         };
+
         let end = self.comma.as_ref().map(|c| c.span()).unwrap_or_else(|| self.body.span());
         start.join(end)
     }
@@ -80,7 +85,6 @@ impl Parse for MatchArm {
     fn parse(stream: &mut moxy_token::parser::ParseStream) -> Result<Self, moxy_token::parser::ParseError> {
         let attrs = stream.parse::<Vec<Attribute>>()?;
         let pat = stream.parse::<Pattern>()?;
-
         let (if_keyword, guard) = if let Some(if_kw) = stream.parse_if::<If>() {
             (Some(if_kw), Some(Box::new(stream.parse::<Expr>()?)))
         } else {
@@ -108,6 +112,7 @@ impl ToTokens for MatchArm {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         self.pat.to_tokens(t);
 
         if let Some(g) = &self.guard {

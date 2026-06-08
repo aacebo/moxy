@@ -4,7 +4,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::LifetimeName;
 
-#[doc = "A named lifetime (e.g. `'a`, `'static`)."]
+/// A named lifetime (e.g. `'a`, `'static`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Lifetime {
@@ -39,13 +39,13 @@ impl Lifetime {
     ) -> Result<crate::Punctuated<Self, moxy_token::punct::Plus>, moxy_token::parser::ParseError> {
         use moxy_token::punct::{Colon, Plus};
         let mut bounds = crate::Punctuated::new();
-        if stream.peek::<Colon>().is_some() {
+        if stream.peek::<Colon>() {
             let _ = stream.parse::<Colon>()?;
 
             loop {
                 bounds.push_value(stream.parse::<Lifetime>()?);
 
-                if stream.peek::<Plus>().is_some() {
+                if stream.peek::<Plus>() {
                     bounds.push_punct(stream.parse::<Plus>()?);
                 } else {
                     break;

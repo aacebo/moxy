@@ -3,7 +3,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::Lit;
 
-#[doc = "A character literal (`'a'`, `'\\n'`)."]
+/// A character literal (`'a'`, `'\n'`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LitChar {

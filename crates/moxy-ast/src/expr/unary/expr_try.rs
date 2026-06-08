@@ -1,14 +1,14 @@
 use moxy_token::punct::Question;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::Attribute;
+use crate::*;
 
-#[doc = "A try expression: `expr?`."]
+/// A try expression: `expr?`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprTry {
     pub attrs: Vec<Attribute>,
-    pub expr: Box<super::super::Expr>,
+    pub expr: Box<Expr>,
     pub question_punct: Question,
 }
 

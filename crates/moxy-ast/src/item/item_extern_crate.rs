@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Ident, Visibility};
 
-#[doc = "An `extern crate` item (`extern crate foo;` or `extern crate foo as bar;`)."]
+/// An `extern crate` item (`extern crate foo;` or `extern crate foo as bar;`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemExternCrate {
@@ -27,7 +27,7 @@ impl Parse for ItemExternCrate {
         let crate_keyword = stream.parse::<Crate>()?;
         let ident = stream.parse::<Ident>()?;
 
-        let (as_keyword, rename) = if stream.peek::<As>().is_some() {
+        let (as_keyword, rename) = if stream.peek::<As>() {
             let as_keyword = stream.parse::<As>()?;
             let rename = stream.parse::<Ident>()?;
             (Some(as_keyword), Some(rename))

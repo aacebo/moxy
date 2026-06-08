@@ -35,7 +35,7 @@ pub use pat_tuple::*;
 pub use pat_tuple_struct::*;
 pub use pat_type::*;
 
-#[doc = "A Rust pattern (in `let`, `match`, function params, etc.)."]
+/// A Rust pattern (in `let`, `match`, function params, etc.).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Pattern {
@@ -164,7 +164,7 @@ impl From<PatParen> for Pattern {
 impl Parse for Pattern {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         // Optional leading `|`, then one-or-more `|`-separated alternatives.
-        let leading = stream.peek::<Or>().is_some();
+        let leading = stream.peek::<Or>();
 
         if leading {
             let _ = stream.parse::<Or>()?;
@@ -172,14 +172,14 @@ impl Parse for Pattern {
 
         let first = parse_single(stream)?;
 
-        if !leading && stream.peek::<Or>().is_none() {
+        if !leading && !stream.peek::<Or>() {
             return Ok(first);
         }
 
         let mut cases = Punctuated::new();
         cases.push_value(first);
 
-        while stream.peek::<Or>().is_some() {
+        while stream.peek::<Or>() {
             cases.push_punct(stream.parse::<Or>()?);
             cases.push_value(parse_single(stream)?);
         }
@@ -239,7 +239,7 @@ impl PatIdent {
         let mutability = stream.parse::<Mutability>()?;
         let ident = stream.parse::<Ident>()?;
 
-        let subpat = if stream.peek::<At>().is_some() {
+        let subpat = if stream.peek::<At>() {
             let at = stream.parse::<At>()?;
             Some((at, Box::new(Pattern::parse(stream)?)))
         } else {
@@ -262,14 +262,14 @@ impl PatStruct {
         let mut rest = None;
 
         while !stream.is_empty() {
-            if stream.peek::<DotDot>().is_some() {
+            if stream.peek::<DotDot>() {
                 rest = Some(stream.parse::<DotDot>()?);
                 break;
             }
 
             let member = stream.parse::<Member>()?;
 
-            let (colon, pat, shorthand) = if stream.peek::<Colon>().is_some() {
+            let (colon, pat, shorthand) = if stream.peek::<Colon>() {
                 let colon = stream.parse::<Colon>()?;
                 (Some(colon), stream.parse::<Pattern>()?, false)
             } else {
@@ -301,7 +301,7 @@ impl PatStruct {
                 shorthand,
             });
 
-            if stream.peek::<Comma>().is_some() {
+            if stream.peek::<Comma>() {
                 fields.push_punct(stream.parse::<Comma>()?);
             } else {
                 break;
@@ -323,7 +323,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     }
 
     // Rest `..`
-    if stream.peek::<DotDot>().is_some() {
+    if stream.peek::<DotDot>() {
         let _ = stream.parse::<DotDot>()?;
         return Ok(Pattern::Rest);
     }
@@ -343,7 +343,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     }
 
     // Reference `&`/`&mut`
-    if stream.peek::<And>().is_some() {
+    if stream.peek::<And>() {
         let and = stream.parse::<And>()?;
         let mutability = stream.parse::<Mutability>()?;
         let pat = Box::new(Pattern::parse(stream)?);
@@ -368,7 +368,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     }
 
     // `ref`/`mut`-led binding
-    if stream.peek::<Ref>().is_some() || stream.peek::<Mut>().is_some() {
+    if stream.peek::<Ref>() || stream.peek::<Mut>() {
         return Ok(Pattern::Ident(PatIdent::parse_from(stream, attrs)?));
     }
 

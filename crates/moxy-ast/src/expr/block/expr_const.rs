@@ -4,7 +4,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A const block expression: `const { ... }`."]
+/// A const block expression: `const { ... }`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprConst {
@@ -20,6 +20,7 @@ impl Spanner for ExprConst {
         } else {
             self.const_keyword.span()
         };
+
         start.join(self.block.span())
     }
 }
@@ -28,6 +29,7 @@ impl ExprConst {
     pub fn parse_from(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let const_keyword = stream.parse::<Const>()?;
         let block = stream.parse::<StmtBlock>()?;
+
         Ok(Self {
             attrs: Vec::new(),
             const_keyword,
@@ -41,6 +43,7 @@ impl ToTokens for ExprConst {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         self.const_keyword.to_tokens(t);
         self.block.to_tokens(t);
     }

@@ -6,7 +6,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use super::QSelf;
 use crate::{Path, PathSegment};
 
-#[doc = "A path type (e.g. `T`, `std::vec::Vec`, `<T as Trait>::Item`)."]
+/// A path type (e.g. `T`, `std::vec::Vec`, `<T as Trait>::Item`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypePath {
@@ -16,7 +16,7 @@ pub struct TypePath {
 
 impl Parse for TypePath {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Lt>().is_some() {
+        if stream.peek::<Lt>() {
             let (qself, path) = super::QSelf::parse_qualified(stream)?;
             return Ok(Self {
                 qself: Some(qself),

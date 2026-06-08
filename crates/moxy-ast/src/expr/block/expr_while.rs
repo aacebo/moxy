@@ -2,16 +2,17 @@ use moxy_token::keyword::While;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
+use crate::expr::parse_expr;
 use crate::*;
 
-#[doc = "A while loop expression: `while cond { ... }`, `while let pat = expr { ... }`."]
+/// A while loop expression: `while cond { ... }`, `while let pat = expr { ... }`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprWhile {
     pub attrs: Vec<Attribute>,
     pub label: Option<Label>,
     pub while_keyword: While,
-    pub cond: Box<super::super::Expr>,
+    pub cond: Box<Expr>,
     pub body: StmtBlock,
 }
 
@@ -24,6 +25,7 @@ impl Spanner for ExprWhile {
         } else {
             self.while_keyword.span()
         };
+
         start.join(self.body.span())
     }
 }
@@ -31,8 +33,9 @@ impl Spanner for ExprWhile {
 impl ExprWhile {
     pub fn parse_from(stream: &mut ParseStream, label: Option<Label>) -> Result<Self, ParseError> {
         let while_keyword = stream.parse::<While>()?;
-        let cond = Box::new(super::super::parse_expr(stream, false)?);
+        let cond = Box::new(parse_expr(stream, false)?);
         let body = stream.parse::<StmtBlock>()?;
+
         Ok(Self {
             attrs: Vec::new(),
             label,

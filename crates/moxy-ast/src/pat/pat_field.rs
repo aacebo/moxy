@@ -3,7 +3,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A single field binding inside a struct pattern, e.g. `x` (shorthand) or `x: pat`."]
+/// A single field binding inside a struct pattern, e.g. `x` (shorthand) or `x: pat`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatField {

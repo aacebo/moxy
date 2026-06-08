@@ -6,7 +6,7 @@ use moxy_token::{Parse, Span, ToTokens, TokenStream};
 use super::Type;
 use crate::{Delimited, Punctuated};
 
-#[doc = "A tuple type (e.g. `()`, `(A, B)`, `(T,)`)."]
+/// A tuple type (e.g. `()`, `(A, B)`, `(T,)`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeTuple {

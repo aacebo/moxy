@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use super::FieldDef;
 use crate::{Delimited, Punctuated};
 
-#[doc = "Tuple-struct fields (`(A, B)`)."]
+/// Tuple-struct fields (`(A, B)`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldsUnnamed {

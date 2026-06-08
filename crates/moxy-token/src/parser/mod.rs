@@ -11,12 +11,12 @@ pub trait Parse: Sized {
 }
 
 pub trait Peek: Sized {
-    fn peek(stream: &mut ParseStream) -> Option<Self>;
+    fn peek(stream: &mut ParseStream) -> bool;
 }
 
 impl<T: Parse> Peek for T {
-    fn peek(stream: &mut ParseStream) -> Option<Self> {
-        Self::parse(stream).ok()
+    fn peek(stream: &mut ParseStream) -> bool {
+        Self::parse(stream).is_ok()
     }
 }
 
@@ -24,6 +24,7 @@ impl<T: Parse> Parse for Option<T> {
     #[inline]
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let mut fork = stream.fork();
+
         match T::parse(&mut fork) {
             Ok(v) => {
                 stream.seek(&fork);

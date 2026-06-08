@@ -3,7 +3,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{BoundLifetimes, BoundPolarity, Path, TraitBoundModifier};
 
-#[doc = "A trait bound (`Trait`, `?Sized`, `for<'a> Trait`)."]
+/// A trait bound (`Trait`, `?Sized`, `for<'a> Trait`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitBound {

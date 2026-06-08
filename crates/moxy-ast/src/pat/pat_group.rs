@@ -2,7 +2,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A grouped pattern (used internally by the parser for grouping token trees)."]
+/// A grouped pattern (used internally by the parser for grouping token trees).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatGroup {

@@ -3,7 +3,7 @@ use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::*;
 
-#[doc = "A block expression: `{ stmts }`, `'label: { stmts }`."]
+/// A block expression: `{ stmts }`, `'label: { stmts }`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprBrace {
@@ -21,6 +21,7 @@ impl Spanner for ExprBrace {
         } else {
             self.block.span()
         };
+
         start.join(self.block.span())
     }
 }
@@ -28,7 +29,11 @@ impl Spanner for ExprBrace {
 impl ExprBrace {
     /// Returns `true` when the token at position 1 (peek-ahead) is a brace group.
     pub fn is_next(stream: &ParseStream) -> bool {
-        matches!(stream.nth(1), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace)
+        stream
+            .nth(1)
+            .and_then(|t| t.as_group())
+            .map(|g| g.delim().is_brace())
+            .unwrap_or(false)
     }
 }
 

@@ -27,7 +27,7 @@ pub use lit_int::*;
 #[doc(inline)]
 pub use lit_str::*;
 
-#[doc = "A literal value in source code (string, integer, float, byte, char, or boolean)."]
+/// A literal value in source code (string, integer, float, byte, char, or boolean).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Lit {

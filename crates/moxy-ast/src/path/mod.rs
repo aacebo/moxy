@@ -14,7 +14,7 @@ pub use lifetime_name::*;
 pub use path_arguments::*;
 pub use path_segment::*;
 
-#[doc = "A path expression or type path (e.g. `std::collections::HashMap`, `crate::Foo`)."]
+/// A path expression or type path (e.g. `std::collections::HashMap`, `crate::Foo`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Path {
@@ -26,7 +26,7 @@ pub struct Path {
 impl Parse for Path {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let start = stream.span();
-        let leading_colon = if stream.peek::<PathSep>().is_some() {
+        let leading_colon = if stream.peek::<PathSep>() {
             let _ = stream.parse::<PathSep>()?;
             true
         } else {

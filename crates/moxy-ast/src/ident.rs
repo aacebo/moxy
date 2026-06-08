@@ -1,7 +1,7 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
-#[doc = "An identifier token (e.g. a variable name, type name, or keyword-like ident)."]
+/// An identifier token (e.g. a variable name, type name, or keyword-like ident).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Ident {

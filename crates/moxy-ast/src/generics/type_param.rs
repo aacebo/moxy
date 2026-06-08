@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use super::TypeBound;
 use crate::{Attribute, Ident, Punctuated, Type};
 
-#[doc = "A type parameter (`T: Bound = Default`)."]
+/// A type parameter (`T: Bound = Default`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeParam {
@@ -22,7 +22,7 @@ impl Parse for TypeParam {
         let attrs = stream.parse::<Vec<Attribute>>()?;
         let ident = stream.parse::<Ident>()?;
 
-        let (colon_punct, bounds) = if stream.peek::<Colon>().is_some() {
+        let (colon_punct, bounds) = if stream.peek::<Colon>() {
             let colon_punct = stream.parse::<Colon>()?;
             let bounds = TypeBound::parse_bounds(stream)?;
             (Some(colon_punct), bounds)
@@ -30,7 +30,7 @@ impl Parse for TypeParam {
             (None, Punctuated::new())
         };
 
-        let (eq_punct, default) = if stream.peek::<Eq>().is_some() {
+        let (eq_punct, default) = if stream.peek::<Eq>() {
             let eq_punct = stream.parse::<Eq>()?;
             let default = stream.parse::<Type>()?;
             (Some(eq_punct), Some(default))

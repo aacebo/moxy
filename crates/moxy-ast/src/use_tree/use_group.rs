@@ -5,7 +5,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use super::UseTree;
 use crate::{Delimited, Punctuated};
 
-#[doc = "A braced use group (`{a, b::c}`)."]
+/// A braced use group (`{a, b::c}`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseGroup {

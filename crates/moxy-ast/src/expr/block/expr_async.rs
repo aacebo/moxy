@@ -5,7 +5,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use super::ExprBrace;
 use crate::*;
 
-#[doc = "An async block expression: `async { ... }`, `async move { ... }`."]
+/// An async block expression: `async { ... }`, `async move { ... }`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprAsync {
@@ -22,6 +22,7 @@ impl Spanner for ExprAsync {
         } else {
             self.async_keyword.span()
         };
+
         start.join(self.block.span())
     }
 }
@@ -40,6 +41,7 @@ impl ExprAsync {
         let async_keyword = stream.parse::<Async>()?;
         let move_keyword = stream.parse_if::<Move>();
         let block = stream.parse::<StmtBlock>()?;
+
         Ok(Self {
             attrs: Vec::new(),
             async_keyword,
@@ -54,6 +56,7 @@ impl ToTokens for ExprAsync {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         self.async_keyword.to_tokens(t);
         self.move_keyword.to_tokens(t);
         self.block.to_tokens(t);

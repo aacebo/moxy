@@ -1,6 +1,6 @@
 use crate::BinOp;
 
-#[doc = "Operator precedence level used when parsing and printing expressions without parentheses."]
+/// Operator precedence level used when parsing and printing expressions without parentheses.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Precedence {

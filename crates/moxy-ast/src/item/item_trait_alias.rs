@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Generics, Ident, Punctuated, TypeBound, Unsafety, Visibility};
 
-#[doc = "A trait alias item (`trait Alias<T> = Bound1 + Bound2;`)."]
+/// A trait alias item (`trait Alias<T> = Bound1 + Bound2;`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemTraitAlias {
@@ -26,7 +26,7 @@ impl Parse for ItemTraitAlias {
         let _unsafety = stream.parse::<Unsafety>()?;
 
         // skip optional `auto`
-        if stream.peek::<Auto>().is_some() {
+        if stream.peek::<Auto>() {
             let _ = stream.parse::<Auto>()?;
         }
 

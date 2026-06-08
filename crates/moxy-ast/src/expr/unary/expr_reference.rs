@@ -3,14 +3,14 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A reference expression: `&x`, `&mut x`."]
+/// A reference expression: `&x`, `&mut x`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprReference {
     pub attrs: Vec<Attribute>,
     pub and_punct: And,
     pub mutability: Mutability,
-    pub expr: Box<super::super::Expr>,
+    pub expr: Box<Expr>,
 }
 
 impl Spanner for ExprReference {

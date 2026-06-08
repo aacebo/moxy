@@ -1,14 +1,14 @@
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Delimited};
+use crate::*;
 
-#[doc = "An index expression: `a[0]`."]
+/// An index expression: `a[0]`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprIndex {
     pub attrs: Vec<Attribute>,
-    pub base: Box<super::super::Expr>,
-    pub index: Delimited<Box<super::super::Expr>>,
+    pub base: Box<Expr>,
+    pub index: Delimited<Box<Expr>>,
 }
 
 impl Spanner for ExprIndex {

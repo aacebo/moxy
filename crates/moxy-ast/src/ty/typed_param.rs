@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use super::Type;
 use crate::{Attribute, Pattern};
 
-#[doc = "A typed function parameter (`pat: Type`)."]
+/// A typed function parameter (`pat: Type`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypedParam {

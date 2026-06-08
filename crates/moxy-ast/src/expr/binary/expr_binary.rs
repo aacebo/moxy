@@ -2,14 +2,14 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A binary operation expression: `a + b`, `x && y`."]
+/// A binary operation expression: `a + b`, `x && y`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprBinary {
     pub attrs: Vec<Attribute>,
-    pub left: Box<super::super::Expr>,
+    pub left: Box<Expr>,
     pub op: BinOp,
-    pub right: Box<super::super::Expr>,
+    pub right: Box<Expr>,
 }
 
 impl Spanner for ExprBinary {
@@ -19,6 +19,7 @@ impl Spanner for ExprBinary {
         } else {
             self.left.span()
         };
+
         start.join(self.right.span())
     }
 }
@@ -28,6 +29,7 @@ impl ToTokens for ExprBinary {
         for a in &self.attrs {
             a.to_tokens(t);
         }
+
         self.left.to_tokens(t);
         self.op.to_tokens(t);
         self.right.to_tokens(t);

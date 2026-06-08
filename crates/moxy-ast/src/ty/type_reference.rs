@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use super::Type;
 use crate::{Lifetime, Mutability};
 
-#[doc = "A reference type (e.g. `&'a T`, `&mut T`)."]
+/// A reference type (e.g. `&'a T`, `&mut T`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeReference {

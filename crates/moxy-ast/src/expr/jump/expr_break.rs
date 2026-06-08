@@ -3,14 +3,14 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A break expression: `break`, `break 'label`, `break expr`."]
+/// A break expression: `break`, `break 'label`, `break expr`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprBreak {
     pub attrs: Vec<Attribute>,
     pub break_keyword: Break,
     pub label: Option<Label>,
-    pub expr: Option<Box<super::super::Expr>>,
+    pub expr: Option<Box<Expr>>,
 }
 
 impl Spanner for ExprBreak {

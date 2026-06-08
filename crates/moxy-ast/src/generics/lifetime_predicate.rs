@@ -4,7 +4,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Lifetime, Punctuated};
 
-#[doc = "A predicate in a `where` clause."]
+/// A predicate in a `where` clause.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LifetimePredicate {

@@ -4,7 +4,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use super::Stmt;
 use crate::Delimited;
 
-#[doc = "A braced block of statements (`{ stmt; stmt; expr }`)."]
+/// A braced block of statements (`{ stmt; stmt; expr }`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StmtBlock {

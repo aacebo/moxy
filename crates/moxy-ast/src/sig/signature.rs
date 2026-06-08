@@ -30,7 +30,7 @@ impl ToTokens for FnParams {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.inputs.to_tokens(t);
         if let Some(v) = &self.variadic {
-            if !self.inputs.is_empty() && !self.inputs.trailing_punct() {
+            if !self.inputs.is_empty() && !self.inputs.is_trailing() {
                 Comma::default().to_tokens(t);
             }
             v.to_tokens(t);
@@ -38,7 +38,7 @@ impl ToTokens for FnParams {
     }
 }
 
-#[doc = "A function signature."]
+/// A function signature.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Signature {
@@ -58,7 +58,7 @@ impl Parse for Signature {
         let constness = stream.parse::<Constness>()?;
         let asyncness = stream.parse::<Asyncness>()?;
         let unsafety = stream.parse::<Unsafety>()?;
-        let abi = if stream.peek::<Extern>().is_some() {
+        let abi = if stream.peek::<Extern>() {
             Some(stream.parse::<Abi>()?)
         } else {
             None
@@ -77,7 +77,7 @@ impl Parse for Signature {
                     break;
                 }
                 inputs.push_value(inner.parse::<FnParam>()?);
-                if inner.peek::<Comma>().is_some() {
+                if inner.peek::<Comma>() {
                     inputs.push_punct(inner.parse::<Comma>()?);
                 } else {
                     break;
@@ -88,7 +88,7 @@ impl Parse for Signature {
 
         let output = stream.parse::<ReturnType>()?;
 
-        if stream.peek::<moxy_token::keyword::Where>().is_some() {
+        if stream.peek::<moxy_token::keyword::Where>() {
             generics.where_clause = Some(stream.parse()?);
         }
 
@@ -142,11 +142,11 @@ impl Signature {
         let _ = fork.parse::<crate::Asyncness>();
         let _ = fork.parse::<crate::Unsafety>();
 
-        if fork.peek::<Extern>().is_some() {
+        if fork.peek::<Extern>() {
             let _ = fork.parse::<crate::sig::Abi>();
         }
 
-        fork.peek::<Fn>().is_some()
+        fork.peek::<Fn>()
     }
 }
 

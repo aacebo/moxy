@@ -3,7 +3,7 @@ use moxy_token::{Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::*;
 
-#[doc = "A literal expression: `1`, `\"hello\"`, `true`."]
+/// A literal expression: `1`, `"hello"`, `true`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprLit {

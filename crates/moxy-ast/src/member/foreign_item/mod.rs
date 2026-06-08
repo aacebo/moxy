@@ -11,7 +11,7 @@ pub use foreign_item_macro::*;
 pub use foreign_item_static::*;
 pub use foreign_item_type::*;
 
-#[doc = "An item inside an `extern` block."]
+/// An item inside an `extern` block.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ForeignItem {
@@ -46,13 +46,13 @@ impl_from! {
 
 impl Parse for ForeignItem {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<ForeignItemStatic>().is_some() {
+        if stream.peek::<ForeignItemStatic>() {
             return Ok(ForeignItem::Static(stream.parse()?));
         }
-        if stream.peek::<ForeignItemType>().is_some() {
+        if stream.peek::<ForeignItemType>() {
             return Ok(ForeignItem::Type(stream.parse()?));
         }
-        if stream.peek::<ForeignItemFn>().is_some() {
+        if stream.peek::<ForeignItemFn>() {
             return Ok(ForeignItem::Fn(stream.parse()?));
         }
         Ok(ForeignItem::Macro(stream.parse()?))

@@ -1,15 +1,15 @@
 use moxy_token::keyword::Return;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::Attribute;
+use crate::*;
 
-#[doc = "A return expression: `return`, `return expr`."]
+/// A return expression: `return`, `return expr`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprReturn {
     pub attrs: Vec<Attribute>,
     pub return_keyword: Return,
-    pub expr: Option<Box<super::super::Expr>>,
+    pub expr: Option<Box<Expr>>,
 }
 
 impl Spanner for ExprReturn {

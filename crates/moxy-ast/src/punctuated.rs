@@ -21,6 +21,14 @@ impl<T, P> Punctuated<T, P> {
         self.inner.is_empty() && self.last.is_none()
     }
 
+    pub fn is_trailing(&self) -> bool {
+        self.last.is_none() && !self.inner.is_empty()
+    }
+
+    pub fn is_empty_or_trailing(&self) -> bool {
+        self.last.is_none()
+    }
+
     pub fn len(&self) -> usize {
         self.inner.len() + if self.last.is_some() { 1 } else { 0 }
     }
@@ -62,17 +70,9 @@ impl<T, P> Punctuated<T, P> {
         }
     }
 
-    pub fn trailing_punct(&self) -> bool {
-        self.last.is_none() && !self.inner.is_empty()
-    }
-
-    pub fn empty_or_trailing(&self) -> bool {
-        self.last.is_none()
-    }
-
     pub fn push_value(&mut self, value: T) {
         assert!(
-            self.empty_or_trailing(),
+            self.is_empty_or_trailing(),
             "Punctuated::push_value: cannot push value if Punctuated is missing trailing punctuation",
         );
         self.last = Some(Box::new(value));
@@ -91,7 +91,7 @@ impl<T, P> Punctuated<T, P> {
     where
         P: Default,
     {
-        if !self.empty_or_trailing() {
+        if !self.is_empty_or_trailing() {
             self.push_punct(P::default());
         }
 
@@ -177,6 +177,7 @@ impl<T, P> Punctuated<T, P> {
 impl<T: Parse, P: Parse> Punctuated<T, P> {
     pub fn parse_terminated(stream: &mut ParseStream<'_>) -> Result<Self, ParseError> {
         let mut punctuated = Punctuated::new();
+
         loop {
             if stream.is_empty() {
                 break;
@@ -328,7 +329,7 @@ impl<T, P> FromIterator<Pair<T, P>> for Punctuated<T, P> {
 
 impl<T, P: Default> Extend<Pair<T, P>> for Punctuated<T, P> {
     fn extend<I: IntoIterator<Item = Pair<T, P>>>(&mut self, i: I) {
-        if !self.empty_or_trailing() {
+        if !self.is_empty_or_trailing() {
             self.push_punct(P::default());
         }
 
@@ -831,7 +832,7 @@ mod tests {
         let mut ps = ts.parse();
         let p: Punctuated<Ident, Comma> = Punctuated::parse_terminated(&mut ps).unwrap();
         assert_eq!(p.len(), 3);
-        assert!(!p.trailing_punct());
+        assert!(!p.is_trailing());
     }
 
     #[test]
@@ -840,7 +841,7 @@ mod tests {
         let mut ps = ts.parse();
         let p: Punctuated<Ident, Comma> = Punctuated::parse_terminated(&mut ps).unwrap();
         assert_eq!(p.len(), 3);
-        assert!(p.trailing_punct());
+        assert!(p.is_trailing());
     }
 
     #[test]
@@ -876,19 +877,19 @@ mod tests {
     }
 
     #[test]
-    fn len_is_empty_trailing_punct() {
+    fn len_is_empty_is_trailing() {
         let mut p: Punctuated<Ident, Comma> = Punctuated::new();
         assert!(p.is_empty());
         assert_eq!(p.len(), 0);
         p.push_value(Ident::new("a", Span::default()));
         assert_eq!(p.len(), 1);
-        assert!(!p.trailing_punct());
+        assert!(!p.is_trailing());
         p.push_punct(Comma::default());
         assert_eq!(p.len(), 1);
-        assert!(p.trailing_punct());
+        assert!(p.is_trailing());
         p.push_value(Ident::new("b", Span::default()));
         assert_eq!(p.len(), 2);
-        assert!(!p.trailing_punct());
+        assert!(!p.is_trailing());
     }
 
     #[test]
@@ -923,12 +924,12 @@ mod tests {
         let last = p.pop().unwrap();
         assert!(matches!(last, Pair::End(_)));
         assert_eq!(p.len(), 1);
-        assert!(p.trailing_punct());
+        assert!(p.is_trailing());
 
         // pop trailing punct
         let punct = p.pop_punct().unwrap();
         assert_eq!(punct.as_str(), ",");
-        assert!(!p.trailing_punct());
+        assert!(!p.is_trailing());
         assert_eq!(p.len(), 1);
     }
 

@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use super::FieldDef;
 use crate::{Delimited, Punctuated};
 
-#[doc = "Named struct fields (`{ a: A, b: B }`)."]
+/// Named struct fields (`{ a: A, b: B }`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldsNamed {

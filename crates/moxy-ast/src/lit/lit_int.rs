@@ -3,7 +3,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::Lit;
 
-#[doc = "An integer literal (`42`, `0xFF`, `1_000u64`)."]
+/// An integer literal (`42`, `0xFF`, `1_000u64`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LitInt {

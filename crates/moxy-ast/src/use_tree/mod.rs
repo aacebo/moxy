@@ -17,7 +17,7 @@ pub use use_name::*;
 pub use use_path::*;
 pub use use_rename::*;
 
-#[doc = "A `use` import tree."]
+/// A `use` import tree.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum UseTree {
@@ -42,7 +42,7 @@ impl Spanner for UseTree {
 
 impl Parse for UseTree {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Star>().is_some() {
+        if stream.peek::<Star>() {
             let star = stream.parse::<Star>()?;
             return Ok(UseTree::Glob(UseGlob { star }));
         }
@@ -54,13 +54,13 @@ impl Parse for UseTree {
 
         let ident = stream.parse::<Ident>()?;
 
-        if stream.peek::<PathSep>().is_some() {
+        if stream.peek::<PathSep>() {
             let path_sep = stream.parse::<PathSep>()?;
             let tree = Box::new(stream.parse::<UseTree>()?);
             return Ok(UseTree::Path(UsePath { ident, path_sep, tree }));
         }
 
-        if stream.peek::<As>().is_some() {
+        if stream.peek::<As>() {
             let as_keyword = stream.parse::<As>()?;
             let rename = stream.parse::<Ident>()?;
             return Ok(UseTree::Rename(UseRename {

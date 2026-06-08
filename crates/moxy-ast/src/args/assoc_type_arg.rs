@@ -3,9 +3,9 @@ use moxy_token::punct::{Eq, Lt};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::AngleArgs;
-use crate::{Ident, Type};
+use crate::{GenericArgument, Ident, Type};
 
-#[doc = "An associated type binding (`Item = T`)."]
+/// An associated type binding (`Item = T`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct AssocTypeArg {
@@ -15,26 +15,23 @@ pub struct AssocTypeArg {
     pub ty: Type,
 }
 
+impl AssocTypeArg {
+    pub fn to_generic_argument(&self) -> GenericArgument {
+        GenericArgument::AssocType(self.clone())
+    }
+
+    pub fn into_generic_argument(self) -> GenericArgument {
+        GenericArgument::AssocType(self)
+    }
+}
+
 impl Parse for AssocTypeArg {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let mut fork = stream.fork();
-        let ident = fork.parse::<Ident>()?;
-
-        let generics = if fork.peek::<Lt>().is_some() {
-            Some(fork.parse::<AngleArgs>()?)
-        } else {
-            None
-        };
-
-        let eq_punct = fork.parse::<Eq>()?;
-        // Try to parse a type; if it fails this is not an assoc-type binding.
-        let ty = fork.parse::<Type>()?;
-        stream.seek(&fork);
         Ok(Self {
-            ident,
-            generics,
-            eq_punct,
-            ty,
+            ident: stream.parse()?,
+            generics: stream.parse_if(),
+            eq_punct: stream.parse()?,
+            ty: stream.parse()?,
         })
     }
 }

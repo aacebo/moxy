@@ -4,7 +4,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Ident, MacroCall};
 
-#[doc = "A macro invocation used as an item (`name!(...);`)."]
+/// A macro invocation used as an item (`name!(...);`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemMacro {
@@ -20,7 +20,7 @@ impl Parse for ItemMacro {
         let attrs = stream.parse::<Vec<Attribute>>()?;
         let mac = stream.parse::<MacroCall>()?;
 
-        let (semi, semi_punct) = if stream.peek::<Semi>().is_some() {
+        let (semi, semi_punct) = if stream.peek::<Semi>() {
             let punct = stream.parse::<Semi>()?;
             (true, Some(punct))
         } else {

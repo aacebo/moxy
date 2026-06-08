@@ -3,12 +3,12 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A tuple expression: `(a, b, c)`."]
+/// A tuple expression: `(a, b, c)`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprTuple {
     pub attrs: Vec<Attribute>,
-    pub elems: Delimited<Punctuated<super::super::Expr, Comma>>,
+    pub elems: Delimited<Punctuated<Expr, Comma>>,
 }
 
 impl Spanner for ExprTuple {

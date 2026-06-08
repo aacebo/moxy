@@ -4,16 +4,16 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A method call expression: `receiver.method(args)`, `x.collect::<Vec<_>>()`."]
+/// A method call expression: `receiver.method(args)`, `x.collect::<Vec<_>>()`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprMethodCall {
     pub attrs: Vec<Attribute>,
-    pub receiver: Box<super::super::Expr>,
+    pub receiver: Box<Expr>,
     pub dot: Dot,
     pub method: Ident,
     pub turbofish: Option<AngleArgs>,
-    pub args: Delimited<Punctuated<super::super::Expr, Comma>>,
+    pub args: Delimited<Punctuated<Expr, Comma>>,
 }
 
 impl Spanner for ExprMethodCall {
@@ -23,6 +23,7 @@ impl Spanner for ExprMethodCall {
         } else {
             self.receiver.span()
         };
+
         start.join(self.args.span())
     }
 }
@@ -32,13 +33,13 @@ impl ExprMethodCall {
     pub fn parse_turbofish(stream: &mut ParseStream) -> Result<Option<AngleArgs>, ParseError> {
         let mut fork = stream.fork();
 
-        if fork.peek::<moxy_token::punct::PathSep>().is_none() {
+        if !fork.peek::<moxy_token::punct::PathSep>() {
             return Ok(None);
         }
 
         let _ = fork.parse::<moxy_token::punct::PathSep>()?;
 
-        if fork.peek::<moxy_token::punct::Lt>().is_none() {
+        if !fork.peek::<moxy_token::punct::Lt>() {
             return Ok(None);
         }
 

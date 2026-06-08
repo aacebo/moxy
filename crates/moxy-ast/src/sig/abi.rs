@@ -2,7 +2,7 @@ use moxy_token::keyword::Extern;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Parse, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
 
-#[doc = "An ABI string (`extern \"C\"`)."]
+/// An ABI string (`extern "C"`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Abi {

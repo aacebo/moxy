@@ -20,7 +20,7 @@ impl ToTokens for PatStructBody {
     }
 }
 
-#[doc = "A struct pattern, e.g. `Point { x, y }` or `Point { x, .. }`."]
+/// A struct pattern, e.g. `Point { x, y }` or `Point { x, .. }`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatStruct {

@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use super::TypeBound;
 use crate::{BoundLifetimes, Punctuated, Type};
 
-#[doc = "A type predicate in a `where` clause (`T: Bound`)."]
+/// A type predicate in a `where` clause (`T: Bound`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypePredicate {

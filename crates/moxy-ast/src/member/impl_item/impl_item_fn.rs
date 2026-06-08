@@ -4,7 +4,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use super::ImplItem;
 use crate::{Attribute, Defaultness, Signature, StmtBlock, Visibility};
 
-#[doc = "A method or associated function inside an `impl` block."]
+/// A method or associated function inside an `impl` block.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ImplItemFn {

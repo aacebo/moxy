@@ -6,7 +6,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use super::ImplItem;
 use crate::{Attribute, Defaultness, Expr, Generics, Ident, Type, Visibility};
 
-#[doc = "A constant item inside an `impl` block (`const NAME: Type = expr;`)."]
+/// A constant item inside an `impl` block (`const NAME: Type = expr;`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ImplItemConst {

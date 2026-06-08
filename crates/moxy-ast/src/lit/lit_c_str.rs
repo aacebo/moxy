@@ -3,7 +3,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::Lit;
 
-#[doc = "A C-string literal (`c\"hello\"` / `c\\'\\\\0\\'`)."]
+/// A C-string literal (`c"hello"` / `c\'\\0\'`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LitCStr {

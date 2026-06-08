@@ -11,7 +11,7 @@ pub use field_value::*;
 pub use fields_named::*;
 pub use fields_unnamed::*;
 
-#[doc = "The fields of a struct/enum variant (named, unnamed, or unit)."]
+/// The fields of a struct/enum variant (named, unnamed, or unit).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Fields {

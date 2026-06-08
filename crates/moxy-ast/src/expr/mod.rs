@@ -15,7 +15,7 @@ pub use postfix::*;
 pub use primary::*;
 pub use unary::*;
 
-#[doc = "A Rust expression. The primary recursive node covering all expression forms."]
+/// A Rust expression. The primary recursive node covering all expression forms.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Expr {

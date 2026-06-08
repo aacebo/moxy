@@ -1,10 +1,10 @@
 use super::ToTokens;
 use super::lex::{Cursor, LexError, Scan};
 use crate::parser::{ParseError, ParseStream};
-use crate::{Parse, Span, Token, TokenStream, TokenTree};
+use crate::{Parse, Span, Spanner, Token, TokenStream, TokenTree};
 
 macro_rules! define_keyword {
-    ($($name:ident => $text:literal),+ $(,)?) => {
+    ($($name:ident[$is_method:ident, $as_method:ident] => $text:literal),+ $(,)?) => {
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
         pub enum Keyword {
             $($name($name),)*
@@ -39,6 +39,26 @@ macro_rules! define_keyword {
                     _ => None,
                 }
             }
+
+            #[inline]
+            pub fn to_token(&self) -> Token {
+                Token::Keyword(self.clone())
+            }
+
+            #[inline]
+            pub fn into_token(self) -> Token {
+                Token::Keyword(self)
+            }
+
+            #[inline]
+            pub fn to_token_tree(&self) -> TokenTree {
+                TokenTree::Token(self.to_token())
+            }
+
+            #[inline]
+            pub fn into_token_tree(self) -> TokenTree {
+                TokenTree::Token(self.into_token())
+            }
         }
 
         impl Scan for Keyword {
@@ -60,7 +80,7 @@ macro_rules! define_keyword {
             }
         }
 
-        impl crate::Spanner for Keyword {
+        impl Spanner for Keyword {
             fn span(&self) -> Span {
                 self.span()
             }
@@ -153,7 +173,7 @@ macro_rules! define_keyword {
                 }
             }
 
-            impl crate::Spanner for $name {
+            impl Spanner for $name {
                 fn span(&self) -> Span {
                     self.span
                 }
@@ -175,63 +195,118 @@ macro_rules! define_keyword {
                 }
             }
         )+
+
+        impl Token {
+            pub fn is_keyword(&self) -> bool {
+                matches!(self, Self::Keyword(_))
+            }
+
+            pub fn as_keyword(&self) -> Option<&Keyword> {
+                match self {
+                    Self::Keyword(v) => Some(v),
+                    _ => None,
+                }
+            }
+
+            $(
+                pub fn $is_method(&self) -> bool {
+                    matches!(self, Self::Keyword(Keyword::$name(_)))
+                }
+
+                pub fn $as_method(&self) -> Option<&$name> {
+                    match self {
+                        Self::Keyword(Keyword::$name(v)) => Some(v),
+                        _ => None,
+                    }
+                }
+            )*
+        }
+
+        impl TokenTree {
+            pub fn is_keyword(&self) -> bool {
+                match self {
+                    Self::Token(v) => v.is_keyword(),
+                    _ => false,
+                }
+            }
+
+            pub fn as_keyword(&self) -> Option<&Keyword> {
+                match self {
+                    Self::Token(v) => v.as_keyword(),
+                    _ => None,
+                }
+            }
+
+            $(
+                pub fn $is_method(&self) -> bool {
+                    matches!(self, Self::Token(Token::Keyword(Keyword::$name(_))))
+                }
+
+                pub fn $as_method(&self) -> Option<&$name> {
+                    match self {
+                        Self::Token(Token::Keyword(Keyword::$name(v))) => Some(v),
+                        _ => None,
+                    }
+                }
+            )*
+        }
     };
 }
 
 define_keyword! {
-    As         => "as",
-    Async      => "async",
-    Auto       => "auto",
-    Await      => "await",
-    Become     => "become",
-    Box        => "box",
-    Break      => "break",
-    Const      => "const",
-    Continue   => "continue",
-    Crate      => "crate",
-    Default    => "default",
-    Do         => "do",
-    Dyn        => "dyn",
-    Else       => "else",
-    Enum       => "enum",
-    Extern     => "extern",
-    Final      => "final",
-    Fn         => "fn",
-    For        => "for",
-    If         => "if",
-    Impl       => "impl",
-    In         => "in",
-    Let        => "let",
-    Loop       => "loop",
-    Macro      => "macro",
-    MacroRules => "macro_rules",
-    Match      => "match",
-    Mod        => "mod",
-    Move       => "move",
-    Mut        => "mut",
-    Override   => "override",
-    Priv       => "priv",
-    Pub        => "pub",
-    Raw        => "raw",
-    Ref        => "ref",
-    Return     => "return",
-    SelfType   => "Self",
-    SelfValue  => "self",
-    Static     => "static",
-    Struct     => "struct",
-    Super      => "super",
-    Trait      => "trait",
-    Try        => "try",
-    Type       => "type",
-    Typeof     => "typeof",
-    Union      => "union",
-    Unsafe     => "unsafe",
-    Unsized    => "unsized",
-    Use        => "use",
-    Virtual    => "virtual",
-    Where      => "where",
-    While      => "while",
-    Yield      => "yield",
+    As[is_keyword_as, as_keyword_as]                            => "as",
+    Async[is_keyword_async, as_keyword_async]                   => "async",
+    Auto[is_keyword_auto, as_keyword_auto]                      => "auto",
+    Await[is_keyword_await, as_keyword_await]                   => "await",
+    Become[is_keyword_become, as_keyword_become]                => "become",
+    Box[is_keyword_box, as_keyword_box]                         => "box",
+    Break[is_keyword_break, as_keyword_break]                   => "break",
+    Const[is_keyword_const, as_keyword_const]                   => "const",
+    Continue[is_keyword_continue, as_keyword_continue]          => "continue",
+    Crate[is_keyword_crate, as_keyword_crate]                   => "crate",
+    Default[is_keyword_default, as_keyword_default]             => "default",
+    Do[is_keyword_do, as_keyword_do]                            => "do",
+    Dyn[is_keyword_dyn, as_keyword_dyn]                         => "dyn",
+    Else[is_keyword_else, as_keyword_else]                      => "else",
+    Enum[is_keyword_enum, as_keyword_enum]                      => "enum",
+    Extern[is_keyword_extern, as_keyword_extern]                => "extern",
+    Final[is_keyword_final, as_keyword_final]                   => "final",
+    Fn[is_keyword_fn, as_keyword_fn]                            => "fn",
+    For[is_keyword_for, as_keyword_for]                         => "for",
+    If[is_keyword_if, as_keyword_if]                            => "if",
+    Impl[is_keyword_impl, as_keyword_impl]                      => "impl",
+    In[is_keyword_in, as_keyword_in]                            => "in",
+    Let[is_keyword_let, as_keyword_let]                         => "let",
+    Loop[is_keyword_loop, as_keyword_loop]                      => "loop",
+    Macro[is_keyword_macro, as_keyword_macro]                   => "macro",
+    MacroRules[is_keyword_macro_rules, as_keyword_macro_rules]  => "macro_rules",
+    Match[is_keyword_match, as_keyword_match]                   => "match",
+    Mod[is_keyword_mod, as_keyword_mod]                         => "mod",
+    Move[is_keyword_move, as_keyword_move]                      => "move",
+    Mut[is_keyword_mut, as_keyword_mut]                         => "mut",
+    Override[is_keyword_override, as_keyword_override]          => "override",
+    Priv[is_keyword_priv, as_keyword_priv]                      => "priv",
+    Pub[is_keyword_pub, as_keyword_pub]                         => "pub",
+    Raw[is_keyword_raw, as_keyword_raw]                         => "raw",
+    Ref[is_keyword_ref, as_keyword_ref]                         => "ref",
+    Return[is_keyword_return, as_keyword_return]                => "return",
+    SelfType[is_keyword_self_type, as_keyword_self_type]        => "Self",
+    SelfValue[is_keyword_self_value, as_keyword_self_value]     => "self",
+    Static[is_keyword_static, as_keyword_static]                => "static",
+    Struct[is_keyword_struct, as_keyword_struct]                => "struct",
+    Super[is_keyword_super, as_keyword_super]                   => "super",
+    Trait[is_keyword_trait, as_keyword_trait]                   => "trait",
+    Try[is_keyword_try, as_keyword_try]                         => "try",
+    Type[is_keyword_type, as_keyword_type]                      => "type",
+    Typeof[is_keyword_typeof, as_keyword_typeof]                => "typeof",
+    Union[is_keyword_union, as_keyword_union]                   => "union",
+    Unsafe[is_keyword_unsafe, as_keyword_unsafe]                => "unsafe",
+    Unsized[is_keyword_unsized, as_keyword_unsized]             => "unsized",
+    Use[is_keyword_use, as_keyword_use]                         => "use",
+    Virtual[is_keyword_virtual, as_keyword_virtual]             => "virtual",
+    Where[is_keyword_where, as_keyword_where]                   => "where",
+    While[is_keyword_while, as_keyword_while]                   => "while",
+    Yield[is_keyword_yield, as_keyword_yield]                   => "yield",
 }
 
 #[cfg(test)]

@@ -3,7 +3,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::MacroCall;
 
-#[doc = "A macro invocation in type position (`path!(...)`)."]
+/// A macro invocation in type position (`path!(...)`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeMacro {

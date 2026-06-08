@@ -4,7 +4,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::UseTree;
 
-#[doc = "A glob import (`*`)."]
+/// A glob import (`*`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseGlob {

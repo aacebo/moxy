@@ -2,7 +2,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[doc = "A literal pattern, e.g. `42`, `'a'`, or `\"hello\"`."]
+/// A literal pattern, e.g. `42`, `'a'`, or `"hello"`.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatLit {

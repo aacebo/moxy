@@ -3,7 +3,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Item};
 
-#[doc = "A whole parsed crate (inner attributes + items)."]
+/// A whole parsed crate (inner attributes + items).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Crate {

@@ -4,7 +4,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, FieldsNamed, Generics, Ident, Visibility};
 
-#[doc = "A union item (`union Name<T> { field: Type, ... }`)."]
+/// A union item (`union Name<T> { field: Type, ... }`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemUnion {

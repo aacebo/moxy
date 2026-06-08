@@ -1,5 +1,5 @@
-use crate::Span;
 use crate::lex::{Cursor, LexError};
+use crate::{Span, Token, TokenTree};
 
 #[derive(Debug, Clone)]
 pub struct Literal {
@@ -78,6 +78,26 @@ impl Literal {
     #[inline]
     pub fn set_span(&mut self, span: Span) {
         self.span = span;
+    }
+
+    #[inline]
+    pub fn to_token(&self) -> Token {
+        Token::Literal(self.clone())
+    }
+
+    #[inline]
+    pub fn into_token(self) -> Token {
+        Token::Literal(self)
+    }
+
+    #[inline]
+    pub fn to_token_tree(&self) -> TokenTree {
+        TokenTree::Token(self.to_token())
+    }
+
+    #[inline]
+    pub fn into_token_tree(self) -> TokenTree {
+        TokenTree::Token(self.into_token())
     }
 }
 

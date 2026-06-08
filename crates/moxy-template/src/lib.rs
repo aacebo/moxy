@@ -2,8 +2,10 @@ extern crate proc_macro;
 
 mod ast;
 
+use moxy_ast::sig::FnParam;
+use moxy_ast::{Meta, item};
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, Parse, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, Parse, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 /// Build a [`moxy_token::TokenStream`] at runtime from a template, in the style
 /// of `quote!`.
@@ -79,5 +81,21 @@ impl ToTokens for Template {
 
 #[proc_macro_attribute]
 pub fn expand(_args: proc_macro::TokenStream, target: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    target
+    let stream = target.into_token_stream();
+    let mut stream = stream.parse();
+    let mut target: item::ItemFn = match stream.parse() {
+        Err(err) => return err.to_compile_error().into(),
+        Ok(v) => v,
+    };
+
+    for param in &mut target.sig.params.inputs {
+        if let FnParam::Typed(p) = param {
+            p.attrs.retain(|attr| match &attr.meta.inner {
+                Meta::Path(v) => v.to_token_stream().to_string() != "parse",
+                _ => true,
+            });
+        }
+    }
+
+    target.into_token_stream().into()
 }

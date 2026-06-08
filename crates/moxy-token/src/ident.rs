@@ -1,8 +1,8 @@
 use std::borrow::Cow;
 
 use super::{ToTokens, TokenStream};
-use crate::Span;
 use crate::lex::{Cursor, LexError, Scan};
+use crate::{Span, Token, TokenTree};
 
 #[derive(Debug, Clone)]
 pub struct Ident {
@@ -29,6 +29,26 @@ impl Ident {
     #[inline]
     pub fn set_span(&mut self, span: Span) {
         self.span = span;
+    }
+
+    #[inline]
+    pub fn to_token(&self) -> Token {
+        Token::Ident(self.clone())
+    }
+
+    #[inline]
+    pub fn into_token(self) -> Token {
+        Token::Ident(self)
+    }
+
+    #[inline]
+    pub fn to_token_tree(&self) -> TokenTree {
+        TokenTree::Token(self.to_token())
+    }
+
+    #[inline]
+    pub fn into_token_tree(self) -> TokenTree {
+        TokenTree::Token(self.into_token())
     }
 }
 

@@ -6,7 +6,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use super::Receiver;
 use crate::{Lifetime, Mutability, TypedParam};
 
-#[doc = "A function parameter (receiver or typed pattern)."]
+/// A function parameter (receiver or typed pattern).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum FnParam {
@@ -19,15 +19,15 @@ impl FnParam {
         let mut fork = stream.fork();
         fork.skip_while::<crate::Attribute>();
 
-        if fork.peek::<SelfValue>().is_some() {
+        if fork.peek::<SelfValue>() {
             return true;
         }
 
-        if fork.peek::<And>().is_some() {
+        if fork.peek::<And>() {
             let _ = fork.parse::<And>();
             let _ = fork.parse_if::<Lifetime>();
             let _ = fork.parse::<Mutability>();
-            return fork.peek::<SelfValue>().is_some();
+            return fork.peek::<SelfValue>();
         }
 
         false

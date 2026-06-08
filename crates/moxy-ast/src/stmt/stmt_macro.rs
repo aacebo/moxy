@@ -4,7 +4,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, MacroCall};
 
-#[doc = "A macro invocation used as a statement (`name!(...);` or `name!(...)`)."]
+/// A macro invocation used as a statement (`name!(...);` or `name!(...)`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StmtMacro {

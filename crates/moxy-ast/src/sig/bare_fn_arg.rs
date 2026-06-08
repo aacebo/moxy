@@ -4,7 +4,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Ident, Type};
 
-#[doc = "An argument of a bare function pointer type."]
+/// An argument of a bare function pointer type.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct BareFnArg {
@@ -20,7 +20,7 @@ impl Parse for BareFnArg {
         let name = {
             let mut fork = stream.fork();
             if let Ok(id) = fork.parse::<Ident>() {
-                if fork.peek::<Colon>().is_some() {
+                if fork.peek::<Colon>() {
                     stream.seek(&fork);
                     let colon = stream.parse::<Colon>()?;
                     Some((id, colon))

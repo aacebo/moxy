@@ -4,7 +4,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::{ConstParam, LifetimeParam, TypeParam};
 
-#[doc = "A generic parameter (lifetime, type, or const)."]
+/// A generic parameter (lifetime, type, or const).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum GenericParam {
@@ -55,7 +55,7 @@ impl Parse for GenericParam {
         let mut fork = stream.fork();
         fork.skip_while::<crate::Attribute>();
 
-        if fork.peek::<Const>().is_some() {
+        if fork.peek::<Const>() {
             return Ok(GenericParam::Const(Box::new(stream.parse()?)));
         }
 

@@ -8,6 +8,16 @@ pub enum Spacing {
 
 impl Spacing {
     #[inline]
+    pub fn is_alone(&self) -> bool {
+        matches!(self, Self::Alone)
+    }
+
+    #[inline]
+    pub fn is_joint(&self) -> bool {
+        matches!(self, Self::Joint)
+    }
+
+    #[inline]
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Alone => "alone",

@@ -3,7 +3,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::{LifetimePredicate, TypePredicate};
 
-#[doc = "A `where` clause predicate (lifetime or type)."]
+/// A `where` clause predicate (lifetime or type).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum WherePredicate {

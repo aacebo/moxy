@@ -5,7 +5,7 @@ use moxy_token::{Group, LexError, Parse, Span, Spanner, ToTokens, TokenStream, T
 
 use crate::{Attribute, Ident};
 
-#[doc = "A `macro_rules!` definition item."]
+/// A `macro_rules!` definition item.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemMacroRules {

@@ -1,13 +1,13 @@
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::Attribute;
+use crate::*;
 
-#[doc = "A group expression (invisible delimiter wrapper used during macro expansion)."]
+/// A group expression (invisible delimiter wrapper used during macro expansion).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprGroup {
     pub attrs: Vec<Attribute>,
-    pub expr: Box<super::super::Expr>,
+    pub expr: Box<Expr>,
 }
 
 impl Spanner for ExprGroup {

@@ -4,7 +4,7 @@ use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Delimited, Path};
 
-#[doc = "The visibility of an item (`pub`, `pub`, `pub(in path)`, or inherited)."]
+/// The visibility of an item (`pub`, `pub`, `pub(in path)`, or inherited).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Visibility {
@@ -32,7 +32,7 @@ pub enum Visibility {
 
 impl Parse for Visibility {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Pub>().is_none() {
+        if !stream.peek::<Pub>() {
             return Ok(Visibility::Inherited);
         }
 
@@ -43,7 +43,7 @@ impl Parse for Visibility {
             let (span, group_tokens) = stream.parse_group_spanned(Delim::Paren)?;
             let mut inner = group_tokens.parse();
 
-            if inner.peek::<Crate>().is_some() {
+            if inner.peek::<Crate>() {
                 let crate_keyword = inner.parse::<Crate>()?;
 
                 return Ok(Visibility::Crate {
@@ -52,7 +52,7 @@ impl Parse for Visibility {
                 });
             }
 
-            if inner.peek::<SelfValue>().is_some() {
+            if inner.peek::<SelfValue>() {
                 let self_keyword = inner.parse::<SelfValue>()?;
 
                 return Ok(Visibility::SelfValue {
@@ -61,7 +61,7 @@ impl Parse for Visibility {
                 });
             }
 
-            if inner.peek::<Super>().is_some() {
+            if inner.peek::<Super>() {
                 let super_keyword = inner.parse::<Super>()?;
 
                 return Ok(Visibility::Super {

@@ -9,7 +9,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::Delimited;
 
-#[doc = "A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement."]
+/// A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Attribute {
@@ -27,7 +27,7 @@ impl Parse for Attribute {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let pound = stream.parse::<Pound>()?;
 
-        let style = if stream.peek::<Not>().is_some() {
+        let style = if stream.peek::<Not>() {
             let not = stream.parse::<Not>()?;
             AttrStyle::Inner(pound, not)
         } else {
@@ -35,7 +35,6 @@ impl Parse for Attribute {
         };
 
         let meta = Delimited::<Meta>::parse_bracket(stream)?;
-
         Ok(Self { style, meta })
     }
 }

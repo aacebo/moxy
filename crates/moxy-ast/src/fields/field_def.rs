@@ -4,7 +4,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, Ident, Mutability, Type, Visibility};
 
-#[doc = "A struct/enum field definition (`pub name: Type` or `pub Type`)."]
+/// A struct/enum field definition (`pub name: Type` or `pub Type`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldDef {
@@ -25,7 +25,7 @@ impl Parse for FieldDef {
         let (ident, colon_punct) = {
             let mut fork = stream.fork();
             if let Ok(id) = fork.parse::<Ident>() {
-                if fork.peek::<Colon>().is_some() {
+                if fork.peek::<Colon>() {
                     stream.seek(&fork);
                     let colon = stream.parse::<Colon>()?;
                     (Some(id), Some(colon))

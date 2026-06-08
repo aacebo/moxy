@@ -1,7 +1,7 @@
 use moxy_token::punct::{Not, Pound};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-#[doc = "Whether an attribute is outer (`#[...]`) or inner (`#![...]`)."]
+/// Whether an attribute is outer (`#[...]`) or inner (`#![...]`).
 #[derive(Debug, Clone)]
 pub enum AttrStyle {
     Outer(Pound),

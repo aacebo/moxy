@@ -5,7 +5,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attribute, BoundPolarity, Defaultness, Delimited, Generics, ImplItem, TraitRef, Type, Unsafety};
 
-#[doc = "An `impl` block, optionally implementing a trait (`impl Trait for Type { ... }`)."]
+/// An `impl` block, optionally implementing a trait (`impl Trait for Type { ... }`).
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemImpl {
@@ -37,7 +37,7 @@ impl Parse for ItemImpl {
         let impl_keyword = stream.parse::<Impl>()?;
         let generics = stream.parse::<Generics>()?;
 
-        let polarity = if stream.peek::<Not>().is_some() {
+        let polarity = if stream.peek::<Not>() {
             BoundPolarity::Negative(stream.parse::<Not>()?)
         } else {
             BoundPolarity::Positive
@@ -45,7 +45,7 @@ impl Parse for ItemImpl {
 
         let first = stream.parse::<Type>()?;
 
-        let (for_keyword, trait_ref, self_ty) = if stream.peek::<For>().is_some() {
+        let (for_keyword, trait_ref, self_ty) = if stream.peek::<For>() {
             let for_keyword = stream.parse::<For>()?;
             let self_ty = stream.parse::<Type>()?;
             (
@@ -59,7 +59,7 @@ impl Parse for ItemImpl {
 
         let mut generics = generics;
 
-        if stream.peek::<moxy_token::keyword::Where>().is_some() {
+        if stream.peek::<moxy_token::keyword::Where>() {
             generics.where_clause = Some(stream.parse()?);
         }
 
