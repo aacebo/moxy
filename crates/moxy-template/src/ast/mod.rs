@@ -4,11 +4,43 @@ mod tmpl_tokens;
 
 pub use keyword::TmplKeyword;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, LexError, Parse, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, LexError, Parse, Punctuation, Span, ToTokens, Token, TokenStream, TokenTree};
 pub use tmpl_interp::*;
 pub use tmpl_tokens::*;
 
-#[doc = "A single node in a template."]
+/// A parsed template: a sequence of nodes (literal tokens, interpolations, and control flow).
+#[derive(Debug, Clone)]
+pub struct Template {
+    pub nodes: Vec<Node>,
+}
+
+impl Template {
+    pub fn expand(&self) -> TokenStream {
+        use std::str::FromStr;
+
+        let mut body = TokenStream::from_str("let mut __moxy_tmpl = ::moxy_token::TokenStream::new();").unwrap();
+        self.to_tokens(&mut body);
+        body.extend(TokenStream::from_str("__moxy_tmpl").unwrap());
+        TokenStream::from(vec![Group::new(Delim::Brace, body).to_token_tree()])
+    }
+}
+
+impl Parse for Template {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let nodes = stream.parse::<Vec<Node>>()?;
+        Ok(Self { nodes })
+    }
+}
+
+impl ToTokens for Template {
+    fn to_tokens(&self, out: &mut TokenStream) {
+        for node in &self.nodes {
+            node.to_tokens(out);
+        }
+    }
+}
+
+/// A single node in a template.
 #[derive(Debug, Clone)]
 pub enum Node {
     Tokens(TmplTokens),

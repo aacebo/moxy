@@ -20,5 +20,3 @@ workspace = true
 
 [dependencies]
 moxy-token = { path = "../moxy-token" }
-moxy-ast = { path = "../moxy-ast" }
-moxy-diagnostic = { path = "../moxy-diagnostic" }

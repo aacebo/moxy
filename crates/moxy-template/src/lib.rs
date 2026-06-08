@@ -2,10 +2,8 @@ extern crate proc_macro;
 
 mod ast;
 
-use moxy_ast::sig::FnParam;
-use moxy_ast::{Meta, item};
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, Parse, ToTokenStream, ToTokens, TokenStream, TokenTree};
+use ast::Template;
+use moxy_token::{Parse, ToTokens, TokenStream};
 
 /// Build a [`moxy_token::TokenStream`] at runtime from a template, in the style
 /// of `quote!`.
@@ -47,55 +45,23 @@ pub fn template(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     out
 }
 
-#[doc = "A parsed template: a sequence of nodes (literal tokens, interpolations, and control flow)."]
-#[derive(Debug, Clone)]
-struct Template {
-    pub nodes: Vec<ast::Node>,
-}
+// #[proc_macro_attribute]
+// pub fn expand(_args: proc_macro::TokenStream, target: proc_macro::TokenStream) -> proc_macro::TokenStream {
+//     let stream = target.into_token_stream();
+//     let mut stream = stream.parse();
+//     let mut target: item::ItemFn = match stream.parse() {
+//         Err(err) => return err.to_compile_error().into(),
+//         Ok(v) => v,
+//     };
 
-impl Template {
-    pub fn expand(&self) -> TokenStream {
-        use std::str::FromStr;
+//     for param in &mut target.sig.params.inputs {
+//         if let FnParam::Typed(p) = param {
+//             p.attrs.retain(|attr| match &attr.meta.inner {
+//                 Meta::Path(v) => v.to_token_stream().to_string() != "parse",
+//                 _ => true,
+//             });
+//         }
+//     }
 
-        let mut body = TokenStream::from_str("let mut __moxy_tmpl = ::moxy_token::TokenStream::new();").unwrap();
-        self.to_tokens(&mut body);
-        body.extend(TokenStream::from_str("__moxy_tmpl").unwrap());
-        TokenStream::from(vec![TokenTree::Group(Group::new(Delim::Brace, body))])
-    }
-}
-
-impl Parse for Template {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let nodes = stream.parse::<Vec<ast::Node>>()?;
-        Ok(Self { nodes })
-    }
-}
-
-impl ToTokens for Template {
-    fn to_tokens(&self, out: &mut TokenStream) {
-        for node in &self.nodes {
-            node.to_tokens(out);
-        }
-    }
-}
-
-#[proc_macro_attribute]
-pub fn expand(_args: proc_macro::TokenStream, target: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let stream = target.into_token_stream();
-    let mut stream = stream.parse();
-    let mut target: item::ItemFn = match stream.parse() {
-        Err(err) => return err.to_compile_error().into(),
-        Ok(v) => v,
-    };
-
-    for param in &mut target.sig.params.inputs {
-        if let FnParam::Typed(p) = param {
-            p.attrs.retain(|attr| match &attr.meta.inner {
-                Meta::Path(v) => v.to_token_stream().to_string() != "parse",
-                _ => true,
-            });
-        }
-    }
-
-    target.into_token_stream().into()
-}
+//     target.into_token_stream().into()
+// }
