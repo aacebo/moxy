@@ -4,7 +4,7 @@ mod meta_name_value;
 pub use meta_list::*;
 pub use meta_name_value::*;
 use moxy_token::parser::{Parse, ParseError, ParseStream};
-use moxy_token::{Eq, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Eq, EqEq, FatArrow, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Expr, Path};
 
@@ -14,7 +14,7 @@ use crate::{Expr, Path};
 pub enum Meta {
     Path(Path),
     List(MetaList),
-    NameValue(Box<MetaNameValue>),
+    NameValue(MetaNameValue),
 }
 
 impl Meta {
@@ -39,11 +39,7 @@ impl Meta {
     }
 
     pub fn as_name_value(&self) -> Option<&MetaNameValue> {
-        if let Self::NameValue(v) = self {
-            Some(v.as_ref())
-        } else {
-            None
-        }
+        if let Self::NameValue(v) = self { Some(v) } else { None }
     }
 }
 
@@ -61,11 +57,11 @@ impl Parse for Meta {
             }));
         }
 
-        if stream.peek::<Eq>() {
+        if stream.peek::<Eq>() && !stream.peek::<EqEq>() && !stream.peek::<FatArrow>() {
             let eq = stream.parse::<Eq>()?;
             let value = stream.parse::<Expr>()?;
 
-            return Ok(Meta::NameValue(Box::new(MetaNameValue { path, eq, value })));
+            return Ok(Meta::NameValue(MetaNameValue { path, eq, value }));
         }
 
         Ok(Self::Path(path))
