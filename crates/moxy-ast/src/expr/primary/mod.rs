@@ -25,16 +25,14 @@ pub use expr_tuple::*;
 use moxy_token::keyword::{Break, Const, Continue, Let, Return, Try, Unsafe, Yield};
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, DotDot, Eq, Or, OrOr, Semi};
-use moxy_token::{Delim, LexError, Punctuation, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Delim, LexError, Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use super::block::{
     ExprAsync, ExprBrace, ExprConst, ExprForLoop, ExprIf, ExprLoop, ExprMatch, ExprTryBlock, ExprUnsafe, ExprWhile,
 };
 use super::jump::{ExprBreak, ExprContinue, ExprReturn, ExprYield};
 use super::{BlockExpr, Expr, JumpExpr};
-use crate::{
-    Asyncness, ClosureParam, Constness, Delimited, FieldValue, Label, Movability, Pattern, Punctuated, QSelf, ReturnType,
-};
+use crate::{Asyncness, ClosureParam, Constness, Delimited, FieldValue, Label, Movability, Pattern, Punctuated, ReturnType};
 
 /// Primary/leaf expressions (literals, paths, closures, collections, struct literals, macros).
 #[derive(Debug, Clone)]

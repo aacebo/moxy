@@ -3,7 +3,7 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Comma, Gt, Lt, RArrow};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Lifetime, Pattern, Punctuated, Type};
+use crate::{Lifetime, Pattern, Punctuated, Type};
 
 /// A closure parameter, either type-annotated (`pat: ty`) or inferred (`pat`).
 #[derive(Debug, Clone)]

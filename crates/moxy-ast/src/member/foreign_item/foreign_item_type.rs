@@ -3,7 +3,6 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
-use super::ForeignItem;
 use crate::{Attribute, Generics, Ident, Visibility};
 
 /// A foreign opaque type declaration inside an `extern` block (`type Name;`).

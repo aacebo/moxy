@@ -403,8 +403,6 @@ pub fn parse_expr(stream: &mut ParseStream, allow_struct: bool) -> Result<Expr, 
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
     use moxy_token::ToTokenStream;
 
     use super::*;

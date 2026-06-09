@@ -1,11 +1,12 @@
-mod attr_style;
 pub mod meta;
+pub mod query;
+mod style;
 
-pub use attr_style::*;
 pub use meta::Meta;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Not, Pound};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+pub use style::*;
 
 use crate::Delimited;
 

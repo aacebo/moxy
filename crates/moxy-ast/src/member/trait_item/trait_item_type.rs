@@ -3,7 +3,6 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Eq, Plus, Semi};
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
-use super::TraitItem;
 use crate::{Attribute, Generics, Ident, Punctuated, Type, TypeBound};
 
 /// An associated type inside a trait definition (`type Name: Bound = Default;`).

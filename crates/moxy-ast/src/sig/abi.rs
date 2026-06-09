@@ -1,6 +1,6 @@
 use moxy_token::keyword::Extern;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 /// An ABI string (`extern "C"`).
 #[derive(Debug, Clone)]

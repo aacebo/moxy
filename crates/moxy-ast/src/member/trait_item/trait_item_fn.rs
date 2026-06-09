@@ -2,7 +2,6 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
 use moxy_token::{Delim, LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use super::TraitItem;
 use crate::{Attribute, Signature, StmtBlock};
 
 /// A method declaration or default implementation inside a trait definition.

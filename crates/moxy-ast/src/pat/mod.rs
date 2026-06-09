@@ -1,9 +1,9 @@
 use moxy_token::keyword::{Mut, Ref};
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{And, At, Colon, Comma, DotDot, Or};
-use moxy_token::{Delim, LexError, Parse, Punctuation, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Delim, LexError, Parse, Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use crate::{Attribute, Delimited, Expr, Ident, Member, Mutability, Path, Punctuated, RangeLimits, Type};
+use crate::{Attribute, Delimited, Expr, Ident, Member, Mutability, Path, Punctuated};
 
 mod pat_field;
 mod pat_group;
@@ -579,8 +579,6 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
     use moxy_token::ToTokenStream;
 
     use super::*;

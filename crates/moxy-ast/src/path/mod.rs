@@ -75,9 +75,7 @@ impl From<crate::Ident> for Path {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
-    use moxy_token::{Parse, ToTokenStream, TokenStream};
+    use moxy_token::ToTokenStream;
 
     use super::*;
 

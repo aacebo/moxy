@@ -1,5 +1,3 @@
-extern crate proc_macro;
-
 mod ast;
 
 use ast::{Paste, Template};

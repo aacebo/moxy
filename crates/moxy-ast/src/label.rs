@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Colon;
-use moxy_token::{Parse, Punctuation, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Parse, Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::Lifetime;
 

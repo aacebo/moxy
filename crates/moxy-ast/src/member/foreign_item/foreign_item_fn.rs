@@ -2,7 +2,6 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
-use super::ForeignItem;
 use crate::{Attribute, Signature, Visibility};
 
 /// A foreign function declaration inside an `extern` block.

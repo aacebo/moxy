@@ -3,7 +3,6 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Eq, Semi};
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
-use super::ImplItem;
 use crate::{Attribute, Defaultness, Generics, Ident, Type, Visibility};
 
 /// An associated type definition inside an `impl` block (`type Name = Type;`).

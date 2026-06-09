@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Quote, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Expr, Lifetime, Type};
 

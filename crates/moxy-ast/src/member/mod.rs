@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::Ident;
 

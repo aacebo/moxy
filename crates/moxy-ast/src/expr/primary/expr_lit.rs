@@ -1,5 +1,5 @@
 use moxy_token::parser::ParseStream;
-use moxy_token::{Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::*;
 

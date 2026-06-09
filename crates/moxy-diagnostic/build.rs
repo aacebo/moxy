@@ -1,4 +1,4 @@
-extern crate moxy_build as build;
+use moxy_build as build;
 
 fn main() {
     build::rustc::Config::new()

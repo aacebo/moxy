@@ -362,8 +362,6 @@ impl ToTokens for Type {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
     use moxy_token::ToTokenStream;
 
     use super::*;

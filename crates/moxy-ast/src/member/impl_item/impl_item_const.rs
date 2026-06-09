@@ -3,7 +3,6 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Eq, Semi};
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
-use super::ImplItem;
 use crate::{Attribute, Defaultness, Expr, Generics, Ident, Type, Visibility};
 
 /// A constant item inside an `impl` block (`const NAME: Type = expr;`).

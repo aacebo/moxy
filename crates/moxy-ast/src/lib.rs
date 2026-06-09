@@ -1,7 +1,3 @@
-#![allow(unused)]
-
-extern crate self as moxy_ast;
-
 mod _crate;
 pub mod args;
 pub mod attr;

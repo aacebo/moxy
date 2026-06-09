@@ -1,7 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
-use super::ImplItem;
 use crate::{Attribute, Defaultness, Signature, StmtBlock, Visibility};
 
 /// A method or associated function inside an `impl` block.

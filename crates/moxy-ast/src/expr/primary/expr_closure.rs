@@ -1,7 +1,7 @@
 use moxy_token::keyword::Move;
 use moxy_token::parser::ParseStream;
 use moxy_token::punct::{Comma, Or, OrOr};
-use moxy_token::{Punctuation, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::expr::block::ExprBrace;
 use crate::*;

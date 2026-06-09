@@ -1,7 +1,7 @@
 use moxy_token::keyword::{Const, Mut};
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Star;
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use super::Type;
 

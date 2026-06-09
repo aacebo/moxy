@@ -92,7 +92,7 @@ impl ToTokens for Meta {
 mod tests {
     use std::str::FromStr;
 
-    use moxy_token::{Parse, ToTokenStream, TokenStream};
+    use moxy_token::{ToTokenStream, TokenStream};
 
     use super::super::*;
     use super::*;

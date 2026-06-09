@@ -2,7 +2,6 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use super::TraitItem;
 use crate::{Attribute, MacroCall};
 
 /// A macro invocation inside a trait definition.

@@ -1,4 +1,3 @@
-#[allow(unused)]
 use crate::*;
 
 /// A type wrapped in an invisible group delimiter (produced during macro expansion).

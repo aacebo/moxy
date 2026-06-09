@@ -14,9 +14,7 @@ pub use variadic::*;
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
-    use moxy_token::{ToTokenStream, TokenStream};
+    use moxy_token::ToTokenStream;
 
     use super::*;
 

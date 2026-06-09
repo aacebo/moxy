@@ -3,7 +3,6 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Semi};
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
-use super::ForeignItem;
 use crate::{Attribute, Ident, Mutability, Type, Visibility};
 
 /// A foreign static declaration inside an `extern` block (`static NAME: Type;`).

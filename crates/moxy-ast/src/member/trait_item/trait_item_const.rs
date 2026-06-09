@@ -3,7 +3,6 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Eq, Semi};
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
-use super::TraitItem;
 use crate::{Attribute, Expr, Generics, Ident, Type};
 
 /// A constant item inside a trait definition (`const NAME: Type;` or `const NAME: Type = expr;`).

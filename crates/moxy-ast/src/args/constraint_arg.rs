@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Colon, Lt, Plus};
+use moxy_token::punct::{Colon, Plus};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::AngleArgs;

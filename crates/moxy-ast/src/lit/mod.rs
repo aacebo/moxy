@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 mod lit_bool;
 mod lit_byte;
@@ -254,8 +254,6 @@ impl std::fmt::Display for Lit {
 
 #[cfg(test)]
 mod tests {
-    use std::str::FromStr;
-
     use moxy_token::{Span, ToTokenStream};
 
     use super::*;

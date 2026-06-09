@@ -1,4 +1,4 @@
-use moxy_token::keyword::{Mut, Ref};
+use moxy_token::keyword::Ref;
 use moxy_token::punct::At;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 

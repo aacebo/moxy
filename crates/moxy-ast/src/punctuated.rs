@@ -817,8 +817,8 @@ impl<T: serde::Serialize, P> serde::Serialize for Punctuated<T, P> {
 
 #[cfg(test)]
 mod tests {
+    use moxy_token::Ident;
     use moxy_token::punct::Comma;
-    use moxy_token::{Ident, Span};
 
     use super::*;
 
