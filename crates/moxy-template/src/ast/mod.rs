@@ -1,10 +1,12 @@
 pub mod keyword;
+mod paste;
 mod tmpl_interp;
 mod tmpl_tokens;
 
 pub use keyword::TmplKeyword;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Delim, Group, LexError, Parse, Punctuation, Span, ToTokens, TokenStream, TokenTree};
+pub use paste::Paste;
 pub use tmpl_interp::*;
 pub use tmpl_tokens::*;
 
