@@ -8,19 +8,6 @@ pub enum AttrStyle {
     Inner(Pound, Not),
 }
 
-#[cfg(feature = "serde")]
-impl serde::Serialize for AttrStyle {
-    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
-    where
-        S: serde::Serializer,
-    {
-        match self {
-            AttrStyle::Outer(_) => s.serialize_str("Outer"),
-            AttrStyle::Inner(..) => s.serialize_str("Inner"),
-        }
-    }
-}
-
 // Equality/hashing ignore token spans: two attributes of the same style match.
 impl PartialEq for AttrStyle {
     fn eq(&self, other: &Self) -> bool {
@@ -53,6 +40,19 @@ impl ToTokens for AttrStyle {
                 pound.to_tokens(tokens);
                 not.to_tokens(tokens);
             }
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+impl serde::Serialize for AttrStyle {
+    fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
+    where
+        S: serde::Serializer,
+    {
+        match self {
+            AttrStyle::Outer(_) => s.serialize_str("Outer"),
+            AttrStyle::Inner(..) => s.serialize_str("Inner"),
         }
     }
 }
