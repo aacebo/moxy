@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::{Attribute, MacroCall};
 
 /// A macro invocation used as a statement (`name!(...);` or `name!(...)`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StmtMacro {
     pub attrs: Vec<Attribute>,

@@ -36,7 +36,7 @@ pub use type_tuple::*;
 pub use typed_param::*;
 
 /// A Rust type expression. Covers all positions where a type can appear in source code.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Type {
     Never(moxy_token::punct::Not),

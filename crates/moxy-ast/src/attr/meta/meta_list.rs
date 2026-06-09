@@ -1,13 +1,20 @@
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Delimited, Path};
+use crate::{Delimited, Meta, Path};
 
 /// A list-style meta item (`name(tokens)`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MetaList {
     pub path: Path,
     pub tokens: Delimited<TokenStream>,
+}
+
+impl MetaList {
+    pub fn get(&self, path: &Path) -> Option<Meta> {
+        let meta: Meta = self.tokens.parse().parse_if()?;
+        meta.get(path)
+    }
 }
 
 impl Spanner for MetaList {
@@ -24,7 +31,7 @@ impl ToTokens for MetaList {
 }
 
 impl MetaList {
-    pub fn into_meta(self) -> super::Meta {
-        super::Meta::List(self)
+    pub fn into_meta(self) -> Meta {
+        Meta::List(self)
     }
 }

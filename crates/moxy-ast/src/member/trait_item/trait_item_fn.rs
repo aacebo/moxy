@@ -5,7 +5,7 @@ use moxy_token::{Delim, LexError, Parse, Span, Spanner, ToTokens, TokenStream, T
 use crate::{Attribute, Signature, StmtBlock};
 
 /// A method declaration or default implementation inside a trait definition.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitItemFn {
     pub attrs: Vec<Attribute>,

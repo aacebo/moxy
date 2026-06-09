@@ -5,7 +5,7 @@ use super::Stmt;
 use crate::Delimited;
 
 /// A braced block of statements (`{ stmt; stmt; expr }`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StmtBlock {
     pub stmts: Delimited<Vec<Stmt>>,

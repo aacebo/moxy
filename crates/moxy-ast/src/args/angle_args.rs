@@ -6,7 +6,7 @@ use super::GenericArgument;
 use crate::Punctuated;
 
 /// A `<...>` argument list.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct AngleArgs {
     pub lt_punct: Lt,

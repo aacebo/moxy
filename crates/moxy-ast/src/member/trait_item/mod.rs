@@ -12,7 +12,7 @@ pub use trait_item_macro::*;
 pub use trait_item_type::*;
 
 /// An item inside a `trait` definition.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum TraitItem {
     Fn(TraitItemFn),

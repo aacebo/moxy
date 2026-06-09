@@ -7,7 +7,7 @@ use super::Receiver;
 use crate::{Lifetime, Mutability, TypedParam};
 
 /// A function parameter (receiver or typed pattern).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum FnParam {
     Receiver(Box<Receiver>),

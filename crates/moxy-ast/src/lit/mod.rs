@@ -28,7 +28,7 @@ pub use lit_int::*;
 pub use lit_str::*;
 
 /// A literal value in source code (string, integer, float, byte, char, or boolean).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Lit {
     Str(LitStr),

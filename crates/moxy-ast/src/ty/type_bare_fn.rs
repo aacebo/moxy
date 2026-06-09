@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Abi, BareFnArg, BoundLifetimes, Delimited, Punctuated, ReturnType, Unsafety, Variadic};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct BareFnParams {
     pub inputs: Punctuated<BareFnArg, Comma>,
@@ -25,7 +25,7 @@ impl ToTokens for BareFnParams {
 }
 
 /// A bare function pointer type (e.g. `fn(u8) -> u8`, `extern "C" fn()`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeBareFn {
     pub lifetimes: Option<BoundLifetimes>,

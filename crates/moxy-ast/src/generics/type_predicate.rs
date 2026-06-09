@@ -6,7 +6,7 @@ use super::TypeBound;
 use crate::{BoundLifetimes, Punctuated, Type};
 
 /// A type predicate in a `where` clause (`T: Bound`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypePredicate {
     pub lifetimes: Option<BoundLifetimes>,

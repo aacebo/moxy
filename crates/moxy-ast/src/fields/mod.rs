@@ -12,7 +12,7 @@ pub use fields_named::*;
 pub use fields_unnamed::*;
 
 /// The fields of a struct/enum variant (named, unnamed, or unit).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Fields {
     Named(FieldsNamed),

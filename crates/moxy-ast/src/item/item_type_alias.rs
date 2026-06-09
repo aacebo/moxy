@@ -6,7 +6,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::{Attribute, Generics, Ident, Type, Visibility};
 
 /// A type alias item (`type Name<T> = Type;`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemTypeAlias {
     pub attrs: Vec<Attribute>,

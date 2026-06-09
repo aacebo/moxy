@@ -9,7 +9,7 @@ use moxy_token::{Eq, EqEq, FatArrow, Span, Spanner, ToTokens, TokenStream};
 use crate::{Expr, Path};
 
 /// A structured attribute meta item (`name`, `name(...)`, `name = expr`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Meta {
     Path(Path),
@@ -40,6 +40,22 @@ impl Meta {
 
     pub fn as_name_value(&self) -> Option<&MetaNameValue> {
         if let Self::NameValue(v) = self { Some(v) } else { None }
+    }
+
+    pub fn path(&self) -> &Path {
+        match self {
+            Self::Path(v) => v,
+            Self::List(v) => &v.path,
+            Self::NameValue(v) => &v.path,
+        }
+    }
+
+    pub fn get(&self, path: &Path) -> Option<Self> {
+        match self {
+            Self::Path(v) if v == path => Some(self.clone()),
+            Self::List(v) => v.get(path),
+            _ => return None,
+        }
     }
 }
 

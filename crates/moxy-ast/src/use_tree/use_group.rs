@@ -6,7 +6,7 @@ use super::UseTree;
 use crate::{Delimited, Punctuated};
 
 /// A braced use group (`{a, b::c}`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseGroup {
     pub items: Delimited<Punctuated<UseTree, Comma>>,

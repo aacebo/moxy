@@ -35,7 +35,7 @@ use super::{BlockExpr, Expr, JumpExpr};
 use crate::{Asyncness, ClosureParam, Constness, Delimited, FieldValue, Label, Movability, Pattern, Punctuated, ReturnType};
 
 /// Primary/leaf expressions (literals, paths, closures, collections, struct literals, macros).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum PrimaryExpr {
     Lit(ExprLit),

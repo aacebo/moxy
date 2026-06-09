@@ -7,7 +7,7 @@ use super::Type;
 use crate::Path;
 
 /// The `<T as Trait>` qualifier of a qualified path.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct QSelf {
     pub lt: Lt,

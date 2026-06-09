@@ -6,7 +6,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::{Attribute, Generics, Ident, Visibility};
 
 /// A foreign opaque type declaration inside an `extern` block (`type Name;`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ForeignItemType {
     pub attrs: Vec<Attribute>,

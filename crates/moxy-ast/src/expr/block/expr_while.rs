@@ -6,7 +6,7 @@ use crate::expr::parse_expr;
 use crate::*;
 
 /// A while loop expression: `while cond { ... }`, `while let pat = expr { ... }`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprWhile {
     pub attrs: Vec<Attribute>,

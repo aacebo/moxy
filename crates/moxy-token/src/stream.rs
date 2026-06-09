@@ -6,7 +6,7 @@ use crate::parser::{ParseError, ParseStream};
 use crate::span::DelimSpan;
 use crate::{Span, TokenTree};
 
-#[derive(Debug, Default, Clone)]
+#[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct TokenStream(Vec<TokenTree>);
 
 impl TokenStream {

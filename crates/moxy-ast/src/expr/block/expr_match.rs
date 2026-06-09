@@ -7,7 +7,7 @@ use crate::expr::parse_expr;
 use crate::{Attribute, BlockExpr, Delimited, Expr, Pattern};
 
 /// A match expression: `match x { pat => expr, ... }`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprMatch {
     pub attrs: Vec<Attribute>,
@@ -60,7 +60,7 @@ impl ToTokens for ExprMatch {
 }
 
 /// A single arm of a `match` expression (`pat (if guard)? => body`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MatchArm {
     pub attrs: Vec<Attribute>,

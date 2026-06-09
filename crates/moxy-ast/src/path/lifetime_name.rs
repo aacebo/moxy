@@ -2,7 +2,7 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 /// The name part of a lifetime (e.g. the `a` in `'a`, or the `static` in `'static`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LifetimeName {
     pub span: Span,

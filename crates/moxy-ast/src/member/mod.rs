@@ -12,7 +12,7 @@ pub use impl_item::*;
 pub use trait_item::*;
 
 /// A struct/tuple field accessor — a named field (`.field`) or a tuple index (`.0`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Member {
     Named(Ident),

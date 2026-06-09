@@ -36,7 +36,7 @@ pub use item_union::*;
 pub use item_use::*;
 
 /// A top-level item (fn, struct, enum, trait, impl, use, ...).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Item {
     Use(ItemUse),

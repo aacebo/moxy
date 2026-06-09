@@ -6,7 +6,7 @@ use super::ExprBrace;
 use crate::*;
 
 /// An async block expression: `async { ... }`, `async move { ... }`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprAsync {
     pub attrs: Vec<Attribute>,

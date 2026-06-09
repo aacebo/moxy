@@ -1,5 +1,4 @@
 pub mod meta;
-pub mod query;
 mod style;
 
 pub use meta::Meta;
@@ -8,14 +7,20 @@ use moxy_token::punct::{Not, Pound};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 pub use style::*;
 
-use crate::Delimited;
+use crate::{Delimited, Path};
 
 /// A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Attribute {
     pub style: AttrStyle,
     pub meta: Delimited<Meta>,
+}
+
+impl Attribute {
+    pub fn get(&self, path: &Path) -> Option<Meta> {
+        self.meta.inner.get(path)
+    }
 }
 
 impl Spanner for Attribute {

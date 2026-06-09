@@ -4,7 +4,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream, TokenTree};
 use crate::*;
 
 /// A literal expression: `1`, `"hello"`, `true`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprLit {
     pub attrs: Vec<Attribute>,

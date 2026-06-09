@@ -5,7 +5,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// A loop expression: `loop { ... }`, `'label: loop { ... }`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprLoop {
     pub attrs: Vec<Attribute>,

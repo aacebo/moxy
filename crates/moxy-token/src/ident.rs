@@ -70,7 +70,7 @@ macro_rules! ident {
     }};
 }
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ident {
     text: Box<str>,
     span: Span,

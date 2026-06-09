@@ -6,7 +6,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::{Attribute, Expr, Ident, Mutability, Type, Visibility};
 
 /// A static item (`static [mut] NAME: Type = expr;`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemStatic {
     pub attrs: Vec<Attribute>,

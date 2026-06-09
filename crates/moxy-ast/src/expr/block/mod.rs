@@ -25,7 +25,7 @@ use moxy_token::{Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
 use crate::{Label, Lifetime};
 
 /// Block-like expressions (braced blocks, if, while, for, loop, match, async, unsafe, const, try).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum BlockExpr {
     Brace(ExprBrace),

@@ -6,7 +6,7 @@ use super::TypeBound;
 use crate::{Attribute, Ident, Punctuated, Type};
 
 /// A type parameter (`T: Bound = Default`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeParam {
     pub attrs: Vec<Attribute>,

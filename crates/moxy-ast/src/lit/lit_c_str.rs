@@ -4,7 +4,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use super::Lit;
 
 /// A C-string literal (`c"hello"` / `c\'\\0\'`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LitCStr {
     pub span: Span,

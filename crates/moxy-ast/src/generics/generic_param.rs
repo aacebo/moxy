@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use super::{ConstParam, LifetimeParam, TypeParam};
 
 /// A generic parameter (lifetime, type, or const).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum GenericParam {
     Lifetime(LifetimeParam),

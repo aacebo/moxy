@@ -6,7 +6,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::{Attribute, Generics, Ident, Punctuated, Type, TypeBound};
 
 /// An associated type inside a trait definition (`type Name: Bound = Default;`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitItemType {
     pub attrs: Vec<Attribute>,

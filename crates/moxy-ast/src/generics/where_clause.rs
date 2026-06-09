@@ -7,7 +7,7 @@ use super::WherePredicate;
 use crate::Punctuated;
 
 /// A `where` clause.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct WhereClause {
     pub where_keyword: Where,

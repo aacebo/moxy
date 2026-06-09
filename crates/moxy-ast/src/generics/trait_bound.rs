@@ -4,7 +4,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::{BoundLifetimes, BoundPolarity, Path, TraitBoundModifier};
 
 /// A trait bound (`Trait`, `?Sized`, `for<'a> Trait`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitBound {
     pub polarity: BoundPolarity,

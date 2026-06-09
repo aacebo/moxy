@@ -18,7 +18,7 @@ pub use use_path::*;
 pub use use_rename::*;
 
 /// A `use` import tree.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum UseTree {
     Path(UsePath),

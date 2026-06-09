@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::{Attribute, Ident, Mutability, Type, Visibility};
 
 /// A struct/enum field definition (`pub name: Type` or `pub Type`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldDef {
     pub attrs: Vec<Attribute>,

@@ -6,7 +6,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::{Lifetime, Pattern, Punctuated, Type};
 
 /// A closure parameter, either type-annotated (`pat: ty`) or inferred (`pat`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ClosureParam {
     Typed { pat: Box<Pattern>, colon: Colon, ty: Box<Type> },
@@ -59,7 +59,7 @@ impl ToTokens for ClosureParam {
 }
 
 /// The optional return type of a function (`-> Type` or nothing).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ReturnType {
     Default,
@@ -110,7 +110,7 @@ impl ToTokens for ReturnType {
 }
 
 /// A `for<'a, 'b>` higher-ranked lifetime binder.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct BoundLifetimes {
     pub for_keyword: For,

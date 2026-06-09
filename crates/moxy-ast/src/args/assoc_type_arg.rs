@@ -6,7 +6,7 @@ use super::AngleArgs;
 use crate::{GenericArgument, Ident, Type};
 
 /// An associated type binding (`Item = T`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct AssocTypeArg {
     pub ident: Ident,

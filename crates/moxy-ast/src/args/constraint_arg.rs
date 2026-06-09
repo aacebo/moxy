@@ -6,7 +6,7 @@ use super::AngleArgs;
 use crate::{GenericArgument, Ident, Punctuated, TypeBound};
 
 /// An associated type bound constraint (`Item: Bound`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ConstraintArg {
     pub ident: Ident,

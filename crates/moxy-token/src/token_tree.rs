@@ -1,7 +1,7 @@
 use crate::lex::{Cursor, Scan};
 use crate::{Delim, Group, Ident, Keyword, Literal, Punctuation, Span, Spanner, ToTokens, TokenStream};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(untagged))]
 pub enum TokenTree {
     Ident(Ident),

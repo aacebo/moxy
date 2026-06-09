@@ -6,7 +6,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::{Attribute, Fields, Generics, Ident, Visibility};
 
 /// A struct item (`struct Name<T> { ... }` or `struct Name(T);`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemStruct {
     pub attrs: Vec<Attribute>,

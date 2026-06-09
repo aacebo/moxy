@@ -16,7 +16,7 @@ use super::{BinaryExpr, Expr};
 use crate::{Mutability, UnOp};
 
 /// Unary prefix expressions (reference, unary op, cast, try-propagation).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum UnaryExpr {
     Reference(ExprReference),

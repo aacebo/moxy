@@ -1,9 +1,9 @@
 use moxy_token::{Eq, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Expr, Path};
+use crate::{Expr, Meta, Path};
 
 /// A name-value meta item (`name = expr`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MetaNameValue {
     pub path: Path,
@@ -26,7 +26,7 @@ impl ToTokens for MetaNameValue {
 }
 
 impl MetaNameValue {
-    pub fn into_meta(self) -> super::Meta {
-        super::Meta::NameValue(self)
+    pub fn into_meta(self) -> Meta {
+        Meta::NameValue(self)
     }
 }

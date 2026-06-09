@@ -19,7 +19,7 @@ use crate::precedence::Precedence;
 use crate::{AssignOp, BinOp, RangeLimits, Type};
 
 /// Binary and assignment expressions.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum BinaryExpr {
     Binary(ExprBinary),

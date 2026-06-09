@@ -6,7 +6,7 @@ use super::Type;
 use crate::Delimited;
 
 /// A slice type (e.g. `[T]`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeSlice {
     pub elem: Delimited<Box<Type>>,

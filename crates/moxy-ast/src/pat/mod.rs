@@ -36,7 +36,7 @@ pub use pat_tuple_struct::*;
 pub use pat_type::*;
 
 /// A Rust pattern (in `let`, `match`, function params, etc.).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Pattern {
     Wild,

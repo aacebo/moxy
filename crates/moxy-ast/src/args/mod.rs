@@ -14,7 +14,7 @@ pub use assoc_type_arg::*;
 pub use constraint_arg::*;
 
 /// A single generic argument inside `<...>`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum GenericArgument {
     Lifetime(Lifetime),

@@ -2,20 +2,11 @@ use moxy_token::punct::{Not, Pound};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 /// Whether an attribute is outer (`#[...]`) or inner (`#![...]`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub enum AttrStyle {
     Outer(Pound),
     Inner(Pound, Not),
 }
-
-// Equality/hashing ignore token spans: two attributes of the same style match.
-impl PartialEq for AttrStyle {
-    fn eq(&self, other: &Self) -> bool {
-        std::mem::discriminant(self) == std::mem::discriminant(other)
-    }
-}
-
-impl Eq for AttrStyle {}
 
 impl std::hash::Hash for AttrStyle {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {

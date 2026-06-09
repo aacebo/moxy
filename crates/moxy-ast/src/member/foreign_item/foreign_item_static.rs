@@ -6,7 +6,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::{Attribute, Ident, Mutability, Type, Visibility};
 
 /// A foreign static declaration inside an `extern` block (`static NAME: Type;`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ForeignItemStatic {
     pub attrs: Vec<Attribute>,

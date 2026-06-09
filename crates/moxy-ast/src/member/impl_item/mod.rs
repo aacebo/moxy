@@ -12,7 +12,7 @@ pub use impl_item_macro::*;
 pub use impl_item_type::*;
 
 /// An item inside an `impl` block.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ImplItem {
     Fn(ImplItemFn),

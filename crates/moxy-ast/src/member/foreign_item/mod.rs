@@ -12,7 +12,7 @@ pub use foreign_item_static::*;
 pub use foreign_item_type::*;
 
 /// An item inside an `extern` block.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ForeignItem {
     Fn(ForeignItemFn),

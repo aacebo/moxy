@@ -16,7 +16,7 @@ pub use primary::*;
 pub use unary::*;
 
 /// A Rust expression. The primary recursive node covering all expression forms.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Expr {
     Unary(UnaryExpr),

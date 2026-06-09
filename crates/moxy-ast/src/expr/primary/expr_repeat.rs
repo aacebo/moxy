@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::expr::parse_expr;
 use crate::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct RepeatInner {
     pub elem: Box<Expr>,
@@ -31,7 +31,7 @@ impl ToTokens for RepeatInner {
 }
 
 /// A repeat expression: `[0u8; 16]`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprRepeat {
     pub attrs: Vec<Attribute>,

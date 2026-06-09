@@ -6,7 +6,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::{Attribute, Lifetime, Mutability};
 
 /// A method receiver parameter (`self`, `&self`, `&mut self`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Receiver {
     pub attrs: Vec<Attribute>,

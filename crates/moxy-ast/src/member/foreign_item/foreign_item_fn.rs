@@ -5,7 +5,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::{Attribute, Signature, Visibility};
 
 /// A foreign function declaration inside an `extern` block.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ForeignItemFn {
     pub attrs: Vec<Attribute>,

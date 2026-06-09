@@ -7,7 +7,7 @@ use crate::expr::block::ExprBrace;
 use crate::*;
 
 /// The pipe delimiters around a closure's parameters: either an empty `||` or a pair of `|`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ClosurePipes {
     Empty(OrOr),
@@ -15,7 +15,7 @@ pub enum ClosurePipes {
 }
 
 /// A closure expression: `|x| x`, `move || 1`, `async |x: u32| -> u32 { x }`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprClosure {
     pub attrs: Vec<Attribute>,

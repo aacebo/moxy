@@ -4,7 +4,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::{Attribute, Defaultness, Signature, StmtBlock, Visibility};
 
 /// A method or associated function inside an `impl` block.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ImplItemFn {
     pub attrs: Vec<Attribute>,

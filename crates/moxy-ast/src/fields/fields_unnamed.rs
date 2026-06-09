@@ -6,7 +6,7 @@ use super::FieldDef;
 use crate::{Delimited, Punctuated};
 
 /// Tuple-struct fields (`(A, B)`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldsUnnamed {
     pub fields: Delimited<Punctuated<FieldDef, Comma>>,

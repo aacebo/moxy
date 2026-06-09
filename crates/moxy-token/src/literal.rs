@@ -1,7 +1,7 @@
 use crate::lex::{Cursor, LexError};
 use crate::{Span, TokenTree};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Literal {
     pub(crate) repr: Box<str>,
     pub(crate) span: Span,

@@ -6,7 +6,7 @@ use crate::expr::parse_expr;
 use crate::*;
 
 /// An if expression: `if cond { ... } else { ... }`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprIf {
     pub attrs: Vec<Attribute>,

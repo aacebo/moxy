@@ -6,7 +6,7 @@ use moxy_token::{Group, LexError, Parse, Span, Spanner, ToTokens, TokenStream, T
 use crate::{Attribute, Ident};
 
 /// A `macro_rules!` definition item.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemMacroRules {
     pub attrs: Vec<Attribute>,

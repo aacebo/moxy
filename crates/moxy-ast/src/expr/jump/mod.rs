@@ -10,7 +10,7 @@ pub use expr_yield::*;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 /// Jump/control-flow expressions: return, break, continue, yield.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum JumpExpr {
     Return(ExprReturn),

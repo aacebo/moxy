@@ -6,7 +6,7 @@ use crate::expr::{ExprPath, PrimaryExpr};
 use crate::{Attribute, Expr, Member};
 
 /// A struct literal field (`member: expr` or shorthand `member`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldValue {
     pub attrs: Vec<Attribute>,

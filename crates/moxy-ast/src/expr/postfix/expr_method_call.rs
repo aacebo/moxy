@@ -5,7 +5,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// A method call expression: `receiver.method(args)`, `x.collect::<Vec<_>>()`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprMethodCall {
     pub attrs: Vec<Attribute>,

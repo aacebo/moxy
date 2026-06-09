@@ -6,7 +6,7 @@ use super::UseTree;
 use crate::Ident;
 
 /// A use path segment (`foo::<rest>`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UsePath {
     pub ident: Ident,

@@ -18,7 +18,7 @@ use super::{Expr, UnaryExpr};
 use crate::{Delimited, Member, Punctuated};
 
 /// Postfix/suffix expressions (calls, field access, indexing, await, try-propagation).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum PostfixExpr {
     Call(ExprCall),

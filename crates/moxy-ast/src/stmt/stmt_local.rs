@@ -6,7 +6,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::{Attribute, Expr, Pattern, Type};
 
 /// A `let` binding statement.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StmtLocal {
     pub attrs: Vec<Attribute>,
@@ -18,7 +18,7 @@ pub struct StmtLocal {
 }
 
 /// The initializer of a `let` binding.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StmtLocalInit {
     pub eq: Eq,

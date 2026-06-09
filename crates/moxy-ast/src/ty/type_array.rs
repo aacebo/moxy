@@ -5,7 +5,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 use super::Type;
 use crate::{Delimited, Expr};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ArrayInner {
     pub elem: Box<Type>,
@@ -31,7 +31,7 @@ impl ToTokens for ArrayInner {
 }
 
 /// A fixed-size array type (`[T; N]`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeArray {
     pub content: Delimited<ArrayInner>,

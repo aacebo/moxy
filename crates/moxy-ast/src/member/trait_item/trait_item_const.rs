@@ -6,7 +6,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::{Attribute, Expr, Generics, Ident, Type};
 
 /// A constant item inside a trait definition (`const NAME: Type;` or `const NAME: Type = expr;`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitItemConst {
     pub attrs: Vec<Attribute>,

@@ -3,7 +3,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StructBody {
     pub fields: Punctuated<FieldValue, Comma>,
@@ -21,7 +21,7 @@ impl ToTokens for StructBody {
 }
 
 /// A struct literal expression: `Foo { a: 1, b, ..rest }`.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprStruct {
     pub attrs: Vec<Attribute>,

@@ -6,7 +6,7 @@ use super::Type;
 use crate::{Lifetime, Mutability};
 
 /// A reference type (e.g. `&'a T`, `&mut T`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeReference {
     pub and: And,

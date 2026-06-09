@@ -15,7 +15,7 @@ pub use path_arguments::*;
 pub use path_segment::*;
 
 /// A path expression or type path (e.g. `std::collections::HashMap`, `crate::Foo`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Path {
     pub span: Span,

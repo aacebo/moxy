@@ -2,7 +2,7 @@ use crate::lex::{Cursor, LexError, Scan};
 use crate::span::DelimSpan;
 use crate::{Delim, Span, TokenStream, TokenTree};
 
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Group {
     pub(crate) delim: Delim,
     pub(crate) span: DelimSpan,

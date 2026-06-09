@@ -6,7 +6,7 @@ use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 use crate::{Attribute, Defaultness, Generics, Ident, Type, Visibility};
 
 /// An associated type definition inside an `impl` block (`type Name = Type;`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ImplItemType {
     pub attrs: Vec<Attribute>,

@@ -6,7 +6,7 @@ use super::UseTree;
 use crate::Ident;
 
 /// A renamed use leaf (`foo as bar`).
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseRename {
     pub ident: Ident,

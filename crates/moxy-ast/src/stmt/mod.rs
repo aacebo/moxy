@@ -13,7 +13,7 @@ pub use stmt_local::*;
 pub use stmt_macro::*;
 
 /// A statement in a block.
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Stmt {
     Local(Box<StmtLocal>),
