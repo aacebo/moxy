@@ -54,7 +54,7 @@ impl Meta {
         match self {
             Self::Path(v) if v == path => Some(self.clone()),
             Self::List(v) => v.get(path),
-            _ => return None,
+            _ => None,
         }
     }
 }
