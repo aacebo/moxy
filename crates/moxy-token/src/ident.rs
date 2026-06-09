@@ -2,13 +2,71 @@ use super::{ToTokens, TokenStream};
 use crate::lex::{Cursor, LexError, Scan};
 use crate::{Span, TokenTree};
 
+/// Builds an [`Ident`] from one or more segments, lexing the result and panicking
+/// on invalid identifier syntax.
+///
+/// Accepts a bare identifier, a string/expression that evaluates to a name, or a
+/// comma-separated list of segments that are concatenated into a single identifier.
+/// Bare identifiers are captured by name via `stringify!`; expressions are converted
+/// with [`ToString`].
+///
+/// # Examples
+///
+/// ```
+/// use moxy_token::ident;
+///
+/// // Bare identifier
+/// let counter = ident!(counter);
+/// assert_eq!(counter, "counter");
+///
+/// // Raw identifier
+/// let kw = ident!(r#struct);
+/// assert_eq!(kw.text(), "struct");
+/// assert!(kw.is_raw());
+///
+/// // From a string or expression
+/// let name = ident!("buffer");
+/// assert_eq!(name, "buffer");
+///
+/// // Concatenate segments into one identifier
+/// let field = ident!(get, "_", value);
+/// assert_eq!(field, "get_value");
+///
+/// // Bare identifier segments are taken by name, not evaluated
+/// let slot = ident!(slot, "_", n);
+/// assert_eq!(slot, "slot_n");
+/// ```
+///
+/// # Panics
+///
+/// Panics if the concatenated text is not a valid identifier.
 #[macro_export]
 macro_rules! ident {
-    ($fmt:ident) => {{
-        $crate::Ident::lex(stringify!($fmt)).expect("invalid syntax")
+    ($x:ident) => { $crate::Ident::lex(stringify!($x).to_string()).expect("invalid syntax") };
+    ($x:expr)  => { $crate::Ident::lex($x).expect("invalid syntax") };
+    ($head:ident, $($tail:tt)+) => {{
+        let mut __ident = stringify!($head).to_string();
+        ident!(@accum __ident, $($tail)+)
     }};
-    ($fmt:ident $(,$token:tt)*) => {{
-        $crate::Ident::lex(format!(stringify!($fmt), $($token)*)).expect("invalid syntax")
+    ($head:expr, $($tail:tt)+) => {{
+        let mut __ident = $head.to_string();
+        ident!(@accum __ident, $($tail)+)
+    }};
+    (@accum $acc:ident, $next:ident, $($tail:tt)+) => {{
+        $acc += stringify!($next);
+        ident!(@accum $acc, $($tail)+)
+    }};
+    (@accum $acc:ident, $next:expr, $($tail:tt)+) => {{
+        $acc += &$next.to_string();
+        ident!(@accum $acc, $($tail)+)
+    }};
+    (@accum $acc:ident, $last:ident) => {{
+        $acc += stringify!($last);
+        $crate::Ident::lex($acc).expect("invalid syntax")
+    }};
+    (@accum $acc:ident, $last:expr) => {{
+        $acc += $last.to_string();
+        $crate::Ident::lex($acc).expect("invalid syntax")
     }};
 }
 
@@ -27,14 +85,15 @@ impl Ident {
         }
     }
 
-    pub fn with_span(mut self, span: Span) -> Self {
-        self.span = span;
-        self
-    }
-
     #[inline]
     pub fn lex(input: impl std::fmt::Display) -> Result<Self, LexError> {
         std::str::FromStr::from_str(&input.to_string())
+    }
+
+    #[inline]
+    pub fn with_span(mut self, span: Span) -> Self {
+        self.span = span;
+        self
     }
 
     #[inline]
@@ -170,6 +229,14 @@ mod tests {
     }
 
     #[test]
+    fn literal_plain() {
+        let id = ident!("foo");
+        assert_eq!(id, "foo");
+        assert!(!id.is_raw());
+        assert_eq!(id, "foo");
+    }
+
+    #[test]
     fn ident_raw() {
         let id = ident!(r#fn);
         assert_eq!(id.text(), "fn");
@@ -178,8 +245,17 @@ mod tests {
     }
 
     #[test]
-    fn text_append() {
-        let id = ident!(a, "_", "b");
+    fn literal_raw() {
+        let id = ident!("r#fn");
+        assert_eq!(id.text(), "fn");
+        assert!(id.is_raw());
+        assert_eq!(id, "r#fn");
+    }
+
+    #[test]
+    fn ident_plus_str() {
+        let id = ident!(a, "_", b);
+        assert_eq!(id, "a_b");
     }
 
     #[cfg(feature = "serde")]
