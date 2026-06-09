@@ -18,7 +18,7 @@ pub use moxy_fmt::fmt;
 pub use moxy_template as template;
 #[cfg(feature = "template")]
 #[doc(inline)]
-pub use moxy_template::template;
+pub use moxy_template::*;
 #[cfg(feature = "token")]
 #[doc(inline)]
 pub use moxy_token as token;
