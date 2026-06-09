@@ -29,6 +29,64 @@ pub enum Expr {
     Verbatim(TokenStream),
 }
 
+impl Expr {
+    pub fn is_unary(&self) -> bool {
+        matches!(self, Self::Unary(_))
+    }
+
+    pub fn is_binary(&self) -> bool {
+        matches!(self, Self::Binary(_))
+    }
+
+    pub fn is_postfix(&self) -> bool {
+        matches!(self, Self::Postfix(_))
+    }
+
+    pub fn is_block(&self) -> bool {
+        matches!(self, Self::Block(_))
+    }
+
+    pub fn is_jump(&self) -> bool {
+        matches!(self, Self::Jump(_))
+    }
+
+    pub fn is_primary(&self) -> bool {
+        matches!(self, Self::Primary(_))
+    }
+
+    pub fn is_infer(&self) -> bool {
+        matches!(self, Self::Infer)
+    }
+
+    pub fn is_verbatim(&self) -> bool {
+        matches!(self, Self::Verbatim(_))
+    }
+
+    pub fn as_unary(&self) -> Option<&UnaryExpr> {
+        if let Self::Unary(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_binary(&self) -> Option<&BinaryExpr> {
+        if let Self::Binary(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_postfix(&self) -> Option<&PostfixExpr> {
+        if let Self::Postfix(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_block(&self) -> Option<&BlockExpr> {
+        if let Self::Block(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_jump(&self) -> Option<&JumpExpr> {
+        if let Self::Jump(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_primary(&self) -> Option<&PrimaryExpr> {
+        if let Self::Primary(v) = self { Some(v) } else { None }
+    }
+}
+
 impl Spanner for Expr {
     fn span(&self) -> Span {
         match self {

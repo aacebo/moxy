@@ -52,3 +52,9 @@ impl ToTokens for PatStruct {
         self.body.to_tokens(t);
     }
 }
+
+impl PatStruct {
+    pub fn into_pattern(self) -> super::Pattern {
+        super::Pattern::from(self)
+    }
+}

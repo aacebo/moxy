@@ -24,3 +24,9 @@ impl ToTokens for PatParen {
         self.content.to_tokens(t);
     }
 }
+
+impl PatParen {
+    pub fn into_pattern(self) -> super::Pattern {
+        super::Pattern::from(self)
+    }
+}

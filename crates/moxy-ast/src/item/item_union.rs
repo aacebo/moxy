@@ -60,3 +60,9 @@ impl ToTokens for ItemUnion {
         self.fields.to_tokens(t);
     }
 }
+
+impl ItemUnion {
+    pub fn into_item(self) -> super::Item {
+        super::Item::from(self)
+    }
+}

@@ -34,3 +34,9 @@ impl ToTokens for ExprField {
         self.member.to_tokens(t);
     }
 }
+
+impl ExprField {
+    pub fn into_postfix_expr(self) -> super::PostfixExpr {
+        super::PostfixExpr::from(self)
+    }
+}

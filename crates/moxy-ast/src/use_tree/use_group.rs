@@ -33,3 +33,9 @@ impl ToTokens for UseGroup {
         self.items.to_tokens(t);
     }
 }
+
+impl UseGroup {
+    pub fn into_use_tree(self) -> super::UseTree {
+        super::UseTree::Group(self)
+    }
+}

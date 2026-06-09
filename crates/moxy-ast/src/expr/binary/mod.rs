@@ -29,6 +29,52 @@ pub enum BinaryExpr {
     Type(ExprType),
 }
 
+impl BinaryExpr {
+    pub fn is_binary(&self) -> bool {
+        matches!(self, Self::Binary(_))
+    }
+
+    pub fn is_assign(&self) -> bool {
+        matches!(self, Self::Assign(_))
+    }
+
+    pub fn is_assign_op(&self) -> bool {
+        matches!(self, Self::AssignOp(_))
+    }
+
+    pub fn is_range(&self) -> bool {
+        matches!(self, Self::Range(_))
+    }
+
+    pub fn is_type(&self) -> bool {
+        matches!(self, Self::Type(_))
+    }
+
+    pub fn as_binary(&self) -> Option<&ExprBinary> {
+        if let Self::Binary(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_assign(&self) -> Option<&ExprAssign> {
+        if let Self::Assign(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_assign_op(&self) -> Option<&ExprAssignOp> {
+        if let Self::AssignOp(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_range(&self) -> Option<&ExprRange> {
+        if let Self::Range(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_type(&self) -> Option<&ExprType> {
+        if let Self::Type(v) = self { Some(v) } else { None }
+    }
+
+    pub fn into_expr(self) -> super::Expr {
+        super::Expr::from(self)
+    }
+}
+
 impl Spanner for BinaryExpr {
     fn span(&self) -> Span {
         match self {

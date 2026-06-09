@@ -32,6 +32,10 @@ impl ExprLit {
     pub fn is_literal(tt: &TokenTree) -> bool {
         matches!(tt, TokenTree::Literal(_))
     }
+
+    pub fn into_primary_expr(self) -> super::PrimaryExpr {
+        super::PrimaryExpr::from(self)
+    }
 }
 
 impl ToTokens for ExprLit {

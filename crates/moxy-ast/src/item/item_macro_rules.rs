@@ -66,3 +66,9 @@ impl ToTokens for ItemMacroRules {
         t.extend_one(TokenTree::Group(self.body.clone()));
     }
 }
+
+impl ItemMacroRules {
+    pub fn into_item(self) -> super::Item {
+        super::Item::from(self)
+    }
+}

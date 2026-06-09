@@ -52,3 +52,9 @@ impl ToTokens for ExprStruct {
         self.body.to_tokens(t);
     }
 }
+
+impl ExprStruct {
+    pub fn into_primary_expr(self) -> super::PrimaryExpr {
+        super::PrimaryExpr::from(self)
+    }
+}

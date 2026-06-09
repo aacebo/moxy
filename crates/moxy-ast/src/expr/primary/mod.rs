@@ -53,6 +53,100 @@ pub enum PrimaryExpr {
     Macro(ExprMacro),
 }
 
+impl PrimaryExpr {
+    pub fn is_lit(&self) -> bool {
+        matches!(self, Self::Lit(_))
+    }
+
+    pub fn is_path(&self) -> bool {
+        matches!(self, Self::Path(_))
+    }
+
+    pub fn is_struct(&self) -> bool {
+        matches!(self, Self::Struct(_))
+    }
+
+    pub fn is_closure(&self) -> bool {
+        matches!(self, Self::Closure(_))
+    }
+
+    pub fn is_tuple(&self) -> bool {
+        matches!(self, Self::Tuple(_))
+    }
+
+    pub fn is_array(&self) -> bool {
+        matches!(self, Self::Array(_))
+    }
+
+    pub fn is_repeat(&self) -> bool {
+        matches!(self, Self::Repeat(_))
+    }
+
+    pub fn is_let(&self) -> bool {
+        matches!(self, Self::Let(_))
+    }
+
+    pub fn is_paren(&self) -> bool {
+        matches!(self, Self::Paren(_))
+    }
+
+    pub fn is_group(&self) -> bool {
+        matches!(self, Self::Group(_))
+    }
+
+    pub fn is_macro(&self) -> bool {
+        matches!(self, Self::Macro(_))
+    }
+
+    pub fn as_lit(&self) -> Option<&ExprLit> {
+        if let Self::Lit(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_path(&self) -> Option<&ExprPath> {
+        if let Self::Path(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_struct(&self) -> Option<&ExprStruct> {
+        if let Self::Struct(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_closure(&self) -> Option<&ExprClosure> {
+        if let Self::Closure(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_tuple(&self) -> Option<&ExprTuple> {
+        if let Self::Tuple(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_array(&self) -> Option<&ExprArray> {
+        if let Self::Array(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_repeat(&self) -> Option<&ExprRepeat> {
+        if let Self::Repeat(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_let(&self) -> Option<&ExprLet> {
+        if let Self::Let(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_paren(&self) -> Option<&ExprParen> {
+        if let Self::Paren(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_group(&self) -> Option<&ExprGroup> {
+        if let Self::Group(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_macro(&self) -> Option<&ExprMacro> {
+        if let Self::Macro(v) = self { Some(v) } else { None }
+    }
+
+    pub fn into_expr(self) -> super::Expr {
+        super::Expr::from(self)
+    }
+}
+
 impl Spanner for PrimaryExpr {
     fn span(&self) -> Span {
         match self {

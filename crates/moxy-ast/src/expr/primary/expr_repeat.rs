@@ -52,3 +52,9 @@ impl ToTokens for ExprRepeat {
         self.content.to_tokens(t);
     }
 }
+
+impl ExprRepeat {
+    pub fn into_primary_expr(self) -> super::PrimaryExpr {
+        super::PrimaryExpr::from(self)
+    }
+}

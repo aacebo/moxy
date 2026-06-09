@@ -43,3 +43,9 @@ impl ToTokens for ImplItemMacro {
         self.semi.to_tokens(t);
     }
 }
+
+impl ImplItemMacro {
+    pub fn into_impl_item(self) -> super::ImplItem {
+        super::ImplItem::from(self)
+    }
+}

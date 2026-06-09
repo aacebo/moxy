@@ -24,3 +24,9 @@ impl ToTokens for ExprParen {
         self.content.to_tokens(t);
     }
 }
+
+impl ExprParen {
+    pub fn into_primary_expr(self) -> super::PrimaryExpr {
+        super::PrimaryExpr::from(self)
+    }
+}

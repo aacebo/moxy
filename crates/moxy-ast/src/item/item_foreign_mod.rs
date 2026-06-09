@@ -51,3 +51,9 @@ impl ToTokens for ItemForeignMod {
         self.items.to_tokens(t);
     }
 }
+
+impl ItemForeignMod {
+    pub fn into_item(self) -> super::Item {
+        super::Item::from(self)
+    }
+}

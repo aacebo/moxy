@@ -54,6 +54,10 @@ impl ExprRange {
             }
         }
     }
+
+    pub fn into_binary_expr(self) -> super::BinaryExpr {
+        super::BinaryExpr::from(self)
+    }
 }
 
 impl ToTokens for ExprRange {

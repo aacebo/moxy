@@ -92,3 +92,9 @@ impl ToTokens for TraitItemConst {
         self.semi.to_tokens(t);
     }
 }
+
+impl TraitItemConst {
+    pub fn into_trait_item(self) -> super::TraitItem {
+        super::TraitItem::from(self)
+    }
+}

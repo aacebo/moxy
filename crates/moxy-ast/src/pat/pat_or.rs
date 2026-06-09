@@ -34,3 +34,9 @@ impl ToTokens for PatOr {
         self.cases.to_tokens(t);
     }
 }
+
+impl PatOr {
+    pub fn into_pattern(self) -> super::Pattern {
+        super::Pattern::from(self)
+    }
+}

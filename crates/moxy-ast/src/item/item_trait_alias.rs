@@ -76,3 +76,9 @@ impl ToTokens for ItemTraitAlias {
         self.semi_punct.to_tokens(t);
     }
 }
+
+impl ItemTraitAlias {
+    pub fn into_item(self) -> super::Item {
+        super::Item::from(self)
+    }
+}

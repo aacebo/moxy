@@ -32,3 +32,9 @@ impl ToTokens for ExprPath {
         self.path.to_tokens(t);
     }
 }
+
+impl ExprPath {
+    pub fn into_primary_expr(self) -> super::PrimaryExpr {
+        super::PrimaryExpr::from(self)
+    }
+}

@@ -28,6 +28,48 @@ pub enum UseTree {
     Group(UseGroup),
 }
 
+impl UseTree {
+    pub fn is_path(&self) -> bool {
+        matches!(self, Self::Path(_))
+    }
+
+    pub fn is_name(&self) -> bool {
+        matches!(self, Self::Name(_))
+    }
+
+    pub fn is_rename(&self) -> bool {
+        matches!(self, Self::Rename(_))
+    }
+
+    pub fn is_glob(&self) -> bool {
+        matches!(self, Self::Glob(_))
+    }
+
+    pub fn is_group(&self) -> bool {
+        matches!(self, Self::Group(_))
+    }
+
+    pub fn as_path(&self) -> Option<&UsePath> {
+        if let Self::Path(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_name(&self) -> Option<&UseName> {
+        if let Self::Name(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_rename(&self) -> Option<&UseRename> {
+        if let Self::Rename(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_glob(&self) -> Option<&UseGlob> {
+        if let Self::Glob(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_group(&self) -> Option<&UseGroup> {
+        if let Self::Group(v) = self { Some(v) } else { None }
+    }
+}
+
 impl Spanner for UseTree {
     fn span(&self) -> Span {
         match self {

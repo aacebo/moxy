@@ -32,3 +32,9 @@ impl ToTokens for UseName {
         self.ident.to_tokens(t);
     }
 }
+
+impl UseName {
+    pub fn into_use_tree(self) -> super::UseTree {
+        super::UseTree::Name(self)
+    }
+}

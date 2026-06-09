@@ -70,3 +70,9 @@ impl ToTokens for TraitItemFn {
         }
     }
 }
+
+impl TraitItemFn {
+    pub fn into_trait_item(self) -> super::TraitItem {
+        super::TraitItem::from(self)
+    }
+}

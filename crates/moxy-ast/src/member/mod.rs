@@ -19,6 +19,20 @@ pub enum Member {
     Unnamed(u32),
 }
 
+impl Member {
+    pub fn is_named(&self) -> bool {
+        matches!(self, Self::Named(_))
+    }
+
+    pub fn is_unnamed(&self) -> bool {
+        matches!(self, Self::Unnamed(_))
+    }
+
+    pub fn as_named(&self) -> Option<&Ident> {
+        if let Self::Named(v) = self { Some(v) } else { None }
+    }
+}
+
 impl Spanner for Member {
     fn span(&self) -> Span {
         match self {

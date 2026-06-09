@@ -21,6 +21,40 @@ pub enum ImplItem {
     Macro(ImplItemMacro),
 }
 
+impl ImplItem {
+    pub fn is_fn(&self) -> bool {
+        matches!(self, Self::Fn(_))
+    }
+
+    pub fn is_const(&self) -> bool {
+        matches!(self, Self::Const(_))
+    }
+
+    pub fn is_type(&self) -> bool {
+        matches!(self, Self::Type(_))
+    }
+
+    pub fn is_macro(&self) -> bool {
+        matches!(self, Self::Macro(_))
+    }
+
+    pub fn as_fn(&self) -> Option<&ImplItemFn> {
+        if let Self::Fn(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_const(&self) -> Option<&ImplItemConst> {
+        if let Self::Const(v) = self { Some(v.as_ref()) } else { None }
+    }
+
+    pub fn as_type(&self) -> Option<&ImplItemType> {
+        if let Self::Type(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_macro(&self) -> Option<&ImplItemMacro> {
+        if let Self::Macro(v) = self { Some(v) } else { None }
+    }
+}
+
 impl Spanner for ImplItem {
     fn span(&self) -> Span {
         match self {

@@ -40,3 +40,9 @@ impl ToTokens for ExprContinue {
         }
     }
 }
+
+impl ExprContinue {
+    pub fn into_jump_expr(self) -> super::JumpExpr {
+        super::JumpExpr::from(self)
+    }
+}

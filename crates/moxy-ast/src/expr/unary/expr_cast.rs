@@ -34,3 +34,9 @@ impl ToTokens for ExprCast {
         self.ty.to_tokens(t);
     }
 }
+
+impl ExprCast {
+    pub fn into_unary_expr(self) -> super::UnaryExpr {
+        super::UnaryExpr::from(self)
+    }
+}

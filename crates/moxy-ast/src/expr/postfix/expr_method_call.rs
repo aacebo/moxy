@@ -47,6 +47,10 @@ impl ExprMethodCall {
         stream.seek(&fork);
         Ok(Some(args))
     }
+
+    pub fn into_postfix_expr(self) -> super::PostfixExpr {
+        super::PostfixExpr::from(self)
+    }
 }
 
 impl ToTokens for ExprMethodCall {

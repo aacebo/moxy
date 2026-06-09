@@ -36,3 +36,9 @@ impl ToTokens for ExprType {
         self.ty.to_tokens(t);
     }
 }
+
+impl ExprType {
+    pub fn into_binary_expr(self) -> super::BinaryExpr {
+        super::BinaryExpr::from(self)
+    }
+}

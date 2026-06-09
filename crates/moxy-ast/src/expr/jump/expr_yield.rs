@@ -40,3 +40,9 @@ impl ToTokens for ExprYield {
         }
     }
 }
+
+impl ExprYield {
+    pub fn into_jump_expr(self) -> super::JumpExpr {
+        super::JumpExpr::from(self)
+    }
+}

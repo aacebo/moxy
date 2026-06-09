@@ -27,6 +27,10 @@ impl ItemImpl {
             _ => Err(LexError::new(Span::default()).message("expected trait path").into()),
         }
     }
+
+    pub fn into_item(self) -> super::Item {
+        super::Item::from(self)
+    }
 }
 
 impl Parse for ItemImpl {

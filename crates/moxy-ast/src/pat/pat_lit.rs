@@ -30,3 +30,9 @@ impl ToTokens for PatLit {
         self.expr.to_tokens(t);
     }
 }
+
+impl PatLit {
+    pub fn into_pattern(self) -> super::Pattern {
+        super::Pattern::from(self)
+    }
+}

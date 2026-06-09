@@ -37,3 +37,9 @@ impl ToTokens for UseRename {
         self.rename.to_tokens(t);
     }
 }
+
+impl UseRename {
+    pub fn into_use_tree(self) -> super::UseTree {
+        super::UseTree::Rename(self)
+    }
+}

@@ -35,3 +35,9 @@ impl ToTokens for PatType {
         self.ty.to_tokens(t);
     }
 }
+
+impl PatType {
+    pub fn into_pattern(self) -> super::Pattern {
+        super::Pattern::from(self)
+    }
+}

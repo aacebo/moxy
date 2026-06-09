@@ -14,6 +14,30 @@ pub enum TypeBound {
 }
 
 impl TypeBound {
+    pub fn is_trait(&self) -> bool {
+        matches!(self, Self::Trait(_))
+    }
+
+    pub fn is_lifetime(&self) -> bool {
+        matches!(self, Self::Lifetime(_))
+    }
+
+    pub fn is_use(&self) -> bool {
+        matches!(self, Self::Use(_))
+    }
+
+    pub fn as_trait(&self) -> Option<&TraitBound> {
+        if let Self::Trait(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_lifetime(&self) -> Option<&Lifetime> {
+        if let Self::Lifetime(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_use(&self) -> Option<&UseBound> {
+        if let Self::Use(v) = self { Some(v) } else { None }
+    }
+
     pub fn parse_bounds(
         stream: &mut moxy_token::parser::ParseStream,
     ) -> Result<crate::Punctuated<Self, moxy_token::punct::Plus>, moxy_token::parser::ParseError> {

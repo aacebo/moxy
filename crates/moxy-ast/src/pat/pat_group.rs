@@ -30,3 +30,9 @@ impl ToTokens for PatGroup {
         self.pat.to_tokens(t);
     }
 }
+
+impl PatGroup {
+    pub fn into_pattern(self) -> super::Pattern {
+        super::Pattern::from(self)
+    }
+}

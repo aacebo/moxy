@@ -43,3 +43,9 @@ impl ToTokens for ForeignItemMacro {
         self.semi.to_tokens(t);
     }
 }
+
+impl ForeignItemMacro {
+    pub fn into_foreign_item(self) -> super::ForeignItem {
+        super::ForeignItem::from(self)
+    }
+}

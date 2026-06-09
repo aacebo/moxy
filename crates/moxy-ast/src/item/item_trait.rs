@@ -104,3 +104,9 @@ impl ToTokens for ItemTrait {
         self.items.to_tokens(t);
     }
 }
+
+impl ItemTrait {
+    pub fn into_item(self) -> super::Item {
+        super::Item::from(self)
+    }
+}

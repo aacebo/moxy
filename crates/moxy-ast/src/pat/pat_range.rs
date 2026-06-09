@@ -47,3 +47,9 @@ impl ToTokens for PatRange {
         }
     }
 }
+
+impl PatRange {
+    pub fn into_pattern(self) -> super::Pattern {
+        super::Pattern::from(self)
+    }
+}

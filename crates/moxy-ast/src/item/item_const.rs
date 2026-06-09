@@ -76,3 +76,9 @@ impl ToTokens for ItemConst {
         self.semi_punct.to_tokens(t);
     }
 }
+
+impl ItemConst {
+    pub fn into_item(self) -> super::Item {
+        super::Item::from(self)
+    }
+}

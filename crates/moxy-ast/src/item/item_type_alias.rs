@@ -69,3 +69,9 @@ impl ToTokens for ItemTypeAlias {
         self.semi_punct.to_tokens(t);
     }
 }
+
+impl ItemTypeAlias {
+    pub fn into_item(self) -> super::Item {
+        super::Item::from(self)
+    }
+}

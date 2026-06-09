@@ -17,6 +17,36 @@ pub enum Meta {
     NameValue(Box<MetaNameValue>),
 }
 
+impl Meta {
+    pub fn is_path(&self) -> bool {
+        matches!(self, Self::Path(_))
+    }
+
+    pub fn is_list(&self) -> bool {
+        matches!(self, Self::List(_))
+    }
+
+    pub fn is_name_value(&self) -> bool {
+        matches!(self, Self::NameValue(_))
+    }
+
+    pub fn as_path(&self) -> Option<&Path> {
+        if let Self::Path(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_list(&self) -> Option<&MetaList> {
+        if let Self::List(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_name_value(&self) -> Option<&MetaNameValue> {
+        if let Self::NameValue(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
+    }
+}
+
 impl Parse for Meta {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let path = stream.parse::<Path>()?;

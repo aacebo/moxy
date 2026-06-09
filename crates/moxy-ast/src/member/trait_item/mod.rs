@@ -21,6 +21,40 @@ pub enum TraitItem {
     Macro(TraitItemMacro),
 }
 
+impl TraitItem {
+    pub fn is_fn(&self) -> bool {
+        matches!(self, Self::Fn(_))
+    }
+
+    pub fn is_const(&self) -> bool {
+        matches!(self, Self::Const(_))
+    }
+
+    pub fn is_type(&self) -> bool {
+        matches!(self, Self::Type(_))
+    }
+
+    pub fn is_macro(&self) -> bool {
+        matches!(self, Self::Macro(_))
+    }
+
+    pub fn as_fn(&self) -> Option<&TraitItemFn> {
+        if let Self::Fn(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_const(&self) -> Option<&TraitItemConst> {
+        if let Self::Const(v) = self { Some(v.as_ref()) } else { None }
+    }
+
+    pub fn as_type(&self) -> Option<&TraitItemType> {
+        if let Self::Type(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_macro(&self) -> Option<&TraitItemMacro> {
+        if let Self::Macro(v) = self { Some(v) } else { None }
+    }
+}
+
 impl Spanner for TraitItem {
     fn span(&self) -> Span {
         match self {

@@ -25,3 +25,9 @@ impl ToTokens for PatTuple {
         self.elems.to_tokens(t);
     }
 }
+
+impl PatTuple {
+    pub fn into_pattern(self) -> super::Pattern {
+        super::Pattern::from(self)
+    }
+}

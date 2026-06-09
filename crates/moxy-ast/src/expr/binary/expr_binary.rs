@@ -35,3 +35,9 @@ impl ToTokens for ExprBinary {
         self.right.to_tokens(t);
     }
 }
+
+impl ExprBinary {
+    pub fn into_binary_expr(self) -> super::BinaryExpr {
+        super::BinaryExpr::from(self)
+    }
+}

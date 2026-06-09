@@ -23,6 +23,44 @@ pub enum Stmt {
     Macro(StmtMacro),
 }
 
+impl Stmt {
+    pub fn is_local(&self) -> bool {
+        matches!(self, Self::Local(_))
+    }
+
+    pub fn is_block(&self) -> bool {
+        matches!(self, Self::Block(_))
+    }
+
+    pub fn is_item(&self) -> bool {
+        matches!(self, Self::Item(_))
+    }
+
+    pub fn is_expr(&self) -> bool {
+        matches!(self, Self::Expr(..))
+    }
+
+    pub fn is_macro(&self) -> bool {
+        matches!(self, Self::Macro(_))
+    }
+
+    pub fn as_local(&self) -> Option<&StmtLocal> {
+        if let Self::Local(v) = self { Some(v.as_ref()) } else { None }
+    }
+
+    pub fn as_block(&self) -> Option<&StmtBlock> {
+        if let Self::Block(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_item(&self) -> Option<&crate::Item> {
+        if let Self::Item(v) = self { Some(v.as_ref()) } else { None }
+    }
+
+    pub fn as_macro(&self) -> Option<&StmtMacro> {
+        if let Self::Macro(v) = self { Some(v) } else { None }
+    }
+}
+
 impl Spanner for Stmt {
     fn span(&self) -> Span {
         match self {

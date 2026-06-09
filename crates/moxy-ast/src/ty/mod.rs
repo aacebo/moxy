@@ -55,6 +55,120 @@ pub enum Type {
     Macro(TypeMacro),
 }
 
+impl Type {
+    pub fn is_never(&self) -> bool {
+        matches!(self, Self::Never(_))
+    }
+
+    pub fn is_infer(&self) -> bool {
+        matches!(self, Self::Infer(_))
+    }
+
+    pub fn is_path(&self) -> bool {
+        matches!(self, Self::Path(_))
+    }
+
+    pub fn is_tuple(&self) -> bool {
+        matches!(self, Self::Tuple(_))
+    }
+
+    pub fn is_array(&self) -> bool {
+        matches!(self, Self::Array(_))
+    }
+
+    pub fn is_slice(&self) -> bool {
+        matches!(self, Self::Slice(_))
+    }
+
+    pub fn is_reference(&self) -> bool {
+        matches!(self, Self::Reference(_))
+    }
+
+    pub fn is_pointer(&self) -> bool {
+        matches!(self, Self::Pointer(_))
+    }
+
+    pub fn is_bare_fn(&self) -> bool {
+        matches!(self, Self::BareFn(_))
+    }
+
+    pub fn is_impl_trait(&self) -> bool {
+        matches!(self, Self::ImplTrait(_))
+    }
+
+    pub fn is_trait_object(&self) -> bool {
+        matches!(self, Self::TraitObject(_))
+    }
+
+    pub fn is_paren(&self) -> bool {
+        matches!(self, Self::Paren(_))
+    }
+
+    pub fn is_group(&self) -> bool {
+        matches!(self, Self::Group(_))
+    }
+
+    pub fn is_macro(&self) -> bool {
+        matches!(self, Self::Macro(_))
+    }
+
+    pub fn as_never(&self) -> Option<&moxy_token::punct::Not> {
+        if let Self::Never(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_infer(&self) -> Option<&moxy_token::Ident> {
+        if let Self::Infer(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_path(&self) -> Option<&TypePath> {
+        if let Self::Path(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_tuple(&self) -> Option<&TypeTuple> {
+        if let Self::Tuple(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_array(&self) -> Option<&TypeArray> {
+        if let Self::Array(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_slice(&self) -> Option<&TypeSlice> {
+        if let Self::Slice(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_reference(&self) -> Option<&TypeReference> {
+        if let Self::Reference(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_pointer(&self) -> Option<&TypePointer> {
+        if let Self::Pointer(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_bare_fn(&self) -> Option<&TypeBareFn> {
+        if let Self::BareFn(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_impl_trait(&self) -> Option<&TypeImplTrait> {
+        if let Self::ImplTrait(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_trait_object(&self) -> Option<&TypeTraitObject> {
+        if let Self::TraitObject(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_paren(&self) -> Option<&TypeParen> {
+        if let Self::Paren(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_group(&self) -> Option<&TypeGroup> {
+        if let Self::Group(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_macro(&self) -> Option<&TypeMacro> {
+        if let Self::Macro(v) = self { Some(v) } else { None }
+    }
+}
+
 impl Spanner for Type {
     fn span(&self) -> Span {
         match self {

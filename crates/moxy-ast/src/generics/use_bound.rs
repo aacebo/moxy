@@ -40,3 +40,9 @@ impl ToTokens for UseBound {
         self.gt_punct.to_tokens(t);
     }
 }
+
+impl UseBound {
+    pub fn into_type_bound(self) -> super::TypeBound {
+        super::TypeBound::from(self)
+    }
+}

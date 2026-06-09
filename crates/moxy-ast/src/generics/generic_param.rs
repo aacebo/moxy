@@ -13,6 +13,32 @@ pub enum GenericParam {
     Const(Box<ConstParam>),
 }
 
+impl GenericParam {
+    pub fn is_lifetime(&self) -> bool {
+        matches!(self, Self::Lifetime(_))
+    }
+
+    pub fn is_type(&self) -> bool {
+        matches!(self, Self::Type(_))
+    }
+
+    pub fn is_const(&self) -> bool {
+        matches!(self, Self::Const(_))
+    }
+
+    pub fn as_lifetime(&self) -> Option<&LifetimeParam> {
+        if let Self::Lifetime(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_type(&self) -> Option<&TypeParam> {
+        if let Self::Type(v) = self { Some(v.as_ref()) } else { None }
+    }
+
+    pub fn as_const(&self) -> Option<&ConstParam> {
+        if let Self::Const(v) = self { Some(v.as_ref()) } else { None }
+    }
+}
+
 impl From<LifetimeParam> for GenericParam {
     fn from(v: LifetimeParam) -> Self {
         GenericParam::Lifetime(v)

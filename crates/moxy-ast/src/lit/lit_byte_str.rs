@@ -39,3 +39,9 @@ impl std::fmt::Display for LitByteStr {
         f.write_str(&self.repr)
     }
 }
+
+impl LitByteStr {
+    pub fn into_lit(self) -> super::Lit {
+        super::Lit::from(self)
+    }
+}

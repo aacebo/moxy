@@ -33,3 +33,9 @@ impl ToTokens for PatPath {
         self.path.to_tokens(t);
     }
 }
+
+impl PatPath {
+    pub fn into_pattern(self) -> super::Pattern {
+        super::Pattern::from(self)
+    }
+}

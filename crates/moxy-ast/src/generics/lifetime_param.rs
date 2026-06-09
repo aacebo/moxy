@@ -56,3 +56,9 @@ impl ToTokens for LifetimeParam {
         }
     }
 }
+
+impl LifetimeParam {
+    pub fn into_generic_param(self) -> super::GenericParam {
+        super::GenericParam::from(self)
+    }
+}

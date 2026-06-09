@@ -87,3 +87,9 @@ impl ToTokens for TypeParam {
         }
     }
 }
+
+impl TypeParam {
+    pub fn into_generic_param(self) -> super::GenericParam {
+        super::GenericParam::from(self)
+    }
+}

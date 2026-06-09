@@ -51,3 +51,9 @@ impl ToTokens for PatIdent {
         }
     }
 }
+
+impl PatIdent {
+    pub fn into_pattern(self) -> super::Pattern {
+        super::Pattern::from(self)
+    }
+}

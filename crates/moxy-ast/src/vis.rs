@@ -30,6 +30,32 @@ pub enum Visibility {
     },
 }
 
+impl Visibility {
+    pub fn is_inherited(&self) -> bool {
+        matches!(self, Self::Inherited)
+    }
+
+    pub fn is_public(&self) -> bool {
+        matches!(self, Self::Public { .. })
+    }
+
+    pub fn is_crate(&self) -> bool {
+        matches!(self, Self::Crate { .. })
+    }
+
+    pub fn is_self_value(&self) -> bool {
+        matches!(self, Self::SelfValue { .. })
+    }
+
+    pub fn is_super(&self) -> bool {
+        matches!(self, Self::Super { .. })
+    }
+
+    pub fn is_restricted(&self) -> bool {
+        matches!(self, Self::Restricted { .. })
+    }
+}
+
 impl Parse for Visibility {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if !stream.peek::<Pub>() {

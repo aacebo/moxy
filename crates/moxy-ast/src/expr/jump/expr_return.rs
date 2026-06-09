@@ -40,3 +40,9 @@ impl ToTokens for ExprReturn {
         }
     }
 }
+
+impl ExprReturn {
+    pub fn into_jump_expr(self) -> super::JumpExpr {
+        super::JumpExpr::from(self)
+    }
+}

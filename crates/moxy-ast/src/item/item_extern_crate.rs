@@ -80,3 +80,9 @@ impl ToTokens for ItemExternCrate {
         self.semi_punct.to_tokens(t);
     }
 }
+
+impl ItemExternCrate {
+    pub fn into_item(self) -> super::Item {
+        super::Item::from(self)
+    }
+}

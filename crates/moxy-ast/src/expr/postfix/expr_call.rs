@@ -32,3 +32,9 @@ impl ToTokens for ExprCall {
         self.args.to_tokens(t);
     }
 }
+
+impl ExprCall {
+    pub fn into_postfix_expr(self) -> super::PostfixExpr {
+        super::PostfixExpr::from(self)
+    }
+}

@@ -35,6 +35,10 @@ impl ExprBrace {
             .map(|g| g.delim().is_brace())
             .unwrap_or(false)
     }
+
+    pub fn into_block_expr(self) -> super::BlockExpr {
+        super::BlockExpr::from(self)
+    }
 }
 
 impl ToTokens for ExprBrace {

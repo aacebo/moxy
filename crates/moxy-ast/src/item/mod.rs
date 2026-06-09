@@ -57,6 +57,136 @@ pub enum Item {
     ForeignMod(ItemForeignMod),
 }
 
+impl Item {
+    pub fn is_use(&self) -> bool {
+        matches!(self, Self::Use(_))
+    }
+
+    pub fn is_extern_crate(&self) -> bool {
+        matches!(self, Self::ExternCrate(_))
+    }
+
+    pub fn is_mod(&self) -> bool {
+        matches!(self, Self::Mod(_))
+    }
+
+    pub fn is_fn(&self) -> bool {
+        matches!(self, Self::Fn(_))
+    }
+
+    pub fn is_struct(&self) -> bool {
+        matches!(self, Self::Struct(_))
+    }
+
+    pub fn is_enum(&self) -> bool {
+        matches!(self, Self::Enum(_))
+    }
+
+    pub fn is_union(&self) -> bool {
+        matches!(self, Self::Union(_))
+    }
+
+    pub fn is_trait(&self) -> bool {
+        matches!(self, Self::Trait(_))
+    }
+
+    pub fn is_trait_alias(&self) -> bool {
+        matches!(self, Self::TraitAlias(_))
+    }
+
+    pub fn is_impl(&self) -> bool {
+        matches!(self, Self::Impl(_))
+    }
+
+    pub fn is_type_alias(&self) -> bool {
+        matches!(self, Self::TypeAlias(_))
+    }
+
+    pub fn is_const(&self) -> bool {
+        matches!(self, Self::Const(_))
+    }
+
+    pub fn is_static(&self) -> bool {
+        matches!(self, Self::Static(_))
+    }
+
+    pub fn is_macro(&self) -> bool {
+        matches!(self, Self::Macro(_))
+    }
+
+    pub fn is_macro2(&self) -> bool {
+        matches!(self, Self::Macro2(_))
+    }
+
+    pub fn is_foreign_mod(&self) -> bool {
+        matches!(self, Self::ForeignMod(_))
+    }
+
+    pub fn as_use(&self) -> Option<&ItemUse> {
+        if let Self::Use(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_extern_crate(&self) -> Option<&ItemExternCrate> {
+        if let Self::ExternCrate(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_mod(&self) -> Option<&ItemMod> {
+        if let Self::Mod(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_fn(&self) -> Option<&ItemFn> {
+        if let Self::Fn(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_struct(&self) -> Option<&ItemStruct> {
+        if let Self::Struct(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_enum(&self) -> Option<&ItemEnum> {
+        if let Self::Enum(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_union(&self) -> Option<&ItemUnion> {
+        if let Self::Union(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_trait(&self) -> Option<&ItemTrait> {
+        if let Self::Trait(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_trait_alias(&self) -> Option<&ItemTraitAlias> {
+        if let Self::TraitAlias(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_impl(&self) -> Option<&ItemImpl> {
+        if let Self::Impl(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_type_alias(&self) -> Option<&ItemTypeAlias> {
+        if let Self::TypeAlias(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_const(&self) -> Option<&ItemConst> {
+        if let Self::Const(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_static(&self) -> Option<&ItemStatic> {
+        if let Self::Static(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_macro(&self) -> Option<&ItemMacro> {
+        if let Self::Macro(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_macro2(&self) -> Option<&ItemMacroRules> {
+        if let Self::Macro2(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_foreign_mod(&self) -> Option<&ItemForeignMod> {
+        if let Self::ForeignMod(v) = self { Some(v) } else { None }
+    }
+}
+
 impl Spanner for Item {
     fn span(&self) -> Span {
         match self {

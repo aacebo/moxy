@@ -25,6 +25,44 @@ pub enum UnaryExpr {
     Try(ExprTry),
 }
 
+impl UnaryExpr {
+    pub fn is_reference(&self) -> bool {
+        matches!(self, Self::Reference(_))
+    }
+
+    pub fn is_unary(&self) -> bool {
+        matches!(self, Self::Unary(_))
+    }
+
+    pub fn is_cast(&self) -> bool {
+        matches!(self, Self::Cast(_))
+    }
+
+    pub fn is_try(&self) -> bool {
+        matches!(self, Self::Try(_))
+    }
+
+    pub fn as_reference(&self) -> Option<&ExprReference> {
+        if let Self::Reference(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_unary(&self) -> Option<&ExprUnary> {
+        if let Self::Unary(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_cast(&self) -> Option<&ExprCast> {
+        if let Self::Cast(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_try(&self) -> Option<&ExprTry> {
+        if let Self::Try(v) = self { Some(v) } else { None }
+    }
+
+    pub fn into_expr(self) -> super::Expr {
+        super::Expr::from(self)
+    }
+}
+
 impl Spanner for UnaryExpr {
     fn span(&self) -> Span {
         match self {

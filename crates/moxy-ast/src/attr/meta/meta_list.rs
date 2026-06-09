@@ -22,3 +22,9 @@ impl ToTokens for MetaList {
         self.tokens.to_tokens(t);
     }
 }
+
+impl MetaList {
+    pub fn into_meta(self) -> super::Meta {
+        super::Meta::List(self)
+    }
+}

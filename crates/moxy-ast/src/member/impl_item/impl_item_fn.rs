@@ -62,3 +62,9 @@ impl ToTokens for ImplItemFn {
         self.body.to_tokens(t);
     }
 }
+
+impl ImplItemFn {
+    pub fn into_impl_item(self) -> super::ImplItem {
+        super::ImplItem::from(self)
+    }
+}

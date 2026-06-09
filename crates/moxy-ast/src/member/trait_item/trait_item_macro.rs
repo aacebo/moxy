@@ -43,3 +43,9 @@ impl ToTokens for TraitItemMacro {
         self.semi.to_tokens(t);
     }
 }
+
+impl TraitItemMacro {
+    pub fn into_trait_item(self) -> super::TraitItem {
+        super::TraitItem::from(self)
+    }
+}

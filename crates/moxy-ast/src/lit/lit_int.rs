@@ -39,3 +39,9 @@ impl std::fmt::Display for LitInt {
         f.write_str(&self.repr)
     }
 }
+
+impl LitInt {
+    pub fn into_lit(self) -> super::Lit {
+        super::Lit::from(self)
+    }
+}

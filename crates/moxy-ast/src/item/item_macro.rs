@@ -61,3 +61,9 @@ impl ToTokens for ItemMacro {
         }
     }
 }
+
+impl ItemMacro {
+    pub fn into_item(self) -> super::Item {
+        super::Item::from(self)
+    }
+}

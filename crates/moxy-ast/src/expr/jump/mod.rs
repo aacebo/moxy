@@ -19,6 +19,44 @@ pub enum JumpExpr {
     Yield(ExprYield),
 }
 
+impl JumpExpr {
+    pub fn is_return(&self) -> bool {
+        matches!(self, Self::Return(_))
+    }
+
+    pub fn is_break(&self) -> bool {
+        matches!(self, Self::Break(_))
+    }
+
+    pub fn is_continue(&self) -> bool {
+        matches!(self, Self::Continue(_))
+    }
+
+    pub fn is_yield(&self) -> bool {
+        matches!(self, Self::Yield(_))
+    }
+
+    pub fn as_return(&self) -> Option<&ExprReturn> {
+        if let Self::Return(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_break(&self) -> Option<&ExprBreak> {
+        if let Self::Break(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_continue(&self) -> Option<&ExprContinue> {
+        if let Self::Continue(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_yield(&self) -> Option<&ExprYield> {
+        if let Self::Yield(v) = self { Some(v) } else { None }
+    }
+
+    pub fn into_expr(self) -> super::Expr {
+        super::Expr::from(self)
+    }
+}
+
 impl Spanner for JumpExpr {
     fn span(&self) -> Span {
         match self {

@@ -34,3 +34,9 @@ impl ToTokens for ExprReference {
         self.expr.to_tokens(t);
     }
 }
+
+impl ExprReference {
+    pub fn into_unary_expr(self) -> super::UnaryExpr {
+        super::UnaryExpr::from(self)
+    }
+}

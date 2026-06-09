@@ -39,3 +39,9 @@ impl std::fmt::Display for LitFloat {
         f.write_str(&self.repr)
     }
 }
+
+impl LitFloat {
+    pub fn into_lit(self) -> super::Lit {
+        super::Lit::from(self)
+    }
+}

@@ -31,3 +31,9 @@ impl ToTokens for ExprIndex {
         self.index.to_tokens(t);
     }
 }
+
+impl ExprIndex {
+    pub fn into_postfix_expr(self) -> super::PostfixExpr {
+        super::PostfixExpr::from(self)
+    }
+}

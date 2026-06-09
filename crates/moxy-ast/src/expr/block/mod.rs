@@ -40,6 +40,92 @@ pub enum BlockExpr {
     TryBlock(ExprTryBlock),
 }
 
+impl BlockExpr {
+    pub fn is_brace(&self) -> bool {
+        matches!(self, Self::Brace(_))
+    }
+
+    pub fn is_if(&self) -> bool {
+        matches!(self, Self::If(_))
+    }
+
+    pub fn is_while(&self) -> bool {
+        matches!(self, Self::While(_))
+    }
+
+    pub fn is_for_loop(&self) -> bool {
+        matches!(self, Self::ForLoop(_))
+    }
+
+    pub fn is_loop(&self) -> bool {
+        matches!(self, Self::Loop(_))
+    }
+
+    pub fn is_match(&self) -> bool {
+        matches!(self, Self::Match(_))
+    }
+
+    pub fn is_async(&self) -> bool {
+        matches!(self, Self::Async(_))
+    }
+
+    pub fn is_unsafe(&self) -> bool {
+        matches!(self, Self::Unsafe(_))
+    }
+
+    pub fn is_const(&self) -> bool {
+        matches!(self, Self::Const(_))
+    }
+
+    pub fn is_try_block(&self) -> bool {
+        matches!(self, Self::TryBlock(_))
+    }
+
+    pub fn as_brace(&self) -> Option<&ExprBrace> {
+        if let Self::Brace(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_if(&self) -> Option<&ExprIf> {
+        if let Self::If(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_while(&self) -> Option<&ExprWhile> {
+        if let Self::While(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_for_loop(&self) -> Option<&ExprForLoop> {
+        if let Self::ForLoop(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_loop(&self) -> Option<&ExprLoop> {
+        if let Self::Loop(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_match(&self) -> Option<&ExprMatch> {
+        if let Self::Match(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_async(&self) -> Option<&ExprAsync> {
+        if let Self::Async(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_unsafe(&self) -> Option<&ExprUnsafe> {
+        if let Self::Unsafe(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_const(&self) -> Option<&ExprConst> {
+        if let Self::Const(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_try_block(&self) -> Option<&ExprTryBlock> {
+        if let Self::TryBlock(v) = self { Some(v) } else { None }
+    }
+
+    pub fn into_expr(self) -> super::Expr {
+        super::Expr::from(self)
+    }
+}
+
 impl Spanner for BlockExpr {
     fn span(&self) -> Span {
         match self {

@@ -35,3 +35,9 @@ impl ToTokens for ExprAwait {
         self.await_keyword.to_tokens(t);
     }
 }
+
+impl ExprAwait {
+    pub fn into_postfix_expr(self) -> super::PostfixExpr {
+        super::PostfixExpr::from(self)
+    }
+}

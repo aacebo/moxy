@@ -43,3 +43,9 @@ impl ToTokens for StmtMacro {
         self.semi.to_tokens(t);
     }
 }
+
+impl StmtMacro {
+    pub fn into_stmt(self) -> super::Stmt {
+        super::Stmt::Macro(self)
+    }
+}

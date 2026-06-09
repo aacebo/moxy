@@ -55,3 +55,9 @@ impl ToTokens for TraitBound {
         self.path.to_tokens(tokens);
     }
 }
+
+impl TraitBound {
+    pub fn into_type_bound(self) -> super::TypeBound {
+        super::TypeBound::from(self)
+    }
+}

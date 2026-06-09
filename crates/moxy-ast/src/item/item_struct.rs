@@ -73,3 +73,9 @@ impl ToTokens for ItemStruct {
         }
     }
 }
+
+impl ItemStruct {
+    pub fn into_item(self) -> super::Item {
+        super::Item::from(self)
+    }
+}

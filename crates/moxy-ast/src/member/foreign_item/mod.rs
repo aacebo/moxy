@@ -21,6 +21,40 @@ pub enum ForeignItem {
     Macro(ForeignItemMacro),
 }
 
+impl ForeignItem {
+    pub fn is_fn(&self) -> bool {
+        matches!(self, Self::Fn(_))
+    }
+
+    pub fn is_static(&self) -> bool {
+        matches!(self, Self::Static(_))
+    }
+
+    pub fn is_type(&self) -> bool {
+        matches!(self, Self::Type(_))
+    }
+
+    pub fn is_macro(&self) -> bool {
+        matches!(self, Self::Macro(_))
+    }
+
+    pub fn as_fn(&self) -> Option<&ForeignItemFn> {
+        if let Self::Fn(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_static(&self) -> Option<&ForeignItemStatic> {
+        if let Self::Static(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_type(&self) -> Option<&ForeignItemType> {
+        if let Self::Type(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_macro(&self) -> Option<&ForeignItemMacro> {
+        if let Self::Macro(v) = self { Some(v) } else { None }
+    }
+}
+
 impl Spanner for ForeignItem {
     fn span(&self) -> Span {
         match self {

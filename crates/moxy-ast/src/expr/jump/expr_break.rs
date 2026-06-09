@@ -47,3 +47,9 @@ impl ToTokens for ExprBreak {
         }
     }
 }
+
+impl ExprBreak {
+    pub fn into_jump_expr(self) -> super::JumpExpr {
+        super::JumpExpr::from(self)
+    }
+}

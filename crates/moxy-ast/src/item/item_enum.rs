@@ -132,3 +132,9 @@ impl ToTokens for Variant {
         }
     }
 }
+
+impl ItemEnum {
+    pub fn into_item(self) -> super::Item {
+        super::Item::from(self)
+    }
+}

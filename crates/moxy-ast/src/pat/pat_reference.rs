@@ -35,3 +35,9 @@ impl ToTokens for PatReference {
         self.pat.to_tokens(t);
     }
 }
+
+impl PatReference {
+    pub fn into_pattern(self) -> super::Pattern {
+        super::Pattern::from(self)
+    }
+}

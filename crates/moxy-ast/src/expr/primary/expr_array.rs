@@ -25,3 +25,9 @@ impl ToTokens for ExprArray {
         self.elems.to_tokens(t);
     }
 }
+
+impl ExprArray {
+    pub fn into_primary_expr(self) -> super::PrimaryExpr {
+        super::PrimaryExpr::from(self)
+    }
+}

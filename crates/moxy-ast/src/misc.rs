@@ -13,6 +13,16 @@ pub enum ClosureParam {
     Inferred { pat: Box<Pattern> },
 }
 
+impl ClosureParam {
+    pub fn is_typed(&self) -> bool {
+        matches!(self, Self::Typed { .. })
+    }
+
+    pub fn is_inferred(&self) -> bool {
+        matches!(self, Self::Inferred { .. })
+    }
+}
+
 impl Parse for ClosureParam {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let pat = Box::new(Pattern::parse_single(stream)?);
@@ -54,6 +64,20 @@ impl ToTokens for ClosureParam {
 pub enum ReturnType {
     Default,
     Type(RArrow, Box<Type>),
+}
+
+impl ReturnType {
+    pub fn is_default(&self) -> bool {
+        matches!(self, Self::Default)
+    }
+
+    pub fn is_type(&self) -> bool {
+        matches!(self, Self::Type(..))
+    }
+
+    pub fn as_type(&self) -> Option<&Type> {
+        if let Self::Type(_, v) = self { Some(v.as_ref()) } else { None }
+    }
 }
 
 impl Parse for ReturnType {

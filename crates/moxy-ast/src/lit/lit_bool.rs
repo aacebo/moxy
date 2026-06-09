@@ -40,3 +40,9 @@ impl std::fmt::Display for LitBool {
         f.write_str(if self.value { "true" } else { "false" })
     }
 }
+
+impl LitBool {
+    pub fn into_lit(self) -> super::Lit {
+        super::Lit::from(self)
+    }
+}

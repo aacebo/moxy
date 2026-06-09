@@ -42,6 +42,80 @@ pub enum Lit {
     Verbatim(moxy_token::Literal),
 }
 
+impl Lit {
+    pub fn is_str(&self) -> bool {
+        matches!(self, Self::Str(_))
+    }
+
+    pub fn is_byte_str(&self) -> bool {
+        matches!(self, Self::ByteStr(_))
+    }
+
+    pub fn is_c_str(&self) -> bool {
+        matches!(self, Self::CStr(_))
+    }
+
+    pub fn is_byte(&self) -> bool {
+        matches!(self, Self::Byte(_))
+    }
+
+    pub fn is_char(&self) -> bool {
+        matches!(self, Self::Char(_))
+    }
+
+    pub fn is_int(&self) -> bool {
+        matches!(self, Self::Int(_))
+    }
+
+    pub fn is_float(&self) -> bool {
+        matches!(self, Self::Float(_))
+    }
+
+    pub fn is_bool(&self) -> bool {
+        matches!(self, Self::Bool(_))
+    }
+
+    pub fn is_verbatim(&self) -> bool {
+        matches!(self, Self::Verbatim(_))
+    }
+
+    pub fn as_str(&self) -> Option<&LitStr> {
+        if let Self::Str(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_byte_str(&self) -> Option<&LitByteStr> {
+        if let Self::ByteStr(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_c_str(&self) -> Option<&LitCStr> {
+        if let Self::CStr(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_byte(&self) -> Option<&LitByte> {
+        if let Self::Byte(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_char(&self) -> Option<&LitChar> {
+        if let Self::Char(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_int(&self) -> Option<&LitInt> {
+        if let Self::Int(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_float(&self) -> Option<&LitFloat> {
+        if let Self::Float(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_bool(&self) -> Option<&LitBool> {
+        if let Self::Bool(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_verbatim(&self) -> Option<&moxy_token::Literal> {
+        if let Self::Verbatim(v) = self { Some(v) } else { None }
+    }
+}
+
 impl From<LitStr> for Lit {
     fn from(value: LitStr) -> Self {
         Lit::Str(value)

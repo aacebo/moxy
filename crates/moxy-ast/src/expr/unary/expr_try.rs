@@ -32,3 +32,9 @@ impl ToTokens for ExprTry {
         self.question_punct.to_tokens(t);
     }
 }
+
+impl ExprTry {
+    pub fn into_unary_expr(self) -> super::UnaryExpr {
+        super::UnaryExpr::from(self)
+    }
+}

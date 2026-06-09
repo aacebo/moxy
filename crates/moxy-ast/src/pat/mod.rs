@@ -59,6 +59,144 @@ pub enum Pattern {
     Const(crate::StmtBlock),
 }
 
+impl Pattern {
+    pub fn is_wild(&self) -> bool {
+        matches!(self, Self::Wild)
+    }
+
+    pub fn is_rest(&self) -> bool {
+        matches!(self, Self::Rest)
+    }
+
+    pub fn is_ident(&self) -> bool {
+        matches!(self, Self::Ident(_))
+    }
+
+    pub fn is_path(&self) -> bool {
+        matches!(self, Self::Path(_))
+    }
+
+    pub fn is_tuple(&self) -> bool {
+        matches!(self, Self::Tuple(_))
+    }
+
+    pub fn is_tuple_struct(&self) -> bool {
+        matches!(self, Self::TupleStruct(_))
+    }
+
+    pub fn is_struct(&self) -> bool {
+        matches!(self, Self::Struct(_))
+    }
+
+    pub fn is_slice(&self) -> bool {
+        matches!(self, Self::Slice(_))
+    }
+
+    pub fn is_reference(&self) -> bool {
+        matches!(self, Self::Reference(_))
+    }
+
+    pub fn is_or(&self) -> bool {
+        matches!(self, Self::Or(_))
+    }
+
+    pub fn is_lit(&self) -> bool {
+        matches!(self, Self::Lit(_))
+    }
+
+    pub fn is_range(&self) -> bool {
+        matches!(self, Self::Range(_))
+    }
+
+    pub fn is_macro(&self) -> bool {
+        matches!(self, Self::Macro(_))
+    }
+
+    pub fn is_type(&self) -> bool {
+        matches!(self, Self::Type(_))
+    }
+
+    pub fn is_group(&self) -> bool {
+        matches!(self, Self::Group(_))
+    }
+
+    pub fn is_paren(&self) -> bool {
+        matches!(self, Self::Paren(_))
+    }
+
+    pub fn is_box(&self) -> bool {
+        matches!(self, Self::Box(_))
+    }
+
+    pub fn is_const(&self) -> bool {
+        matches!(self, Self::Const(_))
+    }
+
+    pub fn as_ident(&self) -> Option<&PatIdent> {
+        if let Self::Ident(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_path(&self) -> Option<&PatPath> {
+        if let Self::Path(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_tuple(&self) -> Option<&PatTuple> {
+        if let Self::Tuple(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_tuple_struct(&self) -> Option<&PatTupleStruct> {
+        if let Self::TupleStruct(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_struct(&self) -> Option<&PatStruct> {
+        if let Self::Struct(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_slice(&self) -> Option<&PatSlice> {
+        if let Self::Slice(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_reference(&self) -> Option<&PatReference> {
+        if let Self::Reference(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_or(&self) -> Option<&PatOr> {
+        if let Self::Or(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_lit(&self) -> Option<&PatLit> {
+        if let Self::Lit(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_range(&self) -> Option<&PatRange> {
+        if let Self::Range(v) = self { Some(v.as_ref()) } else { None }
+    }
+
+    pub fn as_macro(&self) -> Option<&crate::MacroCall> {
+        if let Self::Macro(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_type(&self) -> Option<&PatType> {
+        if let Self::Type(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_group(&self) -> Option<&PatGroup> {
+        if let Self::Group(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_paren(&self) -> Option<&PatParen> {
+        if let Self::Paren(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_box(&self) -> Option<&Pattern> {
+        if let Self::Box(v) = self { Some(v.as_ref()) } else { None }
+    }
+
+    pub fn as_const(&self) -> Option<&crate::StmtBlock> {
+        if let Self::Const(v) = self { Some(v) } else { None }
+    }
+}
+
 impl Spanner for Pattern {
     fn span(&self) -> Span {
         match self {

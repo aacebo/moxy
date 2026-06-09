@@ -25,3 +25,9 @@ impl ToTokens for ExprGroup {
         self.expr.to_tokens(t);
     }
 }
+
+impl ExprGroup {
+    pub fn into_primary_expr(self) -> super::PrimaryExpr {
+        super::PrimaryExpr::from(self)
+    }
+}

@@ -90,3 +90,9 @@ impl ToTokens for ImplItemConst {
         self.semi.to_tokens(t);
     }
 }
+
+impl ImplItemConst {
+    pub fn into_impl_item(self) -> super::ImplItem {
+        super::ImplItem::from(self)
+    }
+}

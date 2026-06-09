@@ -81,3 +81,9 @@ impl ToTokens for ItemMod {
         }
     }
 }
+
+impl ItemMod {
+    pub fn into_item(self) -> super::Item {
+        super::Item::from(self)
+    }
+}

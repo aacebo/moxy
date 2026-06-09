@@ -25,3 +25,9 @@ impl ToTokens for ExprTuple {
         self.elems.to_tokens(t);
     }
 }
+
+impl ExprTuple {
+    pub fn into_primary_expr(self) -> super::PrimaryExpr {
+        super::PrimaryExpr::from(self)
+    }
+}

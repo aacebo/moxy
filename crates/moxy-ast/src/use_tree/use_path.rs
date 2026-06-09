@@ -37,3 +37,9 @@ impl ToTokens for UsePath {
         self.tree.to_tokens(t);
     }
 }
+
+impl UsePath {
+    pub fn into_use_tree(self) -> super::UseTree {
+        super::UseTree::Path(self)
+    }
+}

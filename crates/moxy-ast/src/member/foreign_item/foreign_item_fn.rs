@@ -55,3 +55,9 @@ impl ToTokens for ForeignItemFn {
         self.semi.to_tokens(t);
     }
 }
+
+impl ForeignItemFn {
+    pub fn into_foreign_item(self) -> super::ForeignItem {
+        super::ForeignItem::from(self)
+    }
+}

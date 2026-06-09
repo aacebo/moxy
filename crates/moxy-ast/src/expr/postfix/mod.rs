@@ -28,6 +28,52 @@ pub enum PostfixExpr {
     Await(ExprAwait),
 }
 
+impl PostfixExpr {
+    pub fn is_call(&self) -> bool {
+        matches!(self, Self::Call(_))
+    }
+
+    pub fn is_method_call(&self) -> bool {
+        matches!(self, Self::MethodCall(_))
+    }
+
+    pub fn is_field(&self) -> bool {
+        matches!(self, Self::Field(_))
+    }
+
+    pub fn is_index(&self) -> bool {
+        matches!(self, Self::Index(_))
+    }
+
+    pub fn is_await(&self) -> bool {
+        matches!(self, Self::Await(_))
+    }
+
+    pub fn as_call(&self) -> Option<&ExprCall> {
+        if let Self::Call(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_method_call(&self) -> Option<&ExprMethodCall> {
+        if let Self::MethodCall(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_field(&self) -> Option<&ExprField> {
+        if let Self::Field(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_index(&self) -> Option<&ExprIndex> {
+        if let Self::Index(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_await(&self) -> Option<&ExprAwait> {
+        if let Self::Await(v) = self { Some(v) } else { None }
+    }
+
+    pub fn into_expr(self) -> super::Expr {
+        super::Expr::from(self)
+    }
+}
+
 impl Spanner for PostfixExpr {
     fn span(&self) -> Span {
         match self {

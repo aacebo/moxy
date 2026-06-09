@@ -32,3 +32,9 @@ impl ToTokens for UseGlob {
         self.star.to_tokens(t);
     }
 }
+
+impl UseGlob {
+    pub fn into_use_tree(self) -> super::UseTree {
+        super::UseTree::Glob(self)
+    }
+}

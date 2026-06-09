@@ -117,3 +117,9 @@ impl ToTokens for StmtLocal {
         self.semi.to_tokens(t);
     }
 }
+
+impl StmtLocal {
+    pub fn into_stmt(self) -> super::Stmt {
+        super::Stmt::Local(Box::new(self))
+    }
+}

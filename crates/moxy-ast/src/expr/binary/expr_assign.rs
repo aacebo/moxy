@@ -36,3 +36,9 @@ impl ToTokens for ExprAssign {
         self.right.to_tokens(t);
     }
 }
+
+impl ExprAssign {
+    pub fn into_binary_expr(self) -> super::BinaryExpr {
+        super::BinaryExpr::from(self)
+    }
+}

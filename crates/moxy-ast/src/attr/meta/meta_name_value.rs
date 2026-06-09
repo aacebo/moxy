@@ -24,3 +24,9 @@ impl ToTokens for MetaNameValue {
         self.value.to_tokens(t);
     }
 }
+
+impl MetaNameValue {
+    pub fn into_meta(self) -> super::Meta {
+        super::Meta::NameValue(Box::new(self))
+    }
+}

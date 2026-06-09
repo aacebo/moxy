@@ -29,6 +29,10 @@ impl ExprUnary {
     pub fn is_prefix(stream: &mut ParseStream) -> bool {
         stream.peek::<Not>() || stream.peek::<moxy_token::punct::Minus>() || stream.peek::<Star>()
     }
+
+    pub fn into_unary_expr(self) -> super::UnaryExpr {
+        super::UnaryExpr::from(self)
+    }
 }
 
 impl ToTokens for ExprUnary {

@@ -79,3 +79,9 @@ impl ToTokens for ConstParam {
         }
     }
 }
+
+impl ConstParam {
+    pub fn into_generic_param(self) -> super::GenericParam {
+        super::GenericParam::from(self)
+    }
+}
