@@ -14,6 +14,25 @@ pub use lifetime_name::*;
 pub use path_arguments::*;
 pub use path_segment::*;
 
+#[macro_export]
+macro_rules! path {
+    ($x:ident) => { $crate::Path::try_from_str(stringify!($x)).expect("invalid syntax") };
+    ($head:ident :: $($tail:tt)+) => {{
+        let mut __ident = stringify!($head).to_string();
+        path!(@accum __ident, $($tail)+)
+    }};
+    (@accum $acc:ident, $next:ident :: $($tail:tt)+) => {{
+        $acc += "::";
+        $acc += stringify!($next);
+        path!(@accum $acc, $($tail)+)
+    }};
+    (@accum $acc:ident, $last:ident) => {{
+        $acc += "::";
+        $acc += stringify!($last);
+        $crate::Path::try_from_str($acc).expect("invalid syntax")
+    }};
+}
+
 /// A path expression or type path (e.g. `std::collections::HashMap`, `crate::Foo`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -21,6 +40,12 @@ pub struct Path {
     pub span: Span,
     pub leading_colon: bool,
     pub segments: Punctuated<PathSegment, PathSep>,
+}
+
+impl Path {
+    pub fn try_from_str(value: impl AsRef<str>) -> Result<Self, ParseError> {
+        std::str::FromStr::from_str(value.as_ref())
+    }
 }
 
 impl Parse for Path {
@@ -32,8 +57,10 @@ impl Parse for Path {
         } else {
             false
         };
+
         let segments = Punctuated::parse_separated_nonempty(stream)?;
         let end = segments.last().map(|s: &PathSegment| s.span()).unwrap_or(start);
+
         Ok(Self {
             span: start.join(end),
             leading_colon,
@@ -53,7 +80,17 @@ impl ToTokens for Path {
         if self.leading_colon {
             PathSep::default().to_tokens(tokens);
         }
+
         self.segments.to_tokens(tokens);
+    }
+}
+
+impl std::str::FromStr for Path {
+    type Err = ParseError;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        let stream = TokenStream::from_str(s)?;
+        Self::parse(&mut stream.parse())
     }
 }
 
@@ -61,11 +98,13 @@ impl From<crate::Ident> for Path {
     fn from(ident: crate::Ident) -> Self {
         let span = ident.span();
         let mut segments = Punctuated::new();
+
         segments.push_value(PathSegment {
             ident,
             args: PathArguments::None,
         });
-        Path {
+
+        Self {
             span,
             leading_colon: false,
             segments,
@@ -144,5 +183,11 @@ mod tests {
             }
             _ => panic!("expected angle-bracketed"),
         }
+    }
+
+    #[test]
+    fn macro_construct() {
+        let path = path!(hello::world);
+        assert_eq!(path.segments.len(), 2)
     }
 }

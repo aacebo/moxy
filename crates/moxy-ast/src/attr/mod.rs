@@ -51,3 +51,18 @@ impl ToTokens for Attribute {
         self.meta.to_tokens(tokens);
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    use crate::path;
+
+    #[test]
+    fn nested_meta_name_value() {
+        assert_eq!(path!(foo::bar::path).segments.len(), 3);
+        let attr = moxy_token::parse!("#[foo::bar(path = \"x.rs\")]" as Attribute).unwrap();
+        let meta = attr.get(&path!(foo::bar::path));
+        assert!(meta.is_some());
+        assert!(meta.unwrap().is_name_value());
+    }
+}
