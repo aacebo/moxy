@@ -78,8 +78,8 @@ impl FmtNode {
     }
 }
 
-impl super::Fmt for FmtNode {
-    fn fmt(&self, f: &mut crate::Formatter) -> Result<(), crate::FmtError> {
+impl super::Format for FmtNode {
+    fn format(&self, f: &mut crate::Formatter) -> Result<(), crate::FmtError> {
         f.write_node(self, super::Mode::Broken)
     }
 }

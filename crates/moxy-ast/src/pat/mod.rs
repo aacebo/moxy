@@ -551,7 +551,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
         }
 
         // Bare single-segment path with no leading colon → binding ident.
-        if !path.leading_colon && path.segments.len() == 1 {
+        if !path.leading_colon.is_some() && path.segments.len() == 1 {
             stream.seek(&fork);
             let ident = match path.segments.into_iter().next() {
                 Some(seg) => seg.ident,

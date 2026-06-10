@@ -1,34 +1,26 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Comma, Lt, PathSep};
+use moxy_token::punct::{Lt, PathSep};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{AngleArgs, Delimited, Punctuated, ReturnType, Type};
-
-/// Parenthesized path arguments (`Fn(A, B) -> C`).
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
-pub struct ParenthesizedArgs {
-    pub params: Delimited<Punctuated<Type, Comma>>,
-    pub output: ReturnType,
-}
+use crate::{AngleArguments, ParenArguments};
 
 /// The arguments of a path segment: none, angle-bracketed (`<T>`), or parenthesized (`Fn(A) -> B`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum PathArguments {
     None,
-    AngleBracketed(AngleArgs),
-    Parenthesized(ParenthesizedArgs),
+    AngleBracketed(AngleArguments),
+    Parenthesized(ParenArguments),
 }
 
-impl From<AngleArgs> for PathArguments {
-    fn from(v: AngleArgs) -> Self {
+impl From<AngleArguments> for PathArguments {
+    fn from(v: AngleArguments) -> Self {
         PathArguments::AngleBracketed(v)
     }
 }
 
-impl From<ParenthesizedArgs> for PathArguments {
-    fn from(v: ParenthesizedArgs) -> Self {
+impl From<ParenArguments> for PathArguments {
+    fn from(v: ParenArguments) -> Self {
         PathArguments::Parenthesized(v)
     }
 }
@@ -36,8 +28,10 @@ impl From<ParenthesizedArgs> for PathArguments {
 impl Parse for PathArguments {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let mut fork = stream.fork();
+
         if fork.peek::<PathSep>() {
             let _ = fork.parse::<PathSep>()?;
+
             if fork.peek::<Lt>() {
                 stream.seek(&fork);
             }
@@ -53,15 +47,8 @@ impl Parse for PathArguments {
 
 impl PathArguments {
     pub fn parse_parenthesized(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let params = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
-        let output = stream.parse::<ReturnType>()?;
-        Ok(PathArguments::Parenthesized(ParenthesizedArgs { params, output }))
-    }
-}
-
-impl Spanner for ParenthesizedArgs {
-    fn span(&self) -> Span {
-        self.params.span()
+        let args = stream.parse::<ParenArguments>()?;
+        Ok(Self::Parenthesized(args))
     }
 }
 
@@ -80,10 +67,7 @@ impl ToTokens for PathArguments {
         match self {
             PathArguments::None => {}
             PathArguments::AngleBracketed(args) => args.to_tokens(tokens),
-            PathArguments::Parenthesized(p) => {
-                p.params.to_tokens(tokens);
-                p.output.to_tokens(tokens);
-            }
+            PathArguments::Parenthesized(args) => args.to_tokens(tokens),
         }
     }
 }

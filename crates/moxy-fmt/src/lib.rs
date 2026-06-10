@@ -12,7 +12,7 @@ pub use error::*;
 #[doc(inline)]
 pub use node::*;
 
-/// Format a value that implements [`Fmt`] into a `String`.
+/// Format a value that implements [`Format`] into a `String`.
 ///
 /// Accepts an optional [`FmtConfig`] as a second argument. When omitted,
 /// [`FmtConfig::default`] is used.
@@ -59,8 +59,8 @@ macro_rules! fmt {
     }};
 }
 
-pub trait Fmt {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError>;
+pub trait Format {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError>;
 }
 
 pub struct Formatter {
@@ -138,8 +138,8 @@ impl Formatter {
 }
 
 impl Formatter {
-    pub fn write<T: Fmt>(&mut self, value: &T) -> Result<(), FmtError> {
-        value.fmt(self)?;
+    pub fn write<T: Format>(&mut self, value: &T) -> Result<(), FmtError> {
+        value.format(self)?;
         let nodes: Vec<_> = self.buffer.drain(0..).collect();
 
         for node in nodes {
@@ -149,7 +149,7 @@ impl Formatter {
         Ok(())
     }
 
-    pub fn write_all<T: Fmt>(&mut self, iter: impl AsRef<[T]>) -> Result<(), FmtError> {
+    pub fn write_all<T: Format>(&mut self, iter: impl AsRef<[T]>) -> Result<(), FmtError> {
         for item in iter.as_ref() {
             self.write(item)?;
         }
@@ -222,13 +222,13 @@ impl Formatter {
     }
 }
 
-impl<T: Fmt, P: std::fmt::Display> Fmt for moxy_ast::Punctuated<T, P> {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl<T: Format, P: std::fmt::Display> Format for moxy_ast::Punctuated<T, P> {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.group(|f| {
             for pair in self.pairs() {
                 match pair {
                     moxy_ast::Pair::Punctuated(t, p) => {
-                        t.fmt(f)?;
+                        t.format(f)?;
                         let sep = p.to_string();
                         if sep.trim() == "+" {
                             f.text(" ")?;
@@ -239,7 +239,7 @@ impl<T: Fmt, P: std::fmt::Display> Fmt for moxy_ast::Punctuated<T, P> {
                         f.space()?;
                     }
                     moxy_ast::Pair::End(t) => {
-                        t.fmt(f)?;
+                        t.format(f)?;
                     }
                 }
             }

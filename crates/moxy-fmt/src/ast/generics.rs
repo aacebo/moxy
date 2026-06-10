@@ -3,36 +3,36 @@ use moxy_ast::generics::{
 };
 use moxy_ast::{BoundLifetimes, Generics, TraitRef, WhereClause, WherePredicate};
 
-use crate::{Fmt, FmtError, Formatter};
+use crate::{FmtError, Format, Formatter};
 
-impl Fmt for BoundLifetimes {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for BoundLifetimes {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("for<")?;
-        self.params.fmt(f)?;
+        self.params.format(f)?;
         f.text(">")
     }
 }
 
-impl Fmt for Generics {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Generics {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if self.params.is_empty() {
             return Ok(());
         }
 
         f.text("<")?;
-        self.params.fmt(f)?;
+        self.params.format(f)?;
         f.text(">")?;
 
         if let Some(where_clause) = &self.where_clause {
-            where_clause.fmt(f)?;
+            where_clause.format(f)?;
         }
 
         Ok(())
     }
 }
 
-impl Fmt for WhereClause {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for WhereClause {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.hard_break()?;
         f.text("where")?;
 
@@ -40,10 +40,10 @@ impl Fmt for WhereClause {
             f.hard_break()?;
             f.indent(|f| match pair {
                 moxy_ast::Pair::Punctuated(pred, _) => {
-                    pred.fmt(f)?;
+                    pred.format(f)?;
                     f.text(",")
                 }
-                moxy_ast::Pair::End(pred) => pred.fmt(f),
+                moxy_ast::Pair::End(pred) => pred.format(f),
             })?;
         }
 
@@ -51,128 +51,128 @@ impl Fmt for WhereClause {
     }
 }
 
-impl Fmt for WherePredicate {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for WherePredicate {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Lifetime(v) => v.fmt(f),
-            Self::Type(v) => v.fmt(f),
+            Self::Lifetime(v) => v.format(f),
+            Self::Type(v) => v.format(f),
         }
     }
 }
 
-impl Fmt for LifetimePredicate {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.lifetime.fmt(f)?;
+impl Format for LifetimePredicate {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.lifetime.format(f)?;
         f.text(": ")?;
-        self.bounds.fmt(f)
+        self.bounds.format(f)
     }
 }
 
-impl Fmt for TypePredicate {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for TypePredicate {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if let Some(lifetimes) = &self.lifetimes {
-            lifetimes.fmt(f)?;
+            lifetimes.format(f)?;
             f.text(" ")?;
         }
 
-        self.bounded_ty.fmt(f)?;
+        self.bounded_ty.format(f)?;
         f.text(": ")?;
-        self.bounds.fmt(f)
+        self.bounds.format(f)
     }
 }
 
-impl Fmt for GenericParam {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for GenericParam {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Lifetime(v) => v.fmt(f),
-            Self::Type(v) => v.fmt(f),
-            Self::Const(v) => v.fmt(f),
+            Self::Lifetime(v) => v.format(f),
+            Self::Type(v) => v.format(f),
+            Self::Const(v) => v.format(f),
         }
     }
 }
 
-impl Fmt for LifetimeParam {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.lifetime.fmt(f)?;
+impl Format for LifetimeParam {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.lifetime.format(f)?;
 
         if !self.bounds.is_empty() {
             f.text(": ")?;
-            self.bounds.fmt(f)?;
+            self.bounds.format(f)?;
         }
 
         Ok(())
     }
 }
 
-impl Fmt for TypeParam {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.ident.fmt(f)?;
+impl Format for TypeParam {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.ident.format(f)?;
 
         if !self.bounds.is_empty() {
             f.text(": ")?;
-            self.bounds.fmt(f)?;
+            self.bounds.format(f)?;
         }
 
         if let Some(default) = &self.default {
             f.text(" = ")?;
-            default.fmt(f)?;
+            default.format(f)?;
         }
 
         Ok(())
     }
 }
 
-impl Fmt for ConstParam {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for ConstParam {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("const ")?;
-        self.ident.fmt(f)?;
+        self.ident.format(f)?;
         f.text(": ")?;
-        self.ty.fmt(f)?;
+        self.ty.format(f)?;
 
         if let Some(default) = &self.default {
             f.text(" = ")?;
-            default.fmt(f)?;
+            default.format(f)?;
         }
 
         Ok(())
     }
 }
 
-impl Fmt for TypeBound {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for TypeBound {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Trait(v) => v.fmt(f),
-            Self::Lifetime(v) => v.fmt(f),
-            Self::Use(v) => v.fmt(f),
+            Self::Trait(v) => v.format(f),
+            Self::Lifetime(v) => v.format(f),
+            Self::Use(v) => v.format(f),
         }
     }
 }
 
-impl Fmt for TraitBound {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.polarity.fmt(f)?;
+impl Format for TraitBound {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.polarity.format(f)?;
 
         if let Some(lifetimes) = &self.lifetimes {
-            lifetimes.fmt(f)?;
+            lifetimes.format(f)?;
             f.text(" ")?;
         }
 
-        self.modifier.fmt(f)?;
-        self.path.fmt(f)
+        self.modifier.format(f)?;
+        self.path.format(f)
     }
 }
 
-impl Fmt for TraitRef {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.polarity.fmt(f)?;
-        self.path.fmt(f)
+impl Format for TraitRef {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.polarity.format(f)?;
+        self.path.format(f)
     }
 }
 
-impl Fmt for UseBound {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for UseBound {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("use<")?;
-        self.lifetimes.fmt(f)?;
+        self.lifetimes.format(f)?;
         f.text(">")
     }
 }

@@ -1,17 +1,17 @@
 use moxy_ast::{Crate, TypedParam};
 
-use crate::{Fmt, FmtError, Formatter};
+use crate::{FmtError, Format, Formatter};
 
-impl Fmt for TypedParam {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.pat.fmt(f)?;
+impl Format for TypedParam {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.pat.format(f)?;
         f.text(": ")?;
-        self.ty.fmt(f)
+        self.ty.format(f)
     }
 }
 
-impl Fmt for Crate {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Crate {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         let mut first = true;
 
         for item in &self.items {
@@ -20,7 +20,7 @@ impl Fmt for Crate {
                 f.hard_break()?;
             }
 
-            item.fmt(f)?;
+            item.format(f)?;
             first = false;
         }
 

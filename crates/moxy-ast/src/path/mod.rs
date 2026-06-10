@@ -1,6 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::PathSep;
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, Token, TokenStream};
 
 use crate::Punctuated;
 
@@ -37,9 +36,8 @@ macro_rules! path {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Path {
-    pub span: Span,
-    pub leading_colon: bool,
-    pub segments: Punctuated<PathSegment, PathSep>,
+    pub leading_colon: Option<Token![::]>,
+    pub segments: Punctuated<PathSegment, Token![::]>,
 }
 
 impl Path {
@@ -50,35 +48,28 @@ impl Path {
 
 impl Parse for Path {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let start = stream.span();
-        let leading_colon = if stream.peek::<PathSep>() {
-            let _ = stream.parse::<PathSep>()?;
-            true
-        } else {
-            false
-        };
-
+        let leading_colon = stream.parse_if::<Token![::]>();
         let segments = Punctuated::parse_separated_nonempty(stream)?;
-        let end = segments.last().map(|s: &PathSegment| s.span()).unwrap_or(start);
 
-        Ok(Self {
-            span: start.join(end),
-            leading_colon,
-            segments,
-        })
+        Ok(Self { leading_colon, segments })
     }
 }
 
 impl Spanner for Path {
     fn span(&self) -> Span {
-        self.span
+        match (self.leading_colon, self.segments.last()) {
+            (Some(colon), Some(segment)) => colon.span().join(segment.span()),
+            (Some(colon), None) => colon.span(),
+            (None, Some(segment)) => segment.span(),
+            _ => Span::default(),
+        }
     }
 }
 
 impl ToTokens for Path {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        if self.leading_colon {
-            PathSep::default().to_tokens(tokens);
+        if let Some(colon) = self.leading_colon {
+            colon.to_tokens(tokens);
         }
 
         self.segments.to_tokens(tokens);
@@ -96,7 +87,6 @@ impl std::str::FromStr for Path {
 
 impl From<crate::Ident> for Path {
     fn from(ident: crate::Ident) -> Self {
-        let span = ident.span();
         let mut segments = Punctuated::new();
 
         segments.push_value(PathSegment {
@@ -105,8 +95,7 @@ impl From<crate::Ident> for Path {
         });
 
         Self {
-            span,
-            leading_colon: false,
+            leading_colon: None,
             segments,
         }
     }
@@ -136,7 +125,7 @@ mod tests {
     #[test]
     fn simple_path() {
         let p = moxy_token::parse!("Foo" as Path).unwrap();
-        assert!(!p.leading_colon);
+        assert!(!p.leading_colon.is_some());
         assert_eq!(p.segments.len(), 1);
         assert_eq!(render(&p), "Foo");
     }
@@ -151,7 +140,7 @@ mod tests {
     #[test]
     fn leading_colon() {
         let p = moxy_token::parse!("::core::mem" as Path).unwrap();
-        assert!(p.leading_colon);
+        assert!(p.leading_colon.is_some());
         assert_eq!(p.segments.len(), 2);
         assert_eq!(render(&p), ":: core :: mem");
     }

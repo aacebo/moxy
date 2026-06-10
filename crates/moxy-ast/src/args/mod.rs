@@ -3,15 +3,17 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Expr, Lifetime, Type};
 
-mod angle_args;
-mod assoc_const_arg;
-mod assoc_type_arg;
-mod constraint_arg;
+mod angle_arguments;
+mod assoc_const_argument;
+mod assoc_type_argument;
+mod constraint_argument;
+mod paren_arguments;
 
-pub use angle_args::*;
-pub use assoc_const_arg::*;
-pub use assoc_type_arg::*;
-pub use constraint_arg::*;
+pub use angle_arguments::*;
+pub use assoc_const_argument::*;
+pub use assoc_type_argument::*;
+pub use constraint_argument::*;
+pub use paren_arguments::*;
 
 /// A single generic argument inside `<...>`.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -20,9 +22,9 @@ pub enum GenericArgument {
     Lifetime(Lifetime),
     Type(Type),
     Const(Expr),
-    AssocType(AssocTypeArg),
-    AssocConst(AssocConstArg),
-    Constraint(ConstraintArg),
+    AssocType(AssocTypeArgument),
+    AssocConst(AssocConstArgument),
+    Constraint(ConstraintArgument),
 }
 
 impl Spanner for GenericArgument {
@@ -52,17 +54,17 @@ impl Parse for GenericArgument {
 
         // Constraint `ident [generics] : bounds` — must come before AssocType/AssocConst
         // because `:` is unambiguous.
-        if let Ok(v) = stream.parse::<ConstraintArg>() {
+        if let Ok(v) = stream.parse::<ConstraintArgument>() {
             return Ok(v.into_generic_argument());
         }
 
         // Associated type binding `ident [generics] = Type`.
-        if let Ok(v) = stream.parse::<AssocTypeArg>() {
+        if let Ok(v) = stream.parse::<AssocTypeArgument>() {
             return Ok(v.into_generic_argument());
         }
 
         // Associated const binding `ident [generics] = expr`.
-        if let Ok(v) = stream.parse::<AssocConstArg>() {
+        if let Ok(v) = stream.parse::<AssocConstArgument>() {
             return Ok(v.into_generic_argument());
         }
 

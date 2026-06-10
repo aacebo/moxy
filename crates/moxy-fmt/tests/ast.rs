@@ -1,7 +1,7 @@
 use moxy_ast::{Crate, Expr, Item, Pattern, Stmt, Type};
 use moxy_fmt::{FmtConfig, NewlineStyle, fmt};
 
-fn format<T: moxy_fmt::Fmt>(src: &str) -> String
+fn format<T: moxy_fmt::Format>(src: &str) -> String
 where
     T: moxy_token::Parse,
 {
@@ -9,7 +9,7 @@ where
     fmt!(&value, FmtConfig::default().with_newline(NewlineStyle::Unix)).unwrap()
 }
 
-fn idempotent<T: moxy_fmt::Fmt>(src: &str)
+fn idempotent<T: moxy_fmt::Format>(src: &str)
 where
     T: moxy_token::Parse,
 {

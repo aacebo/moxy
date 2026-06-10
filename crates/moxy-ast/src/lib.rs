@@ -28,7 +28,7 @@ pub mod vis;
 #[doc(inline)]
 pub use _crate::Crate;
 #[doc(inline)]
-pub use args::{AngleArgs, GenericArgument};
+pub use args::{AngleArguments, GenericArgument, ParenArguments};
 #[doc(inline)]
 pub use attr::{Attribute, Meta};
 #[doc(inline)]

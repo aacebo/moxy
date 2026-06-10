@@ -1,68 +1,68 @@
 use moxy_ast::Lit;
 use moxy_ast::lit::*;
 
-use crate::{Fmt, FmtError, Formatter};
+use crate::{FmtError, Format, Formatter};
 
-impl Fmt for Lit {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Lit {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Str(v) => v.fmt(f),
-            Self::ByteStr(v) => v.fmt(f),
-            Self::CStr(v) => v.fmt(f),
-            Self::Byte(v) => v.fmt(f),
-            Self::Char(v) => v.fmt(f),
-            Self::Int(v) => v.fmt(f),
-            Self::Float(v) => v.fmt(f),
-            Self::Bool(v) => v.fmt(f),
+            Self::Str(v) => v.format(f),
+            Self::ByteStr(v) => v.format(f),
+            Self::CStr(v) => v.format(f),
+            Self::Byte(v) => v.format(f),
+            Self::Char(v) => v.format(f),
+            Self::Int(v) => v.format(f),
+            Self::Float(v) => v.format(f),
+            Self::Bool(v) => v.format(f),
             Self::Verbatim(v) => f.text(v),
         }
     }
 }
 
-impl Fmt for LitStr {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for LitStr {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text(&self.repr)
     }
 }
 
-impl Fmt for LitByteStr {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for LitByteStr {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text(&self.repr)
     }
 }
 
-impl Fmt for LitCStr {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for LitCStr {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text(&self.repr)
     }
 }
 
-impl Fmt for LitByte {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for LitByte {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text(&self.repr)
     }
 }
 
-impl Fmt for LitChar {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for LitChar {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text(&self.repr)
     }
 }
 
-impl Fmt for LitInt {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for LitInt {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text(&self.repr)
     }
 }
 
-impl Fmt for LitFloat {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for LitFloat {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text(&self.repr)
     }
 }
 
-impl Fmt for LitBool {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for LitBool {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text(self.value)
     }
 }

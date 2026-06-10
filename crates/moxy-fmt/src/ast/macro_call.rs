@@ -1,11 +1,11 @@
 use moxy_ast::MacroCall;
 use moxy_token::{Delim, ToTokenStream};
 
-use crate::{Fmt, FmtError, Formatter};
+use crate::{FmtError, Format, Formatter};
 
-impl Fmt for MacroCall {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.path.fmt(f)?;
+impl Format for MacroCall {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.path.format(f)?;
         f.text("!")?;
 
         let (open, close) = match self.delim() {

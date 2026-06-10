@@ -12,7 +12,7 @@ pub struct ExprMethodCall {
     pub receiver: Box<Expr>,
     pub dot: Dot,
     pub method: Ident,
-    pub turbofish: Option<AngleArgs>,
+    pub turbofish: Option<AngleArguments>,
     pub args: Delimited<Punctuated<Expr, Comma>>,
 }
 
@@ -30,7 +30,7 @@ impl Spanner for ExprMethodCall {
 
 impl ExprMethodCall {
     /// Parse an optional turbofish `::<...>` (method-call generic args).
-    pub fn parse_turbofish(stream: &mut ParseStream) -> Result<Option<AngleArgs>, ParseError> {
+    pub fn parse_turbofish(stream: &mut ParseStream) -> Result<Option<AngleArguments>, ParseError> {
         let mut fork = stream.fork();
 
         if !fork.peek::<moxy_token::punct::PathSep>() {
@@ -43,7 +43,7 @@ impl ExprMethodCall {
             return Ok(None);
         }
 
-        let args = fork.parse::<AngleArgs>()?;
+        let args = fork.parse::<AngleArguments>()?;
         stream.seek(&fork);
         Ok(Some(args))
     }

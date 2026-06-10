@@ -32,13 +32,10 @@ impl QSelf {
             segments.push(seg);
         }
 
-        let span = segments.first().map(|s| s.span()).unwrap_or_else(Span::call_site);
-        let end_span = segments.last().map(|s| s.span()).unwrap_or(span);
         Ok((
             qself,
             Path {
-                span: span.join(end_span),
-                leading_colon: false,
+                leading_colon: None,
                 segments,
             },
         ))

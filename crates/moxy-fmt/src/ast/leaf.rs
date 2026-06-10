@@ -3,23 +3,23 @@ use moxy_ast::{
     TraitBoundModifier, UnOp, Unsafety, Visibility,
 };
 
-use crate::{Fmt, FmtError, Formatter};
+use crate::{FmtError, Format, Formatter};
 
-impl Fmt for Ident {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Ident {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text(self)
     }
 }
 
-impl Fmt for Label {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.name.fmt(f)?;
+impl Format for Label {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.name.format(f)?;
         f.text(":")
     }
 }
 
-impl Fmt for Abi {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Abi {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("extern")?;
 
         if let Some(name) = &self.name {
@@ -31,8 +31,8 @@ impl Fmt for Abi {
     }
 }
 
-impl Fmt for Visibility {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Visibility {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Inherited => Ok(()),
             Self::Public { .. } => f.text("pub"),
@@ -41,33 +41,33 @@ impl Fmt for Visibility {
             Self::Super { .. } => f.text("pub(super)"),
             Self::Restricted { path, .. } => {
                 f.text("pub(in ")?;
-                path.inner.1.fmt(f)?;
+                path.inner.1.format(f)?;
                 f.text(")")
             }
         }
     }
 }
 
-impl Fmt for BinOp {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for BinOp {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text(self)
     }
 }
 
-impl Fmt for AssignOp {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for AssignOp {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text(self)
     }
 }
 
-impl Fmt for UnOp {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for UnOp {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text(self)
     }
 }
 
-impl Fmt for Asyncness {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Asyncness {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Async(_) => f.text("async"),
             Self::Sync => Ok(()),
@@ -75,8 +75,8 @@ impl Fmt for Asyncness {
     }
 }
 
-impl Fmt for Constness {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Constness {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Const(_) => f.text("const"),
             Self::NoConst => Ok(()),
@@ -84,8 +84,8 @@ impl Fmt for Constness {
     }
 }
 
-impl Fmt for Unsafety {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Unsafety {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Unsafe(_) => f.text("unsafe"),
             Self::Safe => Ok(()),
@@ -93,8 +93,8 @@ impl Fmt for Unsafety {
     }
 }
 
-impl Fmt for Defaultness {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Defaultness {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Default(_) => f.text("default"),
             Self::Final => Ok(()),
@@ -102,8 +102,8 @@ impl Fmt for Defaultness {
     }
 }
 
-impl Fmt for Mutability {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Mutability {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Mutable(_) => f.text("mut"),
             Self::Immutable => Ok(()),
@@ -111,8 +111,8 @@ impl Fmt for Mutability {
     }
 }
 
-impl Fmt for Movability {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Movability {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Static(_) => f.text("static"),
             Self::Movable => Ok(()),
@@ -120,8 +120,8 @@ impl Fmt for Movability {
     }
 }
 
-impl Fmt for RangeLimits {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for RangeLimits {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Closed(_) => f.text("..="),
             Self::HalfOpen(_) => f.text(".."),
@@ -129,8 +129,8 @@ impl Fmt for RangeLimits {
     }
 }
 
-impl Fmt for TraitBoundModifier {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for TraitBoundModifier {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Maybe(_) => f.text("?"),
             Self::None => Ok(()),
@@ -138,8 +138,8 @@ impl Fmt for TraitBoundModifier {
     }
 }
 
-impl Fmt for BoundPolarity {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for BoundPolarity {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Negative(_) => f.text("!"),
             Self::Positive => Ok(()),

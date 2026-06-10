@@ -1,30 +1,32 @@
-use moxy_ast::args::{AngleArgs, AssocConstArg, AssocTypeArg, ConstraintArg, GenericArgument};
-use moxy_ast::path::{ParenthesizedArgs, PathArguments};
+use moxy_ast::args::{
+    AngleArguments, AssocConstArgument, AssocTypeArgument, ConstraintArgument, GenericArgument, ParenArguments,
+};
+use moxy_ast::path::PathArguments;
 use moxy_ast::{Lifetime, Path, PathSegment, ReturnType};
 
-use crate::{Fmt, FmtError, Formatter};
+use crate::{FmtError, Format, Formatter};
 
-impl Fmt for Lifetime {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Lifetime {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("'")?;
         f.text(&self.ident.text)
     }
 }
 
-impl Fmt for Path {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        if self.leading_colon {
-            f.text("::")?;
+impl Format for Path {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        if let Some(colon) = self.leading_colon {
+            f.text(colon)?;
         }
 
         for (i, pair) in self.segments.pairs().enumerate() {
             match pair {
-                moxy_ast::Pair::Punctuated(seg, _) => {
-                    seg.fmt(f)?;
-                    f.text("::")?;
+                moxy_ast::Pair::Punctuated(seg, sep) => {
+                    seg.format(f)?;
+                    f.text(sep)?;
                 }
                 moxy_ast::Pair::End(seg) => {
-                    seg.fmt(f)?;
+                    seg.format(f)?;
                 }
             }
 
@@ -35,102 +37,102 @@ impl Fmt for Path {
     }
 }
 
-impl Fmt for PathSegment {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.ident.fmt(f)?;
-        self.args.fmt(f)
+impl Format for PathSegment {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.ident.format(f)?;
+        self.args.format(f)
     }
 }
 
-impl Fmt for PathArguments {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for PathArguments {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::None => Ok(()),
-            Self::AngleBracketed(args) => args.fmt(f),
-            Self::Parenthesized(args) => args.fmt(f),
+            Self::AngleBracketed(args) => args.format(f),
+            Self::Parenthesized(args) => args.format(f),
         }
     }
 }
 
-impl Fmt for AngleArgs {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for AngleArguments {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("<")?;
-        self.args.fmt(f)?;
+        self.args.format(f)?;
         f.text(">")
     }
 }
 
-impl Fmt for ParenthesizedArgs {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for ParenArguments {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("(")?;
-        self.params.inner.fmt(f)?;
+        self.params.format(f)?;
         f.text(")")?;
-        self.output.fmt(f)
+        self.output.format(f)
     }
 }
 
-impl Fmt for ReturnType {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for ReturnType {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Default => Ok(()),
             Self::Type(_, ty) => {
                 f.text(" ")?;
                 f.text("->")?;
                 f.text(" ")?;
-                ty.fmt(f)
+                ty.format(f)
             }
         }
     }
 }
 
-impl Fmt for GenericArgument {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for GenericArgument {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Lifetime(v) => v.fmt(f),
-            Self::Type(v) => v.fmt(f),
-            Self::Const(v) => v.fmt(f),
-            Self::AssocType(v) => v.fmt(f),
-            Self::AssocConst(v) => v.fmt(f),
-            Self::Constraint(v) => v.fmt(f),
+            Self::Lifetime(v) => v.format(f),
+            Self::Type(v) => v.format(f),
+            Self::Const(v) => v.format(f),
+            Self::AssocType(v) => v.format(f),
+            Self::AssocConst(v) => v.format(f),
+            Self::Constraint(v) => v.format(f),
         }
     }
 }
 
-impl Fmt for AssocTypeArg {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.ident.fmt(f)?;
+impl Format for AssocTypeArgument {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.ident.format(f)?;
 
         if let Some(generics) = &self.generics {
-            generics.fmt(f)?;
-        }
-
-        f.text(" = ")?;
-        self.ty.fmt(f)
-    }
-}
-
-impl Fmt for AssocConstArg {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.ident.fmt(f)?;
-
-        if let Some(generics) = &self.generics {
-            generics.fmt(f)?;
+            generics.format(f)?;
         }
 
         f.text(" = ")?;
-        self.expr.fmt(f)
+        self.ty.format(f)
     }
 }
 
-impl Fmt for ConstraintArg {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.ident.fmt(f)?;
+impl Format for AssocConstArgument {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.ident.format(f)?;
 
         if let Some(generics) = &self.generics {
-            generics.fmt(f)?;
+            generics.format(f)?;
+        }
+
+        f.text(" = ")?;
+        self.expr.format(f)
+    }
+}
+
+impl Format for ConstraintArgument {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.ident.format(f)?;
+
+        if let Some(generics) = &self.generics {
+            generics.format(f)?;
         }
 
         f.text(": ")?;
-        self.bounds.fmt(f)
+        self.bounds.format(f)
     }
 }

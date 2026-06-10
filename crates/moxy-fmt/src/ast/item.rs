@@ -8,49 +8,49 @@ use moxy_ast::sig::{FnParam, Receiver, Signature, Variadic};
 use moxy_ast::use_tree::*;
 use moxy_ast::{Item, UseTree, Variant};
 
-use crate::{Fmt, FmtError, Formatter};
+use crate::{FmtError, Format, Formatter};
 
 // ── Signature ─────────────────────────────────────────────────────────────────
 
-impl Fmt for Signature {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.constness.fmt(f)?;
+impl Format for Signature {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.constness.format(f)?;
 
         if matches!(self.constness, moxy_ast::Constness::Const(_)) {
             f.text(" ")?;
         }
 
-        self.asyncness.fmt(f)?;
+        self.asyncness.format(f)?;
 
         if matches!(self.asyncness, moxy_ast::Asyncness::Async(_)) {
             f.text(" ")?;
         }
 
-        self.unsafety.fmt(f)?;
+        self.unsafety.format(f)?;
 
         if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
             f.text(" ")?;
         }
 
         if let Some(abi) = &self.abi {
-            abi.fmt(f)?;
+            abi.format(f)?;
             f.text(" ")?;
         }
 
         f.text("fn ")?;
-        self.ident.fmt(f)?;
-        self.generics.fmt(f)?;
+        self.ident.format(f)?;
+        self.generics.format(f)?;
         f.text("(")?;
         f.group(|f| {
             for pair in self.params.inner.inputs.pairs() {
                 match pair {
                     moxy_ast::Pair::Punctuated(param, _) => {
-                        param.fmt(f)?;
+                        param.format(f)?;
                         f.text(",")?;
                         f.text(" ")?;
                     }
                     moxy_ast::Pair::End(param) => {
-                        param.fmt(f)?;
+                        param.format(f)?;
                     }
                 }
             }
@@ -61,42 +61,42 @@ impl Fmt for Signature {
                     f.text(" ")?;
                 }
 
-                variadic.fmt(f)?;
+                variadic.format(f)?;
             }
 
             Ok(())
         })?;
         f.text(")")?;
-        self.output.fmt(f)
+        self.output.format(f)
     }
 }
 
-impl Fmt for FnParam {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for FnParam {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Receiver(v) => v.fmt(f),
-            Self::Typed(v) => v.fmt(f),
+            Self::Receiver(v) => v.format(f),
+            Self::Typed(v) => v.format(f),
         }
     }
 }
 
-impl Fmt for Receiver {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Receiver {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if self.reference.is_some() {
             f.text("&")?;
 
             if let Some(lt) = &self.lifetime {
-                lt.fmt(f)?;
+                lt.format(f)?;
                 f.text(" ")?;
             }
 
-            self.mutability.fmt(f)?;
+            self.mutability.format(f)?;
 
             if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
                 f.text(" ")?;
             }
         } else {
-            self.mutability.fmt(f)?;
+            self.mutability.format(f)?;
 
             if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
                 f.text(" ")?;
@@ -107,10 +107,10 @@ impl Fmt for Receiver {
     }
 }
 
-impl Fmt for Variadic {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Variadic {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if let Some(name) = &self.name {
-            name.fmt(f)?;
+            name.format(f)?;
             f.text(": ")?;
         }
 
@@ -120,18 +120,18 @@ impl Fmt for Variadic {
 
 // ── Fields ────────────────────────────────────────────────────────────────────
 
-impl Fmt for Fields {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Fields {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Named(v) => v.fmt(f),
-            Self::Unnamed(v) => v.fmt(f),
+            Self::Named(v) => v.format(f),
+            Self::Unnamed(v) => v.format(f),
             Self::Unit => Ok(()),
         }
     }
 }
 
-impl Fmt for FieldsNamed {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for FieldsNamed {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text(" {")?;
         f.indent(|f| {
             for pair in self.fields.inner.pairs() {
@@ -139,11 +139,11 @@ impl Fmt for FieldsNamed {
 
                 match pair {
                     moxy_ast::Pair::Punctuated(field, _) => {
-                        field.fmt(f)?;
+                        field.format(f)?;
                         f.text(",")?;
                     }
                     moxy_ast::Pair::End(field) => {
-                        field.fmt(f)?;
+                        field.format(f)?;
                         f.text(",")?;
                     }
                 }
@@ -160,150 +160,150 @@ impl Fmt for FieldsNamed {
     }
 }
 
-impl Fmt for FieldsUnnamed {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for FieldsUnnamed {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("(")?;
-        self.fields.inner.fmt(f)?;
+        self.fields.inner.format(f)?;
         f.text(")")
     }
 }
 
-impl Fmt for FieldDef {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for FieldDef {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
         if let Some(ident) = &self.ident {
-            ident.fmt(f)?;
+            ident.format(f)?;
             f.text(": ")?;
         }
 
-        self.ty.fmt(f)
+        self.ty.format(f)
     }
 }
 
 // ── UseTree ───────────────────────────────────────────────────────────────────
 
-impl Fmt for UseTree {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for UseTree {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Path(v) => v.fmt(f),
-            Self::Name(v) => v.fmt(f),
-            Self::Rename(v) => v.fmt(f),
+            Self::Path(v) => v.format(f),
+            Self::Name(v) => v.format(f),
+            Self::Rename(v) => v.format(f),
             Self::Glob(_) => f.text("*"),
-            Self::Group(v) => v.fmt(f),
+            Self::Group(v) => v.format(f),
         }
     }
 }
 
-impl Fmt for UsePath {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.ident.fmt(f)?;
+impl Format for UsePath {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.ident.format(f)?;
         f.text("::")?;
-        self.tree.fmt(f)
+        self.tree.format(f)
     }
 }
 
-impl Fmt for UseName {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.ident.fmt(f)
+impl Format for UseName {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.ident.format(f)
     }
 }
 
-impl Fmt for UseRename {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.ident.fmt(f)?;
+impl Format for UseRename {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.ident.format(f)?;
         f.text(" as ")?;
-        self.rename.fmt(f)
+        self.rename.format(f)
     }
 }
 
-impl Fmt for UseGroup {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for UseGroup {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("{")?;
-        self.items.inner.fmt(f)?;
+        self.items.inner.format(f)?;
         f.text("}")
     }
 }
 
 // ── Item ──────────────────────────────────────────────────────────────────────
 
-impl Fmt for Item {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Item {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Use(v) => v.fmt(f),
-            Self::ExternCrate(v) => v.fmt(f),
-            Self::Mod(v) => v.fmt(f),
-            Self::Fn(v) => v.fmt(f),
-            Self::Struct(v) => v.fmt(f),
-            Self::Enum(v) => v.fmt(f),
-            Self::Union(v) => v.fmt(f),
-            Self::Trait(v) => v.fmt(f),
-            Self::TraitAlias(v) => v.fmt(f),
-            Self::Impl(v) => v.fmt(f),
-            Self::TypeAlias(v) => v.fmt(f),
-            Self::Const(v) => v.fmt(f),
-            Self::Static(v) => v.fmt(f),
-            Self::Macro(v) => v.fmt(f),
-            Self::Macro2(v) => v.fmt(f),
-            Self::ForeignMod(v) => v.fmt(f),
+            Self::Use(v) => v.format(f),
+            Self::ExternCrate(v) => v.format(f),
+            Self::Mod(v) => v.format(f),
+            Self::Fn(v) => v.format(f),
+            Self::Struct(v) => v.format(f),
+            Self::Enum(v) => v.format(f),
+            Self::Union(v) => v.format(f),
+            Self::Trait(v) => v.format(f),
+            Self::TraitAlias(v) => v.format(f),
+            Self::Impl(v) => v.format(f),
+            Self::TypeAlias(v) => v.format(f),
+            Self::Const(v) => v.format(f),
+            Self::Static(v) => v.format(f),
+            Self::Macro(v) => v.format(f),
+            Self::Macro2(v) => v.format(f),
+            Self::ForeignMod(v) => v.format(f),
         }
     }
 }
 
-impl Fmt for ItemUse {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ItemUse {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
         f.text("use ")?;
-        self.tree.fmt(f)?;
+        self.tree.format(f)?;
         f.text(";")
     }
 }
 
-impl Fmt for ItemExternCrate {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ItemExternCrate {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
         f.text("extern crate ")?;
-        self.ident.fmt(f)?;
+        self.ident.format(f)?;
 
         if let Some(rename) = &self.rename {
             f.text(" as ")?;
-            rename.fmt(f)?;
+            rename.format(f)?;
         }
 
         f.text(";")
     }
 }
 
-impl Fmt for ItemMod {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ItemMod {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
-        self.unsafety.fmt(f)?;
+        self.unsafety.format(f)?;
 
         if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
             f.text(" ")?;
         }
 
         f.text("mod ")?;
-        self.ident.fmt(f)?;
+        self.ident.format(f)?;
 
         if let Some(content) = &self.content {
             f.text(" {")?;
@@ -313,7 +313,7 @@ impl Fmt for ItemMod {
                     if i > 0 {
                         f.hard_break()?;
                     }
-                    item.fmt(f)?;
+                    item.format(f)?;
                 }
 
                 Ok(())
@@ -330,38 +330,38 @@ impl Fmt for ItemMod {
     }
 }
 
-impl Fmt for ItemFn {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ItemFn {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
-        self.defaultness.fmt(f)?;
+        self.defaultness.format(f)?;
 
         if matches!(self.defaultness, moxy_ast::Defaultness::Default(_)) {
             f.text(" ")?;
         }
 
-        self.sig.fmt(f)?;
+        self.sig.format(f)?;
         f.text(" ")?;
-        self.body.fmt(f)
+        self.body.format(f)
     }
 }
 
-impl Fmt for ItemStruct {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ItemStruct {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
         f.text("struct ")?;
-        self.ident.fmt(f)?;
-        self.generics.fmt(f)?;
-        self.fields.fmt(f)?;
+        self.ident.format(f)?;
+        self.generics.format(f)?;
+        self.fields.format(f)?;
 
         if matches!(self.fields, moxy_ast::Fields::Unnamed(_) | moxy_ast::Fields::Unit) {
             f.text(";")?;
@@ -371,17 +371,17 @@ impl Fmt for ItemStruct {
     }
 }
 
-impl Fmt for ItemEnum {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ItemEnum {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
         f.text("enum ")?;
-        self.ident.fmt(f)?;
-        self.generics.fmt(f)?;
+        self.ident.format(f)?;
+        self.generics.format(f)?;
         f.text(" {")?;
         f.indent(|f| {
             for pair in self.variants.inner.pairs() {
@@ -389,11 +389,11 @@ impl Fmt for ItemEnum {
 
                 match pair {
                     moxy_ast::Pair::Punctuated(v, _) => {
-                        v.fmt(f)?;
+                        v.format(f)?;
                         f.text(",")?;
                     }
                     moxy_ast::Pair::End(v) => {
-                        v.fmt(f)?;
+                        v.format(f)?;
                         f.text(",")?;
                     }
                 }
@@ -410,44 +410,44 @@ impl Fmt for ItemEnum {
     }
 }
 
-impl Fmt for Variant {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.ident.fmt(f)?;
-        self.fields.fmt(f)?;
+impl Format for Variant {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.ident.format(f)?;
+        self.fields.format(f)?;
 
         if let Some(discriminant) = &self.discriminant {
             f.text(" = ")?;
-            discriminant.fmt(f)?;
+            discriminant.format(f)?;
         }
 
         Ok(())
     }
 }
 
-impl Fmt for ItemUnion {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ItemUnion {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
         f.text("union ")?;
-        self.ident.fmt(f)?;
-        self.generics.fmt(f)?;
-        self.fields.fmt(f)
+        self.ident.format(f)?;
+        self.generics.format(f)?;
+        self.fields.format(f)
     }
 }
 
-impl Fmt for ItemTrait {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ItemTrait {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
-        self.unsafety.fmt(f)?;
+        self.unsafety.format(f)?;
 
         if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
             f.text(" ")?;
@@ -458,19 +458,19 @@ impl Fmt for ItemTrait {
         }
 
         f.text("trait ")?;
-        self.ident.fmt(f)?;
-        self.generics.fmt(f)?;
+        self.ident.format(f)?;
+        self.generics.format(f)?;
 
         if !self.supertraits.is_empty() {
             f.text(": ")?;
-            self.supertraits.fmt(f)?;
+            self.supertraits.format(f)?;
         }
 
         f.text(" {")?;
         f.indent(|f| {
             for item in &self.items.inner {
                 f.hard_break()?;
-                item.fmt(f)?;
+                item.format(f)?;
             }
 
             Ok(())
@@ -484,47 +484,47 @@ impl Fmt for ItemTrait {
     }
 }
 
-impl Fmt for ItemTraitAlias {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ItemTraitAlias {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
         f.text("trait ")?;
-        self.ident.fmt(f)?;
-        self.generics.fmt(f)?;
+        self.ident.format(f)?;
+        self.generics.format(f)?;
         f.text(" = ")?;
-        self.bounds.fmt(f)?;
+        self.bounds.format(f)?;
         f.text(";")
     }
 }
 
-impl Fmt for ItemImpl {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.defaultness.fmt(f)?;
+impl Format for ItemImpl {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.defaultness.format(f)?;
 
         if matches!(self.defaultness, moxy_ast::Defaultness::Default(_)) {
             f.text(" ")?;
         }
 
-        self.unsafety.fmt(f)?;
+        self.unsafety.format(f)?;
 
         if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
             f.text(" ")?;
         }
 
         f.text("impl")?;
-        self.generics.fmt(f)?;
+        self.generics.format(f)?;
         f.text(" ")?;
 
         if let Some(trait_ref) = &self.trait_ref {
-            trait_ref.fmt(f)?;
+            trait_ref.format(f)?;
             f.text(" for ")?;
         }
 
-        self.self_ty.fmt(f)?;
+        self.self_ty.format(f)?;
 
         f.text(" {")?;
         f.indent(|f| {
@@ -533,7 +533,7 @@ impl Fmt for ItemImpl {
                 if i > 0 {
                     f.hard_break()?;
                 }
-                item.fmt(f)?;
+                item.format(f)?;
             }
 
             Ok(())
@@ -547,74 +547,74 @@ impl Fmt for ItemImpl {
     }
 }
 
-impl Fmt for ItemTypeAlias {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ItemTypeAlias {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
         f.text("type ")?;
-        self.ident.fmt(f)?;
-        self.generics.fmt(f)?;
+        self.ident.format(f)?;
+        self.generics.format(f)?;
         f.text(" = ")?;
-        self.ty.fmt(f)?;
+        self.ty.format(f)?;
         f.text(";")
     }
 }
 
-impl Fmt for ItemConst {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ItemConst {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
         f.text("const ")?;
-        self.ident.fmt(f)?;
-        self.generics.fmt(f)?;
+        self.ident.format(f)?;
+        self.generics.format(f)?;
         f.text(": ")?;
-        self.ty.fmt(f)?;
+        self.ty.format(f)?;
         f.text(" = ")?;
-        self.expr.fmt(f)?;
+        self.expr.format(f)?;
         f.text(";")
     }
 }
 
-impl Fmt for ItemStatic {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ItemStatic {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
         f.text("static ")?;
-        self.mutability.fmt(f)?;
+        self.mutability.format(f)?;
 
         if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
             f.text(" ")?;
         }
 
-        self.ident.fmt(f)?;
+        self.ident.format(f)?;
         f.text(": ")?;
-        self.ty.fmt(f)?;
+        self.ty.format(f)?;
         f.text(" = ")?;
-        self.expr.fmt(f)?;
+        self.expr.format(f)?;
         f.text(";")
     }
 }
 
-impl Fmt for ItemMacro {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for ItemMacro {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if let Some(ident) = &self.ident {
-            ident.fmt(f)?;
+            ident.format(f)?;
             f.text(" ")?;
         }
 
-        self.mac.fmt(f)?;
+        self.mac.format(f)?;
 
         if self.semi {
             f.text(";")?;
@@ -624,25 +624,25 @@ impl Fmt for ItemMacro {
     }
 }
 
-impl Fmt for ItemMacroRules {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for ItemMacroRules {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("macro_rules! ")?;
-        self.ident.fmt(f)?;
+        self.ident.format(f)?;
         f.text(" {")?;
         f.text(self.body.stream())?;
         f.text("}")
     }
 }
 
-impl Fmt for ItemForeignMod {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.unsafety.fmt(f)?;
+impl Format for ItemForeignMod {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.unsafety.format(f)?;
 
         if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
             f.text(" ")?;
         }
 
-        self.abi.fmt(f)?;
+        self.abi.format(f)?;
         f.text(" {")?;
         f.indent(|f| {
             for (i, item) in self.items.inner.iter().enumerate() {
@@ -650,7 +650,7 @@ impl Fmt for ItemForeignMod {
                 if i > 0 {
                     f.hard_break()?;
                 }
-                item.fmt(f)?;
+                item.format(f)?;
             }
 
             Ok(())
@@ -666,88 +666,88 @@ impl Fmt for ItemForeignMod {
 
 // ── ImplItem ──────────────────────────────────────────────────────────────────
 
-impl Fmt for ImplItem {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for ImplItem {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Fn(v) => v.fmt(f),
-            Self::Const(v) => v.fmt(f),
-            Self::Type(v) => v.fmt(f),
-            Self::Macro(v) => v.fmt(f),
+            Self::Fn(v) => v.format(f),
+            Self::Const(v) => v.format(f),
+            Self::Type(v) => v.format(f),
+            Self::Macro(v) => v.format(f),
         }
     }
 }
 
-impl Fmt for ImplItemFn {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ImplItemFn {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
-        self.defaultness.fmt(f)?;
+        self.defaultness.format(f)?;
 
         if matches!(self.defaultness, moxy_ast::Defaultness::Default(_)) {
             f.text(" ")?;
         }
 
-        self.sig.fmt(f)?;
+        self.sig.format(f)?;
         f.text(" ")?;
-        self.body.fmt(f)
+        self.body.format(f)
     }
 }
 
-impl Fmt for ImplItemConst {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ImplItemConst {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
-        self.defaultness.fmt(f)?;
+        self.defaultness.format(f)?;
 
         if matches!(self.defaultness, moxy_ast::Defaultness::Default(_)) {
             f.text(" ")?;
         }
 
         f.text("const ")?;
-        self.ident.fmt(f)?;
-        self.generics.fmt(f)?;
+        self.ident.format(f)?;
+        self.generics.format(f)?;
         f.text(": ")?;
-        self.ty.fmt(f)?;
+        self.ty.format(f)?;
         f.text(" = ")?;
-        self.expr.fmt(f)?;
+        self.expr.format(f)?;
         f.text(";")
     }
 }
 
-impl Fmt for ImplItemType {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ImplItemType {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
-        self.defaultness.fmt(f)?;
+        self.defaultness.format(f)?;
 
         if matches!(self.defaultness, moxy_ast::Defaultness::Default(_)) {
             f.text(" ")?;
         }
 
         f.text("type ")?;
-        self.ident.fmt(f)?;
-        self.generics.fmt(f)?;
+        self.ident.format(f)?;
+        self.generics.format(f)?;
         f.text(" = ")?;
-        self.ty.fmt(f)?;
+        self.ty.format(f)?;
         f.text(";")
     }
 }
 
-impl Fmt for ImplItemMacro {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.mac.fmt(f)?;
+impl Format for ImplItemMacro {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.mac.format(f)?;
 
         if self.semi.is_some() {
             f.text(";")?;
@@ -759,24 +759,24 @@ impl Fmt for ImplItemMacro {
 
 // ── TraitItem ─────────────────────────────────────────────────────────────────
 
-impl Fmt for TraitItem {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for TraitItem {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Fn(v) => v.fmt(f),
-            Self::Const(v) => v.fmt(f),
-            Self::Type(v) => v.fmt(f),
-            Self::Macro(v) => v.fmt(f),
+            Self::Fn(v) => v.format(f),
+            Self::Const(v) => v.format(f),
+            Self::Type(v) => v.format(f),
+            Self::Macro(v) => v.format(f),
         }
     }
 }
 
-impl Fmt for TraitItemFn {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.sig.fmt(f)?;
+impl Format for TraitItemFn {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.sig.format(f)?;
 
         if let Some(body) = &self.default_body {
             f.text(" ")?;
-            body.fmt(f)?;
+            body.format(f)?;
         } else {
             f.text(";")?;
         }
@@ -785,46 +785,46 @@ impl Fmt for TraitItemFn {
     }
 }
 
-impl Fmt for TraitItemConst {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for TraitItemConst {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("const ")?;
-        self.ident.fmt(f)?;
-        self.generics.fmt(f)?;
+        self.ident.format(f)?;
+        self.generics.format(f)?;
         f.text(": ")?;
-        self.ty.fmt(f)?;
+        self.ty.format(f)?;
 
         if let Some((_, default)) = &self.default {
             f.text(" = ")?;
-            default.fmt(f)?;
+            default.format(f)?;
         }
 
         f.text(";")
     }
 }
 
-impl Fmt for TraitItemType {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for TraitItemType {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("type ")?;
-        self.ident.fmt(f)?;
-        self.generics.fmt(f)?;
+        self.ident.format(f)?;
+        self.generics.format(f)?;
 
         if !self.bounds.is_empty() {
             f.text(": ")?;
-            self.bounds.fmt(f)?;
+            self.bounds.format(f)?;
         }
 
         if let Some((_, default)) = &self.default {
             f.text(" = ")?;
-            default.fmt(f)?;
+            default.format(f)?;
         }
 
         f.text(";")
     }
 }
 
-impl Fmt for TraitItemMacro {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.mac.fmt(f)?;
+impl Format for TraitItemMacro {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.mac.format(f)?;
 
         if self.semi.is_some() {
             f.text(";")?;
@@ -836,70 +836,70 @@ impl Fmt for TraitItemMacro {
 
 // ── ForeignItem ───────────────────────────────────────────────────────────────
 
-impl Fmt for ForeignItem {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for ForeignItem {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Fn(v) => v.fmt(f),
-            Self::Static(v) => v.fmt(f),
-            Self::Type(v) => v.fmt(f),
-            Self::Macro(v) => v.fmt(f),
+            Self::Fn(v) => v.format(f),
+            Self::Static(v) => v.format(f),
+            Self::Type(v) => v.format(f),
+            Self::Macro(v) => v.format(f),
         }
     }
 }
 
-impl Fmt for ForeignItemFn {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ForeignItemFn {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
-        self.sig.fmt(f)?;
+        self.sig.format(f)?;
         f.text(";")
     }
 }
 
-impl Fmt for ForeignItemStatic {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ForeignItemStatic {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
         f.text("static ")?;
-        self.mutability.fmt(f)?;
+        self.mutability.format(f)?;
 
         if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
             f.text(" ")?;
         }
 
-        self.ident.fmt(f)?;
+        self.ident.format(f)?;
         f.text(": ")?;
-        self.ty.fmt(f)?;
+        self.ty.format(f)?;
         f.text(";")
     }
 }
 
-impl Fmt for ForeignItemType {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.vis.fmt(f)?;
+impl Format for ForeignItemType {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
             f.text(" ")?;
         }
 
         f.text("type ")?;
-        self.ident.fmt(f)?;
-        self.generics.fmt(f)?;
+        self.ident.format(f)?;
+        self.generics.format(f)?;
         f.text(";")
     }
 }
 
-impl Fmt for ForeignItemMacro {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.mac.fmt(f)?;
+impl Format for ForeignItemMacro {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.mac.format(f)?;
 
         if self.semi.is_some() {
             f.text(";")?;

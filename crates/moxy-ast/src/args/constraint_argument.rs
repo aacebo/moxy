@@ -2,20 +2,20 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Plus};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use super::AngleArgs;
+use super::AngleArguments;
 use crate::{GenericArgument, Ident, Punctuated, TypeBound};
 
 /// An associated type bound constraint (`Item: Bound`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
-pub struct ConstraintArg {
+pub struct ConstraintArgument {
     pub ident: Ident,
-    pub generics: Option<AngleArgs>,
+    pub generics: Option<AngleArguments>,
     pub colon_punct: Colon,
     pub bounds: Punctuated<TypeBound, Plus>,
 }
 
-impl ConstraintArg {
+impl ConstraintArgument {
     pub fn to_generic_argument(&self) -> GenericArgument {
         GenericArgument::Constraint(self.clone())
     }
@@ -25,7 +25,7 @@ impl ConstraintArg {
     }
 }
 
-impl Parse for ConstraintArg {
+impl Parse for ConstraintArgument {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         Ok(Self {
             ident: stream.parse()?,
@@ -36,7 +36,7 @@ impl Parse for ConstraintArg {
     }
 }
 
-impl Spanner for ConstraintArg {
+impl Spanner for ConstraintArgument {
     fn span(&self) -> Span {
         let end = self
             .bounds
@@ -47,7 +47,7 @@ impl Spanner for ConstraintArg {
     }
 }
 
-impl ToTokens for ConstraintArg {
+impl ToTokens for ConstraintArgument {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.ident.to_tokens(t);
 

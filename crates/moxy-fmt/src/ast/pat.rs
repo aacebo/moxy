@@ -1,88 +1,88 @@
 use moxy_ast::Pattern;
 use moxy_ast::pat::*;
 
-use crate::{Fmt, FmtError, Formatter};
+use crate::{FmtError, Format, Formatter};
 
-impl Fmt for Pattern {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for Pattern {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Wild => f.text("_"),
             Self::Rest => f.text(".."),
-            Self::Ident(v) => v.fmt(f),
-            Self::Path(v) => v.fmt(f),
-            Self::Tuple(v) => v.fmt(f),
-            Self::TupleStruct(v) => v.fmt(f),
-            Self::Struct(v) => v.fmt(f),
-            Self::Slice(v) => v.fmt(f),
-            Self::Reference(v) => v.fmt(f),
-            Self::Or(v) => v.fmt(f),
-            Self::Lit(v) => v.fmt(f),
-            Self::Range(v) => v.fmt(f),
-            Self::Macro(v) => v.fmt(f),
-            Self::Type(v) => v.fmt(f),
-            Self::Group(v) => v.fmt(f),
-            Self::Paren(v) => v.fmt(f),
+            Self::Ident(v) => v.format(f),
+            Self::Path(v) => v.format(f),
+            Self::Tuple(v) => v.format(f),
+            Self::TupleStruct(v) => v.format(f),
+            Self::Struct(v) => v.format(f),
+            Self::Slice(v) => v.format(f),
+            Self::Reference(v) => v.format(f),
+            Self::Or(v) => v.format(f),
+            Self::Lit(v) => v.format(f),
+            Self::Range(v) => v.format(f),
+            Self::Macro(v) => v.format(f),
+            Self::Type(v) => v.format(f),
+            Self::Group(v) => v.format(f),
+            Self::Paren(v) => v.format(f),
             Self::Box(v) => {
                 f.text("box ")?;
-                v.fmt(f)
+                v.format(f)
             }
             Self::Const(v) => {
                 f.text("const ")?;
-                v.fmt(f)
+                v.format(f)
             }
         }
     }
 }
 
-impl Fmt for PatIdent {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for PatIdent {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if self.by_ref.is_some() {
             f.text("ref ")?;
         }
 
-        self.mutability.fmt(f)?;
+        self.mutability.format(f)?;
 
         if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
             f.text(" ")?;
         }
 
-        self.ident.fmt(f)?;
+        self.ident.format(f)?;
 
         if let Some((_, subpat)) = &self.subpat {
             f.text(" @ ")?;
-            subpat.fmt(f)?;
+            subpat.format(f)?;
         }
 
         Ok(())
     }
 }
 
-impl Fmt for PatPath {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.path.fmt(f)
+impl Format for PatPath {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.path.format(f)
     }
 }
 
-impl Fmt for PatTuple {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for PatTuple {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("(")?;
-        self.elems.inner.fmt(f)?;
+        self.elems.inner.format(f)?;
         f.text(")")
     }
 }
 
-impl Fmt for PatTupleStruct {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.path.fmt(f)?;
+impl Format for PatTupleStruct {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.path.format(f)?;
         f.text("(")?;
-        self.elems.inner.fmt(f)?;
+        self.elems.inner.format(f)?;
         f.text(")")
     }
 }
 
-impl Fmt for PatStruct {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.path.fmt(f)?;
+impl Format for PatStruct {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.path.format(f)?;
         f.text(" {")?;
         f.indent(|f| {
             for pair in self.body.inner.fields.pairs() {
@@ -90,11 +90,11 @@ impl Fmt for PatStruct {
 
                 match pair {
                     moxy_ast::Pair::Punctuated(field, _) => {
-                        field.fmt(f)?;
+                        field.format(f)?;
                         f.text(",")?;
                     }
                     moxy_ast::Pair::End(field) => {
-                        field.fmt(f)?;
+                        field.format(f)?;
                         f.text(",")?;
                     }
                 }
@@ -116,49 +116,49 @@ impl Fmt for PatStruct {
     }
 }
 
-impl Fmt for PatField {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for PatField {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if self.shorthand {
-            self.pat.fmt(f)
+            self.pat.format(f)
         } else {
-            self.member.fmt(f)?;
+            self.member.format(f)?;
             f.text(": ")?;
-            self.pat.fmt(f)
+            self.pat.format(f)
         }
     }
 }
 
-impl Fmt for PatSlice {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for PatSlice {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("[")?;
-        self.elems.inner.fmt(f)?;
+        self.elems.inner.format(f)?;
         f.text("]")
     }
 }
 
-impl Fmt for PatReference {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for PatReference {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("&")?;
-        self.mutability.fmt(f)?;
+        self.mutability.format(f)?;
 
         if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
             f.text(" ")?;
         }
 
-        self.pat.fmt(f)
+        self.pat.format(f)
     }
 }
 
-impl Fmt for PatOr {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for PatOr {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         for pair in self.cases.pairs() {
             match pair {
                 moxy_ast::Pair::Punctuated(pat, _) => {
-                    pat.fmt(f)?;
+                    pat.format(f)?;
                     f.text(" | ")?;
                 }
                 moxy_ast::Pair::End(pat) => {
-                    pat.fmt(f)?;
+                    pat.format(f)?;
                 }
             }
         }
@@ -167,46 +167,46 @@ impl Fmt for PatOr {
     }
 }
 
-impl Fmt for PatLit {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.expr.fmt(f)
+impl Format for PatLit {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.expr.format(f)
     }
 }
 
-impl Fmt for PatRange {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for PatRange {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if let Some(start) = &self.start {
-            start.fmt(f)?;
+            start.format(f)?;
         }
 
-        self.limits.fmt(f)?;
+        self.limits.format(f)?;
 
         if let Some(end) = &self.end {
-            end.fmt(f)?;
+            end.format(f)?;
         }
 
         Ok(())
     }
 }
 
-impl Fmt for PatType {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.pat.fmt(f)?;
+impl Format for PatType {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.pat.format(f)?;
         f.text(": ")?;
-        self.ty.fmt(f)
+        self.ty.format(f)
     }
 }
 
-impl Fmt for PatGroup {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.pat.fmt(f)
+impl Format for PatGroup {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.pat.format(f)
     }
 }
 
-impl Fmt for PatParen {
-    fn fmt(&self, f: &mut Formatter) -> Result<(), FmtError> {
+impl Format for PatParen {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("(")?;
-        self.content.inner.fmt(f)?;
+        self.content.inner.format(f)?;
         f.text(")")
     }
 }
