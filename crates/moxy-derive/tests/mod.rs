@@ -1,7 +1,9 @@
-use moxy_derive::Moxy;
+use moxy_derive::ToTokens;
 
-#[derive(Moxy)]
-#[moxy(debug)]
+#[derive(ToTokens)]
+#[template {
+    impl User { }
+}]
 pub struct User {
     pub name: String,
     pub email: String,

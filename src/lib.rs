@@ -1,6 +1,9 @@
 #[cfg(feature = "ast")]
 #[doc(inline)]
 pub use moxy_ast as ast;
+#[cfg(feature = "derive")]
+#[doc(inline)]
+pub use moxy_derive::*;
 #[cfg(feature = "diagnostic")]
 #[doc(inline)]
 pub use moxy_diagnostic as diagnostic;
