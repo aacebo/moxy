@@ -1,5 +1,58 @@
 use moxy_token::parser::{ParseError, ParseStream};
+use moxy_token::punct::Quote;
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
+
+/// A named lifetime (e.g. `'a`, `'static`).
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct Lifetime {
+    pub quote: Quote,
+    pub ident: LifetimeName,
+}
+
+impl Parse for Lifetime {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        let quote = stream.parse::<Quote>()?;
+        let ident = stream.parse::<LifetimeName>()?;
+        Ok(Self { quote, ident })
+    }
+}
+
+impl Spanner for Lifetime {
+    fn span(&self) -> Span {
+        self.quote.span().join(self.ident.span())
+    }
+}
+
+impl ToTokens for Lifetime {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.quote.to_tokens(tokens);
+        self.ident.to_tokens(tokens);
+    }
+}
+
+impl Lifetime {
+    pub fn parse_bounds(
+        stream: &mut moxy_token::parser::ParseStream,
+    ) -> Result<crate::Punctuated<Self, moxy_token::punct::Plus>, moxy_token::parser::ParseError> {
+        use moxy_token::punct::{Colon, Plus};
+        let mut bounds = crate::Punctuated::new();
+        if stream.peek::<Colon>() {
+            let _ = stream.parse::<Colon>()?;
+
+            loop {
+                bounds.push_value(stream.parse::<Lifetime>()?);
+
+                if stream.peek::<Plus>() {
+                    bounds.push_punct(stream.parse::<Plus>()?);
+                } else {
+                    break;
+                }
+            }
+        }
+        Ok(bounds)
+    }
+}
 
 /// The name part of a lifetime (e.g. the `a` in `'a`, or the `static` in `'static`).
 #[derive(Debug, Clone, PartialEq, Eq)]

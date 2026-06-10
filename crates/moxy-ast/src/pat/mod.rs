@@ -550,13 +550,15 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
             }));
         }
 
+        stream.seek(&fork);
+
         // Bare single-segment path with no leading colon → binding ident.
-        if !path.leading_colon.is_some() && path.segments.len() == 1 {
-            stream.seek(&fork);
+        if path.leading_colon.is_none() && path.segments.len() == 1 {
             let ident = match path.segments.into_iter().next() {
                 Some(seg) => seg.ident,
                 None => return Err(LexError::new(at).message("expected pattern").into()),
             };
+
             return Ok(Pattern::Ident(PatIdent {
                 attrs,
                 by_ref: None,
@@ -566,7 +568,6 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
             }));
         }
 
-        stream.seek(&fork);
         return Ok(Pattern::Path(PatPath {
             attrs,
             qself: None,

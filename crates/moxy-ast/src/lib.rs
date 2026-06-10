@@ -13,6 +13,7 @@ pub mod lit;
 mod macro_call;
 #[macro_use]
 mod macros;
+mod lifetime;
 pub mod member;
 mod misc;
 pub mod pat;
@@ -48,6 +49,8 @@ pub use label::*;
 #[doc(inline)]
 pub use leaf::*;
 #[doc(inline)]
+pub use lifetime::*;
+#[doc(inline)]
 pub use lit::Lit;
 #[doc(inline)]
 pub use macro_call::*;
@@ -60,7 +63,7 @@ pub use moxy_token::Ident;
 #[doc(inline)]
 pub use pat::Pattern;
 #[doc(inline)]
-pub use path::{Lifetime, Path, PathSegment};
+pub use path::{Path, PathSegment};
 #[doc(inline)]
 pub use punctuated::*;
 #[doc(inline)]

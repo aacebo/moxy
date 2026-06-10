@@ -3,15 +3,11 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, Token, TokenStream};
 
 use crate::Punctuated;
 
-mod lifetime;
-mod lifetime_name;
-mod path_arguments;
-mod path_segment;
+mod arguments;
+mod segment;
 
-pub use lifetime::*;
-pub use lifetime_name::*;
-pub use path_arguments::*;
-pub use path_segment::*;
+pub use arguments::*;
+pub use segment::*;
 
 #[macro_export]
 macro_rules! path {
@@ -106,6 +102,7 @@ mod tests {
     use moxy_token::ToTokenStream;
 
     use super::*;
+    use crate::Lifetime;
 
     fn render<T: ToTokenStream>(v: &T) -> String {
         v.to_token_stream().to_string()
