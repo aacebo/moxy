@@ -65,7 +65,7 @@ macro_rules! ident {
         $crate::Ident::lex($acc).expect("invalid syntax")
     }};
     (@accum $acc:ident, $last:expr) => {{
-        $acc += $last.to_string();
+        $acc += &$last.to_string();
         $crate::Ident::lex($acc).expect("invalid syntax")
     }};
 }
@@ -117,6 +117,18 @@ impl Ident {
     #[inline]
     pub fn set_span(&mut self, span: Span) {
         self.span = span;
+    }
+
+    #[inline]
+    pub fn to_lowercase(mut self) -> Self {
+        self.text = self.text.to_lowercase().into_boxed_str();
+        self
+    }
+
+    #[inline]
+    pub fn to_uppercase(mut self) -> Self {
+        self.text = self.text.to_uppercase().into_boxed_str();
+        self
     }
 
     #[inline]

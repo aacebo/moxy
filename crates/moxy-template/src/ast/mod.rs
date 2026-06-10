@@ -25,44 +25,12 @@ impl Template {
         body.extend(TokenStream::from_str("__moxy_tmpl").unwrap());
         TokenStream::from(vec![Group::new(Delim::Brace, body).to_token_tree()])
     }
-
-    fn fused(self) -> Self {
-        let mut nodes = Vec::with_capacity(self.nodes.len());
-        let mut iter = self.nodes.into_iter().peekable();
-
-        while let Some(node) = iter.next() {
-            match node {
-                Node::Interp(interp) => match iter.peek() {
-                    Some(Node::Tokens(tokens)) if tokens.lead_ident().is_some() => {
-                        let Some(Node::Tokens(tokens)) = iter.next() else {
-                            unreachable!()
-                        };
-
-                        let suffix = tokens.lead_ident().unwrap();
-                        let rest = tokens.rest();
-                        nodes.push(Node::Concat(TmplConcat { interp, suffix }));
-
-                        if !rest.is_empty() {
-                            nodes.push(Node::Tokens(TmplTokens {
-                                span: tokens.span,
-                                stream: rest,
-                            }));
-                        }
-                    }
-                    _ => nodes.push(Node::Interp(interp)),
-                },
-                other => nodes.push(other),
-            }
-        }
-
-        Self { nodes }
-    }
 }
 
 impl Parse for Template {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let nodes = stream.parse::<Vec<Node>>()?;
-        Ok(Self { nodes }.fused())
+        Ok(Self { nodes })
     }
 }
 
@@ -79,7 +47,6 @@ impl ToTokens for Template {
 pub enum Node {
     Tokens(TmplTokens),
     Interp(TmplInterp),
-    Concat(TmplConcat),
     Group(Delim, Box<Template>),
     Keyword(TmplKeyword),
 }
@@ -116,7 +83,6 @@ impl ToTokens for Node {
         match self {
             Node::Tokens(v) => v.to_tokens(out),
             Node::Interp(v) => v.to_tokens(out),
-            Node::Concat(v) => v.to_tokens(out),
             Node::Group(delim, body) => emit_group(*delim, body, out),
             Node::Keyword(v) => v.to_tokens(out),
         }

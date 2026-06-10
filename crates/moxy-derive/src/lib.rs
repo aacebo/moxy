@@ -1,11 +1,5 @@
-#[macro_use]
-extern crate moxy_template;
-
-#[macro_use]
-extern crate moxy_diagnostic;
-
 use moxy_ast::Declaration;
-use moxy_token::{Spanner, TokenStream};
+use moxy_token::TokenStream;
 
 #[proc_macro_derive(Moxy, attributes(moxy))]
 pub fn derive(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
@@ -15,14 +9,7 @@ pub fn derive(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
         Ok(v) => v,
     };
 
-    let out = template! {
-        impl {{ declr.ident() }} {
-            pub fn {{ declr.ident() }}_test(&self) -> bool {
-                true
-            }
-        }
-    };
+    for _attr in declr.attrs() {}
 
-    note!(&out, span = declr.span()).emit();
-    out.into()
+    proc_macro::TokenStream::new()
 }

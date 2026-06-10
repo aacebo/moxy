@@ -47,43 +47,33 @@ mod interp {
     }
 
     #[test]
-    fn interp_fuses_trailing_ident() {
-        let name = "user";
-        let tokens = template! { {{ name }}_test };
+    fn interp_mints_ident_with_suffix() {
+        use moxy_token::ident;
+
+        let tokens = template! { {{ ident!("user", "_test") }} };
         assert_eq!(tokens.to_string(), "user_test");
     }
 
     #[test]
-    fn interp_does_not_fuse_leading_ident() {
-        let name = "world";
-        let tokens = template! { Hello {{ name }} };
-        assert_eq!(tokens.to_string(), "Hello world");
+    fn interp_mints_ident_keeps_trailing_tokens() {
+        use moxy_token::ident;
+
+        let tokens = template! { fn {{ ident!("user", "_test") }}() };
+        assert_eq!(tokens.to_string(), "fn user_test ()");
     }
 
     #[test]
-    fn interp_does_not_fuse_trailing_punct() {
+    fn interp_does_not_merge_separate_tokens() {
         let name = "moxy";
         let tokens = template! { {{ name }}() };
         assert_eq!(tokens.to_string(), "moxy ()");
     }
 
     #[test]
-    fn interp_fuse_keeps_trailing_tokens() {
-        let name = "user";
-        let tokens = template! { fn {{ name }}_test() };
-        assert_eq!(tokens.to_string(), "fn user_test ()");
-    }
-
-    #[test]
-    fn interp_fuse_preserves_span() {
-        use std::str::FromStr;
-
-        use moxy_token::{Ident, TokenStream};
-
-        let seg = TokenStream::from_str("user").unwrap().parse().parse::<Ident>().unwrap();
-        let tokens = template! { {{ seg }}_test };
-        let fused = tokens.iter().next().unwrap();
-        assert_eq!(fused.span(), seg.span());
+    fn interp_in_text_with_surrounding_idents() {
+        let name = "world";
+        let tokens = template! { Hello {{ name }} };
+        assert_eq!(tokens.to_string(), "Hello world");
     }
 
     #[test]
@@ -94,9 +84,10 @@ mod interp {
     }
 
     #[test]
-    fn interp_fuse_inside_nested_groups() {
-        let name = "user";
-        let tokens = template! { impl Foo { fn {{ name }}_test(&self) -> bool { true } } };
+    fn interp_mints_ident_inside_nested_groups() {
+        use moxy_token::ident;
+
+        let tokens = template! { impl Foo { fn {{ ident!("user", "_test") }}(&self) -> bool { true } } };
         assert_eq!(tokens.to_string(), "impl Foo {fn user_test (& self) -> bool {true}}");
     }
 
