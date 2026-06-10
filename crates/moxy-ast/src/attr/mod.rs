@@ -17,12 +17,6 @@ pub struct Attribute {
     pub meta: Delimited<Meta>,
 }
 
-impl Attribute {
-    pub fn get(&self, path: &Path) -> Option<Meta> {
-        self.meta.inner.get(path)
-    }
-}
-
 impl Spanner for Attribute {
     fn span(&self) -> Span {
         self.style.span().join(self.meta.span())
@@ -51,17 +45,3 @@ impl ToTokens for Attribute {
         self.meta.to_tokens(tokens);
     }
 }
-
-// #[cfg(test)]
-// mod tests {
-//     use super::*;
-//     use crate::path;
-
-//     #[test]
-//     fn nested_meta_name_value() {
-//         let attr = moxy_token::parse!("#[foo::bar(path = \"x.rs\")]" as Attribute).unwrap();
-//         let meta = attr.get(&path!(foo::bar::path));
-//         assert!(meta.is_some());
-//         assert!(meta.unwrap().is_name_value());
-//     }
-// }

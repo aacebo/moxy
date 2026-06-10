@@ -1,20 +1,28 @@
 mod meta_list;
 mod meta_name_value;
+mod meta_custom;
 
 pub use meta_list::*;
 pub use meta_name_value::*;
-use moxy_token::parser::{Parse, ParseError, ParseStream};
-use moxy_token::{Eq, EqEq, FatArrow, Span, Spanner, ToTokens, TokenStream};
+pub use meta_custom::*;
 
-use crate::{Expr, Path};
+use moxy_token::parser::{Parse, ParseError, ParseStream};
+use moxy_token::{Delim, Eq, EqEq, FatArrow, Span, Spanner, ToTokens, Token, TokenStream};
+
+use crate::{Delimited, Expr, Path};
 
 /// A structured attribute meta item (`name`, `name(...)`, `name = expr`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Meta {
+    /// `#[debug]`
     Path(Path),
+    /// `#[debug(true, env = "test")]`
     List(MetaList),
+    /// `#[debug = true]`
     NameValue(MetaNameValue),
+    /// `#[debug { .. }]`
+    Custom(MetaCustom),
 }
 
 impl Meta {
@@ -30,6 +38,10 @@ impl Meta {
         matches!(self, Self::NameValue(_))
     }
 
+    pub fn is_custom(&self) -> bool {
+        matches!(self, Self::Custom(_))
+    }
+
     pub fn as_path(&self) -> Option<&Path> {
         if let Self::Path(v) = self { Some(v) } else { None }
     }
@@ -42,19 +54,16 @@ impl Meta {
         if let Self::NameValue(v) = self { Some(v) } else { None }
     }
 
+    pub fn as_custom(&self) -> Option<&MetaCustom> {
+        if let Self::Custom(v) = self { Some(v) } else { None }
+    }
+
     pub fn path(&self) -> &Path {
         match self {
             Self::Path(v) => v,
             Self::List(v) => &v.path,
             Self::NameValue(v) => &v.path,
-        }
-    }
-
-    pub fn get(&self, path: &Path) -> Option<Self> {
-        match self {
-            Self::Path(v) if v == path => Some(self.clone()),
-            Self::List(v) => v.get(path),
-            _ => None,
+            Self::Custom(v) => &v.path,
         }
     }
 }
@@ -63,21 +72,23 @@ impl Parse for Meta {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let path = stream.parse::<Path>()?;
 
-        if let Some(group) = stream.curr().and_then(|t| t.as_group()) {
-            let delim = group.delim();
-            let (span, inner_tokens) = stream.parse_group_spanned(delim)?;
+        if stream.parse_if::<Token![]>() {
 
+        }
+
+        if let Some(curr) = stream.curr() && curr.is_group() && let Ok(items) = Delimited::parse_paren(stream) {
             return Ok(Self::List(MetaList {
                 path,
-                tokens: crate::Delimited::new(delim, span, inner_tokens),
+                items,
             }));
         }
 
         if stream.peek::<Eq>() && !stream.peek::<EqEq>() && !stream.peek::<FatArrow>() {
-            let eq = stream.parse::<Eq>()?;
-            let value = stream.parse::<Expr>()?;
-
-            return Ok(Meta::NameValue(MetaNameValue { path, eq, value }));
+            return Ok(Meta::NameValue(MetaNameValue {
+                path,
+                eq: stream.parse()?,
+                value: stream.parse()?,
+            }));
         }
 
         Ok(Self::Path(path))
@@ -90,6 +101,7 @@ impl Spanner for Meta {
             Self::Path(p) => p.span(),
             Self::List(l) => l.span(),
             Self::NameValue(nv) => nv.span(),
+            Self::Custom(v) => v.span(),
         }
     }
 }
@@ -100,6 +112,7 @@ impl ToTokens for Meta {
             Self::Path(p) => p.to_tokens(t),
             Self::List(l) => l.to_tokens(t),
             Self::NameValue(nv) => nv.to_tokens(t),
+            Self::Custom(v) => v.to_tokens(t),
         }
     }
 }

@@ -11,6 +11,12 @@ pub struct MetaNameValue {
     pub value: Expr,
 }
 
+impl MetaNameValue {
+    pub fn into_meta(self) -> Meta {
+        Meta::NameValue(self)
+    }
+}
+
 impl Spanner for MetaNameValue {
     fn span(&self) -> Span {
         self.path.span().join(self.value.span())
@@ -22,11 +28,5 @@ impl ToTokens for MetaNameValue {
         self.path.to_tokens(t);
         self.eq.to_tokens(t);
         self.value.to_tokens(t);
-    }
-}
-
-impl MetaNameValue {
-    pub fn into_meta(self) -> Meta {
-        Meta::NameValue(self)
     }
 }
