@@ -1,0 +1,26 @@
+[package]
+name = "moxy-derive"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+readme.workspace = true
+documentation.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+include.workspace = true
+
+[lib]
+proc-macro = true
+doctest = false
+
+[lints]
+workspace = true
+
+[dependencies]
+moxy-token = { path = "../moxy-token" }
+moxy-ast = { path = "../moxy-ast" }
+moxy-template = { path = "../moxy-template" }
+moxy-diagnostic = { path = "../moxy-diagnostic" }
+moxy-fmt = { path = "../moxy-fmt" }

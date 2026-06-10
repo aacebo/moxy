@@ -35,3 +35,33 @@ impl ToTokens for TmplInterp {
         out.extend(TokenStream::from_str(";").unwrap());
     }
 }
+
+#[doc = "A template interpolation fused with a trailing identifier suffix: `{{ expr }}suffix`."]
+#[derive(Debug, Clone)]
+pub struct TmplConcat {
+    pub interp: TmplInterp,
+    pub suffix: String,
+}
+
+impl ToTokens for TmplConcat {
+    fn to_tokens(&self, out: &mut TokenStream) {
+        let mut body =
+            TokenStream::from_str("let mut __moxy_seg = ::moxy_token::TokenStream::new(); ::moxy_token::ToTokens::to_tokens")
+                .unwrap();
+
+        let mut seg_args = TokenStream::from_str("&").unwrap();
+        seg_args.extend_one(TokenTree::Group(Group::new(Delim::Paren, self.interp.expr.clone())));
+        seg_args.extend(TokenStream::from_str(", &mut __moxy_seg").unwrap());
+        body.extend_one(TokenTree::Group(Group::new(Delim::Paren, seg_args)));
+
+        body.extend(
+            TokenStream::from_str(&format!(
+                "; let __moxy_sp = __moxy_seg.last(); ::moxy_token::ToTokens::to_tokens(&::moxy_token::Ident::lex(::std::format!(\"{{}}{{}}\", __moxy_seg, {:?})).expect(\"template concat: not a valid identifier\").with_span(__moxy_sp), &mut __moxy_tmpl);",
+                self.suffix
+            ))
+            .unwrap(),
+        );
+
+        out.extend_one(TokenTree::Group(Group::new(Delim::Brace, body)));
+    }
+}

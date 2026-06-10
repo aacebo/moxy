@@ -78,6 +78,12 @@ impl<T: ToTokens> ToTokens for ::std::boxed::Box<T> {
     }
 }
 
+impl<T: ToTokens> ToTokens for &T {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        ToTokens::to_tokens(*self, tokens);
+    }
+}
+
 impl<T: ToTokens> ToTokens for Option<T> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         if let Some(v) = self {
