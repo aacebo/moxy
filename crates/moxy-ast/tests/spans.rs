@@ -77,12 +77,12 @@ fn doc_comments_desugar_to_doc_attributes() {
     let Meta::NameValue(nv) = &attr.meta.inner else {
         panic!("expected NameValue")
     };
-    assert_eq!(nv.path.segments.first().unwrap().ident.text(), "doc");
+    assert_eq!(nv.path.first().unwrap().ident.text(), "doc");
 
     let attr = moxy_token::parse!("//! inner doc\n" as Attribute).unwrap();
     assert!(matches!(attr.style, AttrStyle::Inner(..)));
     let Meta::NameValue(nv) = &attr.meta.inner else {
         panic!("expected NameValue")
     };
-    assert_eq!(nv.path.segments.first().unwrap().ident.text(), "doc");
+    assert_eq!(nv.path.first().unwrap().ident.text(), "doc");
 }

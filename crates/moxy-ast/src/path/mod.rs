@@ -1,7 +1,7 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Parse, Span, Spanner, ToTokens, Token, TokenStream};
 
-use crate::Punctuated;
+use crate::{IntoIter, Punctuated};
 
 mod arguments;
 mod segment;
@@ -32,13 +32,25 @@ macro_rules! path {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Path {
-    pub leading_colon: Option<Token![::]>,
-    pub segments: Punctuated<PathSegment, Token![::]>,
+    leading_colon: Option<Token![::]>,
+    segments: Punctuated<PathSegment, Token![::]>,
 }
 
 impl Path {
     pub fn try_from_str(value: impl AsRef<str>) -> Result<Self, ParseError> {
         std::str::FromStr::from_str(value.as_ref())
+    }
+
+    pub fn leading_colon(&self) -> Option<Token![::]> {
+        self.leading_colon
+    }
+
+    pub fn as_ident(&self) -> Option<&crate::Ident> {
+        if self.leading_colon.is_none() && self.segments.len() == 1 {
+            return self.segments.first().map(|s| &s.ident);
+        }
+
+        None
     }
 }
 
@@ -94,6 +106,44 @@ impl From<crate::Ident> for Path {
             leading_colon: None,
             segments,
         }
+    }
+}
+
+impl From<Vec<PathSegment>> for Path {
+    fn from(value: Vec<PathSegment>) -> Self {
+        Self {
+            leading_colon: None,
+            segments: Punctuated::from_iter(value),
+        }
+    }
+}
+
+impl Extend<PathSegment> for Path {
+    fn extend<T: IntoIterator<Item = PathSegment>>(&mut self, iter: T) {
+        self.segments.extend(iter);
+    }
+}
+
+impl std::ops::Deref for Path {
+    type Target = Punctuated<PathSegment, Token![::]>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.segments
+    }
+}
+
+impl std::ops::DerefMut for Path {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        &mut self.segments
+    }
+}
+
+impl IntoIterator for Path {
+    type IntoIter = IntoIter<PathSegment>;
+    type Item = PathSegment;
+
+    fn into_iter(self) -> Self::IntoIter {
+        self.segments.into_iter()
     }
 }
 

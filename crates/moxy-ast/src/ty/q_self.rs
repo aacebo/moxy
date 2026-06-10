@@ -25,20 +25,14 @@ impl QSelf {
         let (qself, trait_path) = Self::parse_with_trait(stream)?;
         let _ = stream.parse::<moxy_token::punct::PathSep>()?;
         let rest = stream.parse::<Path>()?;
+        let path = if let Some(mut p) = trait_path {
+            p.extend(rest);
+            p
+        } else {
+            rest
+        };
 
-        let mut segments = trait_path.map(|p| p.segments).unwrap_or_default();
-
-        for seg in rest.segments {
-            segments.push(seg);
-        }
-
-        Ok((
-            qself,
-            Path {
-                leading_colon: None,
-                segments,
-            },
-        ))
+        Ok((qself, path))
     }
 
     /// Parse `< Type ( as Path )? >`, returning the qself plus the trait path
@@ -56,7 +50,7 @@ impl QSelf {
 
         let _ = stream.parse::<Gt>()?;
 
-        let position = trait_path.as_ref().map(|p| p.segments.len()).unwrap_or(0);
+        let position = trait_path.as_ref().map(|p| p.len()).unwrap_or(0);
 
         Ok((
             Self {

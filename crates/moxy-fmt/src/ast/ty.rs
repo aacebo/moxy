@@ -34,7 +34,7 @@ impl Format for TypePath {
             if qself.position > 0 {
                 f.text(" as ")?;
                 // emit all segments up to position as a path prefix
-                for (i, pair) in self.path.segments.pairs().enumerate() {
+                for (i, pair) in self.path.pairs().enumerate() {
                     if i >= qself.position {
                         break;
                     }
@@ -55,7 +55,7 @@ impl Format for TypePath {
             f.text("::")?;
 
             // emit remaining segments
-            for (i, pair) in self.path.segments.pairs().enumerate() {
+            for (i, pair) in self.path.pairs().enumerate() {
                 if i < qself.position {
                     continue;
                 }

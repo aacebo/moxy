@@ -525,9 +525,11 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
         let mut fork = stream.fork();
         let path = fork.parse::<Path>()?;
 
+        stream.seek(&fork);
+
         if matches!(fork.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-            stream.seek(&fork);
             let elems = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
+
             return Ok(Pattern::TupleStruct(PatTupleStruct {
                 attrs,
                 qself: None,
@@ -537,11 +539,11 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
         }
 
         if matches!(fork.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
-            stream.seek(&fork);
             let body = Delimited::parse_brace_with(stream, |inner| {
                 let (fields, rest) = PatStruct::parse_body(inner)?;
                 Ok(PatStructBody { fields, rest })
             })?;
+
             return Ok(Pattern::Struct(PatStruct {
                 attrs,
                 qself: None,
@@ -550,29 +552,22 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
             }));
         }
 
-        stream.seek(&fork);
-
         // Bare single-segment path with no leading colon → binding ident.
-        if path.leading_colon.is_none() && path.segments.len() == 1 {
-            let ident = match path.segments.into_iter().next() {
-                Some(seg) => seg.ident,
-                None => return Err(LexError::new(at).message("expected pattern").into()),
-            };
-
-            return Ok(Pattern::Ident(PatIdent {
+        return if let Some(ident) = path.as_ident().cloned() {
+            Ok(Pattern::Ident(PatIdent {
                 attrs,
                 by_ref: None,
                 mutability: Mutability::Immutable,
                 ident,
                 subpat: None,
-            }));
-        }
-
-        return Ok(Pattern::Path(PatPath {
-            attrs,
-            qself: None,
-            path,
-        }));
+            }))
+        } else {
+            Ok(Pattern::Path(PatPath {
+                attrs,
+                qself: None,
+                path,
+            }))
+        };
     }
 
     Err(LexError::new(at).message("expected pattern").into())

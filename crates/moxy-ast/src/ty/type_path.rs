@@ -63,7 +63,7 @@ impl ToTokens for TypePath {
                 Lt::default().to_tokens(tokens);
                 qself.ty.to_tokens(tokens);
 
-                let segs: Vec<&PathSegment> = self.path.segments.iter().collect();
+                let segs: Vec<&PathSegment> = self.path.iter().collect();
 
                 if qself.position > 0 {
                     As::default().to_tokens(tokens);

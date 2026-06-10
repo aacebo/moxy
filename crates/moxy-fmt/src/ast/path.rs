@@ -15,11 +15,11 @@ impl Format for Lifetime {
 
 impl Format for Path {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        if let Some(colon) = self.leading_colon {
+        if let Some(colon) = self.leading_colon() {
             f.text(colon)?;
         }
 
-        for (i, pair) in self.segments.pairs().enumerate() {
+        for (i, pair) in self.pairs().enumerate() {
             match pair {
                 moxy_ast::Pair::Punctuated(seg, sep) => {
                     seg.format(f)?;

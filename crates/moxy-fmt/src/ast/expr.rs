@@ -64,7 +64,7 @@ impl Format for ExprPath {
             if qself.position > 0 {
                 f.text(" as ")?;
 
-                for (i, pair) in self.path.segments.pairs().enumerate() {
+                for (i, pair) in self.path.pairs().enumerate() {
                     if i >= qself.position {
                         break;
                     }
@@ -84,7 +84,7 @@ impl Format for ExprPath {
             f.text(">")?;
             f.text("::")?;
 
-            for (i, pair) in self.path.segments.pairs().enumerate() {
+            for (i, pair) in self.path.pairs().enumerate() {
                 if i < qself.position {
                     continue;
                 }
