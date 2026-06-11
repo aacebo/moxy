@@ -1,13 +1,13 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Defaultness, Signature, StmtBlock, Visibility};
+use crate::{Attributes, Defaultness, Signature, StmtBlock, Visibility};
 
 /// A method or associated function inside an `impl` block.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ImplItemFn {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub vis: Visibility,
     pub defaultness: Defaultness,
     pub sig: Signature,
@@ -17,7 +17,7 @@ pub struct ImplItemFn {
 impl Parse for ImplItemFn {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let defaultness = stream.parse::<Defaultness>()?;
 

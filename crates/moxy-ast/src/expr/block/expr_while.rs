@@ -9,7 +9,7 @@ use crate::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprWhile {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub label: Option<Label>,
     pub while_keyword: While,
     pub cond: Box<Expr>,
@@ -37,7 +37,7 @@ impl ExprWhile {
         let body = stream.parse::<StmtBlock>()?;
 
         Ok(Self {
-            attrs: Vec::new(),
+            attrs: Attributes::default(),
             label,
             while_keyword,
             cond,

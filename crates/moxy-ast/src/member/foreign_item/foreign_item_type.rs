@@ -3,13 +3,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Generics, Ident, Visibility};
+use crate::{Attributes, Generics, Ident, Visibility};
 
 /// A foreign opaque type declaration inside an `extern` block (`type Name;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ForeignItemType {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub vis: Visibility,
     pub type_keyword: KwType,
     pub ident: Ident,
@@ -20,7 +20,7 @@ pub struct ForeignItemType {
 impl Parse for ForeignItemType {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
 
         if stream.curr().and_then(|t| t.text()) != Some("type") {

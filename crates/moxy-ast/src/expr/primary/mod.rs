@@ -32,7 +32,9 @@ use super::block::{
 };
 use super::jump::{ExprBreak, ExprContinue, ExprReturn, ExprYield};
 use super::{BlockExpr, Expr, JumpExpr};
-use crate::{Asyncness, ClosureParam, Constness, Delimited, FieldValue, Label, Movability, Pattern, Punctuated, ReturnType};
+use crate::{
+    Asyncness, Attributes, ClosureParam, Constness, Delimited, FieldValue, Label, Movability, Pattern, Punctuated, ReturnType,
+};
 
 /// Primary/leaf expressions (literals, paths, closures, collections, struct literals, macros).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -280,7 +282,7 @@ impl ExprClosure {
         let body = Box::new(super::parse_expr(stream, true)?);
 
         Ok(Self {
-            attrs: Vec::new(),
+            attrs: Attributes::default(),
             lifetimes: None,
             constness,
             movability: Movability::Movable,
@@ -334,7 +336,7 @@ impl ExprRepeat {
         let len = super::parse_expr(&mut fork, true)?;
         stream.seek(&fork);
         Ok(Some(Self {
-            attrs: Vec::new(),
+            attrs: Attributes::default(),
             content: Delimited::bracket(
                 bracket_span,
                 RepeatInner {
@@ -375,12 +377,12 @@ impl PrimaryExpr {
             return Ok(if elems.len() == 1 && !elems.is_trailing() {
                 let expr = Box::new(elems.into_iter().next().unwrap());
                 Expr::Primary(PrimaryExpr::Paren(ExprParen {
-                    attrs: Vec::new(),
+                    attrs: Attributes::default(),
                     content: Delimited::paren(paren_span, expr),
                 }))
             } else {
                 Expr::Primary(PrimaryExpr::Tuple(ExprTuple {
-                    attrs: Vec::new(),
+                    attrs: Attributes::default(),
                     elems: Delimited::paren(paren_span, elems),
                 }))
             });
@@ -394,7 +396,7 @@ impl PrimaryExpr {
             }
             let elems = Punctuated::parse_terminated(&mut inner)?;
             return Ok(Expr::Primary(PrimaryExpr::Array(ExprArray {
-                attrs: Vec::new(),
+                attrs: Attributes::default(),
                 elems: Delimited::bracket(bracket_span, elems),
             })));
         }
@@ -416,7 +418,7 @@ impl PrimaryExpr {
             }
 
             return Ok(Expr::Block(BlockExpr::Brace(ExprBrace {
-                attrs: Vec::new(),
+                attrs: Attributes::default(),
                 label,
                 block: stream.parse()?,
             })));
@@ -424,7 +426,7 @@ impl PrimaryExpr {
 
         if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
             return Ok(Expr::Block(BlockExpr::Brace(ExprBrace {
-                attrs: Vec::new(),
+                attrs: Attributes::default(),
                 label: None,
                 block: stream.parse()?,
             })));
@@ -469,7 +471,7 @@ impl PrimaryExpr {
         if stream.peek::<Return>() {
             let return_keyword = stream.parse::<Return>()?;
             return Ok(Expr::Jump(JumpExpr::Return(ExprReturn {
-                attrs: Vec::new(),
+                attrs: Attributes::default(),
                 return_keyword,
                 expr: Expr::parse_if(stream)?,
             })));
@@ -478,7 +480,7 @@ impl PrimaryExpr {
         if stream.peek::<Yield>() {
             let yield_keyword = stream.parse::<Yield>()?;
             return Ok(Expr::Jump(JumpExpr::Yield(ExprYield {
-                attrs: Vec::new(),
+                attrs: Attributes::default(),
                 yield_keyword,
                 expr: Expr::parse_if(stream)?,
             })));
@@ -488,7 +490,7 @@ impl PrimaryExpr {
             let break_keyword = stream.parse::<Break>()?;
             let label = Label::parse_opt_break(stream);
             return Ok(Expr::Jump(JumpExpr::Break(ExprBreak {
-                attrs: Vec::new(),
+                attrs: Attributes::default(),
                 break_keyword,
                 label,
                 expr: Expr::parse_if(stream)?,
@@ -499,7 +501,7 @@ impl PrimaryExpr {
             let continue_keyword = stream.parse::<Continue>()?;
             let label = Label::parse_opt_break(stream);
             return Ok(Expr::Jump(JumpExpr::Continue(ExprContinue {
-                attrs: Vec::new(),
+                attrs: Attributes::default(),
                 continue_keyword,
                 label,
             })));
@@ -511,7 +513,7 @@ impl PrimaryExpr {
             let eq = stream.parse::<Eq>()?;
             let expr = Box::new(super::parse_expr(stream, false)?);
             return Ok(Expr::Primary(PrimaryExpr::Let(ExprLet {
-                attrs: Vec::new(),
+                attrs: Attributes::default(),
                 let_keyword,
                 pat,
                 eq,
@@ -525,20 +527,23 @@ impl PrimaryExpr {
 
         if matches!(stream.curr(), Some(tt) if ExprLit::is_literal(tt)) || ExprLit::is_bool_ident(stream) {
             return Ok(Expr::Primary(PrimaryExpr::Lit(ExprLit {
-                attrs: Vec::new(),
+                attrs: Attributes::default(),
                 lit: stream.parse()?,
             })));
         }
 
         if let Some(mac) = stream.parse_if::<crate::MacroCall>() {
-            return Ok(Expr::Primary(PrimaryExpr::Macro(ExprMacro { attrs: Vec::new(), mac })));
+            return Ok(Expr::Primary(PrimaryExpr::Macro(ExprMacro {
+                attrs: Attributes::default(),
+                mac,
+            })));
         }
 
         // Qualified path `<T as Trait>::assoc` in expression position.
         if stream.peek::<moxy_token::punct::Lt>() {
             let (qself, path) = crate::ty::QSelf::parse_qualified(stream)?;
             return Ok(Expr::Primary(PrimaryExpr::Path(ExprPath {
-                attrs: Vec::new(),
+                attrs: Attributes::default(),
                 qself: Some(qself),
                 path,
             })));
@@ -557,7 +562,7 @@ impl PrimaryExpr {
                     Ok(StructBody { fields, rest })
                 })?;
                 return Ok(Expr::Primary(PrimaryExpr::Struct(ExprStruct {
-                    attrs: Vec::new(),
+                    attrs: Attributes::default(),
                     qself: None,
                     path,
                     body,
@@ -565,7 +570,7 @@ impl PrimaryExpr {
             }
 
             return Ok(Expr::Primary(PrimaryExpr::Path(ExprPath {
-                attrs: Vec::new(),
+                attrs: Attributes::default(),
                 qself: None,
                 path,
             })));

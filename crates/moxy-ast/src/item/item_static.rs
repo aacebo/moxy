@@ -3,13 +3,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Eq, Semi};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Expr, Ident, Mutability, Type, Visibility};
+use crate::{Attributes, Expr, Ident, Mutability, Type, Visibility};
 
 /// A static item (`static [mut] NAME: Type = expr;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemStatic {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub vis: Visibility,
     pub static_keyword: Static,
     pub mutability: Mutability,
@@ -23,7 +23,7 @@ pub struct ItemStatic {
 
 impl Parse for ItemStatic {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let static_keyword = stream.parse::<Static>()?;
         let mutability = stream.parse::<Mutability>()?;

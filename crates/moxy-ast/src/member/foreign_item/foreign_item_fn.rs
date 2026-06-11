@@ -2,13 +2,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Signature, Visibility};
+use crate::{Attributes, Signature, Visibility};
 
 /// A foreign function declaration inside an `extern` block.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ForeignItemFn {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub vis: Visibility,
     pub sig: Signature,
     pub semi: Option<Semi>,
@@ -17,7 +17,7 @@ pub struct ForeignItemFn {
 impl Parse for ForeignItemFn {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
 
         if !crate::sig::Signature::is_start(stream) {

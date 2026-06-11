@@ -18,7 +18,7 @@ pub enum ClosurePipes {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprClosure {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub lifetimes: Option<BoundLifetimes>,
     pub constness: Constness,
     pub movability: Movability,

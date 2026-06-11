@@ -8,7 +8,7 @@ use crate::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatIdent {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub by_ref: Option<Ref>,
     pub mutability: Mutability,
     pub ident: Ident,

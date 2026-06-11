@@ -2,20 +2,20 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, MacroCall};
+use crate::{Attributes, MacroCall};
 
 /// A macro invocation inside an `extern` block.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ForeignItemMacro {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub mac: MacroCall,
     pub semi: Option<Semi>,
 }
 
 impl Parse for ForeignItemMacro {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let (mac, semi) = crate::MacroCall::parse_semi(stream)?;
         Ok(ForeignItemMacro { attrs, mac, semi })
     }

@@ -3,13 +3,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::And;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Lifetime, Mutability};
+use crate::{Attributes, Lifetime, Mutability};
 
 /// A method receiver parameter (`self`, `&self`, `&mut self`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Receiver {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub reference: Option<And>,
     pub lifetime: Option<Lifetime>,
     pub mutability: Mutability,
@@ -18,7 +18,7 @@ pub struct Receiver {
 
 impl Parse for Receiver {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let reference = stream.parse_if::<And>();
 
         let lifetime = if reference.is_some() {

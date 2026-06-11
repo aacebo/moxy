@@ -3,13 +3,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Eq, Plus, Semi};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Generics, Ident, Punctuated, TypeBound, Unsafety, Visibility};
+use crate::{Attributes, Generics, Ident, Punctuated, TypeBound, Unsafety, Visibility};
 
 /// A trait alias item (`trait Alias<T> = Bound1 + Bound2;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemTraitAlias {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub vis: Visibility,
     pub trait_keyword: Trait,
     pub ident: Ident,
@@ -21,7 +21,7 @@ pub struct ItemTraitAlias {
 
 impl Parse for ItemTraitAlias {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let _unsafety = stream.parse::<Unsafety>()?;
 

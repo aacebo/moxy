@@ -7,7 +7,7 @@ use crate::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprYield {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub yield_keyword: Yield,
     pub expr: Option<Box<Expr>>,
 }

@@ -3,13 +3,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Fields, Generics, Ident, Visibility};
+use crate::{Attributes, Fields, Generics, Ident, Visibility};
 
 /// A struct item (`struct Name<T> { ... }` or `struct Name(T);`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemStruct {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub vis: Visibility,
     pub struct_keyword: Struct,
     pub ident: Ident,
@@ -20,7 +20,7 @@ pub struct ItemStruct {
 
 impl Parse for ItemStruct {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let _ = stream.parse::<Struct>()?;
         let ident = stream.parse::<Ident>()?;

@@ -3,13 +3,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, Eq};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Delimited, Expr, Fields, Generics, Ident, Punctuated, Visibility};
+use crate::{Attributes, Delimited, Expr, Fields, Generics, Ident, Punctuated, Visibility};
 
 /// An enum item (`enum Name<T> { Variant, ... }`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemEnum {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub vis: Visibility,
     pub enum_keyword: Enum,
     pub ident: Ident,
@@ -19,7 +19,7 @@ pub struct ItemEnum {
 
 impl Parse for ItemEnum {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let enum_keyword = stream.parse::<Enum>()?;
         let ident = stream.parse::<Ident>()?;
@@ -87,7 +87,7 @@ impl ToTokens for ItemEnum {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Variant {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub ident: Ident,
     pub fields: Fields,
     pub eq_punct: Option<Eq>,
@@ -96,7 +96,7 @@ pub struct Variant {
 
 impl Parse for Variant {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let ident = stream.parse::<Ident>()?;
         let fields = stream.parse::<Fields>()?;
 

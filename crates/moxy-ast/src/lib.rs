@@ -31,7 +31,7 @@ pub use _crate::Crate;
 #[doc(inline)]
 pub use args::{AngleArguments, GenericArgument, ParenArguments};
 #[doc(inline)]
-pub use attr::{Attribute, Meta};
+pub use attr::{Attribute, Attributes, Meta};
 #[doc(inline)]
 pub use declaration::*;
 #[doc(inline)]

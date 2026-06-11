@@ -3,13 +3,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Eq, Plus, Semi};
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Generics, Ident, Punctuated, Type, TypeBound};
+use crate::{Attributes, Generics, Ident, Punctuated, Type, TypeBound};
 
 /// An associated type inside a trait definition (`type Name: Bound = Default;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitItemType {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub type_keyword: KwType,
     pub ident: Ident,
     pub generics: Generics,
@@ -22,7 +22,7 @@ pub struct TraitItemType {
 impl Parse for TraitItemType {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
 
         if stream.curr().and_then(|t| t.text()) != Some("type") {
             return Err(LexError::new(at).message("expected trait type").into());

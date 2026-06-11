@@ -3,13 +3,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Eq, Semi};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Generics, Ident, Type, Visibility};
+use crate::{Attributes, Generics, Ident, Type, Visibility};
 
 /// A type alias item (`type Name<T> = Type;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemTypeAlias {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub vis: Visibility,
     pub type_keyword: KwType,
     pub ident: Ident,
@@ -21,7 +21,7 @@ pub struct ItemTypeAlias {
 
 impl Parse for ItemTypeAlias {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let type_keyword = stream.parse::<KwType>()?;
         let ident = stream.parse::<Ident>()?;

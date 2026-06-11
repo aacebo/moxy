@@ -1,13 +1,13 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Item};
+use crate::{Attributes, Item};
 
 /// A whole parsed crate (inner attributes + items).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Crate {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub items: Vec<Item>,
 }
 
@@ -34,7 +34,7 @@ impl Spanner for Crate {
 
 impl Parse for Crate {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let items = stream.parse::<Vec<Item>>()?;
         Ok(Self { attrs, items })
     }

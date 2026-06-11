@@ -3,13 +3,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, UseTree, Visibility};
+use crate::{Attributes, UseTree, Visibility};
 
 /// A `use` item (`use path::to::Name;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemUse {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub vis: Visibility,
     pub use_keyword: Use,
     pub tree: UseTree,
@@ -18,7 +18,7 @@ pub struct ItemUse {
 
 impl Parse for ItemUse {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let use_keyword = stream.parse::<Use>()?;
         let tree = stream.parse::<UseTree>()?;

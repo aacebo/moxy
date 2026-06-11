@@ -7,7 +7,7 @@ use crate::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprReturn {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub return_keyword: Return,
     pub expr: Option<Box<Expr>>,
 }

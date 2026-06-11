@@ -3,13 +3,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Plus};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Delimited, Generics, Ident, Punctuated, TraitItem, TypeBound, Unsafety, Visibility};
+use crate::{Attributes, Delimited, Generics, Ident, Punctuated, TraitItem, TypeBound, Unsafety, Visibility};
 
 /// A trait definition item (`trait Name: Super { ... }`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemTrait {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub vis: Visibility,
     pub unsafety: Unsafety,
     pub auto_keyword: Option<Auto>,
@@ -23,7 +23,7 @@ pub struct ItemTrait {
 
 impl Parse for ItemTrait {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let unsafety = stream.parse::<Unsafety>()?;
         let auto_keyword = if stream.peek::<Auto>() {

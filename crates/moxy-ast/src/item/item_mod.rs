@@ -4,13 +4,13 @@ use moxy_token::punct::Semi;
 use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use super::Item;
-use crate::{Attribute, Delimited, Ident, Unsafety, Visibility};
+use crate::{Attributes, Delimited, Ident, Unsafety, Visibility};
 
 /// A module item (`mod foo;` or `mod foo { ... }`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemMod {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub vis: Visibility,
     pub unsafety: Unsafety,
     pub mod_keyword: Mod,
@@ -21,7 +21,7 @@ pub struct ItemMod {
 
 impl Parse for ItemMod {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let unsafety = Unsafety::Safe;
         let mod_keyword = stream.parse::<Mod>()?;

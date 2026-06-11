@@ -3,13 +3,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Not;
 use moxy_token::{Group, LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use crate::{Attribute, Ident};
+use crate::{Attributes, Ident};
 
 /// A `macro_rules!` definition item.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemMacroRules {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub macro_rules_keyword: MacroRules,
     pub not_punct: Not,
     pub ident: Ident,
@@ -18,7 +18,7 @@ pub struct ItemMacroRules {
 
 impl Parse for ItemMacroRules {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let macro_rules_keyword = stream.parse::<MacroRules>()?;
         let not_punct = stream.parse::<Not>()?;
         let ident = stream.parse::<Ident>()?;

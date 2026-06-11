@@ -3,7 +3,7 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{And, At, Colon, Comma, DotDot, Or};
 use moxy_token::{Delim, LexError, Parse, Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use crate::{Attribute, Delimited, Expr, Ident, Member, Mutability, Path, Punctuated};
+use crate::{Attributes, Delimited, Expr, Ident, Member, Mutability, Path, Punctuated};
 
 mod pat_field;
 mod pat_group;
@@ -323,7 +323,7 @@ impl Parse for Pattern {
         }
 
         Ok(Pattern::Or(PatOr {
-            attrs: Vec::new(),
+            attrs: Attributes::default(),
             cases,
         }))
     }
@@ -371,7 +371,7 @@ impl ToTokens for Pattern {
 }
 
 impl PatIdent {
-    pub fn parse_from(stream: &mut ParseStream, attrs: Vec<Attribute>) -> Result<Self, ParseError> {
+    pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Self, ParseError> {
         let by_ref = stream.parse_if::<Ref>();
 
         let mutability = stream.parse::<Mutability>()?;
@@ -421,7 +421,7 @@ impl PatStruct {
                 (
                     None,
                     Pattern::Ident(PatIdent {
-                        attrs: Vec::new(),
+                        attrs: Attributes::default(),
                         by_ref: None,
                         mutability: Mutability::Immutable,
                         ident,
@@ -432,7 +432,7 @@ impl PatStruct {
             };
 
             fields.push_value(PatField {
-                attrs: Vec::new(),
+                attrs: Attributes::default(),
                 member,
                 colon,
                 pat,
@@ -452,7 +452,7 @@ impl PatStruct {
 
 fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     let at = stream.span();
-    let attrs = stream.parse::<Vec<Attribute>>()?;
+    let attrs = stream.parse::<Attributes>()?;
 
     // Wildcard `_`
     if matches!(stream.curr(), Some(tt) if tt.text() == Some("_")) {

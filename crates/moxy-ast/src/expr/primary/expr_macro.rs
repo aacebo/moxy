@@ -1,13 +1,13 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Expr, MacroCall};
+use crate::{Attributes, Expr, MacroCall};
 
 /// A macro invocation expression (`path!(...)`, `path![...]`, `path!{...}`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprMacro {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub mac: MacroCall,
 }
 

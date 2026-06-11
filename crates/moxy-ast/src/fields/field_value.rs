@@ -3,13 +3,13 @@ use moxy_token::punct::Colon;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::expr::{ExprPath, PrimaryExpr};
-use crate::{Attribute, Expr, Member};
+use crate::{Attributes, Expr, Member};
 
 /// A struct literal field (`member: expr` or shorthand `member`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldValue {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub member: Member,
     pub colon_punct: Option<Colon>,
     pub expr: Expr,
@@ -18,7 +18,7 @@ pub struct FieldValue {
 
 impl Parse for FieldValue {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let member = stream.parse::<Member>()?;
         if stream.peek::<Colon>() {
             let colon_punct = Some(stream.parse::<Colon>()?);
@@ -33,7 +33,7 @@ impl Parse for FieldValue {
         } else {
             let expr = match &member {
                 Member::Named(id) => Expr::Primary(PrimaryExpr::Path(ExprPath {
-                    attrs: Vec::new(),
+                    attrs: Attributes::default(),
                     qself: None,
                     path: id.clone().into(),
                 })),

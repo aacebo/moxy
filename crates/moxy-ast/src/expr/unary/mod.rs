@@ -13,7 +13,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::binary::ExprRange;
 use super::{BinaryExpr, Expr};
-use crate::{Mutability, UnOp};
+use crate::{Attributes, Mutability, UnOp};
 
 /// Unary prefix expressions (reference, unary op, cast, try-propagation).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -119,7 +119,7 @@ impl UnaryExpr {
             let limits = stream.parse::<RangeLimits>()?;
             let end = super::binary::ExprRange::maybe_end(stream, allow_struct)?;
             return Ok(Expr::Binary(BinaryExpr::Range(ExprRange {
-                attrs: Vec::new(),
+                attrs: Attributes::default(),
                 start: None,
                 limits,
                 end,
@@ -131,7 +131,7 @@ impl UnaryExpr {
             let mutability = stream.parse::<Mutability>()?;
             let expr = Box::new(UnaryExpr::parse_from(stream, allow_struct)?);
             return Ok(Expr::Unary(UnaryExpr::Reference(ExprReference {
-                attrs: Vec::new(),
+                attrs: Attributes::default(),
                 and_punct,
                 mutability,
                 expr,
@@ -142,7 +142,7 @@ impl UnaryExpr {
             let op = stream.parse::<UnOp>()?;
             let expr = Box::new(UnaryExpr::parse_from(stream, allow_struct)?);
             return Ok(Expr::Unary(UnaryExpr::Unary(ExprUnary {
-                attrs: Vec::new(),
+                attrs: Attributes::default(),
                 op,
                 expr,
             })));

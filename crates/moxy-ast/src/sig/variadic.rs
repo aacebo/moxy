@@ -2,20 +2,20 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::DotDotDot;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Ident};
+use crate::{Attributes, Ident};
 
 /// A C-style variadic marker (`...`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Variadic {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub name: Option<Ident>,
     pub dots: DotDotDot,
 }
 
 impl Parse for Variadic {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let dots = stream.parse::<DotDotDot>()?;
         Ok(Self { attrs, name: None, dots })
     }

@@ -3,13 +3,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Not;
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, BoundPolarity, Defaultness, Delimited, Generics, ImplItem, TraitRef, Type, Unsafety};
+use crate::{Attributes, BoundPolarity, Defaultness, Delimited, Generics, ImplItem, TraitRef, Type, Unsafety};
 
 /// An `impl` block, optionally implementing a trait (`impl Trait for Type { ... }`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemImpl {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub defaultness: Defaultness,
     pub unsafety: Unsafety,
     pub impl_keyword: Impl,
@@ -35,7 +35,7 @@ impl ItemImpl {
 
 impl Parse for ItemImpl {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let defaultness = stream.parse::<Defaultness>()?;
         let unsafety = stream.parse::<Unsafety>()?;
         let impl_keyword = stream.parse::<Impl>()?;

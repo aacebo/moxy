@@ -24,7 +24,7 @@ impl ToTokens for StructBody {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprStruct {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub qself: Option<QSelf>,
     pub path: Path,
     pub body: Delimited<StructBody>,

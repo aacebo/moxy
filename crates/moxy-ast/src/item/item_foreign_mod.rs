@@ -1,13 +1,13 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Abi, Attribute, Delimited, ForeignItem, Unsafety};
+use crate::{Abi, Attributes, Delimited, ForeignItem, Unsafety};
 
 /// An `extern` block (`extern "C" { ... }`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemForeignMod {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub unsafety: Unsafety,
     pub abi: Abi,
     pub items: Delimited<Vec<ForeignItem>>,
@@ -15,7 +15,7 @@ pub struct ItemForeignMod {
 
 impl Parse for ItemForeignMod {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let unsafety = stream.parse::<Unsafety>()?;
         let abi = stream.parse::<Abi>()?;
         let items = Delimited::<Vec<ForeignItem>>::parse_brace(stream)?;

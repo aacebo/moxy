@@ -2,13 +2,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Plus};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Lifetime, Punctuated};
+use crate::{Attributes, Lifetime, Punctuated};
 
 /// A lifetime parameter (`'a: 'b + 'c`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LifetimeParam {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub lifetime: Lifetime,
     pub colon_punct: Option<Colon>,
     pub bounds: Punctuated<Lifetime, Plus>,
@@ -16,7 +16,7 @@ pub struct LifetimeParam {
 
 impl Parse for LifetimeParam {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let lifetime = stream.parse::<Lifetime>()?;
         let bounds = Lifetime::parse_bounds(stream)?;
         let colon_punct = if !bounds.is_empty() { Some(Colon::default()) } else { None };

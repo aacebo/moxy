@@ -2,13 +2,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Not;
 use moxy_token::{Delim, Group, LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use crate::{Attribute, Path};
+use crate::{Attributes, Path};
 
 /// A macro invocation (`path!(...)`, `path![...]`, `path!{...}`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MacroCall {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub path: Path,
     pub bang: Not,
     pub body: Group,
@@ -35,7 +35,7 @@ impl MacroCall {
 
 impl Parse for MacroCall {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let path = stream.parse::<Path>()?;
         let bang = stream.parse::<Not>()?;
 

@@ -2,13 +2,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
 use moxy_token::{Delim, LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use crate::{Attribute, Signature, StmtBlock};
+use crate::{Attributes, Signature, StmtBlock};
 
 /// A method declaration or default implementation inside a trait definition.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitItemFn {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub sig: Signature,
     pub default_body: Option<StmtBlock>,
     pub semi: Option<Semi>,
@@ -17,7 +17,7 @@ pub struct TraitItemFn {
 impl Parse for TraitItemFn {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
 
         if !crate::sig::Signature::is_start(stream) {
             return Err(LexError::new(at).message("expected trait fn").into());

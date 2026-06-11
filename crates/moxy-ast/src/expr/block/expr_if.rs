@@ -9,7 +9,7 @@ use crate::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprIf {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub if_keyword: If,
     pub cond: Box<Expr>,
     pub then_branch: StmtBlock,
@@ -49,7 +49,7 @@ impl ExprIf {
         };
 
         Ok(Expr::Block(BlockExpr::If(Self {
-            attrs: Vec::new(),
+            attrs: Attributes::default(),
             if_keyword,
             cond,
             then_branch,

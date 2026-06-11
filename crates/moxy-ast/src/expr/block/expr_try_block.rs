@@ -8,7 +8,7 @@ use crate::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprTryBlock {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub try_keyword: Try,
     pub block: StmtBlock,
 }
@@ -31,7 +31,7 @@ impl ExprTryBlock {
         let block = stream.parse::<StmtBlock>()?;
 
         Ok(Self {
-            attrs: Vec::new(),
+            attrs: Attributes::default(),
             try_keyword,
             block,
         })

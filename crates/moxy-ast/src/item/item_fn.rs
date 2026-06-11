@@ -1,13 +1,13 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Defaultness, Signature, StmtBlock, Visibility};
+use crate::{Attributes, Defaultness, Signature, StmtBlock, Visibility};
 
 /// A free function item (`fn name(...) -> T { ... }`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemFn {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub vis: Visibility,
     pub defaultness: Defaultness,
     pub sig: Signature,
@@ -16,7 +16,7 @@ pub struct ItemFn {
 
 impl Parse for ItemFn {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let defaultness = Defaultness::Final;
         let sig = stream.parse::<Signature>()?;

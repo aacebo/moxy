@@ -3,13 +3,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Semi};
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Ident, Mutability, Type, Visibility};
+use crate::{Attributes, Ident, Mutability, Type, Visibility};
 
 /// A foreign static declaration inside an `extern` block (`static NAME: Type;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ForeignItemStatic {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub vis: Visibility,
     pub static_keyword: Static,
     pub mutability: Mutability,
@@ -22,7 +22,7 @@ pub struct ForeignItemStatic {
 impl Parse for ForeignItemStatic {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
 
         if stream.curr().and_then(|t| t.text()) != Some("static") {

@@ -2,13 +2,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Colon;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Ident, Mutability, Type, Visibility};
+use crate::{Attributes, Ident, Mutability, Type, Visibility};
 
 /// A struct/enum field definition (`pub name: Type` or `pub Type`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldDef {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub vis: Visibility,
     pub mutability: Mutability,
     pub ident: Option<Ident>,
@@ -18,7 +18,7 @@ pub struct FieldDef {
 
 impl Parse for FieldDef {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let mutability = stream.parse::<Mutability>()?;
 

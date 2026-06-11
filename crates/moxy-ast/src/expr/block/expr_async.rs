@@ -9,7 +9,7 @@ use crate::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprAsync {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub async_keyword: Async,
     pub move_keyword: Option<Move>,
     pub block: StmtBlock,
@@ -43,7 +43,7 @@ impl ExprAsync {
         let block = stream.parse::<StmtBlock>()?;
 
         Ok(Self {
-            attrs: Vec::new(),
+            attrs: Attributes::default(),
             async_keyword,
             move_keyword,
             block,

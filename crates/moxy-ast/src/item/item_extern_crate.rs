@@ -3,13 +3,13 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Ident, Visibility};
+use crate::{Attributes, Ident, Visibility};
 
 /// An `extern crate` item (`extern crate foo;` or `extern crate foo as bar;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemExternCrate {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub vis: Visibility,
     pub extern_keyword: Extern,
     pub crate_keyword: Crate,
@@ -21,7 +21,7 @@ pub struct ItemExternCrate {
 
 impl Parse for ItemExternCrate {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let extern_keyword = stream.parse::<Extern>()?;
         let crate_keyword = stream.parse::<Crate>()?;

@@ -6,7 +6,7 @@ use crate::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprParen {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub content: Delimited<Box<Expr>>,
 }
 

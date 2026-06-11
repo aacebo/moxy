@@ -2,20 +2,20 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Colon;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attribute, Ident, Type};
+use crate::{Attributes, Ident, Type};
 
 /// An argument of a bare function pointer type.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct BareFnArg {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub name: Option<(Ident, Colon)>,
     pub ty: Type,
 }
 
 impl Parse for BareFnArg {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
 
         let name = {
             let mut fork = stream.fork();

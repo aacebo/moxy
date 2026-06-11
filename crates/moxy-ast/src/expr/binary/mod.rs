@@ -16,7 +16,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use super::unary::ExprCast;
 use super::{Expr, UnaryExpr};
 use crate::precedence::Precedence;
-use crate::{AssignOp, BinOp, RangeLimits, Type};
+use crate::{AssignOp, Attributes, BinOp, RangeLimits, Type};
 
 /// Binary and assignment expressions.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -139,7 +139,7 @@ impl BinaryExpr {
                 let ty = Box::new(stream.parse::<Type>()?);
 
                 lhs = Expr::Unary(UnaryExpr::Cast(ExprCast {
-                    attrs: Vec::new(),
+                    attrs: Attributes::default(),
                     expr: Box::new(lhs),
                     as_keyword,
                     ty,
@@ -154,7 +154,7 @@ impl BinaryExpr {
                     let right = Box::new(super::parse_expr(stream, allow_struct)?);
 
                     lhs = Expr::Binary(BinaryExpr::Assign(ExprAssign {
-                        attrs: Vec::new(),
+                        attrs: Attributes::default(),
                         left: Box::new(lhs),
                         eq,
                         right,
@@ -167,7 +167,7 @@ impl BinaryExpr {
                     let right = Box::new(super::parse_expr(stream, allow_struct)?);
 
                     lhs = Expr::Binary(BinaryExpr::AssignOp(ExprAssignOp {
-                        attrs: Vec::new(),
+                        attrs: Attributes::default(),
                         left: Box::new(lhs),
                         op,
                         right,
@@ -183,7 +183,7 @@ impl BinaryExpr {
                 let end = ExprRange::maybe_end(stream, allow_struct)?;
 
                 lhs = Expr::Binary(BinaryExpr::Range(ExprRange {
-                    attrs: Vec::new(),
+                    attrs: Attributes::default(),
                     start: Some(Box::new(lhs)),
                     limits,
                     end,
@@ -200,7 +200,7 @@ impl BinaryExpr {
 
                     rhs = BinaryExpr::parse_from(stream, rhs, prec.next(), allow_struct)?;
                     lhs = Expr::Binary(BinaryExpr::Binary(ExprBinary {
-                        attrs: Vec::new(),
+                        attrs: Attributes::default(),
                         left: Box::new(lhs),
                         op,
                         right: Box::new(rhs),

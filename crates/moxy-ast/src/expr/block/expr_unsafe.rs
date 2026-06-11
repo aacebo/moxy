@@ -8,7 +8,7 @@ use crate::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprUnsafe {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub unsafe_keyword: Unsafe,
     pub block: StmtBlock,
 }
@@ -31,7 +31,7 @@ impl ExprUnsafe {
         let block = stream.parse::<StmtBlock>()?;
 
         Ok(Self {
-            attrs: Vec::new(),
+            attrs: Attributes::default(),
             unsafe_keyword,
             block,
         })

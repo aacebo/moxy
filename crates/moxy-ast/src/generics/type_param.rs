@@ -3,13 +3,13 @@ use moxy_token::punct::{Colon, Eq, Plus};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::TypeBound;
-use crate::{Attribute, Ident, Punctuated, Type};
+use crate::{Attributes, Ident, Punctuated, Type};
 
 /// A type parameter (`T: Bound = Default`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeParam {
-    pub attrs: Vec<Attribute>,
+    pub attrs: Attributes,
     pub ident: Ident,
     pub colon_punct: Option<Colon>,
     pub bounds: Punctuated<TypeBound, Plus>,
@@ -19,7 +19,7 @@ pub struct TypeParam {
 
 impl Parse for TypeParam {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Vec<Attribute>>()?;
+        let attrs = stream.parse::<Attributes>()?;
         let ident = stream.parse::<Ident>()?;
 
         let (colon_punct, bounds) = if stream.peek::<Colon>() {
