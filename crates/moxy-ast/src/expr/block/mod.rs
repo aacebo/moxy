@@ -22,7 +22,7 @@ pub use expr_while::*;
 use moxy_token::parser::ParseStream;
 use moxy_token::{Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use crate::{Label, Lifetime};
+use crate::{Attributes, Label, Lifetime};
 
 /// Block-like expressions (braced blocks, if, while, for, loop, match, async, unsafe, const, try).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -41,6 +41,21 @@ pub enum BlockExpr {
 }
 
 impl BlockExpr {
+    pub fn attrs_mut(&mut self) -> &mut Attributes {
+        match self {
+            Self::Brace(v) => &mut v.attrs,
+            Self::If(v) => &mut v.attrs,
+            Self::While(v) => &mut v.attrs,
+            Self::ForLoop(v) => &mut v.attrs,
+            Self::Loop(v) => &mut v.attrs,
+            Self::Match(v) => &mut v.attrs,
+            Self::Async(v) => &mut v.attrs,
+            Self::Unsafe(v) => &mut v.attrs,
+            Self::Const(v) => &mut v.attrs,
+            Self::TryBlock(v) => &mut v.attrs,
+        }
+    }
+
     pub fn is_brace(&self) -> bool {
         matches!(self, Self::Brace(_))
     }

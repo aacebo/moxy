@@ -26,6 +26,15 @@ pub enum UnaryExpr {
 }
 
 impl UnaryExpr {
+    pub fn attrs_mut(&mut self) -> &mut Attributes {
+        match self {
+            Self::Reference(v) => &mut v.attrs,
+            Self::Unary(v) => &mut v.attrs,
+            Self::Cast(v) => &mut v.attrs,
+            Self::Try(v) => &mut v.attrs,
+        }
+    }
+
     pub fn is_reference(&self) -> bool {
         matches!(self, Self::Reference(_))
     }
@@ -113,13 +122,16 @@ impl From<ExprTry> for UnaryExpr {
 
 impl UnaryExpr {
     pub fn parse_from(stream: &mut ParseStream, allow_struct: bool) -> Result<Expr, ParseError> {
+        // Leading outer attributes apply to whichever expression node we build here.
+        let attrs = stream.parse::<Attributes>()?;
+
         // Prefix range: `..b`, `..=b`, `..`.
         if stream.peek::<moxy_token::punct::DotDot>() || stream.peek::<moxy_token::punct::DotDotEq>() {
             use crate::RangeLimits;
             let limits = stream.parse::<RangeLimits>()?;
             let end = super::binary::ExprRange::maybe_end(stream, allow_struct)?;
             return Ok(Expr::Binary(BinaryExpr::Range(ExprRange {
-                attrs: Attributes::default(),
+                attrs,
                 start: None,
                 limits,
                 end,
@@ -131,7 +143,7 @@ impl UnaryExpr {
             let mutability = stream.parse::<Mutability>()?;
             let expr = Box::new(UnaryExpr::parse_from(stream, allow_struct)?);
             return Ok(Expr::Unary(UnaryExpr::Reference(ExprReference {
-                attrs: Attributes::default(),
+                attrs,
                 and_punct,
                 mutability,
                 expr,
@@ -141,14 +153,19 @@ impl UnaryExpr {
         if ExprUnary::is_prefix(stream) {
             let op = stream.parse::<UnOp>()?;
             let expr = Box::new(UnaryExpr::parse_from(stream, allow_struct)?);
-            return Ok(Expr::Unary(UnaryExpr::Unary(ExprUnary {
-                attrs: Attributes::default(),
-                op,
-                expr,
-            })));
+            return Ok(Expr::Unary(UnaryExpr::Unary(ExprUnary { attrs, op, expr })));
         }
 
         let atom = super::primary::PrimaryExpr::parse_from(stream, allow_struct)?;
-        super::postfix::PostfixExpr::parse_from(stream, atom)
+        let mut expr = super::postfix::PostfixExpr::parse_from(stream, atom)?;
+
+        // Attach the leading attributes to the parsed atom/postfix node.
+        if !attrs.is_empty()
+            && let Some(slot) = expr.attrs_mut()
+        {
+            *slot = attrs;
+        }
+
+        Ok(expr)
     }
 }

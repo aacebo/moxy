@@ -49,10 +49,7 @@ impl ExprMatch {
 
 impl ToTokens for ExprMatch {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
-
+        self.attrs.to_tokens(t);
         self.match_keyword.to_tokens(t);
         self.expr.to_tokens(t);
         self.arms.to_tokens(t);
@@ -113,10 +110,7 @@ impl Parse for MatchArm {
 
 impl ToTokens for MatchArm {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
-
+        self.attrs.to_tokens(t);
         self.pat.to_tokens(t);
 
         if let Some(g) = &self.guard {

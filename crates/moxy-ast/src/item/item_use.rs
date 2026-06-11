@@ -48,9 +48,7 @@ impl Spanner for ItemUse {
 
 impl ToTokens for ItemUse {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
+        self.attrs.to_tokens(t);
         self.vis.to_tokens(t);
         self.use_keyword.to_tokens(t);
         self.tree.to_tokens(t);

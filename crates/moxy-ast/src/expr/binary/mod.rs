@@ -30,6 +30,16 @@ pub enum BinaryExpr {
 }
 
 impl BinaryExpr {
+    pub fn attrs_mut(&mut self) -> &mut Attributes {
+        match self {
+            Self::Binary(v) => &mut v.attrs,
+            Self::Assign(v) => &mut v.attrs,
+            Self::AssignOp(v) => &mut v.attrs,
+            Self::Range(v) => &mut v.attrs,
+            Self::Type(v) => &mut v.attrs,
+        }
+    }
+
     pub fn is_binary(&self) -> bool {
         matches!(self, Self::Binary(_))
     }

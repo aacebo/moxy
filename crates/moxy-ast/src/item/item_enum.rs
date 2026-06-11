@@ -72,9 +72,7 @@ impl Spanner for Variant {
 
 impl ToTokens for ItemEnum {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
+        self.attrs.to_tokens(t);
         self.vis.to_tokens(t);
         self.enum_keyword.to_tokens(t);
         self.ident.to_tokens(t);
@@ -120,9 +118,7 @@ impl Parse for Variant {
 
 impl ToTokens for Variant {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
+        self.attrs.to_tokens(t);
         self.ident.to_tokens(t);
         self.fields.to_tokens(t);
 

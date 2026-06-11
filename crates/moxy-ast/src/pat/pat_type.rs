@@ -26,10 +26,7 @@ impl Spanner for PatType {
 
 impl ToTokens for PatType {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
-
+        self.attrs.to_tokens(t);
         self.pat.to_tokens(t);
         self.colon.to_tokens(t);
         self.ty.to_tokens(t);

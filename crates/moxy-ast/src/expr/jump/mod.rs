@@ -9,6 +9,8 @@ pub use expr_return::*;
 pub use expr_yield::*;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
+use crate::Attributes;
+
 /// Jump/control-flow expressions: return, break, continue, yield.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -20,6 +22,15 @@ pub enum JumpExpr {
 }
 
 impl JumpExpr {
+    pub fn attrs_mut(&mut self) -> &mut Attributes {
+        match self {
+            Self::Return(v) => &mut v.attrs,
+            Self::Break(v) => &mut v.attrs,
+            Self::Continue(v) => &mut v.attrs,
+            Self::Yield(v) => &mut v.attrs,
+        }
+    }
+
     pub fn is_return(&self) -> bool {
         matches!(self, Self::Return(_))
     }

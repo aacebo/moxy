@@ -30,9 +30,7 @@ impl Spanner for ExprReturn {
 
 impl ToTokens for ExprReturn {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
+        self.attrs.to_tokens(t);
         self.return_keyword.to_tokens(t);
 
         if let Some(e) = &self.expr {

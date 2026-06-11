@@ -55,9 +55,7 @@ impl ExprMethodCall {
 
 impl ToTokens for ExprMethodCall {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
+        self.attrs.to_tokens(t);
         self.receiver.to_tokens(t);
         self.dot.to_tokens(t);
         self.method.to_tokens(t);

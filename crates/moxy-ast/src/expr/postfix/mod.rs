@@ -29,6 +29,16 @@ pub enum PostfixExpr {
 }
 
 impl PostfixExpr {
+    pub fn attrs_mut(&mut self) -> &mut Attributes {
+        match self {
+            Self::Call(v) => &mut v.attrs,
+            Self::MethodCall(v) => &mut v.attrs,
+            Self::Field(v) => &mut v.attrs,
+            Self::Index(v) => &mut v.attrs,
+            Self::Await(v) => &mut v.attrs,
+        }
+    }
+
     pub fn is_call(&self) -> bool {
         matches!(self, Self::Call(_))
     }

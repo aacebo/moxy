@@ -19,9 +19,7 @@ impl Spanner for ExprGroup {
 
 impl ToTokens for ExprGroup {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
+        self.attrs.to_tokens(t);
         self.expr.to_tokens(t);
     }
 }

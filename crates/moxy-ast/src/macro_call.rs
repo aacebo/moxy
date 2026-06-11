@@ -67,9 +67,7 @@ impl Spanner for MacroCall {
 
 impl ToTokens for MacroCall {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        for attr in &self.attrs {
-            attr.to_tokens(tokens);
-        }
+        self.attrs.to_tokens(tokens);
         self.path.to_tokens(tokens);
         self.bang.to_tokens(tokens);
         tokens.extend_one(TokenTree::Group(self.body.clone()));

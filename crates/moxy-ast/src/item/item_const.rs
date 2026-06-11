@@ -63,9 +63,7 @@ impl Spanner for ItemConst {
 
 impl ToTokens for ItemConst {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
+        self.attrs.to_tokens(t);
         self.vis.to_tokens(t);
         self.const_keyword.to_tokens(t);
         self.ident.to_tokens(t);

@@ -54,6 +54,22 @@ pub enum PrimaryExpr {
 }
 
 impl PrimaryExpr {
+    pub fn attrs_mut(&mut self) -> &mut Attributes {
+        match self {
+            Self::Lit(v) => &mut v.attrs,
+            Self::Path(v) => &mut v.attrs,
+            Self::Struct(v) => &mut v.attrs,
+            Self::Closure(v) => &mut v.attrs,
+            Self::Tuple(v) => &mut v.attrs,
+            Self::Array(v) => &mut v.attrs,
+            Self::Repeat(v) => &mut v.attrs,
+            Self::Let(v) => &mut v.attrs,
+            Self::Paren(v) => &mut v.attrs,
+            Self::Group(v) => &mut v.attrs,
+            Self::Macro(v) => &mut v.attrs,
+        }
+    }
+
     pub fn is_lit(&self) -> bool {
         matches!(self, Self::Lit(_))
     }

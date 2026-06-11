@@ -51,9 +51,7 @@ impl Spanner for ItemMacro {
 
 impl ToTokens for ItemMacro {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
+        self.attrs.to_tokens(t);
         self.mac.to_tokens(t);
 
         if let Some(semi_punct) = &self.semi_punct {

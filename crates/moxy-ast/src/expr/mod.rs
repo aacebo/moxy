@@ -85,6 +85,18 @@ impl Expr {
     pub fn as_primary(&self) -> Option<&PrimaryExpr> {
         if let Self::Primary(v) = self { Some(v) } else { None }
     }
+
+    pub fn attrs_mut(&mut self) -> Option<&mut crate::Attributes> {
+        match self {
+            Self::Unary(v) => Some(v.attrs_mut()),
+            Self::Binary(v) => Some(v.attrs_mut()),
+            Self::Postfix(v) => Some(v.attrs_mut()),
+            Self::Block(v) => Some(v.attrs_mut()),
+            Self::Jump(v) => Some(v.attrs_mut()),
+            Self::Primary(v) => Some(v.attrs_mut()),
+            Self::Infer | Self::Verbatim(_) => None,
+        }
+    }
 }
 
 impl Spanner for Expr {
@@ -798,6 +810,46 @@ mod tests {
             let r = render(&e);
             let e2: Expr = moxy_token::parse!(r).unwrap();
             assert_eq!(render(&e2), r, "unstable roundtrip for {src}");
+        }
+    }
+
+    #[test]
+    fn leading_attributes() {
+        let e = moxy_token::parse!("#[a] if c { }" as Expr).unwrap();
+        match &e {
+            Expr::Block(BlockExpr::If(v)) => assert_eq!(v.attrs.len(), 1),
+            other => panic!("expected if-expr, got {other:?}"),
+        }
+        assert_eq!(render(&e), "# [a] if c {}");
+
+        let lit = moxy_token::parse!("#[a] 42" as Expr).unwrap();
+        match &lit {
+            Expr::Primary(PrimaryExpr::Lit(v)) => assert_eq!(v.attrs.len(), 1),
+            other => panic!("expected lit, got {other:?}"),
+        }
+
+        // Multiple attributes on a closure.
+        let cl = moxy_token::parse!("#[a] #[b] || x" as Expr).unwrap();
+        match &cl {
+            Expr::Primary(PrimaryExpr::Closure(v)) => assert_eq!(v.attrs.len(), 2),
+            other => panic!("expected closure, got {other:?}"),
+        }
+
+        // No attributes -> empty.
+        let bare = moxy_token::parse!("42" as Expr).unwrap();
+        assert!(bare.clone().attrs_mut().is_none_or(|a| a.is_empty()));
+
+        // Postfix: attribute applies to the whole (outermost) expression.
+        let mut pf = moxy_token::parse!("#[a] foo . bar ()" as Expr).unwrap();
+        assert!(matches!(pf, Expr::Postfix(PostfixExpr::MethodCall(_))));
+        assert_eq!(pf.attrs_mut().unwrap().len(), 1);
+    }
+
+    #[test]
+    fn attribute_roundtrip() {
+        for src in ["# [a] 42", "# [cfg (test)] if c {}", "# [a] # [b] || x"] {
+            let e: Expr = moxy_token::parse!(src).unwrap();
+            assert_eq!(render(&e), src, "unstable attr roundtrip for {src}");
         }
     }
 }

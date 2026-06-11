@@ -42,9 +42,7 @@ impl Parse for Crate {
 
 impl ToTokens for Crate {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
+        self.attrs.to_tokens(t);
 
         for it in &self.items {
             it.to_tokens(t);

@@ -59,9 +59,7 @@ impl Spanner for TraitItemFn {
 
 impl ToTokens for TraitItemFn {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
+        self.attrs.to_tokens(t);
         self.sig.to_tokens(t);
         match &self.default_body {
             Some(b) => b.to_tokens(t),

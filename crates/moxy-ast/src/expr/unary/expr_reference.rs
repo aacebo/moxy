@@ -26,9 +26,7 @@ impl Spanner for ExprReference {
 
 impl ToTokens for ExprReference {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
+        self.attrs.to_tokens(t);
         self.and_punct.to_tokens(t);
         self.mutability.to_tokens(t);
         self.expr.to_tokens(t);

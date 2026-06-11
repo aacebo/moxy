@@ -19,9 +19,7 @@ impl Spanner for PatTuple {
 
 impl ToTokens for PatTuple {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
+        self.attrs.to_tokens(t);
         self.elems.to_tokens(t);
     }
 }

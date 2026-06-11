@@ -26,10 +26,7 @@ impl Spanner for PatReference {
 
 impl ToTokens for PatReference {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
-
+        self.attrs.to_tokens(t);
         self.and.to_tokens(t);
         self.mutability.to_tokens(t);
         self.pat.to_tokens(t);

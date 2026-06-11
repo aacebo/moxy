@@ -28,9 +28,7 @@ impl Spanner for ExprLet {
 
 impl ToTokens for ExprLet {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
+        self.attrs.to_tokens(t);
         self.let_keyword.to_tokens(t);
         self.pat.to_tokens(t);
         self.eq.to_tokens(t);

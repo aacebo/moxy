@@ -18,9 +18,7 @@ impl Spanner for PatParen {
 
 impl ToTokens for PatParen {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
+        self.attrs.to_tokens(t);
         self.content.to_tokens(t);
     }
 }

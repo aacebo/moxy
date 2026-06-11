@@ -26,9 +26,7 @@ impl Spanner for ExprField {
 
 impl ToTokens for ExprField {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
+        self.attrs.to_tokens(t);
         self.base.to_tokens(t);
         self.dot.to_tokens(t);
         self.member.to_tokens(t);

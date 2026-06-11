@@ -26,10 +26,7 @@ impl Spanner for ExprAssignOp {
 
 impl ToTokens for ExprAssignOp {
     fn to_tokens(&self, t: &mut TokenStream) {
-        for a in &self.attrs {
-            a.to_tokens(t);
-        }
-
+        self.attrs.to_tokens(t);
         self.left.to_tokens(t);
         self.op.to_tokens(t);
         self.right.to_tokens(t);
