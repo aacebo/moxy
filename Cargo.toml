@@ -27,6 +27,7 @@ new-ret-no-self = "allow"
 get_first = "allow"
 explicit_counter_loop = "allow"
 type_complexity = "allow"
+large_enum_variant = "allow"
 
 [package]
 name = "moxy"

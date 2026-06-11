@@ -7,7 +7,7 @@ use moxy_token::punct::{Not, Pound};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 pub use style::*;
 
-use crate::{Delimited, Path};
+use crate::Delimited;
 
 /// A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement.
 #[derive(Debug, Clone, PartialEq, Eq)]

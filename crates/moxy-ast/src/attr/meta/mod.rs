@@ -1,15 +1,14 @@
+mod meta_custom;
 mod meta_list;
 mod meta_name_value;
-mod meta_custom;
 
+pub use meta_custom::*;
 pub use meta_list::*;
 pub use meta_name_value::*;
-pub use meta_custom::*;
-
 use moxy_token::parser::{Parse, ParseError, ParseStream};
-use moxy_token::{Delim, Eq, EqEq, FatArrow, Span, Spanner, ToTokens, Token, TokenStream};
+use moxy_token::{Delim, Eq, EqEq, FatArrow, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Delimited, Expr, Path};
+use crate::{Delimited, Path};
 
 /// A structured attribute meta item (`name`, `name(...)`, `name = expr`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -72,26 +71,32 @@ impl Parse for Meta {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let path = stream.parse::<Path>()?;
 
-        if stream.parse_if::<Token![]>() {
-
-        }
-
-        if let Some(curr) = stream.curr() && curr.is_group() && let Ok(items) = Delimited::parse_paren(stream) {
-            return Ok(Self::List(MetaList {
-                path,
-                items,
-            }));
+        if let Some(curr) = stream.curr()
+            && curr.delim() == Some(Delim::Paren)
+            && let Ok(items) = Delimited::parse_paren(stream)
+        {
+            return Ok(Self::List(MetaList { path, items }));
         }
 
         if stream.peek::<Eq>() && !stream.peek::<EqEq>() && !stream.peek::<FatArrow>() {
-            return Ok(Meta::NameValue(MetaNameValue {
+            return Ok(Self::NameValue(MetaNameValue {
                 path,
                 eq: stream.parse()?,
                 value: stream.parse()?,
             }));
         }
 
-        Ok(Self::Path(path))
+        if stream.is_empty() {
+            return Ok(Self::Path(path));
+        }
+
+        let mut tokens = TokenStream::new();
+
+        while let Some(tt) = stream.advance() {
+            tokens.extend_one(tt.clone());
+        }
+
+        Ok(Self::Custom(MetaCustom { path, tokens }))
     }
 }
 
@@ -188,5 +193,16 @@ mod tests {
             moxy_token::parse!("path = \"x\"" as Meta).unwrap(),
             Meta::NameValue(_)
         ));
+        assert!(matches!(
+            moxy_token::parse!("debug { x = 1 }" as Meta).unwrap(),
+            Meta::Custom(_)
+        ));
+    }
+
+    #[test]
+    fn custom_round_trip() {
+        let m = moxy_token::parse!("debug { x = 1 }" as Meta).unwrap();
+        assert!(matches!(m, Meta::Custom(_)));
+        assert_eq!(render(&m), "debug {x = 1}");
     }
 }
