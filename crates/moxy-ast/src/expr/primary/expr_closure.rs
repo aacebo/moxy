@@ -32,21 +32,7 @@ pub struct ExprClosure {
 
 impl Spanner for ExprClosure {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if let Some(l) = &self.lifetimes {
-            l.span()
-        } else if !matches!(self.constness, Constness::NoConst) {
-            self.constness.span()
-        } else if !matches!(self.asyncness, Asyncness::Sync) {
-            self.asyncness.span()
-        } else {
-            match &self.pipes {
-                ClosurePipes::Empty(oror) => oror.span(),
-                ClosurePipes::Params(open, _) => open.span(),
-            }
-        };
-        start.join(self.body.span())
+        self.attrs.span().join(self.body.span())
     }
 }
 

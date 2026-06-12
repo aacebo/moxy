@@ -57,18 +57,13 @@ impl Parse for TraitItemConst {
 
 impl Spanner for TraitItemConst {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.const_keyword.span()
-        };
         let end = self
             .semi
             .as_ref()
             .map(|s| s.span())
             .or_else(|| self.default.as_ref().map(|(_, e)| e.span()))
             .unwrap_or_else(|| self.ty.span());
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

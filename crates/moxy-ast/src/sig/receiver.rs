@@ -40,16 +40,7 @@ impl Parse for Receiver {
 
 impl Spanner for Receiver {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if let Some(r) = &self.reference {
-            r.span()
-        } else if !matches!(self.mutability, Mutability::Immutable) {
-            self.mutability.span()
-        } else {
-            self.self_keyword.span()
-        };
-        start.join(self.self_keyword.span())
+        self.attrs.span().join(self.self_keyword.span())
     }
 }
 

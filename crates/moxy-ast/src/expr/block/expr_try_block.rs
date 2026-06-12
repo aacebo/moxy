@@ -15,23 +15,17 @@ pub struct ExprTryBlock {
 
 impl Spanner for ExprTryBlock {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.try_keyword.span()
-        };
-
-        start.join(self.block.span())
+        self.attrs.span().join(self.block.span())
     }
 }
 
 impl ExprTryBlock {
-    pub fn parse_from(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Self, ParseError> {
         let try_keyword = stream.parse::<Try>()?;
         let block = stream.parse::<StmtBlock>()?;
 
         Ok(Self {
-            attrs: Attributes::default(),
+            attrs,
             try_keyword,
             block,
         })

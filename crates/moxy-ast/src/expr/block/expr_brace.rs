@@ -14,15 +14,7 @@ pub struct ExprBrace {
 
 impl Spanner for ExprBrace {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if let Some(l) = &self.label {
-            l.span()
-        } else {
-            self.block.span()
-        };
-
-        start.join(self.block.span())
+        self.attrs.span().join(self.block.span())
     }
 }
 

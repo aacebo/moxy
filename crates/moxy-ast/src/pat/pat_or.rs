@@ -13,15 +13,11 @@ pub struct PatOr {
 
 impl Spanner for PatOr {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if let Some(c) = self.cases.first() {
-            c.span()
-        } else {
-            Span::call_site()
+        let cases = match (self.cases.first(), self.cases.last()) {
+            (Some(a), Some(b)) => a.span().join(b.span()),
+            _ => Span::call_site(),
         };
-        let end = self.cases.last().map(|c| c.span()).unwrap_or(start);
-        start.join(end)
+        self.attrs.span().join(cases)
     }
 }
 

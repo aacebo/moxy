@@ -66,16 +66,7 @@ impl Parse for ItemTrait {
 
 impl Spanner for ItemTrait {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if !matches!(self.vis, Visibility::Inherited) {
-            self.vis.span()
-        } else if !matches!(self.unsafety, Unsafety::Safe) {
-            self.unsafety.span()
-        } else {
-            self.trait_keyword.span()
-        };
-        start.join(self.items.span())
+        self.attrs.span().join(self.items.span())
     }
 }
 

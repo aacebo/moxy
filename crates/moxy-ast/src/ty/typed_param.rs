@@ -27,12 +27,7 @@ impl Parse for TypedParam {
 
 impl Spanner for TypedParam {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.pat.span()
-        };
-        start.join(self.ty.span())
+        self.attrs.span().join(self.ty.span())
     }
 }
 

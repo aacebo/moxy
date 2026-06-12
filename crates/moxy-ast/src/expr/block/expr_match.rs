@@ -18,24 +18,18 @@ pub struct ExprMatch {
 
 impl Spanner for ExprMatch {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.match_keyword.span()
-        };
-
-        start.join(self.arms.span())
+        self.attrs.span().join(self.arms.span())
     }
 }
 
 impl ExprMatch {
-    pub fn parse_from(stream: &mut ParseStream) -> Result<Expr, ParseError> {
+    pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Expr, ParseError> {
         let match_keyword = stream.parse::<Match>()?;
         let expr = Box::new(parse_expr(stream, false)?);
         let arms = Delimited::<Vec<MatchArm>>::parse_brace(stream)?;
 
         Ok(Expr::Block(BlockExpr::Match(Self {
-            attrs: Attributes::default(),
+            attrs,
             match_keyword,
             expr,
             arms,
@@ -71,14 +65,8 @@ pub struct MatchArm {
 
 impl Spanner for MatchArm {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.pat.span()
-        };
-
         let end = self.comma.as_ref().map(|c| c.span()).unwrap_or_else(|| self.body.span());
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

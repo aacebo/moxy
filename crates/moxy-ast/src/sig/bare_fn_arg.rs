@@ -39,14 +39,7 @@ impl Parse for BareFnArg {
 
 impl Spanner for BareFnArg {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if let Some((id, _)) = &self.name {
-            id.span()
-        } else {
-            self.ty.span()
-        };
-        start.join(self.ty.span())
+        self.attrs.span().join(self.ty.span())
     }
 }
 

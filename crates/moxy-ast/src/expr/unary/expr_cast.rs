@@ -15,12 +15,7 @@ pub struct ExprCast {
 
 impl Spanner for ExprCast {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.expr.span()
-        };
-        start.join(self.ty.span())
+        self.attrs.span().join(self.ty.span())
     }
 }
 

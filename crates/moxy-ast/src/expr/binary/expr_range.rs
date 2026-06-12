@@ -15,21 +15,13 @@ pub struct ExprRange {
 
 impl Spanner for ExprRange {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if let Some(s) = &self.start {
-            s.span()
-        } else {
-            self.limits.span()
-        };
-
         let end = if let Some(e) = &self.end {
             e.span()
         } else {
             self.limits.span()
         };
 
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

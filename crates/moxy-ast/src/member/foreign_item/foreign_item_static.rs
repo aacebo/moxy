@@ -50,15 +50,8 @@ impl Parse for ForeignItemStatic {
 
 impl Spanner for ForeignItemStatic {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if !matches!(self.vis, Visibility::Inherited) {
-            self.vis.span()
-        } else {
-            self.static_keyword.span()
-        };
         let end = self.semi.as_ref().map(|s| s.span()).unwrap_or_else(|| self.ty.span());
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

@@ -75,11 +75,6 @@ impl Spanner for StmtLocalInit {
 
 impl Spanner for StmtLocal {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.let_keyword.span()
-        };
         let end = if let Some(s) = &self.semi {
             s.span()
         } else if let Some(init) = &self.init {
@@ -87,7 +82,7 @@ impl Spanner for StmtLocal {
         } else {
             self.pat.span()
         };
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

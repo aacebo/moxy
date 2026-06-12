@@ -56,12 +56,7 @@ impl Parse for FieldValue {
 
 impl Spanner for FieldValue {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.member.span()
-        };
-        start.join(self.expr.span())
+        self.attrs.span().join(self.expr.span())
     }
 }
 

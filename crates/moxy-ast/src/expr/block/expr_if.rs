@@ -19,37 +19,32 @@ pub struct ExprIf {
 
 impl Spanner for ExprIf {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.if_keyword.span()
-        };
-
         let end = if let Some(e) = &self.else_branch {
             e.span()
         } else {
             self.then_branch.span()
         };
 
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 
 impl ExprIf {
-    pub fn parse_from(stream: &mut ParseStream) -> Result<Expr, ParseError> {
+    pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Expr, ParseError> {
         let if_keyword = stream.parse::<If>()?;
         let cond = Box::new(parse_expr(stream, false)?);
         let then_branch = stream.parse::<StmtBlock>()?;
         let (else_keyword, else_branch) = if matches!(stream.curr(), Some(tt) if tt.text() == Some("else")) {
             let else_kw = stream.parse::<Else>()?;
-            let branch = Some(Box::new(PrimaryExpr::parse_from(stream, true)?));
+            let else_attrs = stream.parse::<Attributes>()?;
+            let branch = Some(Box::new(PrimaryExpr::parse_from(stream, true, else_attrs)?));
             (Some(else_kw), branch)
         } else {
             (None, None)
         };
 
         Ok(Expr::Block(BlockExpr::If(Self {
-            attrs: Attributes::default(),
+            attrs,
             if_keyword,
             cond,
             then_branch,

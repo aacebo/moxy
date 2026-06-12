@@ -14,13 +14,7 @@ pub struct ExprAssignOp {
 
 impl Spanner for ExprAssignOp {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.left.span()
-        };
-
-        start.join(self.right.span())
+        self.attrs.span().join(self.right.span())
     }
 }
 

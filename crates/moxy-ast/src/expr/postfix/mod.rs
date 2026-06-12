@@ -29,6 +29,16 @@ pub enum PostfixExpr {
 }
 
 impl PostfixExpr {
+    pub fn attrs(&self) -> &Attributes {
+        match self {
+            Self::Call(v) => &v.attrs,
+            Self::MethodCall(v) => &v.attrs,
+            Self::Field(v) => &v.attrs,
+            Self::Index(v) => &v.attrs,
+            Self::Await(v) => &v.attrs,
+        }
+    }
+
     pub fn attrs_mut(&mut self) -> &mut Attributes {
         match self {
             Self::Call(v) => &mut v.attrs,

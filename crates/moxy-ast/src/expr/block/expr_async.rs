@@ -17,13 +17,7 @@ pub struct ExprAsync {
 
 impl Spanner for ExprAsync {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.async_keyword.span()
-        };
-
-        start.join(self.block.span())
+        self.attrs.span().join(self.block.span())
     }
 }
 
@@ -37,13 +31,13 @@ impl ExprAsync {
             && matches!(stream.nth(2), Some(moxy_token::TokenTree::Group(g)) if g.delim() == moxy_token::Delim::Brace)
     }
 
-    pub fn parse_from(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Self, ParseError> {
         let async_keyword = stream.parse::<Async>()?;
         let move_keyword = stream.parse_if::<Move>();
         let block = stream.parse::<StmtBlock>()?;
 
         Ok(Self {
-            attrs: Attributes::default(),
+            attrs,
             async_keyword,
             move_keyword,
             block,

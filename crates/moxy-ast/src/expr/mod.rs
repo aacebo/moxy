@@ -86,6 +86,18 @@ impl Expr {
         if let Self::Primary(v) = self { Some(v) } else { None }
     }
 
+    pub fn attrs(&self) -> Option<&crate::Attributes> {
+        match self {
+            Self::Unary(v) => Some(v.attrs()),
+            Self::Binary(v) => Some(v.attrs()),
+            Self::Postfix(v) => Some(v.attrs()),
+            Self::Block(v) => Some(v.attrs()),
+            Self::Jump(v) => Some(v.attrs()),
+            Self::Primary(v) => Some(v.attrs()),
+            Self::Infer | Self::Verbatim(_) => None,
+        }
+    }
+
     pub fn attrs_mut(&mut self) -> Option<&mut crate::Attributes> {
         match self {
             Self::Unary(v) => Some(v.attrs_mut()),
@@ -839,10 +851,20 @@ mod tests {
         let bare = moxy_token::parse!("42" as Expr).unwrap();
         assert!(bare.clone().attrs_mut().is_none_or(|a| a.is_empty()));
 
-        // Postfix: attribute applies to the whole (outermost) expression.
-        let mut pf = moxy_token::parse!("#[a] foo . bar ()" as Expr).unwrap();
-        assert!(matches!(pf, Expr::Postfix(PostfixExpr::MethodCall(_))));
-        assert_eq!(pf.attrs_mut().unwrap().len(), 1);
+        // Postfix: the leading attribute binds to the inner atom (receiver), since each
+        // node parses its own attrs and the postfix wrapper sees none. Round-trip is stable.
+        let pf = moxy_token::parse!("#[a] foo . bar ()" as Expr).unwrap();
+        match &pf {
+            Expr::Postfix(PostfixExpr::MethodCall(m)) => {
+                assert!(m.attrs.is_empty());
+                match m.receiver.as_ref() {
+                    Expr::Primary(PrimaryExpr::Path(p)) => assert_eq!(p.attrs.len(), 1),
+                    other => panic!("expected path receiver, got {other:?}"),
+                }
+            }
+            other => panic!("expected method call, got {other:?}"),
+        }
+        assert_eq!(render(&pf), "# [a] foo . bar ()");
     }
 
     #[test]

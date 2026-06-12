@@ -51,11 +51,6 @@ impl Parse for TypeParam {
 
 impl Spanner for TypeParam {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.ident.span()
-        };
         let end = if let Some(d) = &self.default {
             d.span()
         } else if let Some(b) = self.bounds.last() {
@@ -63,7 +58,7 @@ impl Spanner for TypeParam {
         } else {
             self.ident.span()
         };
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

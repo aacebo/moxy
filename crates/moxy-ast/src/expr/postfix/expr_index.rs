@@ -13,12 +13,7 @@ pub struct ExprIndex {
 
 impl Spanner for ExprIndex {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.base.span()
-        };
-        start.join(self.index.span())
+        self.attrs.span().join(self.index.span())
     }
 }
 

@@ -23,13 +23,8 @@ impl Parse for TraitItemMacro {
 
 impl Spanner for TraitItemMacro {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.mac.span()
-        };
         let end = self.semi.as_ref().map(|s| s.span()).unwrap_or_else(|| self.mac.span());
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

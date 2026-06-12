@@ -41,6 +41,21 @@ pub enum BlockExpr {
 }
 
 impl BlockExpr {
+    pub fn attrs(&self) -> &Attributes {
+        match self {
+            Self::Brace(v) => &v.attrs,
+            Self::If(v) => &v.attrs,
+            Self::While(v) => &v.attrs,
+            Self::ForLoop(v) => &v.attrs,
+            Self::Loop(v) => &v.attrs,
+            Self::Match(v) => &v.attrs,
+            Self::Async(v) => &v.attrs,
+            Self::Unsafe(v) => &v.attrs,
+            Self::Const(v) => &v.attrs,
+            Self::TryBlock(v) => &v.attrs,
+        }
+    }
+
     pub fn attrs_mut(&mut self) -> &mut Attributes {
         match self {
             Self::Brace(v) => &mut v.attrs,

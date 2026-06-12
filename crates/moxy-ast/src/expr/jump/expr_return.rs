@@ -14,17 +14,12 @@ pub struct ExprReturn {
 
 impl Spanner for ExprReturn {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.return_keyword.span()
-        };
         let end = if let Some(e) = &self.expr {
             e.span()
         } else {
             self.return_keyword.span()
         };
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

@@ -62,13 +62,7 @@ impl Parse for TraitItemType {
 
 impl Spanner for TraitItemType {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.type_keyword.span()
-        };
-
-        start.join(
+        self.attrs.span().join(
             self.semi
                 .as_ref()
                 .map(|s| s.span())

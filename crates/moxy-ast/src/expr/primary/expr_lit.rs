@@ -13,12 +13,7 @@ pub struct ExprLit {
 
 impl Spanner for ExprLit {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.lit.span()
-        };
-        start.join(self.lit.span())
+        self.attrs.span().join(self.lit.span())
     }
 }
 

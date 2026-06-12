@@ -15,12 +15,7 @@ pub struct PatType {
 
 impl Spanner for PatType {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.pat.span()
-        };
-        start.join(self.ty.span())
+        self.attrs.span().join(self.ty.span())
     }
 }
 

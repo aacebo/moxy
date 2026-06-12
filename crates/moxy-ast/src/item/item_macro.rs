@@ -39,13 +39,8 @@ impl Parse for ItemMacro {
 
 impl Spanner for ItemMacro {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.mac.span()
-        };
         let end = self.semi_punct.as_ref().map(|s| s.span()).unwrap_or_else(|| self.mac.span());
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

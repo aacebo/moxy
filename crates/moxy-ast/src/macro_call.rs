@@ -2,13 +2,12 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Not;
 use moxy_token::{Delim, Group, LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use crate::{Attributes, Path};
+use crate::Path;
 
 /// A macro invocation (`path!(...)`, `path![...]`, `path!{...}`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MacroCall {
-    pub attrs: Attributes,
     pub path: Path,
     pub bang: Not,
     pub body: Group,
@@ -35,7 +34,6 @@ impl MacroCall {
 
 impl Parse for MacroCall {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
         let path = stream.parse::<Path>()?;
         let bang = stream.parse::<Not>()?;
 
@@ -50,24 +48,18 @@ impl Parse for MacroCall {
             }
         };
 
-        Ok(Self { attrs, path, bang, body })
+        Ok(Self { path, bang, body })
     }
 }
 
 impl Spanner for MacroCall {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.path.span()
-        };
-        start.join(self.body.span().into())
+        self.path.span().join(self.body.span().into())
     }
 }
 
 impl ToTokens for MacroCall {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.attrs.to_tokens(tokens);
         self.path.to_tokens(tokens);
         self.bang.to_tokens(tokens);
         tokens.extend_one(TokenTree::Group(self.body.clone()));

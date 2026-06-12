@@ -17,21 +17,12 @@ pub struct PatIdent {
 
 impl Spanner for PatIdent {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if let Some(r) = &self.by_ref {
-            r.span()
-        } else if !matches!(self.mutability, Mutability::Immutable) {
-            self.mutability.span()
-        } else {
-            self.ident.span()
-        };
         let end = if let Some((_, sub)) = &self.subpat {
             sub.span()
         } else {
             self.ident.span()
         };
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

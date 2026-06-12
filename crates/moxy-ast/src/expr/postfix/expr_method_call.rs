@@ -18,13 +18,7 @@ pub struct ExprMethodCall {
 
 impl Spanner for ExprMethodCall {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.receiver.span()
-        };
-
-        start.join(self.args.span())
+        self.attrs.span().join(self.args.span())
     }
 }
 

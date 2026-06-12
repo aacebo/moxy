@@ -12,8 +12,7 @@ pub struct ExprGroup {
 
 impl Spanner for ExprGroup {
     fn span(&self) -> Span {
-        let start = self.attrs.first().map(|a| a.span()).unwrap_or_else(|| self.expr.span());
-        start.join(self.expr.span())
+        self.attrs.span().join(self.expr.span())
     }
 }
 

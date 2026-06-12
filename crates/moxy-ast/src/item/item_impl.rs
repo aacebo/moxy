@@ -84,16 +84,7 @@ impl Parse for ItemImpl {
 
 impl Spanner for ItemImpl {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if !matches!(self.defaultness, Defaultness::Final) {
-            self.defaultness.span()
-        } else if !matches!(self.unsafety, Unsafety::Safe) {
-            self.unsafety.span()
-        } else {
-            self.impl_keyword.span()
-        };
-        start.join(self.items.span())
+        self.attrs.span().join(self.items.span())
     }
 }
 

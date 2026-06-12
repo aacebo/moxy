@@ -42,18 +42,13 @@ impl Parse for TraitItemFn {
 
 impl Spanner for TraitItemFn {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.sig.span()
-        };
         let end = self
             .default_body
             .as_ref()
             .map(|b| b.span())
             .or_else(|| self.semi.as_ref().map(|s| s.span()))
             .unwrap_or_else(|| self.sig.span());
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

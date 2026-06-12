@@ -13,12 +13,7 @@ pub struct ExprMacro {
 
 impl Spanner for ExprMacro {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.mac.span()
-        };
-        start.join(self.mac.span())
+        self.attrs.span().join(self.mac.span())
     }
 }
 

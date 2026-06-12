@@ -15,12 +15,7 @@ pub struct ExprReference {
 
 impl Spanner for ExprReference {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.and_punct.span()
-        };
-        start.join(self.expr.span())
+        self.attrs.span().join(self.expr.span())
     }
 }
 

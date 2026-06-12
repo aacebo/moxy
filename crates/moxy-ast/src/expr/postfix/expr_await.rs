@@ -16,12 +16,7 @@ pub struct ExprAwait {
 
 impl Spanner for ExprAwait {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.base.span()
-        };
-        start.join(self.await_keyword.span())
+        self.attrs.span().join(self.await_keyword.span())
     }
 }
 

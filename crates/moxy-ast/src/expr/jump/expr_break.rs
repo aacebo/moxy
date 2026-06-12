@@ -15,11 +15,6 @@ pub struct ExprBreak {
 
 impl Spanner for ExprBreak {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.break_keyword.span()
-        };
         let end = if let Some(e) = &self.expr {
             e.span()
         } else if let Some(l) = &self.label {
@@ -27,7 +22,7 @@ impl Spanner for ExprBreak {
         } else {
             self.break_keyword.span()
         };
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

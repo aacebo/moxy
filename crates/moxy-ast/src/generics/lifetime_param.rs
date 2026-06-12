@@ -31,13 +31,8 @@ impl Parse for LifetimeParam {
 
 impl Spanner for LifetimeParam {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.lifetime.span()
-        };
         let end = self.bounds.last().map(|b| b.span()).unwrap_or_else(|| self.lifetime.span());
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

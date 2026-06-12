@@ -23,12 +23,7 @@ impl Parse for Variadic {
 
 impl Spanner for Variadic {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.dots.span()
-        };
-        start.join(self.dots.span())
+        self.attrs.span().join(self.dots.span())
     }
 }
 

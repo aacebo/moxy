@@ -15,12 +15,7 @@ pub struct ExprField {
 
 impl Spanner for ExprField {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.base.span()
-        };
-        start.join(self.member.span())
+        self.attrs.span().join(self.member.span())
     }
 }
 

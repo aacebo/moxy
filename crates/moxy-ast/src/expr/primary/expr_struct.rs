@@ -32,14 +32,7 @@ pub struct ExprStruct {
 
 impl Spanner for ExprStruct {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if let Some(q) = &self.qself {
-            q.span()
-        } else {
-            self.path.span()
-        };
-        start.join(self.body.span())
+        self.attrs.span().join(self.body.span())
     }
 }
 

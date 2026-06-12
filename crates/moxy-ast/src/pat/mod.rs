@@ -405,6 +405,7 @@ impl PatStruct {
                 break;
             }
 
+            let field_attrs = stream.parse::<Attributes>()?;
             let member = stream.parse::<Member>()?;
 
             let (colon, pat, shorthand) = if stream.peek::<Colon>() {
@@ -432,7 +433,7 @@ impl PatStruct {
             };
 
             fields.push_value(PatField {
-                attrs: Attributes::default(),
+                attrs: field_attrs,
                 member,
                 colon,
                 pat,

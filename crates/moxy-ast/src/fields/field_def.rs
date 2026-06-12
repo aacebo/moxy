@@ -51,18 +51,7 @@ impl Parse for FieldDef {
 
 impl Spanner for FieldDef {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if !matches!(self.vis, Visibility::Inherited) {
-            self.vis.span()
-        } else if !matches!(self.mutability, Mutability::Immutable) {
-            self.mutability.span()
-        } else if let Some(id) = &self.ident {
-            id.span()
-        } else {
-            self.ty.span()
-        };
-        start.join(self.ty.span())
+        self.attrs.span().join(self.ty.span())
     }
 }
 

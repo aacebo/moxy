@@ -12,12 +12,7 @@ pub struct PatGroup {
 
 impl Spanner for PatGroup {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.pat.span()
-        };
-        start.join(self.pat.span())
+        self.attrs.span().join(self.pat.span())
     }
 }
 

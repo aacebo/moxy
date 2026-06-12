@@ -37,14 +37,7 @@ impl Parse for ItemUnion {
 
 impl Spanner for ItemUnion {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if !matches!(self.vis, Visibility::Inherited) {
-            self.vis.span()
-        } else {
-            self.union_keyword.span()
-        };
-        start.join(self.fields.span())
+        self.attrs.span().join(self.fields.span())
     }
 }
 

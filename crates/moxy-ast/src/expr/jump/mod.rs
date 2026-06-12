@@ -22,6 +22,15 @@ pub enum JumpExpr {
 }
 
 impl JumpExpr {
+    pub fn attrs(&self) -> &Attributes {
+        match self {
+            Self::Return(v) => &v.attrs,
+            Self::Break(v) => &v.attrs,
+            Self::Continue(v) => &v.attrs,
+            Self::Yield(v) => &v.attrs,
+        }
+    }
+
     pub fn attrs_mut(&mut self) -> &mut Attributes {
         match self {
             Self::Return(v) => &mut v.attrs,

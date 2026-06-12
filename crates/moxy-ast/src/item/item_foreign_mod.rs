@@ -30,14 +30,7 @@ impl Parse for ItemForeignMod {
 
 impl Spanner for ItemForeignMod {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if !matches!(self.unsafety, Unsafety::Safe) {
-            self.unsafety.span()
-        } else {
-            self.abi.span()
-        };
-        start.join(self.items.span())
+        self.attrs.span().join(self.items.span())
     }
 }
 

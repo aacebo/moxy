@@ -15,23 +15,17 @@ pub struct ExprConst {
 
 impl Spanner for ExprConst {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.const_keyword.span()
-        };
-
-        start.join(self.block.span())
+        self.attrs.span().join(self.block.span())
     }
 }
 
 impl ExprConst {
-    pub fn parse_from(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Self, ParseError> {
         let const_keyword = stream.parse::<Const>()?;
         let block = stream.parse::<StmtBlock>()?;
 
         Ok(Self {
-            attrs: Attributes::default(),
+            attrs,
             const_keyword,
             block,
         })

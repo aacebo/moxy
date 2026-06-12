@@ -46,12 +46,7 @@ impl Parse for ItemMacroRules {
 
 impl Spanner for ItemMacroRules {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.macro_rules_keyword.span()
-        };
-        start.join(self.body.span().into())
+        self.attrs.span().join(self.body.span().into())
     }
 }
 

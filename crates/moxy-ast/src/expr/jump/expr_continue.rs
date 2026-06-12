@@ -14,17 +14,12 @@ pub struct ExprContinue {
 
 impl Spanner for ExprContinue {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.continue_keyword.span()
-        };
         let end = if let Some(l) = &self.label {
             l.span()
         } else {
             self.continue_keyword.span()
         };
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

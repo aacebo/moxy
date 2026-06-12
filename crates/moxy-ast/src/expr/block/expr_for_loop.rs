@@ -20,20 +20,12 @@ pub struct ExprForLoop {
 
 impl Spanner for ExprForLoop {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if let Some(l) = &self.label {
-            l.span()
-        } else {
-            self.for_keyword.span()
-        };
-
-        start.join(self.body.span())
+        self.attrs.span().join(self.body.span())
     }
 }
 
 impl ExprForLoop {
-    pub fn parse_from(stream: &mut ParseStream, label: Option<Label>) -> Result<Self, ParseError> {
+    pub fn parse_from(stream: &mut ParseStream, label: Option<Label>, attrs: Attributes) -> Result<Self, ParseError> {
         let for_keyword = stream.parse::<For>()?;
         let pat = Box::new(stream.parse::<Pattern>()?);
         let in_keyword = stream.parse::<In>()?;
@@ -41,7 +33,7 @@ impl ExprForLoop {
         let body = stream.parse::<StmtBlock>()?;
 
         Ok(Self {
-            attrs: Attributes::default(),
+            attrs,
             label,
             for_keyword,
             pat,

@@ -15,23 +15,17 @@ pub struct ExprUnsafe {
 
 impl Spanner for ExprUnsafe {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.unsafe_keyword.span()
-        };
-
-        start.join(self.block.span())
+        self.attrs.span().join(self.block.span())
     }
 }
 
 impl ExprUnsafe {
-    pub fn parse_from(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Self, ParseError> {
         let unsafe_keyword = stream.parse::<Unsafe>()?;
         let block = stream.parse::<StmtBlock>()?;
 
         Ok(Self {
-            attrs: Attributes::default(),
+            attrs,
             unsafe_keyword,
             block,
         })

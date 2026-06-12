@@ -14,12 +14,7 @@ pub struct ExprTry {
 
 impl Spanner for ExprTry {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.expr.span()
-        };
-        start.join(self.question_punct.span())
+        self.attrs.span().join(self.question_punct.span())
     }
 }
 

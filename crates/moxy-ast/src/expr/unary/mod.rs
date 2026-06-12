@@ -26,6 +26,15 @@ pub enum UnaryExpr {
 }
 
 impl UnaryExpr {
+    pub fn attrs(&self) -> &Attributes {
+        match self {
+            Self::Reference(v) => &v.attrs,
+            Self::Unary(v) => &v.attrs,
+            Self::Cast(v) => &v.attrs,
+            Self::Try(v) => &v.attrs,
+        }
+    }
+
     pub fn attrs_mut(&mut self) -> &mut Attributes {
         match self {
             Self::Reference(v) => &mut v.attrs,
@@ -156,16 +165,7 @@ impl UnaryExpr {
             return Ok(Expr::Unary(UnaryExpr::Unary(ExprUnary { attrs, op, expr })));
         }
 
-        let atom = super::primary::PrimaryExpr::parse_from(stream, allow_struct)?;
-        let mut expr = super::postfix::PostfixExpr::parse_from(stream, atom)?;
-
-        // Attach the leading attributes to the parsed atom/postfix node.
-        if !attrs.is_empty()
-            && let Some(slot) = expr.attrs_mut()
-        {
-            *slot = attrs;
-        }
-
-        Ok(expr)
+        let atom = super::primary::PrimaryExpr::parse_from(stream, allow_struct, attrs)?;
+        super::postfix::PostfixExpr::parse_from(stream, atom)
     }
 }

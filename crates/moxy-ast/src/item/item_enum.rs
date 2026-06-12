@@ -43,30 +43,18 @@ impl Parse for ItemEnum {
 
 impl Spanner for ItemEnum {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if !matches!(self.vis, Visibility::Inherited) {
-            self.vis.span()
-        } else {
-            self.enum_keyword.span()
-        };
-        start.join(self.variants.span())
+        self.attrs.span().join(self.variants.span())
     }
 }
 
 impl Spanner for Variant {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.ident.span()
-        };
         let end = if let Some(d) = &self.discriminant {
             d.span()
         } else {
             self.fields.span()
         };
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

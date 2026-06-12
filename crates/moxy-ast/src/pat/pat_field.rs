@@ -16,12 +16,7 @@ pub struct PatField {
 
 impl Spanner for PatField {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.member.span()
-        };
-        start.join(self.pat.span())
+        self.attrs.span().join(self.pat.span())
     }
 }
 

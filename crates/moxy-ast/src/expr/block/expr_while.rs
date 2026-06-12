@@ -18,26 +18,18 @@ pub struct ExprWhile {
 
 impl Spanner for ExprWhile {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if let Some(l) = &self.label {
-            l.span()
-        } else {
-            self.while_keyword.span()
-        };
-
-        start.join(self.body.span())
+        self.attrs.span().join(self.body.span())
     }
 }
 
 impl ExprWhile {
-    pub fn parse_from(stream: &mut ParseStream, label: Option<Label>) -> Result<Self, ParseError> {
+    pub fn parse_from(stream: &mut ParseStream, label: Option<Label>, attrs: Attributes) -> Result<Self, ParseError> {
         let while_keyword = stream.parse::<While>()?;
         let cond = Box::new(parse_expr(stream, false)?);
         let body = stream.parse::<StmtBlock>()?;
 
         Ok(Self {
-            attrs: Attributes::default(),
+            attrs,
             label,
             while_keyword,
             cond,

@@ -49,13 +49,6 @@ impl Parse for ItemMod {
 
 impl Spanner for ItemMod {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if !matches!(self.vis, Visibility::Inherited) {
-            self.vis.span()
-        } else {
-            self.mod_keyword.span()
-        };
         let end = if let Some(c) = &self.content {
             c.span()
         } else if let Some(s) = &self.semi_punct {
@@ -63,7 +56,7 @@ impl Spanner for ItemMod {
         } else {
             self.mod_keyword.span()
         };
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

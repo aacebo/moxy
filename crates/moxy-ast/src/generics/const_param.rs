@@ -48,17 +48,12 @@ impl Parse for ConstParam {
 
 impl Spanner for ConstParam {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else {
-            self.const_keyword.span()
-        };
         let end = if let Some(d) = &self.default {
             d.span()
         } else {
             self.ty.span()
         };
-        start.join(end)
+        self.attrs.span().join(end)
     }
 }
 

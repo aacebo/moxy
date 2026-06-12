@@ -16,25 +16,17 @@ pub struct ExprLoop {
 
 impl Spanner for ExprLoop {
     fn span(&self) -> Span {
-        let start = if let Some(a) = self.attrs.first() {
-            a.span()
-        } else if let Some(l) = &self.label {
-            l.span()
-        } else {
-            self.loop_keyword.span()
-        };
-
-        start.join(self.body.span())
+        self.attrs.span().join(self.body.span())
     }
 }
 
 impl ExprLoop {
-    pub fn parse_from(stream: &mut ParseStream, label: Option<Label>) -> Result<Self, ParseError> {
+    pub fn parse_from(stream: &mut ParseStream, label: Option<Label>, attrs: Attributes) -> Result<Self, ParseError> {
         let loop_keyword = stream.parse::<Loop>()?;
         let body = stream.parse::<StmtBlock>()?;
 
         Ok(Self {
-            attrs: Attributes::default(),
+            attrs,
             label,
             loop_keyword,
             body,
