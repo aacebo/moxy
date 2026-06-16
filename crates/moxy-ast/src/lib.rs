@@ -25,6 +25,7 @@ pub mod stmt;
 pub mod ty;
 pub mod use_tree;
 pub mod vis;
+pub mod visit;
 
 #[doc(inline)]
 pub use _crate::Crate;
@@ -76,3 +77,5 @@ pub use ty::{QSelf, Type, TypeMacro, TypedParam};
 pub use use_tree::UseTree;
 #[doc(inline)]
 pub use vis::*;
+#[doc(inline)]
+pub use visit::{Visit, VisitMut};
