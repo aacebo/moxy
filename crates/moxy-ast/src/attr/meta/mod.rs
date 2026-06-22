@@ -1,16 +1,14 @@
-mod meta_custom;
 mod meta_list;
 mod meta_map;
 mod meta_name_value;
 
-pub use meta_custom::*;
 pub use meta_list::*;
 pub use meta_map::*;
 pub use meta_name_value::*;
 use moxy_token::parser::{Parse, ParseError, ParseStream};
-use moxy_token::{Delim, Eq, EqEq, FatArrow, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Delimited, Path, Punctuated};
+use crate::Path;
 
 /// A structured attribute meta item (`name`, `name(...)`, `name = expr`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -22,8 +20,6 @@ pub enum Meta {
     List(MetaList),
     /// `#[debug = true]`
     NameValue(MetaNameValue),
-    /// `#[debug { .. }]`
-    Custom(MetaCustom),
 }
 
 impl Meta {
@@ -39,10 +35,6 @@ impl Meta {
         matches!(self, Self::NameValue(_))
     }
 
-    pub fn is_custom(&self) -> bool {
-        matches!(self, Self::Custom(_))
-    }
-
     pub fn as_path(&self) -> Option<&Path> {
         if let Self::Path(v) = self { Some(v) } else { None }
     }
@@ -55,50 +47,27 @@ impl Meta {
         if let Self::NameValue(v) = self { Some(v) } else { None }
     }
 
-    pub fn as_custom(&self) -> Option<&MetaCustom> {
-        if let Self::Custom(v) = self { Some(v) } else { None }
-    }
-
     pub fn path(&self) -> &Path {
         match self {
             Self::Path(v) => v,
             Self::List(v) => &v.path,
             Self::NameValue(v) => &v.path,
-            Self::Custom(v) => &v.path,
         }
     }
 }
 
 impl Parse for Meta {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+        if let Some(v) = stream.parse_if::<MetaNameValue>() {
+            return Ok(v.into_meta());
+        }
+
+        if let Some(v) = stream.parse_if::<MetaList>() {
+            return Ok(v.into_meta());
+        }
+
         let path = stream.parse::<Path>()?;
-
-        if let Some(curr) = stream.curr()
-            && curr.delim() == Some(Delim::Paren)
-            && let Ok(items) = Delimited::parse_paren_with(stream, Punctuated::parse_separated_nonempty)
-        {
-            return Ok(Self::List(MetaList { path, items }));
-        }
-
-        if stream.peek::<Eq>() && !stream.peek::<EqEq>() && !stream.peek::<FatArrow>() {
-            return Ok(Self::NameValue(MetaNameValue {
-                path,
-                eq: stream.parse()?,
-                value: stream.parse()?,
-            }));
-        }
-
-        if stream.is_empty() {
-            return Ok(Self::Path(path));
-        }
-
-        let mut tokens = TokenStream::new();
-
-        while let Some(tt) = stream.advance() {
-            tokens.extend_one(tt.clone());
-        }
-
-        Ok(Self::Custom(MetaCustom { path, tokens }))
+        Ok(Meta::Path(path))
     }
 }
 
@@ -108,7 +77,6 @@ impl Spanner for Meta {
             Self::Path(p) => p.span(),
             Self::List(l) => l.span(),
             Self::NameValue(nv) => nv.span(),
-            Self::Custom(v) => v.span(),
         }
     }
 }
@@ -119,7 +87,6 @@ impl ToTokens for Meta {
             Self::Path(p) => p.to_tokens(t),
             Self::List(l) => l.to_tokens(t),
             Self::NameValue(nv) => nv.to_tokens(t),
-            Self::Custom(v) => v.to_tokens(t),
         }
     }
 }
@@ -182,12 +149,6 @@ mod tests {
     }
 
     #[test]
-    fn cfg_delimited() {
-        let a = moxy_token::parse!("#[cfg(feature = \"x\")]" as Attribute).unwrap();
-        assert!(matches!(a.meta.inner, Meta::List(_)));
-    }
-
-    #[test]
     fn meta_forms() {
         assert!(matches!(moxy_token::parse!("inline" as Meta).unwrap(), Meta::Path(_)));
         assert!(matches!(moxy_token::parse!("derive(Clone)" as Meta).unwrap(), Meta::List(_)));
@@ -195,16 +156,5 @@ mod tests {
             moxy_token::parse!("path = \"x\"" as Meta).unwrap(),
             Meta::NameValue(_)
         ));
-        assert!(matches!(
-            moxy_token::parse!("debug { x = 1 }" as Meta).unwrap(),
-            Meta::Custom(_)
-        ));
-    }
-
-    #[test]
-    fn custom_round_trip() {
-        let m = moxy_token::parse!("debug { x = 1 }" as Meta).unwrap();
-        assert!(matches!(m, Meta::Custom(_)));
-        assert_eq!(render(&m), "debug {x = 1}");
     }
 }

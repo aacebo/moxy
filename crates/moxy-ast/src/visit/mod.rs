@@ -1659,7 +1659,6 @@ define_visit! {
             Path(visit_path / visit_path_mut),
             List(visit_meta_list / visit_meta_list_mut),
             NameValue(visit_meta_name_value / visit_meta_name_value_mut),
-            Custom(visit_meta_custom / visit_meta_custom_mut),
         }
     }
     struct MetaList {
@@ -1677,14 +1676,6 @@ define_visit! {
             path => visit_path / visit_path_mut,
             eq: skip,
             value => visit_expr / visit_expr_mut,
-        }
-    }
-    struct MetaCustom {
-        visit: visit_meta_custom, visit_mut: visit_meta_custom_mut,
-        walk: walk_meta_custom, walk_mut: walk_meta_custom_mut,
-        fields {
-            path => visit_path / visit_path_mut,
-            tokens: skip,
         }
     }
 

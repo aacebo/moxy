@@ -4,7 +4,7 @@ use super::ToTokens;
 use crate::lex::{Cursor, LexError, Scan};
 use crate::parser::{ParseError, ParseStream};
 use crate::span::DelimSpan;
-use crate::{Span, TokenTree};
+use crate::{Span, Spanner, TokenTree};
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct TokenStream(Vec<TokenTree>);
@@ -119,6 +119,12 @@ impl From<TokenStream> for Vec<TokenTree> {
     #[inline]
     fn from(value: TokenStream) -> Self {
         value.0
+    }
+}
+
+impl Spanner for TokenStream {
+    fn span(&self) -> Span {
+        self.first().join(self.last())
     }
 }
 

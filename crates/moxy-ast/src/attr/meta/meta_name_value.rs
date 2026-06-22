@@ -1,4 +1,5 @@
-use moxy_token::{Eq, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::parser::ParseError;
+use moxy_token::{Eq, EqEq, FatArrow, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Expr, Meta, Path};
 
@@ -28,5 +29,21 @@ impl ToTokens for MetaNameValue {
         self.path.to_tokens(t);
         self.eq.to_tokens(t);
         self.value.to_tokens(t);
+    }
+}
+
+impl Parse for MetaNameValue {
+    fn parse(stream: &mut moxy_token::parser::ParseStream) -> Result<Self, moxy_token::parser::ParseError> {
+        let path = stream.parse::<Path>()?;
+
+        if !stream.peek::<Eq>() || stream.peek::<EqEq>() || stream.peek::<FatArrow>() {
+            return Err(ParseError::new(path.span(), "expected \"=\""));
+        }
+
+        Ok(Self {
+            path,
+            eq: stream.parse()?,
+            value: stream.parse()?,
+        })
     }
 }

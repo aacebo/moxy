@@ -27,7 +27,6 @@ impl Spanner for Attribute {
 impl Parse for Attribute {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let pound = stream.parse::<Pound>()?;
-
         let style = if stream.peek::<Not>() {
             let not = stream.parse::<Not>()?;
             AttrStyle::Inner(pound, not)
@@ -35,7 +34,7 @@ impl Parse for Attribute {
             AttrStyle::Outer(pound)
         };
 
-        let meta = Delimited::<Meta>::parse_bracket(stream)?;
+        let meta = Delimited::parse_bracket(stream)?;
         Ok(Self { style, meta })
     }
 }
