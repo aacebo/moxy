@@ -64,7 +64,7 @@ impl Extend<Meta> for MetaMap {
     fn extend<T: IntoIterator<Item = Meta>>(&mut self, iter: T) {
         for meta in iter {
             if let Meta::List(list) = meta {
-                self.extend(list.items.into_inner().into_iter());
+                self.extend(list.items.into_inner());
             } else {
                 self.push(meta.path().clone(), meta);
             }
