@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Parse, Span, Spanner, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 use super::PathArguments;
 use crate::Ident;
@@ -46,5 +46,11 @@ impl ToTokens for PathSegment {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.ident.to_tokens(tokens);
         self.args.to_tokens(tokens);
+    }
+}
+
+impl std::hash::Hash for PathSegment {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.to_token_stream().to_string().hash(state);
     }
 }

@@ -34,6 +34,10 @@ impl<T> Delimited<T> {
         self.span.close()
     }
 
+    pub fn into_inner(self) -> T {
+        self.inner
+    }
+
     pub fn surround(&self, tokens: &mut TokenStream, inner: TokenStream)
     where
         T: ToTokens,

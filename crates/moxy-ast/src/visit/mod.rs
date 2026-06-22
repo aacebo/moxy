@@ -1667,7 +1667,7 @@ define_visit! {
         walk: walk_meta_list, walk_mut: walk_meta_list_mut,
         fields {
             path => visit_path / visit_path_mut,
-            items: delim => visit_meta / visit_meta_mut,
+            items: punct => visit_meta / visit_meta_mut,
         }
     }
     struct MetaNameValue {

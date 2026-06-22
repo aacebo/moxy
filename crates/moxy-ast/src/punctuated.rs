@@ -5,8 +5,8 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 pub struct Punctuated<T, P> {
-    inner: Vec<(T, P)>,
-    last: Option<Box<T>>,
+    pub inner: Vec<(T, P)>,
+    pub last: Option<Box<T>>,
 }
 
 impl<T, P> Punctuated<T, P> {
@@ -389,10 +389,10 @@ impl<'a, T, P> IntoIterator for &'a mut Punctuated<T, P> {
 }
 
 impl<T: Spanner, P> Punctuated<T, P> {
-    pub fn span(&self) -> Option<Span> {
-        let first = self.first()?.span();
-        let last = self.last()?.span();
-        Some(first.join(last))
+    pub fn span(&self) -> Span {
+        let first = self.first().map(|v| v.span()).unwrap_or_default();
+        let last = self.last().map(|v| v.span()).unwrap_or_default();
+        first.join(last)
     }
 }
 

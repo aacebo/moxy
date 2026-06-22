@@ -1,13 +1,13 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Comma, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Delimited, Meta, Path};
+use crate::{Delimited, Meta, Path, Punctuated};
 
 /// A list-style meta item (`name(tokens)`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MetaList {
     pub path: Path,
-    pub items: Delimited<Box<Meta>>,
+    pub items: Delimited<Punctuated<Meta, Comma>>,
 }
 
 impl MetaList {

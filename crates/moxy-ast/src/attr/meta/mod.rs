@@ -1,14 +1,16 @@
 mod meta_custom;
 mod meta_list;
+mod meta_map;
 mod meta_name_value;
 
 pub use meta_custom::*;
 pub use meta_list::*;
+pub use meta_map::*;
 pub use meta_name_value::*;
 use moxy_token::parser::{Parse, ParseError, ParseStream};
 use moxy_token::{Delim, Eq, EqEq, FatArrow, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Delimited, Path};
+use crate::{Delimited, Path, Punctuated};
 
 /// A structured attribute meta item (`name`, `name(...)`, `name = expr`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -73,7 +75,7 @@ impl Parse for Meta {
 
         if let Some(curr) = stream.curr()
             && curr.delim() == Some(Delim::Paren)
-            && let Ok(items) = Delimited::parse_paren(stream)
+            && let Ok(items) = Delimited::parse_paren_with(stream, Punctuated::parse_separated_nonempty)
         {
             return Ok(Self::List(MetaList { path, items }));
         }

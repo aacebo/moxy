@@ -230,6 +230,12 @@ impl PartialEq<&str> for Ident {
     }
 }
 
+impl std::hash::Hash for Ident {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.text.hash(state);
+    }
+}
+
 #[cfg(test)]
 mod tests {
     #[test]

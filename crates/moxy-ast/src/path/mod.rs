@@ -147,6 +147,22 @@ impl IntoIterator for Path {
     }
 }
 
+impl std::hash::Hash for Path {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        if let Some(colon) = &self.leading_colon {
+            colon.hash(state);
+        }
+
+        for (seg, sep) in self.pairs().map(|v| v.into_tuple()) {
+            seg.hash(state);
+
+            if let Some(colon) = sep {
+                colon.hash(state);
+            }
+        }
+    }
+}
+
 #[cfg(test)]
 mod tests {
     use moxy_token::ToTokenStream;
