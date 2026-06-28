@@ -10,15 +10,56 @@ type Project<'p, T> = Box<dyn for<'x> Fn(&'x Meta) -> Option<&'x T> + 'p>;
 impl Attributes {
     pub fn query(&self) -> QueryBuilder<'_, Meta> {
         QueryBuilder {
-            roots: self,
+            target: self.into(),
             project: Box::new(|m| Some(m)),
             operation: Operation::Always,
         }
     }
 }
 
+impl Meta {
+    pub fn query(&self) -> QueryBuilder<'_, Meta> {
+        QueryBuilder {
+            target: self.into(),
+            project: Box::new(|m| Some(m)),
+            operation: Operation::Always,
+        }
+    }
+}
+
+#[derive(Clone, Copy)]
+pub enum QueryTarget<'a> {
+    Attributes(&'a Attributes),
+    Meta(&'a Meta),
+}
+
+impl<'a> From<&'a Attributes> for QueryTarget<'a> {
+    fn from(a: &'a Attributes) -> Self {
+        Self::Attributes(a)
+    }
+}
+
+impl<'a> From<&'a Meta> for QueryTarget<'a> {
+    fn from(m: &'a Meta) -> Self {
+        Self::Meta(m)
+    }
+}
+
+impl<'a> QueryTarget<'a> {
+    fn walk<T>(self, c: &mut Collector<'a, '_, T>) {
+        match self {
+            Self::Attributes(attrs) => {
+                for attr in attrs {
+                    c.visit_meta(&attr.meta);
+                }
+            }
+            Self::Meta(meta) => c.visit_meta(meta),
+        }
+    }
+}
+
 pub struct QueryBuilder<'a, T = Meta> {
-    roots: &'a Attributes,
+    target: QueryTarget<'a>,
     project: Project<'a, T>,
     operation: Operation<T>,
 }
@@ -37,7 +78,7 @@ impl<'a, T: 'a> QueryBuilder<'a, T> {
 
     pub fn and<F: FnOnce(QueryBuilder<'a, T>) -> QueryBuilder<'a, T>>(mut self, f: F) -> Self {
         let group = f(QueryBuilder {
-            roots: self.roots,
+            target: self.target,
             project: Box::new(|_| None),
             operation: Operation::Always,
         });
@@ -48,7 +89,7 @@ impl<'a, T: 'a> QueryBuilder<'a, T> {
 
     pub fn or<F: FnOnce(QueryBuilder<'a, T>) -> QueryBuilder<'a, T>>(mut self, f: F) -> Self {
         let group = f(QueryBuilder {
-            roots: self.roots,
+            target: self.target,
             project: Box::new(|_| None),
             operation: Operation::Always,
         });
@@ -65,7 +106,7 @@ impl<'a, T: 'a> QueryBuilder<'a, T> {
         let project: Project<'a, U> = Box::new(move |m: &Meta| (self.project)(m).filter(|v| self.operation.eval(v)).and(f(m)));
 
         QueryBuilder {
-            roots: self.roots,
+            target: self.target,
             project,
             operation: Operation::Always,
         }
@@ -93,9 +134,7 @@ impl<'a, T> QueryBuilder<'a, T> {
             out: Vec::new(),
         };
 
-        for attr in self.roots {
-            c.visit_meta(&attr.meta);
-        }
+        self.target.walk(&mut c);
 
         c.out
     }
@@ -202,5 +241,23 @@ mod tests {
     fn not_inverts() {
         let a = attrs("#[cfg(feature = \"x\")]");
         assert!(a.query().path("cfg").not().path("cfg").collect().is_empty());
+    }
+
+    #[test]
+    fn meta_query_searches_within_a_single_meta() {
+        let a = attrs("#[cfg(all(feature = \"x\", unix))]");
+        let cfg = a.query().path("cfg").collect();
+        let cfg = *cfg.first().unwrap();
+
+        assert!(!cfg.query().path("all").collect().is_empty());
+        assert!(!cfg.query().path("feature").collect().is_empty());
+        assert!(cfg.query().path("derive").collect().is_empty());
+    }
+
+    #[test]
+    fn meta_query_includes_itself() {
+        let a = attrs("#[cfg(feature = \"x\")]");
+        let cfg = *a.query().path("cfg").collect().first().unwrap();
+        assert!(!cfg.query().path("cfg").collect().is_empty());
     }
 }
