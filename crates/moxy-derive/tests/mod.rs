@@ -12,6 +12,4 @@ pub struct User {
 }
 
 #[test]
-fn derive_debug() {
-
-}
+fn derive_debug() {}

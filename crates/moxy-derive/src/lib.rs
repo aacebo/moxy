@@ -29,5 +29,6 @@ pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStr
         impl moxy_token::ToTokens for {{ declr.ident() }} {
             {{ content }}
         }
-    }.into()
+    }
+    .into()
 }

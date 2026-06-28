@@ -63,11 +63,7 @@ impl<'a> ParseStream<'a> {
     }
 
     pub fn depth(&self, delim: Delim) -> usize {
-        if let Some(v) = self.depths.get(&delim) {
-            *v
-        } else {
-            0
-        }
+        if let Some(v) = self.depths.get(&delim) { *v } else { 0 }
     }
 
     pub fn seek(&mut self, other: &Self) {
