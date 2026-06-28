@@ -1,5 +1,3 @@
-use std::collections::HashMap;
-
 use super::{ParseError, Peek};
 use crate::span::{DelimSpan, fallback};
 use crate::{Delim, LexError, Parse, Span, TokenStream, TokenTree};
@@ -28,7 +26,6 @@ pub struct ParseStream<'a> {
     /// peeled off its first character. Acts as a virtual "current" token that is
     /// consumed before `index` advances again.
     pending: Option<TokenTree>,
-    depths: HashMap<Delim, usize>,
 }
 
 impl<'a> ParseStream<'a> {
@@ -37,7 +34,6 @@ impl<'a> ParseStream<'a> {
             input,
             index: 0,
             pending: None,
-            depths: HashMap::new(),
         }
     }
 
@@ -58,12 +54,7 @@ impl<'a> ParseStream<'a> {
             input: self.input,
             index: self.index,
             pending: self.pending.clone(),
-            depths: self.depths.clone(),
         }
-    }
-
-    pub fn depth(&self, delim: Delim) -> usize {
-        if let Some(v) = self.depths.get(&delim) { *v } else { 0 }
     }
 
     pub fn seek(&mut self, other: &Self) {
@@ -175,16 +166,7 @@ impl<'a> ParseStream<'a> {
 
         let start = self.index;
         self.index += n;
-        let tokens = &self.input[start..self.index];
-
-        for token in tokens {
-            if let Some(g) = token.as_group() {
-                let v = self.depths.entry(g.delim()).or_insert(0);
-                *v += 1;
-            }
-        }
-
-        Some(tokens)
+        Some(&self.input[start..self.index])
     }
 
     /// move the iterator forward and return the token. Consumes a pending split
