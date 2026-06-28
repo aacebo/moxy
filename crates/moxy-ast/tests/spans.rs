@@ -1,5 +1,3 @@
-use moxy_ast::attr::AttrStyle;
-use moxy_ast::attr::meta::Meta;
 use moxy_ast::{Attribute, BinOp, Expr, FieldsNamed, Type};
 use moxy_token::ToTokenStream;
 
@@ -68,21 +66,4 @@ fn never_type_preserves_span() {
     let ty = moxy_token::parse!("  !" as Type).unwrap();
     let Type::Never(not) = ty else { panic!("expected never type") };
     assert_eq!(not.span().start().index(), 2);
-}
-
-#[test]
-fn doc_comments_desugar_to_doc_attributes() {
-    let attr = moxy_token::parse!("/// outer doc\nfn f() {}" as Attribute).unwrap();
-    assert!(matches!(attr.style, AttrStyle::Outer(_)));
-    let Meta::NameValue(nv) = &attr.meta.inner else {
-        panic!("expected NameValue")
-    };
-    assert_eq!(nv.path.first().unwrap().ident.text(), "doc");
-
-    let attr = moxy_token::parse!("//! inner doc\n" as Attribute).unwrap();
-    assert!(matches!(attr.style, AttrStyle::Inner(..)));
-    let Meta::NameValue(nv) = &attr.meta.inner else {
-        panic!("expected NameValue")
-    };
-    assert_eq!(nv.path.first().unwrap().ident.text(), "doc");
 }

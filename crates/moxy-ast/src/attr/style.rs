@@ -1,24 +1,35 @@
 use moxy_token::punct::{Not, Pound};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 /// Whether an attribute is outer (`#[...]`) or inner (`#![...]`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AttrStyle {
     Outer(Pound),
     Inner(Pound, Not),
 }
 
-impl std::hash::Hash for AttrStyle {
-    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        std::mem::discriminant(self).hash(state);
+impl AttrStyle {
+    pub fn is_outer(&self) -> bool {
+        matches!(self, Self::Outer(_))
+    }
+
+    pub fn is_inner(&self) -> bool {
+        matches!(self, Self::Inner(_, _))
+    }
+
+    pub fn pound(&self) -> &Pound {
+        match self {
+            Self::Outer(p) => p,
+            Self::Inner(p, _) => p,
+        }
     }
 }
 
 impl Spanner for AttrStyle {
     fn span(&self) -> Span {
         match self {
-            AttrStyle::Outer(pound) => pound.span(),
-            AttrStyle::Inner(pound, not) => pound.span().join(not.span()),
+            Self::Outer(pound) => pound.span(),
+            Self::Inner(pound, not) => pound.span().join(not.span()),
         }
     }
 }
@@ -26,11 +37,23 @@ impl Spanner for AttrStyle {
 impl ToTokens for AttrStyle {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
-            AttrStyle::Outer(pound) => pound.to_tokens(tokens),
-            AttrStyle::Inner(pound, not) => {
+            Self::Outer(pound) => pound.to_tokens(tokens),
+            Self::Inner(pound, not) => {
                 pound.to_tokens(tokens);
                 not.to_tokens(tokens);
             }
+        }
+    }
+}
+
+impl Parse for AttrStyle {
+    fn parse(stream: &mut moxy_token::parser::ParseStream) -> Result<Self, moxy_token::parser::ParseError> {
+        let pound = stream.parse::<Pound>()?;
+
+        if let Ok(not) = stream.parse::<Not>() {
+            Ok(Self::Inner(pound, not))
+        } else {
+            Ok(Self::Outer(pound))
         }
     }
 }
@@ -42,8 +65,8 @@ impl serde::Serialize for AttrStyle {
         S: serde::Serializer,
     {
         match self {
-            AttrStyle::Outer(_) => s.serialize_str("Outer"),
-            AttrStyle::Inner(..) => s.serialize_str("Inner"),
+            Self::Outer(_) => s.serialize_str("Outer"),
+            Self::Inner(..) => s.serialize_str("Inner"),
         }
     }
 }

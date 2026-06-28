@@ -4,7 +4,6 @@ mod style;
 
 pub use meta::Meta;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Not, Pound};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 pub use style::*;
 
@@ -26,16 +25,10 @@ impl Spanner for Attribute {
 
 impl Parse for Attribute {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let pound = stream.parse::<Pound>()?;
-        let style = if stream.peek::<Not>() {
-            let not = stream.parse::<Not>()?;
-            AttrStyle::Inner(pound, not)
-        } else {
-            AttrStyle::Outer(pound)
-        };
-
-        let meta = Delimited::parse_bracket(stream)?;
-        Ok(Self { style, meta })
+        Ok(Self {
+            style: stream.parse()?,
+            meta: Delimited::parse_bracket(stream)?,
+        })
     }
 }
 

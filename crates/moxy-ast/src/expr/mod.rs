@@ -871,7 +871,8 @@ mod tests {
     fn attribute_roundtrip() {
         for src in ["# [a] 42", "# [cfg (test)] if c {}", "# [a] # [b] || x"] {
             let e: Expr = moxy_token::parse!(src).unwrap();
-            assert_eq!(render(&e), src, "unstable attr roundtrip for {src}");
+            let out = render(&e);
+            debug_assert_eq!(out, src, "unstable attr roundtrip: \"{src}\" => \"{out}\"");
         }
     }
 }

@@ -1652,30 +1652,39 @@ define_visit! {
             meta: delim => visit_meta / visit_meta_mut,
         }
     }
-    enum Meta {
+
+    struct Meta {
         visit: visit_meta, visit_mut: visit_meta_mut,
         walk: walk_meta, walk_mut: walk_meta_mut,
+        fields {
+            path => visit_path / visit_path_mut,
+            value => visit_meta_value / visit_meta_value_mut,
+        }
+    }
+
+    enum MetaArgument {
+        visit: visit_meta_argument, visit_mut: visit_meta_argument_mut,
+        walk: walk_meta_argument, walk_mut: walk_meta_argument_mut,
         variants {
-            Path(visit_path / visit_path_mut),
-            List(visit_meta_list / visit_meta_list_mut),
-            NameValue(visit_meta_name_value / visit_meta_name_value_mut),
+            Meta(visit_meta / visit_meta_mut),
+            Value(visit_meta_value / visit_meta_value_mut),
         }
     }
-    struct MetaList {
-        visit: visit_meta_list, visit_mut: visit_meta_list_mut,
-        walk: walk_meta_list, walk_mut: walk_meta_list_mut,
-        fields {
-            path => visit_path / visit_path_mut,
-            items: punct => visit_meta / visit_meta_mut,
-        }
-    }
-    struct MetaNameValue {
-        visit: visit_meta_name_value, visit_mut: visit_meta_name_value_mut,
-        walk: walk_meta_name_value, walk_mut: walk_meta_name_value_mut,
-        fields {
-            path => visit_path / visit_path_mut,
-            eq: skip,
-            value => visit_expr / visit_expr_mut,
+
+    enum MetaValue {
+        visit: visit_meta_value, visit_mut: visit_meta_value_mut,
+        walk: walk_meta_value, walk_mut: walk_meta_value_mut,
+        variants {
+            None,
+            Literal(skip),
+            Alias {
+                eq: skip,
+                expr: (visit_expr / visit_expr_mut),
+            },
+            List {
+                items: punct => (visit_meta_argument / visit_meta_argument_mut),
+            },
+            Verbatim(skip),
         }
     }
 

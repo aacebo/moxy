@@ -191,9 +191,14 @@ impl crate::Spanner for Ident {
 
 impl crate::Parse for Ident {
     fn parse(stream: &mut crate::parser::ParseStream) -> Result<Self, crate::parser::ParseError> {
-        match stream.advance() {
+        match stream.advance().cloned() {
             Some(crate::TokenTree::Ident(v)) => Ok(v.clone()),
-            _ => Err(crate::lex::LexError::new(stream.span()).message("expected Ident").into()),
+            Some(other) => Err(crate::lex::LexError::new(stream.span())
+                .message(format!("expected Ident, received \"{}\"", other.to_string()))
+                .into()),
+            None => Err(crate::lex::LexError::new(stream.span())
+                .message(format!("expected Ident, received \"<EOF>\""))
+                .into()),
         }
     }
 }

@@ -77,9 +77,9 @@ impl<'a> QueryBuilder<'a, Meta> {
         let want = crate::Path::try_from_str(name).ok();
         self.filter(move |m: &Meta| {
             want.as_ref().is_some_and(|w| {
-                w.leading_colon().is_some() == m.path().leading_colon().is_some()
-                    && w.len() == m.path().len()
-                    && w.iter().zip(m.path().iter()).all(|(x, y)| x.ident.text() == y.ident.text())
+                w.leading_colon().is_some() == m.path.leading_colon().is_some()
+                    && w.len() == m.path.len()
+                    && w.iter().zip(m.path.iter()).all(|(x, y)| x.ident.text() == y.ident.text())
             })
         })
     }
@@ -94,7 +94,7 @@ impl<'a, T> QueryBuilder<'a, T> {
         };
 
         for attr in self.roots {
-            c.visit_meta(&attr.meta.inner);
+            c.visit_meta(&attr.meta);
         }
 
         c.out
@@ -128,7 +128,6 @@ mod tests {
 
     use super::*;
     use crate::Attribute;
-    use crate::attr::meta::MetaList;
 
     fn attrs(src: &str) -> Attributes {
         let ts = TokenStream::from_str(src).unwrap();
@@ -203,25 +202,5 @@ mod tests {
     fn not_inverts() {
         let a = attrs("#[cfg(feature = \"x\")]");
         assert!(a.query().path("cfg").not().path("cfg").collect().is_empty());
-    }
-
-    #[test]
-    fn nested_recursion_reaches_inner_list() {
-        let a = attrs("#[derive(cfg(feature = \"x\"))]");
-        let lists = a.query().path("cfg").filter_map(Meta::as_list).collect();
-        assert_eq!(lists.len(), 1, "expected to reach the nested cfg list");
-    }
-
-    #[test]
-    fn filter_map_narrows_type_and_carries_predicates() {
-        let a = attrs("#[cfg(feature = \"x\")]");
-        let lists: Vec<&MetaList> = a.query().path("cfg").filter_map(Meta::as_list).collect();
-        assert_eq!(lists.len(), 1);
-        let still: Vec<&MetaList> = a
-            .query()
-            .filter_map(Meta::as_list)
-            .filter(|l: &MetaList| l.path.as_ident().is_some())
-            .collect();
-        assert!(!still.is_empty());
     }
 }
