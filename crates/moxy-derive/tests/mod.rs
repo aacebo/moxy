@@ -1,10 +1,7 @@
 use moxy_derive::ToTokens;
 
 #[derive(Default, ToTokens)]
-#[debug]
-#[template {
-
-}]
+#[template]
 pub struct User {
     pub name: String,
     pub email: String,

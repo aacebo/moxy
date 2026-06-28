@@ -9,15 +9,18 @@ use moxy_token::{Spanner, TokenStream};
 pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let target = TokenStream::from(target);
     let object: Declaration = match target.parse().parse() {
-        Err(err) => {
-            return err.span().error(target).emit().into();
-        }
+        Err(err) => return err.to_compile_error().into(),
         Ok(v) => v,
     };
 
     let tpl_meta_list = object.attrs().query().path("template").collect();
-    let tpl_meta = tpl_meta_list.first().unwrap();
-    let content = tpl_meta.as_value().unwrap().as_verbatim().unwrap().clone();
+    let tpl_meta = if let Some(first) = tpl_meta_list.first() {
+        first
+    } else {
+        return object.span().error("template required").emit().into();
+    };
+
+    let content = tpl_meta.as_value().and_then(|m| m.as_verbatim());
     let output = template! {
         impl moxy_token::ToTokens for {{ object.ident() }} {
             fn to_tokens(&self, tokens: &mut moxy_token::TokenStream) {
