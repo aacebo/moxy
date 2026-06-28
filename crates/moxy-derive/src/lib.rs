@@ -1,6 +1,7 @@
 use moxy_ast::Declaration;
 use moxy_diagnostic::SpanExt;
 use moxy_fmt::fmt;
+use moxy_template::template;
 use moxy_token::{Spanner, TokenStream};
 
 #[proc_macro_derive(ToTokens, attributes(template))]
@@ -14,10 +15,19 @@ pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStr
     };
 
     let formatted = match fmt!(&declr) {
-        Err(err) => panic!("{}", err),
+        Err(err) => return err.to_compile_error().into(),
         Ok(v) => v,
     };
 
     declr.span().note(formatted).emit();
-    Default::default()
+
+    let matching = declr.attrs().query().path("template").collect();
+    let tpl = matching.first().unwrap();
+    let content = tpl.as_value().unwrap().as_verbatim().unwrap().clone();
+
+    template! {
+        impl moxy_token::ToTokens for {{ declr.ident() }} {
+            {{ content }}
+        }
+    }.into()
 }

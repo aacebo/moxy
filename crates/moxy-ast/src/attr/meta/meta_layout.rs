@@ -69,8 +69,8 @@ impl Parse for MetaLayout {
             return Ok(Self::List { items });
         }
 
-        if matches!(stream.curr().and_then(|tt| tt.delim()), Some(d) if d.is_brace()) {
-            return Ok(Self::Value(stream.parse()?));
+        if let Ok(value) = stream.parse::<MetaValue>() {
+            return Ok(Self::Value(value));
         }
 
         Ok(Self::None)

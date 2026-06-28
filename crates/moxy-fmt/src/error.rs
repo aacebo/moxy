@@ -1,6 +1,26 @@
+use moxy_ast::Ident;
+use moxy_token::{Delim, Group, Literal, Not, Punctuation, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
+
 #[derive(Debug)]
 pub enum FmtError {
     Std(std::fmt::Error),
+}
+
+impl FmtError {
+    pub fn to_compile_error(&self) -> TokenStream {
+        let ident = Ident::new("compile_error");
+        let bang = Not::new(Span::def_site());
+        let lit = Literal::string(&self.to_string());
+        let inner: TokenTree = lit.into();
+        let group = Group::new(Delim::Paren, inner.into_token_stream());
+
+        vec![
+            TokenTree::from(ident),
+            TokenTree::from(Punctuation::from(bang)),
+            TokenTree::from(group),
+        ]
+        .into()
+    }
 }
 
 impl From<std::fmt::Error> for FmtError {
@@ -22,5 +42,11 @@ impl std::error::Error for FmtError {
         match self {
             Self::Std(err) => Some(err),
         }
+    }
+}
+
+impl ToTokens for FmtError {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.to_compile_error().to_tokens(tokens);
     }
 }

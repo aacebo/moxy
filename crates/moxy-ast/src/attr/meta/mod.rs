@@ -15,20 +15,20 @@ use crate::{Delimited, Lit, Path, Punctuated};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Meta {
     pub path: Path,
-    pub inner: MetaLayout,
+    pub content: MetaLayout,
 }
 
 impl std::ops::Deref for Meta {
     type Target = MetaLayout;
 
     fn deref(&self) -> &Self::Target {
-        &self.inner
+        &self.content
     }
 }
 
 impl std::ops::DerefMut for Meta {
     fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.inner
+        &mut self.content
     }
 }
 
@@ -36,14 +36,14 @@ impl Parse for Meta {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         Ok(Self {
             path: stream.parse()?,
-            inner: stream.parse()?,
+            content: stream.parse()?,
         })
     }
 }
 
 impl Spanner for Meta {
     fn span(&self) -> Span {
-        match self.inner.span() {
+        match self.content.span() {
             None => self.path.span(),
             Some(span) => self.path.span().join(span),
         }
@@ -53,6 +53,6 @@ impl Spanner for Meta {
 impl ToTokens for Meta {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.path.to_tokens(t);
-        self.inner.to_tokens(t);
+        self.content.to_tokens(t);
     }
 }

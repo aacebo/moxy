@@ -1,7 +1,7 @@
 use moxy_token::parser::ParseError;
 use moxy_token::{Parse, Span, Spanner, ToTokens};
 
-use crate::{Attribute, Generics, Ident, Visibility, item};
+use crate::{Attributes, Generics, Ident, Visibility, item};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(tag = "type", rename_all = "snake_case"))]
@@ -45,7 +45,7 @@ impl Declaration {
         }
     }
 
-    pub fn attrs(&self) -> &[Attribute] {
+    pub fn attrs(&self) -> &Attributes {
         match self {
             Self::Enum(v) => &v.attrs,
             Self::Struct(v) => &v.attrs,

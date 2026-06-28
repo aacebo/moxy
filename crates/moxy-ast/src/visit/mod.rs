@@ -1658,7 +1658,7 @@ define_visit! {
         walk: walk_meta, walk_mut: walk_meta_mut,
         fields {
             path => visit_path / visit_path_mut,
-            inner => visit_meta_layout / visit_meta_layout_mut,
+            content => visit_meta_layout / visit_meta_layout_mut,
         }
     }
 

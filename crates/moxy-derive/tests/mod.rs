@@ -1,8 +1,9 @@
 use moxy_derive::ToTokens;
 
-#[derive(ToTokens)]
+#[derive(Default, ToTokens)]
 #[template {
-    impl User { }
+    fn to_tokens(&self, tokens: &mut moxy_token::TokenStream) {
+    }
 }]
 pub struct User {
     pub name: String,
@@ -11,4 +12,6 @@ pub struct User {
 }
 
 #[test]
-fn derive_debug() {}
+fn derive_debug() {
+
+}
