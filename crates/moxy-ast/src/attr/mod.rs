@@ -179,7 +179,10 @@ mod tests {
 
     #[test]
     fn meta_literal() {
-        assert!(parse!("count 42" as Meta).is_err());
+        let meta = parse!("count = 42" as Meta).unwrap();
+        assert!(meta.is_alias());
+        assert!(meta.as_alias().unwrap().is_literal());
+        assert_eq!(meta.as_alias().unwrap().as_literal().unwrap().as_int().unwrap().repr, "42");
     }
 
     #[test]
