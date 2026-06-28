@@ -181,15 +181,15 @@ mod tests {
     fn meta_literal() {
         let meta = parse!("count = 42" as Meta).unwrap();
         assert!(meta.is_alias());
-        assert!(meta.as_alias().unwrap().is_literal());
-        assert_eq!(meta.as_alias().unwrap().as_literal().unwrap().as_int().unwrap().repr, "42");
+        assert!(meta.as_value().unwrap().is_literal());
+        assert_eq!(meta.as_value().unwrap().as_literal().unwrap().as_int().unwrap().repr, "42");
     }
 
     #[test]
     fn meta_alias() {
         let meta = parse!("path = \"x\"" as Meta).unwrap();
         assert!(meta.is_alias());
-        assert!(meta.as_alias().is_some());
+        assert!(meta.as_value().is_some());
     }
 
     #[test]
@@ -203,8 +203,8 @@ mod tests {
     #[test]
     fn meta_verbatim() {
         let meta = parse!("custom { a + b }" as Meta).unwrap();
-        assert!(meta.is_verbatim());
-        assert!(!meta.as_verbatim().unwrap().is_empty());
+        assert!(meta.as_value().unwrap().is_verbatim());
+        assert!(!meta.as_value().unwrap().as_verbatim().unwrap().is_empty());
     }
 
     #[test]
@@ -249,10 +249,10 @@ mod tests {
     }
 
     #[test]
-    fn nested_literal() {
-        let meta = parse!("outer(inner 42)" as Meta).unwrap();
-        let inner = meta.as_list().unwrap().first().unwrap().as_meta().unwrap();
-        assert_eq!(inner.as_literal().unwrap().as_int().unwrap().repr, "42");
+    fn nested_bare_literal_rejected() {
+        // `inner 42` (a bare literal directly after a path) is no longer valid syntax.
+        // Inside a list, the terminated parser surfaces the dangling `42` as an error.
+        assert!(parse!("outer(inner 42)" as Meta).is_err());
     }
 
     #[test]
@@ -260,7 +260,7 @@ mod tests {
         let meta = parse!("outer(inner = \"x\")" as Meta).unwrap();
         let inner = meta.as_list().unwrap().first().unwrap().as_meta().unwrap();
         assert!(inner.is_alias());
-        assert!(inner.as_alias().is_some());
+        assert!(inner.as_value().is_some());
     }
 
     #[test]
@@ -274,7 +274,7 @@ mod tests {
     fn nested_verbatim() {
         let meta = parse!("outer(inner { a + b })" as Meta).unwrap();
         let inner = meta.as_list().unwrap().first().unwrap().as_meta().unwrap();
-        assert!(!inner.as_verbatim().unwrap().is_empty());
+        assert!(!inner.as_value().unwrap().as_verbatim().unwrap().is_empty());
     }
 
     #[test]

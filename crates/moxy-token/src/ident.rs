@@ -194,10 +194,10 @@ impl crate::Parse for Ident {
         match stream.advance().cloned() {
             Some(crate::TokenTree::Ident(v)) => Ok(v.clone()),
             Some(other) => Err(crate::lex::LexError::new(stream.span())
-                .message(format!("expected Ident, received \"{}\"", other.to_string()))
+                .message(format!("expected Ident, received \"{}\"", other))
                 .into()),
             None => Err(crate::lex::LexError::new(stream.span())
-                .message(format!("expected Ident, received \"<EOF>\""))
+                .message(format!("expected Ident, received \"{}\"", "<EOF>"))
                 .into()),
         }
     }

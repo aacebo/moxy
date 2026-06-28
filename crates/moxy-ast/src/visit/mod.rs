@@ -1658,7 +1658,7 @@ define_visit! {
         walk: walk_meta, walk_mut: walk_meta_mut,
         fields {
             path => visit_path / visit_path_mut,
-            value => visit_meta_value / visit_meta_value_mut,
+            inner => visit_meta_layout / visit_meta_layout_mut,
         }
     }
 
@@ -1671,12 +1671,11 @@ define_visit! {
         }
     }
 
-    enum MetaValue {
-        visit: visit_meta_value, visit_mut: visit_meta_value_mut,
-        walk: walk_meta_value, walk_mut: walk_meta_value_mut,
+    enum MetaLayout {
+        visit: visit_meta_layout, visit_mut: visit_meta_layout_mut,
+        walk: walk_meta_layout, walk_mut: walk_meta_layout_mut,
         variants {
             None,
-            Literal(skip),
             Alias {
                 eq: skip,
                 value: (visit_meta_value / visit_meta_value_mut),
@@ -1684,6 +1683,15 @@ define_visit! {
             List {
                 items: punct => (visit_meta_argument / visit_meta_argument_mut),
             },
+            Value(visit_meta_value / visit_meta_value_mut),
+        }
+    }
+
+    enum MetaValue {
+        visit: visit_meta_value, visit_mut: visit_meta_value_mut,
+        walk: walk_meta_value, walk_mut: walk_meta_value_mut,
+        variants {
+            Literal(skip),
             Verbatim(skip),
         }
     }
