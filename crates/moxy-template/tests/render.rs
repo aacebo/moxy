@@ -96,6 +96,27 @@ mod interp {
         let tokens = template! { fn f() { let x = (1 + 2); } };
         assert_eq!(tokens.to_string(), "fn f () {let x = (1 + 2) ;}");
     }
+
+    #[test]
+    fn block_wrapping_interp_keeps_braces() {
+        let name = "user";
+        let tokens = template! { impl Foo for {{ name }} { {{ name }} } };
+        assert_eq!(tokens.to_string(), "impl Foo for user {user}");
+    }
+
+    #[test]
+    fn triple_brace_is_block_around_interp() {
+        let x = "v";
+        let tokens = template! { {{{ x }}} };
+        assert_eq!(tokens.to_string(), "{v}");
+    }
+
+    #[test]
+    fn quad_brace_is_nested_blocks() {
+        let x = "v";
+        let tokens = template! { {{{{ x }}}} };
+        assert_eq!(tokens.to_string(), "{{v}}");
+    }
 }
 
 mod keywords {

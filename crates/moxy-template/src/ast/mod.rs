@@ -52,12 +52,19 @@ pub enum Node {
 }
 
 impl Node {
-    fn is_interp_group(g: &Group) -> bool {
-        g.delim() == Delim::Brace && matches!(g.stream().get(0), Some(TokenTree::Group(ig)) if ig.delim() == Delim::Brace)
+    pub fn is_interp_group(g: &Group) -> bool {
+        g.delim() == Delim::Brace && lone_brace_child(&g.stream()).is_some()
     }
 
-    fn group_has_interp(g: &Group) -> bool {
+    pub fn group_has_interp(g: &Group) -> bool {
         !Self::is_interp_group(g) && stream_has_interp(&g.stream())
+    }
+}
+
+pub fn lone_brace_child(stream: &TokenStream) -> Option<Group> {
+    match (stream.len(), stream.get(0)) {
+        (1, Some(TokenTree::Group(g))) if g.delim() == Delim::Brace => Some(g.clone()),
+        _ => None,
     }
 }
 
@@ -65,7 +72,17 @@ impl Parse for Node {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         match stream.curr() {
             Some(TokenTree::Punct(Punctuation::At(_))) => Ok(Node::Keyword(stream.parse::<TmplKeyword>()?)),
-            Some(TokenTree::Group(g)) if Node::is_interp_group(g) => Ok(Node::Interp(stream.parse::<TmplInterp>()?)),
+            Some(TokenTree::Group(g)) if Node::is_interp_group(g) => {
+                let interp = stream.parse::<TmplInterp>()?;
+                let wrap = interp.wrap;
+                let mut node = Node::Interp(interp);
+
+                for _ in 0..wrap {
+                    node = Node::Group(Delim::Brace, Box::new(Template { nodes: vec![node] }));
+                }
+
+                Ok(node)
+            }
             Some(TokenTree::Group(g)) if Node::group_has_interp(g) => {
                 let delim = g.delim();
                 let inner = g.stream();
