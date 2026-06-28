@@ -1679,7 +1679,7 @@ define_visit! {
             Literal(skip),
             Alias {
                 eq: skip,
-                expr: (visit_expr / visit_expr_mut),
+                value: (visit_meta_value / visit_meta_value_mut),
             },
             List {
                 items: punct => (visit_meta_argument / visit_meta_argument_mut),

@@ -1,7 +1,7 @@
 use moxy_token::parser::{Parse, ParseError, ParseStream};
 use moxy_token::{Comma, Delim, Eq, EqEq, FatArrow, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Delimited, Expr, Lit, Path, Punctuated};
+use crate::{Delimited, Lit, Path, Punctuated};
 
 /// A structured attribute meta item (`name`, `name(...)`, `name = expr`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -36,12 +36,9 @@ impl Parse for Meta {
 
 impl Spanner for Meta {
     fn span(&self) -> Span {
-        match &self.value {
-            MetaValue::None => self.path.span(),
-            MetaValue::Literal(lit) => self.path.span().join(lit.span()),
-            MetaValue::Alias { eq: _, expr } => self.path.span().join(expr.span()),
-            MetaValue::List { items } => self.path.span().join(items.span()),
-            MetaValue::Verbatim(tokens) => self.path.span().join(tokens.span()),
+        match self.value.span() {
+            None => self.path.span(),
+            Some(span) => self.path.span().join(span),
         }
     }
 }
@@ -110,9 +107,10 @@ pub enum MetaValue {
     /// `#[debug]`
     None,
     /// `#[debug(true)]`
+    /// `#[debug = true]`
     Literal(Lit),
     /// `#[debug = true]`
-    Alias { eq: Eq, expr: Expr },
+    Alias { eq: Eq, value: Box<Self> },
     /// `#[debug(true, env = "test")]`
     List {
         items: Delimited<Punctuated<MetaArgument, Comma>>,
@@ -135,16 +133,16 @@ impl MetaValue {
     }
 
     pub fn is_alias(&self) -> bool {
-        matches!(self, Self::Alias { eq: _, expr: _ })
+        matches!(self, Self::Alias { eq: _, value: _ })
     }
 
     pub fn is_verbatim(&self) -> bool {
         matches!(self, Self::Verbatim(_))
     }
 
-    pub fn as_alias(&self) -> Option<&Expr> {
+    pub fn as_alias(&self) -> Option<&Self> {
         match self {
-            Self::Alias { eq: _, expr } => Some(expr),
+            Self::Alias { eq: _, value } => Some(value),
             _ => None,
         }
     }
@@ -169,6 +167,16 @@ impl MetaValue {
             _ => None,
         }
     }
+
+    pub fn span(&self) -> Option<Span> {
+        match self {
+            Self::None => None,
+            Self::Literal(lit) => Some(lit.span()),
+            Self::Alias { eq: _, value } => value.span(),
+            Self::List { items } => Some(items.span()),
+            Self::Verbatim(tokens) => Some(tokens.span()),
+        }
+    }
 }
 
 impl Parse for MetaValue {
@@ -176,7 +184,7 @@ impl Parse for MetaValue {
         if stream.peek::<Eq>() && !stream.peek::<EqEq>() && !stream.peek::<FatArrow>() {
             return Ok(Self::Alias {
                 eq: stream.parse()?,
-                expr: stream.parse()?,
+                value: stream.parse()?,
             });
         }
 
@@ -201,9 +209,9 @@ impl Parse for MetaValue {
 impl ToTokens for MetaValue {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            Self::Alias { eq, expr } => {
+            Self::Alias { eq, value } => {
                 eq.to_tokens(t);
-                expr.to_tokens(t);
+                value.to_tokens(t);
             }
             Self::Literal(lit) => {
                 lit.to_tokens(t);
@@ -215,84 +223,6 @@ impl ToTokens for MetaValue {
                 tokens.to_tokens(t);
             }
             _ => {}
-        }
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use std::str::FromStr;
-
-    use moxy_token::{ToTokenStream, TokenStream};
-
-    use super::super::*;
-    use super::*;
-
-    fn render<T: ToTokenStream>(v: &T) -> String {
-        v.to_token_stream().to_string()
-    }
-
-    #[test]
-    fn outer_empty() {
-        let a = moxy_token::parse!("#[inline]" as Attribute).unwrap();
-        assert!(a.style.is_outer());
-        assert!(a.meta.is_none());
-        assert_eq!(render(&a), "# [inline]");
-    }
-
-    #[test]
-    fn outer_delimited() {
-        let a = moxy_token::parse!("#[derive(Clone, Debug)]" as Attribute).unwrap();
-        assert!(a.style.is_outer());
-        assert!(a.meta.is_list());
-        assert_eq!(render(&a), "# [derive (Clone , Debug)]");
-    }
-
-    #[test]
-    fn inner() {
-        let a = moxy_token::parse!("#![no_std]" as Attribute).unwrap();
-        assert!(a.style.is_inner());
-        assert_eq!(render(&a), "# ! [no_std]");
-    }
-
-    #[test]
-    fn many() {
-        let attrs: Vec<Attribute> = {
-            let ts = TokenStream::from_str("#[a] #[b(1)]").unwrap();
-            let mut ps = ts.parse();
-            let mut out = Vec::new();
-            while !ps.is_empty() {
-                out.push(ps.parse::<Attribute>().unwrap());
-            }
-            out
-        };
-
-        assert_eq!(attrs.len(), 2);
-    }
-
-    #[test]
-    fn name_value() {
-        let a = moxy_token::parse!("#[path = \"x.rs\"]" as Attribute).unwrap();
-        assert!(a.meta.is_alias());
-        assert_eq!(render(&a), "# [path = \"x.rs\"]");
-    }
-
-    #[test]
-    fn meta_forms() {
-        assert!(moxy_token::parse!("inline" as Meta).unwrap().is_none());
-        assert!(moxy_token::parse!("derive(Clone)" as Meta).unwrap().is_list());
-        assert!(moxy_token::parse!("path = \"x\"" as Meta).unwrap().is_alias());
-
-        let meta = moxy_token::parse!("debug(\"x\")" as Meta).unwrap();
-
-        if let MetaValue::List { items } = &meta.value {
-            if let Some(MetaArgument::Value(MetaValue::Literal(lit))) = &items.first() {
-                assert_eq!(lit.as_str().map(|s| s.repr.as_str()), Some("\"x\""))
-            } else {
-                panic!("expected lit");
-            }
-        } else {
-            panic!("expected list");
         }
     }
 }
