@@ -161,7 +161,11 @@ impl Formatter {
         match node {
             FmtNode::Text(text) => {
                 self.output.push_str(text);
-                self.column += text.len();
+
+                match text.rfind('\n') {
+                    Some(idx) => self.column = text[idx + 1..].len(),
+                    None => self.column += text.len(),
+                }
             }
             FmtNode::Line(line) => {
                 self.write_line(*line, mode)?;

@@ -20,7 +20,17 @@ pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStr
         return object.span().error("template required").emit().into();
     };
 
-    let content = tpl_meta.as_value().and_then(|m| m.as_verbatim());
+    let content = match tpl_meta.as_value().and_then(|m| m.as_verbatim()) {
+        Some(content) => content,
+        None => {
+            return tpl_meta
+                .span()
+                .error("template attribute must contain a code block `{ ... }`")
+                .emit()
+                .into();
+        }
+    };
+
     let output = template! {
         impl moxy_token::ToTokens for {{ object.ident() }} {
             fn to_tokens(&self, tokens: &mut moxy_token::TokenStream) {

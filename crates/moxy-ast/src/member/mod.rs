@@ -16,7 +16,7 @@ pub use trait_item::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Member {
     Named(Ident),
-    Unnamed(u32),
+    Unnamed(u32, Span),
 }
 
 impl Member {
@@ -25,7 +25,7 @@ impl Member {
     }
 
     pub fn is_unnamed(&self) -> bool {
-        matches!(self, Self::Unnamed(_))
+        matches!(self, Self::Unnamed(..))
     }
 
     pub fn as_named(&self) -> Option<&Ident> {
@@ -37,7 +37,7 @@ impl Spanner for Member {
     fn span(&self) -> Span {
         match self {
             Member::Named(id) => id.span(),
-            Member::Unnamed(_) => Span::call_site(),
+            Member::Unnamed(_, span) => *span,
         }
     }
 }
@@ -48,12 +48,13 @@ impl Parse for Member {
 
         match stream.curr() {
             Some(TokenTree::Literal(lit)) => {
+                let span = lit.span();
                 let index = lit
                     .repr()
                     .parse::<u32>()
                     .map_err(|_| ParseError::from(LexError::new(at).message("expected tuple index")))?;
                 stream.advance();
-                Ok(Member::Unnamed(index))
+                Ok(Member::Unnamed(index, span))
             }
             _ => Ok(Member::Named(stream.parse()?)),
         }
@@ -64,8 +65,8 @@ impl ToTokens for Member {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
             Member::Named(ident) => ident.to_tokens(tokens),
-            Member::Unnamed(index) => {
-                moxy_token::Literal::from_repr(&index.to_string(), moxy_token::Span::default()).to_tokens(tokens);
+            Member::Unnamed(index, span) => {
+                moxy_token::Literal::from_repr(&index.to_string(), *span).to_tokens(tokens);
             }
         }
     }

@@ -672,7 +672,7 @@ impl Format for Member {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Named(ident) => ident.format(f),
-            Self::Unnamed(index) => f.text(index),
+            Self::Unnamed(index, _) => f.text(index),
         }
     }
 }
