@@ -160,6 +160,18 @@ impl ToTokens for &str {
     }
 }
 
+impl ToTokens for String {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        crate::Literal::string(self).to_tokens(tokens);
+    }
+}
+
+impl ToTokens for &mut String {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        crate::Literal::string(self).to_tokens(tokens);
+    }
+}
+
 /// Lex a run of consecutive `proc_macro` punctuation chars into moxy
 /// [`Punctuation`] tokens, preserving each token's real compiler span.
 ///

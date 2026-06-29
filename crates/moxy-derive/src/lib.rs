@@ -24,7 +24,7 @@ pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStr
     let output = template! {
         impl moxy_token::ToTokens for {{ object.ident() }} {
             fn to_tokens(&self, tokens: &mut moxy_token::TokenStream) {
-                {{ content }}
+                moxy_template::template!({{ content }}).to_tokens(tokens);
             }
         }
     };
