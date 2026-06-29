@@ -12,7 +12,6 @@ pub struct User {
 }
 
 #[derive(Default, ToTokens)]
-#[debug]
 #[template {
     println!("email: {}", {{ self.email }});
 }]
