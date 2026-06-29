@@ -22,7 +22,7 @@ pub struct User2 {
 }
 
 #[test]
-fn derive_debug() {
+fn derive_tokens() {
     let user = User {
         name: String::default(),
         email: String::from("test"),
@@ -36,7 +36,7 @@ fn derive_debug() {
 }
 
 #[test]
-fn derive_interp_string() {
+fn derive_tokens_interp_string() {
     let user = User2 {
         name: String::default(),
         email: String::from("test"),
