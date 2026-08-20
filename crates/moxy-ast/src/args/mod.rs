@@ -30,12 +30,12 @@ pub enum GenericArgument {
 impl Spanner for GenericArgument {
     fn span(&self) -> Span {
         match self {
-            GenericArgument::Lifetime(v) => v.span(),
-            GenericArgument::Type(v) => v.span(),
-            GenericArgument::Const(v) => v.span(),
-            GenericArgument::AssocType(v) => v.span(),
-            GenericArgument::AssocConst(v) => v.span(),
-            GenericArgument::Constraint(v) => v.span(),
+            Self::Lifetime(v) => v.span(),
+            Self::Type(v) => v.span(),
+            Self::Const(v) => v.span(),
+            Self::AssocType(v) => v.span(),
+            Self::AssocConst(v) => v.span(),
+            Self::Constraint(v) => v.span(),
         }
     }
 }
@@ -49,7 +49,7 @@ impl Parse for GenericArgument {
 
         // Lifetime: starts with `'`.
         if token.is_punct_quote() {
-            return Ok(GenericArgument::Lifetime(stream.parse()?));
+            return Ok(Self::Lifetime(stream.parse()?));
         }
 
         // Constraint `ident [generics] : bounds` — must come before AssocType/AssocConst
@@ -73,22 +73,22 @@ impl Parse for GenericArgument {
         // matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == moxy_token::Delim::Brace);
 
         if is_const {
-            return Ok(GenericArgument::Const(stream.parse()?));
+            return Ok(Self::Const(stream.parse()?));
         }
 
-        Ok(GenericArgument::Type(stream.parse()?))
+        Ok(Self::Type(stream.parse()?))
     }
 }
 
 impl ToTokens for GenericArgument {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            GenericArgument::Lifetime(v) => v.to_tokens(t),
-            GenericArgument::Type(v) => v.to_tokens(t),
-            GenericArgument::Const(v) => v.to_tokens(t),
-            GenericArgument::AssocType(v) => v.to_tokens(t),
-            GenericArgument::AssocConst(v) => v.to_tokens(t),
-            GenericArgument::Constraint(v) => v.to_tokens(t),
+            Self::Lifetime(v) => v.to_tokens(t),
+            Self::Type(v) => v.to_tokens(t),
+            Self::Const(v) => v.to_tokens(t),
+            Self::AssocType(v) => v.to_tokens(t),
+            Self::AssocConst(v) => v.to_tokens(t),
+            Self::Constraint(v) => v.to_tokens(t),
         }
     }
 }

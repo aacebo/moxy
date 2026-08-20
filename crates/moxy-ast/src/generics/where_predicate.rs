@@ -14,8 +14,8 @@ pub enum WherePredicate {
 impl Spanner for WherePredicate {
     fn span(&self) -> Span {
         match self {
-            WherePredicate::Lifetime(v) => v.span(),
-            WherePredicate::Type(v) => v.span(),
+            Self::Lifetime(v) => v.span(),
+            Self::Type(v) => v.span(),
         }
     }
 }
@@ -26,18 +26,18 @@ impl Parse for WherePredicate {
             stream.curr(),
             Some(moxy_token::TokenTree::Punct(moxy_token::Punctuation::Quote(_)))
         ) {
-            return Ok(WherePredicate::Lifetime(stream.parse()?));
+            return Ok(Self::Lifetime(stream.parse()?));
         }
 
-        Ok(WherePredicate::Type(Box::new(stream.parse()?)))
+        Ok(Self::Type(Box::new(stream.parse()?)))
     }
 }
 
 impl ToTokens for WherePredicate {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            WherePredicate::Lifetime(v) => v.to_tokens(t),
-            WherePredicate::Type(v) => v.to_tokens(t),
+            Self::Lifetime(v) => v.to_tokens(t),
+            Self::Type(v) => v.to_tokens(t),
         }
     }
 }

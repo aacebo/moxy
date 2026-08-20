@@ -68,6 +68,6 @@ impl<T: Parse> Parse for Vec<T> {
 
 impl<T: Parse> Parse for Box<T> {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        Ok(Box::new(T::parse(stream)?))
+        Ok(Self::new(T::parse(stream)?))
     }
 }

@@ -29,9 +29,9 @@ impl Parse for ClosureParam {
         if stream.peek::<Colon>() {
             let colon = stream.parse::<Colon>()?;
             let ty = Box::new(stream.parse::<Type>()?);
-            Ok(ClosureParam::Typed { pat, colon, ty })
+            Ok(Self::Typed { pat, colon, ty })
         } else {
-            Ok(ClosureParam::Inferred { pat })
+            Ok(Self::Inferred { pat })
         }
     }
 }
@@ -39,8 +39,8 @@ impl Parse for ClosureParam {
 impl Spanner for ClosureParam {
     fn span(&self) -> Span {
         match self {
-            ClosureParam::Typed { pat, ty, .. } => pat.span().join(ty.span()),
-            ClosureParam::Inferred { pat } => pat.span(),
+            Self::Typed { pat, ty, .. } => pat.span().join(ty.span()),
+            Self::Inferred { pat } => pat.span(),
         }
     }
 }
@@ -48,12 +48,12 @@ impl Spanner for ClosureParam {
 impl ToTokens for ClosureParam {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            ClosureParam::Typed { pat, colon, ty } => {
+            Self::Typed { pat, colon, ty } => {
                 pat.to_tokens(t);
                 colon.to_tokens(t);
                 ty.to_tokens(t);
             }
-            ClosureParam::Inferred { pat } => pat.to_tokens(t),
+            Self::Inferred { pat } => pat.to_tokens(t),
         }
     }
 }
@@ -84,9 +84,9 @@ impl Parse for ReturnType {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if stream.peek::<RArrow>() {
             let arrow = stream.parse::<RArrow>()?;
-            Ok(ReturnType::Type(arrow, Box::new(stream.parse::<crate::Type>()?)))
+            Ok(Self::Type(arrow, Box::new(stream.parse::<crate::Type>()?)))
         } else {
-            Ok(ReturnType::Default)
+            Ok(Self::Default)
         }
     }
 }
@@ -94,15 +94,15 @@ impl Parse for ReturnType {
 impl Spanner for ReturnType {
     fn span(&self) -> Span {
         match self {
-            ReturnType::Default => Span::call_site(),
-            ReturnType::Type(arrow, ty) => arrow.span().join(ty.span()),
+            Self::Default => Span::call_site(),
+            Self::Type(arrow, ty) => arrow.span().join(ty.span()),
         }
     }
 }
 
 impl ToTokens for ReturnType {
     fn to_tokens(&self, t: &mut TokenStream) {
-        if let ReturnType::Type(arrow, ty) = self {
+        if let Self::Type(arrow, ty) = self {
             arrow.to_tokens(t);
             ty.to_tokens(t);
         }

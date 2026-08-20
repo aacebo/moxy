@@ -31,7 +31,7 @@ impl Parse for TraitItemFn {
             (None, stream.parse_if::<Semi>())
         };
 
-        Ok(TraitItemFn {
+        Ok(Self {
             attrs,
             sig,
             default_body,

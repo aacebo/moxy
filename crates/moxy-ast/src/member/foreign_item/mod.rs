@@ -58,10 +58,10 @@ impl ForeignItem {
 impl Spanner for ForeignItem {
     fn span(&self) -> Span {
         match self {
-            ForeignItem::Fn(v) => v.span(),
-            ForeignItem::Static(v) => v.span(),
-            ForeignItem::Type(v) => v.span(),
-            ForeignItem::Macro(v) => v.span(),
+            Self::Fn(v) => v.span(),
+            Self::Static(v) => v.span(),
+            Self::Type(v) => v.span(),
+            Self::Macro(v) => v.span(),
         }
     }
 }
@@ -81,25 +81,25 @@ impl_from! {
 impl Parse for ForeignItem {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if stream.peek::<ForeignItemStatic>() {
-            return Ok(ForeignItem::Static(stream.parse()?));
+            return Ok(Self::Static(stream.parse()?));
         }
         if stream.peek::<ForeignItemType>() {
-            return Ok(ForeignItem::Type(stream.parse()?));
+            return Ok(Self::Type(stream.parse()?));
         }
         if stream.peek::<ForeignItemFn>() {
-            return Ok(ForeignItem::Fn(stream.parse()?));
+            return Ok(Self::Fn(stream.parse()?));
         }
-        Ok(ForeignItem::Macro(stream.parse()?))
+        Ok(Self::Macro(stream.parse()?))
     }
 }
 
 impl ToTokens for ForeignItem {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            ForeignItem::Fn(v) => v.to_tokens(t),
-            ForeignItem::Static(v) => v.to_tokens(t),
-            ForeignItem::Type(v) => v.to_tokens(t),
-            ForeignItem::Macro(v) => v.to_tokens(t),
+            Self::Fn(v) => v.to_tokens(t),
+            Self::Static(v) => v.to_tokens(t),
+            Self::Type(v) => v.to_tokens(t),
+            Self::Macro(v) => v.to_tokens(t),
         }
     }
 }

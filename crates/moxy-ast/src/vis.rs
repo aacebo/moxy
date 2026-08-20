@@ -59,7 +59,7 @@ impl Visibility {
 impl Parse for Visibility {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if !stream.peek::<Pub>() {
-            return Ok(Visibility::Inherited);
+            return Ok(Self::Inherited);
         }
 
         let pub_keyword = stream.parse::<Pub>()?;
@@ -72,7 +72,7 @@ impl Parse for Visibility {
             if inner.peek::<Crate>() {
                 let crate_keyword = inner.parse::<Crate>()?;
 
-                return Ok(Visibility::Crate {
+                return Ok(Self::Crate {
                     pub_keyword,
                     crate_keyword: Delimited::paren(span, crate_keyword),
                 });
@@ -81,7 +81,7 @@ impl Parse for Visibility {
             if inner.peek::<SelfValue>() {
                 let self_keyword = inner.parse::<SelfValue>()?;
 
-                return Ok(Visibility::SelfValue {
+                return Ok(Self::SelfValue {
                     pub_keyword,
                     self_keyword: Delimited::paren(span, self_keyword),
                 });
@@ -90,7 +90,7 @@ impl Parse for Visibility {
             if inner.peek::<Super>() {
                 let super_keyword = inner.parse::<Super>()?;
 
-                return Ok(Visibility::Super {
+                return Ok(Self::Super {
                     pub_keyword,
                     super_keyword: Delimited::paren(span, super_keyword),
                 });
@@ -99,34 +99,34 @@ impl Parse for Visibility {
             let in_keyword = inner.parse::<In>()?;
             let path = inner.parse::<Path>()?;
 
-            return Ok(Visibility::Restricted {
+            return Ok(Self::Restricted {
                 pub_keyword,
                 path: Delimited::paren(span, (in_keyword, path)),
             });
         }
 
-        Ok(Visibility::Public { pub_keyword })
+        Ok(Self::Public { pub_keyword })
     }
 }
 
 impl Spanner for Visibility {
     fn span(&self) -> Span {
         match self {
-            Visibility::Inherited => Span::call_site(),
-            Visibility::Public { pub_keyword } => pub_keyword.span(),
-            Visibility::Crate {
+            Self::Inherited => Span::call_site(),
+            Self::Public { pub_keyword } => pub_keyword.span(),
+            Self::Crate {
                 pub_keyword,
                 crate_keyword,
             } => pub_keyword.span().join(crate_keyword.span()),
-            Visibility::SelfValue {
+            Self::SelfValue {
                 pub_keyword,
                 self_keyword,
             } => pub_keyword.span().join(self_keyword.span()),
-            Visibility::Super {
+            Self::Super {
                 pub_keyword,
                 super_keyword,
             } => pub_keyword.span().join(super_keyword.span()),
-            Visibility::Restricted { pub_keyword, path } => pub_keyword.span().join(path.close()),
+            Self::Restricted { pub_keyword, path } => pub_keyword.span().join(path.close()),
         }
     }
 }
@@ -134,30 +134,30 @@ impl Spanner for Visibility {
 impl ToTokens for Visibility {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            Visibility::Inherited => {}
-            Visibility::Public { pub_keyword } => pub_keyword.to_tokens(t),
-            Visibility::Crate {
+            Self::Inherited => {}
+            Self::Public { pub_keyword } => pub_keyword.to_tokens(t),
+            Self::Crate {
                 pub_keyword,
                 crate_keyword,
             } => {
                 pub_keyword.to_tokens(t);
                 crate_keyword.to_tokens(t);
             }
-            Visibility::SelfValue {
+            Self::SelfValue {
                 pub_keyword,
                 self_keyword,
             } => {
                 pub_keyword.to_tokens(t);
                 self_keyword.to_tokens(t);
             }
-            Visibility::Super {
+            Self::Super {
                 pub_keyword,
                 super_keyword,
             } => {
                 pub_keyword.to_tokens(t);
                 super_keyword.to_tokens(t);
             }
-            Visibility::Restricted { pub_keyword, path } => {
+            Self::Restricted { pub_keyword, path } => {
                 pub_keyword.to_tokens(t);
                 let mut inner = TokenStream::new();
                 let (in_keyword, p) = &path.inner;

@@ -49,7 +49,7 @@ impl Parse for ItemTrait {
         }
 
         let items = Delimited::<Vec<TraitItem>>::parse_brace(stream)?;
-        Ok(ItemTrait {
+        Ok(Self {
             attrs,
             vis,
             unsafety,

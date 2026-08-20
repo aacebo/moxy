@@ -76,7 +76,7 @@ impl Scan for LitCStr {
         let span = cursor.span_to(&end);
 
         match repr.strip_prefix('c').and_then(decode_string_body) {
-            Some(value) => Ok((end, LitCStr::from_parts(value.into_bytes(), repr, span))),
+            Some(value) => Ok((end, Self::from_parts(value.into_bytes(), repr, span))),
             None => cursor.error().into(),
         }
     }
@@ -95,7 +95,7 @@ impl Parse for LitCStr {
 
 impl From<LitCStr> for Lit {
     fn from(value: LitCStr) -> Self {
-        Lit::CStr(value)
+        Self::CStr(value)
     }
 }
 

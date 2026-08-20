@@ -24,3 +24,6 @@ moxy-ast = { path = "../moxy-ast" }
 moxy-template = { path = "../moxy-template" }
 moxy-diagnostic = { path = "../moxy-diagnostic" }
 moxy-fmt = { path = "../moxy-fmt" }
+
+[dev-dependencies]
+trybuild = "1"

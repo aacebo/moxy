@@ -41,7 +41,7 @@ impl Lifetime {
             let _ = stream.parse::<Colon>()?;
 
             loop {
-                bounds.push_value(stream.parse::<Lifetime>()?);
+                bounds.push_value(stream.parse::<Self>()?);
 
                 if stream.peek::<Plus>() {
                     bounds.push_punct(stream.parse::<Plus>()?);

@@ -80,10 +80,10 @@ impl JumpExpr {
 impl Spanner for JumpExpr {
     fn span(&self) -> Span {
         match self {
-            JumpExpr::Return(v) => v.span(),
-            JumpExpr::Break(v) => v.span(),
-            JumpExpr::Continue(v) => v.span(),
-            JumpExpr::Yield(v) => v.span(),
+            Self::Return(v) => v.span(),
+            Self::Break(v) => v.span(),
+            Self::Continue(v) => v.span(),
+            Self::Yield(v) => v.span(),
         }
     }
 }
@@ -91,34 +91,34 @@ impl Spanner for JumpExpr {
 impl ToTokens for JumpExpr {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            JumpExpr::Return(v) => v.to_tokens(t),
-            JumpExpr::Break(v) => v.to_tokens(t),
-            JumpExpr::Continue(v) => v.to_tokens(t),
-            JumpExpr::Yield(v) => v.to_tokens(t),
+            Self::Return(v) => v.to_tokens(t),
+            Self::Break(v) => v.to_tokens(t),
+            Self::Continue(v) => v.to_tokens(t),
+            Self::Yield(v) => v.to_tokens(t),
         }
     }
 }
 
 impl From<ExprReturn> for JumpExpr {
     fn from(v: ExprReturn) -> Self {
-        JumpExpr::Return(v)
+        Self::Return(v)
     }
 }
 
 impl From<ExprBreak> for JumpExpr {
     fn from(v: ExprBreak) -> Self {
-        JumpExpr::Break(v)
+        Self::Break(v)
     }
 }
 
 impl From<ExprContinue> for JumpExpr {
     fn from(v: ExprContinue) -> Self {
-        JumpExpr::Continue(v)
+        Self::Continue(v)
     }
 }
 
 impl From<ExprYield> for JumpExpr {
     fn from(v: ExprYield) -> Self {
-        JumpExpr::Yield(v)
+        Self::Yield(v)
     }
 }

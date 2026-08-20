@@ -98,11 +98,11 @@ impl BinaryExpr {
 impl Spanner for BinaryExpr {
     fn span(&self) -> Span {
         match self {
-            BinaryExpr::Binary(v) => v.span(),
-            BinaryExpr::Assign(v) => v.span(),
-            BinaryExpr::AssignOp(v) => v.span(),
-            BinaryExpr::Range(v) => v.span(),
-            BinaryExpr::Type(v) => v.span(),
+            Self::Binary(v) => v.span(),
+            Self::Assign(v) => v.span(),
+            Self::AssignOp(v) => v.span(),
+            Self::Range(v) => v.span(),
+            Self::Type(v) => v.span(),
         }
     }
 }
@@ -110,42 +110,42 @@ impl Spanner for BinaryExpr {
 impl ToTokens for BinaryExpr {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            BinaryExpr::Binary(v) => v.to_tokens(t),
-            BinaryExpr::Assign(v) => v.to_tokens(t),
-            BinaryExpr::AssignOp(v) => v.to_tokens(t),
-            BinaryExpr::Range(v) => v.to_tokens(t),
-            BinaryExpr::Type(v) => v.to_tokens(t),
+            Self::Binary(v) => v.to_tokens(t),
+            Self::Assign(v) => v.to_tokens(t),
+            Self::AssignOp(v) => v.to_tokens(t),
+            Self::Range(v) => v.to_tokens(t),
+            Self::Type(v) => v.to_tokens(t),
         }
     }
 }
 
 impl From<ExprBinary> for BinaryExpr {
     fn from(v: ExprBinary) -> Self {
-        BinaryExpr::Binary(v)
+        Self::Binary(v)
     }
 }
 
 impl From<ExprAssign> for BinaryExpr {
     fn from(v: ExprAssign) -> Self {
-        BinaryExpr::Assign(v)
+        Self::Assign(v)
     }
 }
 
 impl From<ExprAssignOp> for BinaryExpr {
     fn from(v: ExprAssignOp) -> Self {
-        BinaryExpr::AssignOp(v)
+        Self::AssignOp(v)
     }
 }
 
 impl From<ExprRange> for BinaryExpr {
     fn from(v: ExprRange) -> Self {
-        BinaryExpr::Range(v)
+        Self::Range(v)
     }
 }
 
 impl From<ExprType> for BinaryExpr {
     fn from(v: ExprType) -> Self {
-        BinaryExpr::Type(v)
+        Self::Type(v)
     }
 }
 
@@ -173,7 +173,7 @@ impl BinaryExpr {
                     let eq = stream.parse::<Eq>()?;
                     let right = Box::new(super::parse_expr(stream, allow_struct)?);
 
-                    lhs = Expr::Binary(BinaryExpr::Assign(ExprAssign {
+                    lhs = Expr::Binary(Self::Assign(ExprAssign {
                         attrs: Attributes::default(),
                         left: Box::new(lhs),
                         eq,
@@ -186,7 +186,7 @@ impl BinaryExpr {
                 if let Ok(op) = stream.parse::<AssignOp>() {
                     let right = Box::new(super::parse_expr(stream, allow_struct)?);
 
-                    lhs = Expr::Binary(BinaryExpr::AssignOp(ExprAssignOp {
+                    lhs = Expr::Binary(Self::AssignOp(ExprAssignOp {
                         attrs: Attributes::default(),
                         left: Box::new(lhs),
                         op,
@@ -202,7 +202,7 @@ impl BinaryExpr {
                 let limits = stream.parse::<RangeLimits>()?;
                 let end = ExprRange::maybe_end(stream, allow_struct)?;
 
-                lhs = Expr::Binary(BinaryExpr::Range(ExprRange {
+                lhs = Expr::Binary(Self::Range(ExprRange {
                     attrs: Attributes::default(),
                     start: Some(Box::new(lhs)),
                     limits,
@@ -218,8 +218,8 @@ impl BinaryExpr {
                     let _ = stream.parse::<BinOp>()?;
                     let mut rhs = super::unary::UnaryExpr::parse_from(stream, allow_struct)?;
 
-                    rhs = BinaryExpr::parse_from(stream, rhs, prec.next(), allow_struct)?;
-                    lhs = Expr::Binary(BinaryExpr::Binary(ExprBinary {
+                    rhs = Self::parse_from(stream, rhs, prec.next(), allow_struct)?;
+                    lhs = Expr::Binary(Self::Binary(ExprBinary {
                         attrs: Attributes::default(),
                         left: Box::new(lhs),
                         op,

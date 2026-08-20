@@ -37,7 +37,7 @@ impl Parse for ImplItemType {
         let eq = stream.parse::<Eq>()?;
         let ty = stream.parse::<Type>()?;
         let semi = stream.parse_if::<Semi>();
-        Ok(ImplItemType {
+        Ok(Self {
             attrs,
             vis,
             defaultness,

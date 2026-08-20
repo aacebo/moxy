@@ -237,7 +237,7 @@ impl std::fmt::Display for TokenStream {
 }
 
 impl ToTokens for TokenStream {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
+    fn to_tokens(&self, tokens: &mut Self) {
         tokens.extend(self.clone());
     }
 }

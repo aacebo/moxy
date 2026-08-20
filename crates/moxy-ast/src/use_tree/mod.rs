@@ -73,11 +73,11 @@ impl UseTree {
 impl Spanner for UseTree {
     fn span(&self) -> Span {
         match self {
-            UseTree::Path(v) => v.span(),
-            UseTree::Name(v) => v.span(),
-            UseTree::Rename(v) => v.span(),
-            UseTree::Glob(v) => v.span(),
-            UseTree::Group(v) => v.span(),
+            Self::Path(v) => v.span(),
+            Self::Name(v) => v.span(),
+            Self::Rename(v) => v.span(),
+            Self::Glob(v) => v.span(),
+            Self::Group(v) => v.span(),
         }
     }
 }
@@ -86,44 +86,44 @@ impl Parse for UseTree {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if stream.peek::<Star>() {
             let star = stream.parse::<Star>()?;
-            return Ok(UseTree::Glob(UseGlob { star }));
+            return Ok(Self::Glob(UseGlob { star }));
         }
 
         if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
             let items = Delimited::parse_brace_with(stream, crate::Punctuated::parse_terminated)?;
-            return Ok(UseTree::Group(UseGroup { items }));
+            return Ok(Self::Group(UseGroup { items }));
         }
 
         let ident = stream.parse::<Ident>()?;
 
         if stream.peek::<PathSep>() {
             let path_sep = stream.parse::<PathSep>()?;
-            let tree = Box::new(stream.parse::<UseTree>()?);
-            return Ok(UseTree::Path(UsePath { ident, path_sep, tree }));
+            let tree = Box::new(stream.parse::<Self>()?);
+            return Ok(Self::Path(UsePath { ident, path_sep, tree }));
         }
 
         if stream.peek::<As>() {
             let as_keyword = stream.parse::<As>()?;
             let rename = stream.parse::<Ident>()?;
-            return Ok(UseTree::Rename(UseRename {
+            return Ok(Self::Rename(UseRename {
                 ident,
                 as_keyword,
                 rename,
             }));
         }
 
-        Ok(UseTree::Name(UseName { ident }))
+        Ok(Self::Name(UseName { ident }))
     }
 }
 
 impl ToTokens for UseTree {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            UseTree::Path(v) => v.to_tokens(t),
-            UseTree::Name(v) => v.to_tokens(t),
-            UseTree::Rename(v) => v.to_tokens(t),
-            UseTree::Glob(v) => v.to_tokens(t),
-            UseTree::Group(v) => v.to_tokens(t),
+            Self::Path(v) => v.to_tokens(t),
+            Self::Name(v) => v.to_tokens(t),
+            Self::Rename(v) => v.to_tokens(t),
+            Self::Glob(v) => v.to_tokens(t),
+            Self::Group(v) => v.to_tokens(t),
         }
     }
 }

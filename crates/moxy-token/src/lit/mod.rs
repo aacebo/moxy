@@ -28,9 +28,9 @@ pub use verbatim::*;
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(into = "String"))]
 pub enum Lit {
-    Int(Int),
-    UInt(UInt),
-    Float(Float),
+    Int(LitInt),
+    UInt(LitUInt),
+    Float(LitFloat),
     Str(LitStr),
     ByteStr(LitByteStr),
     CStr(LitCStr),
@@ -43,12 +43,12 @@ pub enum Lit {
 impl Lit {
     #[inline]
     pub fn string(value: &str) -> Self {
-        Lit::Str(LitStr::new(value, Span::default()))
+        Self::Str(LitStr::new(value, Span::default()))
     }
 
     #[inline]
     pub fn char(value: char) -> Self {
-        Lit::Char(LitChar::new(value, Span::default()))
+        Self::Char(LitChar::new(value, Span::default()))
     }
 
     /// Classify and decode an arbitrary literal repr into the matching variant. Used by
@@ -62,7 +62,7 @@ impl Lit {
                 lit.set_span(span);
                 lit
             }
-            _ => Lit::Verbatim(LitVerbatim::new(repr, span)),
+            _ => Self::Verbatim(LitVerbatim::new(repr, span)),
         }
     }
 
@@ -99,11 +99,11 @@ impl Lit {
     }
 
     pub fn usize_suffixed(value: usize) -> Self {
-        LitUsize::new(value, true, Span::default()).into()
+        LitUSize::new(value, true, Span::default()).into()
     }
 
     pub fn usize_unsuffixed(value: usize) -> Self {
-        LitUsize::new(value, false, Span::default()).into()
+        LitUSize::new(value, false, Span::default()).into()
     }
 
     pub fn i8_suffixed(value: i8) -> Self {
@@ -139,11 +139,11 @@ impl Lit {
     }
 
     pub fn isize_suffixed(value: isize) -> Self {
-        LitIsize::new(value, true, Span::default()).into()
+        LitISize::new(value, true, Span::default()).into()
     }
 
     pub fn isize_unsuffixed(value: isize) -> Self {
-        LitIsize::new(value, false, Span::default()).into()
+        LitISize::new(value, false, Span::default()).into()
     }
 
     pub fn f32_suffixed(value: f32) -> Self {
@@ -165,48 +165,48 @@ impl Lit {
     #[inline]
     pub fn repr(&self) -> &str {
         match self {
-            Lit::Int(v) => v.repr(),
-            Lit::UInt(v) => v.repr(),
-            Lit::Float(v) => v.repr(),
-            Lit::Str(v) => v.repr(),
-            Lit::ByteStr(v) => v.repr(),
-            Lit::CStr(v) => v.repr(),
-            Lit::Char(v) => v.repr(),
-            Lit::Byte(v) => v.repr(),
-            Lit::Bool(v) => v.repr(),
-            Lit::Verbatim(v) => v.repr(),
+            Self::Int(v) => v.repr(),
+            Self::UInt(v) => v.repr(),
+            Self::Float(v) => v.repr(),
+            Self::Str(v) => v.repr(),
+            Self::ByteStr(v) => v.repr(),
+            Self::CStr(v) => v.repr(),
+            Self::Char(v) => v.repr(),
+            Self::Byte(v) => v.repr(),
+            Self::Bool(v) => v.repr(),
+            Self::Verbatim(v) => v.repr(),
         }
     }
 
     #[inline]
     pub fn span(&self) -> Span {
         match self {
-            Lit::Int(v) => v.span(),
-            Lit::UInt(v) => v.span(),
-            Lit::Float(v) => v.span(),
-            Lit::Str(v) => v.span(),
-            Lit::ByteStr(v) => v.span(),
-            Lit::CStr(v) => v.span(),
-            Lit::Char(v) => v.span(),
-            Lit::Byte(v) => v.span(),
-            Lit::Bool(v) => v.span(),
-            Lit::Verbatim(v) => v.span(),
+            Self::Int(v) => v.span(),
+            Self::UInt(v) => v.span(),
+            Self::Float(v) => v.span(),
+            Self::Str(v) => v.span(),
+            Self::ByteStr(v) => v.span(),
+            Self::CStr(v) => v.span(),
+            Self::Char(v) => v.span(),
+            Self::Byte(v) => v.span(),
+            Self::Bool(v) => v.span(),
+            Self::Verbatim(v) => v.span(),
         }
     }
 
     #[inline]
     pub fn set_span(&mut self, span: Span) {
         match self {
-            Lit::Int(v) => v.set_span(span),
-            Lit::UInt(v) => v.set_span(span),
-            Lit::Float(v) => v.set_span(span),
-            Lit::Str(v) => v.set_span(span),
-            Lit::ByteStr(v) => v.set_span(span),
-            Lit::CStr(v) => v.set_span(span),
-            Lit::Char(v) => v.set_span(span),
-            Lit::Byte(v) => v.set_span(span),
-            Lit::Bool(v) => v.set_span(span),
-            Lit::Verbatim(v) => v.set_span(span),
+            Self::Int(v) => v.set_span(span),
+            Self::UInt(v) => v.set_span(span),
+            Self::Float(v) => v.set_span(span),
+            Self::Str(v) => v.set_span(span),
+            Self::ByteStr(v) => v.set_span(span),
+            Self::CStr(v) => v.set_span(span),
+            Self::Char(v) => v.set_span(span),
+            Self::Byte(v) => v.set_span(span),
+            Self::Bool(v) => v.set_span(span),
+            Self::Verbatim(v) => v.set_span(span),
         }
     }
 
@@ -222,40 +222,55 @@ impl Lit {
 
     #[inline]
     pub fn is_int(&self) -> bool {
-        matches!(self, Lit::Int(_) | Lit::UInt(_))
+        matches!(self, Self::Int(_) | Self::UInt(_))
     }
 
     #[inline]
     pub fn is_float(&self) -> bool {
-        matches!(self, Lit::Float(_))
+        matches!(self, Self::Float(_))
     }
 
     #[inline]
     pub fn is_str(&self) -> bool {
-        matches!(self, Lit::Str(_))
+        matches!(self, Self::Str(_))
     }
 
     #[inline]
     pub fn is_bool(&self) -> bool {
-        matches!(self, Lit::Bool(_))
+        matches!(self, Self::Bool(_))
     }
 
     #[inline]
     pub fn as_str(&self) -> Option<&LitStr> {
-        if let Lit::Str(v) = self { Some(v) } else { None }
+        if let Self::Str(v) = self { Some(v) } else { None }
     }
 
     #[inline]
     pub fn as_bool(&self) -> Option<&LitBool> {
-        if let Lit::Bool(v) = self { Some(v) } else { None }
+        if let Self::Bool(v) = self { Some(v) } else { None }
+    }
+
+    #[inline]
+    pub fn as_int(&self) -> Option<&LitInt> {
+        if let Self::Int(v) = self { Some(v) } else { None }
+    }
+
+    #[inline]
+    pub fn as_float(&self) -> Option<&LitFloat> {
+        if let Self::Float(v) = self { Some(v) } else { None }
+    }
+
+    #[inline]
+    pub fn as_uint(&self) -> Option<&LitUInt> {
+        if let Self::UInt(v) = self { Some(v) } else { None }
     }
 
     /// The integer value as `u64`, when this is an unsigned int, or a non-negative
     /// signed int that fits.
     pub fn as_u64(&self) -> Option<u64> {
         match self {
-            Lit::UInt(v) => u64::try_from(v.as_u128()).ok(),
-            Lit::Int(v) => u64::try_from(v.as_i128()).ok(),
+            Self::UInt(v) => u64::try_from(v.as_u128()).ok(),
+            Self::Int(v) => u64::try_from(v.as_i128()).ok(),
             _ => None,
         }
     }
@@ -284,30 +299,36 @@ impl Scan for Lit {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
         // Strings / chars / bytes first — their prefix bytes (b c r ' ") are unambiguous.
         if let Ok((end, v)) = LitByteStr::scan(cursor) {
-            return Ok((end, Lit::ByteStr(v)));
-        }
-        if let Ok((end, v)) = LitCStr::scan(cursor) {
-            return Ok((end, Lit::CStr(v)));
-        }
-        if let Ok((end, v)) = LitByte::scan(cursor) {
-            return Ok((end, Lit::Byte(v)));
-        }
-        if let Ok((end, v)) = LitStr::scan(cursor) {
-            return Ok((end, Lit::Str(v)));
-        }
-        if let Ok((end, v)) = LitChar::scan(cursor) {
-            return Ok((end, Lit::Char(v)));
+            return Ok((end, Self::ByteStr(v)));
         }
 
-        // Numbers: UInt (u*-suffixed) → Float (f*/fractional) → Int (i*/unsuffixed default).
-        if let Ok((end, v)) = UInt::scan(cursor) {
-            return Ok((end, Lit::UInt(v)));
+        if let Ok((end, v)) = LitCStr::scan(cursor) {
+            return Ok((end, Self::CStr(v)));
         }
-        if let Ok((end, v)) = Float::scan(cursor) {
-            return Ok((end, Lit::Float(v)));
+
+        if let Ok((end, v)) = LitByte::scan(cursor) {
+            return Ok((end, Self::Byte(v)));
         }
-        if let Ok((end, v)) = Int::scan(cursor) {
-            return Ok((end, Lit::Int(v)));
+
+        if let Ok((end, v)) = LitStr::scan(cursor) {
+            return Ok((end, Self::Str(v)));
+        }
+
+        if let Ok((end, v)) = LitChar::scan(cursor) {
+            return Ok((end, Self::Char(v)));
+        }
+
+        // Numbers: LitUInt (u*-suffixed) → LitFloat (f*/fractional) → LitInt (i*/unsuffixed default).
+        if let Ok((end, v)) = LitUInt::scan(cursor) {
+            return Ok((end, Self::UInt(v)));
+        }
+
+        if let Ok((end, v)) = LitFloat::scan(cursor) {
+            return Ok((end, Self::Float(v)));
+        }
+
+        if let Ok((end, v)) = LitInt::scan(cursor) {
+            return Ok((end, Self::Int(v)));
         }
 
         cursor.error().into()
@@ -365,12 +386,12 @@ mod tests {
 
     #[test]
     fn classifies_and_decodes() {
-        assert!(matches!(lit("42"), Lit::Int(Int::I32(v)) if v.value() == 42 && !v.suffixed()));
-        assert!(matches!(lit("42u64"), Lit::UInt(UInt::U64(v)) if v.value() == 42 && v.suffixed()));
-        assert!(matches!(lit("0xFF"), Lit::Int(Int::I32(v)) if v.value() == 255));
-        assert!(matches!(lit("1_000"), Lit::Int(Int::I32(v)) if v.value() == 1000));
-        assert!(matches!(lit("1.5f32"), Lit::Float(Float::F32(v)) if v.value() == 1.5 && v.suffixed()));
-        assert!(matches!(lit("1.5"), Lit::Float(Float::F64(v)) if v.value() == 1.5 && !v.suffixed()));
+        assert!(matches!(lit("42"), Lit::Int(LitInt::I32(v)) if v.value() == 42 && !v.suffixed()));
+        assert!(matches!(lit("42u64"), Lit::UInt(LitUInt::U64(v)) if v.value() == 42 && v.suffixed()));
+        assert!(matches!(lit("0xFF"), Lit::Int(LitInt::I32(v)) if v.value() == 255));
+        assert!(matches!(lit("1_000"), Lit::Int(LitInt::I32(v)) if v.value() == 1000));
+        assert!(matches!(lit("1.5f32"), Lit::Float(LitFloat::F32(v)) if v.value() == 1.5 && v.suffixed()));
+        assert!(matches!(lit("1.5"), Lit::Float(LitFloat::F64(v)) if v.value() == 1.5 && !v.suffixed()));
         assert!(matches!(lit("'\\n'"), Lit::Char(v) if v.value() == '\n'));
         assert!(matches!(lit("b'x'"), Lit::Byte(v) if v.value() == b'x'));
     }
@@ -398,8 +419,8 @@ mod tests {
     #[test]
     fn from_chains() {
         let leaf = LitI8::new(5, false, Span::default());
-        assert!(matches!(Int::from(leaf.clone()), Int::I8(_)));
-        assert!(matches!(Lit::from(leaf), Lit::Int(Int::I8(_))));
+        assert!(matches!(LitInt::from(leaf.clone()), LitInt::I8(_)));
+        assert!(matches!(Lit::from(leaf), Lit::Int(LitInt::I8(_))));
     }
 
     #[test]

@@ -10,7 +10,7 @@ pub struct Paste {
 #[derive(Debug, Clone)]
 enum PasteNode {
     Verbatim(TokenTree),
-    Group(Delim, Vec<PasteNode>),
+    Group(Delim, Vec<Self>),
     Splice(Span, TokenStream),
 }
 
@@ -72,8 +72,8 @@ fn is_marker(g: &Group) -> bool {
 impl PasteNode {
     fn expand(&self) -> Result<TokenStream, ParseError> {
         match self {
-            PasteNode::Verbatim(tt) => Ok(TokenStream::from(vec![tt.clone()])),
-            PasteNode::Group(delim, kids) => {
+            Self::Verbatim(tt) => Ok(TokenStream::from(vec![tt.clone()])),
+            Self::Group(delim, kids) => {
                 let mut body = TokenStream::new();
 
                 for kid in kids {
@@ -82,7 +82,7 @@ impl PasteNode {
 
                 Ok(TokenStream::from(vec![Group::new(*delim, body).to_token_tree()]))
             }
-            PasteNode::Splice(span, inner) => {
+            Self::Splice(span, inner) => {
                 let mut text = String::new();
 
                 for tt in inner.iter() {

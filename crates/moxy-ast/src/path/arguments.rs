@@ -15,13 +15,13 @@ pub enum PathArguments {
 
 impl From<AngleArguments> for PathArguments {
     fn from(v: AngleArguments) -> Self {
-        PathArguments::AngleBracketed(v)
+        Self::AngleBracketed(v)
     }
 }
 
 impl From<ParenArguments> for PathArguments {
     fn from(v: ParenArguments) -> Self {
-        PathArguments::Parenthesized(v)
+        Self::Parenthesized(v)
     }
 }
 
@@ -38,10 +38,10 @@ impl Parse for PathArguments {
         }
 
         if stream.peek::<Lt>() {
-            return Ok(PathArguments::AngleBracketed(stream.parse()?));
+            return Ok(Self::AngleBracketed(stream.parse()?));
         }
 
-        Ok(PathArguments::None)
+        Ok(Self::None)
     }
 }
 
@@ -55,9 +55,9 @@ impl PathArguments {
 impl Spanner for PathArguments {
     fn span(&self) -> Span {
         match self {
-            PathArguments::None => Span::call_site(),
-            PathArguments::AngleBracketed(v) => v.span(),
-            PathArguments::Parenthesized(v) => v.span(),
+            Self::None => Span::call_site(),
+            Self::AngleBracketed(v) => v.span(),
+            Self::Parenthesized(v) => v.span(),
         }
     }
 }
@@ -65,9 +65,9 @@ impl Spanner for PathArguments {
 impl ToTokens for PathArguments {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
-            PathArguments::None => {}
-            PathArguments::AngleBracketed(args) => args.to_tokens(tokens),
-            PathArguments::Parenthesized(args) => args.to_tokens(tokens),
+            Self::None => {}
+            Self::AngleBracketed(args) => args.to_tokens(tokens),
+            Self::Parenthesized(args) => args.to_tokens(tokens),
         }
     }
 }

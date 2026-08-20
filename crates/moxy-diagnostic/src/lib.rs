@@ -306,10 +306,10 @@ impl std::fmt::Display for Diagnostic {
 
 impl From<&ParseError> for Diagnostic {
     fn from(err: &ParseError) -> Self {
-        let mut builder = Diagnostic::new().level(Level::Error).span(err.span()).message(err.message());
+        let mut builder = Self::new().level(Level::Error).span(err.span()).message(err.message());
 
         for child in err.children() {
-            builder = builder.child(Diagnostic::from(child));
+            builder = builder.child(Self::from(child));
         }
 
         builder.build()

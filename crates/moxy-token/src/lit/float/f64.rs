@@ -1,4 +1,4 @@
-use super::Float;
+use super::LitFloat;
 use crate::lit::Lit;
 use crate::parser::{ParseError, ParseStream};
 use crate::{LexError, Parse, Span, Spanner};
@@ -96,21 +96,21 @@ impl Parse for LitF64 {
         let at = stream.span();
 
         match Lit::parse(stream)? {
-            Lit::Float(Float::F64(v)) => Ok(v),
+            Lit::Float(LitFloat::F64(v)) => Ok(v),
             _ => Err(LexError::new(at).message("expected `f64` literal").into()),
         }
     }
 }
 
-impl From<LitF64> for Float {
+impl From<LitF64> for LitFloat {
     fn from(value: LitF64) -> Self {
-        Float::F64(value)
+        Self::F64(value)
     }
 }
 
 impl From<LitF64> for Lit {
     fn from(value: LitF64) -> Self {
-        Lit::Float(Float::F64(value))
+        Self::Float(LitFloat::F64(value))
     }
 }
 

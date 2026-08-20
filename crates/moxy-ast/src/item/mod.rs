@@ -190,119 +190,119 @@ impl Item {
 impl Spanner for Item {
     fn span(&self) -> Span {
         match self {
-            Item::Use(v) => v.span(),
-            Item::ExternCrate(v) => v.span(),
-            Item::Mod(v) => v.span(),
-            Item::Fn(v) => v.span(),
-            Item::Struct(v) => v.span(),
-            Item::Enum(v) => v.span(),
-            Item::Union(v) => v.span(),
-            Item::Trait(v) => v.span(),
-            Item::TraitAlias(v) => v.span(),
-            Item::Impl(v) => v.span(),
-            Item::TypeAlias(v) => v.span(),
-            Item::Const(v) => v.span(),
-            Item::Static(v) => v.span(),
-            Item::Macro(v) => v.span(),
-            Item::Macro2(v) => v.span(),
-            Item::ForeignMod(v) => v.span(),
+            Self::Use(v) => v.span(),
+            Self::ExternCrate(v) => v.span(),
+            Self::Mod(v) => v.span(),
+            Self::Fn(v) => v.span(),
+            Self::Struct(v) => v.span(),
+            Self::Enum(v) => v.span(),
+            Self::Union(v) => v.span(),
+            Self::Trait(v) => v.span(),
+            Self::TraitAlias(v) => v.span(),
+            Self::Impl(v) => v.span(),
+            Self::TypeAlias(v) => v.span(),
+            Self::Const(v) => v.span(),
+            Self::Static(v) => v.span(),
+            Self::Macro(v) => v.span(),
+            Self::Macro2(v) => v.span(),
+            Self::ForeignMod(v) => v.span(),
         }
     }
 }
 
 impl From<ItemUse> for Item {
     fn from(value: ItemUse) -> Self {
-        Item::Use(value)
+        Self::Use(value)
     }
 }
 
 impl From<ItemExternCrate> for Item {
     fn from(value: ItemExternCrate) -> Self {
-        Item::ExternCrate(value)
+        Self::ExternCrate(value)
     }
 }
 
 impl From<ItemMod> for Item {
     fn from(value: ItemMod) -> Self {
-        Item::Mod(value)
+        Self::Mod(value)
     }
 }
 
 impl From<ItemFn> for Item {
     fn from(value: ItemFn) -> Self {
-        Item::Fn(value)
+        Self::Fn(value)
     }
 }
 
 impl From<ItemStruct> for Item {
     fn from(value: ItemStruct) -> Self {
-        Item::Struct(value)
+        Self::Struct(value)
     }
 }
 
 impl From<ItemEnum> for Item {
     fn from(value: ItemEnum) -> Self {
-        Item::Enum(value)
+        Self::Enum(value)
     }
 }
 
 impl From<ItemUnion> for Item {
     fn from(value: ItemUnion) -> Self {
-        Item::Union(value)
+        Self::Union(value)
     }
 }
 
 impl From<ItemTrait> for Item {
     fn from(value: ItemTrait) -> Self {
-        Item::Trait(value)
+        Self::Trait(value)
     }
 }
 
 impl From<ItemTraitAlias> for Item {
     fn from(value: ItemTraitAlias) -> Self {
-        Item::TraitAlias(value)
+        Self::TraitAlias(value)
     }
 }
 
 impl From<ItemImpl> for Item {
     fn from(value: ItemImpl) -> Self {
-        Item::Impl(value)
+        Self::Impl(value)
     }
 }
 
 impl From<ItemTypeAlias> for Item {
     fn from(value: ItemTypeAlias) -> Self {
-        Item::TypeAlias(value)
+        Self::TypeAlias(value)
     }
 }
 
 impl From<ItemConst> for Item {
     fn from(value: ItemConst) -> Self {
-        Item::Const(value)
+        Self::Const(value)
     }
 }
 
 impl From<ItemStatic> for Item {
     fn from(value: ItemStatic) -> Self {
-        Item::Static(value)
+        Self::Static(value)
     }
 }
 
 impl From<ItemMacro> for Item {
     fn from(value: ItemMacro) -> Self {
-        Item::Macro(value)
+        Self::Macro(value)
     }
 }
 
 impl From<ItemMacroRules> for Item {
     fn from(value: ItemMacroRules) -> Self {
-        Item::Macro2(value)
+        Self::Macro2(value)
     }
 }
 
 impl From<ItemForeignMod> for Item {
     fn from(value: ItemForeignMod) -> Self {
-        Item::ForeignMod(value)
+        Self::ForeignMod(value)
     }
 }
 
@@ -311,52 +311,52 @@ impl Parse for Item {
         let at = stream.span();
 
         if stream.peek::<ItemMacroRules>() {
-            return Ok(Item::Macro2(stream.parse()?));
+            return Ok(Self::Macro2(stream.parse()?));
         }
         if stream.peek::<ItemUse>() {
-            return Ok(Item::Use(stream.parse()?));
+            return Ok(Self::Use(stream.parse()?));
         }
         if stream.peek::<ItemExternCrate>() {
-            return Ok(Item::ExternCrate(stream.parse()?));
+            return Ok(Self::ExternCrate(stream.parse()?));
         }
         if stream.peek::<ItemForeignMod>() {
-            return Ok(Item::ForeignMod(stream.parse()?));
+            return Ok(Self::ForeignMod(stream.parse()?));
         }
         if stream.peek::<ItemMod>() {
-            return Ok(Item::Mod(stream.parse()?));
+            return Ok(Self::Mod(stream.parse()?));
         }
         if stream.peek::<ItemStruct>() {
-            return Ok(Item::Struct(stream.parse()?));
+            return Ok(Self::Struct(stream.parse()?));
         }
         if stream.peek::<ItemEnum>() {
-            return Ok(Item::Enum(stream.parse()?));
+            return Ok(Self::Enum(stream.parse()?));
         }
         if stream.peek::<ItemUnion>() {
-            return Ok(Item::Union(stream.parse()?));
+            return Ok(Self::Union(stream.parse()?));
         }
         if stream.peek::<ItemTraitAlias>() {
-            return Ok(Item::TraitAlias(stream.parse()?));
+            return Ok(Self::TraitAlias(stream.parse()?));
         }
         if stream.peek::<ItemTrait>() {
-            return Ok(Item::Trait(stream.parse()?));
+            return Ok(Self::Trait(stream.parse()?));
         }
         if stream.peek::<ItemImpl>() {
-            return Ok(Item::Impl(stream.parse()?));
+            return Ok(Self::Impl(stream.parse()?));
         }
         if stream.peek::<ItemTypeAlias>() {
-            return Ok(Item::TypeAlias(stream.parse()?));
+            return Ok(Self::TypeAlias(stream.parse()?));
         }
         if stream.peek::<ItemConst>() {
-            return Ok(Item::Const(stream.parse()?));
+            return Ok(Self::Const(stream.parse()?));
         }
         if stream.peek::<ItemStatic>() {
-            return Ok(Item::Static(stream.parse()?));
+            return Ok(Self::Static(stream.parse()?));
         }
         if stream.peek::<ItemFn>() {
-            return Ok(Item::Fn(stream.parse()?));
+            return Ok(Self::Fn(stream.parse()?));
         }
         if stream.peek::<ItemMacro>() {
-            return Ok(Item::Macro(stream.parse()?));
+            return Ok(Self::Macro(stream.parse()?));
         }
 
         Err(LexError::new(at).message("expected item").into())
@@ -366,22 +366,22 @@ impl Parse for Item {
 impl ToTokens for Item {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            Item::Use(v) => v.to_tokens(t),
-            Item::ExternCrate(v) => v.to_tokens(t),
-            Item::Mod(v) => v.to_tokens(t),
-            Item::Fn(v) => v.to_tokens(t),
-            Item::Struct(v) => v.to_tokens(t),
-            Item::Enum(v) => v.to_tokens(t),
-            Item::Union(v) => v.to_tokens(t),
-            Item::Trait(v) => v.to_tokens(t),
-            Item::TraitAlias(v) => v.to_tokens(t),
-            Item::Impl(v) => v.to_tokens(t),
-            Item::TypeAlias(v) => v.to_tokens(t),
-            Item::Const(v) => v.to_tokens(t),
-            Item::Static(v) => v.to_tokens(t),
-            Item::Macro(v) => v.to_tokens(t),
-            Item::Macro2(v) => v.to_tokens(t),
-            Item::ForeignMod(v) => v.to_tokens(t),
+            Self::Use(v) => v.to_tokens(t),
+            Self::ExternCrate(v) => v.to_tokens(t),
+            Self::Mod(v) => v.to_tokens(t),
+            Self::Fn(v) => v.to_tokens(t),
+            Self::Struct(v) => v.to_tokens(t),
+            Self::Enum(v) => v.to_tokens(t),
+            Self::Union(v) => v.to_tokens(t),
+            Self::Trait(v) => v.to_tokens(t),
+            Self::TraitAlias(v) => v.to_tokens(t),
+            Self::Impl(v) => v.to_tokens(t),
+            Self::TypeAlias(v) => v.to_tokens(t),
+            Self::Const(v) => v.to_tokens(t),
+            Self::Static(v) => v.to_tokens(t),
+            Self::Macro(v) => v.to_tokens(t),
+            Self::Macro2(v) => v.to_tokens(t),
+            Self::ForeignMod(v) => v.to_tokens(t),
         }
     }
 }

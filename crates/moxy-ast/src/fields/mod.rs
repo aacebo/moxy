@@ -44,22 +44,22 @@ impl Fields {
 
 impl From<FieldsNamed> for Fields {
     fn from(v: FieldsNamed) -> Self {
-        Fields::Named(v)
+        Self::Named(v)
     }
 }
 
 impl From<FieldsUnnamed> for Fields {
     fn from(v: FieldsUnnamed) -> Self {
-        Fields::Unnamed(v)
+        Self::Unnamed(v)
     }
 }
 
 impl Spanner for Fields {
     fn span(&self) -> Span {
         match self {
-            Fields::Named(v) => v.span(),
-            Fields::Unnamed(v) => v.span(),
-            Fields::Unit => Span::call_site(),
+            Self::Named(v) => v.span(),
+            Self::Unnamed(v) => v.span(),
+            Self::Unit => Span::call_site(),
         }
     }
 }
@@ -67,9 +67,9 @@ impl Spanner for Fields {
 impl Parse for Fields {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         match stream.curr() {
-            Some(TokenTree::Group(g)) if g.delim() == Delim::Brace => Ok(Fields::Named(stream.parse()?)),
-            Some(TokenTree::Group(g)) if g.delim() == Delim::Paren => Ok(Fields::Unnamed(stream.parse()?)),
-            _ => Ok(Fields::Unit),
+            Some(TokenTree::Group(g)) if g.delim() == Delim::Brace => Ok(Self::Named(stream.parse()?)),
+            Some(TokenTree::Group(g)) if g.delim() == Delim::Paren => Ok(Self::Unnamed(stream.parse()?)),
+            _ => Ok(Self::Unit),
         }
     }
 }
@@ -77,9 +77,9 @@ impl Parse for Fields {
 impl ToTokens for Fields {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            Fields::Named(v) => v.to_tokens(t),
-            Fields::Unnamed(v) => v.to_tokens(t),
-            Fields::Unit => {}
+            Self::Named(v) => v.to_tokens(t),
+            Self::Unnamed(v) => v.to_tokens(t),
+            Self::Unit => {}
         }
     }
 }

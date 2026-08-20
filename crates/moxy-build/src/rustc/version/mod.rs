@@ -39,7 +39,7 @@ pub struct Version {
 }
 
 impl Version {
-    pub fn parse(version: &str) -> Option<Version> {
+    pub fn parse(version: &str) -> Option<Self> {
         let version = version.trim();
         let token = if version.starts_with("rustc ") {
             version.split_whitespace().nth(1)?
@@ -55,7 +55,7 @@ impl Version {
             *slot = part.parse::<u16>().ok()?;
         }
 
-        Some(Version {
+        Some(Self {
             major: mmp[0],
             minor: mmp[1],
             patch: mmp[2],
@@ -63,7 +63,7 @@ impl Version {
         })
     }
 
-    pub fn parse_verbose(output: &str) -> Option<Version> {
+    pub fn parse_verbose(output: &str) -> Option<Self> {
         let release = output.lines().find_map(|line| line.trim().strip_prefix("release:"))?;
         Self::parse(release)
     }
@@ -76,7 +76,7 @@ impl Version {
 
     /// True if this version is at least `other` (compares the semver triple only).
     #[inline]
-    pub fn at_least(&self, other: &Version) -> bool {
+    pub fn at_least(&self, other: &Self) -> bool {
         self.triple() >= other.triple()
     }
 }

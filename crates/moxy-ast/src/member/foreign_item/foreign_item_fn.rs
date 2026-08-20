@@ -26,7 +26,7 @@ impl Parse for ForeignItemFn {
 
         let sig = stream.parse::<Signature>()?;
         let semi = stream.parse_if::<Semi>();
-        Ok(ForeignItemFn { attrs, vis, sig, semi })
+        Ok(Self { attrs, vis, sig, semi })
     }
 }
 

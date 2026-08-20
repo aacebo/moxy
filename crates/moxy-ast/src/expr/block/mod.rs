@@ -159,16 +159,16 @@ impl BlockExpr {
 impl Spanner for BlockExpr {
     fn span(&self) -> Span {
         match self {
-            BlockExpr::Brace(v) => v.span(),
-            BlockExpr::If(v) => v.span(),
-            BlockExpr::While(v) => v.span(),
-            BlockExpr::ForLoop(v) => v.span(),
-            BlockExpr::Loop(v) => v.span(),
-            BlockExpr::Match(v) => v.span(),
-            BlockExpr::Async(v) => v.span(),
-            BlockExpr::Unsafe(v) => v.span(),
-            BlockExpr::Const(v) => v.span(),
-            BlockExpr::TryBlock(v) => v.span(),
+            Self::Brace(v) => v.span(),
+            Self::If(v) => v.span(),
+            Self::While(v) => v.span(),
+            Self::ForLoop(v) => v.span(),
+            Self::Loop(v) => v.span(),
+            Self::Match(v) => v.span(),
+            Self::Async(v) => v.span(),
+            Self::Unsafe(v) => v.span(),
+            Self::Const(v) => v.span(),
+            Self::TryBlock(v) => v.span(),
         }
     }
 }
@@ -176,77 +176,77 @@ impl Spanner for BlockExpr {
 impl ToTokens for BlockExpr {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            BlockExpr::Brace(v) => v.to_tokens(t),
-            BlockExpr::If(v) => v.to_tokens(t),
-            BlockExpr::While(v) => v.to_tokens(t),
-            BlockExpr::ForLoop(v) => v.to_tokens(t),
-            BlockExpr::Loop(v) => v.to_tokens(t),
-            BlockExpr::Match(v) => v.to_tokens(t),
-            BlockExpr::Async(v) => v.to_tokens(t),
-            BlockExpr::Unsafe(v) => v.to_tokens(t),
-            BlockExpr::Const(v) => v.to_tokens(t),
-            BlockExpr::TryBlock(v) => v.to_tokens(t),
+            Self::Brace(v) => v.to_tokens(t),
+            Self::If(v) => v.to_tokens(t),
+            Self::While(v) => v.to_tokens(t),
+            Self::ForLoop(v) => v.to_tokens(t),
+            Self::Loop(v) => v.to_tokens(t),
+            Self::Match(v) => v.to_tokens(t),
+            Self::Async(v) => v.to_tokens(t),
+            Self::Unsafe(v) => v.to_tokens(t),
+            Self::Const(v) => v.to_tokens(t),
+            Self::TryBlock(v) => v.to_tokens(t),
         }
     }
 }
 
 impl From<ExprBrace> for BlockExpr {
     fn from(v: ExprBrace) -> Self {
-        BlockExpr::Brace(v)
+        Self::Brace(v)
     }
 }
 
 impl From<ExprIf> for BlockExpr {
     fn from(v: ExprIf) -> Self {
-        BlockExpr::If(v)
+        Self::If(v)
     }
 }
 
 impl From<ExprWhile> for BlockExpr {
     fn from(v: ExprWhile) -> Self {
-        BlockExpr::While(v)
+        Self::While(v)
     }
 }
 
 impl From<ExprForLoop> for BlockExpr {
     fn from(v: ExprForLoop) -> Self {
-        BlockExpr::ForLoop(v)
+        Self::ForLoop(v)
     }
 }
 
 impl From<ExprLoop> for BlockExpr {
     fn from(v: ExprLoop) -> Self {
-        BlockExpr::Loop(v)
+        Self::Loop(v)
     }
 }
 
 impl From<ExprMatch> for BlockExpr {
     fn from(v: ExprMatch) -> Self {
-        BlockExpr::Match(v)
+        Self::Match(v)
     }
 }
 
 impl From<ExprAsync> for BlockExpr {
     fn from(v: ExprAsync) -> Self {
-        BlockExpr::Async(v)
+        Self::Async(v)
     }
 }
 
 impl From<ExprUnsafe> for BlockExpr {
     fn from(v: ExprUnsafe) -> Self {
-        BlockExpr::Unsafe(v)
+        Self::Unsafe(v)
     }
 }
 
 impl From<ExprConst> for BlockExpr {
     fn from(v: ExprConst) -> Self {
-        BlockExpr::Const(v)
+        Self::Const(v)
     }
 }
 
 impl From<ExprTryBlock> for BlockExpr {
     fn from(v: ExprTryBlock) -> Self {
-        BlockExpr::TryBlock(v)
+        Self::TryBlock(v)
     }
 }
 
@@ -258,6 +258,6 @@ impl Label {
 
         let name = stream.parse_if::<Lifetime>()?;
         let colon = stream.parse_if::<moxy_token::punct::Colon>().unwrap_or_default();
-        Some(Label { name, colon })
+        Some(Self { name, colon })
     }
 }

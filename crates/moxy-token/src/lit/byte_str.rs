@@ -76,7 +76,7 @@ impl Scan for LitByteStr {
         let span = cursor.span_to(&end);
 
         match repr.strip_prefix('b').and_then(decode_string_body) {
-            Some(value) => Ok((end, LitByteStr::from_parts(value.into_bytes(), repr, span))),
+            Some(value) => Ok((end, Self::from_parts(value.into_bytes(), repr, span))),
             None => cursor.error().into(),
         }
     }
@@ -95,7 +95,7 @@ impl Parse for LitByteStr {
 
 impl From<LitByteStr> for Lit {
     fn from(value: LitByteStr) -> Self {
-        Lit::ByteStr(value)
+        Self::ByteStr(value)
     }
 }
 

@@ -9,41 +9,41 @@ use crate::{Span, Spanner};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(untagged))]
-pub enum Float {
+pub enum LitFloat {
     F32(LitF32),
     F64(LitF64),
 }
 
-impl Float {
+impl LitFloat {
     #[inline]
     pub fn repr(&self) -> &str {
         match self {
-            Float::F32(v) => v.repr(),
-            Float::F64(v) => v.repr(),
+            Self::F32(v) => v.repr(),
+            Self::F64(v) => v.repr(),
         }
     }
 
     #[inline]
     pub fn span(&self) -> Span {
         match self {
-            Float::F32(v) => v.span(),
-            Float::F64(v) => v.span(),
+            Self::F32(v) => v.span(),
+            Self::F64(v) => v.span(),
         }
     }
 
     #[inline]
     pub fn set_span(&mut self, span: Span) {
         match self {
-            Float::F32(v) => v.set_span(span),
-            Float::F64(v) => v.set_span(span),
+            Self::F32(v) => v.set_span(span),
+            Self::F64(v) => v.set_span(span),
         }
     }
 
     /// The value widened to `f64`.
     pub fn as_f64(&self) -> f64 {
         match self {
-            Float::F32(v) => v.value() as f64,
-            Float::F64(v) => v.value(),
+            Self::F32(v) => v.value() as f64,
+            Self::F64(v) => v.value(),
         }
     }
 
@@ -61,46 +61,46 @@ impl Float {
         match suffix {
             "f32" => {
                 let value = digits.replace('_', "").parse::<f32>().ok()?;
-                Some(Float::F32(LitF32::from_parts(value, suffixed, repr, span)))
+                Some(Self::F32(LitF32::from_parts(value, suffixed, repr, span)))
             }
             "f64" | "" => {
                 let value = digits.replace('_', "").parse::<f64>().ok()?;
-                Some(Float::F64(LitF64::from_parts(value, suffixed, repr, span)))
+                Some(Self::F64(LitF64::from_parts(value, suffixed, repr, span)))
             }
             _ => None,
         }
     }
 }
 
-impl Scan for Float {
+impl Scan for LitFloat {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
         let end = scan_number(cursor)?;
         let len = end.offset() as usize - cursor.offset() as usize;
         let repr = &cursor.rest()[..len];
         let span = cursor.span_to(&end);
 
-        match Float::from_repr(repr, span) {
+        match Self::from_repr(repr, span) {
             Some(float) => Ok((end, float)),
             None => cursor.error().into(),
         }
     }
 }
 
-impl Spanner for Float {
+impl Spanner for LitFloat {
     fn span(&self) -> Span {
         self.span()
     }
 }
 
-impl std::fmt::Display for Float {
+impl std::fmt::Display for LitFloat {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(self.repr())
     }
 }
 
 #[cfg(feature = "serde")]
-impl From<Float> for String {
-    fn from(value: Float) -> Self {
+impl From<LitFloat> for String {
+    fn from(value: LitFloat) -> Self {
         value.repr().to_string()
     }
 }

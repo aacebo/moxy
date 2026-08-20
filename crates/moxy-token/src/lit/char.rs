@@ -86,7 +86,7 @@ impl Scan for LitChar {
 
         let inner = repr.strip_prefix('\'').and_then(|r| r.strip_suffix('\''));
         match inner.and_then(decode_one_char) {
-            Some(value) => Ok((end, LitChar::from_parts(value, repr, span))),
+            Some(value) => Ok((end, Self::from_parts(value, repr, span))),
             None => cursor.error().into(),
         }
     }
@@ -105,7 +105,7 @@ impl Parse for LitChar {
 
 impl From<LitChar> for Lit {
     fn from(value: LitChar) -> Self {
-        Lit::Char(value)
+        Self::Char(value)
     }
 }
 

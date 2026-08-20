@@ -24,7 +24,7 @@ impl Parse for ItemUnion {
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
         let fields = stream.parse::<FieldsNamed>()?;
-        Ok(ItemUnion {
+        Ok(Self {
             attrs,
             vis,
             union_keyword,

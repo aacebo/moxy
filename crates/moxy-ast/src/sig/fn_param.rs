@@ -37,27 +37,27 @@ impl FnParam {
 impl Spanner for FnParam {
     fn span(&self) -> Span {
         match self {
-            FnParam::Receiver(v) => v.span(),
-            FnParam::Typed(v) => v.span(),
+            Self::Receiver(v) => v.span(),
+            Self::Typed(v) => v.span(),
         }
     }
 }
 
 impl Parse for FnParam {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if FnParam::is_receiver(stream) {
-            return Ok(FnParam::Receiver(Box::new(stream.parse()?)));
+        if Self::is_receiver(stream) {
+            return Ok(Self::Receiver(Box::new(stream.parse()?)));
         }
 
-        Ok(FnParam::Typed(Box::new(stream.parse()?)))
+        Ok(Self::Typed(Box::new(stream.parse()?)))
     }
 }
 
 impl ToTokens for FnParam {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            FnParam::Receiver(v) => v.to_tokens(t),
-            FnParam::Typed(v) => v.to_tokens(t),
+            Self::Receiver(v) => v.to_tokens(t),
+            Self::Typed(v) => v.to_tokens(t),
         }
     }
 }

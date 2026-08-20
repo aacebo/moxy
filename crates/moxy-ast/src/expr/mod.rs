@@ -114,285 +114,285 @@ impl Expr {
 impl Spanner for Expr {
     fn span(&self) -> Span {
         match self {
-            Expr::Unary(v) => v.span(),
-            Expr::Binary(v) => v.span(),
-            Expr::Postfix(v) => v.span(),
-            Expr::Block(v) => v.span(),
-            Expr::Jump(v) => v.span(),
-            Expr::Primary(v) => v.span(),
-            Expr::Infer => Span::call_site(),
-            Expr::Verbatim(_) => Span::call_site(),
+            Self::Unary(v) => v.span(),
+            Self::Binary(v) => v.span(),
+            Self::Postfix(v) => v.span(),
+            Self::Block(v) => v.span(),
+            Self::Jump(v) => v.span(),
+            Self::Primary(v) => v.span(),
+            Self::Infer => Span::call_site(),
+            Self::Verbatim(_) => Span::call_site(),
         }
     }
 }
 
 impl From<UnaryExpr> for Expr {
     fn from(v: UnaryExpr) -> Self {
-        Expr::Unary(v)
+        Self::Unary(v)
     }
 }
 
 impl From<BinaryExpr> for Expr {
     fn from(v: BinaryExpr) -> Self {
-        Expr::Binary(v)
+        Self::Binary(v)
     }
 }
 
 impl From<PostfixExpr> for Expr {
     fn from(v: PostfixExpr) -> Self {
-        Expr::Postfix(v)
+        Self::Postfix(v)
     }
 }
 
 impl From<BlockExpr> for Expr {
     fn from(v: BlockExpr) -> Self {
-        Expr::Block(v)
+        Self::Block(v)
     }
 }
 
 impl From<JumpExpr> for Expr {
     fn from(v: JumpExpr) -> Self {
-        Expr::Jump(v)
+        Self::Jump(v)
     }
 }
 
 impl From<PrimaryExpr> for Expr {
     fn from(v: PrimaryExpr) -> Self {
-        Expr::Primary(v)
+        Self::Primary(v)
     }
 }
 
 impl From<ExprReference> for Expr {
     fn from(value: ExprReference) -> Self {
-        Expr::Unary(UnaryExpr::from(value))
+        Self::Unary(UnaryExpr::from(value))
     }
 }
 
 impl From<ExprUnary> for Expr {
     fn from(value: ExprUnary) -> Self {
-        Expr::Unary(UnaryExpr::from(value))
+        Self::Unary(UnaryExpr::from(value))
     }
 }
 
 impl From<ExprCast> for Expr {
     fn from(value: ExprCast) -> Self {
-        Expr::Unary(UnaryExpr::from(value))
+        Self::Unary(UnaryExpr::from(value))
     }
 }
 
 impl From<ExprTry> for Expr {
     fn from(value: ExprTry) -> Self {
-        Expr::Unary(UnaryExpr::from(value))
+        Self::Unary(UnaryExpr::from(value))
     }
 }
 
 impl From<ExprBinary> for Expr {
     fn from(value: ExprBinary) -> Self {
-        Expr::Binary(BinaryExpr::from(value))
+        Self::Binary(BinaryExpr::from(value))
     }
 }
 
 impl From<ExprAssign> for Expr {
     fn from(value: ExprAssign) -> Self {
-        Expr::Binary(BinaryExpr::from(value))
+        Self::Binary(BinaryExpr::from(value))
     }
 }
 
 impl From<ExprAssignOp> for Expr {
     fn from(value: ExprAssignOp) -> Self {
-        Expr::Binary(BinaryExpr::from(value))
+        Self::Binary(BinaryExpr::from(value))
     }
 }
 
 impl From<ExprRange> for Expr {
     fn from(value: ExprRange) -> Self {
-        Expr::Binary(BinaryExpr::from(value))
+        Self::Binary(BinaryExpr::from(value))
     }
 }
 
 impl From<ExprType> for Expr {
     fn from(value: ExprType) -> Self {
-        Expr::Binary(BinaryExpr::from(value))
+        Self::Binary(BinaryExpr::from(value))
     }
 }
 
 impl From<ExprCall> for Expr {
     fn from(value: ExprCall) -> Self {
-        Expr::Postfix(PostfixExpr::from(value))
+        Self::Postfix(PostfixExpr::from(value))
     }
 }
 
 impl From<ExprMethodCall> for Expr {
     fn from(value: ExprMethodCall) -> Self {
-        Expr::Postfix(PostfixExpr::from(value))
+        Self::Postfix(PostfixExpr::from(value))
     }
 }
 
 impl From<ExprField> for Expr {
     fn from(value: ExprField) -> Self {
-        Expr::Postfix(PostfixExpr::from(value))
+        Self::Postfix(PostfixExpr::from(value))
     }
 }
 
 impl From<ExprIndex> for Expr {
     fn from(value: ExprIndex) -> Self {
-        Expr::Postfix(PostfixExpr::from(value))
+        Self::Postfix(PostfixExpr::from(value))
     }
 }
 
 impl From<ExprAwait> for Expr {
     fn from(value: ExprAwait) -> Self {
-        Expr::Postfix(PostfixExpr::from(value))
+        Self::Postfix(PostfixExpr::from(value))
     }
 }
 
 impl From<ExprBrace> for Expr {
     fn from(value: ExprBrace) -> Self {
-        Expr::Block(BlockExpr::from(value))
+        Self::Block(BlockExpr::from(value))
     }
 }
 
 impl From<ExprIf> for Expr {
     fn from(value: ExprIf) -> Self {
-        Expr::Block(BlockExpr::from(value))
+        Self::Block(BlockExpr::from(value))
     }
 }
 
 impl From<ExprWhile> for Expr {
     fn from(value: ExprWhile) -> Self {
-        Expr::Block(BlockExpr::from(value))
+        Self::Block(BlockExpr::from(value))
     }
 }
 
 impl From<ExprForLoop> for Expr {
     fn from(value: ExprForLoop) -> Self {
-        Expr::Block(BlockExpr::from(value))
+        Self::Block(BlockExpr::from(value))
     }
 }
 
 impl From<ExprLoop> for Expr {
     fn from(value: ExprLoop) -> Self {
-        Expr::Block(BlockExpr::from(value))
+        Self::Block(BlockExpr::from(value))
     }
 }
 
 impl From<ExprMatch> for Expr {
     fn from(value: ExprMatch) -> Self {
-        Expr::Block(BlockExpr::from(value))
+        Self::Block(BlockExpr::from(value))
     }
 }
 
 impl From<ExprAsync> for Expr {
     fn from(value: ExprAsync) -> Self {
-        Expr::Block(BlockExpr::from(value))
+        Self::Block(BlockExpr::from(value))
     }
 }
 
 impl From<ExprUnsafe> for Expr {
     fn from(value: ExprUnsafe) -> Self {
-        Expr::Block(BlockExpr::from(value))
+        Self::Block(BlockExpr::from(value))
     }
 }
 
 impl From<ExprConst> for Expr {
     fn from(value: ExprConst) -> Self {
-        Expr::Block(BlockExpr::from(value))
+        Self::Block(BlockExpr::from(value))
     }
 }
 
 impl From<ExprTryBlock> for Expr {
     fn from(value: ExprTryBlock) -> Self {
-        Expr::Block(BlockExpr::from(value))
+        Self::Block(BlockExpr::from(value))
     }
 }
 
 impl From<ExprReturn> for Expr {
     fn from(value: ExprReturn) -> Self {
-        Expr::Jump(JumpExpr::from(value))
+        Self::Jump(JumpExpr::from(value))
     }
 }
 
 impl From<ExprBreak> for Expr {
     fn from(value: ExprBreak) -> Self {
-        Expr::Jump(JumpExpr::from(value))
+        Self::Jump(JumpExpr::from(value))
     }
 }
 
 impl From<ExprContinue> for Expr {
     fn from(value: ExprContinue) -> Self {
-        Expr::Jump(JumpExpr::from(value))
+        Self::Jump(JumpExpr::from(value))
     }
 }
 
 impl From<ExprYield> for Expr {
     fn from(value: ExprYield) -> Self {
-        Expr::Jump(JumpExpr::from(value))
+        Self::Jump(JumpExpr::from(value))
     }
 }
 
 impl From<ExprLit> for Expr {
     fn from(value: ExprLit) -> Self {
-        Expr::Primary(PrimaryExpr::from(value))
+        Self::Primary(PrimaryExpr::from(value))
     }
 }
 
 impl From<ExprPath> for Expr {
     fn from(value: ExprPath) -> Self {
-        Expr::Primary(PrimaryExpr::from(value))
+        Self::Primary(PrimaryExpr::from(value))
     }
 }
 
 impl From<ExprStruct> for Expr {
     fn from(value: ExprStruct) -> Self {
-        Expr::Primary(PrimaryExpr::from(value))
+        Self::Primary(PrimaryExpr::from(value))
     }
 }
 
 impl From<ExprClosure> for Expr {
     fn from(value: ExprClosure) -> Self {
-        Expr::Primary(PrimaryExpr::from(value))
+        Self::Primary(PrimaryExpr::from(value))
     }
 }
 
 impl From<ExprTuple> for Expr {
     fn from(value: ExprTuple) -> Self {
-        Expr::Primary(PrimaryExpr::from(value))
+        Self::Primary(PrimaryExpr::from(value))
     }
 }
 
 impl From<ExprArray> for Expr {
     fn from(value: ExprArray) -> Self {
-        Expr::Primary(PrimaryExpr::from(value))
+        Self::Primary(PrimaryExpr::from(value))
     }
 }
 
 impl From<ExprRepeat> for Expr {
     fn from(value: ExprRepeat) -> Self {
-        Expr::Primary(PrimaryExpr::from(value))
+        Self::Primary(PrimaryExpr::from(value))
     }
 }
 
 impl From<ExprLet> for Expr {
     fn from(value: ExprLet) -> Self {
-        Expr::Primary(PrimaryExpr::from(value))
+        Self::Primary(PrimaryExpr::from(value))
     }
 }
 
 impl From<ExprParen> for Expr {
     fn from(value: ExprParen) -> Self {
-        Expr::Primary(PrimaryExpr::from(value))
+        Self::Primary(PrimaryExpr::from(value))
     }
 }
 
 impl From<ExprGroup> for Expr {
     fn from(value: ExprGroup) -> Self {
-        Expr::Primary(PrimaryExpr::from(value))
+        Self::Primary(PrimaryExpr::from(value))
     }
 }
 
 impl From<ExprMacro> for Expr {
     fn from(value: ExprMacro) -> Self {
-        Expr::Primary(PrimaryExpr::from(value))
+        Self::Primary(PrimaryExpr::from(value))
     }
 }
 
@@ -405,14 +405,14 @@ impl Parse for Expr {
 impl ToTokens for Expr {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            Expr::Unary(v) => v.to_tokens(t),
-            Expr::Binary(v) => v.to_tokens(t),
-            Expr::Postfix(v) => v.to_tokens(t),
-            Expr::Block(v) => v.to_tokens(t),
-            Expr::Jump(v) => v.to_tokens(t),
-            Expr::Primary(v) => v.to_tokens(t),
-            Expr::Infer => {}
-            Expr::Verbatim(v) => v.to_tokens(t),
+            Self::Unary(v) => v.to_tokens(t),
+            Self::Binary(v) => v.to_tokens(t),
+            Self::Postfix(v) => v.to_tokens(t),
+            Self::Block(v) => v.to_tokens(t),
+            Self::Jump(v) => v.to_tokens(t),
+            Self::Primary(v) => v.to_tokens(t),
+            Self::Infer => {}
+            Self::Verbatim(v) => v.to_tokens(t),
         }
     }
 }

@@ -47,7 +47,7 @@ impl Parse for TraitItemType {
         };
 
         let semi = stream.parse_if::<Semi>();
-        Ok(TraitItemType {
+        Ok(Self {
             attrs,
             type_keyword,
             ident,

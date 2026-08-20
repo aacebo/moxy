@@ -15,56 +15,67 @@ use crate::{Span, Spanner};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(untagged))]
-pub enum Int {
+pub enum LitInt {
     I8(LitI8),
     I16(LitI16),
     I32(LitI32),
     I64(LitI64),
-    Isize(LitIsize),
+    ISize(LitISize),
 }
 
-impl Int {
+impl LitInt {
     #[inline]
     pub fn repr(&self) -> &str {
         match self {
-            Int::I8(v) => v.repr(),
-            Int::I16(v) => v.repr(),
-            Int::I32(v) => v.repr(),
-            Int::I64(v) => v.repr(),
-            Int::Isize(v) => v.repr(),
+            Self::I8(v) => v.repr(),
+            Self::I16(v) => v.repr(),
+            Self::I32(v) => v.repr(),
+            Self::I64(v) => v.repr(),
+            Self::ISize(v) => v.repr(),
         }
     }
 
     #[inline]
     pub fn span(&self) -> Span {
         match self {
-            Int::I8(v) => v.span(),
-            Int::I16(v) => v.span(),
-            Int::I32(v) => v.span(),
-            Int::I64(v) => v.span(),
-            Int::Isize(v) => v.span(),
+            Self::I8(v) => v.span(),
+            Self::I16(v) => v.span(),
+            Self::I32(v) => v.span(),
+            Self::I64(v) => v.span(),
+            Self::ISize(v) => v.span(),
         }
     }
 
     #[inline]
     pub fn set_span(&mut self, span: Span) {
         match self {
-            Int::I8(v) => v.set_span(span),
-            Int::I16(v) => v.set_span(span),
-            Int::I32(v) => v.set_span(span),
-            Int::I64(v) => v.set_span(span),
-            Int::Isize(v) => v.set_span(span),
+            Self::I8(v) => v.set_span(span),
+            Self::I16(v) => v.set_span(span),
+            Self::I32(v) => v.set_span(span),
+            Self::I64(v) => v.set_span(span),
+            Self::ISize(v) => v.set_span(span),
+        }
+    }
+
+    #[inline]
+    pub fn suffixed(&self) -> bool {
+        match self {
+            Self::I8(v) => v.suffixed(),
+            Self::I16(v) => v.suffixed(),
+            Self::I32(v) => v.suffixed(),
+            Self::I64(v) => v.suffixed(),
+            Self::ISize(v) => v.suffixed(),
         }
     }
 
     /// The value widened to `i128` (all signed int variants fit).
     pub fn as_i128(&self) -> i128 {
         match self {
-            Int::I8(v) => v.value() as i128,
-            Int::I16(v) => v.value() as i128,
-            Int::I32(v) => v.value() as i128,
-            Int::I64(v) => v.value() as i128,
-            Int::Isize(v) => v.value() as i128,
+            Self::I8(v) => v.value() as i128,
+            Self::I16(v) => v.value() as i128,
+            Self::I32(v) => v.value() as i128,
+            Self::I64(v) => v.value() as i128,
+            Self::ISize(v) => v.value() as i128,
         }
     }
 
@@ -82,31 +93,31 @@ impl Int {
         let suffixed = !suffix.is_empty();
 
         match suffix {
-            "i8" => Some(Int::I8(LitI8::from_parts(
+            "i8" => Some(Self::I8(LitI8::from_parts(
                 i8::try_from(magnitude).ok()?,
                 suffixed,
                 repr,
                 span,
             ))),
-            "i16" => Some(Int::I16(LitI16::from_parts(
+            "i16" => Some(Self::I16(LitI16::from_parts(
                 i16::try_from(magnitude).ok()?,
                 suffixed,
                 repr,
                 span,
             ))),
-            "i64" => Some(Int::I64(LitI64::from_parts(
+            "i64" => Some(Self::I64(LitI64::from_parts(
                 i64::try_from(magnitude).ok()?,
                 suffixed,
                 repr,
                 span,
             ))),
-            "isize" => Some(Int::Isize(LitIsize::from_parts(
+            "isize" => Some(Self::ISize(LitISize::from_parts(
                 isize::try_from(magnitude).ok()?,
                 suffixed,
                 repr,
                 span,
             ))),
-            "i32" | "" => Some(Int::I32(LitI32::from_parts(
+            "i32" | "" => Some(Self::I32(LitI32::from_parts(
                 i32::try_from(magnitude).ok()?,
                 suffixed,
                 repr,
@@ -117,35 +128,35 @@ impl Int {
     }
 }
 
-impl Scan for Int {
+impl Scan for LitInt {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
         let end = scan_number(cursor)?;
         let len = end.offset() as usize - cursor.offset() as usize;
         let repr = &cursor.rest()[..len];
         let span = cursor.span_to(&end);
 
-        match Int::from_repr(repr, span) {
+        match Self::from_repr(repr, span) {
             Some(int) => Ok((end, int)),
             None => cursor.error().into(),
         }
     }
 }
 
-impl Spanner for Int {
+impl Spanner for LitInt {
     fn span(&self) -> Span {
         self.span()
     }
 }
 
-impl std::fmt::Display for Int {
+impl std::fmt::Display for LitInt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(self.repr())
     }
 }
 
 #[cfg(feature = "serde")]
-impl From<Int> for String {
-    fn from(value: Int) -> Self {
+impl From<LitInt> for String {
+    fn from(value: LitInt) -> Self {
         value.repr().to_string()
     }
 }
@@ -161,6 +172,7 @@ fn split_suffix(repr: &str) -> (&str, &str) {
             if (s == "f32" || s == "f64") && (body.starts_with("0x") || body.starts_with("0X")) {
                 continue;
             }
+
             return (body, s);
         }
     }

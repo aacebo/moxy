@@ -60,8 +60,8 @@ pub use misc::*;
 pub use moxy_token::Ident;
 #[doc(inline)]
 pub use moxy_token::{
-    Float, Int, Lit, LitBool, LitByte, LitByteStr, LitCStr, LitChar, LitF32, LitF64, LitI8, LitI16, LitI32, LitI64, LitIsize,
-    LitStr, LitU8, LitU16, LitU32, LitU64, LitUsize, LitVerbatim, UInt,
+    Lit, LitBool, LitByte, LitByteStr, LitCStr, LitChar, LitF32, LitF64, LitFloat, LitI8, LitI16, LitI32, LitI64, LitISize,
+    LitInt, LitStr, LitU8, LitU16, LitU32, LitU64, LitUInt, LitUSize, LitVerbatim,
 };
 #[doc(inline)]
 pub use pat::Pattern;

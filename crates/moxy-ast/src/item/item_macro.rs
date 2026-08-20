@@ -27,7 +27,7 @@ impl Parse for ItemMacro {
             (false, None)
         };
 
-        Ok(ItemMacro {
+        Ok(Self {
             attrs,
             ident: None,
             mac,

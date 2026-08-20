@@ -42,7 +42,7 @@ impl Parse for TraitItemConst {
         };
 
         let semi = stream.parse_if::<Semi>();
-        Ok(TraitItemConst {
+        Ok(Self {
             attrs,
             const_keyword,
             ident,

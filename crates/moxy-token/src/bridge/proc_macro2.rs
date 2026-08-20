@@ -40,10 +40,10 @@ impl From<proc_macro2::Delimiter> for Delim {
 impl From<Delim> for proc_macro2::Delimiter {
     fn from(value: Delim) -> Self {
         match value {
-            Delim::Paren => proc_macro2::Delimiter::Parenthesis,
-            Delim::Brace => proc_macro2::Delimiter::Brace,
-            Delim::Bracket => proc_macro2::Delimiter::Bracket,
-            Delim::None => proc_macro2::Delimiter::None,
+            Delim::Paren => Self::Parenthesis,
+            Delim::Brace => Self::Brace,
+            Delim::Bracket => Self::Bracket,
+            Delim::None => Self::None,
         }
     }
 }
@@ -62,8 +62,8 @@ impl From<proc_macro2::Spacing> for Spacing {
 impl From<Spacing> for proc_macro2::Spacing {
     fn from(value: Spacing) -> Self {
         match value {
-            Spacing::Alone => proc_macro2::Spacing::Alone,
-            Spacing::Joint => proc_macro2::Spacing::Joint,
+            Spacing::Alone => Self::Alone,
+            Spacing::Joint => Self::Joint,
         }
     }
 }
@@ -73,7 +73,7 @@ impl From<Spacing> for proc_macro2::Spacing {
 impl From<proc_macro2::Ident> for Ident {
     fn from(value: proc_macro2::Ident) -> Self {
         let span: Span = value.span().into();
-        Ident::new(value.to_string()).with_span(span)
+        Self::new(value.to_string()).with_span(span)
     }
 }
 
@@ -83,8 +83,8 @@ impl From<Ident> for proc_macro2::Ident {
         let span = proc_macro2::Span::call_site();
 
         match name.strip_prefix("r#") {
-            Some(name) => proc_macro2::Ident::new_raw(name, span),
-            None => proc_macro2::Ident::new(name, span),
+            Some(name) => Self::new_raw(name, span),
+            None => Self::new(name, span),
         }
     }
 }
@@ -94,14 +94,14 @@ impl From<Ident> for proc_macro2::Ident {
 impl From<proc_macro2::Literal> for Lit {
     fn from(value: proc_macro2::Literal) -> Self {
         let span: Span = value.span().into();
-        Lit::from_repr(&value.to_string(), span)
+        Self::from_repr(&value.to_string(), span)
     }
 }
 
 impl From<Lit> for proc_macro2::Literal {
     fn from(value: Lit) -> Self {
         let repr = value.repr();
-        repr.parse().unwrap_or_else(|_| proc_macro2::Literal::string(repr))
+        repr.parse().unwrap_or_else(|_| Self::string(repr))
     }
 }
 
@@ -120,7 +120,7 @@ impl From<Group> for proc_macro2::Group {
         let delim: proc_macro2::Delimiter = value.delim().into();
         let mut stream = proc_macro2::TokenStream::new();
         value.stream().to_tokens(&mut stream);
-        proc_macro2::Group::new(delim, stream)
+        Self::new(delim, stream)
     }
 }
 
@@ -164,14 +164,14 @@ impl ToTokens<TokenStream> for proc_macro2::TokenStream {
 impl ToTokens<proc_macro2::TokenStream> for TokenTree {
     fn to_tokens(&self, out: &mut proc_macro2::TokenStream) {
         match self {
-            TokenTree::Group(g) => out.extend([proc_macro2::TokenTree::Group(g.clone().into())]),
-            TokenTree::Ident(v) => out.extend([proc_macro2::TokenTree::Ident(v.clone().into())]),
-            TokenTree::Keyword(kw) => {
+            Self::Group(g) => out.extend([proc_macro2::TokenTree::Group(g.clone().into())]),
+            Self::Ident(v) => out.extend([proc_macro2::TokenTree::Ident(v.clone().into())]),
+            Self::Keyword(kw) => {
                 let id = proc_macro2::Ident::new(kw.as_str(), proc_macro2::Span::call_site());
                 out.extend([proc_macro2::TokenTree::Ident(id)])
             }
-            TokenTree::Literal(v) => out.extend([proc_macro2::TokenTree::Literal(v.clone().into())]),
-            TokenTree::Punct(op) => {
+            Self::Literal(v) => out.extend([proc_macro2::TokenTree::Literal(v.clone().into())]),
+            Self::Punct(op) => {
                 let text = op.as_str();
                 let last = text.chars().count() - 1;
                 let joint_last = text == "'";
@@ -199,7 +199,7 @@ impl ToTokens<proc_macro2::TokenStream> for TokenStream {
 
 impl From<proc_macro2::TokenStream> for TokenStream {
     fn from(stream: proc_macro2::TokenStream) -> Self {
-        let mut out = TokenStream::new();
+        let mut out = Self::new();
         stream.to_tokens(&mut out);
         out
     }
@@ -207,7 +207,7 @@ impl From<proc_macro2::TokenStream> for TokenStream {
 
 impl From<TokenStream> for proc_macro2::TokenStream {
     fn from(stream: TokenStream) -> Self {
-        let mut out = proc_macro2::TokenStream::new();
+        let mut out = Self::new();
         stream.to_tokens(&mut out);
         out
     }

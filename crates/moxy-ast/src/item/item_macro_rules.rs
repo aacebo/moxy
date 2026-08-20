@@ -34,7 +34,7 @@ impl Parse for ItemMacroRules {
             }
         };
 
-        Ok(ItemMacroRules {
+        Ok(Self {
             attrs,
             macro_rules_keyword,
             not_punct,

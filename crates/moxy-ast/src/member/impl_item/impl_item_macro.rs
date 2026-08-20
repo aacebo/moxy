@@ -17,7 +17,7 @@ impl Parse for ImplItemMacro {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let (mac, semi) = crate::MacroCall::parse_semi(stream)?;
-        Ok(ImplItemMacro { attrs, mac, semi })
+        Ok(Self { attrs, mac, semi })
     }
 }
 

@@ -176,7 +176,7 @@ impl<T, P> Punctuated<T, P> {
 
 impl<T: Parse, P: Parse> Punctuated<T, P> {
     pub fn parse_terminated(stream: &mut ParseStream<'_>) -> Result<Self, ParseError> {
-        let mut punctuated = Punctuated::new();
+        let mut punctuated = Self::new();
 
         loop {
             if stream.is_empty() {
@@ -196,7 +196,7 @@ impl<T: Parse, P: Parse> Punctuated<T, P> {
     }
 
     pub fn parse_separated_nonempty(stream: &mut ParseStream<'_>) -> Result<Self, ParseError> {
-        let mut punctuated = Punctuated::new();
+        let mut punctuated = Self::new();
 
         loop {
             punctuated.push_value(T::parse(stream)?);
@@ -292,7 +292,7 @@ impl<T, P> IndexMut<usize> for Punctuated<T, P> {
 
 impl<T, P: Default> FromIterator<T> for Punctuated<T, P> {
     fn from_iter<I: IntoIterator<Item = T>>(i: I) -> Self {
-        let mut ret = Punctuated::new();
+        let mut ret = Self::new();
         ret.extend(i);
         ret
     }
@@ -308,7 +308,7 @@ impl<T, P: Default> Extend<T> for Punctuated<T, P> {
 
 impl<T, P> FromIterator<Pair<T, P>> for Punctuated<T, P> {
     fn from_iter<I: IntoIterator<Item = Pair<T, P>>>(i: I) -> Self {
-        let mut ret = Punctuated::new();
+        let mut ret = Self::new();
         let mut nomore = false;
 
         for pair in i {
@@ -417,47 +417,47 @@ pub enum Pair<T, P> {
 impl<T, P> Pair<T, P> {
     pub fn new(t: T, p: Option<P>) -> Self {
         match p {
-            Some(p) => Pair::Punctuated(t, p),
-            None => Pair::End(t),
+            Some(p) => Self::Punctuated(t, p),
+            None => Self::End(t),
         }
     }
 
     pub fn value(&self) -> &T {
         match self {
-            Pair::Punctuated(t, _) | Pair::End(t) => t,
+            Self::Punctuated(t, _) | Self::End(t) => t,
         }
     }
 
     pub fn value_mut(&mut self) -> &mut T {
         match self {
-            Pair::Punctuated(t, _) | Pair::End(t) => t,
+            Self::Punctuated(t, _) | Self::End(t) => t,
         }
     }
 
     pub fn punct(&self) -> Option<&P> {
         match self {
-            Pair::Punctuated(_, p) => Some(p),
-            Pair::End(_) => None,
+            Self::Punctuated(_, p) => Some(p),
+            Self::End(_) => None,
         }
     }
 
     pub fn punct_mut(&mut self) -> Option<&mut P> {
         match self {
-            Pair::Punctuated(_, p) => Some(p),
-            Pair::End(_) => None,
+            Self::Punctuated(_, p) => Some(p),
+            Self::End(_) => None,
         }
     }
 
     pub fn into_value(self) -> T {
         match self {
-            Pair::Punctuated(t, _) | Pair::End(t) => t,
+            Self::Punctuated(t, _) | Self::End(t) => t,
         }
     }
 
     pub fn into_tuple(self) -> (T, Option<P>) {
         match self {
-            Pair::Punctuated(t, p) => (t, Some(p)),
-            Pair::End(t) => (t, None),
+            Self::Punctuated(t, p) => (t, Some(p)),
+            Self::End(t) => (t, None),
         }
     }
 }
@@ -465,8 +465,8 @@ impl<T, P> Pair<T, P> {
 impl<T: Clone, P: Clone> Clone for Pair<T, P> {
     fn clone(&self) -> Self {
         match self {
-            Pair::Punctuated(t, p) => Pair::Punctuated(t.clone(), p.clone()),
-            Pair::End(t) => Pair::End(t.clone()),
+            Self::Punctuated(t, p) => Self::Punctuated(t.clone(), p.clone()),
+            Self::End(t) => Self::End(t.clone()),
         }
     }
 }
@@ -474,11 +474,11 @@ impl<T: Clone, P: Clone> Clone for Pair<T, P> {
 impl<T: ToTokens, P: ToTokens> ToTokens for Pair<T, P> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
-            Pair::Punctuated(t, p) => {
+            Self::Punctuated(t, p) => {
                 t.to_tokens(tokens);
                 p.to_tokens(tokens);
             }
-            Pair::End(t) => t.to_tokens(tokens),
+            Self::End(t) => t.to_tokens(tokens),
         }
     }
 }
@@ -513,7 +513,7 @@ impl<T> ExactSizeIterator for IntoIter<T> {
 
 impl<T: Clone> Clone for IntoIter<T> {
     fn clone(&self) -> Self {
-        IntoIter {
+        Self {
             inner: self.inner.clone(),
         }
     }
@@ -796,7 +796,7 @@ impl<T, P> ExactSizeIterator for IntoPairs<T, P> {
 
 impl<T: Clone, P: Clone> Clone for IntoPairs<T, P> {
     fn clone(&self) -> Self {
-        IntoPairs {
+        Self {
             inner: self.inner.clone(),
             last: self.last.clone(),
         }

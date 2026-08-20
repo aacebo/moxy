@@ -21,7 +21,7 @@ impl Parse for ItemFn {
         let defaultness = Defaultness::Final;
         let sig = stream.parse::<Signature>()?;
         let body = stream.parse::<StmtBlock>()?;
-        Ok(ItemFn {
+        Ok(Self {
             attrs,
             vis,
             defaultness,

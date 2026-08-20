@@ -10,4 +10,5 @@ retry = 3
 
 [alias]
 lint = "clippy --workspace --all-features --all-targets -- -D warnings"
-cov = "llvm-cov --workspace --html --open"
+cov = "llvm-cov --workspace --all-features --html --open"
+cov-check = "llvm-cov --workspace --all-features --fail-under-lines 90"

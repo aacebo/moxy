@@ -42,7 +42,7 @@ impl Parse for ImplItemConst {
         let expr = stream.parse::<Expr>()?;
         let semi = stream.parse_if::<Semi>();
 
-        Ok(ImplItemConst {
+        Ok(Self {
             attrs,
             vis,
             defaultness,

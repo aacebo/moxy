@@ -18,7 +18,7 @@ impl Attributes {
 }
 
 impl Meta {
-    pub fn query(&self) -> QueryBuilder<'_, Meta> {
+    pub fn query(&self) -> QueryBuilder<'_, Self> {
         QueryBuilder {
             target: self.into(),
             project: Box::new(|m| Some(m)),
@@ -76,7 +76,7 @@ impl<'a, T: 'a> QueryBuilder<'a, T> {
         self
     }
 
-    pub fn and<F: FnOnce(QueryBuilder<'a, T>) -> QueryBuilder<'a, T>>(mut self, f: F) -> Self {
+    pub fn and<F: FnOnce(Self) -> Self>(mut self, f: F) -> Self {
         let group = f(QueryBuilder {
             target: self.target,
             project: Box::new(|_| None),
@@ -87,7 +87,7 @@ impl<'a, T: 'a> QueryBuilder<'a, T> {
         self
     }
 
-    pub fn or<F: FnOnce(QueryBuilder<'a, T>) -> QueryBuilder<'a, T>>(mut self, f: F) -> Self {
+    pub fn or<F: FnOnce(Self) -> Self>(mut self, f: F) -> Self {
         let group = f(QueryBuilder {
             target: self.target,
             project: Box::new(|_| None),

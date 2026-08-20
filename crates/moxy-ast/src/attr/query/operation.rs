@@ -3,9 +3,9 @@ pub enum Operation<T> {
     #[default]
     Always,
     Predicate(Box<dyn Fn(&T) -> bool>),
-    And(Box<Operation<T>>, Box<Operation<T>>),
-    Or(Box<Operation<T>>, Box<Operation<T>>),
-    Not(Box<Operation<T>>),
+    And(Box<Self>, Box<Self>),
+    Or(Box<Self>, Box<Self>),
+    Not(Box<Self>),
 }
 
 impl<T> Operation<T> {

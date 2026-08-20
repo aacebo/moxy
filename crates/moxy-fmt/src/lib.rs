@@ -140,7 +140,7 @@ impl Formatter {
 impl Formatter {
     pub fn write<T: Format>(&mut self, value: &T) -> Result<(), FmtError> {
         value.format(self)?;
-        let nodes: Vec<_> = self.buffer.drain(0..).collect();
+        let nodes: Vec<_> = std::mem::take(&mut self.buffer);
 
         for node in nodes {
             self.write_node(&node, Mode::Broken)?;

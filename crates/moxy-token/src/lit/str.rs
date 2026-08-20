@@ -85,7 +85,7 @@ impl Scan for LitStr {
         let span = cursor.span_to(&end);
 
         match decode_string_body(repr) {
-            Some(value) => Ok((end, LitStr::from_parts(value, repr, span))),
+            Some(value) => Ok((end, Self::from_parts(value, repr, span))),
             None => cursor.error().into(),
         }
     }
@@ -104,7 +104,7 @@ impl Parse for LitStr {
 
 impl From<LitStr> for Lit {
     fn from(value: LitStr) -> Self {
-        Lit::Str(value)
+        Self::Str(value)
     }
 }
 

@@ -24,13 +24,12 @@ impl Parse for PathSegment {
 
         // `Fn`-family segments take parenthesized args (`Fn(A) -> B`); this only
         // applies to those trait names, so it never swallows expression calls.
-        let args = if PathSegment::is_fn_family(&ident)
-            && matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Paren)
-        {
-            PathArguments::parse_parenthesized(stream)?
-        } else {
-            stream.parse::<PathArguments>()?
-        };
+        let args =
+            if Self::is_fn_family(&ident) && matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Paren) {
+                PathArguments::parse_parenthesized(stream)?
+            } else {
+                stream.parse::<PathArguments>()?
+            };
 
         Ok(Self { ident, args })
     }

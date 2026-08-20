@@ -30,7 +30,7 @@ impl Parse for ItemEnum {
         }
 
         let variants = Delimited::parse_brace_with(stream, Punctuated::parse_terminated)?;
-        Ok(ItemEnum {
+        Ok(Self {
             attrs,
             vis,
             enum_keyword,

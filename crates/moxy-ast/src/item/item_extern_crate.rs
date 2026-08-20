@@ -36,7 +36,7 @@ impl Parse for ItemExternCrate {
         };
 
         let semi_punct = stream.parse::<Semi>()?;
-        Ok(ItemExternCrate {
+        Ok(Self {
             attrs,
             vis,
             extern_keyword,

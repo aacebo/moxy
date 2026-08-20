@@ -1,4 +1,4 @@
-use super::Float;
+use super::LitFloat;
 use crate::lit::Lit;
 use crate::parser::{ParseError, ParseStream};
 use crate::{LexError, Parse, Span, Spanner};
@@ -96,21 +96,21 @@ impl Parse for LitF32 {
         let at = stream.span();
 
         match Lit::parse(stream)? {
-            Lit::Float(Float::F32(v)) => Ok(v),
+            Lit::Float(LitFloat::F32(v)) => Ok(v),
             _ => Err(LexError::new(at).message("expected `f32` literal").into()),
         }
     }
 }
 
-impl From<LitF32> for Float {
+impl From<LitF32> for LitFloat {
     fn from(value: LitF32) -> Self {
-        Float::F32(value)
+        Self::F32(value)
     }
 }
 
 impl From<LitF32> for Lit {
     fn from(value: LitF32) -> Self {
-        Lit::Float(Float::F32(value))
+        Self::Float(LitFloat::F32(value))
     }
 }
 

@@ -15,11 +15,11 @@ impl SourceMap {
         Self(vec![])
     }
 
-    pub fn with<R>(f: impl FnOnce(&SourceMap) -> R) -> R {
+    pub fn with<R>(f: impl FnOnce(&Self) -> R) -> R {
         GLOBAL.with(|sm| f(&sm.borrow()))
     }
 
-    pub fn with_mut<R>(f: impl FnOnce(&mut SourceMap) -> R) -> R {
+    pub fn with_mut<R>(f: impl FnOnce(&mut Self) -> R) -> R {
         GLOBAL.with(|sm| f(&mut sm.borrow_mut()))
     }
 

@@ -1,18 +1,18 @@
-use super::Int;
+use super::LitInt;
 use crate::lit::Lit;
 use crate::parser::{ParseError, ParseStream};
 use crate::{LexError, Parse, Span, Spanner};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(into = "String"))]
-pub struct LitIsize {
+pub struct LitISize {
     value: isize,
     suffixed: bool,
     repr: Box<str>,
     span: Span,
 }
 
-impl LitIsize {
+impl LitISize {
     #[inline]
     pub fn new(value: isize, suffixed: bool, span: Span) -> Self {
         let repr = if suffixed {
@@ -65,58 +65,58 @@ impl LitIsize {
     }
 }
 
-impl PartialEq for LitIsize {
+impl PartialEq for LitISize {
     fn eq(&self, other: &Self) -> bool {
         self.value == other.value && self.suffixed == other.suffixed
     }
 }
 
-impl Eq for LitIsize {}
+impl Eq for LitISize {}
 
-impl std::hash::Hash for LitIsize {
+impl std::hash::Hash for LitISize {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.repr.hash(state);
     }
 }
 
-impl std::fmt::Display for LitIsize {
+impl std::fmt::Display for LitISize {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(&self.repr)
     }
 }
 
-impl Spanner for LitIsize {
+impl Spanner for LitISize {
     fn span(&self) -> Span {
         self.span
     }
 }
 
-impl Parse for LitIsize {
+impl Parse for LitISize {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
 
         match Lit::parse(stream)? {
-            Lit::Int(Int::Isize(v)) => Ok(v),
+            Lit::Int(LitInt::ISize(v)) => Ok(v),
             _ => Err(LexError::new(at).message("expected `isize` literal").into()),
         }
     }
 }
 
-impl From<LitIsize> for Int {
-    fn from(value: LitIsize) -> Self {
-        Int::Isize(value)
+impl From<LitISize> for LitInt {
+    fn from(value: LitISize) -> Self {
+        Self::ISize(value)
     }
 }
 
-impl From<LitIsize> for Lit {
-    fn from(value: LitIsize) -> Self {
-        Lit::Int(Int::Isize(value))
+impl From<LitISize> for Lit {
+    fn from(value: LitISize) -> Self {
+        Self::Int(LitInt::ISize(value))
     }
 }
 
 #[cfg(feature = "serde")]
-impl From<LitIsize> for String {
-    fn from(value: LitIsize) -> Self {
+impl From<LitISize> for String {
+    fn from(value: LitISize) -> Self {
         value.repr.into_string()
     }
 }

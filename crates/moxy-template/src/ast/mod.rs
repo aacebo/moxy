@@ -71,23 +71,23 @@ pub fn lone_brace_child(stream: &TokenStream) -> Option<Group> {
 impl Parse for Node {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         match stream.curr() {
-            Some(TokenTree::Punct(Punctuation::At(_))) => Ok(Node::Keyword(stream.parse::<TmplKeyword>()?)),
-            Some(TokenTree::Group(g)) if Node::is_interp_group(g) => {
+            Some(TokenTree::Punct(Punctuation::At(_))) => Ok(Self::Keyword(stream.parse::<TmplKeyword>()?)),
+            Some(TokenTree::Group(g)) if Self::is_interp_group(g) => {
                 let interp = stream.parse::<TmplInterp>()?;
                 let wrap = interp.wrap;
-                let mut node = Node::Interp(interp);
+                let mut node = Self::Interp(interp);
 
                 for _ in 0..wrap {
-                    node = Node::Group(Delim::Brace, Box::new(Template { nodes: vec![node] }));
+                    node = Self::Group(Delim::Brace, Box::new(Template { nodes: vec![node] }));
                 }
 
                 Ok(node)
             }
-            Some(TokenTree::Group(g)) if Node::group_has_interp(g) => {
+            Some(TokenTree::Group(g)) if Self::group_has_interp(g) => {
                 let delim = g.delim();
                 let inner = g.stream();
                 stream.advance();
-                Ok(Node::Group(delim, Box::new(Template::parse(&mut inner.parse())?)))
+                Ok(Self::Group(delim, Box::new(Template::parse(&mut inner.parse())?)))
             }
             Some(_) => collect_tokens(stream),
             None => Err(LexError::new(Span::default()).message("unexpected end of template").into()),
@@ -98,10 +98,10 @@ impl Parse for Node {
 impl ToTokens for Node {
     fn to_tokens(&self, out: &mut TokenStream) {
         match self {
-            Node::Tokens(v) => v.to_tokens(out),
-            Node::Interp(v) => v.to_tokens(out),
-            Node::Group(delim, body) => emit_group(*delim, body, out),
-            Node::Keyword(v) => v.to_tokens(out),
+            Self::Tokens(v) => v.to_tokens(out),
+            Self::Interp(v) => v.to_tokens(out),
+            Self::Group(delim, body) => emit_group(*delim, body, out),
+            Self::Keyword(v) => v.to_tokens(out),
         }
     }
 }

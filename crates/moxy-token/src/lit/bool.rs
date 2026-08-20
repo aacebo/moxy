@@ -75,7 +75,7 @@ impl Parse for LitBool {
 
 impl From<LitBool> for Lit {
     fn from(value: LitBool) -> Self {
-        Lit::Bool(value)
+        Self::Bool(value)
     }
 }
 

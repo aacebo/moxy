@@ -84,10 +84,10 @@ impl UnaryExpr {
 impl Spanner for UnaryExpr {
     fn span(&self) -> Span {
         match self {
-            UnaryExpr::Reference(v) => v.span(),
-            UnaryExpr::Unary(v) => v.span(),
-            UnaryExpr::Cast(v) => v.span(),
-            UnaryExpr::Try(v) => v.span(),
+            Self::Reference(v) => v.span(),
+            Self::Unary(v) => v.span(),
+            Self::Cast(v) => v.span(),
+            Self::Try(v) => v.span(),
         }
     }
 }
@@ -95,35 +95,35 @@ impl Spanner for UnaryExpr {
 impl ToTokens for UnaryExpr {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            UnaryExpr::Reference(v) => v.to_tokens(t),
-            UnaryExpr::Unary(v) => v.to_tokens(t),
-            UnaryExpr::Cast(v) => v.to_tokens(t),
-            UnaryExpr::Try(v) => v.to_tokens(t),
+            Self::Reference(v) => v.to_tokens(t),
+            Self::Unary(v) => v.to_tokens(t),
+            Self::Cast(v) => v.to_tokens(t),
+            Self::Try(v) => v.to_tokens(t),
         }
     }
 }
 
 impl From<ExprReference> for UnaryExpr {
     fn from(v: ExprReference) -> Self {
-        UnaryExpr::Reference(v)
+        Self::Reference(v)
     }
 }
 
 impl From<ExprUnary> for UnaryExpr {
     fn from(v: ExprUnary) -> Self {
-        UnaryExpr::Unary(v)
+        Self::Unary(v)
     }
 }
 
 impl From<ExprCast> for UnaryExpr {
     fn from(v: ExprCast) -> Self {
-        UnaryExpr::Cast(v)
+        Self::Cast(v)
     }
 }
 
 impl From<ExprTry> for UnaryExpr {
     fn from(v: ExprTry) -> Self {
-        UnaryExpr::Try(v)
+        Self::Try(v)
     }
 }
 
@@ -150,8 +150,8 @@ impl UnaryExpr {
         if stream.peek::<And>() {
             let and_punct = stream.parse::<And>()?;
             let mutability = stream.parse::<Mutability>()?;
-            let expr = Box::new(UnaryExpr::parse_from(stream, allow_struct)?);
-            return Ok(Expr::Unary(UnaryExpr::Reference(ExprReference {
+            let expr = Box::new(Self::parse_from(stream, allow_struct)?);
+            return Ok(Expr::Unary(Self::Reference(ExprReference {
                 attrs,
                 and_punct,
                 mutability,
@@ -161,8 +161,8 @@ impl UnaryExpr {
 
         if ExprUnary::is_prefix(stream) {
             let op = stream.parse::<UnOp>()?;
-            let expr = Box::new(UnaryExpr::parse_from(stream, allow_struct)?);
-            return Ok(Expr::Unary(UnaryExpr::Unary(ExprUnary { attrs, op, expr })));
+            let expr = Box::new(Self::parse_from(stream, allow_struct)?);
+            return Ok(Expr::Unary(Self::Unary(ExprUnary { attrs, op, expr })));
         }
 
         let atom = super::primary::PrimaryExpr::parse_from(stream, allow_struct, attrs)?;

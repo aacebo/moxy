@@ -47,8 +47,8 @@ impl Parse for TypePointer {
 impl Spanner for PointerMutability {
     fn span(&self) -> Span {
         match self {
-            PointerMutability::Const(k) => k.span(),
-            PointerMutability::Mut(k) => k.span(),
+            Self::Const(k) => k.span(),
+            Self::Mut(k) => k.span(),
         }
     }
 }

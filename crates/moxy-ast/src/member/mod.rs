@@ -39,21 +39,21 @@ impl Member {
 
 impl From<Ident> for Member {
     fn from(v: Ident) -> Self {
-        Member::Named(v)
+        Self::Named(v)
     }
 }
 
 impl From<u32> for Member {
     fn from(v: u32) -> Self {
-        Member::Unnamed(Lit::u32_unsuffixed(v))
+        Self::Unnamed(Lit::u32_unsuffixed(v))
     }
 }
 
 impl Spanner for Member {
     fn span(&self) -> Span {
         match self {
-            Member::Named(id) => id.span(),
-            Member::Unnamed(idx) => idx.span(),
+            Self::Named(id) => id.span(),
+            Self::Unnamed(idx) => idx.span(),
         }
     }
 }
@@ -65,13 +65,19 @@ impl Parse for Member {
                 let at = stream.span();
                 let lit = stream.parse::<Lit>()?;
 
+                if let Some(i) = lit.as_uint()
+                    && i.repr().chars().all(char::is_alphabetic)
+                {
+                    return Err(LexError::new(at).message("expected tuple index").into());
+                }
+
                 if !lit.is_int() {
                     return Err(LexError::new(at).message("expected tuple index").into());
                 }
 
-                Ok(Member::Unnamed(lit))
+                Ok(Self::Unnamed(lit))
             }
-            _ => Ok(Member::Named(stream.parse()?)),
+            _ => Ok(Self::Named(stream.parse()?)),
         }
     }
 }
@@ -79,8 +85,8 @@ impl Parse for Member {
 impl ToTokens for Member {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
-            Member::Named(ident) => ident.to_tokens(tokens),
-            Member::Unnamed(idx) => idx.to_tokens(tokens),
+            Self::Named(ident) => ident.to_tokens(tokens),
+            Self::Unnamed(idx) => idx.to_tokens(tokens),
         }
     }
 }

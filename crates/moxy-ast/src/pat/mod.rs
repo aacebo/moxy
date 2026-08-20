@@ -55,7 +55,7 @@ pub enum Pattern {
     Type(PatType),
     Group(PatGroup),
     Paren(PatParen),
-    Box(Box<Pattern>),
+    Box(Box<Self>),
     Const(crate::StmtBlock),
 }
 
@@ -188,7 +188,7 @@ impl Pattern {
         if let Self::Paren(v) = self { Some(v) } else { None }
     }
 
-    pub fn as_box(&self) -> Option<&Pattern> {
+    pub fn as_box(&self) -> Option<&Self> {
         if let Self::Box(v) = self { Some(v.as_ref()) } else { None }
     }
 
@@ -200,102 +200,102 @@ impl Pattern {
 impl Spanner for Pattern {
     fn span(&self) -> Span {
         match self {
-            Pattern::Wild | Pattern::Rest => Span::call_site(),
-            Pattern::Ident(v) => v.span(),
-            Pattern::Path(v) => v.span(),
-            Pattern::Tuple(v) => v.span(),
-            Pattern::TupleStruct(v) => v.span(),
-            Pattern::Struct(v) => v.span(),
-            Pattern::Slice(v) => v.span(),
-            Pattern::Reference(v) => v.span(),
-            Pattern::Or(v) => v.span(),
-            Pattern::Lit(v) => v.span(),
-            Pattern::Range(v) => v.span(),
-            Pattern::Macro(v) => v.span(),
-            Pattern::Type(v) => v.span(),
-            Pattern::Group(v) => v.span(),
-            Pattern::Paren(v) => v.span(),
-            Pattern::Box(p) => p.span(),
-            Pattern::Const(b) => b.span(),
+            Self::Wild | Self::Rest => Span::call_site(),
+            Self::Ident(v) => v.span(),
+            Self::Path(v) => v.span(),
+            Self::Tuple(v) => v.span(),
+            Self::TupleStruct(v) => v.span(),
+            Self::Struct(v) => v.span(),
+            Self::Slice(v) => v.span(),
+            Self::Reference(v) => v.span(),
+            Self::Or(v) => v.span(),
+            Self::Lit(v) => v.span(),
+            Self::Range(v) => v.span(),
+            Self::Macro(v) => v.span(),
+            Self::Type(v) => v.span(),
+            Self::Group(v) => v.span(),
+            Self::Paren(v) => v.span(),
+            Self::Box(p) => p.span(),
+            Self::Const(b) => b.span(),
         }
     }
 }
 
 impl From<PatIdent> for Pattern {
     fn from(value: PatIdent) -> Self {
-        Pattern::Ident(value)
+        Self::Ident(value)
     }
 }
 
 impl From<PatPath> for Pattern {
     fn from(value: PatPath) -> Self {
-        Pattern::Path(value)
+        Self::Path(value)
     }
 }
 
 impl From<PatTuple> for Pattern {
     fn from(value: PatTuple) -> Self {
-        Pattern::Tuple(value)
+        Self::Tuple(value)
     }
 }
 
 impl From<PatTupleStruct> for Pattern {
     fn from(value: PatTupleStruct) -> Self {
-        Pattern::TupleStruct(value)
+        Self::TupleStruct(value)
     }
 }
 
 impl From<PatStruct> for Pattern {
     fn from(value: PatStruct) -> Self {
-        Pattern::Struct(value)
+        Self::Struct(value)
     }
 }
 
 impl From<PatSlice> for Pattern {
     fn from(value: PatSlice) -> Self {
-        Pattern::Slice(value)
+        Self::Slice(value)
     }
 }
 
 impl From<PatReference> for Pattern {
     fn from(value: PatReference) -> Self {
-        Pattern::Reference(value)
+        Self::Reference(value)
     }
 }
 
 impl From<PatOr> for Pattern {
     fn from(value: PatOr) -> Self {
-        Pattern::Or(value)
+        Self::Or(value)
     }
 }
 
 impl From<PatLit> for Pattern {
     fn from(value: PatLit) -> Self {
-        Pattern::Lit(value)
+        Self::Lit(value)
     }
 }
 
 impl From<PatRange> for Pattern {
     fn from(value: PatRange) -> Self {
-        Pattern::Range(Box::new(value))
+        Self::Range(Box::new(value))
     }
 }
 
 impl From<PatType> for Pattern {
     fn from(value: PatType) -> Self {
-        Pattern::Type(value)
+        Self::Type(value)
     }
 }
 
 impl From<PatGroup> for Pattern {
     fn from(value: PatGroup) -> Self {
-        Pattern::Group(value)
+        Self::Group(value)
     }
 }
 
 impl From<PatParen> for Pattern {
     fn from(value: PatParen) -> Self {
-        Pattern::Paren(value)
+        Self::Paren(value)
     }
 }
 
@@ -322,7 +322,7 @@ impl Parse for Pattern {
             cases.push_value(parse_single(stream)?);
         }
 
-        Ok(Pattern::Or(PatOr {
+        Ok(Self::Or(PatOr {
             attrs: Attributes::default(),
             cases,
         }))
@@ -332,7 +332,7 @@ impl Parse for Pattern {
 impl Pattern {
     /// Parse a single pattern alternative (no top-level `|` or-collection).
     /// Used where `|` is a delimiter (closure params), not an or-pattern.
-    pub fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
+    pub fn parse_single(stream: &mut ParseStream) -> Result<Self, ParseError> {
         parse_single(stream)
     }
 }
@@ -340,29 +340,29 @@ impl Pattern {
 impl ToTokens for Pattern {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            Pattern::Wild => {
+            Self::Wild => {
                 moxy_token::Ident::new("_").to_tokens(t);
             }
-            Pattern::Rest => DotDot::default().to_tokens(t),
-            Pattern::Ident(v) => v.to_tokens(t),
-            Pattern::Path(v) => v.to_tokens(t),
-            Pattern::Tuple(v) => v.to_tokens(t),
-            Pattern::TupleStruct(v) => v.to_tokens(t),
-            Pattern::Struct(v) => v.to_tokens(t),
-            Pattern::Slice(v) => v.to_tokens(t),
-            Pattern::Reference(v) => v.to_tokens(t),
-            Pattern::Or(v) => v.to_tokens(t),
-            Pattern::Lit(v) => v.to_tokens(t),
-            Pattern::Range(v) => v.to_tokens(t),
-            Pattern::Macro(v) => v.to_tokens(t),
-            Pattern::Type(v) => v.to_tokens(t),
-            Pattern::Group(v) => v.to_tokens(t),
-            Pattern::Paren(v) => v.to_tokens(t),
-            Pattern::Box(p) => {
+            Self::Rest => DotDot::default().to_tokens(t),
+            Self::Ident(v) => v.to_tokens(t),
+            Self::Path(v) => v.to_tokens(t),
+            Self::Tuple(v) => v.to_tokens(t),
+            Self::TupleStruct(v) => v.to_tokens(t),
+            Self::Struct(v) => v.to_tokens(t),
+            Self::Slice(v) => v.to_tokens(t),
+            Self::Reference(v) => v.to_tokens(t),
+            Self::Or(v) => v.to_tokens(t),
+            Self::Lit(v) => v.to_tokens(t),
+            Self::Range(v) => v.to_tokens(t),
+            Self::Macro(v) => v.to_tokens(t),
+            Self::Type(v) => v.to_tokens(t),
+            Self::Group(v) => v.to_tokens(t),
+            Self::Paren(v) => v.to_tokens(t),
+            Self::Box(p) => {
                 moxy_token::keyword::Box::default().to_tokens(t);
                 p.to_tokens(t);
             }
-            Pattern::Const(b) => {
+            Self::Const(b) => {
                 moxy_token::keyword::Const::default().to_tokens(t);
                 b.to_tokens(t);
             }

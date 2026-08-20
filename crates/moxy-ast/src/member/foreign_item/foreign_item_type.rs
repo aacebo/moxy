@@ -31,7 +31,7 @@ impl Parse for ForeignItemType {
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
         let semi = stream.parse_if::<Semi>();
-        Ok(ForeignItemType {
+        Ok(Self {
             attrs,
             vis,
             type_keyword,

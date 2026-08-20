@@ -172,75 +172,75 @@ impl Type {
 impl Spanner for Type {
     fn span(&self) -> Span {
         match self {
-            Type::Never(not) => not.span(),
-            Type::Infer(id) => id.span(),
-            Type::Path(v) => v.span(),
-            Type::Tuple(v) => v.span(),
-            Type::Array(v) => v.span(),
-            Type::Slice(v) => v.span(),
-            Type::Reference(v) => v.span(),
-            Type::Pointer(v) => v.span(),
-            Type::BareFn(v) => v.span(),
-            Type::ImplTrait(v) => v.span(),
-            Type::TraitObject(v) => v.span(),
-            Type::Paren(v) => v.span(),
-            Type::Group(v) => v.span(),
-            Type::Macro(v) => v.span(),
+            Self::Never(not) => not.span(),
+            Self::Infer(id) => id.span(),
+            Self::Path(v) => v.span(),
+            Self::Tuple(v) => v.span(),
+            Self::Array(v) => v.span(),
+            Self::Slice(v) => v.span(),
+            Self::Reference(v) => v.span(),
+            Self::Pointer(v) => v.span(),
+            Self::BareFn(v) => v.span(),
+            Self::ImplTrait(v) => v.span(),
+            Self::TraitObject(v) => v.span(),
+            Self::Paren(v) => v.span(),
+            Self::Group(v) => v.span(),
+            Self::Macro(v) => v.span(),
         }
     }
 }
 
 impl From<TypePath> for Type {
     fn from(value: TypePath) -> Self {
-        Type::Path(value)
+        Self::Path(value)
     }
 }
 
 impl From<TypeReference> for Type {
     fn from(value: TypeReference) -> Self {
-        Type::Reference(value)
+        Self::Reference(value)
     }
 }
 
 impl From<TypePointer> for Type {
     fn from(value: TypePointer) -> Self {
-        Type::Pointer(value)
+        Self::Pointer(value)
     }
 }
 
 impl From<TypeTuple> for Type {
     fn from(value: TypeTuple) -> Self {
-        Type::Tuple(value)
+        Self::Tuple(value)
     }
 }
 
 impl From<TypeParen> for Type {
     fn from(value: TypeParen) -> Self {
-        Type::Paren(value)
+        Self::Paren(value)
     }
 }
 
 impl From<TypeSlice> for Type {
     fn from(value: TypeSlice) -> Self {
-        Type::Slice(value)
+        Self::Slice(value)
     }
 }
 
 impl From<TypeImplTrait> for Type {
     fn from(value: TypeImplTrait) -> Self {
-        Type::ImplTrait(value)
+        Self::ImplTrait(value)
     }
 }
 
 impl From<TypeTraitObject> for Type {
     fn from(value: TypeTraitObject) -> Self {
-        Type::TraitObject(value)
+        Self::TraitObject(value)
     }
 }
 
 impl From<TypeBareFn> for Type {
     fn from(value: TypeBareFn) -> Self {
-        Type::BareFn(value)
+        Self::BareFn(value)
     }
 }
 
@@ -248,25 +248,25 @@ impl Parse for Type {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         // `&` reference.
         if stream.peek::<And>() {
-            return Ok(Type::Reference(stream.parse()?));
+            return Ok(Self::Reference(stream.parse()?));
         }
 
         // `*` raw pointer.
         if stream.peek::<Star>() {
-            return Ok(Type::Pointer(stream.parse()?));
+            return Ok(Self::Pointer(stream.parse()?));
         }
 
         // Never `!`.
         if stream.peek::<moxy_token::punct::Not>() {
             let not = stream.parse::<moxy_token::punct::Not>()?;
-            return Ok(Type::Never(not));
+            return Ok(Self::Never(not));
         }
 
         // Infer `_`.
         if matches!(stream.curr(), Some(tt) if tt.text() == Some("_")) {
             let span = stream.span();
             stream.advance();
-            return Ok(Type::Infer(moxy_token::Ident::new("_").with_span(span)));
+            return Ok(Self::Infer(moxy_token::Ident::new("_").with_span(span)));
         }
 
         // `[T]` slice or `[T; N]` array — decided by a `;` inside the brackets.
@@ -276,30 +276,30 @@ impl Parse for Type {
         if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
             let (bracket_span, group_tokens) = stream.parse_group_spanned(Delim::Bracket)?;
             let mut inner = group_tokens.parse();
-            let elem = Box::new(inner.parse::<Type>()?);
+            let elem = Box::new(inner.parse::<Self>()?);
 
             if inner.peek::<moxy_token::punct::Semi>() {
                 let semi = inner.parse::<moxy_token::punct::Semi>()?;
                 let len = inner.parse::<crate::Expr>()?;
-                return Ok(Type::Array(TypeArray {
+                return Ok(Self::Array(TypeArray {
                     content: Delimited::bracket(bracket_span, type_array::ArrayInner { elem, semi, len }),
                 }));
             }
 
             {
                 let elem = Delimited::bracket(bracket_span, elem);
-                return Ok(Type::Slice(TypeSlice { elem }));
+                return Ok(Self::Slice(TypeSlice { elem }));
             }
         }
 
         // `impl Trait`.
         if stream.peek::<Impl>() {
-            return Ok(Type::ImplTrait(stream.parse()?));
+            return Ok(Self::ImplTrait(stream.parse()?));
         }
 
         // `dyn Trait`.
         if stream.peek::<Dyn>() {
-            return Ok(Type::TraitObject(stream.parse()?));
+            return Ok(Self::TraitObject(stream.parse()?));
         }
 
         // Bare fn pointer: `fn(...)`, `extern "C" fn(...)`, `unsafe fn(...)`.
@@ -307,7 +307,7 @@ impl Parse for Type {
             || stream.peek::<moxy_token::keyword::Extern>()
             || stream.peek::<moxy_token::keyword::Unsafe>()
         {
-            return Ok(Type::BareFn(stream.parse()?));
+            return Ok(Self::BareFn(stream.parse()?));
         }
 
         // `(...)` — one element with no trailing comma is a parenthesized type;
@@ -316,46 +316,46 @@ impl Parse for Type {
         if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
             let (paren_span, group_tokens) = stream.parse_group_spanned(Delim::Paren)?;
             let mut inner = group_tokens.parse();
-            let elems: Punctuated<Type, Comma> = Punctuated::parse_terminated(&mut inner)?;
+            let elems: Punctuated<Self, Comma> = Punctuated::parse_terminated(&mut inner)?;
 
             return if elems.len() == 1 && !elems.is_trailing() {
                 let content = Delimited::paren(paren_span, Box::new(elems.into_iter().next().unwrap()));
-                Ok(Type::Paren(TypeParen { content }))
+                Ok(Self::Paren(TypeParen { content }))
             } else {
                 let elems_del = Delimited::paren(paren_span, elems);
-                Ok(Type::Tuple(TypeTuple { elems: elems_del }))
+                Ok(Self::Tuple(TypeTuple { elems: elems_del }))
             };
         }
 
         // Macro type `m!(...)` — a path followed by `!`.
         if let Some(mac) = stream.parse_if::<TypeMacro>() {
-            return Ok(Type::Macro(mac));
+            return Ok(Self::Macro(mac));
         }
 
         // Otherwise a path type: `T`, `std::vec::Vec`, or a qualified
         // `<T as Trait>::Item` (which begins with `<`).
-        Ok(Type::Path(stream.parse()?))
+        Ok(Self::Path(stream.parse()?))
     }
 }
 
 impl ToTokens for Type {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
-            Type::Path(value) => value.to_tokens(tokens),
-            Type::Reference(value) => value.to_tokens(tokens),
-            Type::Pointer(value) => value.to_tokens(tokens),
-            Type::Tuple(value) => value.to_tokens(tokens),
-            Type::Paren(value) => value.to_tokens(tokens),
-            Type::Slice(value) => value.to_tokens(tokens),
-            Type::ImplTrait(value) => value.to_tokens(tokens),
-            Type::TraitObject(value) => value.to_tokens(tokens),
-            Type::BareFn(value) => value.to_tokens(tokens),
-            Type::Array(value) => value.to_tokens(tokens),
-            Type::Macro(value) => value.to_tokens(tokens),
-            Type::Never(not) => not.to_tokens(tokens),
-            Type::Infer(id) => id.to_tokens(tokens),
+            Self::Path(value) => value.to_tokens(tokens),
+            Self::Reference(value) => value.to_tokens(tokens),
+            Self::Pointer(value) => value.to_tokens(tokens),
+            Self::Tuple(value) => value.to_tokens(tokens),
+            Self::Paren(value) => value.to_tokens(tokens),
+            Self::Slice(value) => value.to_tokens(tokens),
+            Self::ImplTrait(value) => value.to_tokens(tokens),
+            Self::TraitObject(value) => value.to_tokens(tokens),
+            Self::BareFn(value) => value.to_tokens(tokens),
+            Self::Array(value) => value.to_tokens(tokens),
+            Self::Macro(value) => value.to_tokens(tokens),
+            Self::Never(not) => not.to_tokens(tokens),
+            Self::Infer(id) => id.to_tokens(tokens),
             // `Group` is only produced via the proc-macro bridge, never `from_str`.
-            Type::Group(_) => {}
+            Self::Group(_) => {}
         }
     }
 }

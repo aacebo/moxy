@@ -1,7 +1,7 @@
 use moxy_ast::expr::{ExprBinary, ExprCall};
 use moxy_ast::item::ItemFn;
 use moxy_ast::visit::{Visit, VisitMut, walk_expr_binary, walk_expr_call, walk_path_segment, walk_path_segment_mut};
-use moxy_ast::{Expr, PathSegment};
+use moxy_ast::{Attribute, Crate, Expr, PathSegment, ReturnType, Stmt, Visibility};
 use moxy_token::{Ident, ToTokenStream};
 
 // ---- count visitor (immutable) -----------------------------------------
@@ -120,4 +120,87 @@ fn rewrite_renames_idents() {
     assert!(!rendered.contains('a'), "all `a` idents should be renamed: {rendered}");
     assert_eq!(rendered.matches('z').count(), 2, "two `a`s became `z`: {rendered}");
     assert!(rendered.contains('b'), "`b` should be untouched: {rendered}");
+}
+
+#[derive(Default)]
+struct WorkflowAudit {
+    attributes: usize,
+    statements: usize,
+    paths: usize,
+    returns: usize,
+    visibilities: usize,
+}
+
+impl<'ast> Visit<'ast> for WorkflowAudit {
+    fn visit_attribute(&mut self, node: &'ast Attribute) {
+        self.attributes += 1;
+        moxy_ast::visit::walk_attribute(self, node);
+    }
+
+    fn visit_stmt(&mut self, node: &'ast Stmt) {
+        self.statements += 1;
+        moxy_ast::visit::walk_stmt(self, node);
+    }
+
+    fn visit_path_segment(&mut self, node: &'ast PathSegment) {
+        self.paths += 1;
+        moxy_ast::visit::walk_path_segment(self, node);
+    }
+
+    fn visit_return_type(&mut self, node: &'ast ReturnType) {
+        self.returns += 1;
+        moxy_ast::visit::walk_return_type(self, node);
+    }
+
+    fn visit_visibility(&mut self, node: &'ast Visibility) {
+        self.visibilities += 1;
+        moxy_ast::visit::walk_visibility(self, node);
+    }
+}
+
+struct WorkflowRewrite;
+
+impl VisitMut for WorkflowRewrite {
+    fn visit_path_segment_mut(&mut self, node: &mut PathSegment) {
+        if node.ident.text() == "Old" {
+            node.ident = Ident::new("New");
+        }
+        moxy_ast::visit::walk_path_segment_mut(self, node);
+    }
+}
+
+#[test]
+fn visitors_walk_attributes_paths_every_statement_shape_visibility_returns_closures_and_modules() {
+    let mut krate: Crate = moxy_token::parse!(
+        "#![allow(dead_code)] pub(in module::api) mod inline { pub fn run(value: Old) -> Old { let local: Old = value; { call(local); } const INNER: usize = 1; macro_call!(); |typed: Old, inferred| typed; local } }"
+    )
+    .unwrap();
+    let mut audit = WorkflowAudit::default();
+    for attribute in &krate.attrs {
+        audit.visit_attribute(attribute);
+    }
+    for item in &krate.items {
+        audit.visit_item(item);
+    }
+    assert_eq!(audit.attributes, 1);
+    assert_eq!(audit.visibilities, 3);
+    assert_eq!(audit.returns, 2);
+    assert_eq!(audit.statements, 7);
+    assert!(
+        audit.paths >= 10,
+        "expected nested type, call, visibility, and value paths: {}",
+        audit.paths
+    );
+
+    for attribute in &mut krate.attrs {
+        WorkflowRewrite.visit_attribute_mut(attribute);
+    }
+    for item in &mut krate.items {
+        WorkflowRewrite.visit_item_mut(item);
+    }
+    let output = krate.to_token_stream().to_string();
+    assert!(!output.contains("Old"));
+    assert_eq!(output.matches("New").count(), 4);
+    assert!(output.contains("pub (in module :: api) mod inline"));
+    assert!(output.contains("| typed : New , inferred | typed"));
 }

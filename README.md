@@ -25,3 +25,13 @@ A proc-macro development framework.
 ## Diagnostics
 
 ## Testing
+
+Install [`cargo-llvm-cov`](https://github.com/taiki-e/cargo-llvm-cov) before
+running the full workspace checks.
+
+```sh
+cargo test --workspace --all-features
+cargo cov-check
+```
+
+Use `cargo cov` to generate and open the all-features HTML coverage report.

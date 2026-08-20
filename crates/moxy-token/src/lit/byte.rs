@@ -77,7 +77,7 @@ impl Scan for LitByte {
 
         let inner = repr.strip_prefix("b'").and_then(|r| r.strip_suffix('\''));
         match inner.and_then(decode_one_char) {
-            Some(value) if value.is_ascii() => Ok((end, LitByte::from_parts(value as u8, repr, span))),
+            Some(value) if value.is_ascii() => Ok((end, Self::from_parts(value as u8, repr, span))),
             _ => cursor.error().into(),
         }
     }
@@ -96,7 +96,7 @@ impl Parse for LitByte {
 
 impl From<LitByte> for Lit {
     fn from(value: LitByte) -> Self {
-        Lit::Byte(value)
+        Self::Byte(value)
     }
 }
 

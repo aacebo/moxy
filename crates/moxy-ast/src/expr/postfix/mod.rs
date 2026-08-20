@@ -97,11 +97,11 @@ impl PostfixExpr {
 impl Spanner for PostfixExpr {
     fn span(&self) -> Span {
         match self {
-            PostfixExpr::Call(v) => v.span(),
-            PostfixExpr::MethodCall(v) => v.span(),
-            PostfixExpr::Field(v) => v.span(),
-            PostfixExpr::Index(v) => v.span(),
-            PostfixExpr::Await(v) => v.span(),
+            Self::Call(v) => v.span(),
+            Self::MethodCall(v) => v.span(),
+            Self::Field(v) => v.span(),
+            Self::Index(v) => v.span(),
+            Self::Await(v) => v.span(),
         }
     }
 }
@@ -109,42 +109,42 @@ impl Spanner for PostfixExpr {
 impl ToTokens for PostfixExpr {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            PostfixExpr::Call(v) => v.to_tokens(t),
-            PostfixExpr::MethodCall(v) => v.to_tokens(t),
-            PostfixExpr::Field(v) => v.to_tokens(t),
-            PostfixExpr::Index(v) => v.to_tokens(t),
-            PostfixExpr::Await(v) => v.to_tokens(t),
+            Self::Call(v) => v.to_tokens(t),
+            Self::MethodCall(v) => v.to_tokens(t),
+            Self::Field(v) => v.to_tokens(t),
+            Self::Index(v) => v.to_tokens(t),
+            Self::Await(v) => v.to_tokens(t),
         }
     }
 }
 
 impl From<ExprCall> for PostfixExpr {
     fn from(v: ExprCall) -> Self {
-        PostfixExpr::Call(v)
+        Self::Call(v)
     }
 }
 
 impl From<ExprMethodCall> for PostfixExpr {
     fn from(v: ExprMethodCall) -> Self {
-        PostfixExpr::MethodCall(v)
+        Self::MethodCall(v)
     }
 }
 
 impl From<ExprField> for PostfixExpr {
     fn from(v: ExprField) -> Self {
-        PostfixExpr::Field(v)
+        Self::Field(v)
     }
 }
 
 impl From<ExprIndex> for PostfixExpr {
     fn from(v: ExprIndex) -> Self {
-        PostfixExpr::Index(v)
+        Self::Index(v)
     }
 }
 
 impl From<ExprAwait> for PostfixExpr {
     fn from(v: ExprAwait) -> Self {
-        PostfixExpr::Await(v)
+        Self::Await(v)
     }
 }
 
@@ -159,7 +159,7 @@ impl PostfixExpr {
                 if matches!(stream.curr(), Some(tt) if tt.text() == Some("await")) {
                     let await_span = stream.span();
                     stream.advance();
-                    expr = Expr::Postfix(PostfixExpr::Await(ExprAwait {
+                    expr = Expr::Postfix(Self::Await(ExprAwait {
                         attrs: Attributes::default(),
                         base: Box::new(expr),
                         dot,
@@ -178,7 +178,7 @@ impl PostfixExpr {
                     if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
                         let method = method.clone();
                         let args = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
-                        expr = Expr::Postfix(PostfixExpr::MethodCall(ExprMethodCall {
+                        expr = Expr::Postfix(Self::MethodCall(ExprMethodCall {
                             attrs: Attributes::default(),
                             receiver: Box::new(expr),
                             dot,
@@ -190,7 +190,7 @@ impl PostfixExpr {
                     }
                 }
 
-                expr = Expr::Postfix(PostfixExpr::Field(ExprField {
+                expr = Expr::Postfix(Self::Field(ExprField {
                     attrs: Attributes::default(),
                     base: Box::new(expr),
                     dot,
@@ -202,7 +202,7 @@ impl PostfixExpr {
 
             if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
                 let args = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
-                expr = Expr::Postfix(PostfixExpr::Call(ExprCall {
+                expr = Expr::Postfix(Self::Call(ExprCall {
                     attrs: Attributes::default(),
                     func: Box::new(expr),
                     args,
@@ -213,7 +213,7 @@ impl PostfixExpr {
 
             if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
                 let index = Delimited::parse_bracket_with(stream, |s| super::parse_expr(s, true).map(Box::new))?;
-                expr = Expr::Postfix(PostfixExpr::Index(ExprIndex {
+                expr = Expr::Postfix(Self::Index(ExprIndex {
                     attrs: Attributes::default(),
                     base: Box::new(expr),
                     index,

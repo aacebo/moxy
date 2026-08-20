@@ -1,4 +1,4 @@
-use super::Int;
+use super::LitInt;
 use crate::lit::Lit;
 use crate::parser::{ParseError, ParseStream};
 use crate::{LexError, Parse, Span, Spanner};
@@ -96,21 +96,21 @@ impl Parse for LitI32 {
         let at = stream.span();
 
         match Lit::parse(stream)? {
-            Lit::Int(Int::I32(v)) => Ok(v),
+            Lit::Int(LitInt::I32(v)) => Ok(v),
             _ => Err(LexError::new(at).message("expected `i32` literal").into()),
         }
     }
 }
 
-impl From<LitI32> for Int {
+impl From<LitI32> for LitInt {
     fn from(value: LitI32) -> Self {
-        Int::I32(value)
+        Self::I32(value)
     }
 }
 
 impl From<LitI32> for Lit {
     fn from(value: LitI32) -> Self {
-        Lit::Int(Int::I32(value))
+        Self::Int(LitInt::I32(value))
     }
 }
 

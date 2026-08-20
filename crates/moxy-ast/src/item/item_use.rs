@@ -23,7 +23,7 @@ impl Parse for ItemUse {
         let use_keyword = stream.parse::<Use>()?;
         let tree = stream.parse::<UseTree>()?;
         let semi_punct = stream.parse::<Semi>().unwrap_or_default();
-        Ok(ItemUse {
+        Ok(Self {
             attrs,
             vis,
             use_keyword,

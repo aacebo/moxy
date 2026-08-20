@@ -182,17 +182,17 @@ impl PrimaryExpr {
 impl Spanner for PrimaryExpr {
     fn span(&self) -> Span {
         match self {
-            PrimaryExpr::Lit(v) => v.span(),
-            PrimaryExpr::Path(v) => v.span(),
-            PrimaryExpr::Struct(v) => v.span(),
-            PrimaryExpr::Closure(v) => v.span(),
-            PrimaryExpr::Tuple(v) => v.span(),
-            PrimaryExpr::Array(v) => v.span(),
-            PrimaryExpr::Repeat(v) => v.span(),
-            PrimaryExpr::Let(v) => v.span(),
-            PrimaryExpr::Paren(v) => v.span(),
-            PrimaryExpr::Group(v) => v.span(),
-            PrimaryExpr::Macro(v) => v.span(),
+            Self::Lit(v) => v.span(),
+            Self::Path(v) => v.span(),
+            Self::Struct(v) => v.span(),
+            Self::Closure(v) => v.span(),
+            Self::Tuple(v) => v.span(),
+            Self::Array(v) => v.span(),
+            Self::Repeat(v) => v.span(),
+            Self::Let(v) => v.span(),
+            Self::Paren(v) => v.span(),
+            Self::Group(v) => v.span(),
+            Self::Macro(v) => v.span(),
         }
     }
 }
@@ -200,84 +200,84 @@ impl Spanner for PrimaryExpr {
 impl ToTokens for PrimaryExpr {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            PrimaryExpr::Lit(v) => v.to_tokens(t),
-            PrimaryExpr::Path(v) => v.to_tokens(t),
-            PrimaryExpr::Struct(v) => v.to_tokens(t),
-            PrimaryExpr::Closure(v) => v.to_tokens(t),
-            PrimaryExpr::Tuple(v) => v.to_tokens(t),
-            PrimaryExpr::Array(v) => v.to_tokens(t),
-            PrimaryExpr::Repeat(v) => v.to_tokens(t),
-            PrimaryExpr::Let(v) => v.to_tokens(t),
-            PrimaryExpr::Paren(v) => v.to_tokens(t),
-            PrimaryExpr::Group(v) => v.to_tokens(t),
-            PrimaryExpr::Macro(v) => v.to_tokens(t),
+            Self::Lit(v) => v.to_tokens(t),
+            Self::Path(v) => v.to_tokens(t),
+            Self::Struct(v) => v.to_tokens(t),
+            Self::Closure(v) => v.to_tokens(t),
+            Self::Tuple(v) => v.to_tokens(t),
+            Self::Array(v) => v.to_tokens(t),
+            Self::Repeat(v) => v.to_tokens(t),
+            Self::Let(v) => v.to_tokens(t),
+            Self::Paren(v) => v.to_tokens(t),
+            Self::Group(v) => v.to_tokens(t),
+            Self::Macro(v) => v.to_tokens(t),
         }
     }
 }
 
 impl From<ExprLit> for PrimaryExpr {
     fn from(v: ExprLit) -> Self {
-        PrimaryExpr::Lit(v)
+        Self::Lit(v)
     }
 }
 
 impl From<ExprPath> for PrimaryExpr {
     fn from(v: ExprPath) -> Self {
-        PrimaryExpr::Path(v)
+        Self::Path(v)
     }
 }
 
 impl From<ExprStruct> for PrimaryExpr {
     fn from(v: ExprStruct) -> Self {
-        PrimaryExpr::Struct(v)
+        Self::Struct(v)
     }
 }
 
 impl From<ExprClosure> for PrimaryExpr {
     fn from(v: ExprClosure) -> Self {
-        PrimaryExpr::Closure(v)
+        Self::Closure(v)
     }
 }
 
 impl From<ExprTuple> for PrimaryExpr {
     fn from(v: ExprTuple) -> Self {
-        PrimaryExpr::Tuple(v)
+        Self::Tuple(v)
     }
 }
 
 impl From<ExprArray> for PrimaryExpr {
     fn from(v: ExprArray) -> Self {
-        PrimaryExpr::Array(v)
+        Self::Array(v)
     }
 }
 
 impl From<ExprRepeat> for PrimaryExpr {
     fn from(v: ExprRepeat) -> Self {
-        PrimaryExpr::Repeat(v)
+        Self::Repeat(v)
     }
 }
 
 impl From<ExprLet> for PrimaryExpr {
     fn from(v: ExprLet) -> Self {
-        PrimaryExpr::Let(v)
+        Self::Let(v)
     }
 }
 
 impl From<ExprParen> for PrimaryExpr {
     fn from(v: ExprParen) -> Self {
-        PrimaryExpr::Paren(v)
+        Self::Paren(v)
     }
 }
 
 impl From<ExprGroup> for PrimaryExpr {
     fn from(v: ExprGroup) -> Self {
-        PrimaryExpr::Group(v)
+        Self::Group(v)
     }
 }
 
 impl From<ExprMacro> for PrimaryExpr {
     fn from(v: ExprMacro) -> Self {
-        PrimaryExpr::Macro(v)
+        Self::Macro(v)
     }
 }
 
@@ -412,12 +412,12 @@ impl PrimaryExpr {
             let elems: Punctuated<Expr, Comma> = Punctuated::parse_terminated(&mut inner)?;
             return Ok(if elems.len() == 1 && !elems.is_trailing() {
                 let expr = Box::new(elems.into_iter().next().unwrap());
-                Expr::Primary(PrimaryExpr::Paren(ExprParen {
+                Expr::Primary(Self::Paren(ExprParen {
                     attrs,
                     content: Delimited::paren(paren_span, expr),
                 }))
             } else {
-                Expr::Primary(PrimaryExpr::Tuple(ExprTuple {
+                Expr::Primary(Self::Tuple(ExprTuple {
                     attrs,
                     elems: Delimited::paren(paren_span, elems),
                 }))
@@ -428,10 +428,10 @@ impl PrimaryExpr {
             let (bracket_span, group_tokens) = stream.parse_group_spanned(Delim::Bracket)?;
             let mut inner = group_tokens.parse();
             if let Some(rep) = ExprRepeat::try_parse(&mut inner, bracket_span, attrs.clone())? {
-                return Ok(Expr::Primary(PrimaryExpr::Repeat(rep)));
+                return Ok(Expr::Primary(Self::Repeat(rep)));
             }
             let elems = Punctuated::parse_terminated(&mut inner)?;
-            return Ok(Expr::Primary(PrimaryExpr::Array(ExprArray {
+            return Ok(Expr::Primary(Self::Array(ExprArray {
                 attrs,
                 elems: Delimited::bracket(bracket_span, elems),
             })));
@@ -550,7 +550,7 @@ impl PrimaryExpr {
             let pat = Box::new(stream.parse::<Pattern>()?);
             let eq = stream.parse::<Eq>()?;
             let expr = Box::new(super::parse_expr(stream, false)?);
-            return Ok(Expr::Primary(PrimaryExpr::Let(ExprLet {
+            return Ok(Expr::Primary(Self::Let(ExprLet {
                 attrs,
                 let_keyword,
                 pat,
@@ -560,24 +560,24 @@ impl PrimaryExpr {
         }
 
         if ExprClosure::is_start(stream) {
-            return Ok(Expr::Primary(PrimaryExpr::Closure(ExprClosure::parse_from(stream, attrs)?)));
+            return Ok(Expr::Primary(Self::Closure(ExprClosure::parse_from(stream, attrs)?)));
         }
 
         if matches!(stream.curr(), Some(tt) if ExprLit::is_literal(tt)) {
-            return Ok(Expr::Primary(PrimaryExpr::Lit(ExprLit {
+            return Ok(Expr::Primary(Self::Lit(ExprLit {
                 attrs,
                 lit: stream.parse()?,
             })));
         }
 
         if let Some(mac) = stream.parse_if::<crate::MacroCall>() {
-            return Ok(Expr::Primary(PrimaryExpr::Macro(ExprMacro { attrs, mac })));
+            return Ok(Expr::Primary(Self::Macro(ExprMacro { attrs, mac })));
         }
 
         // Qualified path `<T as Trait>::assoc` in expression position.
         if stream.peek::<moxy_token::punct::Lt>() {
             let (qself, path) = crate::ty::QSelf::parse_qualified(stream)?;
-            return Ok(Expr::Primary(PrimaryExpr::Path(ExprPath {
+            return Ok(Expr::Primary(Self::Path(ExprPath {
                 attrs,
                 qself: Some(qself),
                 path,
@@ -596,7 +596,7 @@ impl PrimaryExpr {
                     let (fields, rest) = ExprStruct::parse_body(inner)?;
                     Ok(StructBody { fields, rest })
                 })?;
-                return Ok(Expr::Primary(PrimaryExpr::Struct(ExprStruct {
+                return Ok(Expr::Primary(Self::Struct(ExprStruct {
                     attrs,
                     qself: None,
                     path,
@@ -604,7 +604,7 @@ impl PrimaryExpr {
                 })));
             }
 
-            return Ok(Expr::Primary(PrimaryExpr::Path(ExprPath {
+            return Ok(Expr::Primary(Self::Path(ExprPath {
                 attrs,
                 qself: None,
                 path,

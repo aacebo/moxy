@@ -67,7 +67,7 @@ impl ToTokens for TypePath {
 
                 if qself.position > 0 {
                     As::default().to_tokens(tokens);
-                    TypePath::emit_segments(&segs[..qself.position], tokens);
+                    Self::emit_segments(&segs[..qself.position], tokens);
                 }
 
                 Gt::default().to_tokens(tokens);

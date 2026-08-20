@@ -58,7 +58,7 @@ impl Spanner for LitVerbatim {
 
 impl From<LitVerbatim> for Lit {
     fn from(value: LitVerbatim) -> Self {
-        Lit::Verbatim(value)
+        Self::Verbatim(value)
     }
 }
 

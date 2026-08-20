@@ -118,8 +118,8 @@ impl From<Group> for TokenTree {
 }
 
 impl IntoIterator for TokenTree {
-    type Item = TokenTree;
-    type IntoIter = std::iter::Once<TokenTree>;
+    type Item = Self;
+    type IntoIter = std::iter::Once<Self>;
 
     fn into_iter(self) -> Self::IntoIter {
         std::iter::once(self)

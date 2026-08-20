@@ -1,4 +1,4 @@
-use super::UInt;
+use super::LitUInt;
 use crate::lit::Lit;
 use crate::parser::{ParseError, ParseStream};
 use crate::{LexError, Parse, Span, Spanner};
@@ -96,21 +96,21 @@ impl Parse for LitU32 {
         let at = stream.span();
 
         match Lit::parse(stream)? {
-            Lit::UInt(UInt::U32(v)) => Ok(v),
+            Lit::UInt(LitUInt::U32(v)) => Ok(v),
             _ => Err(LexError::new(at).message("expected `u32` literal").into()),
         }
     }
 }
 
-impl From<LitU32> for UInt {
+impl From<LitU32> for LitUInt {
     fn from(value: LitU32) -> Self {
-        UInt::U32(value)
+        Self::U32(value)
     }
 }
 
 impl From<LitU32> for Lit {
     fn from(value: LitU32) -> Self {
-        Lit::UInt(UInt::U32(value))
+        Self::UInt(LitUInt::U32(value))
     }
 }
 

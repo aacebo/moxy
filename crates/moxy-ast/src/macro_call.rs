@@ -16,7 +16,7 @@ pub struct MacroCall {
 impl MacroCall {
     pub fn parse_semi(stream: &mut ParseStream) -> Result<(Self, Option<moxy_token::punct::Semi>), ParseError> {
         use moxy_token::punct::Semi;
-        let mac = stream.parse::<MacroCall>()?;
+        let mac = stream.parse::<Self>()?;
         let semi = stream.parse_if::<Semi>();
         Ok((mac, semi))
     }

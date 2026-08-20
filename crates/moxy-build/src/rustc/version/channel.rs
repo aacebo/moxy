@@ -21,7 +21,7 @@ impl Channel {
     ///
     /// Stable releases are identified by the absence of a `-` suffix; the
     /// pre-release channels are identified by their suffix (or bare name).
-    pub fn parse(version: &str) -> Option<Channel> {
+    pub fn parse(version: &str) -> Option<Self> {
         let version = version.trim();
 
         if version.contains("-dev") || version == "dev" {

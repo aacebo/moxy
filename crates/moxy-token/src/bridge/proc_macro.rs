@@ -25,7 +25,7 @@ impl From<proc_macro::Span> for fallback::Span {
 
 impl From<fallback::Span> for proc_macro::Span {
     fn from(_value: fallback::Span) -> Self {
-        proc_macro::Span::call_site()
+        Self::call_site()
     }
 }
 
@@ -42,7 +42,7 @@ impl From<Span> for proc_macro::Span {
     fn from(value: Span) -> Self {
         match value {
             Span::Compiler(s) => s,
-            Span::Fallback(_) => proc_macro::Span::call_site(),
+            Span::Fallback(_) => Self::call_site(),
         }
     }
 }
@@ -75,10 +75,10 @@ impl From<Delim> for proc_macro::Delimiter {
     #[inline]
     fn from(value: Delim) -> Self {
         match value {
-            Delim::Paren => proc_macro::Delimiter::Parenthesis,
-            Delim::Brace => proc_macro::Delimiter::Brace,
-            Delim::Bracket => proc_macro::Delimiter::Bracket,
-            Delim::None => proc_macro::Delimiter::None,
+            Delim::Paren => Self::Parenthesis,
+            Delim::Brace => Self::Brace,
+            Delim::Bracket => Self::Bracket,
+            Delim::None => Self::None,
         }
     }
 }
@@ -99,8 +99,8 @@ impl From<Spacing> for proc_macro::Spacing {
     #[inline]
     fn from(value: Spacing) -> Self {
         match value {
-            Spacing::Alone => proc_macro::Spacing::Alone,
-            Spacing::Joint => proc_macro::Spacing::Joint,
+            Spacing::Alone => Self::Alone,
+            Spacing::Joint => Self::Joint,
         }
     }
 }
@@ -120,8 +120,8 @@ impl From<Ident> for proc_macro::Ident {
         let name = value.text();
 
         match name.strip_prefix("r#") {
-            Some(raw) => proc_macro::Ident::new_raw(raw, span),
-            None => proc_macro::Ident::new(name, span),
+            Some(raw) => Self::new_raw(raw, span),
+            None => Self::new(name, span),
         }
     }
 }
@@ -130,14 +130,14 @@ impl From<Ident> for proc_macro::Ident {
 
 impl From<proc_macro::Literal> for Lit {
     fn from(value: proc_macro::Literal) -> Self {
-        Lit::from_repr(&value.to_string(), value.span().into())
+        Self::from_repr(&value.to_string(), value.span().into())
     }
 }
 
 impl From<Lit> for proc_macro::Literal {
     fn from(value: Lit) -> Self {
         let repr = value.repr();
-        repr.parse().unwrap_or_else(|_| proc_macro::Literal::string(repr))
+        repr.parse().unwrap_or_else(|_| Self::string(repr))
     }
 }
 
@@ -156,7 +156,7 @@ impl From<proc_macro::Group> for Group {
 impl From<Group> for proc_macro::Group {
     #[inline]
     fn from(value: Group) -> Self {
-        proc_macro::Group::new(value.delim.into(), value.tokens.into())
+        Self::new(value.delim.into(), value.tokens.into())
     }
 }
 
@@ -165,16 +165,16 @@ impl From<Group> for proc_macro::Group {
 impl ToTokens<TokenStream> for proc_macro::TokenTree {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
-            proc_macro::TokenTree::Ident(v) => {
+            Self::Ident(v) => {
                 let tt = match Keyword::from_str(&v.to_string(), v.span().into()) {
                     Some(kw) => TokenTree::Keyword(kw),
                     None => TokenTree::Ident(v.clone().into()),
                 };
                 tokens.extend_one(tt)
             }
-            proc_macro::TokenTree::Literal(v) => tokens.extend_one(TokenTree::Literal(v.clone().into())),
-            proc_macro::TokenTree::Group(v) => tokens.extend_one(TokenTree::Group(v.clone().into())),
-            proc_macro::TokenTree::Punct(p) => crate::scan_puncts_spanned(&[(p.as_char(), p.span().into())], tokens),
+            Self::Literal(v) => tokens.extend_one(TokenTree::Literal(v.clone().into())),
+            Self::Group(v) => tokens.extend_one(TokenTree::Group(v.clone().into())),
+            Self::Punct(p) => crate::scan_puncts_spanned(&[(p.as_char(), p.span().into())], tokens),
         }
     }
 }
@@ -205,14 +205,14 @@ impl ToTokens<TokenStream> for proc_macro::TokenStream {
 impl ToTokens<proc_macro::TokenStream> for TokenTree {
     fn to_tokens(&self, out: &mut proc_macro::TokenStream) {
         match self {
-            TokenTree::Group(g) => out.extend_one(proc_macro::TokenTree::Group(g.clone().into())),
-            TokenTree::Ident(v) => out.extend_one(proc_macro::TokenTree::Ident(v.clone().into())),
-            TokenTree::Keyword(kw) => {
+            Self::Group(g) => out.extend_one(proc_macro::TokenTree::Group(g.clone().into())),
+            Self::Ident(v) => out.extend_one(proc_macro::TokenTree::Ident(v.clone().into())),
+            Self::Keyword(kw) => {
                 let id = proc_macro::Ident::new(kw.as_str(), kw.span().into());
                 out.extend_one(proc_macro::TokenTree::Ident(id))
             }
-            TokenTree::Literal(v) => out.extend_one(proc_macro::TokenTree::Literal(v.clone().into())),
-            TokenTree::Punct(op) => {
+            Self::Literal(v) => out.extend_one(proc_macro::TokenTree::Literal(v.clone().into())),
+            Self::Punct(op) => {
                 let text = op.as_str();
                 let span: proc_macro::Span = op.span().into();
                 let last = text.chars().count() - 1;
@@ -251,7 +251,7 @@ impl From<proc_macro::TokenStream> for TokenStream {
 
 impl From<TokenStream> for proc_macro::TokenStream {
     fn from(value: TokenStream) -> Self {
-        let mut out = proc_macro::TokenStream::new();
+        let mut out = Self::new();
         for t in value.iter() {
             t.to_tokens(&mut out);
         }

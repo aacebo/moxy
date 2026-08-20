@@ -161,7 +161,7 @@ impl ToTokens for Signature {
         self.fn_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         let mut params = TokenStream::new();
-        Signature::emit_angle_params(&self.generics, &mut params);
+        Self::emit_angle_params(&self.generics, &mut params);
         t.extend(params);
         self.params.to_tokens(t);
         self.output.to_tokens(t);

@@ -58,10 +58,10 @@ impl TraitItem {
 impl Spanner for TraitItem {
     fn span(&self) -> Span {
         match self {
-            TraitItem::Fn(v) => v.span(),
-            TraitItem::Const(v) => v.span(),
-            TraitItem::Type(v) => v.span(),
-            TraitItem::Macro(v) => v.span(),
+            Self::Fn(v) => v.span(),
+            Self::Const(v) => v.span(),
+            Self::Type(v) => v.span(),
+            Self::Macro(v) => v.span(),
         }
     }
 }
@@ -79,32 +79,32 @@ impl_from! {
 
 impl From<TraitItemConst> for TraitItem {
     fn from(v: TraitItemConst) -> Self {
-        TraitItem::Const(Box::new(v))
+        Self::Const(Box::new(v))
     }
 }
 
 impl Parse for TraitItem {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if stream.peek::<TraitItemConst>() {
-            return Ok(TraitItem::Const(Box::new(stream.parse()?)));
+            return Ok(Self::Const(Box::new(stream.parse()?)));
         }
         if stream.peek::<TraitItemType>() {
-            return Ok(TraitItem::Type(stream.parse()?));
+            return Ok(Self::Type(stream.parse()?));
         }
         if stream.peek::<TraitItemFn>() {
-            return Ok(TraitItem::Fn(stream.parse()?));
+            return Ok(Self::Fn(stream.parse()?));
         }
-        Ok(TraitItem::Macro(stream.parse()?))
+        Ok(Self::Macro(stream.parse()?))
     }
 }
 
 impl ToTokens for TraitItem {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            TraitItem::Fn(v) => v.to_tokens(t),
-            TraitItem::Const(v) => v.to_tokens(t),
-            TraitItem::Type(v) => v.to_tokens(t),
-            TraitItem::Macro(v) => v.to_tokens(t),
+            Self::Fn(v) => v.to_tokens(t),
+            Self::Const(v) => v.to_tokens(t),
+            Self::Type(v) => v.to_tokens(t),
+            Self::Macro(v) => v.to_tokens(t),
         }
     }
 }

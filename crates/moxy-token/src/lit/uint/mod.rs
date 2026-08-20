@@ -15,61 +15,72 @@ use crate::{Span, Spanner};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(untagged))]
-pub enum UInt {
+pub enum LitUInt {
     U8(LitU8),
     U16(LitU16),
     U32(LitU32),
     U64(LitU64),
-    Usize(LitUsize),
+    USize(LitUSize),
 }
 
-impl UInt {
+impl LitUInt {
     #[inline]
     pub fn repr(&self) -> &str {
         match self {
-            UInt::U8(v) => v.repr(),
-            UInt::U16(v) => v.repr(),
-            UInt::U32(v) => v.repr(),
-            UInt::U64(v) => v.repr(),
-            UInt::Usize(v) => v.repr(),
+            Self::U8(v) => v.repr(),
+            Self::U16(v) => v.repr(),
+            Self::U32(v) => v.repr(),
+            Self::U64(v) => v.repr(),
+            Self::USize(v) => v.repr(),
         }
     }
 
     #[inline]
     pub fn span(&self) -> Span {
         match self {
-            UInt::U8(v) => v.span(),
-            UInt::U16(v) => v.span(),
-            UInt::U32(v) => v.span(),
-            UInt::U64(v) => v.span(),
-            UInt::Usize(v) => v.span(),
+            Self::U8(v) => v.span(),
+            Self::U16(v) => v.span(),
+            Self::U32(v) => v.span(),
+            Self::U64(v) => v.span(),
+            Self::USize(v) => v.span(),
         }
     }
 
     #[inline]
     pub fn set_span(&mut self, span: Span) {
         match self {
-            UInt::U8(v) => v.set_span(span),
-            UInt::U16(v) => v.set_span(span),
-            UInt::U32(v) => v.set_span(span),
-            UInt::U64(v) => v.set_span(span),
-            UInt::Usize(v) => v.set_span(span),
+            Self::U8(v) => v.set_span(span),
+            Self::U16(v) => v.set_span(span),
+            Self::U32(v) => v.set_span(span),
+            Self::U64(v) => v.set_span(span),
+            Self::USize(v) => v.set_span(span),
+        }
+    }
+
+    #[inline]
+    pub fn suffixed(&self) -> bool {
+        match self {
+            Self::U8(v) => v.suffixed(),
+            Self::U16(v) => v.suffixed(),
+            Self::U32(v) => v.suffixed(),
+            Self::U64(v) => v.suffixed(),
+            Self::USize(v) => v.suffixed(),
         }
     }
 
     /// The value widened to `u128` (all unsigned int variants fit).
     pub fn as_u128(&self) -> u128 {
         match self {
-            UInt::U8(v) => v.value() as u128,
-            UInt::U16(v) => v.value() as u128,
-            UInt::U32(v) => v.value() as u128,
-            UInt::U64(v) => v.value() as u128,
-            UInt::Usize(v) => v.value() as u128,
+            Self::U8(v) => v.value() as u128,
+            Self::U16(v) => v.value() as u128,
+            Self::U32(v) => v.value() as u128,
+            Self::U64(v) => v.value() as u128,
+            Self::USize(v) => v.value() as u128,
         }
     }
 
     /// Build an unsigned-integer literal from a scanned `repr`. Only `u*`-suffixed reprs
-    /// are unsigned; returns `None` otherwise (unsuffixed ints belong to [`super::Int`]).
+    /// are unsigned; returns `None` otherwise (unsuffixed ints belong to [`super::LitInt`]).
     pub(crate) fn from_repr(repr: &str, span: Span) -> Option<Self> {
         let (digits, suffix) = split_suffix(repr);
 
@@ -81,31 +92,31 @@ impl UInt {
         let suffixed = true;
 
         match suffix {
-            "u8" => Some(UInt::U8(LitU8::from_parts(
+            "u8" => Some(Self::U8(LitU8::from_parts(
                 u8::try_from(magnitude).ok()?,
                 suffixed,
                 repr,
                 span,
             ))),
-            "u16" => Some(UInt::U16(LitU16::from_parts(
+            "u16" => Some(Self::U16(LitU16::from_parts(
                 u16::try_from(magnitude).ok()?,
                 suffixed,
                 repr,
                 span,
             ))),
-            "u32" => Some(UInt::U32(LitU32::from_parts(
+            "u32" => Some(Self::U32(LitU32::from_parts(
                 u32::try_from(magnitude).ok()?,
                 suffixed,
                 repr,
                 span,
             ))),
-            "u64" => Some(UInt::U64(LitU64::from_parts(
+            "u64" => Some(Self::U64(LitU64::from_parts(
                 u64::try_from(magnitude).ok()?,
                 suffixed,
                 repr,
                 span,
             ))),
-            "usize" => Some(UInt::Usize(LitUsize::from_parts(
+            "usize" => Some(Self::USize(LitUSize::from_parts(
                 usize::try_from(magnitude).ok()?,
                 suffixed,
                 repr,
@@ -116,35 +127,35 @@ impl UInt {
     }
 }
 
-impl Scan for UInt {
+impl Scan for LitUInt {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
         let end = scan_number(cursor)?;
         let len = end.offset() as usize - cursor.offset() as usize;
         let repr = &cursor.rest()[..len];
         let span = cursor.span_to(&end);
 
-        match UInt::from_repr(repr, span) {
+        match Self::from_repr(repr, span) {
             Some(uint) => Ok((end, uint)),
             None => cursor.error().into(),
         }
     }
 }
 
-impl Spanner for UInt {
+impl Spanner for LitUInt {
     fn span(&self) -> Span {
         self.span()
     }
 }
 
-impl std::fmt::Display for UInt {
+impl std::fmt::Display for LitUInt {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(self.repr())
     }
 }
 
 #[cfg(feature = "serde")]
-impl From<UInt> for String {
-    fn from(value: UInt) -> Self {
+impl From<LitUInt> for String {
+    fn from(value: LitUInt) -> Self {
         value.repr().to_string()
     }
 }

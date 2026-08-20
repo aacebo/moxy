@@ -35,7 +35,7 @@ impl Parse for ItemMod {
             (None, Some(semi_punct))
         };
 
-        Ok(ItemMod {
+        Ok(Self {
             attrs,
             vis,
             unsafety,

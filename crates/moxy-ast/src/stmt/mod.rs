@@ -64,14 +64,14 @@ impl Stmt {
 impl Spanner for Stmt {
     fn span(&self) -> Span {
         match self {
-            Stmt::Local(v) => v.span(),
-            Stmt::Block(v) => v.span(),
-            Stmt::Item(v) => v.span(),
-            Stmt::Expr(v, semi) => {
+            Self::Local(v) => v.span(),
+            Self::Block(v) => v.span(),
+            Self::Item(v) => v.span(),
+            Self::Expr(v, semi) => {
                 let end = semi.as_ref().map(|s| s.span()).unwrap_or_else(|| v.span());
                 v.span().join(end)
             }
-            Stmt::Macro(v) => v.span(),
+            Self::Macro(v) => v.span(),
         }
     }
 }
@@ -79,36 +79,36 @@ impl Spanner for Stmt {
 impl Parse for Stmt {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if stream.peek::<StmtLocal>() {
-            return Ok(Stmt::Local(Box::new(stream.parse()?)));
+            return Ok(Self::Local(Box::new(stream.parse()?)));
         }
         if stream.peek::<StmtBlock>() {
-            return Ok(Stmt::Block(stream.parse()?));
+            return Ok(Self::Block(stream.parse()?));
         }
         if stream.peek::<crate::Item>() {
-            return Ok(Stmt::Item(Box::new(stream.parse()?)));
+            return Ok(Self::Item(Box::new(stream.parse()?)));
         }
         if stream.peek::<StmtMacro>() {
-            return Ok(Stmt::Macro(stream.parse()?));
+            return Ok(Self::Macro(stream.parse()?));
         }
         let expr = stream.parse::<Expr>()?;
         let semi = stream.parse_if::<Semi>();
-        Ok(Stmt::Expr(Box::new(expr), semi))
+        Ok(Self::Expr(Box::new(expr), semi))
     }
 }
 
 impl ToTokens for Stmt {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            Stmt::Local(v) => v.to_tokens(t),
-            Stmt::Block(v) => v.to_tokens(t),
-            Stmt::Item(v) => v.to_tokens(t),
-            Stmt::Expr(v, semi) => {
+            Self::Local(v) => v.to_tokens(t),
+            Self::Block(v) => v.to_tokens(t),
+            Self::Item(v) => v.to_tokens(t),
+            Self::Expr(v, semi) => {
                 v.to_tokens(t);
                 if let Some(s) = semi {
                     s.to_tokens(t);
                 }
             }
-            Stmt::Macro(v) => v.to_tokens(t),
+            Self::Macro(v) => v.to_tokens(t),
         }
     }
 }

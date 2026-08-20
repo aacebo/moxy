@@ -58,10 +58,10 @@ impl ImplItem {
 impl Spanner for ImplItem {
     fn span(&self) -> Span {
         match self {
-            ImplItem::Fn(v) => v.span(),
-            ImplItem::Const(v) => v.span(),
-            ImplItem::Type(v) => v.span(),
-            ImplItem::Macro(v) => v.span(),
+            Self::Fn(v) => v.span(),
+            Self::Const(v) => v.span(),
+            Self::Type(v) => v.span(),
+            Self::Macro(v) => v.span(),
         }
     }
 }
@@ -79,32 +79,32 @@ impl_from! {
 
 impl From<ImplItemConst> for ImplItem {
     fn from(v: ImplItemConst) -> Self {
-        ImplItem::Const(Box::new(v))
+        Self::Const(Box::new(v))
     }
 }
 
 impl Parse for ImplItem {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if stream.peek::<ImplItemConst>() {
-            return Ok(ImplItem::Const(Box::new(stream.parse()?)));
+            return Ok(Self::Const(Box::new(stream.parse()?)));
         }
         if stream.peek::<ImplItemType>() {
-            return Ok(ImplItem::Type(stream.parse()?));
+            return Ok(Self::Type(stream.parse()?));
         }
         if stream.peek::<ImplItemFn>() {
-            return Ok(ImplItem::Fn(stream.parse()?));
+            return Ok(Self::Fn(stream.parse()?));
         }
-        Ok(ImplItem::Macro(stream.parse()?))
+        Ok(Self::Macro(stream.parse()?))
     }
 }
 
 impl ToTokens for ImplItem {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            ImplItem::Fn(v) => v.to_tokens(t),
-            ImplItem::Const(v) => v.to_tokens(t),
-            ImplItem::Type(v) => v.to_tokens(t),
-            ImplItem::Macro(v) => v.to_tokens(t),
+            Self::Fn(v) => v.to_tokens(t),
+            Self::Const(v) => v.to_tokens(t),
+            Self::Type(v) => v.to_tokens(t),
+            Self::Macro(v) => v.to_tokens(t),
         }
     }
 }

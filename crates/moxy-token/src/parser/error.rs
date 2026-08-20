@@ -5,7 +5,7 @@ use crate::{Delim, Group, Ident, LexError, Lit, Punctuation, Span, ToTokenStream
 pub struct ParseError {
     span: Span,
     message: String,
-    children: Vec<ParseError>,
+    children: Vec<Self>,
 }
 
 impl ParseError {
@@ -25,12 +25,12 @@ impl ParseError {
         &self.message
     }
 
-    pub fn children(&self) -> &[ParseError] {
+    pub fn children(&self) -> &[Self] {
         &self.children
     }
 
     /// Combine two errors, appending `other` as a child of `self`.
-    pub fn combine(mut self, other: ParseError) -> ParseError {
+    pub fn combine(mut self, other: Self) -> Self {
         self.children.push(other);
         self
     }

@@ -52,11 +52,7 @@ impl Parse for ItemImpl {
         let (for_keyword, trait_ref, self_ty) = if stream.peek::<For>() {
             let for_keyword = stream.parse::<For>()?;
             let self_ty = stream.parse::<Type>()?;
-            (
-                Some(for_keyword),
-                Some(ItemImpl::type_to_trait_ref(first, polarity)?),
-                self_ty,
-            )
+            (Some(for_keyword), Some(Self::type_to_trait_ref(first, polarity)?), self_ty)
         } else {
             (None, None, first)
         };
@@ -68,7 +64,7 @@ impl Parse for ItemImpl {
         }
 
         let items = Delimited::<Vec<ImplItem>>::parse_brace(stream)?;
-        Ok(ItemImpl {
+        Ok(Self {
             attrs,
             defaultness,
             unsafety,

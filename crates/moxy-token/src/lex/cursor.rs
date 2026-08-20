@@ -131,6 +131,7 @@ impl<'a> Cursor<'a> {
             let next = if end.starts_with("\n") { end.advance(1) } else { end };
             return Some((next, inner, text.trim().to_string()));
         }
+
         if self.is_block_doc() {
             let inner = self.starts_with("/*!");
             let body = self.advance(3); // skip /** or /*!
@@ -140,12 +141,14 @@ impl<'a> Cursor<'a> {
             let text: String = body.rest()[..len].to_string();
             return Some((close, inner, text.trim().to_string()));
         }
+
         None
     }
 
     /// Skip to just past the matching `*/` of a (non-nested) block comment body.
     fn skip_comment_to_close(&self) -> Option<Self> {
         let mut cur = *self;
+
         while !cur.is_empty() {
             if cur.starts_with("*/") {
                 return Some(cur.advance(2));
@@ -153,6 +156,7 @@ impl<'a> Cursor<'a> {
             let ch = cur.first().unwrap();
             cur = cur.advance(ch.len_utf8());
         }
+
         None
     }
 
