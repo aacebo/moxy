@@ -467,7 +467,7 @@ mod tests {
             let TokenTree::Punct(p) = tree else {
                 panic!("expected punct");
             };
-            assert_eq!(serde_json::to_value(&p).unwrap(), serde_json::json!("+"));
+            assert_eq!(serde_json::to_value(p).unwrap(), serde_json::json!("+"));
         }
 
         #[test]

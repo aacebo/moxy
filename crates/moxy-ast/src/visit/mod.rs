@@ -1358,7 +1358,7 @@ define_visit! {
             fields: seq_punct => visit_field_def / visit_field_def_mut,
         }
     }
-    struct FieldDef {
+    struct Field {
         visit: visit_field_def, visit_mut: visit_field_def_mut,
         walk: walk_field_def, walk_mut: walk_field_def_mut,
         fields {
@@ -1366,7 +1366,7 @@ define_visit! {
             vis => visit_visibility / visit_visibility_mut,
             mutability: leaf,
             ident: skip,
-            colon_punct: skip,
+            colon: skip,
             ty => visit_type / visit_type_mut,
         }
     }

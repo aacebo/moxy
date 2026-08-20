@@ -289,9 +289,9 @@ mod tests {
         let stream = "a b".parse::<TokenStream>().unwrap();
         let mut ps = stream.parse();
 
-        assert!(matches!(ps.peek::<Ident>(), true,));
-        assert!(matches!(ps.peek::<Ident>(), true,));
-        assert!(matches!(ps.parse::<Ident>(), Ok(_),));
+        assert!(ps.peek::<Ident>());
+        assert!(ps.peek::<Ident>());
+        assert!(ps.parse::<Ident>().is_ok());
         assert!(!ps.is_empty()); // "b" remains
     }
 
@@ -301,8 +301,8 @@ mod tests {
         let mut ps = stream.parse();
         let mut fork = ps.fork();
 
-        assert!(matches!(fork.parse::<Ident>(), Ok(_),)); // "a"
-        assert!(matches!(ps.peek::<Ident>(), true,)); // still "a"
+        assert!(fork.parse::<Ident>().is_ok()); // "a"
+        assert!(ps.peek::<Ident>()); // still "a"
     }
 
     #[test]
@@ -314,11 +314,11 @@ mod tests {
         fork.advance().unwrap(); // advance fork past "a"
 
         // original still at "a"
-        assert!(matches!(ps.parse::<Ident>(), Ok(_),));
+        assert!(ps.parse::<Ident>().is_ok());
 
         // commit fork progress to original
         ps.seek(&fork);
-        assert!(matches!(ps.peek::<Ident>(), true,)); // now at "b"
+        assert!(ps.peek::<Ident>()); // now at "b"
     }
 
     #[test]

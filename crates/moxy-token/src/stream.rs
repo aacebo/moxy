@@ -159,16 +159,20 @@ impl Scan for TokenStream {
                 continue;
             }
 
-            if let Ok((next, lit)) = crate::Literal::scan(c) {
+            if let Ok((next, lit)) = <crate::Lit as Scan>::scan(c) {
                 tokens.push(crate::TokenTree::Literal(lit));
                 c = next;
                 continue;
             }
 
             if let Ok((next, ident)) = crate::Ident::scan(c) {
-                let tt = match crate::Keyword::from_str(ident.text(), ident.span()) {
-                    Some(kw) if !ident.is_raw() => crate::TokenTree::Keyword(kw),
-                    _ => crate::TokenTree::Ident(ident),
+                let tt = if !ident.is_raw() && (ident.text() == "true" || ident.text() == "false") {
+                    crate::TokenTree::Literal(crate::Lit::Bool(crate::LitBool::new(ident.text() == "true", ident.span())))
+                } else {
+                    match crate::Keyword::from_str(ident.text(), ident.span()) {
+                        Some(kw) if !ident.is_raw() => crate::TokenTree::Keyword(kw),
+                        _ => crate::TokenTree::Ident(ident),
+                    }
                 };
 
                 tokens.push(tt);
@@ -250,7 +254,7 @@ impl serde::Serialize for TokenStream {
 
 fn push_doc_attr(tokens: &mut Vec<TokenTree>, inner: bool, text: &str, span: Span) {
     use crate::punct::{Eq, Not, Pound};
-    use crate::{Delim, Group, Ident, Literal, Punctuation};
+    use crate::{Delim, Group, Ident, Punctuation};
 
     tokens.push(crate::TokenTree::Punct(Punctuation::Pound(Pound::new(span))));
 
@@ -261,7 +265,7 @@ fn push_doc_attr(tokens: &mut Vec<TokenTree>, inner: bool, text: &str, span: Spa
     let mut body = TokenStream::new();
     body.extend_one(crate::TokenTree::Ident(Ident::new("doc").with_span(span)));
     body.extend_one(crate::TokenTree::Punct(Punctuation::Eq(Eq::new(span))));
-    body.extend_one(crate::TokenTree::Literal(Literal::string(text)));
+    body.extend_one(crate::TokenTree::Literal(crate::Lit::Str(crate::LitStr::new(text, span))));
 
     tokens.push(TokenTree::Group(Group::new(Delim::Bracket, body)));
 }

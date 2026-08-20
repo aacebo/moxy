@@ -37,7 +37,7 @@ impl Parse for FieldValue {
                     qself: None,
                     path: id.clone().into(),
                 })),
-                Member::Unnamed(..) => {
+                Member::Unnamed(_) => {
                     return Err(moxy_token::LexError::new(stream.span())
                         .message("tuple index needs a value")
                         .into());

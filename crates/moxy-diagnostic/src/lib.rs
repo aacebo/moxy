@@ -9,7 +9,7 @@ mod span;
 pub use level::*;
 use moxy_token::parser::ParseError;
 use moxy_token::punct::Not;
-use moxy_token::{Delim, Group, Ident, Literal, Punctuation, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, Ident, Lit, Punctuation, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
 #[doc(inline)]
 pub use span::*;
 
@@ -242,7 +242,7 @@ impl Diagnostic {
         let span = self.spans.first().copied().unwrap_or_default();
         let ident = Ident::new("compile_error").with_span(span);
         let bang = Not::new(span);
-        let mut lit = Literal::string(&self.to_string());
+        let mut lit = Lit::string(&self.to_string());
         lit.set_span(span);
 
         let inner: TokenTree = lit.into();

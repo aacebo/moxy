@@ -2,14 +2,14 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Comma;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use super::FieldDef;
+use super::Field;
 use crate::{Delimited, Punctuated};
 
 /// Named struct fields (`{ a: A, b: B }`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldsNamed {
-    pub fields: Delimited<Punctuated<FieldDef, Comma>>,
+    pub fields: Delimited<Punctuated<Field, Comma>>,
 }
 
 impl Parse for FieldsNamed {

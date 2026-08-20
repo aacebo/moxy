@@ -1,5 +1,5 @@
 use crate::parser::ParseError;
-use crate::{Delim, Group, Ident, Keyword, Literal, Spacing, Span, ToTokens, TokenStream, TokenTree};
+use crate::{Delim, Group, Ident, Keyword, Lit, Spacing, Span, ToTokens, TokenStream, TokenTree};
 
 // --- LexError ---
 
@@ -91,20 +91,17 @@ impl From<Ident> for proc_macro2::Ident {
 
 // --- Literal ---
 
-impl From<proc_macro2::Literal> for Literal {
+impl From<proc_macro2::Literal> for Lit {
     fn from(value: proc_macro2::Literal) -> Self {
         let span: Span = value.span().into();
-        Literal {
-            repr: value.to_string().into_boxed_str(),
-            span,
-        }
+        Lit::from_repr(&value.to_string(), span)
     }
 }
 
-impl From<Literal> for proc_macro2::Literal {
-    fn from(value: Literal) -> Self {
-        let repr = format!("{}", value);
-        repr.parse().unwrap_or_else(|_| proc_macro2::Literal::string(&repr))
+impl From<Lit> for proc_macro2::Literal {
+    fn from(value: Lit) -> Self {
+        let repr = value.repr();
+        repr.parse().unwrap_or_else(|_| proc_macro2::Literal::string(repr))
     }
 }
 

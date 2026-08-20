@@ -1,4 +1,4 @@
-use moxy_ast::fields::{FieldDef, Fields, FieldsNamed, FieldsUnnamed};
+use moxy_ast::fields::{Field, Fields, FieldsNamed, FieldsUnnamed};
 use moxy_ast::item::*;
 use moxy_ast::member::foreign_item::*;
 use moxy_ast::member::impl_item::*;
@@ -168,7 +168,7 @@ impl Format for FieldsUnnamed {
     }
 }
 
-impl Format for FieldDef {
+impl Format for Field {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.vis.format(f)?;
 

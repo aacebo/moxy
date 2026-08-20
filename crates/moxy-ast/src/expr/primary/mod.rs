@@ -563,7 +563,7 @@ impl PrimaryExpr {
             return Ok(Expr::Primary(PrimaryExpr::Closure(ExprClosure::parse_from(stream, attrs)?)));
         }
 
-        if matches!(stream.curr(), Some(tt) if ExprLit::is_literal(tt)) || ExprLit::is_bool_ident(stream) {
+        if matches!(stream.curr(), Some(tt) if ExprLit::is_literal(tt)) {
             return Ok(Expr::Primary(PrimaryExpr::Lit(ExprLit {
                 attrs,
                 lit: stream.parse()?,

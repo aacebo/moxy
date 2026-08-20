@@ -1,17 +1,17 @@
 use moxy_ast::{Crate, Expr, Item, Pattern, Stmt, Type};
 use moxy_fmt::{FmtConfig, NewlineStyle, fmt};
 
-fn format<T: moxy_fmt::Format>(src: &str) -> String
+fn format<T>(src: &str) -> String
 where
-    T: moxy_token::Parse,
+    T: moxy_fmt::Format + moxy_token::Parse,
 {
     let value: T = moxy_token::parse!(src).unwrap();
     fmt!(&value, FmtConfig::default().with_newline(NewlineStyle::Unix)).unwrap()
 }
 
-fn idempotent<T: moxy_fmt::Format>(src: &str)
+fn idempotent<T>(src: &str)
 where
-    T: moxy_token::Parse,
+    T: moxy_fmt::Format + moxy_token::Parse,
 {
     let first = format::<T>(src);
     let second = format::<T>(&first);

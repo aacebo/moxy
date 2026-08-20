@@ -7,22 +7,22 @@ use crate::{Attributes, Ident, Mutability, Type, Visibility};
 /// A struct/enum field definition (`pub name: Type` or `pub Type`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
-pub struct FieldDef {
+pub struct Field {
     pub attrs: Attributes,
     pub vis: Visibility,
     pub mutability: Mutability,
     pub ident: Option<Ident>,
-    pub colon_punct: Option<Colon>,
+    pub colon: Option<Colon>,
     pub ty: Type,
 }
 
-impl Parse for FieldDef {
+impl Parse for Field {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let mutability = stream.parse::<Mutability>()?;
 
-        let (ident, colon_punct) = {
+        let (ident, colon) = {
             let mut fork = stream.fork();
             if let Ok(id) = fork.parse::<Ident>() {
                 if fork.peek::<Colon>() {
@@ -43,19 +43,19 @@ impl Parse for FieldDef {
             vis,
             mutability,
             ident,
-            colon_punct,
+            colon,
             ty,
         })
     }
 }
 
-impl Spanner for FieldDef {
+impl Spanner for Field {
     fn span(&self) -> Span {
         self.attrs.span().join(self.ty.span())
     }
 }
 
-impl ToTokens for FieldDef {
+impl ToTokens for Field {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.vis.to_tokens(t);
@@ -63,8 +63,8 @@ impl ToTokens for FieldDef {
 
         if let Some(id) = &self.ident {
             id.to_tokens(t);
-            if let Some(colon_punct) = &self.colon_punct {
-                colon_punct.to_tokens(t);
+            if let Some(colon) = &self.colon {
+                colon.to_tokens(t);
             }
         }
 

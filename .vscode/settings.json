@@ -5,6 +5,7 @@
   "rust-analyzer.cargo.targetDir": true,
   "rust-analyzer.restartServerOnConfigChange": true,
   "rust-analyzer.check.workspace": true,
+  "rust-analyzer.check.allTargets": true,
   "terminal.integrated.suggest.enabled": false,
   "evenBetterToml.schema.enabled": false
 }

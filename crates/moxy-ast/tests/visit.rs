@@ -104,9 +104,10 @@ struct Renamer;
 
 impl VisitMut for Renamer {
     fn visit_path_segment_mut(&mut self, node: &mut PathSegment) {
-        if node.ident.to_string() == "a" {
+        if node.ident == "a" {
             node.ident = Ident::new("z");
         }
+
         walk_path_segment_mut(self, node);
     }
 }

@@ -182,7 +182,7 @@ mod tests {
         let meta = parse!("count = 42" as Meta).unwrap();
         assert!(meta.is_alias());
         assert!(meta.as_value().unwrap().is_literal());
-        assert_eq!(meta.as_value().unwrap().as_literal().unwrap().as_int().unwrap().repr, "42");
+        assert_eq!(meta.as_value().unwrap().as_literal().unwrap().as_u64(), Some(42));
     }
 
     #[test]
@@ -211,7 +211,7 @@ mod tests {
     fn meta_arg_value() {
         let meta = parse!("debug(\"x\")" as Meta).unwrap();
         let arg = meta.as_list().unwrap().first().unwrap().as_value().unwrap();
-        assert_eq!(arg.as_literal().unwrap().as_str().unwrap().repr, "\"x\"");
+        assert_eq!(arg.as_literal().unwrap().as_str().unwrap().repr(), "\"x\"");
     }
 
     #[test]

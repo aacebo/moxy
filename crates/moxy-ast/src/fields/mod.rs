@@ -1,12 +1,12 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-mod field_def;
+mod field;
 mod field_value;
 mod fields_named;
 mod fields_unnamed;
 
-pub use field_def::*;
+pub use field::*;
 pub use field_value::*;
 pub use fields_named::*;
 pub use fields_unnamed::*;
@@ -18,6 +18,28 @@ pub enum Fields {
     Named(FieldsNamed),
     Unnamed(FieldsUnnamed),
     Unit,
+}
+
+impl Fields {
+    pub fn is_named(&self) -> bool {
+        matches!(self, Self::Named(_))
+    }
+
+    pub fn is_unnamed(&self) -> bool {
+        matches!(self, Self::Unnamed(_))
+    }
+
+    pub fn is_unit(&self) -> bool {
+        matches!(self, Self::Unit)
+    }
+
+    pub fn as_named(&self) -> Option<&FieldsNamed> {
+        if let Self::Named(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_unnamed(&self) -> Option<&FieldsUnnamed> {
+        if let Self::Unnamed(v) = self { Some(v) } else { None }
+    }
 }
 
 impl From<FieldsNamed> for Fields {

@@ -1,5 +1,5 @@
 use crate::lex::{Cursor, Scan};
-use crate::{Delim, Group, Ident, Keyword, Literal, Punctuation, Span, Spanner, ToTokens, TokenStream};
+use crate::{Delim, Group, Ident, Keyword, Lit, Punctuation, Span, Spanner, ToTokens, TokenStream};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(untagged))]
@@ -7,7 +7,7 @@ pub enum TokenTree {
     Ident(Ident),
     Keyword(Keyword),
     Punct(Punctuation),
-    Literal(Literal),
+    Literal(Lit),
     Group(Group),
 }
 
@@ -74,7 +74,7 @@ impl TokenTree {
     }
 
     #[inline]
-    pub fn as_literal(&self) -> Option<&Literal> {
+    pub fn as_literal(&self) -> Option<&Lit> {
         match self {
             Self::Literal(v) => Some(v),
             _ => None,
@@ -103,9 +103,9 @@ impl From<Punctuation> for TokenTree {
     }
 }
 
-impl From<Literal> for TokenTree {
+impl From<Lit> for TokenTree {
     #[inline]
-    fn from(value: Literal) -> Self {
+    fn from(value: Lit) -> Self {
         Self::Literal(value)
     }
 }
@@ -162,13 +162,13 @@ impl ToTokens for &str {
 
 impl ToTokens for String {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        crate::Literal::string(self).to_tokens(tokens);
+        crate::Lit::string(self).to_tokens(tokens);
     }
 }
 
 impl ToTokens for &mut String {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        crate::Literal::string(self).to_tokens(tokens);
+        crate::Lit::string(self).to_tokens(tokens);
     }
 }
 

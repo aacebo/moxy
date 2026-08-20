@@ -9,4 +9,5 @@ RUST_BACKTRACE = "1"
 retry = 3
 
 [alias]
-lint = "clippy --workspace --all-features -- -D warnings"
+lint = "clippy --workspace --all-features --all-targets -- -D warnings"
+cov = "llvm-cov --workspace --html --open"

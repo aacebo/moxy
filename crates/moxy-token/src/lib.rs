@@ -17,7 +17,7 @@ mod group;
 mod ident;
 pub mod keyword;
 pub mod lex;
-mod literal;
+mod lit;
 pub mod parser;
 pub mod punct;
 pub mod source;
@@ -37,7 +37,7 @@ pub use keyword::*;
 #[doc(inline)]
 pub use lex::{LexError, Scan};
 #[doc(inline)]
-pub use literal::*;
+pub use lit::*;
 #[doc(inline)]
 pub use parser::Parse;
 #[doc(inline)]
@@ -271,14 +271,14 @@ mod tests {
 
     #[test]
     fn literal_string() {
-        let lit = Literal::string("hello");
+        let lit = Lit::string("hello");
         let s = format!("{}", lit);
         assert!(s.contains("hello"));
     }
 
     #[test]
     fn literal_integer() {
-        let lit = Literal::u32_suffixed(42);
+        let lit = Lit::u32_suffixed(42);
         let s = format!("{}", lit);
         assert!(s.contains("42"));
     }
@@ -338,7 +338,7 @@ mod tests {
 
     #[test]
     fn token_from_literal() {
-        let t: TokenTree = Literal::string("x").into();
+        let t: TokenTree = Lit::string("x").into();
         assert!(matches!(t, TokenTree::Literal(_)));
     }
 

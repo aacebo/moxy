@@ -415,7 +415,7 @@ impl PatStruct {
                 // shorthand `{ field }`
                 let ident = match &member {
                     Member::Named(id) => id.clone(),
-                    Member::Unnamed(..) => {
+                    Member::Unnamed(_) => {
                         return Err(LexError::new(stream.span()).message("tuple index needs a pattern").into());
                     }
                 };

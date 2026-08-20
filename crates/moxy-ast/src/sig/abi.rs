@@ -38,7 +38,7 @@ impl ToTokens for Abi {
         self.extern_keyword.to_tokens(t);
 
         if let Some(name) = &self.name {
-            moxy_token::Literal::string(name).to_tokens(t);
+            moxy_token::Lit::string(name).to_tokens(t);
         }
     }
 }

@@ -22,8 +22,8 @@ include = [
 ]
 
 [workspace.lints.clippy]
-collapsible-if = "allow"
-new-ret-no-self = "allow"
+collapsible_if = "allow"
+new_ret_no_self = "allow"
 get_first = "allow"
 explicit_counter_loop = "allow"
 type_complexity = "allow"

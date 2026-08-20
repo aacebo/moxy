@@ -9,7 +9,6 @@ pub mod generics;
 pub mod item;
 mod label;
 mod leaf;
-pub mod lit;
 mod macro_call;
 #[macro_use]
 mod macros;
@@ -52,8 +51,6 @@ pub use leaf::*;
 #[doc(inline)]
 pub use lifetime::*;
 #[doc(inline)]
-pub use lit::Lit;
-#[doc(inline)]
 pub use macro_call::*;
 #[doc(inline)]
 pub use member::{ForeignItem, ImplItem, Member, TraitItem};
@@ -61,6 +58,11 @@ pub use member::{ForeignItem, ImplItem, Member, TraitItem};
 pub use misc::*;
 #[doc(inline)]
 pub use moxy_token::Ident;
+#[doc(inline)]
+pub use moxy_token::{
+    Float, Int, Lit, LitBool, LitByte, LitByteStr, LitCStr, LitChar, LitF32, LitF64, LitI8, LitI16, LitI32, LitI64, LitIsize,
+    LitStr, LitU8, LitU16, LitU32, LitU64, LitUsize, LitVerbatim, UInt,
+};
 #[doc(inline)]
 pub use pat::Pattern;
 #[doc(inline)]

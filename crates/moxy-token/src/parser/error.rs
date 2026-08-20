@@ -1,5 +1,5 @@
 use crate::punct::Not;
-use crate::{Delim, Group, Ident, LexError, Literal, Punctuation, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
+use crate::{Delim, Group, Ident, LexError, Lit, Punctuation, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 #[derive(Debug, Clone)]
 pub struct ParseError {
@@ -38,7 +38,7 @@ impl ParseError {
     pub fn to_compile_error(&self) -> TokenStream {
         let ident = Ident::new("compile_error").with_span(self.span);
         let bang = Not::new(self.span);
-        let mut lit = Literal::string(&self.to_string());
+        let mut lit = Lit::string(&self.to_string());
 
         lit.set_span(self.span);
 
