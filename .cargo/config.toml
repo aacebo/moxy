@@ -3,12 +3,12 @@ jobs = -1
 
 [env]
 RUST_BACKTRACE = "1"
-# RUST_TEST_NOCAPTURE = "1"
+LLVM_PROFILE_FILE = { value = "target/coverage/%p-%m.profraw", relative = true }
 
 [net]
 retry = 3
 
 [alias]
 lint = "clippy --workspace --all-features --all-targets -- -D warnings"
-cov = "llvm-cov --workspace --all-features --html --open"
-cov-check = "llvm-cov --workspace --all-features --fail-under-lines 90"
+cov = "llvm-cov --workspace --all-features --html --open --no-cfg-coverage --no-cfg-coverage-nightly"
+cov-check = "llvm-cov --workspace --all-features --no-cfg-coverage --no-cfg-coverage-nightly --fail-under-lines 90"
