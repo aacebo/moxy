@@ -90,31 +90,3 @@ impl ToTokens for Member {
         }
     }
 }
-
-#[cfg(test)]
-mod tests {
-    use moxy_token::ToTokenStream;
-
-    use super::*;
-
-    #[test]
-    fn parses_named() {
-        let member = moxy_token::parse!("field" as Member).unwrap();
-        assert!(member.is_named());
-        assert_eq!(member.as_named().unwrap().text(), "field");
-    }
-
-    #[test]
-    fn parses_unnamed_with_index_and_span() {
-        let member = moxy_token::parse!("0" as Member).unwrap();
-        assert!(member.is_unnamed());
-        assert_eq!(member.as_unnamed().unwrap().as_u64(), Some(0));
-        assert_eq!(member.span(), member.as_unnamed().unwrap().span());
-    }
-
-    #[test]
-    fn unnamed_roundtrips() {
-        let member = moxy_token::parse!("3" as Member).unwrap();
-        assert_eq!(member.to_token_stream().to_string(), "3");
-    }
-}

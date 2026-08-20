@@ -14,6 +14,6 @@ pub struct TmplTokens {
 impl ToTokens for TmplTokens {
     fn to_tokens(&self, out: &mut TokenStream) {
         let src = self.stream.to_string();
-        out.extend(TokenStream::from_str(&format!("::moxy_token::ToTokens::to_tokens(&{src:?}, &mut __moxy_tmpl);")).unwrap());
+        out.extend(TokenStream::from_str(&format!("::moxy::token::ToTokens::to_tokens(&{src:?}, &mut __moxy_tmpl);")).unwrap());
     }
 }

@@ -20,6 +20,3 @@ workspace = true
 
 [dependencies]
 moxy-token = { path = "../moxy-token" }
-
-[dev-dependencies]
-trybuild = "1"

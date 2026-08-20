@@ -1,0 +1,19 @@
+error: macros that expand to items must be delimited with braces or followed by a semicolon
+ --> tests/ui/macros/fail/invalid_paste.rs:1:1
+  |
+1 | / moxy::paste! {
+2 | |     fn {{ 123 }}() {}
+3 | | }
+  | |_^
+  |
+  = note: this error originates in the macro `moxy::paste` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: string could not be parsed
+ --> tests/ui/macros/fail/invalid_paste.rs:1:1
+  |
+1 | / moxy::paste! {
+2 | |     fn {{ 123 }}() {}
+3 | | }
+  | |_^
+  |
+  = note: this error originates in the macro `moxy::paste` (in Nightly builds, run with -Z macro-backtrace for more info)

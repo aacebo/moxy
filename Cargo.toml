@@ -50,14 +50,14 @@ workspace = true
 
 [features]
 default = ["ast", "token", "fmt", "template", "diagnostic"]
-ast = ["moxy-ast"]
-fmt = ["moxy-fmt"]
-token = ["moxy-token"]
-template = ["moxy-template"]
-derive = ["moxy-derive"]
-diagnostic = ["moxy-diagnostic"]
-serde = ["moxy-ast/serde", "moxy-token/serde", "moxy-fmt/serde"]
-proc-macro2 = ["moxy-token/proc-macro2"]
+ast = ["dep:moxy-ast", "token"]
+fmt = ["dep:moxy-fmt", "ast"]
+token = ["dep:moxy-token"]
+template = ["dep:moxy-template", "token"]
+derive = ["dep:moxy-derive", "ast", "diagnostic", "fmt", "template"]
+diagnostic = ["dep:moxy-diagnostic", "token"]
+serde = ["ast", "fmt", "token", "moxy-ast/serde", "moxy-token/serde", "moxy-fmt/serde"]
+proc-macro2 = ["token", "moxy-token/proc-macro2"]
 
 [dependencies]
 moxy-ast = { path = "crates/moxy-ast", optional = true }
@@ -66,3 +66,8 @@ moxy-diagnostic = { path = "crates/moxy-diagnostic", optional = true }
 moxy-fmt = { path = "crates/moxy-fmt", optional = true }
 moxy-token = { path = "crates/moxy-token", optional = true }
 moxy-template = { path = "crates/moxy-template", optional = true }
+
+[dev-dependencies]
+proc-macro2 = { version = "1", features = ["span-locations"] }
+serde_json = "1"
+trybuild = "1"

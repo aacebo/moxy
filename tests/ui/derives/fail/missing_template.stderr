@@ -1,0 +1,29 @@
+error: template required
+ --> tests/ui/derives/fail/missing_template.rs:3:10
+  |
+3 | #[derive(ToTokens)]
+  |          ^^^^^^^^
+  |
+  = note: this error originates in the derive macro `ToTokens` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: macros that expand to items must be delimited with braces or followed by a semicolon
+ --> tests/ui/derives/fail/missing_template.rs:3:10
+  |
+3 | #[derive(ToTokens)]
+  |          ^^^^^^^^
+  |
+  = note: this error originates in the derive macro `ToTokens` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error: proc-macro derive produced unparsable tokens
+ --> tests/ui/derives/fail/missing_template.rs:3:10
+  |
+3 | #[derive(ToTokens)]
+  |          ^^^^^^^^
+
+error: [error]:: template required
+ --> tests/ui/derives/fail/missing_template.rs:3:10
+  |
+3 | #[derive(ToTokens)]
+  |          ^^^^^^^^
+  |
+  = note: this error originates in the derive macro `ToTokens` (in Nightly builds, run with -Z macro-backtrace for more info)

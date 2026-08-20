@@ -52,6 +52,9 @@ dependencies = [
  "moxy-fmt",
  "moxy-template",
  "moxy-token",
+ "proc-macro2",
+ "serde_json",
+ "trybuild",
 ]
 
 [[package]]
@@ -60,7 +63,6 @@ version = "0.0.0"
 dependencies = [
  "moxy-token",
  "serde",
- "serde_json",
 ]
 
 [[package]]
@@ -76,7 +78,6 @@ dependencies = [
  "moxy-fmt",
  "moxy-template",
  "moxy-token",
- "trybuild",
 ]
 
 [[package]]
@@ -101,7 +102,6 @@ name = "moxy-template"
 version = "0.0.0"
 dependencies = [
  "moxy-token",
- "trybuild",
 ]
 
 [[package]]
@@ -111,7 +111,6 @@ dependencies = [
  "moxy-build",
  "proc-macro2",
  "serde",
- "serde_json",
  "unicode-ident",
 ]
 

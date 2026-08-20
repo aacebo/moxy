@@ -34,36 +34,14 @@ impl Parse for TmplInterp {
 
 impl ToTokens for TmplInterp {
     fn to_tokens(&self, out: &mut TokenStream) {
-        // `::moxy_token::ToTokens::to_tokens(&(<expr>), &mut __moxy_tmpl);`
+        // `::moxy::token::ToTokens::to_tokens(&(<expr>), &mut __moxy_tmpl);`
         // The expr is spliced by value so its original spans survive.
         let mut args = TokenStream::from_str("&").unwrap();
         args.extend_one(TokenTree::Group(Group::new(Delim::Paren, self.expr.clone())));
         args.extend(TokenStream::from_str(", &mut __moxy_tmpl").unwrap());
 
-        out.extend(TokenStream::from_str("::moxy_token::ToTokens::to_tokens").unwrap());
+        out.extend(TokenStream::from_str("::moxy::token::ToTokens::to_tokens").unwrap());
         out.extend_one(TokenTree::Group(Group::new(Delim::Paren, args)));
         out.extend(TokenStream::from_str(";").unwrap());
-    }
-}
-
-#[cfg(test)]
-mod tests {
-    use moxy_token::parse;
-
-    use super::TmplInterp;
-
-    #[test]
-    fn wrap_counts_extra_brace_layers() {
-        let single = parse!("{{ x }}" as TmplInterp).unwrap();
-        assert_eq!(single.wrap, 0);
-        assert_eq!(single.expr.to_string(), "x");
-
-        let triple = parse!("{{{ x }}}" as TmplInterp).unwrap();
-        assert_eq!(triple.wrap, 1);
-        assert_eq!(triple.expr.to_string(), "x");
-
-        let quad = parse!("{{{{ x }}}}" as TmplInterp).unwrap();
-        assert_eq!(quad.wrap, 2);
-        assert_eq!(quad.expr.to_string(), "x");
     }
 }

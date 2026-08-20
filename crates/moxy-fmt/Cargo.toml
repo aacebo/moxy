@@ -25,6 +25,3 @@ serde = ["dep:serde"]
 moxy-ast = { path = "../moxy-ast" }
 moxy-token = { path = "../moxy-token" }
 serde = { version = "1", features = ["derive"], optional = true }
-
-[dev-dependencies]
-moxy-token = { path = "../moxy-token" }

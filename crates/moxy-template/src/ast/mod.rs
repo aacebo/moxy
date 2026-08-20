@@ -20,7 +20,7 @@ impl Template {
     pub fn expand(&self) -> TokenStream {
         use std::str::FromStr;
 
-        let mut body = TokenStream::from_str("let mut __moxy_tmpl = ::moxy_token::TokenStream::new();").unwrap();
+        let mut body = TokenStream::from_str("let mut __moxy_tmpl = ::moxy::token::TokenStream::new();").unwrap();
         self.to_tokens(&mut body);
         body.extend(TokenStream::from_str("__moxy_tmpl").unwrap());
         TokenStream::from(vec![Group::new(Delim::Brace, body).to_token_tree()])
@@ -117,13 +117,13 @@ fn emit_group(delim: Delim, body: &Template, out: &mut TokenStream) {
     use std::str::FromStr;
 
     let delim_path = match delim {
-        Delim::Paren => "::moxy_token::Delim::Paren",
-        Delim::Brace => "::moxy_token::Delim::Brace",
-        Delim::Bracket => "::moxy_token::Delim::Bracket",
-        Delim::None => "::moxy_token::Delim::None",
+        Delim::Paren => "::moxy::token::Delim::Paren",
+        Delim::Brace => "::moxy::token::Delim::Brace",
+        Delim::Bracket => "::moxy::token::Delim::Bracket",
+        Delim::None => "::moxy::token::Delim::None",
     };
 
-    let mut inner = TokenStream::from_str("let mut __moxy_tmpl = ::moxy_token::TokenStream::new();").unwrap();
+    let mut inner = TokenStream::from_str("let mut __moxy_tmpl = ::moxy::token::TokenStream::new();").unwrap();
     body.to_tokens(&mut inner);
     inner.extend(TokenStream::from_str("__moxy_tmpl").unwrap());
 
@@ -131,10 +131,10 @@ fn emit_group(delim: Delim, body: &Template, out: &mut TokenStream) {
     args.extend(TokenStream::from_str(",").unwrap());
     args.extend_one(TokenTree::Group(Group::new(Delim::Brace, inner)));
 
-    let mut group_call = TokenStream::from_str("::moxy_token::Group::new").unwrap();
+    let mut group_call = TokenStream::from_str("::moxy::token::Group::new").unwrap();
     group_call.extend_one(TokenTree::Group(Group::new(Delim::Paren, args)));
 
-    let mut tree_args = TokenStream::from_str("::moxy_token::TokenTree::Group").unwrap();
+    let mut tree_args = TokenStream::from_str("::moxy::token::TokenTree::Group").unwrap();
     tree_args.extend_one(TokenTree::Group(Group::new(Delim::Paren, group_call)));
 
     out.extend(TokenStream::from_str("__moxy_tmpl.extend_one").unwrap());

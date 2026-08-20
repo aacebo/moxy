@@ -31,16 +31,3 @@ impl std::fmt::Display for Spacing {
         f.write_str(self.as_str())
     }
 }
-
-#[cfg(test)]
-mod tests {
-    mod display {
-        use crate::Spacing;
-
-        #[test]
-        fn writes_as_str() {
-            assert_eq!(format!("{}", Spacing::Alone), "alone");
-            assert_eq!(format!("{}", Spacing::Joint), "joint");
-        }
-    }
-}

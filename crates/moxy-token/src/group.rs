@@ -125,27 +125,3 @@ impl serde::Serialize for Group {
         o.end()
     }
 }
-
-#[cfg(test)]
-mod tests {
-    #[cfg(feature = "serde")]
-    mod serde {
-        use std::str::FromStr;
-
-        use crate::{TokenStream, TokenTree};
-
-        #[test]
-        fn group_serializes_as_delim_and_tokens() {
-            let ts = TokenStream::from_str("[a, b]").unwrap();
-            let tree = ts.into_iter().next().unwrap();
-            let TokenTree::Group(g) = tree else {
-                panic!("expected group");
-            };
-
-            assert_eq!(
-                serde_json::to_value(&g).unwrap(),
-                serde_json::json!({ "delim": "bracket", "tokens": ["a", ",", "b"] })
-            );
-        }
-    }
-}
