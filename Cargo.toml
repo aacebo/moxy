@@ -29,6 +29,18 @@ explicit_counter_loop = "allow"
 type_complexity = "allow"
 large_enum_variant = "allow"
 
+[workspace.dependencies]
+moxy-ast = { path = "crates/moxy-ast", version = "0.0.0" }
+moxy-build = { path = "crates/moxy-build", version = "0.0.0" }
+moxy-derive = { path = "crates/moxy-derive", version = "0.0.0" }
+moxy-diagnostic = { path = "crates/moxy-diagnostic", version = "0.0.0" }
+moxy-fmt = { path = "crates/moxy-fmt", version = "0.0.0" }
+moxy-token = { path = "crates/moxy-token", version = "0.0.0" }
+moxy-template = { path = "crates/moxy-template", version = "0.0.0" }
+
+serde = { version = "1", features = ["derive"] }
+proc-macro2 = { version = "1", features = ["span-locations"] }
+
 [package]
 name = "moxy"
 version.workspace = true
@@ -51,6 +63,7 @@ workspace = true
 [features]
 default = ["ast", "token", "fmt", "template", "diagnostic"]
 ast = ["dep:moxy-ast", "token"]
+build = ["dep:moxy-build"]
 fmt = ["dep:moxy-fmt", "ast"]
 token = ["dep:moxy-token"]
 template = ["dep:moxy-template", "token"]
@@ -60,14 +73,17 @@ serde = ["ast", "fmt", "token", "moxy-ast/serde", "moxy-token/serde", "moxy-fmt/
 proc-macro2 = ["token", "moxy-token/proc-macro2"]
 
 [dependencies]
-moxy-ast = { path = "crates/moxy-ast", optional = true }
-moxy-derive = { path = "crates/moxy-derive", optional = true }
-moxy-diagnostic = { path = "crates/moxy-diagnostic", optional = true }
-moxy-fmt = { path = "crates/moxy-fmt", optional = true }
-moxy-token = { path = "crates/moxy-token", optional = true }
-moxy-template = { path = "crates/moxy-template", optional = true }
+moxy-ast = { workspace = true, optional = true }
+moxy-build = { workspace = true, optional = true }
+moxy-derive = { workspace = true, optional = true }
+moxy-diagnostic = { workspace = true, optional = true }
+moxy-fmt = { workspace = true, optional = true }
+moxy-token = { workspace = true, optional = true }
+moxy-template = { workspace = true, optional = true }
 
 [dev-dependencies]
-proc-macro2 = { version = "1", features = ["span-locations"] }
+serde.workspace = true
+proc-macro2.workspace = true
+
 serde_json = "1"
 trybuild = "1"

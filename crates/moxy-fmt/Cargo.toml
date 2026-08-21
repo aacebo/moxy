@@ -22,6 +22,6 @@ default = []
 serde = ["dep:serde"]
 
 [dependencies]
-moxy-ast = { path = "../moxy-ast" }
-moxy-token = { path = "../moxy-token" }
-serde = { version = "1", features = ["derive"], optional = true }
+moxy-ast.workspace = true
+moxy-token.workspace = true
+serde = { workspace = true, optional = true }

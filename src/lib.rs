@@ -1,6 +1,9 @@
 #[cfg(feature = "ast")]
 #[doc(inline)]
 pub use moxy_ast as ast;
+#[cfg(feature = "build")]
+#[doc(inline)]
+pub use moxy_build as build;
 #[cfg(feature = "derive")]
 #[doc(inline)]
 pub use moxy_derive::*;

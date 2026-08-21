@@ -19,8 +19,8 @@ doctest = false
 workspace = true
 
 [dependencies]
-moxy-token = { path = "../moxy-token" }
-moxy-ast = { path = "../moxy-ast" }
-moxy-template = { path = "../moxy-template" }
-moxy-diagnostic = { path = "../moxy-diagnostic" }
-moxy-fmt = { path = "../moxy-fmt" }
+moxy-token.workspace = true
+moxy-ast.workspace = true
+moxy-template.workspace = true
+moxy-diagnostic.workspace = true
+moxy-fmt.workspace = true

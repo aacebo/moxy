@@ -19,4 +19,4 @@ doctest = false
 workspace = true
 
 [dependencies]
-moxy-token = { path = "../moxy-token" }
+moxy-token.workspace = true

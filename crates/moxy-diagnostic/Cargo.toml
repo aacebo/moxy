@@ -18,7 +18,7 @@ doctest = false
 workspace = true
 
 [build-dependencies]
-moxy-build = { path = "../moxy-build" }
+moxy-build.workspace = true
 
 [dependencies]
-moxy-token = { path = "../moxy-token" }
+moxy-token.workspace = true
