@@ -8,31 +8,30 @@ use crate::rustc::version::{self, Version};
 /// stdout in one go via [`Config::emit`].
 #[derive(Debug, Clone, Default)]
 pub struct Config {
-    version: Option<Version>,
+    version: Version,
     instructions: Vec<Instruction>,
 }
 
 impl Config {
-    /// Creates a config that auto-detects the installed rustc version (via
-    /// [`version::read`]).
-    pub fn new() -> Self {
+    pub fn new(version: Version) -> Self {
         Self {
-            version: version::read(),
+            version,
             instructions: Vec::new(),
         }
     }
 
-    /// Creates a config with an explicit rustc version, without spawning rustc.
-    pub fn with_version(version: Version) -> Self {
-        Self {
-            version: Some(version),
+    /// Creates a config that auto-detects the installed rustc version (via
+    /// [`version::read`]).
+    pub fn read() -> Result<Self, Box<dyn std::error::Error>> {
+        Ok(Self {
+            version: version::read()?,
             instructions: Vec::new(),
-        }
+        })
     }
 
     /// The detected (or injected) rustc version, if any.
-    pub fn version(&self) -> Option<&Version> {
-        self.version.as_ref()
+    pub fn version(&self) -> &Version {
+        &self.version
     }
 
     /// The accumulated instructions, in insertion order.
@@ -97,31 +96,20 @@ impl Config {
         self.push(Instruction::Error(message.into()))
     }
 
-    /// True if the detected toolchain is at least `min` (e.g. `"1.80.0"`).
-    ///
-    /// Returns `false` if `min` cannot be parsed or no version was detected.
-    /// Use this to add instructions conditionally without failing the build.
-    pub fn at_least(&self, min: &str) -> bool {
-        match (Version::parse(min), &self.version) {
-            (Some(min), Some(version)) => version.at_least(&min),
-            _ => false,
-        }
-    }
-
     /// Requires the detected rustc to be at least `min` (e.g. `"1.80.0"`).
     ///
     /// Records a `cargo::error` — failing the build on [`Config::emit`] — when
     /// the toolchain is older than `min`, the version could not be detected, or
     /// `min` is not a valid version string.
-    pub fn require_version(&mut self, min: &str) -> &mut Self {
-        let Some(min) = Version::parse(min) else {
+    pub fn min_version(&mut self, min: &str) -> &mut Self {
+        let Ok(min) = min.parse::<Version>() else {
             return self.error(format!("invalid minimum rustc version: {min}"));
         };
 
-        match &self.version {
-            Some(version) if version.at_least(&min) => self,
-            Some(version) => self.error(format!("requires rustc >= {min}, found {version}")),
-            None => self.error(format!("requires rustc >= {min}, but rustc version could not be detected")),
+        if self.version.at_least(&min) {
+            self
+        } else {
+            self.error(format!("requires rustc >= {}, found {}", min, self.version))
         }
     }
 

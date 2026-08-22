@@ -1,0 +1,5 @@
+error: template attribute must contain a code block `{ ... }`
+ --> tests/fail/malformed_attribute.rs:4:14
+  |
+4 | #[template = "not a code block"]
+  |              ^^^^^^^^^^^^^^^^^^

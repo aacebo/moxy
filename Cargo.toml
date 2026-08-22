@@ -30,6 +30,7 @@ type_complexity = "allow"
 large_enum_variant = "allow"
 
 [workspace.dependencies]
+moxy = { path = ".", version = "0.0.0" }
 moxy-ast = { path = "crates/moxy-ast", version = "0.0.0" }
 moxy-build = { path = "crates/moxy-build", version = "0.0.0" }
 moxy-derive = { path = "crates/moxy-derive", version = "0.0.0" }
@@ -40,6 +41,7 @@ moxy-template = { path = "crates/moxy-template", version = "0.0.0" }
 
 serde = { version = "1", features = ["derive"] }
 proc-macro2 = { version = "1", features = ["span-locations"] }
+trybuild = { version = "1" }
 
 [package]
 name = "moxy"
@@ -53,6 +55,12 @@ repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
 include.workspace = true
+
+[package.metadata.docs.rs]
+rustdoc-args = [
+    "--generate-link-to-definition",
+    "--generate-macro-expansion"
+]
 
 [lib]
 doctest = false
@@ -84,6 +92,6 @@ moxy-template = { workspace = true, optional = true }
 [dev-dependencies]
 serde.workspace = true
 proc-macro2.workspace = true
+trybuild.workspace = true
 
 serde_json = "1"
-trybuild = "1"

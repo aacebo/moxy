@@ -1,0 +1,7 @@
+error: template required
+ --> tests/fail/missing_template.rs:3:10
+  |
+3 | #[derive(ToTokens)]
+  |          ^^^^^^^^
+  |
+  = note: this error originates in the derive macro `ToTokens` (in Nightly builds, run with -Z macro-backtrace for more info)

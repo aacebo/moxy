@@ -1,5 +1,5 @@
 use crate::punct::Not;
-use crate::{Delim, Group, Ident, LexError, Lit, Punctuation, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
+use crate::{Delim, Group, Ident, LexError, Lit, Punctuation, Semi, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 #[derive(Debug, Clone)]
 pub struct ParseError {
@@ -49,6 +49,7 @@ impl ParseError {
             TokenTree::from(ident),
             TokenTree::from(Punctuation::from(bang)),
             TokenTree::from(group),
+            Punctuation::from(Semi::new(self.span)).into_token_tree(),
         ]
         .into()
     }

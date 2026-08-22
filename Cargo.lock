@@ -75,11 +75,13 @@ version = "0.0.0"
 name = "moxy-derive"
 version = "0.0.0"
 dependencies = [
+ "moxy",
  "moxy-ast",
  "moxy-diagnostic",
  "moxy-fmt",
  "moxy-template",
  "moxy-token",
+ "trybuild",
 ]
 
 [[package]]
@@ -103,7 +105,9 @@ dependencies = [
 name = "moxy-template"
 version = "0.0.0"
 dependencies = [
+ "moxy",
  "moxy-token",
+ "trybuild",
 ]
 
 [[package]]

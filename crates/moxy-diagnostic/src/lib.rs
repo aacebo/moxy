@@ -7,11 +7,14 @@ mod span;
 
 #[doc(inline)]
 pub use level::*;
-use moxy_token::parser::ParseError;
-use moxy_token::punct::Not;
-use moxy_token::{Delim, Group, Ident, Lit, Punctuation, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
+
+use moxy_token::span::DelimSpan;
 #[doc(inline)]
 pub use span::*;
+
+use moxy_token::parser::ParseError;
+use moxy_token::punct::Not;
+use moxy_token::{Delim, Group, Ident, Lit, Punctuation, Semi, Span, ToTokenStream, ToTokens, TokenStream};
 
 /// Build a note-level [`Diagnostic`].
 ///
@@ -207,7 +210,6 @@ impl Diagnostic {
         build::Builder::new()
     }
 
-    /// the max level of this diagnostic and its children.
     pub fn level(&self) -> Level {
         self.level
     }
@@ -233,27 +235,47 @@ impl Diagnostic {
         #[cfg(nightly)]
         if proc_macro::is_available() {
             proc_macro::Diagnostic::from(self.clone()).emit();
+            return Default::default();
+        }
+
+        if !self.level.is_error() {
+            return Default::default();
         }
 
         self.to_compile_error()
     }
 
     pub fn to_compile_error(&self) -> TokenStream {
+        let mut tokens = TokenStream::new();
         let span = self.spans.first().copied().unwrap_or_default();
-        let ident = Ident::new("compile_error").with_span(span);
-        let bang = Not::new(span);
-        let mut lit = Lit::string(&self.to_string());
-        lit.set_span(span);
 
-        let inner: TokenTree = lit.into();
-        let group = Group::new(Delim::Paren, inner.into_token_stream());
+        fn cerror(span: Span, message: impl std::fmt::Display) -> TokenStream {
+            let ident = Ident::new("compile_error").with_span(span);
+            let bang = Not::new(span);
+            let mut lit = Lit::string(&message.to_string());
+            lit.set_span(span);
 
-        vec![
-            TokenTree::from(ident),
-            TokenTree::from(Punctuation::from(bang)),
-            TokenTree::from(group),
-        ]
-        .into()
+            let mut group = Group::new(Delim::Paren, lit.into_token_tree().into_token_stream());
+            group.set_span(DelimSpan::new(span, span));
+
+            vec![
+                ident.into_token_tree(),
+                Punctuation::from(bang).into_token_tree(),
+                group.into_token_tree(),
+                Punctuation::from(Semi::new(span)).into_token_tree(),
+            ]
+            .into_token_stream()
+        }
+
+        if let Some(msg) = &self.message {
+            tokens.extend(cerror(span, msg));
+        }
+
+        for child in &self.children {
+            tokens.extend(child.to_compile_error());
+        }
+
+        tokens
     }
 }
 
@@ -290,10 +312,8 @@ impl From<Diagnostic> for proc_macro::Diagnostic {
 
 impl std::fmt::Display for Diagnostic {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        write!(f, "[{}]:", self.level)?;
-
         if let Some(msg) = &self.message {
-            write!(f, ": {}", msg)?;
+            write!(f, "{}", msg)?;
         }
 
         for child in &self.children {

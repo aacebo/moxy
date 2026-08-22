@@ -13,13 +13,17 @@ impl From<proc_macro::LexError> for ParseError {
 // --- Span (fallback) ---
 
 impl From<proc_macro::Span> for fallback::Span {
-    fn from(value: proc_macro::Span) -> Self {
-        if cfg!(nightly) {
+    fn from(#[allow(unused)] value: proc_macro::Span) -> Self {
+        #[cfg(nightly)]
+        {
             let r = value.byte_range();
             return Self::new(r.start as u32, r.end as u32);
         }
 
-        Self::default()
+        #[cfg(not(nightly))]
+        {
+            Self::default()
+        }
     }
 }
 
@@ -137,7 +141,10 @@ impl From<proc_macro::Literal> for Lit {
 impl From<Lit> for proc_macro::Literal {
     fn from(value: Lit) -> Self {
         let repr = value.repr();
-        repr.parse().unwrap_or_else(|_| Self::string(repr))
+        let mut lit = repr.parse().unwrap_or_else(|_| Self::string(repr));
+
+        lit.set_span(value.span().into());
+        lit
     }
 }
 
@@ -156,7 +163,10 @@ impl From<proc_macro::Group> for Group {
 impl From<Group> for proc_macro::Group {
     #[inline]
     fn from(value: Group) -> Self {
-        Self::new(value.delim.into(), value.tokens.into())
+        let span = value.span().span().into();
+        let mut group = Self::new(value.delim.into(), value.tokens.into());
+        group.set_span(span);
+        group
     }
 }
 
@@ -205,13 +215,13 @@ impl ToTokens<TokenStream> for proc_macro::TokenStream {
 impl ToTokens<proc_macro::TokenStream> for TokenTree {
     fn to_tokens(&self, out: &mut proc_macro::TokenStream) {
         match self {
-            Self::Group(g) => out.extend_one(proc_macro::TokenTree::Group(g.clone().into())),
-            Self::Ident(v) => out.extend_one(proc_macro::TokenTree::Ident(v.clone().into())),
+            Self::Group(g) => out.extend(vec![proc_macro::TokenTree::Group(g.clone().into())]),
+            Self::Ident(v) => out.extend(vec![proc_macro::TokenTree::Ident(v.clone().into())]),
             Self::Keyword(kw) => {
                 let id = proc_macro::Ident::new(kw.as_str(), kw.span().into());
-                out.extend_one(proc_macro::TokenTree::Ident(id))
+                out.extend(vec![proc_macro::TokenTree::Ident(id)])
             }
-            Self::Literal(v) => out.extend_one(proc_macro::TokenTree::Literal(v.clone().into())),
+            Self::Literal(v) => out.extend(vec![proc_macro::TokenTree::Literal(v.clone().into())]),
             Self::Punct(op) => {
                 let text = op.as_str();
                 let span: proc_macro::Span = op.span().into();
@@ -224,9 +234,10 @@ impl ToTokens<proc_macro::TokenStream> for TokenTree {
                     } else {
                         proc_macro::Spacing::Joint
                     };
+
                     let mut p = proc_macro::Punct::new(ch, spacing);
                     p.set_span(span);
-                    out.extend_one(proc_macro::TokenTree::Punct(p));
+                    out.extend(vec![proc_macro::TokenTree::Punct(p)]);
                 }
             }
         }

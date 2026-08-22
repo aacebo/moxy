@@ -38,6 +38,7 @@ impl Span {
         }
     }
 
+    #[inline]
     pub fn def_site() -> Self {
         #[cfg(nightly)]
         if proc_macro::is_available() {
@@ -52,9 +53,13 @@ impl Span {
             Self::Compiler(v) => {
                 let lc = v.start();
 
-                if cfg!(nightly) {
+                #[cfg(nightly)]
+                {
                     Location::new(v.byte_range().start, lc.line(), lc.column())
-                } else {
+                }
+
+                #[cfg(not(nightly))]
+                {
                     Location::new(0, lc.line(), lc.column())
                 }
             }
@@ -67,10 +72,16 @@ impl Span {
             Self::Compiler(v) => {
                 let lc = v.end();
 
-                if cfg!(nightly) {
+                #[cfg(nightly)]
+                {
                     Location::new(v.byte_range().end, lc.line(), lc.column())
-                } else {
-                    Location::new(0, lc.line(), lc.column())
+                }
+
+                #[cfg(not(nightly))]
+                {
+                    let src = v.source_text().unwrap_or_default();
+                    let index = line_column_offset(&src, v.line(), v.column());
+                    Location::new(index, lc.line(), lc.column())
                 }
             }
             Self::Fallback(v) => v.end(),
@@ -79,11 +90,21 @@ impl Span {
 
     pub fn byte_range(&self) -> std::ops::Range<usize> {
         match self {
+            #[allow(unused)]
             Self::Compiler(v) => {
-                if cfg!(nightly) {
+                #[cfg(nightly)]
+                {
                     v.byte_range()
-                } else {
-                    0..0
+                }
+
+                #[cfg(not(nightly))]
+                {
+                    let start = v.start();
+                    let end = v.end();
+                    let src = v.source_text().unwrap_or_default();
+                    let start = line_column_offset(&src, start.line(), start.column());
+                    let end = line_column_offset(&src, end.line(), end.column());
+                    start..end
                 }
             }
             Self::Fallback(v) => v.byte_range(),
@@ -191,10 +212,24 @@ impl PartialOrd for Span {
 impl std::hash::Hash for Span {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         match self {
+            #[allow(unused)]
             Self::Compiler(s) => {
-                let range = s.byte_range();
-                range.start.hash(state);
-                range.end.hash(state);
+                #[cfg(nightly)]
+                {
+                    let range = s.byte_range();
+                    range.start.hash(state);
+                    range.end.hash(state);
+                }
+
+                #[cfg(not(nightly))]
+                {
+                    let start = s.start();
+                    let end = s.end();
+                    let src = s.source_text().unwrap_or_default();
+
+                    line_column_offset(&src, start.line(), start.column()).hash(state);
+                    line_column_offset(&src, end.line(), end.column()).hash(state);
+                }
             }
             Self::Fallback(s) => s.hash(state),
         }
@@ -218,12 +253,43 @@ impl serde::Serialize for Span {
 
         match self {
             Self::Fallback(v) => v.serialize(s),
+            #[allow(unused)]
             Self::Compiler(v) => {
                 let mut o = s.serialize_struct("Span", 2)?;
-                o.serialize_field("start", &v.byte_range().start)?;
-                o.serialize_field("end", &v.byte_range().end)?;
+
+                #[cfg(nightly)]
+                {
+                    o.serialize_field("start", &v.byte_range().start)?;
+                    o.serialize_field("end", &v.byte_range().end)?;
+                }
+
+                #[cfg(not(nightly))]
+                {
+                    let start = v.start();
+                    let end = v.end();
+                    let src = v.source_text().unwrap_or_default();
+
+                    o.serialize_field("start", &line_column_offset(&src, start.line(), start.column()))?;
+                    o.serialize_field("end", &line_column_offset(&src, end.line(), end.column()))?;
+                }
+
                 o.end()
             }
         }
     }
+}
+
+pub fn line_column_offset(src: &str, ln: usize, col: usize) -> usize {
+    let mut curr = 0;
+
+    for (i, line) in src.lines().enumerate() {
+        if i + 1 == ln {
+            let offset = line.char_indices().nth(col).map(|(i, _)| i).unwrap_or(line.len());
+            return curr + offset;
+        }
+
+        curr += line.len() + 1;
+    }
+
+    0
 }

@@ -1,5 +1,3 @@
-#![cfg(feature = "derive")]
-
 use moxy::ToTokens;
 use moxy::ast::Item;
 use moxy::token::{Spanner, ToTokenStream};
@@ -11,6 +9,11 @@ use moxy::token::{Spanner, ToTokenStream};
 struct Model {
     value: String,
 }
+
+// #[derive(ToTokens)]
+// #[debug]
+// #[template = "not a code block"]
+// struct Malformed;
 
 #[test]
 fn derive_output_completes_a_constant_syntax_pipeline() {
@@ -26,6 +29,6 @@ fn derive_output_completes_a_constant_syntax_pipeline() {
 #[test]
 fn derive_compiler_contracts_are_stable() {
     let cases = trybuild::TestCases::new();
-    cases.pass("tests/ui/derives/pass/*.rs");
-    cases.compile_fail("tests/ui/derives/fail/*.rs");
+    cases.pass("tests/pass/*.rs");
+    cases.compile_fail("tests/fail/*.rs");
 }

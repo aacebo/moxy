@@ -1,7 +1,6 @@
 #![cfg_attr(
     nightly,
     feature(
-        extend_one,
         proc_macro_diagnostic,
         proc_macro_span,
         // proc_macro_totokens,
@@ -24,7 +23,7 @@ pub mod source;
 mod spacing;
 pub mod span;
 mod stream;
-mod token_tree;
+mod tree;
 
 #[doc(inline)]
 pub use delim::*;
@@ -49,7 +48,7 @@ pub use span::{Span, Spanner};
 #[doc(inline)]
 pub use stream::*;
 #[doc(inline)]
-pub use token_tree::*;
+pub use tree::*;
 
 pub trait ToTokens<T = TokenStream> {
     fn to_tokens(&self, tokens: &mut T);

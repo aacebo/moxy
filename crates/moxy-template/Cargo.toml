@@ -20,3 +20,7 @@ workspace = true
 
 [dependencies]
 moxy-token.workspace = true
+
+[dev-dependencies]
+moxy = { workspace = true, features = ["ast", "token", "template", "derive"] }
+trybuild.workspace = true

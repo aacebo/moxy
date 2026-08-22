@@ -1,3 +1,5 @@
+use crate::rustc::version::ParseVersionError;
+
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 pub enum Channel {
     Dev,
@@ -8,6 +10,22 @@ pub enum Channel {
 }
 
 impl Channel {
+    pub fn is_dev(self) -> bool {
+        matches!(self, Self::Dev)
+    }
+
+    pub fn is_nightly(self) -> bool {
+        matches!(self, Self::Nightly)
+    }
+
+    pub fn is_beta(self) -> bool {
+        matches!(self, Self::Beta)
+    }
+
+    pub fn is_stable(self) -> bool {
+        matches!(self, Self::Stable)
+    }
+
     pub fn as_str(&self) -> &'static str {
         match self {
             Self::Dev => "dev",
@@ -16,30 +34,30 @@ impl Channel {
             Self::Stable => "stable",
         }
     }
-
-    /// Parses the channel from a version string such as `1.96.0-nightly`.
-    ///
-    /// Stable releases are identified by the absence of a `-` suffix; the
-    /// pre-release channels are identified by their suffix (or bare name).
-    pub fn parse(version: &str) -> Option<Self> {
-        let version = version.trim();
-
-        if version.contains("-dev") || version == "dev" {
-            Some(Self::Dev)
-        } else if version.contains("-nightly") || version == "nightly" {
-            Some(Self::Nightly)
-        } else if version.contains("-beta") || version == "beta" {
-            Some(Self::Beta)
-        } else if !version.contains('-') {
-            Some(Self::Stable)
-        } else {
-            None
-        }
-    }
 }
 
 impl std::fmt::Display for Channel {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.as_str())
+    }
+}
+
+impl std::str::FromStr for Channel {
+    type Err = Box<dyn std::error::Error>;
+
+    fn from_str(version: &str) -> Result<Self, Self::Err> {
+        let version = version.trim();
+
+        if version.contains("-dev") || version == "dev" {
+            Ok(Self::Dev)
+        } else if version.contains("-nightly") || version == "nightly" {
+            Ok(Self::Nightly)
+        } else if version.contains("-beta") || version == "beta" {
+            Ok(Self::Beta)
+        } else if !version.contains('-') {
+            Ok(Self::Stable)
+        } else {
+            Err(ParseVersionError.into())
+        }
     }
 }
