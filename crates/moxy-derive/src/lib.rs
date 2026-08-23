@@ -23,14 +23,16 @@ pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStr
     let tpl_meta = if let Some(first) = tpl_meta_list.first() {
         first
     } else {
-        return object.span().error("template required").emit().into();
+        return object.attrs().span().error("template required").emit().into();
     };
 
     let content = match tpl_meta.as_value().and_then(|m| m.as_verbatim()) {
         Some(content) => content,
         None => {
             return tpl_meta
+                .content
                 .span()
+                .unwrap_or(tpl_meta.span())
                 .error("template attribute must contain a code block `{ ... }`")
                 .emit()
                 .into();

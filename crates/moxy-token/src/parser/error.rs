@@ -1,5 +1,6 @@
 use crate::punct::Not;
-use crate::{Delim, Group, Ident, LexError, Lit, Punctuation, Semi, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
+use crate::span::DelimSpan;
+use crate::{Delim, Group, Ident, LexError, Lit, Punctuation, Semi, Span, ToTokenStream, ToTokens, TokenStream};
 
 #[derive(Debug, Clone)]
 pub struct ParseError {
@@ -36,22 +37,22 @@ impl ParseError {
     }
 
     pub fn to_compile_error(&self) -> TokenStream {
-        let ident = Ident::new("compile_error").with_span(self.span);
-        let bang = Not::new(self.span);
-        let mut lit = Lit::string(&self.to_string());
+        let span = self.span;
+        let ident = Ident::new("compile_error").with_span(span);
+        let bang = Not::new(span);
+        let mut lit = Lit::string(&self.message);
+        lit.set_span(span);
 
-        lit.set_span(self.span);
-
-        let inner: TokenTree = lit.into();
-        let group = Group::new(Delim::Paren, inner.into_token_stream());
+        let mut group = Group::new(Delim::Paren, lit.into_token_tree().into_token_stream());
+        group.set_span(DelimSpan::new(span, span));
 
         vec![
-            TokenTree::from(ident),
-            TokenTree::from(Punctuation::from(bang)),
-            TokenTree::from(group),
-            Punctuation::from(Semi::new(self.span)).into_token_tree(),
+            ident.into_token_tree(),
+            Punctuation::from(bang).into_token_tree(),
+            group.into_token_tree(),
+            Punctuation::from(Semi::new(span)).into_token_tree(),
         ]
-        .into()
+        .into_token_stream()
     }
 }
 

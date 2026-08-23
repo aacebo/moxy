@@ -247,7 +247,9 @@ impl Diagnostic {
 
     pub fn to_compile_error(&self) -> TokenStream {
         let mut tokens = TokenStream::new();
-        let span = self.spans.first().copied().unwrap_or_default();
+        let start = self.spans.first().copied().unwrap_or_default();
+        let end = self.spans.last().copied().unwrap_or_default();
+        let span = start.join(end);
 
         fn cerror(span: Span, message: impl std::fmt::Display) -> TokenStream {
             let ident = Ident::new("compile_error").with_span(span);
