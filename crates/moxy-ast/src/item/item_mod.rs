@@ -23,7 +23,7 @@ impl Parse for ItemMod {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
-        let unsafety = Unsafety::Safe;
+        let unsafety = stream.parse_if::<Unsafety>().unwrap_or(Unsafety::Safe);
         let mod_keyword = stream.parse::<Mod>()?;
         let ident = stream.parse::<Ident>()?;
 
