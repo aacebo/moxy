@@ -159,7 +159,7 @@ impl Scan for TokenStream {
                 continue;
             }
 
-            if let Ok((next, lit)) = <crate::Lit as Scan>::scan(c) {
+            if let Ok((next, lit)) = crate::Lit::scan(c) {
                 tokens.push(crate::TokenTree::Literal(lit));
                 c = next;
                 continue;
@@ -180,7 +180,7 @@ impl Scan for TokenStream {
                 continue;
             }
 
-            if let Ok((next, op)) = <crate::Punctuation as Scan>::scan(c) {
+            if let Ok((next, op)) = crate::Punctuation::scan(c) {
                 tokens.push(crate::TokenTree::Punct(op));
                 c = next;
                 continue;

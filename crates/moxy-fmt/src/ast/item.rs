@@ -628,9 +628,9 @@ impl Format for ItemMacroRules {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("macro_rules! ")?;
         self.ident.format(f)?;
-        f.text(" {")?;
+        f.text(" { ")?;
         f.text(self.body.stream())?;
-        f.text("}")
+        f.text(" }")
     }
 }
 
