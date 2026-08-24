@@ -71,18 +71,22 @@ impl Parse for Signature {
         let params = Delimited::parse_paren_with(stream, |inner| {
             let mut inputs = Punctuated::new();
             let mut variadic = None;
+
             while !inner.is_empty() {
                 if let Some(v) = inner.parse_if::<Variadic>() {
                     variadic = Some(v);
                     break;
                 }
+
                 inputs.push_value(inner.parse::<FnParam>()?);
+
                 if inner.peek::<Comma>() {
                     inputs.push_punct(inner.parse::<Comma>()?);
                 } else {
                     break;
                 }
             }
+
             Ok(FnParams { inputs, variadic })
         })?;
 
