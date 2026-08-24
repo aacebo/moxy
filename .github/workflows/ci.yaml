@@ -20,7 +20,7 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Install Rust
         uses: dtolnay/rust-toolchain@master
@@ -29,12 +29,14 @@ jobs:
 
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
+        with:
+            cache-targets: false
 
       - name: Test
         run: cargo test --workspace --all-features --locked
 
-  clippy:
-    name: Clippy
+  lint:
+    name: Lint
     runs-on: ubuntu-latest
 
     steps:
