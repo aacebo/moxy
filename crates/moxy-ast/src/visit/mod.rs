@@ -1131,8 +1131,7 @@ define_visit! {
         fields {
             attrs => visit_attributes / visit_attributes_mut,
             ident: skip,
-            mac => visit_macro_call / visit_macro_call_mut,
-            semi: skip,
+            call => visit_macro_call / visit_macro_call_mut,
             semi_punct: skip,
         }
     }

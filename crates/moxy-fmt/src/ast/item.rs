@@ -609,14 +609,9 @@ impl Format for ItemStatic {
 
 impl Format for ItemMacro {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        if let Some(ident) = &self.ident {
-            ident.format(f)?;
-            f.text(" ")?;
-        }
+        self.call.format(f)?;
 
-        self.mac.format(f)?;
-
-        if self.semi {
+        if self.semi_punct.is_some() {
             f.text(";")?;
         }
 
