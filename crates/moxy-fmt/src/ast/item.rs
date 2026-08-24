@@ -338,12 +338,6 @@ impl Format for ItemFn {
             f.text(" ")?;
         }
 
-        self.defaultness.format(f)?;
-
-        if matches!(self.defaultness, moxy_ast::Defaultness::Default(_)) {
-            f.text(" ")?;
-        }
-
         self.sig.format(f)?;
         f.text(" ")?;
         self.body.format(f)

@@ -1,7 +1,7 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Defaultness, Signature, StmtBlock, Visibility};
+use crate::{Attributes, Signature, StmtBlock, Visibility};
 
 /// A free function item (`fn name(...) -> T { ... }`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -9,7 +9,6 @@ use crate::{Attributes, Defaultness, Signature, StmtBlock, Visibility};
 pub struct ItemFn {
     pub attrs: Attributes,
     pub vis: Visibility,
-    pub defaultness: Defaultness,
     pub sig: Signature,
     pub body: StmtBlock,
 }
@@ -18,13 +17,11 @@ impl Parse for ItemFn {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
-        let defaultness = Defaultness::Final;
         let sig = stream.parse::<Signature>()?;
         let body = stream.parse::<StmtBlock>()?;
         Ok(Self {
             attrs,
             vis,
-            defaultness,
             sig,
             body,
         })
@@ -41,7 +38,6 @@ impl ToTokens for ItemFn {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.vis.to_tokens(t);
-        self.defaultness.to_tokens(t);
         self.sig.to_tokens(t);
         self.body.to_tokens(t);
     }

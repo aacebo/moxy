@@ -981,7 +981,6 @@ define_visit! {
         fields {
             attrs => visit_attributes / visit_attributes_mut,
             vis => visit_visibility / visit_visibility_mut,
-            defaultness: leaf,
             sig => visit_signature / visit_signature_mut,
             body => visit_stmt_block / visit_stmt_block_mut,
         }
