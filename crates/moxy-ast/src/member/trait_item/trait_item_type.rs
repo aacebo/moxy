@@ -31,7 +31,6 @@ impl Parse for TraitItemType {
         let type_keyword = stream.parse::<KwType>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
-
         let (colon, bounds) = if stream.peek::<Colon>() {
             let colon = stream.parse::<Colon>()?;
             (Some(colon), crate::TypeBound::parse_bounds(stream)?)
@@ -47,6 +46,7 @@ impl Parse for TraitItemType {
         };
 
         let semi = stream.parse_if::<Semi>();
+
         Ok(Self {
             attrs,
             type_keyword,

@@ -40,7 +40,6 @@ impl Parse for ItemImpl {
         let unsafety = stream.parse::<Unsafety>()?;
         let impl_keyword = stream.parse::<Impl>()?;
         let generics = stream.parse::<Generics>()?;
-
         let polarity = if stream.peek::<Not>() {
             BoundPolarity::Negative(stream.parse::<Not>()?)
         } else {
@@ -48,7 +47,6 @@ impl Parse for ItemImpl {
         };
 
         let first = stream.parse::<Type>()?;
-
         let (for_keyword, trait_ref, self_ty) = if stream.peek::<For>() {
             let for_keyword = stream.parse::<For>()?;
             let self_ty = stream.parse::<Type>()?;
@@ -64,6 +62,7 @@ impl Parse for ItemImpl {
         }
 
         let items = Delimited::<Vec<ImplItem>>::parse_brace(stream)?;
+
         Ok(Self {
             attrs,
             defaultness,

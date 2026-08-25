@@ -58,7 +58,6 @@ impl Parse for Path {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let leading_colon = stream.parse_if::<Token![::]>();
         let segments = Punctuated::parse_separated_nonempty(stream)?;
-
         Ok(Self { leading_colon, segments })
     }
 }

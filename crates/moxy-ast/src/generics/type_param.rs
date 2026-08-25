@@ -21,7 +21,6 @@ impl Parse for TypeParam {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let ident = stream.parse::<Ident>()?;
-
         let (colon_punct, bounds) = if stream.peek::<Colon>() {
             let colon_punct = stream.parse::<Colon>()?;
             let bounds = TypeBound::parse_bounds(stream)?;
@@ -58,6 +57,7 @@ impl Spanner for TypeParam {
         } else {
             self.ident.span()
         };
+
         self.attrs.span().join(end)
     }
 }
@@ -66,12 +66,14 @@ impl ToTokens for TypeParam {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.ident.to_tokens(t);
+
         if !self.bounds.is_empty() {
             if let Some(colon_punct) = &self.colon_punct {
                 colon_punct.to_tokens(t);
             }
             self.bounds.to_tokens(t);
         }
+
         if let Some(d) = &self.default {
             if let Some(eq_punct) = &self.eq_punct {
                 eq_punct.to_tokens(t);

@@ -20,14 +20,15 @@ impl Parse for Receiver {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let reference = stream.parse_if::<And>();
-
         let lifetime = if reference.is_some() {
             stream.parse_if::<Lifetime>()
         } else {
             None
         };
+
         let mutability = stream.parse::<Mutability>()?;
         let self_keyword = stream.parse::<SelfValue>()?;
+
         Ok(Self {
             attrs,
             reference,

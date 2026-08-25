@@ -29,6 +29,7 @@ impl Parse for ItemTypeAlias {
         let eq_punct = stream.parse::<Eq>()?;
         let ty = stream.parse::<Type>()?;
         let semi_punct = stream.parse::<Semi>()?;
+
         Ok(Self {
             attrs,
             vis,

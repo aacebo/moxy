@@ -70,7 +70,6 @@ impl Parse for GenericArgument {
 
         // Literal or block expression const argument.
         let is_const = token.is_literal() || token.as_group().map(|g| g.delim().is_brace()).unwrap_or(false);
-        // matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == moxy_token::Delim::Brace);
 
         if is_const {
             return Ok(Self::Const(stream.parse()?));

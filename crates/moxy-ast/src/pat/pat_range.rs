@@ -19,6 +19,7 @@ impl Spanner for PatRange {
         } else {
             self.limits.span()
         };
+
         self.attrs.span().join(end)
     }
 }

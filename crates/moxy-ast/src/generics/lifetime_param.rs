@@ -20,6 +20,7 @@ impl Parse for LifetimeParam {
         let lifetime = stream.parse::<Lifetime>()?;
         let bounds = Lifetime::parse_bounds(stream)?;
         let colon_punct = if !bounds.is_empty() { Some(Colon::default()) } else { None };
+
         Ok(Self {
             attrs,
             lifetime,

@@ -32,6 +32,7 @@ impl Parse for ItemStruct {
 
         let fields = stream.parse::<Fields>()?;
         let _ = stream.parse::<Semi>();
+
         Ok(Self {
             attrs,
             vis,

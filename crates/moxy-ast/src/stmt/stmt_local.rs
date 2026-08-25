@@ -31,7 +31,6 @@ impl Parse for StmtLocal {
         let attrs = stream.parse::<Attributes>()?;
         let let_keyword = stream.parse::<Let>()?;
         let pat = stream.parse::<Pattern>()?;
-
         let ty = if stream.peek::<Colon>() {
             let colon = stream.parse::<Colon>()?;
             Some((colon, stream.parse::<Type>()?))
@@ -56,6 +55,7 @@ impl Parse for StmtLocal {
         };
 
         let semi = stream.parse_if::<Semi>();
+
         Ok(Self {
             attrs,
             let_keyword,
@@ -82,6 +82,7 @@ impl Spanner for StmtLocal {
         } else {
             self.pat.span()
         };
+
         self.attrs.span().join(end)
     }
 }

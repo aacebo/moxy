@@ -15,10 +15,12 @@ pub struct BareFnParams {
 impl ToTokens for BareFnParams {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.inputs.to_tokens(t);
+
         if let Some(v) = &self.variadic {
             if !self.inputs.is_empty() && !self.inputs.is_trailing() {
                 Comma::default().to_tokens(t);
             }
+
             v.to_tokens(t);
         }
     }
@@ -51,7 +53,9 @@ impl Parse for TypeBareFn {
             let inputs = Punctuated::parse_terminated(inner)?;
             Ok(BareFnParams { inputs, variadic: None })
         })?;
+
         let output = stream.parse::<ReturnType>()?;
+
         Ok(Self {
             lifetimes,
             unsafety,
@@ -74,10 +78,12 @@ impl Spanner for TypeBareFn {
         } else {
             self.fn_keyword.span()
         };
+
         let end = match &self.output {
             ReturnType::Type(_, ty) => ty.span(),
             ReturnType::Default => self.params.span(),
         };
+
         start.join(end)
     }
 }
@@ -87,10 +93,13 @@ impl ToTokens for TypeBareFn {
         if let Some(l) = &self.lifetimes {
             l.to_tokens(t);
         }
+
         self.unsafety.to_tokens(t);
+
         if let Some(abi) = &self.abi {
             abi.to_tokens(t);
         }
+
         self.fn_keyword.to_tokens(t);
         self.params.to_tokens(t);
         self.output.to_tokens(t);

@@ -25,6 +25,7 @@ impl Spanner for TraitRef {
             BoundPolarity::Negative(t) => t.span(),
             BoundPolarity::Positive => self.path.span(),
         };
+
         start.join(self.path.span())
     }
 }

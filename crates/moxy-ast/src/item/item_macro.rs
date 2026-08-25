@@ -18,7 +18,6 @@ impl Parse for ItemMacro {
         let attrs = stream.parse::<Attributes>()?;
         let call = stream.parse::<MacroCall>()?;
         let semi_punct = stream.parse_if::<Semi>();
-
         Ok(Self { attrs, call, semi_punct })
     }
 }

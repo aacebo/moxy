@@ -72,11 +72,13 @@ impl Spanner for Generics {
         if self.params.is_empty() {
             return Span::call_site();
         }
+
         let end = if let Some(w) = &self.where_clause {
             w.span()
         } else {
             self.gt_punct.span()
         };
+
         self.lt_punct.span().join(end)
     }
 }
@@ -88,6 +90,7 @@ impl ToTokens for Generics {
             self.params.to_tokens(t);
             self.gt_punct.to_tokens(t);
         }
+
         if let Some(w) = &self.where_clause {
             w.to_tokens(t);
         }

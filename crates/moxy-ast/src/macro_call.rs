@@ -36,7 +36,6 @@ impl Parse for MacroCall {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let path = stream.parse::<Path>()?;
         let bang = stream.parse::<Not>()?;
-
         let body = match stream.curr() {
             Some(TokenTree::Group(g)) => {
                 let g = g.clone();

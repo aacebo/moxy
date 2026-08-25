@@ -15,6 +15,7 @@ pub struct UseGroup {
 impl Parse for UseGroup {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
+
         match UseTree::parse(stream)? {
             UseTree::Group(v) => Ok(v),
             _ => Err(LexError::new(at).message("expected use group").into()),

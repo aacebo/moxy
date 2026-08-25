@@ -35,7 +35,6 @@ impl Parse for ItemTrait {
         let trait_keyword = stream.parse::<Trait>()?;
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
-
         let (colon_punct, supertraits) = if stream.peek::<Colon>() {
             let colon_punct = stream.parse::<Colon>()?;
             let supertraits = crate::TypeBound::parse_bounds(stream)?;
@@ -49,6 +48,7 @@ impl Parse for ItemTrait {
         }
 
         let items = Delimited::<Vec<TraitItem>>::parse_brace(stream)?;
+
         Ok(Self {
             attrs,
             vis,

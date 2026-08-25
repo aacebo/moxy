@@ -33,7 +33,6 @@ impl Parse for TraitItemConst {
         let generics = stream.parse::<Generics>()?;
         let colon = stream.parse::<Colon>()?;
         let ty = stream.parse::<Type>()?;
-
         let default = if stream.peek::<Eq>() {
             let eq = stream.parse::<Eq>()?;
             Some((eq, stream.parse::<Expr>()?))
@@ -42,6 +41,7 @@ impl Parse for TraitItemConst {
         };
 
         let semi = stream.parse_if::<Semi>();
+
         Ok(Self {
             attrs,
             const_keyword,

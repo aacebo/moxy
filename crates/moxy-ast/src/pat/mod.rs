@@ -373,10 +373,8 @@ impl ToTokens for Pattern {
 impl PatIdent {
     pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Self, ParseError> {
         let by_ref = stream.parse_if::<Ref>();
-
         let mutability = stream.parse::<Mutability>()?;
         let ident = stream.parse::<Ident>()?;
-
         let subpat = if stream.peek::<At>() {
             let at = stream.parse::<At>()?;
             Some((at, Box::new(Pattern::parse(stream)?)))
@@ -407,7 +405,6 @@ impl PatStruct {
 
             let field_attrs = stream.parse::<Attributes>()?;
             let member = stream.parse::<Member>()?;
-
             let (colon, pat, shorthand) = if stream.peek::<Colon>() {
                 let colon = stream.parse::<Colon>()?;
                 (Some(colon), stream.parse::<Pattern>()?, false)

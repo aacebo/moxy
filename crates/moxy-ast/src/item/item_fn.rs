@@ -19,12 +19,7 @@ impl Parse for ItemFn {
         let vis = stream.parse::<Visibility>()?;
         let sig = stream.parse::<Signature>()?;
         let body = stream.parse::<StmtBlock>()?;
-        Ok(Self {
-            attrs,
-            vis,
-            sig,
-            body,
-        })
+        Ok(Self { attrs, vis, sig, body })
     }
 }
 

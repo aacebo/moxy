@@ -81,15 +81,19 @@ impl Parse for Stmt {
         if stream.peek::<StmtLocal>() {
             return Ok(Self::Local(Box::new(stream.parse()?)));
         }
+
         if stream.peek::<StmtBlock>() {
             return Ok(Self::Block(stream.parse()?));
         }
+
         if stream.peek::<crate::Item>() {
             return Ok(Self::Item(Box::new(stream.parse()?)));
         }
+
         if stream.peek::<StmtMacro>() {
             return Ok(Self::Macro(stream.parse()?));
         }
+
         let expr = stream.parse::<Expr>()?;
         let semi = stream.parse_if::<Semi>();
         Ok(Self::Expr(Box::new(expr), semi))

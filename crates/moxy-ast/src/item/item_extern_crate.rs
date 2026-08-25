@@ -26,7 +26,6 @@ impl Parse for ItemExternCrate {
         let extern_keyword = stream.parse::<Extern>()?;
         let crate_keyword = stream.parse::<Crate>()?;
         let ident = stream.parse::<Ident>()?;
-
         let (as_keyword, rename) = if stream.peek::<As>() {
             let as_keyword = stream.parse::<As>()?;
             let rename = stream.parse::<Ident>()?;
@@ -36,6 +35,7 @@ impl Parse for ItemExternCrate {
         };
 
         let semi_punct = stream.parse::<Semi>()?;
+
         Ok(Self {
             attrs,
             vis,

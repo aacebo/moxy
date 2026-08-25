@@ -26,6 +26,7 @@ impl ClosureParam {
 impl Parse for ClosureParam {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let pat = Box::new(Pattern::parse_single(stream)?);
+
         if stream.peek::<Colon>() {
             let colon = stream.parse::<Colon>()?;
             let ty = Box::new(stream.parse::<Type>()?);
@@ -135,6 +136,7 @@ impl Parse for BoundLifetimes {
         }
 
         let gt = stream.parse::<Gt>()?;
+
         Ok(Self {
             for_keyword,
             lt,

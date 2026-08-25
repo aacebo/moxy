@@ -20,9 +20,11 @@ impl Parse for FieldValue {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let member = stream.parse::<Member>()?;
+
         if stream.peek::<Colon>() {
             let colon_punct = Some(stream.parse::<Colon>()?);
             let expr = stream.parse::<Expr>()?;
+
             Ok(Self {
                 attrs,
                 member,
@@ -43,6 +45,7 @@ impl Parse for FieldValue {
                         .into());
                 }
             };
+
             Ok(Self {
                 attrs,
                 member,

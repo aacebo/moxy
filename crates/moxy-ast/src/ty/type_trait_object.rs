@@ -30,6 +30,7 @@ impl Spanner for TypeTraitObject {
         } else {
             Span::call_site()
         };
+
         let end = self.bounds.last().map(|b| b.span()).unwrap_or(start);
         start.join(end)
     }

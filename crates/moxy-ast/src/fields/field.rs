@@ -21,9 +21,9 @@ impl Parse for Field {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let mutability = stream.parse::<Mutability>()?;
-
         let (ident, colon) = {
             let mut fork = stream.fork();
+
             if let Ok(id) = fork.parse::<Ident>() {
                 if fork.peek::<Colon>() {
                     stream.seek(&fork);
@@ -38,6 +38,7 @@ impl Parse for Field {
         };
 
         let ty = stream.parse::<Type>()?;
+
         Ok(Self {
             attrs,
             vis,

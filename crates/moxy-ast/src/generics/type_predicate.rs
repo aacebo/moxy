@@ -21,6 +21,7 @@ impl Parse for TypePredicate {
         let bounded_ty = stream.parse::<Type>()?;
         let colon_punct = stream.parse::<Colon>()?;
         let bounds = TypeBound::parse_bounds(stream)?;
+
         Ok(Self {
             lifetimes,
             bounded_ty,
@@ -37,6 +38,7 @@ impl Spanner for TypePredicate {
         } else {
             self.bounded_ty.span()
         };
+
         let end = self
             .bounds
             .last()

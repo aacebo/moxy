@@ -22,7 +22,6 @@ impl Parse for ItemMacroRules {
         let macro_rules_keyword = stream.parse::<MacroRules>()?;
         let not_punct = stream.parse::<Not>()?;
         let ident = stream.parse::<Ident>()?;
-
         let body = match stream.curr() {
             Some(TokenTree::Group(g)) => {
                 let g = g.clone();

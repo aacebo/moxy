@@ -13,7 +13,6 @@ pub struct Abi {
 impl Parse for Abi {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let extern_keyword = stream.parse::<Extern>()?;
-
         let name = match stream.curr() {
             Some(TokenTree::Literal(lit)) if lit.repr().starts_with('"') => {
                 let repr = lit.repr().to_string();

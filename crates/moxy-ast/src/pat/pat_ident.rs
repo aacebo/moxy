@@ -22,6 +22,7 @@ impl Spanner for PatIdent {
         } else {
             self.ident.span()
         };
+
         self.attrs.span().join(end)
     }
 }

@@ -19,6 +19,7 @@ impl Parse for ItemForeignMod {
         let unsafety = stream.parse::<Unsafety>()?;
         let abi = stream.parse::<Abi>()?;
         let items = Delimited::<Vec<ForeignItem>>::parse_brace(stream)?;
+
         Ok(Self {
             attrs,
             unsafety,

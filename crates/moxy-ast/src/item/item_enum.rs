@@ -30,6 +30,7 @@ impl Parse for ItemEnum {
         }
 
         let variants = Delimited::parse_brace_with(stream, Punctuated::parse_terminated)?;
+
         Ok(Self {
             attrs,
             vis,
@@ -85,7 +86,6 @@ impl Parse for Variant {
         let attrs = stream.parse::<Attributes>()?;
         let ident = stream.parse::<Ident>()?;
         let fields = stream.parse::<Fields>()?;
-
         let (eq_punct, discriminant) = if stream.peek::<Eq>() {
             let eq_punct = stream.parse::<Eq>()?;
             let discriminant = stream.parse::<Expr>()?;

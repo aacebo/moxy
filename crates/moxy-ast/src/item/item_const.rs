@@ -33,6 +33,7 @@ impl Parse for ItemConst {
         let eq_punct = stream.parse::<Eq>()?;
         let expr = stream.parse::<Expr>()?;
         let semi_punct = stream.parse::<Semi>()?;
+
         Ok(Self {
             attrs,
             vis,

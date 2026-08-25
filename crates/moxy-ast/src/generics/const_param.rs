@@ -25,7 +25,6 @@ impl Parse for ConstParam {
         let ident = stream.parse::<Ident>()?;
         let colon_punct = stream.parse::<Colon>()?;
         let ty = stream.parse::<Type>()?;
-
         let (default_eq_punct, default) = if stream.peek::<Eq>() {
             let eq_punct = stream.parse::<Eq>()?;
             let expr = stream.parse::<Expr>()?;
@@ -53,6 +52,7 @@ impl Spanner for ConstParam {
         } else {
             self.ty.span()
         };
+
         self.attrs.span().join(end)
     }
 }
@@ -64,6 +64,7 @@ impl ToTokens for ConstParam {
         self.ident.to_tokens(t);
         self.colon_punct.to_tokens(t);
         self.ty.to_tokens(t);
+
         if let Some(eq_punct) = &self.default_eq_punct {
             eq_punct.to_tokens(t);
         }

@@ -21,6 +21,7 @@ impl Parse for TypeReference {
         let lifetime = stream.parse::<Option<Lifetime>>()?;
         let mutability = stream.parse::<Mutability>()?;
         let elem = Box::new(stream.parse::<Type>()?);
+
         Ok(Self {
             and,
             lifetime,

@@ -17,6 +17,7 @@ impl Spanner for PatOr {
             (Some(a), Some(b)) => a.span().join(b.span()),
             _ => Span::call_site(),
         };
+
         self.attrs.span().join(cases)
     }
 }

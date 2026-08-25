@@ -35,6 +35,7 @@ impl Parse for ForeignItemStatic {
         let colon = stream.parse::<Colon>()?;
         let ty = stream.parse::<Type>()?;
         let semi = stream.parse_if::<Semi>();
+
         Ok(Self {
             attrs,
             vis,

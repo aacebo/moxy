@@ -40,7 +40,6 @@ impl QSelf {
     pub fn parse_with_trait(stream: &mut ParseStream) -> Result<(Self, Option<Path>), ParseError> {
         let lt = stream.parse::<Lt>()?;
         let ty = Box::new(stream.parse::<Type>()?);
-
         let (as_keyword, trait_path) = if stream.peek::<As>() {
             let as_keyword = stream.parse::<As>()?;
             (Some(as_keyword), Some(stream.parse::<Path>()?))
@@ -49,7 +48,6 @@ impl QSelf {
         };
 
         let _ = stream.parse::<Gt>()?;
-
         let position = trait_path.as_ref().map(|p| p.len()).unwrap_or(0);
 
         Ok((

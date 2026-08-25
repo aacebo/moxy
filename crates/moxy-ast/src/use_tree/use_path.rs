@@ -17,6 +17,7 @@ pub struct UsePath {
 impl Parse for UsePath {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
+
         match UseTree::parse(stream)? {
             UseTree::Path(v) => Ok(v),
             _ => Err(LexError::new(at).message("expected use path").into()),

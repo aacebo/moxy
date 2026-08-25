@@ -3,40 +3,8 @@ use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, Gt, Lt};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
-use super::{Abi, FnParam, Variadic};
+use super::{Abi, FnParam, FnParams, Variadic};
 use crate::{Asyncness, Constness, Delimited, Generics, Ident, Punctuated, ReturnType, Unsafety};
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
-pub struct FnParams {
-    pub inputs: Punctuated<FnParam, Comma>,
-    pub variadic: Option<Variadic>,
-}
-
-impl Spanner for FnParams {
-    fn span(&self) -> Span {
-        let start = self.inputs.first().map(|i| i.span()).unwrap_or_else(Span::call_site);
-        let end = self
-            .variadic
-            .as_ref()
-            .map(|v| v.span())
-            .or_else(|| self.inputs.last().map(|i| i.span()))
-            .unwrap_or_else(Span::call_site);
-        start.join(end)
-    }
-}
-
-impl ToTokens for FnParams {
-    fn to_tokens(&self, t: &mut TokenStream) {
-        self.inputs.to_tokens(t);
-        if let Some(v) = &self.variadic {
-            if !self.inputs.is_empty() && !self.inputs.is_trailing() {
-                Comma::default().to_tokens(t);
-            }
-            v.to_tokens(t);
-        }
-    }
-}
 
 /// A function signature.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -67,7 +35,6 @@ impl Parse for Signature {
         let fn_keyword = stream.parse::<Fn>()?;
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
-
         let params = Delimited::parse_paren_with(stream, |inner| {
             let mut inputs = Punctuated::new();
             let mut variadic = None;
@@ -159,14 +126,14 @@ impl ToTokens for Signature {
         self.constness.to_tokens(t);
         self.asyncness.to_tokens(t);
         self.unsafety.to_tokens(t);
+
         if let Some(abi) = &self.abi {
             abi.to_tokens(t);
         }
+
         self.fn_keyword.to_tokens(t);
         self.ident.to_tokens(t);
-        let mut params = TokenStream::new();
-        Self::emit_angle_params(&self.generics, &mut params);
-        t.extend(params);
+        Self::emit_angle_params(&self.generics, t);
         self.params.to_tokens(t);
         self.output.to_tokens(t);
 

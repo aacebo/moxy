@@ -26,7 +26,6 @@ impl Parse for ItemMod {
         let unsafety = stream.parse_if::<Unsafety>().unwrap_or(Unsafety::Safe);
         let mod_keyword = stream.parse::<Mod>()?;
         let ident = stream.parse::<Ident>()?;
-
         let (content, semi_punct) = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
             let brace = Delimited::<Vec<Item>>::parse_brace(stream)?;
             (Some(brace), None)
@@ -56,6 +55,7 @@ impl Spanner for ItemMod {
         } else {
             self.mod_keyword.span()
         };
+
         self.attrs.span().join(end)
     }
 }
@@ -66,6 +66,7 @@ impl ToTokens for ItemMod {
         self.vis.to_tokens(t);
         self.mod_keyword.to_tokens(t);
         self.ident.to_tokens(t);
+
         match &self.content {
             Some(brace) => brace.to_tokens(t),
             None => self.semi_punct.to_tokens(t),

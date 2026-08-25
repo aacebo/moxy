@@ -18,11 +18,13 @@ impl Spanner for Crate {
             .first()
             .map(|a| a.span())
             .or_else(|| self.items.first().map(|i| i.span()));
+
         let end = self
             .items
             .last()
             .map(|i| i.span())
             .or_else(|| self.attrs.last().map(|a| a.span()));
+
         match (start, end) {
             (Some(s), Some(e)) => s.join(e),
             (Some(s), None) => s,

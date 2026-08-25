@@ -24,7 +24,6 @@ impl Parse for TraitItemFn {
         }
 
         let sig = stream.parse::<Signature>()?;
-
         let (default_body, semi) = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
             (Some(stream.parse::<StmtBlock>()?), None)
         } else {

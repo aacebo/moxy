@@ -17,6 +17,7 @@ impl Parse for LifetimePredicate {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let lifetime = stream.parse::<Lifetime>()?;
         let bounds = Lifetime::parse_bounds(stream)?;
+
         Ok(Self {
             lifetime,
             colon_punct: Colon::default(),
@@ -35,6 +36,7 @@ impl Spanner for LifetimePredicate {
 impl ToTokens for LifetimePredicate {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.lifetime.to_tokens(t);
+
         if !self.bounds.is_empty() {
             self.colon_punct.to_tokens(t);
             self.bounds.to_tokens(t);

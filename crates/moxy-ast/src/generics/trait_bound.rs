@@ -19,6 +19,7 @@ impl Parse for TraitBound {
         let lifetimes = stream.parse::<Option<BoundLifetimes>>()?;
         let modifier = stream.parse::<TraitBoundModifier>()?;
         let path = stream.parse::<Path>()?;
+
         Ok(Self {
             polarity,
             lifetimes,
@@ -43,6 +44,7 @@ impl Spanner for TraitBound {
                 }
             }
         };
+
         start.join(self.path.span())
     }
 }

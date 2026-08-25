@@ -27,6 +27,7 @@ impl Parse for ImplItemFn {
 
         let sig = stream.parse::<Signature>()?;
         let body = stream.parse::<StmtBlock>()?;
+
         Ok(Self {
             attrs,
             vis,
