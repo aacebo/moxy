@@ -1,3 +1,4 @@
+mod i128;
 mod i16;
 mod i32;
 mod i64;
@@ -8,6 +9,7 @@ pub use i8::*;
 pub use i16::*;
 pub use i32::*;
 pub use i64::*;
+pub use i128::*;
 pub use isize::*;
 
 use crate::lex::{Cursor, LexError, Scan};
@@ -20,6 +22,7 @@ pub enum LitInt {
     I16(LitI16),
     I32(LitI32),
     I64(LitI64),
+    I128(LitI128),
     ISize(LitISize),
 }
 
@@ -31,6 +34,7 @@ impl LitInt {
             Self::I16(v) => v.repr(),
             Self::I32(v) => v.repr(),
             Self::I64(v) => v.repr(),
+            Self::I128(v) => v.repr(),
             Self::ISize(v) => v.repr(),
         }
     }
@@ -42,6 +46,7 @@ impl LitInt {
             Self::I16(v) => v.span(),
             Self::I32(v) => v.span(),
             Self::I64(v) => v.span(),
+            Self::I128(v) => v.span(),
             Self::ISize(v) => v.span(),
         }
     }
@@ -53,6 +58,7 @@ impl LitInt {
             Self::I16(v) => v.set_span(span),
             Self::I32(v) => v.set_span(span),
             Self::I64(v) => v.set_span(span),
+            Self::I128(v) => v.set_span(span),
             Self::ISize(v) => v.set_span(span),
         }
     }
@@ -64,6 +70,7 @@ impl LitInt {
             Self::I16(v) => v.suffixed(),
             Self::I32(v) => v.suffixed(),
             Self::I64(v) => v.suffixed(),
+            Self::I128(v) => v.suffixed(),
             Self::ISize(v) => v.suffixed(),
         }
     }
@@ -75,6 +82,7 @@ impl LitInt {
             Self::I16(v) => v.value() as i128,
             Self::I32(v) => v.value() as i128,
             Self::I64(v) => v.value() as i128,
+            Self::I128(v) => v.value(),
             Self::ISize(v) => v.value() as i128,
         }
     }
@@ -105,8 +113,20 @@ impl LitInt {
                 repr,
                 span,
             ))),
+            "i32" => Some(Self::I32(LitI32::from_parts(
+                i32::try_from(magnitude).ok()?,
+                suffixed,
+                repr,
+                span,
+            ))),
             "i64" => Some(Self::I64(LitI64::from_parts(
                 i64::try_from(magnitude).ok()?,
+                suffixed,
+                repr,
+                span,
+            ))),
+            "i128" => Some(Self::I128(LitI128::from_parts(
+                i128::try_from(magnitude).ok()?,
                 suffixed,
                 repr,
                 span,
@@ -117,8 +137,8 @@ impl LitInt {
                 repr,
                 span,
             ))),
-            "i32" | "" => Some(Self::I32(LitI32::from_parts(
-                i32::try_from(magnitude).ok()?,
+            "" => Some(Self::ISize(LitISize::from_parts(
+                isize::try_from(magnitude).ok()?,
                 suffixed,
                 repr,
                 span,
@@ -163,8 +183,8 @@ impl From<LitInt> for String {
 
 /// Split a numeric repr into its `digits` body and a trailing type suffix.
 fn split_suffix(repr: &str) -> (&str, &str) {
-    const SUFFIXES: [&str; 12] = [
-        "u8", "u16", "u32", "u64", "usize", "i8", "i16", "i32", "i64", "isize", "f32", "f64",
+    const SUFFIXES: [&str; 14] = [
+        "u8", "u16", "u32", "u64", "u128", "usize", "i8", "i16", "i32", "i64", "i128", "isize", "f32", "f64",
     ];
 
     for s in SUFFIXES {

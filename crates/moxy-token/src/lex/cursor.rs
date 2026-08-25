@@ -50,12 +50,9 @@ impl<'a> Cursor<'a> {
 
     /// Advance by `n` bytes, counting characters for the offset.
     pub fn advance(&self, n: usize) -> Self {
-        let consumed = &self.rest[..n];
-        let chars = consumed.chars().count() as u32;
-
         Self {
             rest: &self.rest[n..],
-            off: self.off + chars,
+            off: self.off + n as u32,
         }
     }
 

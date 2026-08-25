@@ -42,7 +42,7 @@ fn every_rust_literal_family_preserves_its_representation() {
 }
 
 #[test]
-#[ignore = "lexer currently rejects unsuffixed integers wider than u64"]
+// #[ignore = "lexer currently rejects unsuffixed integers wider than u64"]
 fn large_unsuffixed_integer_literals_survive_the_syntax_pipeline() {
     let source = "340282366920938463463374607431768211455";
     let expression: Expr = moxy::parse!(source).unwrap();
@@ -53,7 +53,6 @@ fn large_unsuffixed_integer_literals_survive_the_syntax_pipeline() {
 }
 
 #[test]
-#[ignore = "identifier lookahead currently panics while lexing a non-ASCII character literal"]
 fn unicode_character_literals_complete_the_syntax_pipeline() {
     let expression: Expr = moxy::parse!("'λ'").unwrap();
     let literal = &expression.as_primary().unwrap().as_lit().unwrap().lit;
@@ -63,7 +62,7 @@ fn unicode_character_literals_complete_the_syntax_pipeline() {
 }
 
 #[test]
-#[ignore = "high-byte escape currently parses as a path expression instead of a byte literal"]
+// #[ignore = "high-byte escape currently parses as a path expression instead of a byte literal"]
 fn high_byte_escapes_complete_the_syntax_pipeline() {
     let expression: Expr = moxy::parse!(r#"b'\xFF'"#).unwrap();
     let literal = &expression.as_primary().unwrap().as_lit().unwrap().lit;

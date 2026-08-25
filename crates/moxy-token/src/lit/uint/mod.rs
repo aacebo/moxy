@@ -1,3 +1,4 @@
+mod u128;
 mod u16;
 mod u32;
 mod u64;
@@ -8,6 +9,7 @@ pub use u8::*;
 pub use u16::*;
 pub use u32::*;
 pub use u64::*;
+pub use u128::*;
 pub use usize::*;
 
 use crate::lex::{Cursor, LexError, Scan};
@@ -20,6 +22,7 @@ pub enum LitUInt {
     U16(LitU16),
     U32(LitU32),
     U64(LitU64),
+    U128(LitU128),
     USize(LitUSize),
 }
 
@@ -31,6 +34,7 @@ impl LitUInt {
             Self::U16(v) => v.repr(),
             Self::U32(v) => v.repr(),
             Self::U64(v) => v.repr(),
+            Self::U128(v) => v.repr(),
             Self::USize(v) => v.repr(),
         }
     }
@@ -42,6 +46,7 @@ impl LitUInt {
             Self::U16(v) => v.span(),
             Self::U32(v) => v.span(),
             Self::U64(v) => v.span(),
+            Self::U128(v) => v.span(),
             Self::USize(v) => v.span(),
         }
     }
@@ -53,6 +58,7 @@ impl LitUInt {
             Self::U16(v) => v.set_span(span),
             Self::U32(v) => v.set_span(span),
             Self::U64(v) => v.set_span(span),
+            Self::U128(v) => v.set_span(span),
             Self::USize(v) => v.set_span(span),
         }
     }
@@ -64,6 +70,7 @@ impl LitUInt {
             Self::U16(v) => v.suffixed(),
             Self::U32(v) => v.suffixed(),
             Self::U64(v) => v.suffixed(),
+            Self::U128(v) => v.suffixed(),
             Self::USize(v) => v.suffixed(),
         }
     }
@@ -75,6 +82,7 @@ impl LitUInt {
             Self::U16(v) => v.value() as u128,
             Self::U32(v) => v.value() as u128,
             Self::U64(v) => v.value() as u128,
+            Self::U128(v) => v.value(),
             Self::USize(v) => v.value() as u128,
         }
     }
@@ -112,6 +120,12 @@ impl LitUInt {
             ))),
             "u64" => Some(Self::U64(LitU64::from_parts(
                 u64::try_from(magnitude).ok()?,
+                suffixed,
+                repr,
+                span,
+            ))),
+            "u128" => Some(Self::U128(LitU128::from_parts(
+                u128::try_from(magnitude).ok()?,
                 suffixed,
                 repr,
                 span,
@@ -162,8 +176,8 @@ impl From<LitUInt> for String {
 
 /// Split a numeric repr into its `digits` body and a trailing type suffix.
 fn split_suffix(repr: &str) -> (&str, &str) {
-    const SUFFIXES: [&str; 12] = [
-        "u8", "u16", "u32", "u64", "usize", "i8", "i16", "i32", "i64", "isize", "f32", "f64",
+    const SUFFIXES: [&str; 14] = [
+        "u8", "u16", "u32", "u64", "u128", "usize", "i8", "i16", "i32", "i64", "i128", "isize", "f32", "f64",
     ];
 
     for s in SUFFIXES {

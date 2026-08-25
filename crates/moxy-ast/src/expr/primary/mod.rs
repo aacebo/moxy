@@ -289,7 +289,6 @@ impl ExprClosure {
         let constness = stream.parse::<Constness>()?;
         let asyncness = stream.parse::<Asyncness>()?;
         let capture = stream.parse_if::<Move>();
-
         let (pipes, inputs) = if stream.peek::<OrOr>() {
             let oror = stream.parse::<OrOr>()?;
             (ClosurePipes::Empty(oror), Punctuated::new())
@@ -341,7 +340,9 @@ impl ExprStruct {
                 rest = Some((dotdot, Box::new(super::parse_expr(stream, true)?)));
                 break;
             }
+
             fields.push_value(stream.parse::<FieldValue>()?);
+
             if stream.peek::<Comma>() {
                 fields.push_punct(stream.parse::<Comma>()?);
             } else {
@@ -371,6 +372,7 @@ impl ExprRepeat {
         let semi = fork.parse::<Semi>()?;
         let len = super::parse_expr(&mut fork, true)?;
         stream.seek(&fork);
+
         Ok(Some(Self {
             attrs,
             content: Delimited::bracket(
@@ -390,6 +392,7 @@ impl Expr {
         if stream.is_empty() || stream.peek::<Semi>() || stream.peek::<Comma>() {
             return Ok(None);
         }
+
         let mut fork = stream.fork();
 
         match super::parse_expr(&mut fork, true) {
@@ -410,6 +413,7 @@ impl PrimaryExpr {
             let (paren_span, group_tokens) = stream.parse_group_spanned(Delim::Paren)?;
             let mut inner = group_tokens.parse();
             let elems: Punctuated<Expr, Comma> = Punctuated::parse_terminated(&mut inner)?;
+
             return Ok(if elems.len() == 1 && !elems.is_trailing() {
                 let expr = Box::new(elems.into_iter().next().unwrap());
                 Expr::Primary(Self::Paren(ExprParen {
@@ -427,10 +431,13 @@ impl PrimaryExpr {
         if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
             let (bracket_span, group_tokens) = stream.parse_group_spanned(Delim::Bracket)?;
             let mut inner = group_tokens.parse();
+
             if let Some(rep) = ExprRepeat::try_parse(&mut inner, bracket_span, attrs.clone())? {
                 return Ok(Expr::Primary(Self::Repeat(rep)));
             }
+
             let elems = Punctuated::parse_terminated(&mut inner)?;
+
             return Ok(Expr::Primary(Self::Array(ExprArray {
                 attrs,
                 elems: Delimited::bracket(bracket_span, elems),
@@ -508,6 +515,7 @@ impl PrimaryExpr {
 
         if stream.peek::<Return>() {
             let return_keyword = stream.parse::<Return>()?;
+
             return Ok(Expr::Jump(JumpExpr::Return(ExprReturn {
                 attrs,
                 return_keyword,
@@ -517,6 +525,7 @@ impl PrimaryExpr {
 
         if stream.peek::<Yield>() {
             let yield_keyword = stream.parse::<Yield>()?;
+
             return Ok(Expr::Jump(JumpExpr::Yield(ExprYield {
                 attrs,
                 yield_keyword,
@@ -527,6 +536,7 @@ impl PrimaryExpr {
         if stream.peek::<Break>() {
             let break_keyword = stream.parse::<Break>()?;
             let label = Label::parse_opt_break(stream);
+
             return Ok(Expr::Jump(JumpExpr::Break(ExprBreak {
                 attrs,
                 break_keyword,
@@ -538,6 +548,7 @@ impl PrimaryExpr {
         if stream.peek::<Continue>() {
             let continue_keyword = stream.parse::<Continue>()?;
             let label = Label::parse_opt_break(stream);
+
             return Ok(Expr::Jump(JumpExpr::Continue(ExprContinue {
                 attrs,
                 continue_keyword,
@@ -550,6 +561,7 @@ impl PrimaryExpr {
             let pat = Box::new(stream.parse::<Pattern>()?);
             let eq = stream.parse::<Eq>()?;
             let expr = Box::new(super::parse_expr(stream, false)?);
+
             return Ok(Expr::Primary(Self::Let(ExprLet {
                 attrs,
                 let_keyword,
@@ -577,6 +589,7 @@ impl PrimaryExpr {
         // Qualified path `<T as Trait>::assoc` in expression position.
         if stream.peek::<moxy_token::punct::Lt>() {
             let (qself, path) = crate::ty::QSelf::parse_qualified(stream)?;
+
             return Ok(Expr::Primary(Self::Path(ExprPath {
                 attrs,
                 qself: Some(qself),
