@@ -10,7 +10,6 @@ fn declared_modules_preserve_visibility_and_semicolon() {
 }
 
 #[test]
-#[ignore = "formatter currently drops inline module contents"]
 fn inline_modules_render_their_nested_items() {
     let item: Item = moxy::parse!("pub mod api{pub const VALUE:usize=1;}").unwrap();
     let module = item.as_mod().unwrap();
