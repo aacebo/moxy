@@ -24,14 +24,14 @@ fn every_rust_literal_family_preserves_its_representation() {
 
         debug_assert_eq!(
             [
-                matches!(literal, Lit::Int(_)),
-                matches!(literal, Lit::Float(_)),
-                matches!(literal, Lit::Str(_)),
-                matches!(literal, Lit::ByteStr(_)),
-                matches!(literal, Lit::CStr(_)),
-                matches!(literal, Lit::Char(_)),
-                matches!(literal, Lit::Byte(_)),
-                matches!(literal, Lit::Bool(_)),
+                literal.is_int(),
+                literal.is_float(),
+                literal.is_str(),
+                literal.is_byte_str(),
+                literal.is_c_str(),
+                literal.is_char(),
+                literal.is_byte(),
+                literal.is_bool(),
             ],
             std::array::from_fn(|index| index == expected_kind),
             "{literal:#?}"
@@ -63,9 +63,10 @@ fn unicode_character_literals_complete_the_syntax_pipeline() {
 }
 
 #[test]
-#[ignore = "high-byte escape currently parses as a path expression instead of a byte literal"]
 fn high_byte_escapes_complete_the_syntax_pipeline() {
     let expression: Expr = moxy::parse!(r#"b'\xFF'"#).unwrap();
+    debug_assert!(expression.is_primary(), "{expression:#?}");
+    debug_assert!(expression.as_primary().unwrap().is_lit(), "{expression:#?}");
     let literal = &expression.as_primary().unwrap().as_lit().unwrap().lit;
     assert!(literal.is_byte());
     assert_eq!(literal.repr(), r#"b'\xFF'"#);

@@ -70,14 +70,14 @@ impl Spanner for LitByte {
 
 impl Scan for LitByte {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
-        let end = scan_quoted(cursor, "b'")?;
+        let end = scan(cursor, "b'")?;
         let len = end.offset() as usize - cursor.offset() as usize;
         let repr = &cursor.rest()[..len];
         let span = cursor.span_to(&end);
         let inner = repr.strip_prefix("b'").and_then(|r| r.strip_suffix('\''));
 
         match inner.and_then(decode_one_char) {
-            Some(value) if value.is_ascii() => Ok((end, Self::from_parts(value as u8, repr, span))),
+            Some(value) => Ok((end, Self::from_parts(value as u8, repr, span))),
             _ => cursor.error().into(),
         }
     }
@@ -107,7 +107,7 @@ impl From<LitByte> for String {
     }
 }
 
-fn scan_quoted<'a>(c: Cursor<'a>, open: &str) -> Result<Cursor<'a>, LexError> {
+fn scan<'a>(c: Cursor<'a>, open: &str) -> Result<Cursor<'a>, LexError> {
     if !c.starts_with(open) {
         return c.error().into();
     }
@@ -201,18 +201,23 @@ fn decode_escape(chars: &mut std::str::Chars<'_>) -> Option<char> {
             if chars.next()? != '{' {
                 return None;
             }
+
             let mut value = 0u32;
             let mut count = 0;
+
             for c in chars.by_ref() {
                 if c == '}' {
                     break;
                 }
+
                 value = value.checked_mul(16)?.checked_add(c.to_digit(16)?)?;
                 count += 1;
+
                 if count > 6 {
                     return None;
                 }
             }
+
             char::from_u32(value)
         }
         _ => None,

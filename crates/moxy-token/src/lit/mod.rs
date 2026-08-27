@@ -227,16 +227,16 @@ impl From<Lit> for String {
 impl Scan for Lit {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
         // Strings / chars / bytes first — their prefix bytes (b c r ' ") are unambiguous.
+        if let Ok((end, v)) = LitByte::scan(cursor) {
+            return Ok((end, Self::Byte(v)));
+        }
+
         if let Ok((end, v)) = LitByteStr::scan(cursor) {
             return Ok((end, Self::ByteStr(v)));
         }
 
         if let Ok((end, v)) = LitCStr::scan(cursor) {
             return Ok((end, Self::CStr(v)));
-        }
-
-        if let Ok((end, v)) = LitByte::scan(cursor) {
-            return Ok((end, Self::Byte(v)));
         }
 
         if let Ok((end, v)) = LitStr::scan(cursor) {
