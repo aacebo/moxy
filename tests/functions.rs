@@ -25,7 +25,6 @@ fn async_generic_functions_preserve_bounds_references_and_return_types() {
 }
 
 #[test]
-#[ignore = "formatter currently emits a duplicate comma before variadic parameters"]
 fn unsafe_extern_variadic_functions_render_exactly() {
     let item: Item = moxy::parse!("pub unsafe extern \"C\" fn log(format:*const u8,...)->i32{0}").unwrap();
     let function = item.as_fn().unwrap();

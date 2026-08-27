@@ -43,6 +43,7 @@ impl Format for Signature {
         f.text("(")?;
         f.group(|f| {
             for pair in self.params.inner.inputs.pairs() {
+                eprintln!("{:#?}", pair);
                 match pair {
                     moxy_ast::Pair::Punctuated(param, _) => {
                         param.format(f)?;
@@ -56,11 +57,6 @@ impl Format for Signature {
             }
 
             if let Some(variadic) = &self.params.inner.variadic {
-                if !self.params.inner.inputs.is_empty() {
-                    f.text(",")?;
-                    f.text(" ")?;
-                }
-
                 variadic.format(f)?;
             }
 

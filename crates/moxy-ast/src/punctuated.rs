@@ -409,6 +409,7 @@ impl<T: ToTokens, P: ToTokens> ToTokens for Punctuated<T, P> {
     }
 }
 
+#[derive(Debug)]
 pub enum Pair<T, P> {
     Punctuated(T, P),
     End(T),
@@ -808,9 +809,11 @@ impl<T: serde::Serialize, P> serde::Serialize for Punctuated<T, P> {
     fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {
         use serde::ser::SerializeSeq;
         let mut seq = s.serialize_seq(Some(self.len()))?;
+
         for item in self.iter() {
             seq.serialize_element(item)?;
         }
+
         seq.end()
     }
 }

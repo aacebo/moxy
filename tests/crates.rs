@@ -49,13 +49,15 @@ fn visitors_traverse_real_crate_syntax_before_exact_rendering() {
         }
     }
 
+    let mut visitor = StructVisitor { names: Vec::new() };
     let krate: Crate =
         moxy::parse!("struct First { value: u8 } struct Second<T> { value: T } fn consume(value: Second<u8>) { let _ = value; }")
             .unwrap();
-    let mut visitor = StructVisitor { names: Vec::new() };
+
     for item in &krate.items {
         visitor.visit_item(item);
     }
+
     assert_eq!(visitor.names, ["First", "Second"]);
     assert_eq!(krate.items.len(), 3);
     assert!(!krate.to_token_stream().is_empty());
