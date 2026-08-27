@@ -23,10 +23,6 @@ impl Format for Generics {
         self.params.format(f)?;
         f.text(">")?;
 
-        if let Some(where_clause) = &self.where_clause {
-            where_clause.format(f)?;
-        }
-
         Ok(())
     }
 }

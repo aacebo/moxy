@@ -61,8 +61,15 @@ impl Format for Signature {
 
             Ok(())
         })?;
+
         f.text(")")?;
-        self.output.format(f)
+        self.output.format(f)?;
+
+        if let Some(where_clause) = &self.generics.where_clause {
+            where_clause.format(f)?;
+        }
+
+        Ok(())
     }
 }
 
@@ -350,6 +357,11 @@ impl Format for ItemStruct {
         f.text("struct ")?;
         self.ident.format(f)?;
         self.generics.format(f)?;
+
+        if let Some(where_clause) = &self.generics.where_clause {
+            where_clause.format(f)?;
+        }
+
         self.fields.format(f)?;
 
         if matches!(self.fields, moxy_ast::Fields::Unnamed(_) | moxy_ast::Fields::Unit) {

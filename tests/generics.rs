@@ -19,7 +19,6 @@ fn lifetime_type_and_const_parameters_are_inspectable_in_struct_syntax() {
 }
 
 #[test]
-#[ignore = "formatter currently places function where clauses before parameters"]
 fn higher_ranked_where_predicates_render_on_functions() {
     let item: Item = moxy::parse!("fn borrow<T>(value: T) where for<'a> &'a T: IntoIterator, T: 'static { }").unwrap();
     let function = item.as_fn().unwrap();
