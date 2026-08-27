@@ -65,6 +65,101 @@ impl Lit {
     }
 
     #[inline]
+    pub fn is_int(&self) -> bool {
+        matches!(self, Self::Int(_))
+    }
+
+    #[inline]
+    pub fn is_float(&self) -> bool {
+        matches!(self, Self::Float(_))
+    }
+
+    #[inline]
+    pub fn is_str(&self) -> bool {
+        matches!(self, Self::Str(_))
+    }
+
+    #[inline]
+    pub fn is_c_str(&self) -> bool {
+        matches!(self, Self::CStr(_))
+    }
+
+    #[inline]
+    pub fn is_bool(&self) -> bool {
+        matches!(self, Self::Bool(_))
+    }
+
+    #[inline]
+    pub fn is_char(&self) -> bool {
+        matches!(self, Self::Char(_))
+    }
+
+    #[inline]
+    pub fn is_byte(&self) -> bool {
+        matches!(self, Self::Byte(_))
+    }
+
+    #[inline]
+    pub fn is_byte_str(&self) -> bool {
+        matches!(self, Self::ByteStr(_))
+    }
+
+    #[inline]
+    pub fn is_verbatim(&self) -> bool {
+        matches!(self, Self::Verbatim(_))
+    }
+
+    #[inline]
+    pub fn as_str(&self) -> Option<&LitStr> {
+        if let Self::Str(v) = self { Some(v) } else { None }
+    }
+
+    #[inline]
+    pub fn as_c_str(&self) -> Option<&LitCStr> {
+        if let Self::CStr(v) = self { Some(v) } else { None }
+    }
+
+    #[inline]
+    pub fn as_bool(&self) -> Option<&LitBool> {
+        if let Self::Bool(v) = self { Some(v) } else { None }
+    }
+
+    #[inline]
+    pub fn as_int(&self) -> Option<&LitInt> {
+        if let Self::Int(v) = self { Some(v) } else { None }
+    }
+
+    #[inline]
+    pub fn as_float(&self) -> Option<&LitFloat> {
+        if let Self::Float(v) = self { Some(v) } else { None }
+    }
+
+    #[inline]
+    pub fn as_char(&self) -> Option<&LitChar> {
+        if let Self::Char(v) = self { Some(v) } else { None }
+    }
+
+    #[inline]
+    pub fn as_byte(&self) -> Option<&LitByte> {
+        if let Self::Byte(v) = self { Some(v) } else { None }
+    }
+
+    #[inline]
+    pub fn as_byte_str(&self) -> Option<&LitByteStr> {
+        if let Self::ByteStr(v) = self { Some(v) } else { None }
+    }
+
+    #[inline]
+    pub fn to_token_tree(&self) -> TokenTree {
+        TokenTree::Literal(self.clone())
+    }
+
+    #[inline]
+    pub fn into_token_tree(self) -> TokenTree {
+        TokenTree::Literal(self)
+    }
+
+    #[inline]
     pub fn repr(&self) -> &str {
         match self {
             Self::Int(v) => v.repr(),
@@ -107,56 +202,6 @@ impl Lit {
             Self::Bool(v) => v.set_span(span),
             Self::Verbatim(v) => v.set_span(span),
         }
-    }
-
-    #[inline]
-    pub fn is_int(&self) -> bool {
-        matches!(self, Self::Int(_))
-    }
-
-    #[inline]
-    pub fn is_float(&self) -> bool {
-        matches!(self, Self::Float(_))
-    }
-
-    #[inline]
-    pub fn is_str(&self) -> bool {
-        matches!(self, Self::Str(_))
-    }
-
-    #[inline]
-    pub fn is_bool(&self) -> bool {
-        matches!(self, Self::Bool(_))
-    }
-
-    #[inline]
-    pub fn as_str(&self) -> Option<&LitStr> {
-        if let Self::Str(v) = self { Some(v) } else { None }
-    }
-
-    #[inline]
-    pub fn as_bool(&self) -> Option<&LitBool> {
-        if let Self::Bool(v) = self { Some(v) } else { None }
-    }
-
-    #[inline]
-    pub fn as_int(&self) -> Option<&LitInt> {
-        if let Self::Int(v) = self { Some(v) } else { None }
-    }
-
-    #[inline]
-    pub fn as_float(&self) -> Option<&LitFloat> {
-        if let Self::Float(v) = self { Some(v) } else { None }
-    }
-
-    #[inline]
-    pub fn to_token_tree(&self) -> TokenTree {
-        TokenTree::Literal(self.clone())
-    }
-
-    #[inline]
-    pub fn into_token_tree(self) -> TokenTree {
-        TokenTree::Literal(self)
     }
 }
 

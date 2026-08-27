@@ -10,6 +10,7 @@ pub struct LitInt {
     repr: Box<str>,
     radix: Radix,
     suffix: IntSuffix,
+    value: u128,
 }
 
 impl LitInt {
@@ -37,11 +38,16 @@ impl LitInt {
     pub fn set_span(&mut self, span: Span) {
         self.span = span;
     }
+
+    #[inline]
+    pub fn value(&self) -> u128 {
+        self.value
+    }
 }
 
 impl PartialEq for LitInt {
     fn eq(&self, other: &Self) -> bool {
-        self.repr == other.repr && self.suffix == other.suffix
+        self.value == other.value
     }
 }
 
@@ -49,7 +55,7 @@ impl Eq for LitInt {}
 
 impl std::hash::Hash for LitInt {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        self.repr.hash(state);
+        self.value.hash(state);
     }
 }
 
@@ -81,9 +87,10 @@ impl Scan for LitInt {
         let len = end.offset() as usize - cursor.offset() as usize;
         let repr = &cursor.rest()[..len];
         let span = cursor.span_to(&end);
-        let repr = repr.replace("_", "");
-        let (_, suffix) = IntSuffix::split(&repr).map_err(|msg| cursor.error().message(msg))?;
-        let (radix, _) = Radix::split(&repr).map_err(|msg| cursor.error().message(msg))?;
+        let stripped_repr = repr.replace("_", "");
+        let (stripped_repr, suffix) = IntSuffix::split(&stripped_repr).map_err(|msg| cursor.error().message(msg))?;
+        let (radix, stripped_repr) = Radix::split(stripped_repr).map_err(|msg| cursor.error().message(msg))?;
+        let value = u128::from_str_radix(stripped_repr, radix.into()).map_err(|err| cursor.error().message(err))?;
 
         Ok((
             end,
@@ -92,6 +99,7 @@ impl Scan for LitInt {
                 repr: repr.into(),
                 radix,
                 suffix,
+                value,
             },
         ))
     }
@@ -126,6 +134,7 @@ impl Lit {
         Self::Int(LitInt {
             repr: value.to_string().into(),
             suffix: IntSuffix::U8,
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -133,6 +142,7 @@ impl Lit {
     pub fn u8_unsuffixed(value: u8) -> Self {
         Self::Int(LitInt {
             repr: value.to_string().into(),
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -141,6 +151,7 @@ impl Lit {
         Self::Int(LitInt {
             repr: value.to_string().into(),
             suffix: IntSuffix::U16,
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -148,6 +159,7 @@ impl Lit {
     pub fn u16_unsuffixed(value: u16) -> Self {
         Self::Int(LitInt {
             repr: value.to_string().into(),
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -156,6 +168,7 @@ impl Lit {
         Self::Int(LitInt {
             repr: value.to_string().into(),
             suffix: IntSuffix::U32,
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -163,6 +176,7 @@ impl Lit {
     pub fn u32_unsuffixed(value: u32) -> Self {
         Self::Int(LitInt {
             repr: value.to_string().into(),
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -171,6 +185,7 @@ impl Lit {
         Self::Int(LitInt {
             repr: value.to_string().into(),
             suffix: IntSuffix::U64,
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -178,6 +193,7 @@ impl Lit {
     pub fn u64_unsuffixed(value: u64) -> Self {
         Self::Int(LitInt {
             repr: value.to_string().into(),
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -186,6 +202,7 @@ impl Lit {
         Self::Int(LitInt {
             repr: value.to_string().into(),
             suffix: IntSuffix::USize,
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -193,6 +210,7 @@ impl Lit {
     pub fn usize_unsuffixed(value: usize) -> Self {
         Self::Int(LitInt {
             repr: value.to_string().into(),
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -201,6 +219,7 @@ impl Lit {
         Self::Int(LitInt {
             repr: value.to_string().into(),
             suffix: IntSuffix::I8,
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -208,6 +227,7 @@ impl Lit {
     pub fn i8_unsuffixed(value: i8) -> Self {
         Self::Int(LitInt {
             repr: value.to_string().into(),
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -216,6 +236,7 @@ impl Lit {
         Self::Int(LitInt {
             repr: value.to_string().into(),
             suffix: IntSuffix::I16,
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -223,6 +244,7 @@ impl Lit {
     pub fn i16_unsuffixed(value: i16) -> Self {
         Self::Int(LitInt {
             repr: value.to_string().into(),
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -231,6 +253,7 @@ impl Lit {
         Self::Int(LitInt {
             repr: value.to_string().into(),
             suffix: IntSuffix::I32,
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -238,6 +261,7 @@ impl Lit {
     pub fn i32_unsuffixed(value: i32) -> Self {
         Self::Int(LitInt {
             repr: value.to_string().into(),
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -246,6 +270,7 @@ impl Lit {
         Self::Int(LitInt {
             repr: value.to_string().into(),
             suffix: IntSuffix::I64,
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -253,6 +278,7 @@ impl Lit {
     pub fn i64_unsuffixed(value: i64) -> Self {
         Self::Int(LitInt {
             repr: value.to_string().into(),
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -261,6 +287,7 @@ impl Lit {
         Self::Int(LitInt {
             repr: value.to_string().into(),
             suffix: IntSuffix::ISize,
+            value: value as u128,
             ..Default::default()
         })
     }
@@ -268,6 +295,7 @@ impl Lit {
     pub fn isize_unsuffixed(value: isize) -> Self {
         Self::Int(LitInt {
             repr: value.to_string().into(),
+            value: value as u128,
             ..Default::default()
         })
     }

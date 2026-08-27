@@ -44,7 +44,6 @@ fn every_rust_literal_family_preserves_its_representation() {
 }
 
 #[test]
-// #[ignore = "lexer currently rejects unsuffixed integers wider than u64"]
 fn large_unsuffixed_integer_literals_survive_the_syntax_pipeline() {
     let source = "340282366920938463463374607431768211455";
     let expression: Expr = moxy::parse!(source).unwrap();
@@ -58,7 +57,7 @@ fn large_unsuffixed_integer_literals_survive_the_syntax_pipeline() {
 fn unicode_character_literals_complete_the_syntax_pipeline() {
     let expression: Expr = moxy::parse!("'λ'").unwrap();
     let literal = &expression.as_primary().unwrap().as_lit().unwrap().lit;
-    assert!(matches!(literal, Lit::Char(_)));
+    assert!(literal.is_char());
     assert_eq!(literal.repr(), "'λ'");
     assert_eq!(moxy::fmt!(&expression).unwrap(), "'λ'");
 }
@@ -68,7 +67,7 @@ fn unicode_character_literals_complete_the_syntax_pipeline() {
 fn high_byte_escapes_complete_the_syntax_pipeline() {
     let expression: Expr = moxy::parse!(r#"b'\xFF'"#).unwrap();
     let literal = &expression.as_primary().unwrap().as_lit().unwrap().lit;
-    assert!(matches!(literal, Lit::Byte(_)));
+    assert!(literal.is_byte());
     assert_eq!(literal.repr(), r#"b'\xFF'"#);
     assert_eq!(moxy::fmt!(&expression).unwrap(), r#"b'\xFF'"#);
 }
@@ -78,7 +77,7 @@ fn boolean_literals_bridge_as_values_in_expressions() {
     for source in ["true", "false"] {
         let expression: Expr = moxy::parse!(source).unwrap();
         let literal = &expression.as_primary().unwrap().as_lit().unwrap().lit;
-        assert!(matches!(literal, Lit::Bool(_)));
+        assert!(literal.is_bool());
         assert_eq!(literal.repr(), source);
         assert_eq!(moxy::fmt!(&expression).unwrap(), source);
     }
@@ -154,6 +153,7 @@ fn cooked_raw_string_character_and_byte_syntax_decode_to_real_values() {
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
         let literal = &expression.as_primary().unwrap().as_lit().unwrap().lit;
+
         match literal {
             Lit::Str(value) => assert_eq!(value.value(), expected),
             Lit::Char(value) => assert_eq!(value.value().to_string(), expected),
@@ -162,6 +162,7 @@ fn cooked_raw_string_character_and_byte_syntax_decode_to_real_values() {
             Lit::CStr(value) => assert_eq!(value.value(), expected.as_bytes()),
             _ => panic!("{source} parsed as the wrong literal family"),
         }
+
         assert_eq!(literal.repr(), source);
         assert!(!literal.to_token_stream().is_empty());
         assert_eq!(moxy::fmt!(&expression).unwrap(), source);
@@ -169,7 +170,6 @@ fn cooked_raw_string_character_and_byte_syntax_decode_to_real_values() {
 }
 
 #[test]
-#[ignore = "equivalent integer values currently produce different hashes"]
 fn equivalent_integer_spellings_compare_and_hash_by_value() {
     use std::hash::{DefaultHasher, Hash, Hasher};
 
@@ -189,7 +189,6 @@ fn equivalent_integer_spellings_compare_and_hash_by_value() {
 
 #[cfg(feature = "proc-macro2")]
 #[test]
-#[ignore = "proc-macro bridge currently classifies booleans as identifiers"]
 fn proc_macro_boolean_literals_complete_the_syntax_pipeline() {
     use std::str::FromStr;
 
@@ -198,7 +197,7 @@ fn proc_macro_boolean_literals_complete_the_syntax_pipeline() {
         let owned = moxy::token::TokenStream::from(proc_tokens);
         let expression: Expr = moxy::parse!(owned).unwrap();
         let literal = &expression.as_primary().unwrap().as_lit().unwrap().lit;
-        assert!(matches!(literal, Lit::Bool(_)));
+        assert!(literal.is_bool());
         assert_eq!(literal.repr(), source);
         assert_eq!(moxy::fmt!(&expression).unwrap(), source);
     }
