@@ -18,6 +18,7 @@ impl Parse for TypePath {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         if stream.peek::<Lt>() {
             let (qself, path) = super::QSelf::parse_qualified(stream)?;
+
             return Ok(Self {
                 qself: Some(qself),
                 path,

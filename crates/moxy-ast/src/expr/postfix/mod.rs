@@ -158,6 +158,7 @@ impl PostfixExpr {
 
                 if matches!(stream.curr(), Some(tt) if tt.text() == Some("await")) {
                     let await_span = stream.span();
+
                     stream.advance();
                     expr = Expr::Postfix(Self::Await(ExprAwait {
                         attrs: Attributes::default(),
@@ -178,6 +179,7 @@ impl PostfixExpr {
                     if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
                         let method = method.clone();
                         let args = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
+
                         expr = Expr::Postfix(Self::MethodCall(ExprMethodCall {
                             attrs: Attributes::default(),
                             receiver: Box::new(expr),
@@ -186,6 +188,7 @@ impl PostfixExpr {
                             turbofish,
                             args,
                         }));
+
                         continue;
                     }
                 }

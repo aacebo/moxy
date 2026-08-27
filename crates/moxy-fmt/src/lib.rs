@@ -234,12 +234,14 @@ impl<T: Format, P: std::fmt::Display> Format for moxy_ast::Punctuated<T, P> {
                     moxy_ast::Pair::Punctuated(t, p) => {
                         t.format(f)?;
                         let sep = p.to_string();
+
                         if sep.trim() == "+" {
                             f.text(" ")?;
                             f.text(sep)?;
                         } else {
                             f.text(sep)?;
                         }
+
                         f.space()?;
                     }
                     moxy_ast::Pair::End(t) => {

@@ -72,7 +72,6 @@ impl Format for ExprPath {
                     match pair {
                         moxy_ast::Pair::Punctuated(seg, _) => {
                             seg.format(f)?;
-                            f.text("::")?;
                         }
                         moxy_ast::Pair::End(seg) => {
                             seg.format(f)?;
@@ -82,7 +81,6 @@ impl Format for ExprPath {
             }
 
             f.text(">")?;
-            f.text("::")?;
 
             for (i, pair) in self.path.pairs().enumerate() {
                 if i < qself.position {
@@ -92,7 +90,6 @@ impl Format for ExprPath {
                 match pair {
                     moxy_ast::Pair::Punctuated(seg, _) => {
                         seg.format(f)?;
-                        f.text("::")?;
                     }
                     moxy_ast::Pair::End(seg) => {
                         seg.format(f)?;
@@ -402,12 +399,11 @@ impl Format for ExprCall {
 impl Format for ExprMethodCall {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.receiver.format(f)?;
-        f.soft_break()?;
+        // f.soft_break()?;
         f.text(".")?;
         self.method.format(f)?;
 
         if let Some(turbofish) = &self.turbofish {
-            f.text("::")?;
             turbofish.format(f)?;
         }
 

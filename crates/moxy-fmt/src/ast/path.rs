@@ -56,6 +56,10 @@ impl Format for PathArguments {
 
 impl Format for AngleArguments {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        if let Some(_) = &self.colon2 {
+            f.text("::")?;
+        }
+
         f.text("<")?;
         self.args.format(f)?;
         f.text(">")

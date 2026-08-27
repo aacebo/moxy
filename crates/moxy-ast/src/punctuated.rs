@@ -199,16 +199,13 @@ impl<T: Parse, P: Parse> Punctuated<T, P> {
         let mut punctuated = Self::new();
 
         loop {
-            punctuated.push_value(T::parse(stream)?);
-            let mut fork = stream.fork();
+            punctuated.push_value(stream.parse()?);
 
-            match P::parse(&mut fork) {
-                Err(_) => break,
-                Ok(p) => {
-                    stream.seek(&fork);
-                    punctuated.push_punct(p);
-                }
+            if !stream.peek::<P>() {
+                break;
             }
+
+            punctuated.push_punct(stream.parse()?);
         }
 
         Ok(punctuated)

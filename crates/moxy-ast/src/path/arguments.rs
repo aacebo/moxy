@@ -1,5 +1,4 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Lt, PathSep};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{AngleArguments, ParenArguments};
@@ -27,21 +26,11 @@ impl From<ParenArguments> for PathArguments {
 
 impl Parse for PathArguments {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let mut fork = stream.fork();
-
-        if fork.peek::<PathSep>() {
-            let _ = fork.parse::<PathSep>()?;
-
-            if fork.peek::<Lt>() {
-                stream.seek(&fork);
-            }
+        if let Some(args) = stream.parse_if::<AngleArguments>() {
+            Ok(args.into())
+        } else {
+            Ok(Self::None)
         }
-
-        if stream.peek::<Lt>() {
-            return Ok(Self::AngleBracketed(stream.parse()?));
-        }
-
-        Ok(Self::None)
     }
 }
 

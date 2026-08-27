@@ -13,6 +13,7 @@ pub struct QSelf {
     pub lt: Lt,
     pub ty: Box<Type>,
     pub as_keyword: Option<As>,
+    pub gt: Gt,
     /// Number of leading path segments that belong inside the `<... as Trait>`.
     pub position: usize,
 }
@@ -23,7 +24,6 @@ impl QSelf {
     /// by `TypePath` and expression-path parsing.
     pub fn parse_qualified(stream: &mut ParseStream) -> Result<(Self, Path), ParseError> {
         let (qself, trait_path) = Self::parse_with_trait(stream)?;
-        let _ = stream.parse::<moxy_token::punct::PathSep>()?;
         let rest = stream.parse::<Path>()?;
         let path = if let Some(mut p) = trait_path {
             p.extend(rest);
@@ -47,7 +47,7 @@ impl QSelf {
             (None, None)
         };
 
-        let _ = stream.parse::<Gt>()?;
+        let gt = stream.parse::<Gt>()?;
         let position = trait_path.as_ref().map(|p| p.len()).unwrap_or(0);
 
         Ok((
@@ -55,6 +55,7 @@ impl QSelf {
                 lt,
                 ty,
                 as_keyword,
+                gt,
                 position,
             },
             trait_path,
@@ -74,6 +75,6 @@ impl ToTokens for QSelf {
         // (it owns the trait segments and the closing `>`/`::` placement).
         self.lt.to_tokens(tokens);
         self.ty.to_tokens(tokens);
-        Gt::default().to_tokens(tokens);
+        self.gt.to_tokens(tokens);
     }
 }

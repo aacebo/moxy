@@ -25,21 +25,7 @@ impl Spanner for ExprMethodCall {
 impl ExprMethodCall {
     /// Parse an optional turbofish `::<...>` (method-call generic args).
     pub fn parse_turbofish(stream: &mut ParseStream) -> Result<Option<AngleArguments>, ParseError> {
-        let mut fork = stream.fork();
-
-        if !fork.peek::<moxy_token::punct::PathSep>() {
-            return Ok(None);
-        }
-
-        let _ = fork.parse::<moxy_token::punct::PathSep>()?;
-
-        if !fork.peek::<moxy_token::punct::Lt>() {
-            return Ok(None);
-        }
-
-        let args = fork.parse::<AngleArguments>()?;
-        stream.seek(&fork);
-        Ok(Some(args))
+        Ok(stream.parse_if())
     }
 
     pub fn into_postfix_expr(self) -> super::PostfixExpr {

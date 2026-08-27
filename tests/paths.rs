@@ -21,7 +21,6 @@ fn associated_and_turbofish_paths_render_in_expressions() {
 }
 
 #[test]
-#[ignore = "formatter currently drops turbofish path separators"]
 fn turbofish_paths_render_complete_valid_syntax() {
     for source in ["function::<T>(a, b)", "object.method::<T>(a, b)"] {
         let expression: Expr = moxy::parse!(source).unwrap();
@@ -32,7 +31,6 @@ fn turbofish_paths_render_complete_valid_syntax() {
 }
 
 #[test]
-#[ignore = "formatter currently drops qualified-self trait paths"]
 fn qualified_self_paths_render_complete_valid_syntax() {
     let ty: Type = moxy::parse!("<T as Trait>::Assoc").unwrap();
     assert!(ty.is_path());

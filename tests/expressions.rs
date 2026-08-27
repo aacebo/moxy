@@ -108,7 +108,7 @@ fn while_for_break_continue_and_yield_complete_the_pipeline() {
 fn postfix_expression_families_complete_the_pipeline() {
     for (source, expected) in [
         ("function(a, b)", "function(a, b)"),
-        ("object.method(a, b)", "object\n.method(a, b)"),
+        ("object.method(a, b)", "object.method(a, b)"),
         ("object.field", "object.field"),
         ("tuple.0", "tuple.0"),
         ("array[index]", "array[index]"),
@@ -205,7 +205,7 @@ fn unary_binary_and_postfix_public_variants_match_rendered_syntax() {
 
     for (source, expected, kind) in [
         ("function(value)", "function(value)", 0),
-        ("object.method(value)", "object\n.method(value)", 1),
+        ("object.method(value)", "object.method(value)", 1),
         ("object.field", "object.field", 2),
         ("array[index]", "array[index]", 3),
         ("future.await", "future.await", 4),
