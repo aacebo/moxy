@@ -5,7 +5,7 @@ pub use f32::*;
 pub use f64::*;
 
 use crate::lex::{Cursor, LexError, Scan};
-use crate::{Span, Spanner};
+use crate::{Lit, Span, Spanner};
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(untagged))]
@@ -102,6 +102,24 @@ impl std::fmt::Display for LitFloat {
 impl From<LitFloat> for String {
     fn from(value: LitFloat) -> Self {
         value.repr().to_string()
+    }
+}
+
+impl Lit {
+    pub fn f32_suffixed(value: f32) -> Self {
+        LitF32::new(value, true, Span::default()).into()
+    }
+
+    pub fn f32_unsuffixed(value: f32) -> Self {
+        LitF32::new(value, false, Span::default()).into()
+    }
+
+    pub fn f64_suffixed(value: f64) -> Self {
+        LitF64::new(value, true, Span::default()).into()
+    }
+
+    pub fn f64_unsuffixed(value: f64) -> Self {
+        LitF64::new(value, false, Span::default()).into()
     }
 }
 

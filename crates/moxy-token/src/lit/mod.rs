@@ -4,7 +4,6 @@ use crate::{Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 pub mod float;
 pub mod int;
-pub mod uint;
 
 mod r#bool;
 mod byte;
@@ -22,14 +21,12 @@ pub use char::*;
 pub use float::*;
 pub use int::*;
 pub use str::*;
-pub use uint::*;
 pub use verbatim::*;
 
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(into = "String"))]
 pub enum Lit {
     Int(LitInt),
-    UInt(LitUInt),
     Float(LitFloat),
     Str(LitStr),
     ByteStr(LitByteStr),
@@ -54,6 +51,7 @@ impl Lit {
     /// Classify and decode an arbitrary literal repr into the matching variant. Used by
     /// the proc-macro bridges, which only have the source text. Falls back to
     /// [`LitVerbatim`] for anything that doesn't lex as a known literal.
+    #[inline]
     pub fn from_repr(repr: &str, span: Span) -> Self {
         use std::str::FromStr;
 
@@ -66,107 +64,10 @@ impl Lit {
         }
     }
 
-    pub fn u8_suffixed(value: u8) -> Self {
-        LitU8::new(value, true, Span::default()).into()
-    }
-
-    pub fn u8_unsuffixed(value: u8) -> Self {
-        LitU8::new(value, false, Span::default()).into()
-    }
-
-    pub fn u16_suffixed(value: u16) -> Self {
-        LitU16::new(value, true, Span::default()).into()
-    }
-
-    pub fn u16_unsuffixed(value: u16) -> Self {
-        LitU16::new(value, false, Span::default()).into()
-    }
-
-    pub fn u32_suffixed(value: u32) -> Self {
-        LitU32::new(value, true, Span::default()).into()
-    }
-
-    pub fn u32_unsuffixed(value: u32) -> Self {
-        LitU32::new(value, false, Span::default()).into()
-    }
-
-    pub fn u64_suffixed(value: u64) -> Self {
-        LitU64::new(value, true, Span::default()).into()
-    }
-
-    pub fn u64_unsuffixed(value: u64) -> Self {
-        LitU64::new(value, false, Span::default()).into()
-    }
-
-    pub fn usize_suffixed(value: usize) -> Self {
-        LitUSize::new(value, true, Span::default()).into()
-    }
-
-    pub fn usize_unsuffixed(value: usize) -> Self {
-        LitUSize::new(value, false, Span::default()).into()
-    }
-
-    pub fn i8_suffixed(value: i8) -> Self {
-        LitI8::new(value, true, Span::default()).into()
-    }
-
-    pub fn i8_unsuffixed(value: i8) -> Self {
-        LitI8::new(value, false, Span::default()).into()
-    }
-
-    pub fn i16_suffixed(value: i16) -> Self {
-        LitI16::new(value, true, Span::default()).into()
-    }
-
-    pub fn i16_unsuffixed(value: i16) -> Self {
-        LitI16::new(value, false, Span::default()).into()
-    }
-
-    pub fn i32_suffixed(value: i32) -> Self {
-        LitI32::new(value, true, Span::default()).into()
-    }
-
-    pub fn i32_unsuffixed(value: i32) -> Self {
-        LitI32::new(value, false, Span::default()).into()
-    }
-
-    pub fn i64_suffixed(value: i64) -> Self {
-        LitI64::new(value, true, Span::default()).into()
-    }
-
-    pub fn i64_unsuffixed(value: i64) -> Self {
-        LitI64::new(value, false, Span::default()).into()
-    }
-
-    pub fn isize_suffixed(value: isize) -> Self {
-        LitISize::new(value, true, Span::default()).into()
-    }
-
-    pub fn isize_unsuffixed(value: isize) -> Self {
-        LitISize::new(value, false, Span::default()).into()
-    }
-
-    pub fn f32_suffixed(value: f32) -> Self {
-        LitF32::new(value, true, Span::default()).into()
-    }
-
-    pub fn f32_unsuffixed(value: f32) -> Self {
-        LitF32::new(value, false, Span::default()).into()
-    }
-
-    pub fn f64_suffixed(value: f64) -> Self {
-        LitF64::new(value, true, Span::default()).into()
-    }
-
-    pub fn f64_unsuffixed(value: f64) -> Self {
-        LitF64::new(value, false, Span::default()).into()
-    }
-
     #[inline]
     pub fn repr(&self) -> &str {
         match self {
             Self::Int(v) => v.repr(),
-            Self::UInt(v) => v.repr(),
             Self::Float(v) => v.repr(),
             Self::Str(v) => v.repr(),
             Self::ByteStr(v) => v.repr(),
@@ -182,7 +83,6 @@ impl Lit {
     pub fn span(&self) -> Span {
         match self {
             Self::Int(v) => v.span(),
-            Self::UInt(v) => v.span(),
             Self::Float(v) => v.span(),
             Self::Str(v) => v.span(),
             Self::ByteStr(v) => v.span(),
@@ -198,7 +98,6 @@ impl Lit {
     pub fn set_span(&mut self, span: Span) {
         match self {
             Self::Int(v) => v.set_span(span),
-            Self::UInt(v) => v.set_span(span),
             Self::Float(v) => v.set_span(span),
             Self::Str(v) => v.set_span(span),
             Self::ByteStr(v) => v.set_span(span),
@@ -211,18 +110,8 @@ impl Lit {
     }
 
     #[inline]
-    pub fn to_token_tree(&self) -> TokenTree {
-        TokenTree::Literal(self.clone())
-    }
-
-    #[inline]
-    pub fn into_token_tree(self) -> TokenTree {
-        TokenTree::Literal(self)
-    }
-
-    #[inline]
     pub fn is_int(&self) -> bool {
-        matches!(self, Self::Int(_) | Self::UInt(_))
+        matches!(self, Self::Int(_))
     }
 
     #[inline]
@@ -261,18 +150,13 @@ impl Lit {
     }
 
     #[inline]
-    pub fn as_uint(&self) -> Option<&LitUInt> {
-        if let Self::UInt(v) = self { Some(v) } else { None }
+    pub fn to_token_tree(&self) -> TokenTree {
+        TokenTree::Literal(self.clone())
     }
 
-    /// The integer value as `u64`, when this is an unsigned int, or a non-negative
-    /// signed int that fits.
-    pub fn as_u64(&self) -> Option<u64> {
-        match self {
-            Self::UInt(v) => u64::try_from(v.as_u128()).ok(),
-            Self::Int(v) => u64::try_from(v.as_i128()).ok(),
-            _ => None,
-        }
+    #[inline]
+    pub fn into_token_tree(self) -> TokenTree {
+        TokenTree::Literal(self)
     }
 }
 
@@ -316,11 +200,6 @@ impl Scan for Lit {
 
         if let Ok((end, v)) = LitChar::scan(cursor) {
             return Ok((end, Self::Char(v)));
-        }
-
-        // Numbers: LitUInt (u*-suffixed) → LitFloat (f*/fractional) → LitInt (i*/unsuffixed default).
-        if let Ok((end, v)) = LitUInt::scan(cursor) {
-            return Ok((end, Self::UInt(v)));
         }
 
         if let Ok((end, v)) = LitFloat::scan(cursor) {

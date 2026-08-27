@@ -74,8 +74,8 @@ impl Scan for LitByte {
         let len = end.offset() as usize - cursor.offset() as usize;
         let repr = &cursor.rest()[..len];
         let span = cursor.span_to(&end);
-
         let inner = repr.strip_prefix("b'").and_then(|r| r.strip_suffix('\''));
+
         match inner.and_then(decode_one_char) {
             Some(value) if value.is_ascii() => Ok((end, Self::from_parts(value as u8, repr, span))),
             _ => cursor.error().into(),

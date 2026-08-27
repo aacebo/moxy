@@ -65,7 +65,7 @@ impl Parse for Member {
                 let at = stream.span();
                 let lit = stream.parse::<Lit>()?;
 
-                if let Some(i) = lit.as_uint()
+                if let Some(i) = lit.as_int()
                     && i.repr().chars().all(char::is_alphabetic)
                 {
                     return Err(LexError::new(at).message("expected tuple index").into());
