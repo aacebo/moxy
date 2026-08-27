@@ -43,7 +43,6 @@ impl Format for Signature {
         f.text("(")?;
         f.group(|f| {
             for pair in self.params.inner.inputs.pairs() {
-                eprintln!("{:#?}", pair);
                 match pair {
                     moxy_ast::Pair::Punctuated(param, _) => {
                         param.format(f)?;
