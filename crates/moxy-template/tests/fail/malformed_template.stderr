@@ -1,0 +1,13 @@
+error: macro expansion ignores `;` and any tokens following
+ --> tests/fail/malformed_template.rs:2:32
+  |
+2 |     let _ = moxy::template! { @invalid };
+  |             -------------------^^^^^^^-- caused by the macro expansion here
+  |
+  = note: the usage of `moxy::template!` is likely invalid in expression context
+
+error: expected `if`, `for`, or `match` after `@`
+ --> tests/fail/malformed_template.rs:2:32
+  |
+2 |     let _ = moxy::template! { @invalid };
+  |                                ^^^^^^^

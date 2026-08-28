@@ -5,7 +5,7 @@ mod tmpl_tokens;
 
 pub use keyword::TmplKeyword;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, LexError, Parse, Punctuation, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, Keyword, LexError, Parse, Punctuation, Span, ToTokens, TokenStream, TokenTree};
 pub use paste::Paste;
 pub use tmpl_interp::*;
 pub use tmpl_tokens::*;
@@ -29,7 +29,7 @@ impl Template {
 
 impl Parse for Template {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let nodes = stream.parse::<Vec<Node>>()?;
+        let nodes = stream.parse_until_empty()?;
         Ok(Self { nodes })
     }
 }
@@ -57,7 +57,7 @@ impl Node {
     }
 
     pub fn group_has_interp(g: &Group) -> bool {
-        !Self::is_interp_group(g) && stream_has_interp(&g.stream())
+        Self::is_interp_group(g) || is_template(&g.stream())
     }
 }
 
@@ -106,11 +106,24 @@ impl ToTokens for Node {
     }
 }
 
-fn stream_has_interp(stream: &TokenStream) -> bool {
-    stream.iter().any(|tt| match tt {
-        TokenTree::Group(g) => Node::is_interp_group(g) || stream_has_interp(&g.stream()),
-        _ => false,
-    })
+fn is_template(stream: &TokenStream) -> bool {
+    let mut iter = stream.iter();
+
+    while let Some(token) = iter.next() {
+        if let TokenTree::Punct(Punctuation::At(_)) = token {
+            if let Some(TokenTree::Keyword(next)) = iter.next() {
+                if matches!(next, Keyword::If(_) | Keyword::Else(_) | Keyword::For(_) | Keyword::Match(_)) {
+                    return true;
+                }
+            }
+        } else if let TokenTree::Group(g) = token
+            && (Node::is_interp_group(g) || is_template(&g.stream()))
+        {
+            return true;
+        }
+    }
+
+    false
 }
 
 fn emit_group(delim: Delim, body: &Template, out: &mut TokenStream) {

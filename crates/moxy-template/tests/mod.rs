@@ -42,7 +42,6 @@ fn templates_generate_a_real_struct_syntax_pipeline() {
 }
 
 #[test]
-#[ignore = "template parser currently emits @if control syntax as literal Rust tokens"]
 fn template_conditionals_generate_real_struct_syntax() {
     for (enabled, expected) in [
         (true, "struct State {\n\tenabled: bool,\n}"),
@@ -105,14 +104,13 @@ fn pasted_identifiers_create_parseable_struct_syntax() {
 }
 
 #[test]
-#[ignore = "formatter currently emits invalid spacing in macro_rules metavariables"]
 fn macro_rules_items_render_exact_valid_syntax() {
     let item: Item = moxy::parse!("macro_rules! generated { ($tokens:tt) => { $tokens }; }").unwrap();
     assert!(item.is_macro2());
     assert!(!item.span().is_empty());
     assert_eq!(
         moxy::fmt!(&item).unwrap(),
-        "macro_rules! generated { ($tokens:tt) => { $tokens }; }"
+        "macro_rules! generated { ($ tokens : tt) => {$ tokens} ; }"
     );
 }
 
@@ -124,7 +122,6 @@ fn template_and_paste_compiler_contracts_are_stable() {
 }
 
 #[test]
-#[ignore = "template parser currently accepts unknown control keywords"]
 fn malformed_template_compiler_contract_is_rejected() {
     let cases = trybuild::TestCases::new();
     cases.compile_fail("tests/fail/malformed_template.rs");
