@@ -9,6 +9,7 @@ use crate::Ident;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UsePath {
+    pub prefix: Option<PathSep>,
     pub ident: Ident,
     pub path_sep: PathSep,
     pub tree: Box<UseTree>,
@@ -33,6 +34,7 @@ impl Spanner for UsePath {
 
 impl ToTokens for UsePath {
     fn to_tokens(&self, t: &mut TokenStream) {
+        self.prefix.to_tokens(t);
         self.ident.to_tokens(t);
         self.path_sep.to_tokens(t);
         self.tree.to_tokens(t);

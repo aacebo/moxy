@@ -12,8 +12,8 @@ pub use stream::*;
 ///
 /// # Example
 /// ```ignore
-/// let item: Item = moxy_token::parse!("fn foo() {}");
-/// let item = moxy_token::parse!("fn foo() {}" as Item);
+/// let item: Item = parse!("fn foo() {}");
+/// let item = parse!("fn foo() {}" as Item);
 /// ```
 #[macro_export]
 macro_rules! parse {

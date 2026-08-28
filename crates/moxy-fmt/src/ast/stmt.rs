@@ -45,6 +45,7 @@ impl Format for Stmt {
 
 impl Format for StmtLocal {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("let ")?;
         self.pat.format(f)?;
 
@@ -69,6 +70,7 @@ impl Format for StmtLocal {
 
 impl Format for StmtMacro {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.mac.format(f)?;
 
         if self.semi.is_some() {

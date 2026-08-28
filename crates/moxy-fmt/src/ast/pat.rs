@@ -37,6 +37,8 @@ impl Format for Pattern {
 
 impl Format for PatIdent {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+
         if self.by_ref.is_some() {
             f.text("ref ")?;
         }
@@ -60,12 +62,14 @@ impl Format for PatIdent {
 
 impl Format for PatPath {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.path.format(f)
     }
 }
 
 impl Format for PatTuple {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("(")?;
         self.elems.inner.format(f)?;
         f.text(")")
@@ -74,6 +78,7 @@ impl Format for PatTuple {
 
 impl Format for PatTupleStruct {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.path.format(f)?;
         f.text("(")?;
         self.elems.inner.format(f)?;
@@ -83,6 +88,7 @@ impl Format for PatTupleStruct {
 
 impl Format for PatStruct {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.path.format(f)?;
         f.text(" {")?;
         f.indent(|f| {
@@ -119,6 +125,8 @@ impl Format for PatStruct {
 
 impl Format for PatField {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+
         if self.shorthand {
             self.pat.format(f)
         } else {
@@ -131,6 +139,7 @@ impl Format for PatField {
 
 impl Format for PatSlice {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("[")?;
         self.elems.inner.format(f)?;
         f.text("]")
@@ -139,6 +148,7 @@ impl Format for PatSlice {
 
 impl Format for PatReference {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("&")?;
         self.mutability.format(f)?;
 
@@ -152,6 +162,8 @@ impl Format for PatReference {
 
 impl Format for PatOr {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+
         for pair in self.cases.pairs() {
             match pair {
                 moxy_ast::Pair::Punctuated(pat, _) => {
@@ -170,12 +182,15 @@ impl Format for PatOr {
 
 impl Format for PatLit {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.expr.format(f)
     }
 }
 
 impl Format for PatRange {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+
         if let Some(start) = &self.start {
             start.format(f)?;
         }
@@ -192,6 +207,7 @@ impl Format for PatRange {
 
 impl Format for pat::PatType {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.pat.format(f)?;
         f.text(": ")?;
         self.ty.format(f)
@@ -200,12 +216,14 @@ impl Format for pat::PatType {
 
 impl Format for PatGroup {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.pat.format(f)
     }
 }
 
 impl Format for PatParen {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("(")?;
         self.content.inner.format(f)?;
         f.text(")")

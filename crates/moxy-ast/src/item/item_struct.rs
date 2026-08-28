@@ -15,27 +15,27 @@ pub struct ItemStruct {
     pub ident: Ident,
     pub generics: Generics,
     pub fields: Fields,
-    pub semi_punct: Semi,
+    pub semi: Option<Semi>,
 }
 
 impl Parse for ItemStruct {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
-        let _ = stream.parse::<Struct>()?;
+        let struct_keyword = stream.parse::<Struct>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
         let fields = stream.parse::<Fields>()?;
-        let _ = stream.parse::<Semi>();
+        let semi = stream.parse_if::<Semi>();
 
         Ok(Self {
             attrs,
             vis,
-            struct_keyword: Struct::default(),
+            struct_keyword,
             ident,
             generics,
             fields,
-            semi_punct: Semi::default(),
+            semi,
         })
     }
 }
@@ -54,10 +54,7 @@ impl ToTokens for ItemStruct {
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);
         self.fields.to_tokens(t);
-
-        if !matches!(self.fields, Fields::Named(_)) {
-            self.semi_punct.to_tokens(t);
-        }
+        self.semi.to_tokens(t);
     }
 }
 

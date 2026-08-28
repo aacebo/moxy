@@ -50,12 +50,15 @@ impl Format for PrimaryExpr {
 
 impl Format for ExprLit {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.lit.format(f)
     }
 }
 
 impl Format for ExprPath {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+
         if let Some(qself) = &self.qself {
             // reuse TypePath QSelf logic via inline emit
             f.text("<")?;
@@ -106,6 +109,7 @@ impl Format for ExprPath {
 
 impl Format for ExprStruct {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.path.format(f)?;
         f.text(" {")?;
         f.indent(|f| {
@@ -143,6 +147,8 @@ impl Format for ExprStruct {
 
 impl Format for FieldValue {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+
         if self.shorthand {
             self.member.format(f)
         } else {
@@ -155,6 +161,8 @@ impl Format for FieldValue {
 
 impl Format for ExprClosure {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+
         if let Some(lifetimes) = &self.lifetimes {
             lifetimes.format(f)?;
             f.text(" ")?;
@@ -206,6 +214,7 @@ impl Format for ClosureParam {
 
 impl Format for ExprTuple {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("(")?;
         self.elems.inner.format(f)?;
         f.text(")")
@@ -214,6 +223,7 @@ impl Format for ExprTuple {
 
 impl Format for ExprArray {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("[")?;
         self.elems.inner.format(f)?;
         f.text("]")
@@ -222,6 +232,7 @@ impl Format for ExprArray {
 
 impl Format for ExprRepeat {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("[")?;
         self.content.inner.elem.format(f)?;
         f.text("; ")?;
@@ -232,6 +243,7 @@ impl Format for ExprRepeat {
 
 impl Format for ExprLet {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("let ")?;
         self.pat.format(f)?;
         f.text(" = ")?;
@@ -241,6 +253,7 @@ impl Format for ExprLet {
 
 impl Format for ExprParen {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("(")?;
         self.content.inner.format(f)?;
         f.text(")")
@@ -249,12 +262,14 @@ impl Format for ExprParen {
 
 impl Format for ExprGroup {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.expr.format(f)
     }
 }
 
 impl Format for ExprMacro {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.mac.format(f)
     }
 }
@@ -274,6 +289,7 @@ impl Format for UnaryExpr {
 
 impl Format for ExprReference {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("&")?;
         self.mutability.format(f)?;
 
@@ -287,6 +303,7 @@ impl Format for ExprReference {
 
 impl Format for ExprUnary {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.op.format(f)?;
         self.expr.format(f)
     }
@@ -294,6 +311,7 @@ impl Format for ExprUnary {
 
 impl Format for ExprCast {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.expr.format(f)?;
         f.text(" as ")?;
         self.ty.format(f)
@@ -302,6 +320,7 @@ impl Format for ExprCast {
 
 impl Format for ExprTry {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.expr.format(f)?;
         f.text("?")
     }
@@ -323,6 +342,7 @@ impl Format for BinaryExpr {
 
 impl Format for ExprBinary {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.left.format(f)?;
         f.text(" ")?;
         self.op.format(f)?;
@@ -333,6 +353,7 @@ impl Format for ExprBinary {
 
 impl Format for ExprAssign {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.left.format(f)?;
         f.text(" = ")?;
         self.right.format(f)
@@ -341,6 +362,7 @@ impl Format for ExprAssign {
 
 impl Format for ExprAssignOp {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.left.format(f)?;
         f.text(" ")?;
         self.op.format(f)?;
@@ -351,6 +373,8 @@ impl Format for ExprAssignOp {
 
 impl Format for ExprRange {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+
         if let Some(start) = &self.start {
             start.format(f)?;
         }
@@ -367,6 +391,7 @@ impl Format for ExprRange {
 
 impl Format for ExprType {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.expr.format(f)?;
         f.text(": ")?;
         self.ty.format(f)
@@ -389,6 +414,7 @@ impl Format for PostfixExpr {
 
 impl Format for ExprCall {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.func.format(f)?;
         f.text("(")?;
         self.args.inner.format(f)?;
@@ -398,8 +424,8 @@ impl Format for ExprCall {
 
 impl Format for ExprMethodCall {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.receiver.format(f)?;
-        // f.soft_break()?;
         f.text(".")?;
         self.method.format(f)?;
 
@@ -415,6 +441,7 @@ impl Format for ExprMethodCall {
 
 impl Format for ExprField {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.base.format(f)?;
         f.text(".")?;
         self.member.format(f)
@@ -423,6 +450,7 @@ impl Format for ExprField {
 
 impl Format for ExprIndex {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.base.format(f)?;
         f.text("[")?;
         self.index.inner.format(f)?;
@@ -432,6 +460,7 @@ impl Format for ExprIndex {
 
 impl Format for ExprAwait {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.base.format(f)?;
         f.text(".await")
     }
@@ -458,6 +487,8 @@ impl Format for BlockExpr {
 
 impl Format for ExprBrace {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+
         if let Some(label) = &self.label {
             label.format(f)?;
             f.text(" ")?;
@@ -469,6 +500,7 @@ impl Format for ExprBrace {
 
 impl Format for ExprIf {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("if ")?;
         self.cond.format(f)?;
         f.text(" ")?;
@@ -485,6 +517,8 @@ impl Format for ExprIf {
 
 impl Format for ExprWhile {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+
         if let Some(label) = &self.label {
             label.format(f)?;
             f.text(" ")?;
@@ -499,6 +533,8 @@ impl Format for ExprWhile {
 
 impl Format for ExprForLoop {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+
         if let Some(label) = &self.label {
             label.format(f)?;
             f.text(" ")?;
@@ -515,6 +551,8 @@ impl Format for ExprForLoop {
 
 impl Format for ExprLoop {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+
         if let Some(label) = &self.label {
             label.format(f)?;
             f.text(" ")?;
@@ -527,6 +565,7 @@ impl Format for ExprLoop {
 
 impl Format for ExprMatch {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("match ")?;
         self.expr.format(f)?;
         f.text(" {")?;
@@ -545,6 +584,7 @@ impl Format for ExprMatch {
 
 impl Format for MatchArm {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.pat.format(f)?;
 
         if let Some(guard) = &self.guard {
@@ -560,6 +600,7 @@ impl Format for MatchArm {
 
 impl Format for ExprAsync {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("async")?;
 
         if self.move_keyword.is_some() {
@@ -573,6 +614,7 @@ impl Format for ExprAsync {
 
 impl Format for ExprUnsafe {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("unsafe ")?;
         self.block.format(f)
     }
@@ -580,6 +622,7 @@ impl Format for ExprUnsafe {
 
 impl Format for ExprConst {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("const ")?;
         self.block.format(f)
     }
@@ -587,6 +630,7 @@ impl Format for ExprConst {
 
 impl Format for ExprTryBlock {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("try ")?;
         self.block.format(f)
     }
@@ -607,6 +651,7 @@ impl Format for JumpExpr {
 
 impl Format for ExprReturn {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("return")?;
 
         if let Some(expr) = &self.expr {
@@ -620,6 +665,7 @@ impl Format for ExprReturn {
 
 impl Format for ExprBreak {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("break")?;
 
         if let Some(label) = &self.label {
@@ -638,6 +684,7 @@ impl Format for ExprBreak {
 
 impl Format for ExprContinue {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("continue")?;
 
         if let Some(label) = &self.label {
@@ -651,6 +698,7 @@ impl Format for ExprContinue {
 
 impl Format for ExprYield {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("yield")?;
 
         if let Some(expr) = &self.expr {

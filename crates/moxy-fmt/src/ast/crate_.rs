@@ -4,6 +4,7 @@ use crate::{FmtError, Format, Formatter};
 
 impl Format for Crate {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         let mut first = true;
 
         for item in &self.items {

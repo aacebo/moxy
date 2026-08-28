@@ -94,12 +94,18 @@ impl Parse for UseTree {
             return Ok(Self::Group(UseGroup { items }));
         }
 
+        let prefix = stream.parse_if::<PathSep>();
         let ident = stream.parse::<Ident>()?;
 
         if stream.peek::<PathSep>() {
             let path_sep = stream.parse::<PathSep>()?;
             let tree = Box::new(stream.parse::<Self>()?);
-            return Ok(Self::Path(UsePath { ident, path_sep, tree }));
+            return Ok(Self::Path(UsePath {
+                prefix,
+                ident,
+                path_sep,
+                tree,
+            }));
         }
 
         if stream.peek::<As>() {

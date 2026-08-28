@@ -84,6 +84,8 @@ impl Format for FnParam {
 
 impl Format for Receiver {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+
         if self.reference.is_some() {
             f.text("&")?;
 
@@ -111,6 +113,8 @@ impl Format for Receiver {
 
 impl Format for Variadic {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+
         if let Some(name) = &self.name {
             name.format(f)?;
             f.text(": ")?;
@@ -172,6 +176,7 @@ impl Format for FieldsUnnamed {
 
 impl Format for Field {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -203,6 +208,10 @@ impl Format for UseTree {
 
 impl Format for UsePath {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        if self.prefix.is_some() {
+            f.text("::")?;
+        }
+
         self.ident.format(f)?;
         f.text("::")?;
         self.tree.format(f)
@@ -258,6 +267,7 @@ impl Format for Item {
 
 impl Format for ItemUse {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -272,6 +282,7 @@ impl Format for ItemUse {
 
 impl Format for ItemExternCrate {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -292,6 +303,7 @@ impl Format for ItemExternCrate {
 
 impl Format for ItemMod {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -334,6 +346,7 @@ impl Format for ItemMod {
 
 impl Format for ItemFn {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -348,6 +361,7 @@ impl Format for ItemFn {
 
 impl Format for ItemStruct {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -374,6 +388,7 @@ impl Format for ItemStruct {
 
 impl Format for ItemEnum {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -413,6 +428,7 @@ impl Format for ItemEnum {
 
 impl Format for Variant {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.ident.format(f)?;
         self.fields.format(f)?;
 
@@ -427,6 +443,7 @@ impl Format for Variant {
 
 impl Format for ItemUnion {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -442,6 +459,7 @@ impl Format for ItemUnion {
 
 impl Format for ItemTrait {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -487,6 +505,7 @@ impl Format for ItemTrait {
 
 impl Format for ItemTraitAlias {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -504,6 +523,7 @@ impl Format for ItemTraitAlias {
 
 impl Format for ItemImpl {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.defaultness.format(f)?;
 
         if matches!(self.defaultness, moxy_ast::Defaultness::Default(_)) {
@@ -550,6 +570,7 @@ impl Format for ItemImpl {
 
 impl Format for ItemTypeAlias {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -567,6 +588,7 @@ impl Format for ItemTypeAlias {
 
 impl Format for ItemConst {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -586,6 +608,7 @@ impl Format for ItemConst {
 
 impl Format for ItemStatic {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -610,6 +633,7 @@ impl Format for ItemStatic {
 
 impl Format for ItemMacro {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.call.format(f)?;
 
         if self.semi_punct.is_some() {
@@ -622,6 +646,7 @@ impl Format for ItemMacro {
 
 impl Format for ItemMacroRules {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("macro_rules! ")?;
         self.ident.format(f)?;
         f.text(" { ")?;
@@ -632,6 +657,7 @@ impl Format for ItemMacroRules {
 
 impl Format for ItemForeignMod {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.unsafety.format(f)?;
 
         if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
@@ -675,6 +701,7 @@ impl Format for ImplItem {
 
 impl Format for ImplItemFn {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -695,6 +722,7 @@ impl Format for ImplItemFn {
 
 impl Format for ImplItemConst {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -720,6 +748,7 @@ impl Format for ImplItemConst {
 
 impl Format for ImplItemType {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -743,6 +772,7 @@ impl Format for ImplItemType {
 
 impl Format for ImplItemMacro {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.mac.format(f)?;
 
         if self.semi.is_some() {
@@ -768,6 +798,7 @@ impl Format for TraitItem {
 
 impl Format for TraitItemFn {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.sig.format(f)?;
 
         if let Some(body) = &self.body {
@@ -783,6 +814,7 @@ impl Format for TraitItemFn {
 
 impl Format for TraitItemConst {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("const ")?;
         self.ident.format(f)?;
         self.generics.format(f)?;
@@ -800,6 +832,7 @@ impl Format for TraitItemConst {
 
 impl Format for TraitItemType {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         f.text("type ")?;
         self.ident.format(f)?;
         self.generics.format(f)?;
@@ -820,6 +853,7 @@ impl Format for TraitItemType {
 
 impl Format for TraitItemMacro {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.mac.format(f)?;
         f.text(";")?;
         Ok(())
@@ -841,6 +875,7 @@ impl Format for ForeignItem {
 
 impl Format for ForeignItemFn {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -854,6 +889,7 @@ impl Format for ForeignItemFn {
 
 impl Format for ForeignItemStatic {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -876,6 +912,7 @@ impl Format for ForeignItemStatic {
 
 impl Format for ForeignItemType {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -891,6 +928,7 @@ impl Format for ForeignItemType {
 
 impl Format for ForeignItemMacro {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
         self.mac.format(f)?;
 
         if self.semi.is_some() {

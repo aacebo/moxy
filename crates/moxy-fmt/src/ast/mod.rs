@@ -1,3 +1,4 @@
+mod attr;
 mod crate_;
 mod expr;
 mod generics;
