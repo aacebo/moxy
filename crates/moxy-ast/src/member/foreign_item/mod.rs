@@ -71,6 +71,7 @@ macro_rules! impl_from {
         $(impl From<$ty> for ForeignItem { fn from(v: $ty) -> Self { ForeignItem::$variant(v) } })+
     };
 }
+
 impl_from! {
     Fn => ForeignItemFn,
     Static => ForeignItemStatic,
@@ -83,12 +84,15 @@ impl Parse for ForeignItem {
         if stream.peek::<ForeignItemStatic>() {
             return Ok(Self::Static(stream.parse()?));
         }
+
         if stream.peek::<ForeignItemType>() {
             return Ok(Self::Type(stream.parse()?));
         }
+
         if stream.peek::<ForeignItemFn>() {
             return Ok(Self::Fn(stream.parse()?));
         }
+
         Ok(Self::Macro(stream.parse()?))
     }
 }

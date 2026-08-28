@@ -39,7 +39,7 @@ impl Parse for ItemImpl {
         let defaultness = stream.parse::<Defaultness>()?;
         let unsafety = stream.parse::<Unsafety>()?;
         let impl_keyword = stream.parse::<Impl>()?;
-        let generics = stream.parse::<Generics>()?;
+        let mut generics = stream.parse::<Generics>()?;
         let polarity = if stream.peek::<Not>() {
             BoundPolarity::Negative(stream.parse::<Not>()?)
         } else {
@@ -55,12 +55,7 @@ impl Parse for ItemImpl {
             (None, None, first)
         };
 
-        let mut generics = generics;
-
-        if stream.peek::<moxy_token::keyword::Where>() {
-            generics.where_clause = Some(stream.parse()?);
-        }
-
+        generics.where_clause = stream.parse_if();
         let items = Delimited::<Vec<ImplItem>>::parse_brace(stream)?;
 
         Ok(Self {

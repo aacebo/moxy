@@ -1,6 +1,6 @@
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Semi;
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, MacroCall};
 
@@ -10,21 +10,29 @@ use crate::{Attributes, MacroCall};
 pub struct TraitItemMacro {
     pub attrs: Attributes,
     pub mac: MacroCall,
-    pub semi: Option<Semi>,
+    pub semi: Semi,
 }
 
 impl Parse for TraitItemMacro {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let (mac, semi) = crate::MacroCall::parse_semi(stream)?;
-        Ok(Self { attrs, mac, semi })
+
+        if semi.is_none() {
+            return Err(LexError::new(mac.span()).message("expected ';'").into());
+        }
+
+        if let Some(semi) = semi {
+            Ok(Self { attrs, mac, semi })
+        } else {
+            Err(LexError::new(mac.span()).message("expected ';'").into())
+        }
     }
 }
 
 impl Spanner for TraitItemMacro {
     fn span(&self) -> Span {
-        let end = self.semi.as_ref().map(|s| s.span()).unwrap_or_else(|| self.mac.span());
-        self.attrs.span().join(end)
+        self.attrs.span().join(self.semi.span())
     }
 }
 

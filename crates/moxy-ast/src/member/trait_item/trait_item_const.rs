@@ -1,7 +1,7 @@
 use moxy_token::keyword::Const;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Eq, Semi};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Expr, Generics, Ident, Type};
 
@@ -16,31 +16,25 @@ pub struct TraitItemConst {
     pub colon: Colon,
     pub ty: Type,
     pub default: Option<(Eq, Expr)>,
-    pub semi: Option<Semi>,
+    pub semi: Semi,
 }
 
 impl Parse for TraitItemConst {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-        let attrs = stream.parse::<Attributes>()?;
-
-        if stream.curr().and_then(|t| t.text()) != Some("const") {
-            return Err(LexError::new(at).message("expected trait const").into());
-        }
-
-        let const_keyword = stream.parse::<Const>()?;
-        let ident = stream.parse::<Ident>()?;
-        let generics = stream.parse::<Generics>()?;
-        let colon = stream.parse::<Colon>()?;
-        let ty = stream.parse::<Type>()?;
+        let attrs = stream.parse()?;
+        let const_keyword = stream.parse()?;
+        let ident = stream.parse()?;
+        let generics = stream.parse()?;
+        let colon = stream.parse()?;
+        let ty = stream.parse()?;
         let default = if stream.peek::<Eq>() {
-            let eq = stream.parse::<Eq>()?;
-            Some((eq, stream.parse::<Expr>()?))
+            let eq = stream.parse()?;
+            Some((eq, stream.parse()?))
         } else {
             None
         };
 
-        let semi = stream.parse_if::<Semi>();
+        let semi = stream.parse()?;
 
         Ok(Self {
             attrs,
@@ -57,13 +51,7 @@ impl Parse for TraitItemConst {
 
 impl Spanner for TraitItemConst {
     fn span(&self) -> Span {
-        let end = self
-            .semi
-            .as_ref()
-            .map(|s| s.span())
-            .or_else(|| self.default.as_ref().map(|(_, e)| e.span()))
-            .unwrap_or_else(|| self.ty.span());
-        self.attrs.span().join(end)
+        self.attrs.span().join(self.semi.span())
     }
 }
 
@@ -76,9 +64,9 @@ impl ToTokens for TraitItemConst {
         self.colon.to_tokens(t);
         self.ty.to_tokens(t);
 
-        if let Some((eq, d)) = &self.default {
+        if let Some((eq, expr)) = &self.default {
             eq.to_tokens(t);
-            d.to_tokens(t);
+            expr.to_tokens(t);
         }
 
         self.semi.to_tokens(t);

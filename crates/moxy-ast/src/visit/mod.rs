@@ -1280,7 +1280,7 @@ define_visit! {
         fields {
             attrs => visit_attributes / visit_attributes_mut,
             sig => visit_signature / visit_signature_mut,
-            default_body: opt => visit_stmt_block / visit_stmt_block_mut,
+            body: opt => visit_stmt_block / visit_stmt_block_mut,
             semi: skip,
         }
     }

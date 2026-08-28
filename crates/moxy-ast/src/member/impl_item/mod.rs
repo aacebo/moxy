@@ -71,6 +71,7 @@ macro_rules! impl_from {
         $(impl From<$ty> for ImplItem { fn from(v: $ty) -> Self { ImplItem::$variant(v) } })+
     };
 }
+
 impl_from! {
     Fn => ImplItemFn,
     Type => ImplItemType,
@@ -88,12 +89,15 @@ impl Parse for ImplItem {
         if stream.peek::<ImplItemConst>() {
             return Ok(Self::Const(Box::new(stream.parse()?)));
         }
+
         if stream.peek::<ImplItemType>() {
             return Ok(Self::Type(stream.parse()?));
         }
+
         if stream.peek::<ImplItemFn>() {
             return Ok(Self::Fn(stream.parse()?));
         }
+
         Ok(Self::Macro(stream.parse()?))
     }
 }

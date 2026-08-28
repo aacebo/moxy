@@ -58,10 +58,7 @@ impl Parse for Signature {
         })?;
 
         let output = stream.parse::<ReturnType>()?;
-
-        if stream.peek::<moxy_token::keyword::Where>() {
-            generics.where_clause = Some(stream.parse()?);
-        }
+        generics.where_clause = stream.parse_if();
 
         Ok(Self {
             constness,

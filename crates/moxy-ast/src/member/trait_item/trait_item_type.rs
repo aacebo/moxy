@@ -1,7 +1,7 @@
 use moxy_token::keyword::Type as KwType;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Eq, Plus, Semi};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Generics, Ident, Punctuated, Type, TypeBound};
 
@@ -16,24 +16,17 @@ pub struct TraitItemType {
     pub colon: Option<Colon>,
     pub bounds: Punctuated<TypeBound, Plus>,
     pub default: Option<(Eq, Type)>,
-    pub semi: Option<Semi>,
+    pub semi: Semi,
 }
 
 impl Parse for TraitItemType {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
         let attrs = stream.parse::<Attributes>()?;
-
-        if stream.curr().and_then(|t| t.text()) != Some("type") {
-            return Err(LexError::new(at).message("expected trait type").into());
-        }
-
         let type_keyword = stream.parse::<KwType>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
         let (colon, bounds) = if stream.peek::<Colon>() {
-            let colon = stream.parse::<Colon>()?;
-            (Some(colon), crate::TypeBound::parse_bounds(stream)?)
+            (Some(stream.parse::<Colon>()?), TypeBound::parse_bounds(stream)?)
         } else {
             (None, Punctuated::new())
         };
@@ -45,7 +38,7 @@ impl Parse for TraitItemType {
             None
         };
 
-        let semi = stream.parse_if::<Semi>();
+        let semi = stream.parse()?;
 
         Ok(Self {
             attrs,
@@ -62,13 +55,7 @@ impl Parse for TraitItemType {
 
 impl Spanner for TraitItemType {
     fn span(&self) -> Span {
-        self.attrs.span().join(
-            self.semi
-                .as_ref()
-                .map(|s| s.span())
-                .or_else(|| self.default.as_ref().map(|(_, t)| t.span()))
-                .unwrap_or(self.ident.span()),
-        )
+        self.attrs.span().join(self.semi.span())
     }
 }
 
@@ -78,11 +65,8 @@ impl ToTokens for TraitItemType {
         self.type_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);
-
-        if !self.bounds.is_empty() {
-            self.colon.to_tokens(t);
-            self.bounds.to_tokens(t);
-        }
+        self.colon.to_tokens(t);
+        self.bounds.to_tokens(t);
 
         if let Some((eq, d)) = &self.default {
             eq.to_tokens(t);

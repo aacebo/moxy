@@ -23,12 +23,7 @@ impl Parse for ItemEnum {
         let vis = stream.parse::<Visibility>()?;
         let enum_keyword = stream.parse::<Enum>()?;
         let ident = stream.parse::<Ident>()?;
-        let mut generics = stream.parse::<Generics>()?;
-
-        if stream.peek::<moxy_token::keyword::Where>() {
-            generics.where_clause = Some(stream.parse()?);
-        }
-
+        let generics = stream.parse::<Generics>()?;
         let variants = Delimited::parse_brace_with(stream, Punctuated::parse_terminated)?;
 
         Ok(Self {

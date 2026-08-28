@@ -1,4 +1,3 @@
-use moxy_token::keyword::Where;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Comma, Gt, Lt};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
@@ -35,32 +34,28 @@ pub use where_predicate::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Generics {
-    pub lt_punct: Lt,
-    pub gt_punct: Gt,
+    pub lt: Option<Lt>,
+    pub gt: Option<Gt>,
     pub params: Punctuated<GenericParam, Comma>,
     pub where_clause: Option<WhereClause>,
 }
 
 impl Parse for Generics {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let params = if stream.peek::<Lt>() {
-            let _ = stream.parse::<Lt>()?;
-            let params = Punctuated::parse_separated_nonempty(stream)?;
-            let _ = stream.parse::<Gt>()?;
-            params
+        let lt = stream.parse_if();
+
+        let params = if lt.is_some() {
+            Punctuated::parse_separated_nonempty(stream)?
         } else {
             Punctuated::new()
         };
 
-        let where_clause = if stream.peek::<Where>() {
-            Some(stream.parse::<WhereClause>()?)
-        } else {
-            None
-        };
+        let gt = stream.parse_if();
+        let where_clause = stream.parse_if();
 
         Ok(Self {
-            lt_punct: Lt::default(),
-            gt_punct: Gt::default(),
+            lt,
+            gt,
             params,
             where_clause,
         })
@@ -69,30 +64,21 @@ impl Parse for Generics {
 
 impl Spanner for Generics {
     fn span(&self) -> Span {
-        if self.params.is_empty() {
-            return Span::call_site();
-        }
-
         let end = if let Some(w) = &self.where_clause {
             w.span()
         } else {
-            self.gt_punct.span()
+            self.gt.map(|v| v.span()).unwrap_or(self.params.span())
         };
 
-        self.lt_punct.span().join(end)
+        self.lt.map(|v| v.span()).unwrap_or(self.params.span()).join(end)
     }
 }
 
 impl ToTokens for Generics {
     fn to_tokens(&self, t: &mut TokenStream) {
-        if !self.params.is_empty() {
-            self.lt_punct.to_tokens(t);
-            self.params.to_tokens(t);
-            self.gt_punct.to_tokens(t);
-        }
-
-        if let Some(w) = &self.where_clause {
-            w.to_tokens(t);
-        }
+        self.lt.to_tokens(t);
+        self.params.to_tokens(t);
+        self.gt.to_tokens(t);
+        self.where_clause.to_tokens(t);
     }
 }

@@ -1,7 +1,7 @@
 use moxy_token::keyword::Type as KwType;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Eq, Semi};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Defaultness, Generics, Ident, Type, Visibility};
 
@@ -22,15 +22,9 @@ pub struct ImplItemType {
 
 impl Parse for ImplItemType {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let defaultness = stream.parse::<Defaultness>()?;
-
-        if stream.curr().and_then(|t| t.text()) != Some("type") {
-            return Err(LexError::new(at).message("expected impl type").into());
-        }
-
         let type_keyword = stream.parse::<KwType>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;

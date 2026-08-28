@@ -24,12 +24,7 @@ impl Parse for ItemStruct {
         let vis = stream.parse::<Visibility>()?;
         let _ = stream.parse::<Struct>()?;
         let ident = stream.parse::<Ident>()?;
-        let mut generics = stream.parse::<Generics>()?;
-
-        if stream.peek::<moxy_token::keyword::Where>() {
-            generics.where_clause = Some(stream.parse()?);
-        }
-
+        let generics = stream.parse::<Generics>()?;
         let fields = stream.parse::<Fields>()?;
         let _ = stream.parse::<Semi>();
 

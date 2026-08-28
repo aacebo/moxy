@@ -71,6 +71,7 @@ macro_rules! impl_from {
         $(impl From<$ty> for TraitItem { fn from(v: $ty) -> Self { TraitItem::$variant(v) } })+
     };
 }
+
 impl_from! {
     Fn => TraitItemFn,
     Type => TraitItemType,
@@ -88,12 +89,15 @@ impl Parse for TraitItem {
         if stream.peek::<TraitItemConst>() {
             return Ok(Self::Const(Box::new(stream.parse()?)));
         }
+
         if stream.peek::<TraitItemType>() {
             return Ok(Self::Type(stream.parse()?));
         }
+
         if stream.peek::<TraitItemFn>() {
             return Ok(Self::Fn(stream.parse()?));
         }
+
         Ok(Self::Macro(stream.parse()?))
     }
 }

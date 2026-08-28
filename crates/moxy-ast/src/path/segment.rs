@@ -20,7 +20,7 @@ impl PathSegment {
 
 impl Parse for PathSegment {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let ident = stream.parse::<Ident>()?;
+        let ident = Ident::parse_any(stream)?;
 
         // `Fn`-family segments take parenthesized args (`Fn(A) -> B`); this only
         // applies to those trait names, so it never swallows expression calls.

@@ -1,7 +1,7 @@
 use moxy_token::keyword::Const;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::{Colon, Eq, Semi};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Defaultness, Expr, Generics, Ident, Type, Visibility};
 
@@ -24,15 +24,9 @@ pub struct ImplItemConst {
 
 impl Parse for ImplItemConst {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let defaultness = stream.parse::<Defaultness>()?;
-
-        if stream.curr().and_then(|t| t.text()) != Some("const") {
-            return Err(LexError::new(at).message("expected impl const").into());
-        }
-
         let const_keyword = stream.parse::<Const>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;

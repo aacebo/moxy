@@ -36,6 +36,7 @@ impl Parse for ItemTraitAlias {
         let eq_punct = stream.parse::<Eq>()?;
         let bounds = crate::TypeBound::parse_bounds(stream)?;
         let semi_punct = stream.parse::<Semi>()?;
+
         Ok(Self {
             attrs,
             vis,

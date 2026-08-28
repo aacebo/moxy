@@ -770,7 +770,7 @@ impl Format for TraitItemFn {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.sig.format(f)?;
 
-        if let Some(body) = &self.default_body {
+        if let Some(body) = &self.body {
             f.text(" ")?;
             body.format(f)?;
         } else {
@@ -821,11 +821,7 @@ impl Format for TraitItemType {
 impl Format for TraitItemMacro {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.mac.format(f)?;
-
-        if self.semi.is_some() {
-            f.text(";")?;
-        }
-
+        f.text(";")?;
         Ok(())
     }
 }

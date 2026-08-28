@@ -43,10 +43,7 @@ impl Parse for ItemTrait {
             (None, Punctuated::new())
         };
 
-        if stream.peek::<moxy_token::keyword::Where>() {
-            generics.where_clause = Some(stream.parse()?);
-        }
-
+        generics.where_clause = stream.parse_if();
         let items = Delimited::<Vec<TraitItem>>::parse_brace(stream)?;
 
         Ok(Self {
@@ -74,22 +71,13 @@ impl ToTokens for ItemTrait {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.vis.to_tokens(t);
-
-        if let Some(auto_keyword) = &self.auto_keyword {
-            auto_keyword.to_tokens(t);
-        }
-
+        self.unsafety.to_tokens(t);
+        self.auto_keyword.to_tokens(t);
         self.trait_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);
-
-        if !self.supertraits.is_empty() {
-            if let Some(colon_punct) = &self.colon_punct {
-                colon_punct.to_tokens(t);
-            }
-            self.supertraits.to_tokens(t);
-        }
-
+        self.colon_punct.to_tokens(t);
+        self.supertraits.to_tokens(t);
         self.items.to_tokens(t);
     }
 }
