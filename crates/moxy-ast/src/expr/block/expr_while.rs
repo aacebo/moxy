@@ -1,4 +1,4 @@
-use moxy_token::keyword::While;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
@@ -11,7 +11,7 @@ use crate::*;
 pub struct ExprWhile {
     pub attrs: Attributes,
     pub label: Option<Label>,
-    pub while_keyword: While,
+    pub while_keyword: Token![while],
     pub cond: Box<Expr>,
     pub body: StmtBlock,
 }
@@ -24,7 +24,7 @@ impl Spanner for ExprWhile {
 
 impl ExprWhile {
     pub fn parse_from(stream: &mut ParseStream, label: Option<Label>, attrs: Attributes) -> Result<Self, ParseError> {
-        let while_keyword = stream.parse::<While>()?;
+        let while_keyword = stream.parse::<Token![while]>()?;
         let cond = Box::new(parse_expr(stream, false)?);
         let body = stream.parse::<StmtBlock>()?;
 

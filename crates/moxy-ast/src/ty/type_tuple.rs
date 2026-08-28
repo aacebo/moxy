@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Comma;
 use moxy_token::span::Spanner;
 use moxy_token::{Parse, Span, ToTokens, TokenStream};
 
@@ -10,7 +10,7 @@ use crate::{Delimited, Punctuated};
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeTuple {
-    pub elems: Delimited<Punctuated<Type, Comma>>,
+    pub elems: Delimited<Punctuated<Type, Token![,]>>,
 }
 
 impl Parse for TypeTuple {

@@ -1,6 +1,5 @@
-use moxy_token::keyword::As;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Gt, Lt, PathSep};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::QSelf;
@@ -16,7 +15,7 @@ pub struct TypePath {
 
 impl Parse for TypePath {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Lt>() {
+        if stream.peek::<Token![<]>() {
             let (qself, path) = super::QSelf::parse_qualified(stream)?;
 
             return Ok(Self {
@@ -46,7 +45,7 @@ impl TypePath {
     pub fn emit_segments(segs: &[&PathSegment], tokens: &mut TokenStream) {
         for (i, seg) in segs.iter().enumerate() {
             if i > 0 {
-                PathSep::default().to_tokens(tokens);
+                <Token![::]>::default().to_tokens(tokens);
             }
 
             seg.to_tokens(tokens);
@@ -61,20 +60,20 @@ impl ToTokens for TypePath {
             Some(qself) => {
                 // `< ty (as Trait)? > :: rest`, where `position` segments of the
                 // path belong to the trait inside the angle brackets.
-                Lt::default().to_tokens(tokens);
+                <Token![<]>::default().to_tokens(tokens);
                 qself.ty.to_tokens(tokens);
 
                 let segs: Vec<&PathSegment> = self.path.iter().collect();
 
                 if qself.position > 0 {
-                    As::default().to_tokens(tokens);
+                    <Token![as]>::default().to_tokens(tokens);
                     Self::emit_segments(&segs[..qself.position], tokens);
                 }
 
-                Gt::default().to_tokens(tokens);
+                <Token![>]>::default().to_tokens(tokens);
 
                 for seg in &segs[qself.position..] {
-                    PathSep::default().to_tokens(tokens);
+                    <Token![::]>::default().to_tokens(tokens);
                     seg.to_tokens(tokens);
                 }
             }

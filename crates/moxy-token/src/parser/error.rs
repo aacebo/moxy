@@ -1,6 +1,6 @@
-use crate::punct::Not;
+use crate::Token;
 use crate::span::DelimSpan;
-use crate::{Delim, Group, Ident, LexError, Lit, Punctuation, Semi, Span, ToTokenStream, ToTokens, TokenStream};
+use crate::{Delim, Group, Ident, LexError, Lit, Punctuation, Span, ToTokenStream, ToTokens, TokenStream};
 
 #[derive(Debug, Clone)]
 pub struct ParseError {
@@ -39,7 +39,7 @@ impl ParseError {
     pub fn to_compile_error(&self) -> TokenStream {
         let span = self.span;
         let ident = Ident::new("compile_error").with_span(span);
-        let bang = Not::new(span);
+        let bang = <Token![!]>::new(span);
         let mut lit = Lit::string(&self.message);
         lit.set_span(span);
 
@@ -50,7 +50,7 @@ impl ParseError {
             ident.into_token_tree(),
             Punctuation::from(bang).into_token_tree(),
             group.into_token_tree(),
-            Punctuation::from(Semi::new(span)).into_token_tree(),
+            Punctuation::from(<Token![;]>::new(span)).into_token_tree(),
         ]
         .into_token_stream()
     }

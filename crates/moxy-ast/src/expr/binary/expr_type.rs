@@ -1,4 +1,4 @@
-use moxy_token::punct::Colon;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -9,7 +9,7 @@ use crate::*;
 pub struct ExprType {
     pub attrs: Attributes,
     pub expr: Box<Expr>,
-    pub colon_punct: Colon,
+    pub colon_punct: Token![:],
     pub ty: Box<Type>,
 }
 

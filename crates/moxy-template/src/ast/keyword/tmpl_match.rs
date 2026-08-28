@@ -1,8 +1,6 @@
 #![allow(unused)]
 
-use moxy_token::keyword::Match;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{At, Comma, FatArrow};
 use moxy_token::{Delim, Group, LexError, Parse, Punctuation, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::Template;
@@ -11,8 +9,8 @@ use crate::Template;
 #[derive(Debug, Clone)]
 pub struct TmplMatch {
     pub span: Span,
-    pub at_punct: At,
-    pub match_keyword: Match,
+    pub at_punct: Token![@],
+    pub match_keyword: Token![match],
     pub expr: TokenStream,
     pub arms: Vec<TmplMatchArm>,
 }
@@ -22,13 +20,17 @@ pub struct TmplMatch {
 pub struct TmplMatchArm {
     pub span: Span,
     pub pat: TokenStream,
-    pub fat_arrow: FatArrow,
+    pub fat_arrow: Token![=>],
     pub body: Template,
-    pub comma: Option<Comma>,
+    pub comma: Option<Token![,]>,
 }
 
 impl TmplMatch {
-    pub fn parse_after_keyword_match(stream: &mut ParseStream, at_punct: At, match_kw: Match) -> Result<Self, ParseError> {
+    pub fn parse_after_keyword_match(
+        stream: &mut ParseStream,
+        at_punct: Token![@],
+        match_kw: Token![match],
+    ) -> Result<Self, ParseError> {
         let span = at_punct.span();
         let expr = stream.parse_group(Delim::Paren)?;
         let arms_stream = stream.parse_group(Delim::Brace)?;
@@ -60,11 +62,11 @@ impl Parse for TmplMatchArm {
             }
         }
 
-        let fat_arrow = stream.parse::<FatArrow>()?;
+        let fat_arrow = stream.parse::<Token![=>]>()?;
         let body_stream = stream.parse_group(Delim::Brace)?;
         let mut body_ps = body_stream.parse();
         let body = Template::parse(&mut body_ps)?;
-        let comma = stream.parse_if::<Comma>();
+        let comma = stream.parse_if::<Token![,]>();
 
         Ok(Self {
             span,

@@ -1,3 +1,4 @@
+use moxy_token::Token;
 mod expr_cast;
 mod expr_reference;
 mod expr_try;
@@ -8,7 +9,6 @@ pub use expr_reference::*;
 pub use expr_try::*;
 pub use expr_unary::*;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::And;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::binary::ExprRange;
@@ -135,7 +135,7 @@ impl UnaryExpr {
         let attrs = stream.parse::<Attributes>()?;
 
         // Prefix range: `..b`, `..=b`, `..`.
-        if stream.peek::<moxy_token::punct::DotDot>() || stream.peek::<moxy_token::punct::DotDotEq>() {
+        if stream.peek::<Token![..]>() || stream.peek::<Token![..=]>() {
             use crate::RangeLimits;
             let limits = stream.parse::<RangeLimits>()?;
             let end = super::binary::ExprRange::maybe_end(stream, allow_struct)?;
@@ -147,8 +147,8 @@ impl UnaryExpr {
             })));
         }
 
-        if stream.peek::<And>() {
-            let and_punct = stream.parse::<And>()?;
+        if stream.peek::<Token![&]>() {
+            let and_punct = stream.parse::<Token![&]>()?;
             let mutability = stream.parse::<Mutability>()?;
             let expr = Box::new(Self::parse_from(stream, allow_struct)?);
             return Ok(Expr::Unary(Self::Reference(ExprReference {

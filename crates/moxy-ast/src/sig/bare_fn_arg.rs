@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Colon;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Ident, Type};
@@ -9,7 +9,7 @@ use crate::{Attributes, Ident, Type};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct BareFnArg {
     pub attrs: Attributes,
-    pub name: Option<(Ident, Colon)>,
+    pub name: Option<(Ident, Token![:])>,
     pub ty: Type,
 }
 
@@ -19,9 +19,9 @@ impl Parse for BareFnArg {
         let name = {
             let mut fork = stream.fork();
             if let Ok(id) = fork.parse::<Ident>() {
-                if fork.peek::<Colon>() {
+                if fork.peek::<Token![:]>() {
                     stream.seek(&fork);
-                    let colon = stream.parse::<Colon>()?;
+                    let colon = stream.parse::<Token![:]>()?;
                     Some((id, colon))
                 } else {
                     None

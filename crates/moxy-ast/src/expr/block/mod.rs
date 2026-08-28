@@ -1,3 +1,4 @@
+use moxy_token::Token;
 mod expr_async;
 mod expr_brace;
 mod expr_const;
@@ -257,7 +258,7 @@ impl Label {
         }
 
         let name = stream.parse_if::<Lifetime>()?;
-        let colon = stream.parse_if::<moxy_token::punct::Colon>().unwrap_or_default();
+        let colon = stream.parse_if::<Token![:]>().unwrap_or_default();
         Some(Self { name, colon })
     }
 }

@@ -1,6 +1,5 @@
-use moxy_token::keyword::Use;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Comma, Gt, Lt};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Lifetime, Punctuated};
@@ -9,10 +8,10 @@ use crate::{Lifetime, Punctuated};
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseBound {
-    pub use_keyword: Use,
-    pub lt_punct: Lt,
-    pub lifetimes: Punctuated<Lifetime, Comma>,
-    pub gt_punct: Gt,
+    pub use_keyword: Token![use],
+    pub lt_punct: Token![<],
+    pub lifetimes: Punctuated<Lifetime, Token![,]>,
+    pub gt_punct: Token![>],
 }
 
 impl Parse for UseBound {

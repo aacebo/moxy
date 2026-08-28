@@ -1,6 +1,5 @@
-use moxy_token::keyword::Impl;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Plus;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Punctuated, TypeBound};
@@ -9,13 +8,13 @@ use crate::{Punctuated, TypeBound};
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeImplTrait {
-    pub impl_keyword: Impl,
-    pub bounds: Punctuated<TypeBound, Plus>,
+    pub impl_keyword: Token![impl],
+    pub bounds: Punctuated<TypeBound, Token![+]>,
 }
 
 impl Parse for TypeImplTrait {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let impl_keyword = stream.parse::<Impl>()?;
+        let impl_keyword = stream.parse::<Token![impl]>()?;
         let bounds = crate::TypeBound::parse_bounds(stream)?;
         Ok(Self { impl_keyword, bounds })
     }

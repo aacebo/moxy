@@ -1,6 +1,5 @@
-use moxy_token::keyword::MacroRules;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Not;
 use moxy_token::{Group, LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Attributes, Ident};
@@ -10,8 +9,8 @@ use crate::{Attributes, Ident};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemMacroRules {
     pub attrs: Attributes,
-    pub macro_rules_keyword: MacroRules,
-    pub not_punct: Not,
+    pub macro_rules_keyword: Token![macro_rules],
+    pub not_punct: Token![!],
     pub ident: Ident,
     pub body: Group,
 }
@@ -19,8 +18,8 @@ pub struct ItemMacroRules {
 impl Parse for ItemMacroRules {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
-        let macro_rules_keyword = stream.parse::<MacroRules>()?;
-        let not_punct = stream.parse::<Not>()?;
+        let macro_rules_keyword = stream.parse::<Token![macro_rules]>()?;
+        let not_punct = stream.parse::<Token![!]>()?;
         let ident = stream.parse::<Ident>()?;
         let body = match stream.curr() {
             Some(TokenTree::Group(g)) => {

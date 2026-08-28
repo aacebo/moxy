@@ -1,6 +1,5 @@
-use moxy_token::keyword::{Else, Let};
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Colon, Eq, Semi};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Expr, Pattern, Type};
@@ -10,40 +9,40 @@ use crate::{Attributes, Expr, Pattern, Type};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StmtLocal {
     pub attrs: Attributes,
-    pub let_keyword: Let,
+    pub let_keyword: Token![let],
     pub pat: Pattern,
-    pub ty: Option<(Colon, Type)>,
+    pub ty: Option<(Token![:], Type)>,
     pub init: Option<StmtLocalInit>,
-    pub semi: Option<Semi>,
+    pub semi: Option<Token![;]>,
 }
 
 /// The initializer of a `let` binding.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StmtLocalInit {
-    pub eq: Eq,
+    pub eq: Token![=],
     pub expr: Expr,
-    pub diverge: Option<(Else, Box<Expr>)>,
+    pub diverge: Option<(Token![else], Box<Expr>)>,
 }
 
 impl Parse for StmtLocal {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
-        let let_keyword = stream.parse::<Let>()?;
+        let let_keyword = stream.parse::<Token![let]>()?;
         let pat = stream.parse::<Pattern>()?;
-        let ty = if stream.peek::<Colon>() {
-            let colon = stream.parse::<Colon>()?;
+        let ty = if stream.peek::<Token![:]>() {
+            let colon = stream.parse::<Token![:]>()?;
             Some((colon, stream.parse::<Type>()?))
         } else {
             None
         };
 
-        let init = if stream.peek::<Eq>() {
-            let eq = stream.parse::<Eq>()?;
+        let init = if stream.peek::<Token![=]>() {
+            let eq = stream.parse::<Token![=]>()?;
             let expr = stream.parse::<Expr>()?;
 
-            let diverge = if stream.peek::<Else>() {
-                let else_keyword = stream.parse::<Else>()?;
+            let diverge = if stream.peek::<Token![else]>() {
+                let else_keyword = stream.parse::<Token![else]>()?;
                 Some((else_keyword, Box::new(stream.parse::<Expr>()?)))
             } else {
                 None
@@ -54,7 +53,7 @@ impl Parse for StmtLocal {
             None
         };
 
-        let semi = stream.parse_if::<Semi>();
+        let semi = stream.parse_if::<Token![;]>();
 
         Ok(Self {
             attrs,

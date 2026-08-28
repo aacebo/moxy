@@ -6,7 +6,7 @@ pub use meta_argument::*;
 pub use meta_layout::*;
 pub use meta_value::*;
 use moxy_token::parser::{Parse, ParseError, ParseStream};
-use moxy_token::{Comma, Delim, Eq, EqEq, FatArrow, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Delimited, Lit, Path, Punctuated};
 

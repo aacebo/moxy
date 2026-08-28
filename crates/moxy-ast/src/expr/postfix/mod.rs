@@ -1,3 +1,4 @@
+use moxy_token::Token;
 mod expr_await;
 mod expr_call;
 mod expr_field;
@@ -10,7 +11,6 @@ pub use expr_field::*;
 pub use expr_index::*;
 pub use expr_method_call::*;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Dot, Question};
 use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
 use super::unary::ExprTry;
@@ -153,8 +153,8 @@ impl From<ExprAwait> for PostfixExpr {
 impl PostfixExpr {
     pub fn parse_from(stream: &mut ParseStream, mut expr: Expr) -> Result<Expr, ParseError> {
         loop {
-            if stream.peek::<Dot>() {
-                let dot = stream.parse::<Dot>()?;
+            if stream.peek::<Token![.]>() {
+                let dot = stream.parse::<Token![.]>()?;
 
                 if matches!(stream.curr(), Some(tt) if tt.text() == Some("await")) {
                     let await_span = stream.span();
@@ -164,7 +164,7 @@ impl PostfixExpr {
                         attrs: Attributes::default(),
                         base: Box::new(expr),
                         dot,
-                        await_keyword: moxy_token::keyword::Await::new(await_span),
+                        await_keyword: <Token![await]>::new(await_span),
                     }));
 
                     continue;
@@ -225,8 +225,8 @@ impl PostfixExpr {
                 continue;
             }
 
-            if stream.peek::<Question>() {
-                let question_punct = stream.parse::<Question>()?;
+            if stream.peek::<Token![?]>() {
+                let question_punct = stream.parse::<Token![?]>()?;
                 expr = Expr::Unary(UnaryExpr::Try(ExprTry {
                     attrs: Attributes::default(),
                     expr: Box::new(expr),

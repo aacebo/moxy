@@ -1,4 +1,4 @@
-use moxy_token::punct::Comma;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -9,7 +9,7 @@ use crate::*;
 pub struct ExprCall {
     pub attrs: Attributes,
     pub func: Box<Expr>,
-    pub args: Delimited<Punctuated<Expr, Comma>>,
+    pub args: Delimited<Punctuated<Expr, Token![,]>>,
 }
 
 impl Spanner for ExprCall {

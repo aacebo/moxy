@@ -1,6 +1,5 @@
-use moxy_token::keyword::Use;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Semi;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, UseTree, Visibility};
@@ -11,18 +10,18 @@ use crate::{Attributes, UseTree, Visibility};
 pub struct ItemUse {
     pub attrs: Attributes,
     pub vis: Visibility,
-    pub use_keyword: Use,
+    pub use_keyword: Token![use],
     pub tree: UseTree,
-    pub semi_punct: Semi,
+    pub semi_punct: Token![;],
 }
 
 impl Parse for ItemUse {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
-        let use_keyword = stream.parse::<Use>()?;
+        let use_keyword = stream.parse::<Token![use]>()?;
         let tree = stream.parse::<UseTree>()?;
-        let semi_punct = stream.parse::<Semi>().unwrap_or_default();
+        let semi_punct = stream.parse::<Token![;]>().unwrap_or_default();
 
         Ok(Self {
             attrs,

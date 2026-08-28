@@ -1,4 +1,4 @@
-use moxy_token::keyword::Unsafe;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
@@ -9,7 +9,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprUnsafe {
     pub attrs: Attributes,
-    pub unsafe_keyword: Unsafe,
+    pub unsafe_keyword: Token![unsafe],
     pub block: StmtBlock,
 }
 
@@ -21,7 +21,7 @@ impl Spanner for ExprUnsafe {
 
 impl ExprUnsafe {
     pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Self, ParseError> {
-        let unsafe_keyword = stream.parse::<Unsafe>()?;
+        let unsafe_keyword = stream.parse::<Token![unsafe]>()?;
         let block = stream.parse::<StmtBlock>()?;
 
         Ok(Self {

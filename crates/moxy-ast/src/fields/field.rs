@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Colon;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Ident, Mutability, Type, Visibility};
@@ -12,7 +12,7 @@ pub struct Field {
     pub vis: Visibility,
     pub mutability: Mutability,
     pub ident: Option<Ident>,
-    pub colon: Option<Colon>,
+    pub colon: Option<Token![:]>,
     pub ty: Type,
 }
 
@@ -25,9 +25,9 @@ impl Parse for Field {
             let mut fork = stream.fork();
 
             if let Ok(id) = fork.parse::<Ident>() {
-                if fork.peek::<Colon>() {
+                if fork.peek::<Token![:]>() {
                     stream.seek(&fork);
-                    let colon = stream.parse::<Colon>()?;
+                    let colon = stream.parse::<Token![:]>()?;
                     (Some(id), Some(colon))
                 } else {
                     (None, None)

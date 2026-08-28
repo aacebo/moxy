@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Semi;
 use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Attributes, Signature, StmtBlock, TraitItem};
@@ -11,7 +11,7 @@ pub struct TraitItemFn {
     pub attrs: Attributes,
     pub sig: Signature,
     pub body: Option<StmtBlock>,
-    pub semi: Option<Semi>,
+    pub semi: Option<Token![;]>,
 }
 
 impl Parse for TraitItemFn {
@@ -21,7 +21,7 @@ impl Parse for TraitItemFn {
         let (body, semi) = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
             (Some(stream.parse::<StmtBlock>()?), None)
         } else {
-            (None, Some(stream.parse::<Semi>()?))
+            (None, Some(stream.parse::<Token![;]>()?))
         };
 
         Ok(Self { attrs, sig, body, semi })

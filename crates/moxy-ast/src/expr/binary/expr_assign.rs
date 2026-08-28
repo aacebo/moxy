@@ -1,4 +1,4 @@
-use moxy_token::punct::Eq;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Expr};
@@ -9,7 +9,7 @@ use crate::{Attributes, Expr};
 pub struct ExprAssign {
     pub attrs: Attributes,
     pub left: Box<Expr>,
-    pub eq: Eq,
+    pub eq: Token![=],
     pub right: Box<Expr>,
 }
 

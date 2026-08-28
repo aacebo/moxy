@@ -1,6 +1,5 @@
-use moxy_token::keyword::For;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Colon, Comma, Gt, Lt, RArrow};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Lifetime, Pattern, Punctuated, Type};
@@ -9,8 +8,14 @@ use crate::{Lifetime, Pattern, Punctuated, Type};
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ClosureParam {
-    Typed { pat: Box<Pattern>, colon: Colon, ty: Box<Type> },
-    Inferred { pat: Box<Pattern> },
+    Typed {
+        pat: Box<Pattern>,
+        colon: Token![:],
+        ty: Box<Type>,
+    },
+    Inferred {
+        pat: Box<Pattern>,
+    },
 }
 
 impl ClosureParam {
@@ -27,8 +32,8 @@ impl Parse for ClosureParam {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let pat = Box::new(Pattern::parse_single(stream)?);
 
-        if stream.peek::<Colon>() {
-            let colon = stream.parse::<Colon>()?;
+        if stream.peek::<Token![:]>() {
+            let colon = stream.parse::<Token![:]>()?;
             let ty = Box::new(stream.parse::<Type>()?);
             Ok(Self::Typed { pat, colon, ty })
         } else {
@@ -64,7 +69,7 @@ impl ToTokens for ClosureParam {
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ReturnType {
     Default,
-    Type(RArrow, Box<Type>),
+    Type(Token![->], Box<Type>),
 }
 
 impl ReturnType {
@@ -83,8 +88,8 @@ impl ReturnType {
 
 impl Parse for ReturnType {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<RArrow>() {
-            let arrow = stream.parse::<RArrow>()?;
+        if stream.peek::<Token![->]>() {
+            let arrow = stream.parse::<Token![->]>()?;
             Ok(Self::Type(arrow, Box::new(stream.parse::<crate::Type>()?)))
         } else {
             Ok(Self::Default)
@@ -114,28 +119,28 @@ impl ToTokens for ReturnType {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct BoundLifetimes {
-    pub for_keyword: For,
-    pub lt: Lt,
-    pub params: Punctuated<Lifetime, Comma>,
-    pub gt: Gt,
+    pub for_keyword: Token![for],
+    pub lt: Token![<],
+    pub params: Punctuated<Lifetime, Token![,]>,
+    pub gt: Token![>],
 }
 
 impl Parse for BoundLifetimes {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let for_keyword = stream.parse::<For>()?;
-        let lt = stream.parse::<Lt>()?;
+        let for_keyword = stream.parse::<Token![for]>()?;
+        let lt = stream.parse::<Token![<]>()?;
         let mut params = Punctuated::new();
 
-        while !stream.peek::<Gt>() && !stream.is_empty() {
+        while !stream.peek::<Token![>]>() && !stream.is_empty() {
             params.push_value(stream.parse::<Lifetime>()?);
-            if stream.peek::<Comma>() {
-                params.push_punct(stream.parse::<Comma>()?);
+            if stream.peek::<Token![,]>() {
+                params.push_punct(stream.parse::<Token![,]>()?);
             } else {
                 break;
             }
         }
 
-        let gt = stream.parse::<Gt>()?;
+        let gt = stream.parse::<Token![>]>()?;
 
         Ok(Self {
             for_keyword,

@@ -1,5 +1,6 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Comma, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Delimited, Punctuated, ReturnType, ty};
 
@@ -7,7 +8,7 @@ use crate::{Delimited, Punctuated, ReturnType, ty};
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ParenArguments {
-    pub params: Delimited<Punctuated<ty::Type, Comma>>,
+    pub params: Delimited<Punctuated<ty::Type, Token![,]>>,
     pub output: ReturnType,
 }
 

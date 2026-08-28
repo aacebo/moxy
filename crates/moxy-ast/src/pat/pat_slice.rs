@@ -1,4 +1,4 @@
-use moxy_token::punct::Comma;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -8,7 +8,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatSlice {
     pub attrs: Attributes,
-    pub elems: Delimited<Punctuated<Pattern, Comma>>,
+    pub elems: Delimited<Punctuated<Pattern, Token![,]>>,
 }
 
 impl Spanner for PatSlice {

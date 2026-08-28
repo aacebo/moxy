@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Colon, Plus};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Lifetime, Punctuated};
@@ -9,8 +9,8 @@ use crate::{Lifetime, Punctuated};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LifetimePredicate {
     pub lifetime: Lifetime,
-    pub colon_punct: Colon,
-    pub bounds: Punctuated<Lifetime, Plus>,
+    pub colon_punct: Token![:],
+    pub bounds: Punctuated<Lifetime, Token![+]>,
 }
 
 impl Parse for LifetimePredicate {
@@ -20,7 +20,7 @@ impl Parse for LifetimePredicate {
 
         Ok(Self {
             lifetime,
-            colon_punct: Colon::default(),
+            colon_punct: <Token![:]>::default(),
             bounds,
         })
     }

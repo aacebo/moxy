@@ -1,4 +1,4 @@
-use moxy_token::punct::Comma;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -10,7 +10,7 @@ pub struct PatTupleStruct {
     pub attrs: Attributes,
     pub qself: Option<QSelf>,
     pub path: Path,
-    pub elems: Delimited<Punctuated<Pattern, Comma>>,
+    pub elems: Delimited<Punctuated<Pattern, Token![,]>>,
 }
 
 impl Spanner for PatTupleStruct {

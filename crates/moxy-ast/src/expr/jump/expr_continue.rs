@@ -1,4 +1,4 @@
-use moxy_token::keyword::Continue;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -8,7 +8,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprContinue {
     pub attrs: Attributes,
-    pub continue_keyword: Continue,
+    pub continue_keyword: Token![continue],
     pub label: Option<Label>,
 }
 

@@ -1,6 +1,5 @@
-use moxy_token::keyword::{For, Impl};
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Not;
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, BoundPolarity, Defaultness, Delimited, Generics, ImplItem, TraitRef, Type, Unsafety};
@@ -12,9 +11,9 @@ pub struct ItemImpl {
     pub attrs: Attributes,
     pub defaultness: Defaultness,
     pub unsafety: Unsafety,
-    pub impl_keyword: Impl,
+    pub impl_keyword: Token![impl],
     pub generics: Generics,
-    pub for_keyword: Option<For>,
+    pub for_keyword: Option<Token![for]>,
     pub trait_ref: Option<TraitRef>,
     pub self_ty: Type,
     pub items: Delimited<Vec<ImplItem>>,
@@ -38,17 +37,17 @@ impl Parse for ItemImpl {
         let attrs = stream.parse::<Attributes>()?;
         let defaultness = stream.parse::<Defaultness>()?;
         let unsafety = stream.parse::<Unsafety>()?;
-        let impl_keyword = stream.parse::<Impl>()?;
+        let impl_keyword = stream.parse::<Token![impl]>()?;
         let mut generics = stream.parse::<Generics>()?;
-        let polarity = if stream.peek::<Not>() {
-            BoundPolarity::Negative(stream.parse::<Not>()?)
+        let polarity = if stream.peek::<Token![!]>() {
+            BoundPolarity::Negative(stream.parse::<Token![!]>()?)
         } else {
             BoundPolarity::Positive
         };
 
         let first = stream.parse::<Type>()?;
-        let (for_keyword, trait_ref, self_ty) = if stream.peek::<For>() {
-            let for_keyword = stream.parse::<For>()?;
+        let (for_keyword, trait_ref, self_ty) = if stream.peek::<Token![for]>() {
+            let for_keyword = stream.parse::<Token![for]>()?;
             let self_ty = stream.parse::<Type>()?;
             (Some(for_keyword), Some(Self::type_to_trait_ref(first, polarity)?), self_ty)
         } else {

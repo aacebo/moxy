@@ -1,6 +1,5 @@
-use moxy_token::keyword::Move;
+use moxy_token::Token;
 use moxy_token::parser::ParseStream;
-use moxy_token::punct::{Comma, Or, OrOr};
 use moxy_token::{Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::expr::block::ExprBrace;
@@ -10,8 +9,8 @@ use crate::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ClosurePipes {
-    Empty(OrOr),
-    Params(Or, Or),
+    Empty(Token![||]),
+    Params(Token![|], Token![|]),
 }
 
 /// A closure expression: `|x| x`, `move || 1`, `async |x: u32| -> u32 { x }`.
@@ -23,9 +22,9 @@ pub struct ExprClosure {
     pub constness: Constness,
     pub movability: Movability,
     pub asyncness: Asyncness,
-    pub capture: Option<Move>,
+    pub capture: Option<Token![move]>,
     pub pipes: ClosurePipes,
-    pub inputs: Punctuated<ClosureParam, Comma>,
+    pub inputs: Punctuated<ClosureParam, Token![,]>,
     pub output: ReturnType,
     pub body: Box<Expr>,
 }
@@ -40,8 +39,7 @@ impl ExprClosure {
     /// Returns `true` when the stream is positioned at the start of a closure
     /// expression (`|...|`, `||`, `move`, or a `const`/`async` not followed by a block).
     pub fn is_start(stream: &mut ParseStream) -> bool {
-        use moxy_token::keyword::Const;
-        if stream.peek::<Or>() || stream.peek::<OrOr>() || stream.peek::<Move>() {
+        if stream.peek::<Token![|]>() || stream.peek::<Token![||]>() || stream.peek::<Token![move]>() {
             return true;
         }
 
@@ -50,7 +48,7 @@ impl ExprClosure {
             Some(TokenTree::Punct(Punctuation::Or(_) | Punctuation::OrOr(_))) | Some(TokenTree::Keyword(_))
         );
 
-        (stream.peek::<Const>() || stream.peek::<moxy_token::keyword::Async>()) && leads_closure && !ExprBrace::is_next(stream)
+        (stream.peek::<Token![const]>() || stream.peek::<Token![async]>()) && leads_closure && !ExprBrace::is_next(stream)
     }
 
     pub fn into_primary_expr(self) -> super::PrimaryExpr {

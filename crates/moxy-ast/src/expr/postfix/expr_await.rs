@@ -1,5 +1,4 @@
-use moxy_token::keyword::Await as KwAwait;
-use moxy_token::punct::Dot;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -10,8 +9,8 @@ use crate::*;
 pub struct ExprAwait {
     pub attrs: Attributes,
     pub base: Box<Expr>,
-    pub dot: Dot,
-    pub await_keyword: KwAwait,
+    pub dot: Token![.],
+    pub await_keyword: Token![await],
 }
 
 impl Spanner for ExprAwait {

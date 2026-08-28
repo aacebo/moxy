@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, Token, TokenStream};
 
 use crate::*;
 
@@ -28,9 +28,7 @@ impl Spanner for ExprRange {
 impl ExprRange {
     /// Parse an optional range end — `None` if the next token cannot begin an expression.
     pub fn maybe_end(stream: &mut ParseStream, allow_struct: bool) -> Result<Option<Box<Expr>>, ParseError> {
-        use moxy_token::punct::{Comma, Semi};
-
-        if stream.is_empty() || stream.peek::<Semi>() || stream.peek::<Comma>() {
+        if stream.is_empty() || stream.peek::<Token![;]>() || stream.peek::<Token![,]>() {
             return Ok(None);
         }
 

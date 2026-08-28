@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Semi;
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, MacroCall};
@@ -10,7 +10,7 @@ use crate::{Attributes, MacroCall};
 pub struct TraitItemMacro {
     pub attrs: Attributes,
     pub mac: MacroCall,
-    pub semi: Semi,
+    pub semi: Token![;],
 }
 
 impl Parse for TraitItemMacro {

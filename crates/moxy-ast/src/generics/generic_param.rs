@@ -1,4 +1,4 @@
-use moxy_token::keyword::Const;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
@@ -79,7 +79,7 @@ impl Parse for GenericParam {
         let mut fork = stream.fork();
         fork.skip_while::<crate::Attribute>();
 
-        if fork.peek::<Const>() {
+        if fork.peek::<Token![const]>() {
             return Ok(Self::Const(Box::new(stream.parse()?)));
         }
 

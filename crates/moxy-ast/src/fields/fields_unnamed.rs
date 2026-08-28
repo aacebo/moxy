@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Comma;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::Field;
@@ -9,7 +9,7 @@ use crate::{Delimited, Punctuated};
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldsUnnamed {
-    pub fields: Delimited<Punctuated<Field, Comma>>,
+    pub fields: Delimited<Punctuated<Field, Token![,]>>,
 }
 
 impl Parse for FieldsUnnamed {

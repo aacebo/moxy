@@ -122,6 +122,7 @@ macro_rules! Token {
     [;]     => { $crate::Semi };
     [:]     => { $crate::Colon };
     [#]     => { $crate::Pound };
+    [$]     => { $crate::Dollar };
     [?]     => { $crate::Question };
 
     // --- punctuation: multi char ---
@@ -177,6 +178,7 @@ macro_rules! Token {
     [let]         => { $crate::Let };
     [loop]        => { $crate::Loop };
     [macro]       => { $crate::Macro };
+    [macro_rules] => { $crate::MacroRules };
     [match]       => { $crate::Match };
     [mod]         => { $crate::Mod };
     [move]        => { $crate::Move };
@@ -204,4 +206,16 @@ macro_rules! Token {
     [where]       => { $crate::Where };
     [while]       => { $crate::While };
     [yield]       => { $crate::Yield };
+}
+
+#[cfg(test)]
+mod tests {
+    #[test]
+    fn token_macro_maps_dollar_and_macro_rules() {
+        let dollar: Token![$] = Default::default();
+        let macro_rules: Token![macro_rules] = Default::default();
+
+        assert_eq!(dollar.as_str(), "$");
+        assert_eq!(macro_rules.as_str(), "macro_rules");
+    }
 }

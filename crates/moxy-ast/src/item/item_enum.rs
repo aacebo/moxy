@@ -1,6 +1,5 @@
-use moxy_token::keyword::Enum;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Comma, Eq};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Delimited, Expr, Fields, Generics, Ident, Punctuated, Visibility};
@@ -11,17 +10,17 @@ use crate::{Attributes, Delimited, Expr, Fields, Generics, Ident, Punctuated, Vi
 pub struct ItemEnum {
     pub attrs: Attributes,
     pub vis: Visibility,
-    pub enum_keyword: Enum,
+    pub enum_keyword: Token![enum],
     pub ident: Ident,
     pub generics: Generics,
-    pub variants: Delimited<Punctuated<Variant, Comma>>,
+    pub variants: Delimited<Punctuated<Variant, Token![,]>>,
 }
 
 impl Parse for ItemEnum {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
-        let enum_keyword = stream.parse::<Enum>()?;
+        let enum_keyword = stream.parse::<Token![enum]>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
         let variants = Delimited::parse_brace_with(stream, Punctuated::parse_terminated)?;
@@ -72,7 +71,7 @@ pub struct Variant {
     pub attrs: Attributes,
     pub ident: Ident,
     pub fields: Fields,
-    pub eq_punct: Option<Eq>,
+    pub eq_punct: Option<Token![=]>,
     pub discriminant: Option<Expr>,
 }
 
@@ -81,8 +80,8 @@ impl Parse for Variant {
         let attrs = stream.parse::<Attributes>()?;
         let ident = stream.parse::<Ident>()?;
         let fields = stream.parse::<Fields>()?;
-        let (eq_punct, discriminant) = if stream.peek::<Eq>() {
-            let eq_punct = stream.parse::<Eq>()?;
+        let (eq_punct, discriminant) = if stream.peek::<Token![=]>() {
+            let eq_punct = stream.parse::<Token![=]>()?;
             let discriminant = stream.parse::<Expr>()?;
             (Some(eq_punct), Some(discriminant))
         } else {

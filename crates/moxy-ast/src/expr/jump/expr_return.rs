@@ -1,4 +1,4 @@
-use moxy_token::keyword::Return;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -8,7 +8,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprReturn {
     pub attrs: Attributes,
-    pub return_keyword: Return,
+    pub return_keyword: Token![return],
     pub expr: Option<Box<Expr>>,
 }
 

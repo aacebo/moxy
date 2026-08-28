@@ -4,7 +4,7 @@ use super::ToTokens;
 use crate::lex::{Cursor, LexError, Scan};
 use crate::parser::{ParseError, ParseStream};
 use crate::span::DelimSpan;
-use crate::{Span, Spanner, TokenTree};
+use crate::{Span, Spanner, Token, TokenTree};
 
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct TokenStream(Vec<TokenTree>);
@@ -253,18 +253,17 @@ impl serde::Serialize for TokenStream {
 }
 
 fn push_doc_attr(tokens: &mut Vec<TokenTree>, inner: bool, text: &str, span: Span) {
-    use crate::punct::{Eq, Not, Pound};
     use crate::{Delim, Group, Ident, Punctuation};
 
-    tokens.push(crate::TokenTree::Punct(Punctuation::Pound(Pound::new(span))));
+    tokens.push(crate::TokenTree::Punct(Punctuation::Pound(<Token![#]>::new(span))));
 
     if inner {
-        tokens.push(crate::TokenTree::Punct(Punctuation::Not(Not::new(span))));
+        tokens.push(crate::TokenTree::Punct(Punctuation::Not(<Token![!]>::new(span))));
     }
 
     let mut body = TokenStream::new();
     body.extend_one(crate::TokenTree::Ident(Ident::new("doc").with_span(span)));
-    body.extend_one(crate::TokenTree::Punct(Punctuation::Eq(Eq::new(span))));
+    body.extend_one(crate::TokenTree::Punct(Punctuation::Eq(<Token![=]>::new(span))));
     body.extend_one(crate::TokenTree::Literal(crate::Lit::Str(crate::LitStr::new(text, span))));
 
     tokens.push(TokenTree::Group(Group::new(Delim::Bracket, body)));

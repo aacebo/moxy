@@ -1,6 +1,5 @@
-use moxy_token::keyword::SelfValue;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::And;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Lifetime, Mutability};
@@ -10,16 +9,16 @@ use crate::{Attributes, Lifetime, Mutability};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Receiver {
     pub attrs: Attributes,
-    pub reference: Option<And>,
+    pub reference: Option<Token![&]>,
     pub lifetime: Option<Lifetime>,
     pub mutability: Mutability,
-    pub self_keyword: SelfValue,
+    pub self_keyword: Token![self],
 }
 
 impl Parse for Receiver {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
-        let reference = stream.parse_if::<And>();
+        let reference = stream.parse_if::<Token![&]>();
         let lifetime = if reference.is_some() {
             stream.parse_if::<Lifetime>()
         } else {
@@ -27,7 +26,7 @@ impl Parse for Receiver {
         };
 
         let mutability = stream.parse::<Mutability>()?;
-        let self_keyword = stream.parse::<SelfValue>()?;
+        let self_keyword = stream.parse::<Token![self]>()?;
 
         Ok(Self {
             attrs,

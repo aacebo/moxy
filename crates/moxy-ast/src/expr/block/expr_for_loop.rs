@@ -1,4 +1,4 @@
-use moxy_token::keyword::{For, In};
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
@@ -11,9 +11,9 @@ use crate::*;
 pub struct ExprForLoop {
     pub attrs: Attributes,
     pub label: Option<Label>,
-    pub for_keyword: For,
+    pub for_keyword: Token![for],
     pub pat: Box<Pattern>,
-    pub in_keyword: In,
+    pub in_keyword: Token![in],
     pub expr: Box<Expr>,
     pub body: StmtBlock,
 }
@@ -26,9 +26,9 @@ impl Spanner for ExprForLoop {
 
 impl ExprForLoop {
     pub fn parse_from(stream: &mut ParseStream, label: Option<Label>, attrs: Attributes) -> Result<Self, ParseError> {
-        let for_keyword = stream.parse::<For>()?;
+        let for_keyword = stream.parse::<Token![for]>()?;
         let pat = Box::new(stream.parse::<Pattern>()?);
-        let in_keyword = stream.parse::<In>()?;
+        let in_keyword = stream.parse::<Token![in]>()?;
         let expr = Box::new(parse_expr(stream, false)?);
         let body = stream.parse::<StmtBlock>()?;
 

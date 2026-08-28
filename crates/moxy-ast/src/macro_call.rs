@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Not;
 use moxy_token::{Delim, Group, LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::Path;
@@ -9,15 +9,14 @@ use crate::Path;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MacroCall {
     pub path: Path,
-    pub bang: Not,
+    pub bang: Token![!],
     pub body: Group,
 }
 
 impl MacroCall {
-    pub fn parse_semi(stream: &mut ParseStream) -> Result<(Self, Option<moxy_token::punct::Semi>), ParseError> {
-        use moxy_token::punct::Semi;
+    pub fn parse_semi(stream: &mut ParseStream) -> Result<(Self, Option<Token![;]>), ParseError> {
         let mac = stream.parse::<Self>()?;
-        let semi = stream.parse_if::<Semi>();
+        let semi = stream.parse_if::<Token![;]>();
         Ok((mac, semi))
     }
 
@@ -35,7 +34,7 @@ impl MacroCall {
 impl Parse for MacroCall {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let path = stream.parse::<Path>()?;
-        let bang = stream.parse::<Not>()?;
+        let bang = stream.parse::<Token![!]>()?;
         let body = match stream.curr() {
             Some(TokenTree::Group(g)) => {
                 let g = g.clone();

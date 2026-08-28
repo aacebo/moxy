@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Semi;
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Signature, Visibility};
@@ -11,7 +11,7 @@ pub struct ForeignItemFn {
     pub attrs: Attributes,
     pub vis: Visibility,
     pub sig: Signature,
-    pub semi: Option<Semi>,
+    pub semi: Option<Token![;]>,
 }
 
 impl Parse for ForeignItemFn {
@@ -25,7 +25,7 @@ impl Parse for ForeignItemFn {
         }
 
         let sig = stream.parse::<Signature>()?;
-        let semi = stream.parse_if::<Semi>();
+        let semi = stream.parse_if::<Token![;]>();
         Ok(Self { attrs, vis, sig, semi })
     }
 }

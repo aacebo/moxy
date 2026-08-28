@@ -1,3 +1,4 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Quote;
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
@@ -34,17 +35,16 @@ impl ToTokens for Lifetime {
 impl Lifetime {
     pub fn parse_bounds(
         stream: &mut moxy_token::parser::ParseStream,
-    ) -> Result<crate::Punctuated<Self, moxy_token::punct::Plus>, moxy_token::parser::ParseError> {
-        use moxy_token::punct::{Colon, Plus};
+    ) -> Result<crate::Punctuated<Self, Token![+]>, moxy_token::parser::ParseError> {
         let mut bounds = crate::Punctuated::new();
-        if stream.peek::<Colon>() {
-            let _ = stream.parse::<Colon>()?;
+        if stream.peek::<Token![:]>() {
+            let _ = stream.parse::<Token![:]>()?;
 
             loop {
                 bounds.push_value(stream.parse::<Self>()?);
 
-                if stream.peek::<Plus>() {
-                    bounds.push_punct(stream.parse::<Plus>()?);
+                if stream.peek::<Token![+]>() {
+                    bounds.push_punct(stream.parse::<Token![+]>()?);
                 } else {
                     break;
                 }

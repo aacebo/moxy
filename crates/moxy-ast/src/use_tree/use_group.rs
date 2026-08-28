@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Comma;
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::UseTree;
@@ -9,7 +9,7 @@ use crate::{Delimited, Punctuated};
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseGroup {
-    pub items: Delimited<Punctuated<UseTree, Comma>>,
+    pub items: Delimited<Punctuated<UseTree, Token![,]>>,
 }
 
 impl Parse for UseGroup {

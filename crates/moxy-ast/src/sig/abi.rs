@@ -1,4 +1,4 @@
-use moxy_token::keyword::Extern;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
@@ -6,13 +6,13 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Abi {
-    pub extern_keyword: Extern,
+    pub extern_keyword: Token![extern],
     pub name: Option<String>,
 }
 
 impl Parse for Abi {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let extern_keyword = stream.parse::<Extern>()?;
+        let extern_keyword = stream.parse::<Token![extern]>()?;
         let name = match stream.curr() {
             Some(TokenTree::Literal(lit)) if lit.repr().starts_with('"') => {
                 let repr = lit.repr().to_string();

@@ -1,6 +1,5 @@
-use moxy_token::keyword::Type as KwType;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Semi;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Generics, Ident, Visibility};
@@ -11,20 +10,20 @@ use crate::{Attributes, Generics, Ident, Visibility};
 pub struct ForeignItemType {
     pub attrs: Attributes,
     pub vis: Visibility,
-    pub type_keyword: KwType,
+    pub type_keyword: Token![type],
     pub ident: Ident,
     pub generics: Generics,
-    pub semi: Option<Semi>,
+    pub semi: Option<Token![;]>,
 }
 
 impl Parse for ForeignItemType {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
-        let type_keyword = stream.parse::<KwType>()?;
+        let type_keyword = stream.parse::<Token![type]>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
-        let semi = stream.parse_if::<Semi>();
+        let semi = stream.parse_if::<Token![;]>();
 
         Ok(Self {
             attrs,

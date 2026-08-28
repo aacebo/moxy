@@ -1,6 +1,5 @@
-use moxy_token::keyword::Type as KwType;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Eq, Semi};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Defaultness, Generics, Ident, Type, Visibility};
@@ -12,12 +11,12 @@ pub struct ImplItemType {
     pub attrs: Attributes,
     pub vis: Visibility,
     pub defaultness: Defaultness,
-    pub type_keyword: KwType,
+    pub type_keyword: Token![type],
     pub ident: Ident,
     pub generics: Generics,
-    pub eq: Eq,
+    pub eq: Token![=],
     pub ty: Type,
-    pub semi: Option<Semi>,
+    pub semi: Option<Token![;]>,
 }
 
 impl Parse for ImplItemType {
@@ -25,12 +24,12 @@ impl Parse for ImplItemType {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let defaultness = stream.parse::<Defaultness>()?;
-        let type_keyword = stream.parse::<KwType>()?;
+        let type_keyword = stream.parse::<Token![type]>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
-        let eq = stream.parse::<Eq>()?;
+        let eq = stream.parse::<Token![=]>()?;
         let ty = stream.parse::<Type>()?;
-        let semi = stream.parse_if::<Semi>();
+        let semi = stream.parse_if::<Token![;]>();
 
         Ok(Self {
             attrs,

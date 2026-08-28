@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Colon;
 use moxy_token::{Parse, Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::Lifetime;
@@ -9,13 +9,13 @@ use crate::Lifetime;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Label {
     pub name: Lifetime,
-    pub colon: Colon,
+    pub colon: Token![:],
 }
 
 impl Parse for Label {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let name = stream.parse::<Lifetime>()?;
-        let colon = stream.parse::<Colon>()?;
+        let colon = stream.parse::<Token![:]>()?;
         Ok(Self { name, colon })
     }
 }

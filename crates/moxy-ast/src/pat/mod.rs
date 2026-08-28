@@ -1,6 +1,5 @@
-use moxy_token::keyword::{Mut, Ref};
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{And, At, Colon, Comma, DotDot, Or};
 use moxy_token::{Delim, LexError, Parse, Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Attributes, Delimited, Expr, Ident, Member, Mutability, Path, Punctuated};
@@ -302,23 +301,23 @@ impl From<PatParen> for Pattern {
 impl Parse for Pattern {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         // Optional leading `|`, then one-or-more `|`-separated alternatives.
-        let leading = stream.peek::<Or>();
+        let leading = stream.peek::<Token![|]>();
 
         if leading {
-            let _ = stream.parse::<Or>()?;
+            let _ = stream.parse::<Token![|]>()?;
         }
 
         let first = parse_single(stream)?;
 
-        if !leading && !stream.peek::<Or>() {
+        if !leading && !stream.peek::<Token![|]>() {
             return Ok(first);
         }
 
         let mut cases = Punctuated::new();
         cases.push_value(first);
 
-        while stream.peek::<Or>() {
-            cases.push_punct(stream.parse::<Or>()?);
+        while stream.peek::<Token![|]>() {
+            cases.push_punct(stream.parse::<Token![|]>()?);
             cases.push_value(parse_single(stream)?);
         }
 
@@ -343,7 +342,7 @@ impl ToTokens for Pattern {
             Self::Wild => {
                 moxy_token::Ident::new("_").to_tokens(t);
             }
-            Self::Rest => DotDot::default().to_tokens(t),
+            Self::Rest => <Token![..]>::default().to_tokens(t),
             Self::Ident(v) => v.to_tokens(t),
             Self::Path(v) => v.to_tokens(t),
             Self::Tuple(v) => v.to_tokens(t),
@@ -359,11 +358,11 @@ impl ToTokens for Pattern {
             Self::Group(v) => v.to_tokens(t),
             Self::Paren(v) => v.to_tokens(t),
             Self::Box(p) => {
-                moxy_token::keyword::Box::default().to_tokens(t);
+                <Token![box]>::default().to_tokens(t);
                 p.to_tokens(t);
             }
             Self::Const(b) => {
-                moxy_token::keyword::Const::default().to_tokens(t);
+                <Token![const]>::default().to_tokens(t);
                 b.to_tokens(t);
             }
         }
@@ -372,11 +371,11 @@ impl ToTokens for Pattern {
 
 impl PatIdent {
     pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Self, ParseError> {
-        let by_ref = stream.parse_if::<Ref>();
+        let by_ref = stream.parse_if::<Token![ref]>();
         let mutability = stream.parse::<Mutability>()?;
         let ident = stream.parse::<Ident>()?;
-        let subpat = if stream.peek::<At>() {
-            let at = stream.parse::<At>()?;
+        let subpat = if stream.peek::<Token![@]>() {
+            let at = stream.parse::<Token![@]>()?;
             Some((at, Box::new(Pattern::parse(stream)?)))
         } else {
             None
@@ -393,20 +392,20 @@ impl PatIdent {
 }
 
 impl PatStruct {
-    pub fn parse_body(stream: &mut ParseStream) -> Result<(Punctuated<PatField, Comma>, Option<DotDot>), ParseError> {
+    pub fn parse_body(stream: &mut ParseStream) -> Result<(Punctuated<PatField, Token![,]>, Option<Token![..]>), ParseError> {
         let mut fields = Punctuated::new();
         let mut rest = None;
 
         while !stream.is_empty() {
-            if stream.peek::<DotDot>() {
-                rest = Some(stream.parse::<DotDot>()?);
+            if stream.peek::<Token![..]>() {
+                rest = Some(stream.parse::<Token![..]>()?);
                 break;
             }
 
             let field_attrs = stream.parse::<Attributes>()?;
             let member = stream.parse::<Member>()?;
-            let (colon, pat, shorthand) = if stream.peek::<Colon>() {
-                let colon = stream.parse::<Colon>()?;
+            let (colon, pat, shorthand) = if stream.peek::<Token![:]>() {
+                let colon = stream.parse::<Token![:]>()?;
                 (Some(colon), stream.parse::<Pattern>()?, false)
             } else {
                 // shorthand `{ field }`
@@ -437,8 +436,8 @@ impl PatStruct {
                 shorthand,
             });
 
-            if stream.peek::<Comma>() {
-                fields.push_punct(stream.parse::<Comma>()?);
+            if stream.peek::<Token![,]>() {
+                fields.push_punct(stream.parse::<Token![,]>()?);
             } else {
                 break;
             }
@@ -459,8 +458,8 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     }
 
     // Rest `..`
-    if stream.peek::<DotDot>() {
-        let _ = stream.parse::<DotDot>()?;
+    if stream.peek::<Token![..]>() {
+        let _ = stream.parse::<Token![..]>()?;
         return Ok(Pattern::Rest);
     }
 
@@ -479,8 +478,8 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     }
 
     // Reference `&`/`&mut`
-    if stream.peek::<And>() {
-        let and = stream.parse::<And>()?;
+    if stream.peek::<Token![&]>() {
+        let and = stream.parse::<Token![&]>()?;
         let mutability = stream.parse::<Mutability>()?;
         let pat = Box::new(Pattern::parse(stream)?);
         return Ok(Pattern::Reference(PatReference {
@@ -504,7 +503,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     }
 
     // `ref`/`mut`-led binding
-    if stream.peek::<Ref>() || stream.peek::<Mut>() {
+    if stream.peek::<Token![ref]>() || stream.peek::<Token![mut]>() {
         return Ok(Pattern::Ident(PatIdent::parse_from(stream, attrs)?));
     }
 

@@ -1,6 +1,5 @@
-use moxy_token::keyword::Static;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Colon, Eq, Semi};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Expr, Ident, Mutability, Type, Visibility};
@@ -11,28 +10,28 @@ use crate::{Attributes, Expr, Ident, Mutability, Type, Visibility};
 pub struct ItemStatic {
     pub attrs: Attributes,
     pub vis: Visibility,
-    pub static_keyword: Static,
+    pub static_keyword: Token![static],
     pub mutability: Mutability,
     pub ident: Ident,
-    pub colon_punct: Colon,
+    pub colon_punct: Token![:],
     pub ty: Type,
-    pub eq_punct: Eq,
+    pub eq_punct: Token![=],
     pub expr: Expr,
-    pub semi_punct: Semi,
+    pub semi_punct: Token![;],
 }
 
 impl Parse for ItemStatic {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
-        let static_keyword = stream.parse::<Static>()?;
+        let static_keyword = stream.parse::<Token![static]>()?;
         let mutability = stream.parse::<Mutability>()?;
         let ident = stream.parse::<Ident>()?;
-        let colon_punct = stream.parse::<Colon>()?;
+        let colon_punct = stream.parse::<Token![:]>()?;
         let ty = stream.parse::<Type>()?;
-        let eq_punct = stream.parse::<Eq>()?;
+        let eq_punct = stream.parse::<Token![=]>()?;
         let expr = stream.parse::<Expr>()?;
-        let semi_punct = stream.parse::<Semi>()?;
+        let semi_punct = stream.parse::<Token![;]>()?;
 
         Ok(Self {
             attrs,

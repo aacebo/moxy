@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::PathSep;
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::UseTree;
@@ -9,9 +9,9 @@ use crate::Ident;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UsePath {
-    pub prefix: Option<PathSep>,
+    pub prefix: Option<Token![::]>,
     pub ident: Ident,
-    pub path_sep: PathSep,
+    pub path_sep: Token![::],
     pub tree: Box<UseTree>,
 }
 

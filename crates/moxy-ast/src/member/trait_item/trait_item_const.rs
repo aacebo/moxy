@@ -1,6 +1,5 @@
-use moxy_token::keyword::Const;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Colon, Eq, Semi};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Expr, Generics, Ident, Type};
@@ -10,13 +9,13 @@ use crate::{Attributes, Expr, Generics, Ident, Type};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitItemConst {
     pub attrs: Attributes,
-    pub const_keyword: Const,
+    pub const_keyword: Token![const],
     pub ident: Ident,
     pub generics: Generics,
-    pub colon: Colon,
+    pub colon: Token![:],
     pub ty: Type,
-    pub default: Option<(Eq, Expr)>,
-    pub semi: Semi,
+    pub default: Option<(Token![=], Expr)>,
+    pub semi: Token![;],
 }
 
 impl Parse for TraitItemConst {
@@ -27,7 +26,7 @@ impl Parse for TraitItemConst {
         let generics = stream.parse()?;
         let colon = stream.parse()?;
         let ty = stream.parse()?;
-        let default = if stream.peek::<Eq>() {
+        let default = if stream.peek::<Token![=]>() {
             let eq = stream.parse()?;
             Some((eq, stream.parse()?))
         } else {

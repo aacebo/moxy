@@ -1,10 +1,9 @@
+use moxy_token::Token;
 mod tmpl_for;
 mod tmpl_if;
 mod tmpl_match;
 
-use moxy_token::keyword::{For, If, Match};
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::At;
 use moxy_token::{LexError, Parse, ToTokens, TokenStream};
 pub use tmpl_for::*;
 pub use tmpl_if::*;
@@ -20,17 +19,17 @@ pub enum TmplKeyword {
 
 impl Parse for TmplKeyword {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at_punct = stream.parse::<At>()?;
+        let at_punct = stream.parse::<Token![@]>()?;
 
-        if let Some(if_kw) = stream.parse_if::<If>() {
+        if let Some(if_kw) = stream.parse_if::<Token![if]>() {
             return Ok(Self::If(TmplIf::parse_after_keyword_if(stream, at_punct, if_kw)?));
         }
 
-        if let Some(for_kw) = stream.parse_if::<For>() {
+        if let Some(for_kw) = stream.parse_if::<Token![for]>() {
             return Ok(Self::For(TmplFor::parse_after_keyword_for(stream, at_punct, for_kw)?));
         }
 
-        if let Some(match_kw) = stream.parse_if::<Match>() {
+        if let Some(match_kw) = stream.parse_if::<Token![match]>() {
             return Ok(Self::Match(TmplMatch::parse_after_keyword_match(stream, at_punct, match_kw)?));
         }
 

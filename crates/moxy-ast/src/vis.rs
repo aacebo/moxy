@@ -1,4 +1,4 @@
-use moxy_token::keyword::{Crate, In, Pub, SelfValue, Super};
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream};
 
@@ -10,23 +10,23 @@ use crate::{Delimited, Path};
 pub enum Visibility {
     Inherited,
     Public {
-        pub_keyword: Pub,
+        pub_keyword: Token![pub],
     },
     Crate {
-        pub_keyword: Pub,
-        crate_keyword: Delimited<Crate>,
+        pub_keyword: Token![pub],
+        crate_keyword: Delimited<Token![crate]>,
     },
     SelfValue {
-        pub_keyword: Pub,
-        self_keyword: Delimited<SelfValue>,
+        pub_keyword: Token![pub],
+        self_keyword: Delimited<Token![self]>,
     },
     Super {
-        pub_keyword: Pub,
-        super_keyword: Delimited<Super>,
+        pub_keyword: Token![pub],
+        super_keyword: Delimited<Token![super]>,
     },
     Restricted {
-        pub_keyword: Pub,
-        path: Delimited<(In, Path)>,
+        pub_keyword: Token![pub],
+        path: Delimited<(Token![in], Path)>,
     },
 }
 
@@ -58,19 +58,19 @@ impl Visibility {
 
 impl Parse for Visibility {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if !stream.peek::<Pub>() {
+        if !stream.peek::<Token![pub]>() {
             return Ok(Self::Inherited);
         }
 
-        let pub_keyword = stream.parse::<Pub>()?;
+        let pub_keyword = stream.parse::<Token![pub]>()?;
 
         // `pub(...)` restricted forms.
         if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
             let (span, group_tokens) = stream.parse_group_spanned(Delim::Paren)?;
             let mut inner = group_tokens.parse();
 
-            if inner.peek::<Crate>() {
-                let crate_keyword = inner.parse::<Crate>()?;
+            if inner.peek::<Token![crate]>() {
+                let crate_keyword = inner.parse::<Token![crate]>()?;
 
                 return Ok(Self::Crate {
                     pub_keyword,
@@ -78,8 +78,8 @@ impl Parse for Visibility {
                 });
             }
 
-            if inner.peek::<SelfValue>() {
-                let self_keyword = inner.parse::<SelfValue>()?;
+            if inner.peek::<Token![self]>() {
+                let self_keyword = inner.parse::<Token![self]>()?;
 
                 return Ok(Self::SelfValue {
                     pub_keyword,
@@ -87,8 +87,8 @@ impl Parse for Visibility {
                 });
             }
 
-            if inner.peek::<Super>() {
-                let super_keyword = inner.parse::<Super>()?;
+            if inner.peek::<Token![super]>() {
+                let super_keyword = inner.parse::<Token![super]>()?;
 
                 return Ok(Self::Super {
                     pub_keyword,
@@ -96,7 +96,7 @@ impl Parse for Visibility {
                 });
             }
 
-            let in_keyword = inner.parse::<In>()?;
+            let in_keyword = inner.parse::<Token![in]>()?;
             let path = inner.parse::<Path>()?;
 
             return Ok(Self::Restricted {

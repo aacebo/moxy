@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Semi;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, MacroCall};
@@ -10,14 +10,14 @@ use crate::{Attributes, MacroCall};
 pub struct StmtMacro {
     pub attrs: Attributes,
     pub mac: MacroCall,
-    pub semi: Option<Semi>,
+    pub semi: Option<Token![;]>,
 }
 
 impl Parse for StmtMacro {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let mac = stream.parse::<MacroCall>()?;
-        let semi = stream.parse_if::<Semi>();
+        let semi = stream.parse_if::<Token![;]>();
         Ok(Self { attrs, mac, semi })
     }
 }

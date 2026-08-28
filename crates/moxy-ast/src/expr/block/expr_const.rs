@@ -1,4 +1,4 @@
-use moxy_token::keyword::Const;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
@@ -9,7 +9,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprConst {
     pub attrs: Attributes,
-    pub const_keyword: Const,
+    pub const_keyword: Token![const],
     pub block: StmtBlock,
 }
 
@@ -21,7 +21,7 @@ impl Spanner for ExprConst {
 
 impl ExprConst {
     pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Self, ParseError> {
-        let const_keyword = stream.parse::<Const>()?;
+        let const_keyword = stream.parse::<Token![const]>()?;
         let block = stream.parse::<StmtBlock>()?;
 
         Ok(Self {

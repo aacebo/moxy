@@ -1,4 +1,4 @@
-use moxy_token::punct::Question;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -9,7 +9,7 @@ use crate::*;
 pub struct ExprTry {
     pub attrs: Attributes,
     pub expr: Box<Expr>,
-    pub question_punct: Question,
+    pub question_punct: Token![?],
 }
 
 impl Spanner for ExprTry {

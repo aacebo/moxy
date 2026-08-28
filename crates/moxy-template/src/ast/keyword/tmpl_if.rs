@@ -1,8 +1,6 @@
 #![allow(unused)]
 
-use moxy_token::keyword::{Else, If};
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::At;
 use moxy_token::{Delim, Group, Parse, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::Template;
@@ -11,11 +9,11 @@ use crate::Template;
 #[derive(Debug, Clone)]
 pub struct TmplIf {
     pub span: Span,
-    pub at_punct: At,
-    pub if_keyword: If,
+    pub at_punct: Token![@],
+    pub if_keyword: Token![if],
     pub branches: Vec<TmplIfBranch>,
-    pub else_at_punct: Option<At>,
-    pub else_keyword: Option<Else>,
+    pub else_at_punct: Option<Token![@]>,
+    pub else_keyword: Option<Token![else]>,
     pub else_body: Option<Box<Template>>,
 }
 
@@ -23,15 +21,15 @@ pub struct TmplIf {
 #[derive(Debug, Clone)]
 pub struct TmplIfBranch {
     pub span: Span,
-    pub at_punct: Option<At>,
-    pub else_keyword: Option<Else>,
-    pub if_keyword: If,
+    pub at_punct: Option<Token![@]>,
+    pub else_keyword: Option<Token![else]>,
+    pub if_keyword: Token![if],
     pub cond: TokenStream,
     pub body: Template,
 }
 
 impl TmplIf {
-    pub fn parse_after_keyword_if(stream: &mut ParseStream, at_punct: At, if_kw: If) -> Result<Self, ParseError> {
+    pub fn parse_after_keyword_if(stream: &mut ParseStream, at_punct: Token![@], if_kw: Token![if]) -> Result<Self, ParseError> {
         let span = at_punct.span();
         let first = Self::parse_branch(stream, None, None, if_kw)?;
         let mut branches = vec![first];
@@ -41,12 +39,12 @@ impl TmplIf {
 
         loop {
             let mut fork = stream.fork();
-            let Ok(at2) = fork.parse::<At>() else { break };
-            let Ok(else_kw) = fork.parse::<Else>() else { break };
+            let Ok(at2) = fork.parse::<Token![@]>() else { break };
+            let Ok(else_kw) = fork.parse::<Token![else]>() else { break };
 
             stream.seek(&fork);
 
-            if let Some(if_kw2) = stream.parse_if::<If>() {
+            if let Some(if_kw2) = stream.parse_if::<Token![if]>() {
                 branches.push(Self::parse_branch(stream, Some(at2), Some(else_kw), if_kw2)?);
             } else {
                 let body_stream = stream.parse_group(Delim::Brace)?;
@@ -71,9 +69,9 @@ impl TmplIf {
 
     pub fn parse_branch(
         stream: &mut ParseStream,
-        at_punct: Option<At>,
-        else_keyword: Option<Else>,
-        if_keyword: If,
+        at_punct: Option<Token![@]>,
+        else_keyword: Option<Token![else]>,
+        if_keyword: Token![if],
     ) -> Result<TmplIfBranch, ParseError> {
         let span = if_keyword.span();
         let cond = stream.parse_group(Delim::Paren)?;

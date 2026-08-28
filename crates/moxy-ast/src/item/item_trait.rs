@@ -1,6 +1,5 @@
-use moxy_token::keyword::{Auto, Trait};
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Colon, Plus};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Delimited, Generics, Ident, Punctuated, TraitItem, TypeBound, Unsafety, Visibility};
@@ -12,12 +11,12 @@ pub struct ItemTrait {
     pub attrs: Attributes,
     pub vis: Visibility,
     pub unsafety: Unsafety,
-    pub auto_keyword: Option<Auto>,
-    pub trait_keyword: Trait,
+    pub auto_keyword: Option<Token![auto]>,
+    pub trait_keyword: Token![trait],
     pub ident: Ident,
     pub generics: Generics,
-    pub colon_punct: Option<Colon>,
-    pub supertraits: Punctuated<TypeBound, Plus>,
+    pub colon_punct: Option<Token![:]>,
+    pub supertraits: Punctuated<TypeBound, Token![+]>,
     pub items: Delimited<Vec<TraitItem>>,
 }
 
@@ -26,17 +25,17 @@ impl Parse for ItemTrait {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let unsafety = stream.parse::<Unsafety>()?;
-        let auto_keyword = if stream.peek::<Auto>() {
-            Some(stream.parse::<Auto>()?)
+        let auto_keyword = if stream.peek::<Token![auto]>() {
+            Some(stream.parse::<Token![auto]>()?)
         } else {
             None
         };
 
-        let trait_keyword = stream.parse::<Trait>()?;
+        let trait_keyword = stream.parse::<Token![trait]>()?;
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
-        let (colon_punct, supertraits) = if stream.peek::<Colon>() {
-            let colon_punct = stream.parse::<Colon>()?;
+        let (colon_punct, supertraits) = if stream.peek::<Token![:]>() {
+            let colon_punct = stream.parse::<Token![:]>()?;
             let supertraits = crate::TypeBound::parse_bounds(stream)?;
             (Some(colon_punct), supertraits)
         } else {

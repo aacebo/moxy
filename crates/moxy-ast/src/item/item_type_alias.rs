@@ -1,6 +1,5 @@
-use moxy_token::keyword::Type as KwType;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Eq, Semi};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Generics, Ident, Type, Visibility};
@@ -11,24 +10,24 @@ use crate::{Attributes, Generics, Ident, Type, Visibility};
 pub struct ItemTypeAlias {
     pub attrs: Attributes,
     pub vis: Visibility,
-    pub type_keyword: KwType,
+    pub type_keyword: Token![type],
     pub ident: Ident,
     pub generics: Generics,
-    pub eq_punct: Eq,
+    pub eq_punct: Token![=],
     pub ty: Type,
-    pub semi_punct: Semi,
+    pub semi_punct: Token![;],
 }
 
 impl Parse for ItemTypeAlias {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
-        let type_keyword = stream.parse::<KwType>()?;
+        let type_keyword = stream.parse::<Token![type]>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
-        let eq_punct = stream.parse::<Eq>()?;
+        let eq_punct = stream.parse::<Token![=]>()?;
         let ty = stream.parse::<Type>()?;
-        let semi_punct = stream.parse::<Semi>()?;
+        let semi_punct = stream.parse::<Token![;]>()?;
 
         Ok(Self {
             attrs,

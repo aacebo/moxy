@@ -1,8 +1,6 @@
 #![allow(unused)]
 
-use moxy_token::keyword::{For, In};
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::At;
 use moxy_token::{Delim, Group, Ident, Parse, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::Template;
@@ -11,21 +9,25 @@ use crate::Template;
 #[derive(Debug, Clone)]
 pub struct TmplFor {
     pub span: Span,
-    pub at_punct: At,
-    pub for_keyword: For,
+    pub at_punct: Token![@],
+    pub for_keyword: Token![for],
     pub binding: Ident,
-    pub in_keyword: In,
+    pub in_keyword: Token![in],
     pub iter: TokenStream,
     pub body: Box<Template>,
 }
 
 impl TmplFor {
-    pub fn parse_after_keyword_for(stream: &mut ParseStream, at_punct: At, for_kw: For) -> Result<Self, ParseError> {
+    pub fn parse_after_keyword_for(
+        stream: &mut ParseStream,
+        at_punct: Token![@],
+        for_kw: Token![for],
+    ) -> Result<Self, ParseError> {
         let span = at_punct.span();
         let paren_inner = stream.parse_group(Delim::Paren)?;
         let mut ps = paren_inner.parse();
         let binding = ps.parse::<Ident>()?;
-        let in_keyword = ps.parse::<In>()?;
+        let in_keyword = ps.parse::<Token![in]>()?;
         let mut iter = TokenStream::new();
 
         while let Some(tt) = ps.advance() {

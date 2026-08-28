@@ -1,6 +1,5 @@
-use moxy_token::keyword::{Dyn, Impl};
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{And, Comma, Star};
 use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Delimited, Punctuated};
@@ -37,7 +36,7 @@ pub use type_tuple::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Type {
-    Never(moxy_token::punct::Not),
+    Never(Token![!]),
     Infer(moxy_token::Ident),
     Path(TypePath),
     Tuple(TypeTuple),
@@ -110,7 +109,7 @@ impl Type {
         matches!(self, Self::Macro(_))
     }
 
-    pub fn as_never(&self) -> Option<&moxy_token::punct::Not> {
+    pub fn as_never(&self) -> Option<&Token![!]> {
         if let Self::Never(v) = self { Some(v) } else { None }
     }
 
@@ -245,18 +244,18 @@ impl From<TypeBareFn> for Type {
 impl Parse for Type {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         // `&` reference.
-        if stream.peek::<And>() {
+        if stream.peek::<Token![&]>() {
             return Ok(Self::Reference(stream.parse()?));
         }
 
         // `*` raw pointer.
-        if stream.peek::<Star>() {
+        if stream.peek::<Token![*]>() {
             return Ok(Self::Pointer(stream.parse()?));
         }
 
         // Never `!`.
-        if stream.peek::<moxy_token::punct::Not>() {
-            let not = stream.parse::<moxy_token::punct::Not>()?;
+        if stream.peek::<Token![!]>() {
+            let not = stream.parse::<Token![!]>()?;
             return Ok(Self::Never(not));
         }
 
@@ -276,8 +275,8 @@ impl Parse for Type {
             let mut inner = group_tokens.parse();
             let elem = Box::new(inner.parse::<Self>()?);
 
-            if inner.peek::<moxy_token::punct::Semi>() {
-                let semi = inner.parse::<moxy_token::punct::Semi>()?;
+            if inner.peek::<Token![;]>() {
+                let semi = inner.parse::<Token![;]>()?;
                 let len = inner.parse::<crate::Expr>()?;
                 return Ok(Self::Array(TypeArray {
                     content: Delimited::bracket(bracket_span, type_array::ArrayInner { elem, semi, len }),
@@ -291,20 +290,17 @@ impl Parse for Type {
         }
 
         // `impl Trait`.
-        if stream.peek::<Impl>() {
+        if stream.peek::<Token![impl]>() {
             return Ok(Self::ImplTrait(stream.parse()?));
         }
 
         // `dyn Trait`.
-        if stream.peek::<Dyn>() {
+        if stream.peek::<Token![dyn]>() {
             return Ok(Self::TraitObject(stream.parse()?));
         }
 
         // Bare fn pointer: `fn(...)`, `extern "C" fn(...)`, `unsafe fn(...)`.
-        if stream.peek::<moxy_token::keyword::Fn>()
-            || stream.peek::<moxy_token::keyword::Extern>()
-            || stream.peek::<moxy_token::keyword::Unsafe>()
-        {
+        if stream.peek::<Token![fn]>() || stream.peek::<Token![extern]>() || stream.peek::<Token![unsafe]>() {
             return Ok(Self::BareFn(stream.parse()?));
         }
 
@@ -314,7 +310,7 @@ impl Parse for Type {
         if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
             let (paren_span, group_tokens) = stream.parse_group_spanned(Delim::Paren)?;
             let mut inner = group_tokens.parse();
-            let elems: Punctuated<Self, Comma> = Punctuated::parse_terminated(&mut inner)?;
+            let elems: Punctuated<Self, Token![,]> = Punctuated::parse_terminated(&mut inner)?;
 
             return if elems.len() == 1 && !elems.is_trailing() {
                 let content = Delimited::paren(paren_span, Box::new(elems.into_iter().next().unwrap()));

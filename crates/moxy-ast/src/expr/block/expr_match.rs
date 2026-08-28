@@ -1,6 +1,5 @@
-use moxy_token::keyword::{If, Match};
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Comma, FatArrow};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::expr::parse_expr;
@@ -11,7 +10,7 @@ use crate::{Attributes, BlockExpr, Delimited, Expr, Pattern};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprMatch {
     pub attrs: Attributes,
-    pub match_keyword: Match,
+    pub match_keyword: Token![match],
     pub expr: Box<Expr>,
     pub arms: Delimited<Vec<MatchArm>>,
 }
@@ -24,7 +23,7 @@ impl Spanner for ExprMatch {
 
 impl ExprMatch {
     pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Expr, ParseError> {
-        let match_keyword = stream.parse::<Match>()?;
+        let match_keyword = stream.parse::<Token![match]>()?;
         let expr = Box::new(parse_expr(stream, false)?);
         let arms = Delimited::<Vec<MatchArm>>::parse_brace(stream)?;
 
@@ -56,11 +55,11 @@ impl ToTokens for ExprMatch {
 pub struct MatchArm {
     pub attrs: Attributes,
     pub pat: Pattern,
-    pub if_keyword: Option<If>,
+    pub if_keyword: Option<Token![if]>,
     pub guard: Option<Box<Expr>>,
-    pub fat_arrow: FatArrow,
+    pub fat_arrow: Token![=>],
     pub body: Expr,
-    pub comma: Option<Comma>,
+    pub comma: Option<Token![,]>,
 }
 
 impl Spanner for MatchArm {
@@ -74,15 +73,15 @@ impl Parse for MatchArm {
     fn parse(stream: &mut moxy_token::parser::ParseStream) -> Result<Self, moxy_token::parser::ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let pat = stream.parse::<Pattern>()?;
-        let (if_keyword, guard) = if let Some(if_kw) = stream.parse_if::<If>() {
+        let (if_keyword, guard) = if let Some(if_kw) = stream.parse_if::<Token![if]>() {
             (Some(if_kw), Some(Box::new(stream.parse::<Expr>()?)))
         } else {
             (None, None)
         };
 
-        let fat_arrow = stream.parse::<FatArrow>()?;
+        let fat_arrow = stream.parse::<Token![=>]>()?;
         let body = stream.parse::<Expr>()?;
-        let comma = stream.parse_if::<Comma>();
+        let comma = stream.parse_if::<Token![,]>();
 
         Ok(Self {
             attrs,

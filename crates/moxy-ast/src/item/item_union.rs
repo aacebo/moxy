@@ -1,4 +1,4 @@
-use moxy_token::keyword::Union;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
@@ -10,7 +10,7 @@ use crate::{Attributes, FieldsNamed, Generics, Ident, Visibility};
 pub struct ItemUnion {
     pub attrs: Attributes,
     pub vis: Visibility,
-    pub union_keyword: Union,
+    pub union_keyword: Token![union],
     pub ident: Ident,
     pub generics: Generics,
     pub fields: FieldsNamed,
@@ -20,7 +20,7 @@ impl Parse for ItemUnion {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
-        let union_keyword = stream.parse::<Union>()?;
+        let union_keyword = stream.parse::<Token![union]>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
         let fields = stream.parse::<FieldsNamed>()?;

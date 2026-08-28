@@ -1,4 +1,4 @@
-use moxy_token::punct::Dot;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -9,7 +9,7 @@ use crate::*;
 pub struct ExprField {
     pub attrs: Attributes,
     pub base: Box<Expr>,
-    pub dot: Dot,
+    pub dot: Token![.],
     pub member: Member,
 }
 

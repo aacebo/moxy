@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::And;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::Type;
@@ -9,7 +9,7 @@ use crate::{Lifetime, Mutability};
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeReference {
-    pub and: And,
+    pub and: Token![&],
     pub lifetime: Option<Lifetime>,
     pub mutability: Mutability,
     pub elem: Box<Type>,
@@ -17,7 +17,7 @@ pub struct TypeReference {
 
 impl Parse for TypeReference {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let and = stream.parse::<And>()?;
+        let and = stream.parse::<Token![&]>()?;
         let lifetime = stream.parse::<Option<Lifetime>>()?;
         let mutability = stream.parse::<Mutability>()?;
         let elem = Box::new(stream.parse::<Type>()?);

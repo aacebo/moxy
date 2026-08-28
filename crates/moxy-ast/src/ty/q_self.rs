@@ -1,6 +1,5 @@
-use moxy_token::keyword::As;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Gt, Lt};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::Type;
@@ -10,10 +9,10 @@ use crate::Path;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct QSelf {
-    pub lt: Lt,
+    pub lt: Token![<],
     pub ty: Box<Type>,
-    pub as_keyword: Option<As>,
-    pub gt: Gt,
+    pub as_keyword: Option<Token![as]>,
+    pub gt: Token![>],
     /// Number of leading path segments that belong inside the `<... as Trait>`.
     pub position: usize,
 }
@@ -38,16 +37,16 @@ impl QSelf {
     /// Parse `< Type ( as Path )? >`, returning the qself plus the trait path
     /// segments (if any) that the enclosing `TypePath` must prepend to its path.
     pub fn parse_with_trait(stream: &mut ParseStream) -> Result<(Self, Option<Path>), ParseError> {
-        let lt = stream.parse::<Lt>()?;
+        let lt = stream.parse::<Token![<]>()?;
         let ty = Box::new(stream.parse::<Type>()?);
-        let (as_keyword, trait_path) = if stream.peek::<As>() {
-            let as_keyword = stream.parse::<As>()?;
+        let (as_keyword, trait_path) = if stream.peek::<Token![as]>() {
+            let as_keyword = stream.parse::<Token![as]>()?;
             (Some(as_keyword), Some(stream.parse::<Path>()?))
         } else {
             (None, None)
         };
 
-        let gt = stream.parse::<Gt>()?;
+        let gt = stream.parse::<Token![>]>()?;
         let position = trait_path.as_ref().map(|p| p.len()).unwrap_or(0);
 
         Ok((

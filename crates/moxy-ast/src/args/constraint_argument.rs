@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Colon, Plus};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::AngleArguments;
@@ -11,8 +11,8 @@ use crate::{GenericArgument, Ident, Punctuated, TypeBound};
 pub struct ConstraintArgument {
     pub ident: Ident,
     pub generics: Option<AngleArguments>,
-    pub colon_punct: Colon,
-    pub bounds: Punctuated<TypeBound, Plus>,
+    pub colon_punct: Token![:],
+    pub bounds: Punctuated<TypeBound, Token![+]>,
 }
 
 impl ConstraintArgument {

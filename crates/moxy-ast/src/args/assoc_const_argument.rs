@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Eq;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::AngleArguments;
@@ -11,7 +11,7 @@ use crate::{Expr, GenericArgument, Ident};
 pub struct AssocConstArgument {
     pub ident: Ident,
     pub generics: Option<AngleArguments>,
-    pub eq_punct: Eq,
+    pub eq_punct: Token![=],
     pub expr: Expr,
 }
 

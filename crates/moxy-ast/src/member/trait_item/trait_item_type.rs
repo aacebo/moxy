@@ -1,6 +1,5 @@
-use moxy_token::keyword::Type as KwType;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Colon, Eq, Plus, Semi};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Generics, Ident, Punctuated, Type, TypeBound};
@@ -10,29 +9,29 @@ use crate::{Attributes, Generics, Ident, Punctuated, Type, TypeBound};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitItemType {
     pub attrs: Attributes,
-    pub type_keyword: KwType,
+    pub type_keyword: Token![type],
     pub ident: Ident,
     pub generics: Generics,
-    pub colon: Option<Colon>,
-    pub bounds: Punctuated<TypeBound, Plus>,
-    pub default: Option<(Eq, Type)>,
-    pub semi: Semi,
+    pub colon: Option<Token![:]>,
+    pub bounds: Punctuated<TypeBound, Token![+]>,
+    pub default: Option<(Token![=], Type)>,
+    pub semi: Token![;],
 }
 
 impl Parse for TraitItemType {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
-        let type_keyword = stream.parse::<KwType>()?;
+        let type_keyword = stream.parse::<Token![type]>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
-        let (colon, bounds) = if stream.peek::<Colon>() {
-            (Some(stream.parse::<Colon>()?), TypeBound::parse_bounds(stream)?)
+        let (colon, bounds) = if stream.peek::<Token![:]>() {
+            (Some(stream.parse::<Token![:]>()?), TypeBound::parse_bounds(stream)?)
         } else {
             (None, Punctuated::new())
         };
 
-        let default = if stream.peek::<Eq>() {
-            let eq = stream.parse::<Eq>()?;
+        let default = if stream.peek::<Token![=]>() {
+            let eq = stream.parse::<Token![=]>()?;
             Some((eq, stream.parse::<Type>()?))
         } else {
             None

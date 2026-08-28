@@ -1,5 +1,4 @@
-use moxy_token::keyword::Let;
-use moxy_token::punct::Eq;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -9,9 +8,9 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprLet {
     pub attrs: Attributes,
-    pub let_keyword: Let,
+    pub let_keyword: Token![let],
     pub pat: Box<Pattern>,
-    pub eq: Eq,
+    pub eq: Token![=],
     pub expr: Box<Expr>,
 }
 

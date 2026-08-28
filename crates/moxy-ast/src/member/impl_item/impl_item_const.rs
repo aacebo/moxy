@@ -1,6 +1,5 @@
-use moxy_token::keyword::Const;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Colon, Eq, Semi};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Defaultness, Expr, Generics, Ident, Type, Visibility};
@@ -12,14 +11,14 @@ pub struct ImplItemConst {
     pub attrs: Attributes,
     pub vis: Visibility,
     pub defaultness: Defaultness,
-    pub const_keyword: Const,
+    pub const_keyword: Token![const],
     pub ident: Ident,
     pub generics: Generics,
-    pub colon: Colon,
+    pub colon: Token![:],
     pub ty: Type,
-    pub eq: Eq,
+    pub eq: Token![=],
     pub expr: Expr,
-    pub semi: Option<Semi>,
+    pub semi: Option<Token![;]>,
 }
 
 impl Parse for ImplItemConst {
@@ -27,14 +26,14 @@ impl Parse for ImplItemConst {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let defaultness = stream.parse::<Defaultness>()?;
-        let const_keyword = stream.parse::<Const>()?;
+        let const_keyword = stream.parse::<Token![const]>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
-        let colon = stream.parse::<Colon>()?;
+        let colon = stream.parse::<Token![:]>()?;
         let ty = stream.parse::<Type>()?;
-        let eq = stream.parse::<Eq>()?;
+        let eq = stream.parse::<Token![=]>()?;
         let expr = stream.parse::<Expr>()?;
-        let semi = stream.parse_if::<Semi>();
+        let semi = stream.parse_if::<Token![;]>();
 
         Ok(Self {
             attrs,

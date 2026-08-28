@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Semi;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::Expr;
@@ -19,7 +19,7 @@ pub enum Stmt {
     Local(Box<StmtLocal>),
     Block(StmtBlock),
     Item(Box<crate::Item>),
-    Expr(Box<Expr>, Option<Semi>),
+    Expr(Box<Expr>, Option<Token![;]>),
     Macro(StmtMacro),
 }
 
@@ -95,7 +95,7 @@ impl Parse for Stmt {
         }
 
         let expr = stream.parse::<Expr>()?;
-        let semi = stream.parse_if::<Semi>();
+        let semi = stream.parse_if::<Token![;]>();
         Ok(Self::Expr(Box::new(expr), semi))
     }
 }

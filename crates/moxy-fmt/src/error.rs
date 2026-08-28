@@ -1,5 +1,6 @@
 use moxy_ast::Ident;
-use moxy_token::{Delim, Group, Lit, Not, Punctuation, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
+use moxy_token::Token;
+use moxy_token::{Delim, Group, Lit, Punctuation, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 #[derive(Debug)]
 pub enum FmtError {
@@ -9,7 +10,7 @@ pub enum FmtError {
 impl FmtError {
     pub fn to_compile_error(&self) -> TokenStream {
         let ident = Ident::new("compile_error");
-        let bang = Not::new(Span::def_site());
+        let bang = <Token![!]>::new(Span::def_site());
         let lit = Lit::string(&self.to_string());
         let inner: TokenTree = lit.into();
         let group = Group::new(Delim::Paren, inner.into_token_stream());

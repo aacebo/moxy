@@ -1,4 +1,4 @@
-use moxy_token::punct::Or as OrPunct;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -8,7 +8,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatOr {
     pub attrs: Attributes,
-    pub cases: Punctuated<Pattern, OrPunct>,
+    pub cases: Punctuated<Pattern, Token![|]>,
 }
 
 impl Spanner for PatOr {

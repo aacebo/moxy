@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Comma, Dot};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -10,10 +10,10 @@ use crate::*;
 pub struct ExprMethodCall {
     pub attrs: Attributes,
     pub receiver: Box<Expr>,
-    pub dot: Dot,
+    pub dot: Token![.],
     pub method: Ident,
     pub turbofish: Option<AngleArguments>,
-    pub args: Delimited<Punctuated<Expr, Comma>>,
+    pub args: Delimited<Punctuated<Expr, Token![,]>>,
 }
 
 impl Spanner for ExprMethodCall {

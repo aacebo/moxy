@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Star;
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::UseTree;
@@ -8,7 +8,7 @@ use super::UseTree;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseGlob {
-    pub star: Star,
+    pub star: Token![*],
 }
 
 impl Parse for UseGlob {

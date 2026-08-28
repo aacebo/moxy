@@ -1,4 +1,4 @@
-use moxy_token::keyword::{Else, If};
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
@@ -10,10 +10,10 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprIf {
     pub attrs: Attributes,
-    pub if_keyword: If,
+    pub if_keyword: Token![if],
     pub cond: Box<Expr>,
     pub then_branch: StmtBlock,
-    pub else_keyword: Option<Else>,
+    pub else_keyword: Option<Token![else]>,
     pub else_branch: Option<Box<Expr>>,
 }
 
@@ -31,11 +31,11 @@ impl Spanner for ExprIf {
 
 impl ExprIf {
     pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Expr, ParseError> {
-        let if_keyword = stream.parse::<If>()?;
+        let if_keyword = stream.parse::<Token![if]>()?;
         let cond = Box::new(parse_expr(stream, false)?);
         let then_branch = stream.parse::<StmtBlock>()?;
         let (else_keyword, else_branch) = if matches!(stream.curr(), Some(tt) if tt.text() == Some("else")) {
-            let else_kw = stream.parse::<Else>()?;
+            let else_kw = stream.parse::<Token![else]>()?;
             let else_attrs = stream.parse::<Attributes>()?;
             let branch = Some(Box::new(PrimaryExpr::parse_from(stream, true, else_attrs)?));
             (Some(else_kw), branch)

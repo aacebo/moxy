@@ -1,7 +1,6 @@
-use moxy_token::keyword::SelfValue;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::And;
-use moxy_token::{Comma, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::{Receiver, Variadic};
 use crate::pat::PatType;
@@ -10,7 +9,7 @@ use crate::{Lifetime, Mutability, Punctuated};
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FnParams {
-    pub inputs: Punctuated<FnParam, Comma>,
+    pub inputs: Punctuated<FnParam, Token![,]>,
     pub variadic: Option<Variadic>,
 }
 
@@ -32,7 +31,7 @@ impl ToTokens for FnParams {
         self.inputs.to_tokens(t);
         if let Some(v) = &self.variadic {
             if !self.inputs.is_empty() && !self.inputs.is_trailing() {
-                Comma::default().to_tokens(t);
+                <Token![,]>::default().to_tokens(t);
             }
             v.to_tokens(t);
         }
@@ -52,15 +51,15 @@ impl FnParam {
         let mut fork = stream.fork();
         fork.skip_while::<crate::Attribute>();
 
-        if fork.peek::<SelfValue>() {
+        if fork.peek::<Token![self]>() {
             return true;
         }
 
-        if fork.peek::<And>() {
-            let _ = fork.parse::<And>();
+        if fork.peek::<Token![&]>() {
+            let _ = fork.parse::<Token![&]>();
             let _ = fork.parse_if::<Lifetime>();
             let _ = fork.parse::<Mutability>();
-            return fork.peek::<SelfValue>();
+            return fork.peek::<Token![self]>();
         }
 
         false

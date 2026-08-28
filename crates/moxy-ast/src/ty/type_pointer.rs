@@ -1,6 +1,5 @@
-use moxy_token::keyword::{Const, Mut};
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Star;
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use super::Type;
@@ -9,28 +8,28 @@ use super::Type;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum PointerMutability {
-    Const(Const),
-    Mut(Mut),
+    Const(Token![const]),
+    Mut(Token![mut]),
 }
 
 /// A raw pointer type (e.g. `*const T`, `*mut T`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypePointer {
-    pub star: Star,
+    pub star: Token![*],
     pub mutability: PointerMutability,
     pub elem: Box<Type>,
 }
 
 impl Parse for TypePointer {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let star = stream.parse::<Star>()?;
+        let star = stream.parse::<Token![*]>()?;
         let at = stream.span();
 
         // A raw pointer requires an explicit `const` or `mut` after the `*`.
         let mutability = match stream.advance() {
-            Some(TokenTree::Keyword(kw)) if kw.as_str() == "mut" => PointerMutability::Mut(Mut::new(kw.span())),
-            Some(TokenTree::Keyword(kw)) if kw.as_str() == "const" => PointerMutability::Const(Const::new(kw.span())),
+            Some(TokenTree::Keyword(kw)) if kw.as_str() == "mut" => PointerMutability::Mut(<Token![mut]>::new(kw.span())),
+            Some(TokenTree::Keyword(kw)) if kw.as_str() == "const" => PointerMutability::Const(<Token![const]>::new(kw.span())),
             _ => {
                 return Err(LexError::new(at).message("expected `const` or `mut` after `*`").into());
             }

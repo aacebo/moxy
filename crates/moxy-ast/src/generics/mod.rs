@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Comma, Gt, Lt};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::Punctuated;
@@ -34,9 +34,9 @@ pub use where_predicate::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Generics {
-    pub lt: Option<Lt>,
-    pub gt: Option<Gt>,
-    pub params: Punctuated<GenericParam, Comma>,
+    pub lt: Option<Token![<]>,
+    pub gt: Option<Token![>]>,
+    pub params: Punctuated<GenericParam, Token![,]>,
     pub where_clause: Option<WhereClause>,
 }
 

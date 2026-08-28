@@ -1,4 +1,4 @@
-use moxy_token::keyword::As;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -9,7 +9,7 @@ use crate::*;
 pub struct ExprCast {
     pub attrs: Attributes,
     pub expr: Box<Expr>,
-    pub as_keyword: As,
+    pub as_keyword: Token![as],
     pub ty: Box<Type>,
 }
 

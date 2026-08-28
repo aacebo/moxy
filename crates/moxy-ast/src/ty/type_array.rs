@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Semi;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::Type;
@@ -9,14 +9,14 @@ use crate::{Delimited, Expr};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ArrayInner {
     pub elem: Box<Type>,
-    pub semi: Semi,
+    pub semi: Token![;],
     pub len: Expr,
 }
 
 impl Parse for ArrayInner {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let elem = Box::new(stream.parse::<Type>()?);
-        let semi = stream.parse::<Semi>()?;
+        let semi = stream.parse::<Token![;]>()?;
         let len = stream.parse::<Expr>()?;
         Ok(Self { elem, semi, len })
     }

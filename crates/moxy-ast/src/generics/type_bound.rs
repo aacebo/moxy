@@ -1,3 +1,4 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
@@ -40,15 +41,14 @@ impl TypeBound {
 
     pub fn parse_bounds(
         stream: &mut moxy_token::parser::ParseStream,
-    ) -> Result<crate::Punctuated<Self, moxy_token::punct::Plus>, moxy_token::parser::ParseError> {
-        use moxy_token::punct::Plus;
+    ) -> Result<crate::Punctuated<Self, Token![+]>, moxy_token::parser::ParseError> {
         let mut bounds = crate::Punctuated::new();
 
         loop {
             bounds.push_value(stream.parse::<Self>()?);
 
-            if stream.peek::<Plus>() {
-                bounds.push_punct(stream.parse::<Plus>()?);
+            if stream.peek::<Token![+]>() {
+                bounds.push_punct(stream.parse::<Token![+]>()?);
             } else {
                 break;
             }
@@ -89,7 +89,7 @@ impl Parse for TypeBound {
             return Ok(Self::Lifetime(stream.parse()?));
         }
 
-        if stream.peek::<moxy_token::keyword::Use>() {
+        if stream.peek::<Token![use]>() {
             return Ok(Self::Use(stream.parse()?));
         }
 

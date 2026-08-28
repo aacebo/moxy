@@ -1,11 +1,11 @@
-use moxy_token::punct::{Not, Pound};
+use moxy_token::Token;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 /// Whether an attribute is outer (`#[...]`) or inner (`#![...]`).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 pub enum AttrStyle {
-    Outer(Pound),
-    Inner(Pound, Not),
+    Outer(Token![#]),
+    Inner(Token![#], Token![!]),
 }
 
 impl AttrStyle {
@@ -17,7 +17,7 @@ impl AttrStyle {
         matches!(self, Self::Inner(_, _))
     }
 
-    pub fn pound(&self) -> &Pound {
+    pub fn pound(&self) -> &Token![#] {
         match self {
             Self::Outer(p) => p,
             Self::Inner(p, _) => p,
@@ -48,9 +48,9 @@ impl ToTokens for AttrStyle {
 
 impl Parse for AttrStyle {
     fn parse(stream: &mut moxy_token::parser::ParseStream) -> Result<Self, moxy_token::parser::ParseError> {
-        let pound = stream.parse::<Pound>()?;
+        let pound = stream.parse::<Token![#]>()?;
 
-        if let Ok(not) = stream.parse::<Not>() {
+        if let Ok(not) = stream.parse::<Token![!]>() {
             Ok(Self::Inner(pound, not))
         } else {
             Ok(Self::Outer(pound))

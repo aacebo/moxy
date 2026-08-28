@@ -1,5 +1,7 @@
 #![cfg_attr(nightly, feature(proc_macro_diagnostic))]
 
+use moxy_token::Token;
+
 extern crate proc_macro;
 
 mod level;
@@ -13,8 +15,7 @@ use moxy_token::span::DelimSpan;
 pub use span::*;
 
 use moxy_token::parser::ParseError;
-use moxy_token::punct::Not;
-use moxy_token::{Delim, Group, Ident, Lit, Punctuation, Semi, Span, ToTokenStream, ToTokens, TokenStream};
+use moxy_token::{Delim, Group, Ident, Lit, Punctuation, Span, ToTokenStream, ToTokens, TokenStream};
 
 /// Build a note-level [`Diagnostic`].
 ///
@@ -253,7 +254,7 @@ impl Diagnostic {
 
         fn cerror(span: Span, message: impl std::fmt::Display) -> TokenStream {
             let ident = Ident::new("compile_error").with_span(span);
-            let bang = Not::new(span);
+            let bang = <Token![!]>::new(span);
             let mut lit = Lit::string(&message.to_string());
             lit.set_span(span);
 
@@ -264,7 +265,7 @@ impl Diagnostic {
                 ident.into_token_tree(),
                 Punctuation::from(bang).into_token_tree(),
                 group.into_token_tree(),
-                Punctuation::from(Semi::new(span)).into_token_tree(),
+                Punctuation::from(<Token![;]>::new(span)).into_token_tree(),
             ]
             .into_token_stream()
         }

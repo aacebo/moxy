@@ -1,5 +1,4 @@
-use moxy_token::keyword::Ref;
-use moxy_token::punct::At;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -9,10 +8,10 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatIdent {
     pub attrs: Attributes,
-    pub by_ref: Option<Ref>,
+    pub by_ref: Option<Token![ref]>,
     pub mutability: Mutability,
     pub ident: Ident,
-    pub subpat: Option<(At, Box<Pattern>)>,
+    pub subpat: Option<(Token![@], Box<Pattern>)>,
 }
 
 impl Spanner for PatIdent {

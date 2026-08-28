@@ -1,4 +1,4 @@
-use moxy_token::keyword::{Async, Move};
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
@@ -10,8 +10,8 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprAsync {
     pub attrs: Attributes,
-    pub async_keyword: Async,
-    pub move_keyword: Option<Move>,
+    pub async_keyword: Token![async],
+    pub move_keyword: Option<Token![move]>,
     pub block: StmtBlock,
 }
 
@@ -32,8 +32,8 @@ impl ExprAsync {
     }
 
     pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Self, ParseError> {
-        let async_keyword = stream.parse::<Async>()?;
-        let move_keyword = stream.parse_if::<Move>();
+        let async_keyword = stream.parse::<Token![async]>()?;
+        let move_keyword = stream.parse_if::<Token![move]>();
         let block = stream.parse::<StmtBlock>()?;
 
         Ok(Self {

@@ -1,4 +1,4 @@
-use moxy_token::punct::Colon;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -9,7 +9,7 @@ use crate::*;
 pub struct PatField {
     pub attrs: Attributes,
     pub member: Member,
-    pub colon: Option<Colon>,
+    pub colon: Option<Token![:]>,
     pub pat: Pattern,
     pub shorthand: bool,
 }

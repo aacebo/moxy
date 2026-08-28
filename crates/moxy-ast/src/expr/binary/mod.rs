@@ -1,3 +1,4 @@
+use moxy_token::Token;
 mod expr_assign;
 mod expr_assign_op;
 mod expr_binary;
@@ -10,7 +11,6 @@ pub use expr_binary::*;
 pub use expr_range::*;
 pub use expr_type::*;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{DotDot, Eq};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::unary::ExprCast;
@@ -154,8 +154,8 @@ impl From<ExprType> for BinaryExpr {
 impl BinaryExpr {
     pub fn parse_from(stream: &mut ParseStream, mut lhs: Expr, min: Precedence, allow_struct: bool) -> Result<Expr, ParseError> {
         loop {
-            if Precedence::Cast >= min && stream.peek::<moxy_token::keyword::As>() {
-                let as_keyword = stream.parse::<moxy_token::keyword::As>()?;
+            if Precedence::Cast >= min && stream.peek::<Token![as]>() {
+                let as_keyword = stream.parse::<Token![as]>()?;
                 let ty = Box::new(stream.parse::<Type>()?);
 
                 lhs = Expr::Unary(UnaryExpr::Cast(ExprCast {
@@ -169,8 +169,8 @@ impl BinaryExpr {
             }
 
             if min == Precedence::Min {
-                if stream.peek::<Eq>() {
-                    let eq = stream.parse::<Eq>()?;
+                if stream.peek::<Token![=]>() {
+                    let eq = stream.parse::<Token![=]>()?;
                     let right = Box::new(super::parse_expr(stream, allow_struct)?);
 
                     lhs = Expr::Binary(Self::Assign(ExprAssign {
@@ -198,7 +198,7 @@ impl BinaryExpr {
             }
 
             // Range with a left operand: `a..b`, `a..=b`, `a..` (Precedence::Range).
-            if Precedence::Range >= min && (stream.peek::<DotDot>() || stream.peek::<moxy_token::punct::DotDotEq>()) {
+            if Precedence::Range >= min && (stream.peek::<Token![..]>() || stream.peek::<Token![..=]>()) {
                 let limits = stream.parse::<RangeLimits>()?;
                 let end = ExprRange::maybe_end(stream, allow_struct)?;
 

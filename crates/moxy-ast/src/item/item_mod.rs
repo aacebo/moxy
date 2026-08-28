@@ -1,6 +1,5 @@
-use moxy_token::keyword::Mod;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Semi;
 use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use super::Item;
@@ -13,10 +12,10 @@ pub struct ItemMod {
     pub attrs: Attributes,
     pub vis: Visibility,
     pub unsafety: Unsafety,
-    pub mod_keyword: Mod,
+    pub mod_keyword: Token![mod],
     pub ident: Ident,
     pub content: Option<Delimited<Vec<Item>>>,
-    pub semi_punct: Option<Semi>,
+    pub semi_punct: Option<Token![;]>,
 }
 
 impl Parse for ItemMod {
@@ -24,13 +23,13 @@ impl Parse for ItemMod {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let unsafety = stream.parse_if::<Unsafety>().unwrap_or(Unsafety::Safe);
-        let mod_keyword = stream.parse::<Mod>()?;
+        let mod_keyword = stream.parse::<Token![mod]>()?;
         let ident = stream.parse::<Ident>()?;
         let (content, semi_punct) = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
             let brace = Delimited::<Vec<Item>>::parse_brace(stream)?;
             (Some(brace), None)
         } else {
-            let semi_punct = stream.parse::<Semi>()?;
+            let semi_punct = stream.parse::<Token![;]>()?;
             (None, Some(semi_punct))
         };
 

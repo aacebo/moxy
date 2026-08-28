@@ -1,4 +1,4 @@
-use moxy_token::keyword::As;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
 
@@ -10,7 +10,7 @@ use crate::Ident;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseRename {
     pub ident: Ident,
-    pub as_keyword: As,
+    pub as_keyword: Token![as],
     pub rename: Ident,
 }
 

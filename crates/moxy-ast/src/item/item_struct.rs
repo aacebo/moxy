@@ -1,6 +1,5 @@
-use moxy_token::keyword::Struct;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Semi;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Fields, Generics, Ident, Visibility};
@@ -11,22 +10,22 @@ use crate::{Attributes, Fields, Generics, Ident, Visibility};
 pub struct ItemStruct {
     pub attrs: Attributes,
     pub vis: Visibility,
-    pub struct_keyword: Struct,
+    pub struct_keyword: Token![struct],
     pub ident: Ident,
     pub generics: Generics,
     pub fields: Fields,
-    pub semi: Option<Semi>,
+    pub semi: Option<Token![;]>,
 }
 
 impl Parse for ItemStruct {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
-        let struct_keyword = stream.parse::<Struct>()?;
+        let struct_keyword = stream.parse::<Token![struct]>()?;
         let ident = stream.parse::<Ident>()?;
         let generics = stream.parse::<Generics>()?;
         let fields = stream.parse::<Fields>()?;
-        let semi = stream.parse_if::<Semi>();
+        let semi = stream.parse_if::<Token![;]>();
 
         Ok(Self {
             attrs,

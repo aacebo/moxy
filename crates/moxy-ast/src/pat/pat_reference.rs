@@ -1,4 +1,4 @@
-use moxy_token::punct::And;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -8,7 +8,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatReference {
     pub attrs: Attributes,
-    pub and: And,
+    pub and: Token![&],
     pub mutability: Mutability,
     pub pat: Box<Pattern>,
 }

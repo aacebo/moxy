@@ -1,4 +1,4 @@
-use moxy_token::keyword::Yield;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -8,7 +8,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprYield {
     pub attrs: Attributes,
-    pub yield_keyword: Yield,
+    pub yield_keyword: Token![yield],
     pub expr: Option<Box<Expr>>,
 }
 

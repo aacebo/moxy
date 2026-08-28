@@ -1,4 +1,4 @@
-use moxy_token::punct::And;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -8,7 +8,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprReference {
     pub attrs: Attributes,
-    pub and_punct: And,
+    pub and_punct: Token![&],
     pub mutability: Mutability,
     pub expr: Box<Expr>,
 }

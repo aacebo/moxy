@@ -1,6 +1,5 @@
-use moxy_token::keyword::Const;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Colon, Eq};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Expr, Ident, Type};
@@ -10,23 +9,23 @@ use crate::{Attributes, Expr, Ident, Type};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ConstParam {
     pub attrs: Attributes,
-    pub const_keyword: Const,
+    pub const_keyword: Token![const],
     pub ident: Ident,
-    pub colon_punct: Colon,
+    pub colon_punct: Token![:],
     pub ty: Type,
-    pub default_eq_punct: Option<Eq>,
+    pub default_eq_punct: Option<Token![=]>,
     pub default: Option<Expr>,
 }
 
 impl Parse for ConstParam {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
-        let const_keyword = stream.parse::<Const>()?;
+        let const_keyword = stream.parse::<Token![const]>()?;
         let ident = stream.parse::<Ident>()?;
-        let colon_punct = stream.parse::<Colon>()?;
+        let colon_punct = stream.parse::<Token![:]>()?;
         let ty = stream.parse::<Type>()?;
-        let (default_eq_punct, default) = if stream.peek::<Eq>() {
-            let eq_punct = stream.parse::<Eq>()?;
+        let (default_eq_punct, default) = if stream.peek::<Token![=]>() {
+            let eq_punct = stream.parse::<Token![=]>()?;
             let expr = stream.parse::<Expr>()?;
             (Some(eq_punct), Some(expr))
         } else {

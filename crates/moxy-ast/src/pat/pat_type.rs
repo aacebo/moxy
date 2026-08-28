@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Colon;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -10,7 +10,7 @@ use crate::*;
 pub struct PatType {
     pub attrs: Attributes,
     pub pat: Box<Pattern>,
-    pub colon: Colon,
+    pub colon: Token![:],
     pub ty: Box<Type>,
 }
 

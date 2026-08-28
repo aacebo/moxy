@@ -1,6 +1,5 @@
-use moxy_token::keyword::{Extern, Fn};
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{Comma, Gt, Lt};
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::{Abi, FnParam, FnParams, Variadic};
@@ -14,7 +13,7 @@ pub struct Signature {
     pub asyncness: Asyncness,
     pub unsafety: Unsafety,
     pub abi: Option<Abi>,
-    pub fn_keyword: Fn,
+    pub fn_keyword: Token![fn],
     pub ident: Ident,
     pub generics: Generics,
     pub params: Delimited<FnParams>,
@@ -26,13 +25,13 @@ impl Parse for Signature {
         let constness = stream.parse::<Constness>()?;
         let asyncness = stream.parse::<Asyncness>()?;
         let unsafety = stream.parse::<Unsafety>()?;
-        let abi = if stream.peek::<Extern>() {
+        let abi = if stream.peek::<Token![extern]>() {
             Some(stream.parse::<Abi>()?)
         } else {
             None
         };
 
-        let fn_keyword = stream.parse::<Fn>()?;
+        let fn_keyword = stream.parse::<Token![fn]>()?;
         let ident = stream.parse::<Ident>()?;
         let mut generics = stream.parse::<Generics>()?;
         let params = Delimited::parse_paren_with(stream, |inner| {
@@ -47,8 +46,8 @@ impl Parse for Signature {
 
                 inputs.push_value(inner.parse::<FnParam>()?);
 
-                if inner.peek::<Comma>() {
-                    inputs.push_punct(inner.parse::<Comma>()?);
+                if inner.peek::<Token![,]>() {
+                    inputs.push_punct(inner.parse::<Token![,]>()?);
                 } else {
                     break;
                 }
@@ -98,9 +97,9 @@ impl Spanner for Signature {
 impl Signature {
     pub fn emit_angle_params(generics: &Generics, t: &mut TokenStream) {
         if !generics.params.is_empty() {
-            Lt::default().to_tokens(t);
+            <Token![<]>::default().to_tokens(t);
             generics.params.to_tokens(t);
-            Gt::default().to_tokens(t);
+            <Token![>]>::default().to_tokens(t);
         }
     }
 
@@ -110,11 +109,11 @@ impl Signature {
         let _ = fork.parse::<crate::Asyncness>();
         let _ = fork.parse::<crate::Unsafety>();
 
-        if fork.peek::<Extern>() {
+        if fork.peek::<Token![extern]>() {
             let _ = fork.parse::<crate::sig::Abi>();
         }
 
-        fork.peek::<Fn>()
+        fork.peek::<Token![fn]>()
     }
 }
 

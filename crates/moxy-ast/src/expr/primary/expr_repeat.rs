@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Semi;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::expr::parse_expr;
@@ -9,14 +9,14 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct RepeatInner {
     pub elem: Box<Expr>,
-    pub semi: Semi,
+    pub semi: Token![;],
     pub len: Box<Expr>,
 }
 
 impl Parse for RepeatInner {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let elem = Box::new(parse_expr(stream, true)?);
-        let semi = stream.parse::<Semi>()?;
+        let semi = stream.parse::<Token![;]>()?;
         let len = Box::new(parse_expr(stream, true)?);
         Ok(Self { elem, semi, len })
     }

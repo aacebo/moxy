@@ -1,3 +1,5 @@
+use moxy_token::Token;
+
 use super::*;
 
 /// The shape of a meta item after its path (`name`, `name = v`, `name(..)`, `name { .. }`).
@@ -9,10 +11,10 @@ pub enum MetaLayout {
     /// `#[custom { a + b }]` — a verbatim leaf attached directly to the path
     Value(MetaValue),
     /// `#[debug = true]`
-    Alias { eq: Eq, value: MetaValue },
+    Alias { eq: Token![=], value: MetaValue },
     /// `#[debug(true, env = "test")]`
     List {
-        items: Delimited<Punctuated<MetaArgument, Comma>>,
+        items: Delimited<Punctuated<MetaArgument, Token![,]>>,
     },
 }
 
@@ -37,7 +39,7 @@ impl MetaLayout {
         }
     }
 
-    pub fn as_list(&self) -> Option<&Delimited<Punctuated<MetaArgument, Comma>>> {
+    pub fn as_list(&self) -> Option<&Delimited<Punctuated<MetaArgument, Token![,]>>> {
         match self {
             Self::List { items } => Some(items),
             _ => None,
@@ -56,7 +58,7 @@ impl MetaLayout {
 
 impl Parse for MetaLayout {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Eq>() && !stream.peek::<EqEq>() && !stream.peek::<FatArrow>() {
+        if stream.peek::<Token![=]>() && !stream.peek::<Token![==]>() && !stream.peek::<Token![=>]>() {
             return Ok(Self::Alias {
                 eq: stream.parse()?,
                 value: stream.parse()?,

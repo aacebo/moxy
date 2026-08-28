@@ -1,4 +1,4 @@
-use moxy_token::keyword::Break;
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -8,7 +8,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprBreak {
     pub attrs: Attributes,
-    pub break_keyword: Break,
+    pub break_keyword: Token![break],
     pub label: Option<Label>,
     pub expr: Option<Box<Expr>>,
 }

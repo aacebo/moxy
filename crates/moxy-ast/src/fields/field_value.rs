@@ -1,5 +1,5 @@
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::Colon;
 use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use crate::expr::{ExprPath, PrimaryExpr};
@@ -11,7 +11,7 @@ use crate::{Attributes, Expr, Member};
 pub struct FieldValue {
     pub attrs: Attributes,
     pub member: Member,
-    pub colon_punct: Option<Colon>,
+    pub colon_punct: Option<Token![:]>,
     pub expr: Expr,
     pub shorthand: bool,
 }
@@ -21,8 +21,8 @@ impl Parse for FieldValue {
         let attrs = stream.parse::<Attributes>()?;
         let member = stream.parse::<Member>()?;
 
-        if stream.peek::<Colon>() {
-            let colon_punct = Some(stream.parse::<Colon>()?);
+        if stream.peek::<Token![:]>() {
+            let colon_punct = Some(stream.parse::<Token![:]>()?);
             let expr = stream.parse::<Expr>()?;
 
             Ok(Self {

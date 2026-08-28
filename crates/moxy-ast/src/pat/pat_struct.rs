@@ -1,4 +1,4 @@
-use moxy_token::punct::{Comma, DotDot};
+use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::pat::PatField;
@@ -7,8 +7,8 @@ use crate::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatStructBody {
-    pub fields: Punctuated<PatField, Comma>,
-    pub rest: Option<DotDot>,
+    pub fields: Punctuated<PatField, Token![,]>,
+    pub rest: Option<Token![..]>,
 }
 
 impl ToTokens for PatStructBody {

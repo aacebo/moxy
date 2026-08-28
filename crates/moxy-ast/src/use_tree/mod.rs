@@ -1,6 +1,5 @@
-use moxy_token::keyword::As;
+use moxy_token::Token;
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::punct::{PathSep, Star};
 use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Delimited, Ident};
@@ -84,8 +83,8 @@ impl Spanner for UseTree {
 
 impl Parse for UseTree {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Star>() {
-            let star = stream.parse::<Star>()?;
+        if stream.peek::<Token![*]>() {
+            let star = stream.parse::<Token![*]>()?;
             return Ok(Self::Glob(UseGlob { star }));
         }
 
@@ -94,11 +93,11 @@ impl Parse for UseTree {
             return Ok(Self::Group(UseGroup { items }));
         }
 
-        let prefix = stream.parse_if::<PathSep>();
+        let prefix = stream.parse_if::<Token![::]>();
         let ident = stream.parse::<Ident>()?;
 
-        if stream.peek::<PathSep>() {
-            let path_sep = stream.parse::<PathSep>()?;
+        if stream.peek::<Token![::]>() {
+            let path_sep = stream.parse::<Token![::]>()?;
             let tree = Box::new(stream.parse::<Self>()?);
             return Ok(Self::Path(UsePath {
                 prefix,
@@ -108,8 +107,8 @@ impl Parse for UseTree {
             }));
         }
 
-        if stream.peek::<As>() {
-            let as_keyword = stream.parse::<As>()?;
+        if stream.peek::<Token![as]>() {
+            let as_keyword = stream.parse::<Token![as]>()?;
             let rename = stream.parse::<Ident>()?;
             return Ok(Self::Rename(UseRename {
                 ident,
