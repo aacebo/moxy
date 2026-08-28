@@ -17,13 +17,13 @@ pub use stream::*;
 /// ```
 #[macro_export]
 macro_rules! parse {
-    ($src:literal as $ty:ty) => {{
+    ($src:tt as $ty:ty) => {{
         use ::std::str::FromStr;
-        $crate::TokenStream::from_str($src)
+        $crate::TokenStream::from_str(&$src.to_string())
             .map_err($crate::parser::ParseError::from)
             .and_then(|ts| <$ty as $crate::Parse>::parse(&mut ts.parse()))
     }};
-    ($src:expr) => {{
+    ($src:tt) => {{
         use ::std::str::FromStr;
         $crate::TokenStream::from_str(&$src.to_string())
             .map_err($crate::parser::ParseError::from)

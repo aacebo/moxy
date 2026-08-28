@@ -18,7 +18,6 @@ mod type_reference;
 mod type_slice;
 mod type_trait_object;
 mod type_tuple;
-mod typed_param;
 
 pub use q_self::*;
 pub use type_array::*;
@@ -33,7 +32,6 @@ pub use type_reference::*;
 pub use type_slice::*;
 pub use type_trait_object::*;
 pub use type_tuple::*;
-pub use typed_param::*;
 
 /// A Rust type expression. Covers all positions where a type can appear in source code.
 #[derive(Debug, Clone, PartialEq, Eq)]

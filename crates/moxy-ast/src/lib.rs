@@ -73,7 +73,7 @@ pub use sig::{Abi, BareFnArg, Signature, Variadic};
 #[doc(inline)]
 pub use stmt::{Stmt, StmtBlock};
 #[doc(inline)]
-pub use ty::{QSelf, Type, TypeMacro, TypedParam};
+pub use ty::{QSelf, Type, TypeMacro};
 #[doc(inline)]
 pub use use_tree::UseTree;
 #[doc(inline)]

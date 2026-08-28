@@ -903,16 +903,6 @@ define_visit! {
             mac => visit_macro_call / visit_macro_call_mut,
         }
     }
-    struct TypedParam {
-        visit: visit_typed_param, visit_mut: visit_typed_param_mut,
-        walk: walk_typed_param, walk_mut: walk_typed_param_mut,
-        fields {
-            attrs => visit_attributes / visit_attributes_mut,
-            pat: box => visit_pattern / visit_pattern_mut,
-            colon: skip,
-            ty: box => visit_type / visit_type_mut,
-        }
-    }
 
     // ===== items =========================================================
     enum Item {
@@ -1409,7 +1399,7 @@ define_visit! {
         walk: walk_fn_param, walk_mut: walk_fn_param_mut,
         variants {
             Receiver(visit_receiver / visit_receiver_mut),
-            Typed(visit_typed_param / visit_typed_param_mut),
+            Typed(visit_pat_type / visit_pat_type_mut),
         }
     }
     struct Receiver {

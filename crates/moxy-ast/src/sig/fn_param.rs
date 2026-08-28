@@ -4,7 +4,8 @@ use moxy_token::punct::And;
 use moxy_token::{Comma, Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::{Receiver, Variadic};
-use crate::{Lifetime, Mutability, Punctuated, TypedParam};
+use crate::pat::PatType;
+use crate::{Lifetime, Mutability, Punctuated};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -43,7 +44,7 @@ impl ToTokens for FnParams {
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum FnParam {
     Receiver(Box<Receiver>),
-    Typed(Box<TypedParam>),
+    Typed(Box<PatType>),
 }
 
 impl FnParam {

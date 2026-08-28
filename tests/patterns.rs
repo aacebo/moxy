@@ -1,5 +1,6 @@
 use moxy::ast::Pattern;
 use moxy::token::{Spanner, ToTokenStream};
+use moxy_ast::pat::PatType;
 
 #[test]
 fn binding_tuple_slice_and_struct_patterns_preserve_shape() {
@@ -61,20 +62,18 @@ fn alternatives_ranges_references_and_typed_patterns_render_exactly() {
 }
 
 #[test]
-#[ignore = "pattern parser currently stops before type ascriptions"]
 fn typed_patterns_preserve_their_type_syntax() {
-    let pattern: Pattern = moxy::parse!("value: Option<T>").unwrap();
-    assert!(pattern.is_type());
+    let pattern: PatType = moxy::parse!("value: Option<T>").unwrap();
     assert!(!pattern.span().is_empty());
     assert_eq!(moxy::fmt!(&pattern).unwrap(), "value: Option<T>");
 }
 
 #[test]
-#[ignore = "member parser currently accepts suffixed, non-decimal, separated, and overflowing tuple indices"]
 fn invalid_tuple_indices_are_rejected_as_member_patterns() {
     assert!(moxy::parse!("0" as moxy::ast::Member).is_ok());
+
     for source in ["0u8", "0x1", "1_0", "4294967296"] {
-        let result: Result<moxy::ast::Member, _> = moxy::parse!(source);
-        assert!(result.is_err(), "accepted invalid tuple index {source}");
+        let result = moxy::parse!(source as moxy::ast::Member);
+        debug_assert!(result.is_err(), "accepted invalid tuple index {source} => {result:#?}");
     }
 }

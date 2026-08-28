@@ -1,4 +1,5 @@
 use moxy_ast::Pattern;
+use moxy_ast::pat;
 use moxy_ast::pat::*;
 
 use crate::{FmtError, Format, Formatter};
@@ -189,7 +190,7 @@ impl Format for PatRange {
     }
 }
 
-impl Format for PatType {
+impl Format for pat::PatType {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.pat.format(f)?;
         f.text(": ")?;

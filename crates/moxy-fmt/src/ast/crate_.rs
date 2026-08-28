@@ -1,14 +1,6 @@
-use moxy_ast::{Crate, TypedParam};
+use moxy_ast::Crate;
 
 use crate::{FmtError, Format, Formatter};
-
-impl Format for TypedParam {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.pat.format(f)?;
-        f.text(": ")?;
-        self.ty.format(f)
-    }
-}
 
 impl Format for Crate {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {

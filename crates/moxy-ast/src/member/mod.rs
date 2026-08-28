@@ -65,17 +65,17 @@ impl Parse for Member {
                 let at = stream.span();
                 let lit = stream.parse::<Lit>()?;
 
-                if let Some(i) = lit.as_int()
-                    && i.repr().chars().all(char::is_alphabetic)
-                {
-                    return Err(LexError::new(at).message("expected tuple index").into());
+                if let Some(i) = lit.as_int() {
+                    if !i.repr().chars().all(char::is_numeric) {
+                        Err(LexError::new(at).message("expected tuple index").into())
+                    } else if i.value() > 4294967295 {
+                        Err(LexError::new(at).message("tuple index exceeds max size 4294967295").into())
+                    } else {
+                        Ok(Self::Unnamed(lit))
+                    }
+                } else {
+                    Err(LexError::new(at).message("expected tuple index").into())
                 }
-
-                if !lit.is_int() {
-                    return Err(LexError::new(at).message("expected tuple index").into());
-                }
-
-                Ok(Self::Unnamed(lit))
             }
             _ => Ok(Self::Named(stream.parse()?)),
         }
