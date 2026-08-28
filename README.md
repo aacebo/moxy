@@ -1,6 +1,6 @@
 <img src="./assets/banner.svg" width="100%" />
 
-[![codecov](https://codecov.io/gh/aacebo/moxy/graph/badge.svg)](https://codecov.io/gh/aacebo/moxy)
+[![codecov](https://codecov.io/gh/aacebo/moxy/branch/master/graph/badge.svg?token=zVUrga2una)](https://codecov.io/gh/aacebo/moxy)
 
 A proc-macro development framework.
 
