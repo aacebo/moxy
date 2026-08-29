@@ -25,7 +25,7 @@ pub use node::*;
 /// # Examples
 ///
 /// ```ignore
-/// use moxy_ast::Item;
+/// use moxy::ast::Item;
 ///
 /// let name = "Greeter";
 /// let tokens = moxy::template! {

@@ -11,9 +11,11 @@ pub use stream::*;
 /// The type can be given explicitly with `as T` or inferred from context.
 ///
 /// # Example
-/// ```ignore
-/// let item: Item = parse!("fn foo() {}");
-/// let item = parse!("fn foo() {}" as Item);
+/// ```
+/// use moxy_token::*;
+///
+/// let token: Fn = parse!("fn").unwrap();
+/// let token = parse!("fn" as Fn).unwrap();
 /// ```
 #[macro_export]
 macro_rules! parse {

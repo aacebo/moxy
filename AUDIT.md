@@ -1,4 +1,4 @@
-# `moxy_ast` ↔ `syn` parse audit
+# `moxy::ast` ↔ `syn` parse audit
 
 I audited the current `moxy-ast` parser architecture against current `syn`, focusing on **AST nodes that exist but cannot be produced, duplicate grammar represented by multiple nodes, parser/AST disagreement, token loss, and grammar boundaries**.
 

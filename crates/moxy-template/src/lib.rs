@@ -3,13 +3,13 @@ mod ast;
 use ast::{Paste, Template};
 use moxy_token::{Parse, ToTokens, TokenStream};
 
-/// Build a [`moxy_token::TokenStream`] at runtime from a template, in the style
+/// Build a [`moxy::token::TokenStream`] at runtime from a template, in the style
 /// of `quote!`.
 ///
 /// The macro expands to a block that constructs and returns a `TokenStream`.
 /// Interpolations and control flow are evaluated against the surrounding scope:
 ///
-/// - `{{ expr }}` splices the runtime value of `expr` (via [`moxy_token::ToTokens`]),
+/// - `{{ expr }}` splices the runtime value of `expr` (via [`moxy::token::ToTokens`]),
 ///   preserving its source spans.
 /// - `@for (binding in iter) { … }`, `@if (cond) { … } @else { … }`, and
 ///   `@match (expr) { pat => { … }, … }` run as real control flow, appending to
@@ -47,7 +47,7 @@ pub fn template(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 /// identifier at compile time, passing all other tokens through unchanged.
 ///
 /// Use it to mint identifier *names* in declaration position — something the
-/// runtime [`moxy_token::ident!`] macro cannot do. Segments are taken by token
+/// runtime [`moxy::token::ident!`] macro cannot do. Segments are taken by token
 /// text (not evaluated), then validated as a Rust identifier.
 ///
 /// # Example
