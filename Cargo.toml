@@ -58,6 +58,7 @@ categories.workspace = true
 include.workspace = true
 
 [package.metadata.docs.rs]
+all-features = true
 rustdoc-args = [
     "--generate-link-to-definition",
     "--generate-macro-expansion"
