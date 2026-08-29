@@ -45,6 +45,7 @@ trybuild = { version = "1" }
 
 [package]
 name = "moxy"
+description = "A modular Rust syntax toolkit for tokenization, parsing, formatting, diagnostics, and quasi-quoting."
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -69,7 +70,8 @@ doctest = false
 workspace = true
 
 [features]
-default = ["ast", "token", "fmt", "template", "diagnostic"]
+default = ["ast", "token"]
+full = ["ast", "token", "build", "fmt", "template", "derive", "diagnostic", "serde", "proc-macro2"]
 ast = ["dep:moxy-ast", "token"]
 build = ["dep:moxy-build"]
 fmt = ["dep:moxy-fmt", "ast"]
@@ -93,5 +95,4 @@ moxy-template = { workspace = true, optional = true }
 serde.workspace = true
 proc-macro2.workspace = true
 trybuild.workspace = true
-
 serde_json = "1"

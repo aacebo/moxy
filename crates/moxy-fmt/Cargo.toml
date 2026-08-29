@@ -1,5 +1,6 @@
 [package]
 name = "moxy-fmt"
+description = "Rust pretty printing (formatting) for moxy"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

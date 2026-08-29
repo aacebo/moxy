@@ -1,5 +1,6 @@
 [package]
 name = "moxy-template"
+description = "Rust quasi-quoting and token templating with explicit interpolation syntax and built-in template control flow"
 version.workspace = true
 edition.workspace = true
 license.workspace = true

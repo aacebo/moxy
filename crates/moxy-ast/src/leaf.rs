@@ -128,103 +128,103 @@ macro_rules! define_leaf {
     };
 }
 
-use moxy_token::{keyword, punct};
+use moxy_token::Token;
 
 define_leaf! {
     /// A binary operator (`+`, `==`, `&&`, ...).
     pub enum BinOp {
-        And => punct::AndAnd,
-        Or => punct::OrOr,
-        Shl => punct::Shl,
-        Shr => punct::Shr,
-        Eq => punct::EqEq,
-        Ne => punct::Ne,
-        Le => punct::Le,
-        Ge => punct::Ge,
-        Add => punct::Plus,
-        Sub => punct::Minus,
-        Mul => punct::Star,
-        Div => punct::Slash,
-        Rem => punct::Percent,
-        BitXor => punct::Caret,
-        BitAnd => punct::And,
-        BitOr => punct::Or,
-        Lt => punct::Lt,
-        Gt => punct::Gt,
+        And => Token![&&],
+        Or => Token![||],
+        Shl => Token![<<],
+        Shr => Token![>>],
+        Eq => Token![==],
+        Ne => Token![!=],
+        Le => Token![<=],
+        Ge => Token![>=],
+        Add => Token![+],
+        Sub => Token![-],
+        Mul => Token![*],
+        Div => Token![/],
+        Rem => Token![%],
+        BitXor => Token![^],
+        BitAnd => Token![&],
+        BitOr => Token![|],
+        Lt => Token![<],
+        Gt => Token![>],
     }
 
     /// A unary operator (`*`, `!`, `-`).
     pub enum UnOp {
-        Deref => punct::Star,
-        Not => punct::Not,
-        Neg => punct::Minus,
+        Deref => Token![*],
+        Not => Token![!],
+        Neg => Token![-],
     }
 
     /// A compound assignment operator (`+=`, `<<=`, ...).
     pub enum AssignOp {
-        ShlAssign => punct::ShlEq,
-        ShrAssign => punct::ShrEq,
-        AddAssign => punct::PlusEq,
-        SubAssign => punct::MinusEq,
-        MulAssign => punct::StarEq,
-        DivAssign => punct::SlashEq,
-        RemAssign => punct::PercentEq,
-        BitXorAssign => punct::CaretEq,
-        BitAndAssign => punct::AndEq,
-        BitOrAssign => punct::OrEq,
+        ShlAssign => Token![<<=],
+        ShrAssign => Token![>>=],
+        AddAssign => Token![+=],
+        SubAssign => Token![-=],
+        MulAssign => Token![*=],
+        DivAssign => Token![/=],
+        RemAssign => Token![%=],
+        BitXorAssign => Token![^=],
+        BitAndAssign => Token![&=],
+        BitOrAssign => Token![|=],
     }
 
     /// Whether a function is `async`.
     pub enum Asyncness {
-        Async => keyword::Async,
+        Async => Token![async],
         Sync,
     }
 
     /// Whether an item is `const`.
     pub enum Constness {
-        Const => keyword::Const,
+        Const => Token![const],
         NoConst,
     }
 
     /// Whether an item is `unsafe`.
     pub enum Unsafety {
-        Unsafe => keyword::Unsafe,
+        Unsafe => Token![unsafe],
         Safe,
     }
 
     /// Whether an impl item is `default`.
     pub enum Defaultness {
-        Default => keyword::Default,
+        Default => Token![default],
         Final,
     }
 
     /// Whether a binding, reference, or pointer is `mut`.
     pub enum Mutability {
-        Mutable => keyword::Mut,
+        Mutable => Token![mut],
         Immutable,
     }
 
     /// Whether a closure is `static` (immovable).
     pub enum Movability {
-        Static => keyword::Static,
+        Static => Token![static],
         Movable,
     }
 
     /// The limits of a range expression (`..` or `..=`).
     pub enum RangeLimits {
-        Closed => punct::DotDotEq,
-        HalfOpen => punct::DotDot,
+        Closed => Token![..=],
+        HalfOpen => Token![..],
     }
 
     /// A trait bound modifier (`?Sized`).
     pub enum TraitBoundModifier {
-        Maybe => punct::Question,
+        Maybe => Token![?],
         None,
     }
 
     /// The polarity of a trait bound (`Trait` or `!Trait`).
     pub enum BoundPolarity {
-        Negative => punct::Not,
+        Negative => Token![!],
         Positive,
     }
 }

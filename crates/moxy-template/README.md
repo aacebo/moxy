@@ -1,4 +1,2 @@
-<h1>
-    <img width="35px" valign="text-top" src="https://raw.githubusercontent.com/aacebo/moxy/refs/heads/master/assets/logo.svg" />
-    Template
-</h1>
+The [official `moxy` README](https://github.com/aacebo/moxy#features) is the
+canonical guide to setup, features, and examples.

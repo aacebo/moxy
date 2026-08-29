@@ -1,5 +1,6 @@
 [package]
 name = "moxy-diagnostic"
+description = "Rust macro diagnostics for moxy"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
