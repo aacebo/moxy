@@ -143,6 +143,12 @@ let tokens = moxy::error!(
 assert!(tokens.to_string().contains("compile_error"));
 ```
 
+### Tracing
+
+The `trace` feature enables trace output to `stdout` to help debug parsing.
+
+![Tracing](https://github.com/aacebo/moxy/blob/master/assets/tracing.png?raw=true)
+
 ### Build
 
 Enable `build` as a build dependency for typed Cargo directives and rustc
