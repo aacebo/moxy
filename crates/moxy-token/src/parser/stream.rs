@@ -125,8 +125,8 @@ impl<'a> ParseStream<'a> {
                         " ".repeat(self.depth),
                         Ansi::Red,
                         name,
-                        self.span().start().line(),
-                        self.span().start().column(),
+                        self.span().end().line(),
+                        self.span().end().column(),
                         Ansi::Reset,
                     );
                 }
@@ -140,8 +140,8 @@ impl<'a> ParseStream<'a> {
                         " ".repeat(self.depth),
                         Ansi::Green,
                         name,
-                        self.span().start().line(),
-                        self.span().start().column(),
+                        self.span().end().line(),
+                        self.span().end().column(),
                         Ansi::Reset,
                     );
                 }
