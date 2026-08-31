@@ -2,14 +2,11 @@ use super::{ParseError, Peek};
 use crate::span::DelimSpan;
 use crate::{Delim, LexError, Parse, Span, TokenStream, TokenTree};
 
-#[derive(Debug, Clone)]
 pub struct ParseStream<'a> {
     input: &'a TokenStream,
     index: usize,
-    /// The leftover half of a glued punct (`>>`, `>=`, ...) after `Gt`/`Lt`
-    /// peeled off its first character. Acts as a virtual "current" token that is
-    /// consumed before `index` advances again.
     pending: Option<TokenTree>,
+    depth: usize,
 }
 
 impl<'a> ParseStream<'a> {
@@ -17,6 +14,7 @@ impl<'a> ParseStream<'a> {
         Self {
             input,
             index: 0,
+            depth: 0,
             pending: None,
         }
     }
@@ -37,6 +35,7 @@ impl<'a> ParseStream<'a> {
         Self {
             input: self.input,
             index: self.index,
+            depth: self.depth + 1,
             pending: self.pending.clone(),
         }
     }
@@ -85,18 +84,55 @@ impl<'a> ParseStream<'a> {
     }
 
     pub fn parse<T: Parse>(&mut self) -> Result<T, ParseError> {
+        let name = std::any::type_name::<T>();
+
+        if cfg!(feature = "trace") {
+            println!(
+                "{}-> {} @ ln {}, col {}",
+                " ".repeat(self.depth),
+                name,
+                self.span().start().line(),
+                self.span().start().column()
+            );
+        }
+
         let mut fork = self.fork();
-        let value = T::parse(&mut fork)?;
+        let value = match T::parse(&mut fork) {
+            Err(err) => {
+                if cfg!(feature = "trace") {
+                    println!(
+                        "{}<- {} @ ln {}, col {}",
+                        " ".repeat(self.depth),
+                        name,
+                        self.span().start().line(),
+                        self.span().start().column()
+                    );
+                }
+
+                Err(err)
+            }
+            Ok(v) => {
+                if cfg!(feature = "trace") {
+                    println!(
+                        "{}<- {} @ ln {}, col {}",
+                        " ".repeat(self.depth),
+                        name,
+                        self.span().start().line(),
+                        self.span().start().column()
+                    );
+                }
+
+                Ok(v)
+            }
+        }?;
+
         self.seek(&fork);
         Ok(value)
     }
 
     /// Parse `T` if it matches; leave the stream unchanged otherwise.
     pub fn parse_if<T: Parse>(&mut self) -> Option<T> {
-        let mut fork = self.fork();
-        let v = T::parse(&mut fork).ok()?;
-        self.seek(&fork);
-        Some(v)
+        self.parse().ok()
     }
 
     /// Parse `T` repeatedly while it matches, collecting results. Never errors.
@@ -115,7 +151,7 @@ impl<'a> ParseStream<'a> {
         let mut items = Vec::new();
 
         while !self.is_empty() {
-            items.push(T::parse(self)?);
+            items.push(self.parse()?);
         }
 
         Ok(items)
@@ -189,10 +225,9 @@ impl<'a> ParseStream<'a> {
         }
 
         let rest = &text[head.len()..];
-        let remainder = Self::scan_punct(rest)?;
+        let mut remainder = Self::scan_punct(rest)?;
         let full = punct.span();
         let (head_span, rest_span) = full.split(head.len());
-        let mut remainder = remainder;
         remainder.set_span(rest_span);
 
         self.advance();
