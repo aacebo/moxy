@@ -1,22 +1,6 @@
 use super::{ParseError, Peek};
-use crate::span::{DelimSpan, fallback};
+use crate::span::DelimSpan;
 use crate::{Delim, LexError, Parse, Span, TokenStream, TokenTree};
-
-/// Split a span at `head_len` characters from its start, returning
-/// `(head_span, rest_span)`. Only `Fallback` spans carry offsets we can split;
-/// for compiler spans we reuse the whole span for both halves.
-fn split_span(span: Span, head_len: usize) -> (Span, Span) {
-    match span {
-        Span::Fallback(s) => {
-            let range = s.byte_range();
-            let mid = (range.start + head_len) as u32;
-            let head = fallback::Span::new(range.start as u32, mid);
-            let rest = fallback::Span::new(mid, range.end as u32);
-            (Span::Fallback(head), Span::Fallback(rest))
-        }
-        other => (other, other),
-    }
-}
 
 #[derive(Debug, Clone)]
 pub struct ParseStream<'a> {
@@ -207,8 +191,7 @@ impl<'a> ParseStream<'a> {
         let rest = &text[head.len()..];
         let remainder = Self::scan_punct(rest)?;
         let full = punct.span();
-        let (head_span, rest_span) = split_span(full, head.len());
-
+        let (head_span, rest_span) = full.split(head.len());
         let mut remainder = remainder;
         remainder.set_span(rest_span);
 

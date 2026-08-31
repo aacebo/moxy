@@ -143,6 +143,7 @@ impl Span {
         }
     }
 
+    #[inline]
     pub fn join(&self, other: Self) -> Self {
         #[cfg(nightly)]
         if let (Self::Compiler(a), Self::Compiler(b)) = (self, other) {
@@ -156,6 +157,23 @@ impl Span {
         }
 
         other
+    }
+
+    /// Split a span at `head_len` characters from its start, returning
+    /// `(head_span, rest_span)`. Only `Fallback` spans carry offsets we can split;
+    /// for compiler spans we reuse the whole span for both halves.
+    #[inline]
+    pub fn split(self, at: usize) -> (Span, Span) {
+        match self {
+            Self::Fallback(s) => {
+                let range = s.byte_range();
+                let mid = (range.start + at) as u32;
+                let head = fallback::Span::new(range.start as u32, mid);
+                let rest = fallback::Span::new(mid, range.end as u32);
+                (Span::Fallback(head), Span::Fallback(rest))
+            }
+            other => (other, other),
+        }
     }
 }
 
