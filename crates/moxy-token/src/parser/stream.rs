@@ -241,7 +241,7 @@ impl<'a> ParseStream<'a> {
         use crate::lex::{Cursor, Scan};
 
         let cursor = Cursor::new(text, 0);
-        <Punctuation as Scan>::scan(cursor).ok().map(|(_, op)| op)
+        Punctuation::scan(cursor).ok().map(|(_, op)| op)
     }
 
     /// Consume a group with the given delimiter and return its inner token stream.
