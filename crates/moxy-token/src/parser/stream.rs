@@ -2,6 +2,24 @@ use super::{ParseError, Peek};
 use crate::span::DelimSpan;
 use crate::{Delim, LexError, Parse, Span, TokenStream, TokenTree};
 
+enum Ansi {
+    Blue,
+    Green,
+    Red,
+    Reset,
+}
+
+impl std::fmt::Display for Ansi {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Blue => write!(f, "\x1b[34m"),
+            Self::Green => write!(f, "\x1b[32m"),
+            Self::Red => write!(f, "\x1b[31m"),
+            Self::Reset => write!(f, "\x1b[0m"),
+        }
+    }
+}
+
 pub struct ParseStream<'a> {
     input: &'a TokenStream,
     index: usize,
@@ -88,11 +106,13 @@ impl<'a> ParseStream<'a> {
 
         if cfg!(feature = "trace") {
             println!(
-                "{}-> {} @ ln {}, col {}",
+                "{}{}-> {} @ ln {}, col {}{}",
                 " ".repeat(self.depth),
+                Ansi::Blue,
                 name,
                 self.span().start().line(),
-                self.span().start().column()
+                self.span().start().column(),
+                Ansi::Reset,
             );
         }
 
@@ -101,11 +121,13 @@ impl<'a> ParseStream<'a> {
             Err(err) => {
                 if cfg!(feature = "trace") {
                     println!(
-                        "{}<- {} @ ln {}, col {}",
+                        "{}{}<- {} @ ln {}, col {}{}",
                         " ".repeat(self.depth),
+                        Ansi::Red,
                         name,
                         self.span().start().line(),
-                        self.span().start().column()
+                        self.span().start().column(),
+                        Ansi::Reset,
                     );
                 }
 
@@ -114,11 +136,13 @@ impl<'a> ParseStream<'a> {
             Ok(v) => {
                 if cfg!(feature = "trace") {
                     println!(
-                        "{}<- {} @ ln {}, col {}",
+                        "{}{}<- {} @ ln {}, col {}{}",
                         " ".repeat(self.depth),
+                        Ansi::Green,
                         name,
                         self.span().start().line(),
-                        self.span().start().column()
+                        self.span().start().column(),
+                        Ansi::Reset,
                     );
                 }
 
