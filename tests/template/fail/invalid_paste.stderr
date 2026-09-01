@@ -1,5 +1,5 @@
 error: string could not be parsed
- --> tests/fail/invalid_paste.rs:1:1
+ --> tests/template/fail/invalid_paste.rs:1:1
   |
 1 | / moxy::paste! {
 2 | |     fn {{ 123 }}() {}

@@ -1,5 +1,5 @@
 error: template attribute must contain a code block `{ ... }`
- --> tests/fail/malformed_attribute.rs:4:19
+ --> tests/derive/fail/malformed_attribute.rs:4:19
   |
 4 | #[moxy(template = "not a code block")]
   |                   ^^^^^^^^^^^^^^^^^^

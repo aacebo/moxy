@@ -25,7 +25,3 @@ moxy-ast.workspace = true
 moxy-template.workspace = true
 moxy-diagnostic.workspace = true
 moxy-fmt.workspace = true
-
-[dev-dependencies]
-moxy = { workspace = true, features = ["ast", "token", "template", "derive"] }
-trybuild.workspace = true

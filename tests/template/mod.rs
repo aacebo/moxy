@@ -117,12 +117,12 @@ fn macro_rules_items_render_exact_valid_syntax() {
 #[test]
 fn template_and_paste_compiler_contracts_are_stable() {
     let cases = trybuild::TestCases::new();
-    cases.pass("tests/pass/*.rs");
-    cases.compile_fail("tests/fail/invalid_paste.rs");
+    cases.pass("tests/template/pass/*.rs");
+    cases.compile_fail("tests/template/fail/invalid_paste.rs");
 }
 
 #[test]
 fn malformed_template_compiler_contract_is_rejected() {
     let cases = trybuild::TestCases::new();
-    cases.compile_fail("tests/fail/malformed_template.rs");
+    cases.compile_fail("tests/template/fail/malformed_template.rs");
 }
