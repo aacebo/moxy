@@ -183,13 +183,13 @@ impl<T: Parse, P: Parse> Punctuated<T, P> {
                 break;
             }
 
-            punctuated.push_value(T::parse(stream)?);
+            punctuated.push_value(stream.parse::<T>()?);
 
             if stream.is_empty() {
                 break;
             }
 
-            punctuated.push_punct(P::parse(stream)?);
+            punctuated.push_punct(stream.parse::<P>()?);
         }
 
         Ok(punctuated)

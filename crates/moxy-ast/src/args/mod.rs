@@ -54,18 +54,18 @@ impl Parse for GenericArgument {
 
         // Constraint `ident [generics] : bounds` — must come before AssocType/AssocConst
         // because `:` is unambiguous.
-        if let Ok(v) = stream.parse::<ConstraintArgument>() {
-            return Ok(v.into_generic_argument());
+        if stream.peek::<ConstraintArgument>() {
+            return Ok(stream.parse::<ConstraintArgument>()?.into_generic_argument());
         }
 
         // Associated type binding `ident [generics] = Type`.
-        if let Ok(v) = stream.parse::<AssocTypeArgument>() {
-            return Ok(v.into_generic_argument());
+        if stream.peek::<AssocTypeArgument>() {
+            return Ok(stream.parse::<AssocTypeArgument>()?.into_generic_argument());
         }
 
         // Associated const binding `ident [generics] = expr`.
-        if let Ok(v) = stream.parse::<AssocConstArgument>() {
-            return Ok(v.into_generic_argument());
+        if stream.peek::<AssocConstArgument>() {
+            return Ok(stream.parse::<AssocConstArgument>()?.into_generic_argument());
         }
 
         // Literal or block expression const argument.

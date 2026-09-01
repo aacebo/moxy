@@ -15,7 +15,7 @@ impl Parse for UseName {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
 
-        match UseTree::parse(stream)? {
+        match stream.parse::<UseTree>()? {
             UseTree::Name(v) => Ok(v),
             _ => Err(LexError::new(at).message("expected use name").into()),
         }

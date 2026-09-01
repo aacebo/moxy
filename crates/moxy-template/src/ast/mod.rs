@@ -87,7 +87,7 @@ impl Parse for Node {
                 let delim = g.delim();
                 let inner = g.stream();
                 stream.advance();
-                Ok(Self::Group(delim, Box::new(Template::parse(&mut inner.parse())?)))
+                Ok(Self::Group(delim, Box::new(inner.parse().parse::<Template>()?)))
             }
             Some(_) => collect_tokens(stream),
             None => Err(LexError::new(Span::default()).message("unexpected end of template").into()),

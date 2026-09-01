@@ -21,20 +21,17 @@ impl Parse for Field {
         let attrs = stream.parse::<Attributes>()?;
         let vis = stream.parse::<Visibility>()?;
         let mutability = stream.parse::<Mutability>()?;
-        let (ident, colon) = {
-            let mut fork = stream.fork();
+        let (ident, colon) = if stream.peek::<Ident>() {
+            let mut fork = stream.lookahead();
+            fork.advance();
 
-            if let Ok(id) = fork.parse::<Ident>() {
-                if fork.peek::<Token![:]>() {
-                    stream.seek(&fork);
-                    let colon = stream.parse::<Token![:]>()?;
-                    (Some(id), Some(colon))
-                } else {
-                    (None, None)
-                }
+            if fork.peek::<Token![:]>() {
+                (Some(stream.parse()?), Some(stream.parse()?))
             } else {
                 (None, None)
             }
+        } else {
+            (None, None)
         };
 
         let ty = stream.parse::<Type>()?;

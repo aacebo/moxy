@@ -95,7 +95,7 @@ impl Parse for LitF32 {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
 
-        match Lit::parse(stream)? {
+        match stream.parse::<Lit>()? {
             Lit::Float(LitFloat::F32(v)) => Ok(v),
             _ => Err(LexError::new(at).message("expected `f32` literal").into()),
         }

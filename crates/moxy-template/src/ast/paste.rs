@@ -1,5 +1,5 @@
 use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, Ident, Span, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, Ident, Parse, Span, TokenStream, TokenTree};
 
 #[doc = "A parsed `paste!` body: a token tree where each `{{ ... }}` marker is collapsed to one identifier."]
 #[derive(Debug, Clone)]
@@ -14,13 +14,15 @@ enum PasteNode {
     Splice(Span, TokenStream),
 }
 
-impl Paste {
-    pub fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+impl Parse for Paste {
+    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         Ok(Self {
             nodes: parse_nodes(stream)?,
         })
     }
+}
 
+impl Paste {
     pub fn expand(&self) -> TokenStream {
         let mut out = TokenStream::new();
 

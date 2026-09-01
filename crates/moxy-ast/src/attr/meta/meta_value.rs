@@ -38,8 +38,8 @@ impl MetaValue {
 
 impl Parse for MetaValue {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if let Ok(lit) = stream.parse::<Lit>() {
-            return Ok(Self::Literal(lit));
+        if stream.peek::<Lit>() {
+            return Ok(Self::Literal(stream.parse()?));
         }
 
         if let Ok((span, tokens)) = stream.parse_group_spanned(Delim::Brace) {

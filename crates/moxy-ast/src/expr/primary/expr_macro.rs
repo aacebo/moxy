@@ -21,7 +21,7 @@ impl Parse for ExprMacro {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         use crate::PrimaryExpr;
         let at = stream.span();
-        match Expr::parse(stream)? {
+        match stream.parse::<Expr>()? {
             Expr::Primary(PrimaryExpr::Macro(v)) => Ok(v),
             _ => Err(LexError::new(at).message("expected macro expression").into()),
         }

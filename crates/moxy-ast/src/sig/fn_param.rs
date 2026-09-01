@@ -4,7 +4,7 @@ use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 
 use super::{Receiver, Variadic};
 use crate::pat::PatType;
-use crate::{Lifetime, Mutability, Punctuated};
+use crate::{Lifetime, Punctuated};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -48,7 +48,7 @@ pub enum FnParam {
 
 impl FnParam {
     pub fn is_receiver(stream: &mut ParseStream) -> bool {
-        let mut fork = stream.fork();
+        let mut fork = stream.lookahead();
         fork.skip_while::<crate::Attribute>();
 
         if fork.peek::<Token![self]>() {
@@ -56,9 +56,17 @@ impl FnParam {
         }
 
         if fork.peek::<Token![&]>() {
-            let _ = fork.parse::<Token![&]>();
-            let _ = fork.parse_if::<Lifetime>();
-            let _ = fork.parse::<Mutability>();
+            fork.advance();
+
+            if fork.peek::<Lifetime>() {
+                fork.advance();
+                fork.advance();
+            }
+
+            if fork.peek::<Token![mut]>() {
+                fork.advance();
+            }
+
             return fork.peek::<Token![self]>();
         }
 

@@ -76,7 +76,7 @@ impl Parse for GenericParam {
             return Ok(Self::Lifetime(stream.parse()?));
         }
 
-        let mut fork = stream.fork();
+        let mut fork = stream.lookahead();
         fork.skip_while::<crate::Attribute>();
 
         if fork.peek::<Token![const]>() {

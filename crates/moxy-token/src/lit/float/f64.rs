@@ -95,7 +95,7 @@ impl Parse for LitF64 {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
 
-        match Lit::parse(stream)? {
+        match stream.parse::<Lit>()? {
             Lit::Float(LitFloat::F64(v)) => Ok(v),
             _ => Err(LexError::new(at).message("expected `f64` literal").into()),
         }

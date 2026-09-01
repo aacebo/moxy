@@ -75,13 +75,9 @@ macro_rules! define_leaf {
     };
 
     (@parse_arm $stream:ident, $value:expr => $token:ty) => {
-        {
-            let mut fork = $stream.fork();
-
-            if let Ok(tok) = <$token as Parse>::parse(&mut fork) {
-                $stream.seek(&fork);
-                return Ok($value(tok));
-            }
+        if $stream.peek::<$token>() {
+            let tok: $token = $stream.parse()?;
+            return Ok($value(tok));
         }
     };
 

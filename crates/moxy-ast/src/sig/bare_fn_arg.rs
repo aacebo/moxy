@@ -16,19 +16,17 @@ pub struct BareFnArg {
 impl Parse for BareFnArg {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let attrs = stream.parse::<Attributes>()?;
-        let name = {
-            let mut fork = stream.fork();
-            if let Ok(id) = fork.parse::<Ident>() {
-                if fork.peek::<Token![:]>() {
-                    stream.seek(&fork);
-                    let colon = stream.parse::<Token![:]>()?;
-                    Some((id, colon))
-                } else {
-                    None
-                }
+        let name = if stream.peek::<Ident>() {
+            let mut fork = stream.lookahead();
+            fork.advance();
+
+            if fork.peek::<Token![:]>() {
+                Some((stream.parse()?, stream.parse()?))
             } else {
                 None
             }
+        } else {
+            None
         };
 
         let ty = stream.parse::<Type>()?;

@@ -87,7 +87,7 @@ impl Parse for LitByte {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
 
-        match Lit::parse(stream)? {
+        match stream.parse::<Lit>()? {
             Lit::Byte(v) => Ok(v),
             _ => Err(LexError::new(at).message("expected byte literal").into()),
         }

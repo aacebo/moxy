@@ -18,7 +18,7 @@ impl Parse for UseRename {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
 
-        match UseTree::parse(stream)? {
+        match stream.parse::<UseTree>()? {
             UseTree::Rename(v) => Ok(v),
             _ => Err(LexError::new(at).message("expected use rename").into()),
         }

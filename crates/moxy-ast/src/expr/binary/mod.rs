@@ -183,7 +183,8 @@ impl BinaryExpr {
                     continue;
                 }
 
-                if let Ok(op) = stream.parse::<AssignOp>() {
+                if stream.peek::<AssignOp>() {
+                    let op = stream.parse::<AssignOp>()?;
                     let right = Box::new(super::parse_expr(stream, allow_struct)?);
 
                     lhs = Expr::Binary(Self::AssignOp(ExprAssignOp {
@@ -212,10 +213,9 @@ impl BinaryExpr {
                 continue;
             }
 
-            match stream.fork().parse::<BinOp>() {
-                Ok(op) if Precedence::of(&op) >= min => {
-                    let prec = Precedence::of(&op);
-                    let _ = stream.parse::<BinOp>()?;
+            match Precedence::peek(stream) {
+                Some(prec) if prec >= min => {
+                    let op = stream.parse::<BinOp>()?;
                     let mut rhs = super::unary::UnaryExpr::parse_from(stream, allow_struct)?;
 
                     rhs = Self::parse_from(stream, rhs, prec.next(), allow_struct)?;

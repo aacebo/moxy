@@ -36,7 +36,7 @@ impl TmplFor {
 
         let body_stream = stream.parse_group(Delim::Brace)?;
         let mut body_ps = body_stream.parse();
-        let body = Template::parse(&mut body_ps)?;
+        let body = body_ps.parse::<Template>()?;
 
         Ok(Self {
             span,

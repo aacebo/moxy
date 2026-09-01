@@ -376,7 +376,7 @@ impl PatIdent {
         let ident = stream.parse::<Ident>()?;
         let subpat = if stream.peek::<Token![@]>() {
             let at = stream.parse::<Token![@]>()?;
-            Some((at, Box::new(Pattern::parse(stream)?)))
+            Some((at, Box::new(stream.parse::<Pattern>()?)))
         } else {
             None
         };
@@ -481,7 +481,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     if stream.peek::<Token![&]>() {
         let and = stream.parse::<Token![&]>()?;
         let mutability = stream.parse::<Mutability>()?;
-        let pat = Box::new(Pattern::parse(stream)?);
+        let pat = Box::new(stream.parse::<Pattern>()?);
         return Ok(Pattern::Reference(PatReference {
             attrs,
             and,
@@ -519,12 +519,9 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
         Some(TokenTree::Ident(_) | TokenTree::Keyword(_) | TokenTree::Punct(Punctuation::PathSep(_)))
     ) {
         // Single bare ident with no `::`/`(`/`{` → binding.
-        let mut fork = stream.fork();
-        let path = fork.parse::<Path>()?;
+        let path = stream.parse::<Path>()?;
 
-        stream.seek(&fork);
-
-        if matches!(fork.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
+        if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
             let elems = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
 
             return Ok(Pattern::TupleStruct(PatTupleStruct {
@@ -535,7 +532,7 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
             }));
         }
 
-        if matches!(fork.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
+        if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
             let body = Delimited::parse_brace_with(stream, |inner| {
                 let (fields, rest) = PatStruct::parse_body(inner)?;
                 Ok(PatStructBody { fields, rest })

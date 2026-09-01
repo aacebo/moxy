@@ -66,7 +66,7 @@ impl Parse for LitBool {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
 
-        match Lit::parse(stream)? {
+        match stream.parse::<Lit>()? {
             Lit::Bool(v) => Ok(v),
             _ => Err(LexError::new(at).message("expected bool literal").into()),
         }

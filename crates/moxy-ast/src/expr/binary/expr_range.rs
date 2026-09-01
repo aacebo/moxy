@@ -28,21 +28,21 @@ impl Spanner for ExprRange {
 impl ExprRange {
     /// Parse an optional range end — `None` if the next token cannot begin an expression.
     pub fn maybe_end(stream: &mut ParseStream, allow_struct: bool) -> Result<Option<Box<Expr>>, ParseError> {
+        use crate::precedence::Precedence;
+
         if stream.is_empty() || stream.peek::<Token![;]>() || stream.peek::<Token![,]>() {
             return Ok(None);
         }
 
-        let mut fork = stream.fork();
+        let mut lookahead = stream.lookahead();
 
-        match expr::unary::UnaryExpr::parse_from(&mut fork, allow_struct) {
-            Err(_) => Ok(None),
-            Ok(e) => {
-                use crate::precedence::Precedence;
-                let e = super::BinaryExpr::parse_from(&mut fork, e, Precedence::Range.next(), allow_struct)?;
-                stream.seek(&fork);
-                Ok(Some(Box::new(e)))
-            }
+        if expr::unary::UnaryExpr::parse_from(&mut lookahead, allow_struct).is_err() {
+            return Ok(None);
         }
+
+        let e = expr::unary::UnaryExpr::parse_from(stream, allow_struct)?;
+        let e = super::BinaryExpr::parse_from(stream, e, Precedence::Range.next(), allow_struct)?;
+        Ok(Some(Box::new(e)))
     }
 
     pub fn into_binary_expr(self) -> super::BinaryExpr {

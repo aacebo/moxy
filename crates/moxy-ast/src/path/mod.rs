@@ -88,7 +88,7 @@ impl std::str::FromStr for Path {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let stream = TokenStream::from_str(s)?;
-        Self::parse(&mut stream.parse())
+        stream.parse().parse()
     }
 }
 

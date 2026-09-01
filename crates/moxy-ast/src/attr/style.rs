@@ -50,8 +50,8 @@ impl Parse for AttrStyle {
     fn parse(stream: &mut moxy_token::parser::ParseStream) -> Result<Self, moxy_token::parser::ParseError> {
         let pound = stream.parse::<Token![#]>()?;
 
-        if let Ok(not) = stream.parse::<Token![!]>() {
-            Ok(Self::Inner(pound, not))
+        if stream.peek::<Token![!]>() {
+            Ok(Self::Inner(pound, stream.parse()?))
         } else {
             Ok(Self::Outer(pound))
         }

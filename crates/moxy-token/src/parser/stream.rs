@@ -24,6 +24,7 @@ pub struct ParseStream<'a> {
     input: &'a TokenStream,
     index: usize,
     depth: usize,
+    trace: bool,
     pending: Option<TokenTree>,
 }
 
@@ -33,6 +34,7 @@ impl<'a> ParseStream<'a> {
             input,
             index: 0,
             depth: 0,
+            trace: true,
             pending: None,
         }
     }
@@ -54,8 +56,19 @@ impl<'a> ParseStream<'a> {
             input: self.input,
             index: self.index,
             depth: self.depth + 1,
+            trace: self.trace,
             pending: self.pending.clone(),
         }
+    }
+
+    /// Create a non-consuming fork whose parser activity is omitted from traces.
+    ///
+    /// This is intended for grammar lookahead that needs more information than
+    /// [`peek`](Self::peek)'s boolean result.
+    pub fn lookahead(&self) -> Self {
+        let mut fork = self.fork();
+        fork.trace = false;
+        fork
     }
 
     pub fn seek(&mut self, other: &Self) {
@@ -93,18 +106,13 @@ impl<'a> ParseStream<'a> {
     }
 
     pub fn peek<T: Peek>(&mut self) -> bool {
-        let index = self.index;
-        let pending = self.pending.clone();
-        let res = T::peek(self);
-        self.index = index;
-        self.pending = pending;
-        res
+        T::peek(&mut self.lookahead())
     }
 
     pub fn parse<T: Parse>(&mut self) -> Result<T, ParseError> {
         let name = std::any::type_name::<T>();
 
-        if cfg!(feature = "trace") {
+        if cfg!(feature = "trace") && self.trace {
             println!(
                 "{}{}-> {} @ ln {}, col {}{}",
                 " ".repeat(self.depth),
@@ -119,7 +127,7 @@ impl<'a> ParseStream<'a> {
         let mut fork = self.fork();
         let value = match T::parse(&mut fork) {
             Err(err) => {
-                if cfg!(feature = "trace") {
+                if cfg!(feature = "trace") && self.trace {
                     println!(
                         "{}{}<- {} @ ln {}, col {}{}",
                         " ".repeat(self.depth),
@@ -134,7 +142,7 @@ impl<'a> ParseStream<'a> {
                 Err(err)
             }
             Ok(v) => {
-                if cfg!(feature = "trace") {
+                if cfg!(feature = "trace") && self.trace {
                     println!(
                         "{}{}<- {} @ ln {}, col {}{}",
                         " ".repeat(self.depth),
@@ -156,7 +164,7 @@ impl<'a> ParseStream<'a> {
 
     /// Parse `T` if it matches; leave the stream unchanged otherwise.
     pub fn parse_if<T: Parse>(&mut self) -> Option<T> {
-        self.parse().ok()
+        if self.peek::<T>() { self.parse().ok() } else { None }
     }
 
     /// Parse `T` repeatedly while it matches, collecting results. Never errors.

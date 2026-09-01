@@ -38,11 +38,20 @@ impl TmplIf {
         let mut else_body = None;
 
         loop {
-            let mut fork = stream.fork();
-            let Ok(at2) = fork.parse::<Token![@]>() else { break };
-            let Ok(else_kw) = fork.parse::<Token![else]>() else { break };
+            let mut fork = stream.lookahead();
 
-            stream.seek(&fork);
+            if !fork.peek::<Token![@]>() {
+                break;
+            }
+
+            fork.advance();
+
+            if !fork.peek::<Token![else]>() {
+                break;
+            }
+
+            let at2 = stream.parse::<Token![@]>()?;
+            let else_kw = stream.parse::<Token![else]>()?;
 
             if let Some(if_kw2) = stream.parse_if::<Token![if]>() {
                 branches.push(Self::parse_branch(stream, Some(at2), Some(else_kw), if_kw2)?);
@@ -51,7 +60,7 @@ impl TmplIf {
                 let mut body_ps = body_stream.parse();
                 else_at_punct = Some(at2);
                 else_keyword_field = Some(else_kw);
-                else_body = Some(Box::new(Template::parse(&mut body_ps)?));
+                else_body = Some(Box::new(body_ps.parse::<Template>()?));
                 break;
             }
         }
@@ -77,7 +86,7 @@ impl TmplIf {
         let cond = stream.parse_group(Delim::Paren)?;
         let body_stream = stream.parse_group(Delim::Brace)?;
         let mut body_ps = body_stream.parse();
-        let body = Template::parse(&mut body_ps)?;
+        let body = body_ps.parse::<Template>()?;
 
         Ok(TmplIfBranch {
             span,
@@ -96,6 +105,7 @@ impl ToTokens for TmplIf {
             if i > 0 {
                 <Token![else]>::new(Span::call_site()).to_tokens(out);
             }
+
             <Token![if]>::new(Span::call_site()).to_tokens(out);
             branch.cond.to_tokens(out);
             out.extend_one(TokenTree::Group(Group::new(Delim::Brace, branch.body.to_token_stream())));

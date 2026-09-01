@@ -96,7 +96,7 @@ impl Parse for LitChar {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
 
-        match Lit::parse(stream)? {
+        match stream.parse::<Lit>()? {
             Lit::Char(v) => Ok(v),
             _ => Err(LexError::new(at).message("expected char literal").into()),
         }

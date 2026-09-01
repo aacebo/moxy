@@ -358,18 +358,19 @@ impl ExprRepeat {
         bracket_span: moxy_token::span::DelimSpan,
         attrs: Attributes,
     ) -> Result<Option<Self>, ParseError> {
-        let mut fork = stream.fork();
-        let Ok(elem) = super::parse_expr(&mut fork, true) else {
-            return Ok(None);
-        };
+        let mut lookahead = stream.lookahead();
 
-        if !fork.peek::<Token![;]>() {
+        if super::parse_expr(&mut lookahead, true).is_err() {
             return Ok(None);
         }
 
-        let semi = fork.parse::<Token![;]>()?;
-        let len = super::parse_expr(&mut fork, true)?;
-        stream.seek(&fork);
+        if !lookahead.peek::<Token![;]>() {
+            return Ok(None);
+        }
+
+        let elem = super::parse_expr(stream, true)?;
+        let semi = stream.parse::<Token![;]>()?;
+        let len = super::parse_expr(stream, true)?;
 
         Ok(Some(Self {
             attrs,
@@ -391,14 +392,10 @@ impl Expr {
             return Ok(None);
         }
 
-        let mut fork = stream.fork();
-
-        match super::parse_expr(&mut fork, true) {
-            Ok(e) => {
-                stream.seek(&fork);
-                Ok(Some(Box::new(e)))
-            }
-            Err(_) => Ok(None),
+        if stream.peek::<Expr>() {
+            Ok(Some(Box::new(stream.parse()?)))
+        } else {
+            Ok(None)
         }
     }
 }

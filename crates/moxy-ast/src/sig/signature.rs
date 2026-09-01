@@ -104,13 +104,23 @@ impl Signature {
     }
 
     pub fn is_start(stream: &mut moxy_token::parser::ParseStream) -> bool {
-        let mut fork = stream.fork();
-        let _ = fork.parse::<crate::Constness>();
-        let _ = fork.parse::<crate::Asyncness>();
-        let _ = fork.parse::<crate::Unsafety>();
+        let mut fork = stream.lookahead();
+
+        if fork.peek::<Token![const]>() {
+            fork.advance();
+        }
+        if fork.peek::<Token![async]>() {
+            fork.advance();
+        }
+        if fork.peek::<Token![unsafe]>() {
+            fork.advance();
+        }
 
         if fork.peek::<Token![extern]>() {
-            let _ = fork.parse::<crate::sig::Abi>();
+            fork.advance();
+            if matches!(fork.curr(), Some(moxy_token::TokenTree::Literal(lit)) if lit.repr().starts_with('"')) {
+                fork.advance();
+            }
         }
 
         fork.peek::<Token![fn]>()
