@@ -23,8 +23,8 @@ impl std::fmt::Display for Ansi {
 pub struct ParseStream<'a> {
     input: &'a TokenStream,
     index: usize,
-    pending: Option<TokenTree>,
     depth: usize,
+    pending: Option<TokenTree>,
 }
 
 impl<'a> ParseStream<'a> {
