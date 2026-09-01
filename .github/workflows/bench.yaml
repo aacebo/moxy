@@ -27,7 +27,7 @@ jobs:
           --token '${{ secrets.BENCHER_API_TOKEN }}' \
           --branch master \
           --testbed ubuntu-latest \
-          --adapter rust_bench \
+          --adapter rust_criterion \
           --threshold-measure latency \
           --threshold-test t_test \
           --threshold-upper-boundary 0.95 \

@@ -49,7 +49,7 @@ jobs:
           --start-point master \
           --start-point-clone-thresholds \
           --testbed ubuntu-latest \
-          --adapter rust_bench \
+          --adapter rust_criterion \
           --threshold-measure latency \
           --threshold-test t_test \
           --threshold-upper-boundary 0.95 \
