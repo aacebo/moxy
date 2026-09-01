@@ -22,7 +22,7 @@ fn crates_preserve_item_order_and_render_blank_lines() {
 fn crate_rendering_obeys_indentation_and_newline_configuration() {
     let krate: Crate = moxy::parse!("struct Pair { left: u8, right: u8 }").unwrap();
     let config = moxy::fmt::FmtConfig::default()
-        .with_indent(moxy::fmt::Indent::space(2))
+        .with_indent(moxy::fmt::IndentStyle::space(2))
         .with_newline(moxy::fmt::NewlineStyle::Windows);
     assert_eq!(krate.items.len(), 1);
     assert!(krate.items[0].as_struct().unwrap().fields.is_named());

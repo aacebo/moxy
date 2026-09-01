@@ -1,13 +1,13 @@
 #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct FmtConfig {
-    pub indent: Indent,
+    pub indent: IndentStyle,
     pub newline: NewlineStyle,
     pub max_width: usize,
 }
 
 impl FmtConfig {
-    pub fn with_indent(mut self, indent: Indent) -> Self {
+    pub fn with_indent(mut self, indent: IndentStyle) -> Self {
         self.indent = indent;
         self
     }
@@ -26,7 +26,7 @@ impl FmtConfig {
 impl Default for FmtConfig {
     fn default() -> Self {
         Self {
-            indent: Indent::default(),
+            indent: IndentStyle::default(),
             newline: NewlineStyle::default(),
             max_width: 80,
         }
@@ -39,12 +39,12 @@ impl Default for FmtConfig {
     derive(serde::Serialize, serde::Deserialize),
     serde(tag = "type", content = "value", rename_all = "lowercase")
 )]
-pub enum Indent {
+pub enum IndentStyle {
     Tab(usize),
     Space(usize),
 }
 
-impl Indent {
+impl IndentStyle {
     pub fn tab(width: usize) -> Self {
         Self::Tab(width)
     }
@@ -68,13 +68,13 @@ impl Indent {
     }
 }
 
-impl Default for Indent {
+impl Default for IndentStyle {
     fn default() -> Self {
         Self::Tab(1)
     }
 }
 
-impl std::fmt::Display for Indent {
+impl std::fmt::Display for IndentStyle {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
             Self::Tab(v) => write!(f, "{}", "\t".repeat(*v)),

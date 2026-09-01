@@ -3,14 +3,16 @@ mod config;
 mod error;
 mod node;
 
-use std::fmt::Write;
-
 #[doc(inline)]
 pub use config::*;
+
 #[doc(inline)]
 pub use error::*;
+
 #[doc(inline)]
 pub use node::*;
+
+use std::fmt::Write;
 
 /// Format a value that implements [`Format`] into a `String`.
 ///
