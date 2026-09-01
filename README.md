@@ -1,10 +1,20 @@
 <img src="./assets/banner.svg" width="100%" alt="moxy" />
 
-![Crates.io Version](https://img.shields.io/crates/v/moxy?link=https%3A%2F%2Fcrates.io%2Fcrates%2Fmoxy)
-![Codecov (with branch)](https://img.shields.io/codecov/c/github/aacebo/moxy/master?link=https%3A%2F%2Fapp.codecov.io%2Fgh%2Faacebo%2Fmoxy%2Ftree%2Fmaster)
-![GitHub License](https://img.shields.io/github/license/aacebo/moxy)
-![GitHub branch status](https://img.shields.io/github/checks-status/aacebo/moxy/master?label=master)
-![Crates.io Size](https://img.shields.io/crates/size/moxy?link=https%3A%2F%2Fcrates.io%2Fcrates%2Fmoxy)
+<a href="https://crates.io/crates/moxy">
+    <img src="https://img.shields.io/crates/v/moxy" />
+</a>
+<a href="https://app.codecov.io/gh/aacebo/moxy/tree/master">
+    <img src="https://img.shields.io/codecov/c/github/aacebo/moxy/master" />
+</a>
+<a href="https://github.com/aacebo/moxy/blob/master/LICENSE">
+    <img src="https://img.shields.io/github/license/aacebo/moxy" />
+</a>
+<a href="https://github.com/aacebo/moxy/commits/master">
+    <img src="https://img.shields.io/github/checks-status/aacebo/moxy/master?label=master" />
+</a>
+<a href="https://crates.io/crates/moxy">
+    <img src="https://img.shields.io/crates/size/moxy" />
+</a>
 
 Rust syntax tools for procedural macros: tokens, typed syntax trees, templates,
 formatting, and diagnostics.
