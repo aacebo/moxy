@@ -34,6 +34,62 @@ macro_rules! parse {
     }};
 }
 
+/// Parse source file(s) into a typed AST node, returning `Result<T, ParseError>`.
+///
+/// The type can be given explicitly with `as T` or inferred from context.
+///
+/// # Example
+/// ```ignore
+/// use moxy_token::*;
+///
+/// let tokens = parse_files!("src/**/*.rs");
+/// ```
+#[macro_export]
+macro_rules! parse_files {
+    ($($pattern:literal),+ $(,)? as $ty:ty) => {{
+        let mut tokens = $crate::TokenStream::new();
+
+        $(
+            let paths = $crate::source::glob(
+                std::env!("CARGO_MANIFEST_DIR"),
+                $pattern,
+            ).expect(&format!("glob pattern `{}` is not valid", $pattern));
+
+            println!("{}", paths.len());
+
+            for path in paths {
+                println!("{}", path.display());
+                let src = ::std::fs::read_to_string(&path).expect(&format!("file `{}` not found", path.display()));
+                let stream: $crate::TokenStream = src.parse().expect("invalid source file");
+                tokens.extend(stream);
+            }
+        )*
+
+        $crate::parse!(tokens as $ty).expect("could not parse tokens")
+    }};
+    ($($pattern:literal),+ $(,)?) => {{
+        let mut tokens = $crate::TokenStream::new();
+
+        $(
+            let paths = $crate::source::glob(
+                std::env!("CARGO_MANIFEST_DIR"),
+                $pattern,
+            ).expect(&format!("glob pattern `{}` is not valid", $pattern));
+
+            println!("{}", paths.len());
+
+            for path in paths {
+                println!("{}", path.display());
+                let src = ::std::fs::read_to_string(&path).expect(&format!("file `{}` not found", path.display()));
+                let stream: $crate::TokenStream = src.parse().expect("invalid source file");
+                tokens.extend(stream);
+            }
+        )*
+
+        tokens
+    }};
+}
+
 pub trait Parse: Sized {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError>;
 }

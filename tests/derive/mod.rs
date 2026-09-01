@@ -31,4 +31,7 @@ fn derive_compiler_contracts_are_stable() {
     let cases = trybuild::TestCases::new();
     cases.pass("tests/derive/pass/*.rs");
     cases.compile_fail("tests/derive/fail/*.rs");
+
+    let items = moxy::parse_files!("tests/template/pass/*.rs" as Vec<moxy::ast::Item>);
+    assert_eq!(items.len(), 5);
 }

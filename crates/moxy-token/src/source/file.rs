@@ -1,5 +1,6 @@
 use std::cell::RefCell;
 use std::collections::BTreeMap;
+use std::path::PathBuf;
 
 use super::Location;
 use crate::span::fallback::Span;
@@ -8,6 +9,10 @@ use crate::span::fallback::Span;
 /// to bytes.
 #[derive(Debug)]
 pub struct Source {
+    /// the filepath if this source belongs to a file
+    /// on disk.
+    path: Option<PathBuf>,
+
     /// raw source text
     text: String,
 
@@ -39,11 +44,25 @@ impl Source {
         char_to_byte.insert(0, 0);
 
         Self {
+            path: None,
             text,
             span: Span::new(start as u32, (start + total) as u32),
             lines,
             char_to_byte: RefCell::new(char_to_byte),
         }
+    }
+
+    pub fn from_file(path: impl Into<PathBuf>) -> std::io::Result<Self> {
+        let path = path.into();
+        let src = std::fs::read_to_string(&path)?;
+        let mut src = Self::new(0, src);
+
+        src.path = Some(path);
+        Ok(src)
+    }
+
+    pub fn path(&self) -> Option<&PathBuf> {
+        self.path.as_ref()
     }
 
     pub fn text(&self) -> &str {
@@ -107,6 +126,7 @@ impl Source {
 impl Default for Source {
     fn default() -> Self {
         Self {
+            path: None,
             text: String::default(),
             span: Span::default(),
             lines: vec![0],

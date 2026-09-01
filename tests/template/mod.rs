@@ -119,6 +119,9 @@ fn template_and_paste_compiler_contracts_are_stable() {
     let cases = trybuild::TestCases::new();
     cases.pass("tests/template/pass/*.rs");
     cases.compile_fail("tests/template/fail/invalid_paste.rs");
+
+    let items = moxy::parse_files!("tests/template/pass/*.rs" as Vec<moxy::ast::Item>);
+    assert_eq!(items.len(), 5);
 }
 
 #[test]
