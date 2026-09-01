@@ -43,7 +43,6 @@ Default features are `token` and `ast`.
 | `diagnostic` | no | Span-aware error, warning, note, and help diagnostics |
 | `build` | no | Cargo build-script and rustc-version helpers |
 | `derive` | no | `#[derive(ToTokens)]` and its supporting pipeline |
-| `trace` | no | Enables parser tracing |
 | `serde` | no | Serialization for supported token, AST, and formatting types |
 | `proc-macro2` | no | Conversions between moxy and `proc_macro2` tokens |
 | `full` | no | Every feature above |
