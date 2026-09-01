@@ -38,7 +38,9 @@ moxy-fmt = { path = "crates/moxy-fmt", version = "0.1.0" }
 moxy-token = { path = "crates/moxy-token", version = "0.1.0" }
 moxy-template = { path = "crates/moxy-template", version = "0.1.0" }
 
+syn = { version = "3", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
+quote = { version = "1" }
 proc-macro2 = { version = "1", features = ["span-locations"] }
 trybuild = { version = "1" }
 
@@ -55,6 +57,13 @@ repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
 include.workspace = true
+
+[profile.bench]
+debug = true
+
+[[bench]]
+name = "parse"
+harness = false
 
 [package.metadata.docs.rs]
 all-features = true
@@ -92,7 +101,12 @@ moxy-token = { workspace = true, optional = true }
 moxy-template = { workspace = true, optional = true }
 
 [dev-dependencies]
+syn.workspace = true
+quote.workspace = true
 serde.workspace = true
 proc-macro2.workspace = true
 trybuild.workspace = true
 serde_json = "1"
+pprof = { version = "0.15", features = ["criterion", "flamegraph"] }
+criterion = { version = "0.5", features = ["html_reports"] }
+
