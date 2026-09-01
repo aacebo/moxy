@@ -20,7 +20,6 @@ workspace = true
 
 [features]
 default = []
-trace = []
 serde = ["dep:serde"]
 proc-macro2 = ["dep:proc-macro2"]
 

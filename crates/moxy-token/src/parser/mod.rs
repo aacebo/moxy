@@ -3,6 +3,7 @@ mod stream;
 
 #[doc(inline)]
 pub use error::*;
+
 #[doc(inline)]
 pub use stream::*;
 

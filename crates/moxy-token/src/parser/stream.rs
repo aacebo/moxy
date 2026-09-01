@@ -2,29 +2,11 @@ use super::{ParseError, Peek};
 use crate::span::DelimSpan;
 use crate::{Delim, LexError, Parse, Span, TokenStream, TokenTree};
 
-enum Ansi {
-    Blue,
-    Green,
-    Red,
-    Reset,
-}
-
-impl std::fmt::Display for Ansi {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match self {
-            Self::Blue => write!(f, "\x1b[34m"),
-            Self::Green => write!(f, "\x1b[32m"),
-            Self::Red => write!(f, "\x1b[31m"),
-            Self::Reset => write!(f, "\x1b[0m"),
-        }
-    }
-}
-
 pub struct ParseStream<'a> {
     input: &'a TokenStream,
     index: usize,
     depth: usize,
-    trace: bool,
+    config: ParseConfig,
     pending: Option<TokenTree>,
 }
 
@@ -34,9 +16,23 @@ impl<'a> ParseStream<'a> {
             input,
             index: 0,
             depth: 0,
-            trace: true,
+            config: Default::default(),
             pending: None,
         }
+    }
+
+    pub fn from_config(input: &'a TokenStream, config: ParseConfig) -> Self {
+        Self {
+            input,
+            index: 0,
+            depth: 0,
+            config,
+            pending: None,
+        }
+    }
+
+    pub fn config(&self) -> &ParseConfig {
+        &self.config
     }
 
     pub fn is_empty(&self) -> bool {
@@ -56,7 +52,7 @@ impl<'a> ParseStream<'a> {
             input: self.input,
             index: self.index,
             depth: self.depth + 1,
-            trace: self.trace,
+            config: self.config,
             pending: self.pending.clone(),
         }
     }
@@ -67,7 +63,7 @@ impl<'a> ParseStream<'a> {
     /// [`peek`](Self::peek)'s boolean result.
     pub fn lookahead(&self) -> Self {
         let mut fork = self.fork();
-        fork.trace = false;
+        fork.config.trace = false;
         fork
     }
 
@@ -112,7 +108,7 @@ impl<'a> ParseStream<'a> {
     pub fn parse<T: Parse>(&mut self) -> Result<T, ParseError> {
         let name = std::any::type_name::<T>();
 
-        if cfg!(feature = "trace") && self.trace {
+        if self.config.trace {
             println!(
                 "{}{}-> {} @ ln {}, col {}{}",
                 " ".repeat(self.depth),
@@ -127,7 +123,7 @@ impl<'a> ParseStream<'a> {
         let mut fork = self.fork();
         let value = match T::parse(&mut fork) {
             Err(err) => {
-                if cfg!(feature = "trace") && self.trace {
+                if self.config.trace {
                     println!(
                         "{}{}<- {} @ ln {}, col {}{}",
                         " ".repeat(self.depth),
@@ -142,7 +138,7 @@ impl<'a> ParseStream<'a> {
                 Err(err)
             }
             Ok(v) => {
-                if cfg!(feature = "trace") && self.trace {
+                if self.config.trace {
                     println!(
                         "{}{}<- {} @ ln {}, col {}{}",
                         " ".repeat(self.depth),
@@ -308,6 +304,30 @@ impl<'a> ParseStream<'a> {
             _ => Err(LexError::new(at)
                 .message(format!("expected `{}` delimiter", delim.as_str()))
                 .into()),
+        }
+    }
+}
+
+#[derive(Debug, Default, Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
+pub struct ParseConfig {
+    pub trace: bool,
+}
+
+enum Ansi {
+    Blue,
+    Green,
+    Red,
+    Reset,
+}
+
+impl std::fmt::Display for Ansi {
+    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        match self {
+            Self::Blue => write!(f, "\x1b[34m"),
+            Self::Green => write!(f, "\x1b[32m"),
+            Self::Red => write!(f, "\x1b[31m"),
+            Self::Reset => write!(f, "\x1b[0m"),
         }
     }
 }

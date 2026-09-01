@@ -1,4 +1,5 @@
 use moxy::ast::Item;
+use moxy::token::ToTokenStream;
 
 #[test]
 fn const_items_preserve_visibility_type_and_value() {
@@ -18,5 +19,3 @@ fn mutable_static_items_render_exactly() {
     assert!(matches!(static_item.mutability, moxy::ast::Mutability::Mutable(_)));
     assert_eq!(moxy::fmt!(&item).unwrap(), "pub static mut VALUE: u64 = 5;");
 }
-
-use moxy::token::ToTokenStream;

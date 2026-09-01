@@ -36,7 +36,6 @@ fn terminating_repetition_leaves_the_first_nonmatching_token() {
     assert!(stream.is_empty());
 }
 
-#[cfg(feature = "trace")]
 #[test]
 fn peek_suppresses_nested_trace_output() {
     const CHILD_ENV: &str = "MOXY_PEEK_TRACE_CHILD";
