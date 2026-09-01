@@ -22,7 +22,7 @@ jobs:
           name: bench_results
           path: output.txt
       - name: Upload PR event
-        uses: actions/upload-artifact@latest@latest
+        uses: actions/upload-artifact@latest
         with:
           name: pr_event
           path: ${{ github.event_path }}
