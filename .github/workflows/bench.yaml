@@ -24,7 +24,7 @@ jobs:
         run: |
           bencher run \
           --project moxy \
-          --token '${{ secrets.BENCHER_API_TOKEN }}' \
+          --key '${{ secrets.BENCHER_API_TOKEN }}' \
           --branch master \
           --testbed ubuntu-latest \
           --adapter rust_criterion \
