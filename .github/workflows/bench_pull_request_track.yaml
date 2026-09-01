@@ -46,7 +46,7 @@ jobs:
           --project moxy \
           --token '${{ secrets.BENCHER_API_TOKEN }}' \
           --branch '${{ steps.pr.outputs.head_ref }}' \
-          --start-point main \
+          --start-point master \
           --start-point-clone-thresholds \
           --testbed ubuntu-latest \
           --adapter rust_bench \

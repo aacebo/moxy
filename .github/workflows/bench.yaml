@@ -26,7 +26,7 @@ jobs:
           bencher run \
           --project moxy \
           --token '${{ secrets.BENCHER_API_TOKEN }}' \
-          --branch main \
+          --branch master \
           --testbed ubuntu-latest \
           --adapter rust_bench \
           --threshold-measure latency \
