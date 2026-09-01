@@ -16,6 +16,11 @@ impl TokenStream {
     }
 
     #[inline]
+    pub fn with_capacity(capacity: usize) -> Self {
+        Self(Vec::with_capacity(capacity))
+    }
+
+    #[inline]
     pub fn is_empty(&self) -> bool {
         self.0.is_empty()
     }
@@ -130,7 +135,7 @@ impl Spanner for TokenStream {
 
 impl Scan for TokenStream {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
-        let mut tokens = Vec::new();
+        let mut tokens = Vec::with_capacity(8);
         let mut c = cursor;
 
         loop {
@@ -199,18 +204,30 @@ impl FromStr for TokenStream {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Self::from_string(s.to_owned())
+    }
+}
+
+impl TokenStream {
+    /// Build a token stream from an owned string while moving that allocation
+    /// directly into the fallback source map.
+    #[doc(hidden)]
+    pub fn from_string(s: String) -> Result<Self, ParseError> {
         use crate::source::SourceMap;
 
-        let span = SourceMap::with_mut(|sm| sm.push(s));
-        let cursor = Cursor::new(s, span.byte_range().start as u32);
-        let (rest, stream) = Self::scan(cursor)?;
-        let rest = rest.skip_whitespace();
+        SourceMap::with_mut(|sm| {
+            let span = sm.push(s);
+            let source = sm.find(span).expect("new source missing from source map");
+            let cursor = Cursor::new(source.text(), span.byte_range().start as u32);
+            let (rest, stream) = Self::scan(cursor)?;
+            let rest = rest.skip_whitespace();
 
-        if !rest.is_empty() {
-            return Err(rest.error().message("unexpected trailing input").into());
-        }
+            if !rest.is_empty() {
+                return Err(rest.error().message("unexpected trailing input").into());
+            }
 
-        Ok(stream)
+            Ok(stream)
+        })
     }
 }
 
@@ -261,7 +278,7 @@ fn push_doc_attr(tokens: &mut Vec<TokenTree>, inner: bool, text: &str, span: Spa
         tokens.push(crate::TokenTree::Punct(Punctuation::Not(<Token![!]>::new(span))));
     }
 
-    let mut body = TokenStream::new();
+    let mut body = TokenStream::with_capacity(3);
     body.extend_one(crate::TokenTree::Ident(Ident::new("doc").with_span(span)));
     body.extend_one(crate::TokenTree::Punct(Punctuation::Eq(<Token![=]>::new(span))));
     body.extend_one(crate::TokenTree::Literal(crate::Lit::Str(crate::LitStr::new(text, span))));

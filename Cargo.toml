@@ -58,11 +58,9 @@ keywords.workspace = true
 categories.workspace = true
 include.workspace = true
 
-[profile.bench]
-debug = true
-
 [[bench]]
-name = "parse"
+name = "all"
+path = "benches/mod.rs"
 harness = false
 
 [package.metadata.docs.rs]

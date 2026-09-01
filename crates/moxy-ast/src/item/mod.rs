@@ -310,53 +310,53 @@ impl Parse for Item {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
         let at = stream.span();
 
-        if stream.peek::<ItemMacroRules>() {
-            return Ok(Self::Macro2(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ItemMacroRules>() {
+            return Ok(Self::Macro2(item));
         }
-        if stream.peek::<ItemUse>() {
-            return Ok(Self::Use(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ItemUse>() {
+            return Ok(Self::Use(item));
         }
-        if stream.peek::<ItemExternCrate>() {
-            return Ok(Self::ExternCrate(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ItemExternCrate>() {
+            return Ok(Self::ExternCrate(item));
         }
-        if stream.peek::<ItemForeignMod>() {
-            return Ok(Self::ForeignMod(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ItemForeignMod>() {
+            return Ok(Self::ForeignMod(item));
         }
-        if stream.peek::<ItemMod>() {
-            return Ok(Self::Mod(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ItemMod>() {
+            return Ok(Self::Mod(item));
         }
-        if stream.peek::<ItemStruct>() {
-            return Ok(Self::Struct(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ItemStruct>() {
+            return Ok(Self::Struct(item));
         }
-        if stream.peek::<ItemEnum>() {
-            return Ok(Self::Enum(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ItemEnum>() {
+            return Ok(Self::Enum(item));
         }
-        if stream.peek::<ItemUnion>() {
-            return Ok(Self::Union(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ItemUnion>() {
+            return Ok(Self::Union(item));
         }
-        if stream.peek::<ItemTraitAlias>() {
-            return Ok(Self::TraitAlias(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ItemTraitAlias>() {
+            return Ok(Self::TraitAlias(item));
         }
-        if stream.peek::<ItemTrait>() {
-            return Ok(Self::Trait(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ItemTrait>() {
+            return Ok(Self::Trait(item));
         }
-        if stream.peek::<ItemImpl>() {
-            return Ok(Self::Impl(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ItemImpl>() {
+            return Ok(Self::Impl(item));
         }
-        if stream.peek::<ItemTypeAlias>() {
-            return Ok(Self::TypeAlias(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ItemTypeAlias>() {
+            return Ok(Self::TypeAlias(item));
         }
-        if stream.peek::<ItemConst>() {
-            return Ok(Self::Const(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ItemConst>() {
+            return Ok(Self::Const(item));
         }
-        if stream.peek::<ItemStatic>() {
-            return Ok(Self::Static(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ItemStatic>() {
+            return Ok(Self::Static(item));
         }
-        if stream.peek::<ItemFn>() {
-            return Ok(Self::Fn(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ItemFn>() {
+            return Ok(Self::Fn(item));
         }
-        if stream.peek::<ItemMacro>() {
-            return Ok(Self::Macro(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ItemMacro>() {
+            return Ok(Self::Macro(item));
         }
 
         Err(LexError::new(at).message("expected item").into())

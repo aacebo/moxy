@@ -40,15 +40,12 @@ impl Source {
             }
         }
 
-        let mut char_to_byte = BTreeMap::new();
-        char_to_byte.insert(0, 0);
-
         Self {
             path: None,
             text,
             span: Span::new(start as u32, (start + total) as u32),
             lines,
-            char_to_byte: RefCell::new(char_to_byte),
+            char_to_byte: RefCell::new(BTreeMap::new()),
         }
     }
 
@@ -103,7 +100,11 @@ impl Source {
             return *byte_index;
         }
 
-        let (&ci, &bi) = cache.range(..=index).next_back().unwrap();
+        let (ci, bi) = cache
+            .range(..=index)
+            .next_back()
+            .map(|(&char_index, &byte_index)| (char_index, byte_index))
+            .unwrap_or((0, 0));
 
         let mut char_index = ci;
         let mut byte_index = bi;
