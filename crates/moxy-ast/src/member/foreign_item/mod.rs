@@ -81,16 +81,16 @@ impl_from! {
 
 impl Parse for ForeignItem {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<ForeignItemStatic>() {
-            return Ok(Self::Static(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ForeignItemStatic>() {
+            return Ok(Self::Static(item));
         }
 
-        if stream.peek::<ForeignItemType>() {
-            return Ok(Self::Type(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ForeignItemType>() {
+            return Ok(Self::Type(item));
         }
 
-        if stream.peek::<ForeignItemFn>() {
-            return Ok(Self::Fn(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ForeignItemFn>() {
+            return Ok(Self::Fn(item));
         }
 
         Ok(Self::Macro(stream.parse()?))

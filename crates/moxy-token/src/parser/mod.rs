@@ -20,18 +20,8 @@ pub use stream::*;
 /// ```
 #[macro_export]
 macro_rules! parse {
-    ($src:tt as $ty:ty) => {{
-        use ::std::str::FromStr;
-        $crate::TokenStream::from_str(&$src.to_string())
-            .map_err($crate::parser::ParseError::from)
-            .and_then(|ts| ts.parse().parse::<$ty>())
-    }};
-    ($src:tt) => {{
-        use ::std::str::FromStr;
-        $crate::TokenStream::from_str(&$src.to_string())
-            .map_err($crate::parser::ParseError::from)
-            .and_then(|ts| ts.parse().parse())
-    }};
+    ($src:tt as $ty:ty) => {{ $crate::parser::__parse_owned::<$ty>($src.to_string()) }};
+    ($src:tt) => {{ $crate::parser::__parse_owned($src.to_string()) }};
 }
 
 /// Parse source file(s) into a typed AST node, returning `Result<T, ParseError>`.
@@ -90,6 +80,14 @@ macro_rules! parse_files {
     }};
 }
 
+/// Parse an owned source string without copying it again for fallback span storage.
+///
+/// This is public only so [`parse!`](crate::parse) can call it from downstream crates.
+#[doc(hidden)]
+pub fn __parse_owned<T: Parse>(source: String) -> Result<T, ParseError> {
+    crate::TokenStream::from_string(source).and_then(|tokens| tokens.parse().parse())
+}
+
 pub trait Parse: Sized {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError>;
 }
@@ -107,11 +105,7 @@ impl<T: Parse> Peek for T {
 impl<T: Parse> Parse for Option<T> {
     #[inline]
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<T>() {
-            stream.parse().map(Some)
-        } else {
-            Ok(None)
-        }
+        Ok(stream.parse_if())
     }
 }
 

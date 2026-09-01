@@ -1,0 +1,25 @@
+name: Benchmark Batch
+
+on:
+  workflow_dispatch:
+
+permissions:
+  checks: write
+  pull-requests: write
+
+jobs:
+  bench-1:
+    uses: ./.github/workflows/bench.yaml
+    secrets: inherit
+  bench-2:
+    uses: ./.github/workflows/bench.yaml
+    secrets: inherit
+  bench-3:
+    uses: ./.github/workflows/bench.yaml
+    secrets: inherit
+  bench-4:
+    uses: ./.github/workflows/bench.yaml
+    secrets: inherit
+  bench-5:
+    uses: ./.github/workflows/bench.yaml
+    secrets: inherit

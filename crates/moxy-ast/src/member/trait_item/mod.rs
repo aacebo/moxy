@@ -86,16 +86,16 @@ impl From<TraitItemConst> for TraitItem {
 
 impl Parse for TraitItem {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<TraitItemConst>() {
-            return Ok(Self::Const(Box::new(stream.parse()?)));
+        if let Some(item) = stream.parse_if::<TraitItemConst>() {
+            return Ok(Self::Const(Box::new(item)));
         }
 
-        if stream.peek::<TraitItemType>() {
-            return Ok(Self::Type(stream.parse()?));
+        if let Some(item) = stream.parse_if::<TraitItemType>() {
+            return Ok(Self::Type(item));
         }
 
-        if stream.peek::<TraitItemFn>() {
-            return Ok(Self::Fn(stream.parse()?));
+        if let Some(item) = stream.parse_if::<TraitItemFn>() {
+            return Ok(Self::Fn(item));
         }
 
         Ok(Self::Macro(stream.parse()?))

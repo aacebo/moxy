@@ -86,16 +86,16 @@ impl From<ImplItemConst> for ImplItem {
 
 impl Parse for ImplItem {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<ImplItemConst>() {
-            return Ok(Self::Const(Box::new(stream.parse()?)));
+        if let Some(item) = stream.parse_if::<ImplItemConst>() {
+            return Ok(Self::Const(Box::new(item)));
         }
 
-        if stream.peek::<ImplItemType>() {
-            return Ok(Self::Type(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ImplItemType>() {
+            return Ok(Self::Type(item));
         }
 
-        if stream.peek::<ImplItemFn>() {
-            return Ok(Self::Fn(stream.parse()?));
+        if let Some(item) = stream.parse_if::<ImplItemFn>() {
+            return Ok(Self::Fn(item));
         }
 
         Ok(Self::Macro(stream.parse()?))

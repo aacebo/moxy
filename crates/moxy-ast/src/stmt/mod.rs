@@ -78,20 +78,20 @@ impl Spanner for Stmt {
 
 impl Parse for Stmt {
     fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<StmtLocal>() {
-            return Ok(Self::Local(Box::new(stream.parse()?)));
+        if let Some(stmt) = stream.parse_if::<StmtLocal>() {
+            return Ok(Self::Local(Box::new(stmt)));
         }
 
-        if stream.peek::<StmtBlock>() {
-            return Ok(Self::Block(stream.parse()?));
+        if let Some(stmt) = stream.parse_if::<StmtBlock>() {
+            return Ok(Self::Block(stmt));
         }
 
-        if stream.peek::<crate::Item>() {
-            return Ok(Self::Item(Box::new(stream.parse()?)));
+        if let Some(item) = stream.parse_if::<crate::Item>() {
+            return Ok(Self::Item(Box::new(item)));
         }
 
-        if stream.peek::<StmtMacro>() {
-            return Ok(Self::Macro(stream.parse()?));
+        if let Some(stmt) = stream.parse_if::<StmtMacro>() {
+            return Ok(Self::Macro(stmt));
         }
 
         let expr = stream.parse::<Expr>()?;
