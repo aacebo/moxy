@@ -4,7 +4,7 @@ members = [".", "crates/*"]
 default-members = [".", "crates/*"]
 
 [workspace.package]
-version = "0.0.0"
+version = "0.1.0"
 edition = "2024"
 license = "MIT"
 readme = "README.md"
@@ -30,14 +30,14 @@ type_complexity = "allow"
 large_enum_variant = "allow"
 
 [workspace.dependencies]
-moxy = { path = ".", version = "0.0.0" }
-moxy-ast = { path = "crates/moxy-ast", version = "0.0.0" }
-moxy-build = { path = "crates/moxy-build", version = "0.0.0" }
-moxy-derive = { path = "crates/moxy-derive", version = "0.0.0" }
-moxy-diagnostic = { path = "crates/moxy-diagnostic", version = "0.0.0" }
-moxy-fmt = { path = "crates/moxy-fmt", version = "0.0.0" }
-moxy-token = { path = "crates/moxy-token", version = "0.0.0" }
-moxy-template = { path = "crates/moxy-template", version = "0.0.0" }
+moxy = { path = ".", version = "0.1.0" }
+moxy-ast = { path = "crates/moxy-ast", version = "0.1.0" }
+moxy-build = { path = "crates/moxy-build", version = "0.1.0" }
+moxy-derive = { path = "crates/moxy-derive", version = "0.1.0" }
+moxy-diagnostic = { path = "crates/moxy-diagnostic", version = "0.1.0" }
+moxy-fmt = { path = "crates/moxy-fmt", version = "0.1.0" }
+moxy-token = { path = "crates/moxy-token", version = "0.1.0" }
+moxy-template = { path = "crates/moxy-template", version = "0.1.0" }
 
 serde = { version = "1", features = ["derive"] }
 proc-macro2 = { version = "1", features = ["span-locations"] }
