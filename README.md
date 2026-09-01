@@ -1,6 +1,11 @@
 <img src="./assets/banner.svg" width="100%" alt="moxy" />
 
-[![codecov](https://codecov.io/gh/aacebo/moxy/branch/master/graph/badge.svg?token=zVUrga2una)](https://codecov.io/gh/aacebo/moxy)
+![Crates.io Version](https://img.shields.io/crates/v/moxy)
+![Codecov (with branch)](https://img.shields.io/codecov/c/github/aacebo/moxy/master)
+![GitHub License](https://img.shields.io/github/license/aacebo/moxy)
+![GitHub branch status](https://img.shields.io/github/checks-status/aacebo/moxy/master?label=master)
+![Crates.io Size](https://img.shields.io/crates/size/moxy)
+
 
 Rust syntax tools for procedural macros: tokens, typed syntax trees, templates,
 formatting, and diagnostics.
