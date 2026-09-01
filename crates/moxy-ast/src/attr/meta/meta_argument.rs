@@ -29,6 +29,13 @@ impl MetaArgument {
             _ => None,
         }
     }
+
+    pub fn path(&self) -> Option<&Path> {
+        match self {
+            Self::Meta(v) => Some(&v.path),
+            Self::Value(_) => None,
+        }
+    }
 }
 
 impl Parse for MetaArgument {

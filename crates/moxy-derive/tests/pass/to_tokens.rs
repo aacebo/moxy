@@ -3,7 +3,7 @@ use moxy::ast::Item;
 use moxy::token::{Spanner, ToTokenStream};
 
 #[derive(ToTokens)]
-#[template { const VALUE: &str = {{ self.value }}; }]
+#[moxy(template { const VALUE: &str = {{ self.value }}; })]
 struct Generated {
     value: String,
 }

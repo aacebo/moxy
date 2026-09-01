@@ -11,7 +11,7 @@ use moxy_fmt::fmt;
 use moxy_template::template;
 use moxy_token::{Spanner, TokenStream};
 
-#[proc_macro_derive(ToTokens, attributes(template, debug))]
+#[proc_macro_derive(ToTokens, attributes(moxy))]
 pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let target = TokenStream::from(target);
     let object: Declaration = match target.parse().parse() {
@@ -19,10 +19,14 @@ pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStr
         Ok(v) => v,
     };
 
-    let tpl_meta_list = object.attrs().query().path("template").collect();
-    let tpl_meta = if let Some(first) = tpl_meta_list.first() {
-        first
-    } else {
+    let meta_list = object.attrs().query().path("moxy").collect();
+    let tpl_meta_list: Vec<_> = meta_list.iter().flat_map(|a| a.query().path("template").collect()).collect();
+
+    if tpl_meta_list.len() > 1 {
+        return tpl_meta_list[0].span().error("exactly 1 template required").emit().into();
+    }
+
+    let Some(tpl_meta) = tpl_meta_list.first() else {
         return object.attrs().span().error("template required").emit().into();
     };
 
@@ -47,7 +51,7 @@ pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStr
         }
     };
 
-    let debug_meta_list = object.attrs().query().path("debug").collect();
+    let debug_meta_list: Vec<_> = meta_list.iter().flat_map(|a| a.query().path("debug").collect()).collect();
 
     if let Some(debug) = debug_meta_list.first() {
         let impl_item = match output.parse().parse::<ItemImpl>() {

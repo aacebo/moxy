@@ -189,7 +189,7 @@ cargo add moxy --features derive
 use moxy::token::ToTokenStream;
 
 #[derive(moxy::ToTokens)]
-#[template { const VALUE: &str = {{ self.value }}; }]
+#[moxy(template { const VALUE: &str = {{ self.value }}; })]
 struct Generated {
     value: String,
 }

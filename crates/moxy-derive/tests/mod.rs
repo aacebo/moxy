@@ -3,9 +3,9 @@ use moxy::ast::Item;
 use moxy::token::{Spanner, ToTokenStream};
 
 #[derive(ToTokens)]
-#[template {
+#[moxy(template {
     pub const GENERATED: &str = {{ self.value }};
-}]
+})]
 struct Model {
     value: String,
 }

@@ -31,6 +31,10 @@ impl MetaLayout {
         matches!(self, Self::List { items: _ })
     }
 
+    pub fn is_value(&self) -> bool {
+        matches!(self, Self::Value(_))
+    }
+
     pub fn as_value(&self) -> Option<&MetaValue> {
         match self {
             Self::Alias { eq: _, value } => Some(value),

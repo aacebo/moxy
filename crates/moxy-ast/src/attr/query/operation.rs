@@ -1,8 +1,10 @@
-#[derive(Default)]
+use std::sync::Arc;
+
+#[derive(Default, Clone)]
 pub enum Operation<T> {
     #[default]
     Always,
-    Predicate(Box<dyn Fn(&T) -> bool>),
+    Predicate(Arc<dyn Fn(&T) -> bool>),
     And(Box<Self>, Box<Self>),
     Or(Box<Self>, Box<Self>),
     Not(Box<Self>),

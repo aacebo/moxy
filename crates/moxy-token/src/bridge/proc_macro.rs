@@ -17,7 +17,7 @@ impl From<proc_macro::Span> for fallback::Span {
         #[cfg(nightly)]
         {
             let r = value.byte_range();
-            return Self::new(r.start as u32, r.end as u32);
+            Self::new(r.start as u32, r.end as u32)
         }
 
         #[cfg(not(nightly))]
