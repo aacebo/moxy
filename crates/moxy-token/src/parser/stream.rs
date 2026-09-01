@@ -160,7 +160,7 @@ impl<'a> ParseStream<'a> {
 
     /// Parse `T` if it matches; leave the stream unchanged otherwise.
     pub fn parse_if<T: Parse>(&mut self) -> Option<T> {
-        if self.peek::<T>() { self.parse().ok() } else { None }
+        self.parse().ok()
     }
 
     /// Parse `T` repeatedly while it matches, collecting results. Never errors.
