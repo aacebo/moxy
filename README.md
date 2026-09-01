@@ -1,4 +1,4 @@
-<img src="./assets/banner.svg" width="100%" alt="moxy" />
+<img src="https://raw.githubusercontent.com/aacebo/moxy/refs/heads/master/assets/banner.svg" width="100%" alt="moxy" />
 
 <a href="https://crates.io/crates/moxy">
     <img src="https://img.shields.io/crates/v/moxy" />
