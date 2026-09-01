@@ -2,7 +2,7 @@ name: Benchmark
 
 on:
   push:
-    branches: [main]
+    branches: [master]
   schedule:
     # Run once per hour at the beginning of the hour (UTC)
     - cron: "0 * * * *"
