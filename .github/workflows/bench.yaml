@@ -1,0 +1,35 @@
+name: Benchmark
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    # Run once per hour at the beginning of the hour (UTC)
+    - cron: "0 * * * *"
+  workflow_dispatch:
+  workflow_call: {}
+
+permissions:
+  checks: write
+  pull-requests: write
+
+jobs:
+  bench:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@nightly
+      - uses: bencherdev/bencher@main
+
+      - name: Run benchmarks
+        run: |
+          bencher run \
+          --project moxy \
+          --token '${{ secrets.BENCHER_API_TOKEN }}' \
+          --branch main \
+          --testbed ubuntu-latest \
+          --adapter rust_bench \
+          --threshold-measure latency \
+          --threshold-test t_test \
+          --threshold-upper-boundary 0.95 \
+          cargo bench -p moxy

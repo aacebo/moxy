@@ -12,3 +12,4 @@ retry = 3
 lint = "clippy --workspace --all-features --all-targets -- -D warnings"
 cov = "llvm-cov --workspace --all-features --html --open --no-cfg-coverage --no-cfg-coverage-nightly"
 cov-check = "llvm-cov --workspace --all-features --no-cfg-coverage --no-cfg-coverage-nightly --fail-under-lines 90"
+profile = "bench --bench all --workspace --all -- --profile-time 10"
