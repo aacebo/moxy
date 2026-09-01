@@ -17,12 +17,12 @@ jobs:
       - name: Run benchmarks
         run: cargo bench -p moxy | tee output.txt
       - name: Upload benchmark results
-        uses: actions/upload-artifact
+        uses: actions/upload-artifact@latest
         with:
           name: bench_results
           path: output.txt
       - name: Upload PR event
-        uses: actions/upload-artifact@latest
+        uses: actions/upload-artifact@latest@latest
         with:
           name: pr_event
           path: ${{ github.event_path }}
