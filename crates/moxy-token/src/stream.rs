@@ -165,16 +165,11 @@ impl Scan for TokenStream {
             }
 
             if let Ok((next, ident)) = crate::Ident::scan(c) {
-                let tt = if !ident.is_raw() && (ident.text() == "true" || ident.text() == "false") {
-                    TokenTree::Literal(crate::Lit::Bool(crate::LitBool::new(ident.text() == "true", ident.span())))
-                } else {
-                    match crate::Keyword::from_str(ident.text(), ident.span()) {
-                        Some(kw) if !ident.is_raw() => TokenTree::Keyword(kw),
-                        _ => TokenTree::Ident(ident),
-                    }
-                };
+                tokens.push(match crate::Keyword::from_str(ident.text(), ident.span()) {
+                    Some(kw) if !ident.is_raw() => TokenTree::Keyword(kw),
+                    _ => TokenTree::Ident(ident),
+                });
 
-                tokens.push(tt);
                 c = next;
                 continue;
             }
