@@ -1,6 +1,7 @@
-use super::LexError;
 use crate::Span;
 use crate::span::fallback;
+
+use super::LexError;
 
 /// Zero-copy immutable cursor over source text.
 /// Each parse step returns a new advanced cursor.
@@ -35,15 +36,16 @@ impl<'a> Cursor<'a> {
         self.rest.starts_with(s)
     }
 
+    pub fn span(&self) -> Span {
+        fallback::Span::new(self.off, self.off + 1).into()
+    }
+
     /// Create a fallback::Span from this cursor to another.
     pub fn span_to(&self, end: &Cursor<'_>) -> Span {
         fallback::Span::new(self.off, end.off).into()
     }
 
-    pub fn span(&self) -> Span {
-        fallback::Span::new(self.off, self.off + 1).into()
-    }
-
+    /// Create an error at the current span
     pub fn error(&self) -> LexError {
         LexError::new(self.span())
     }

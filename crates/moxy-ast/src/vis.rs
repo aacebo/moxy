@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Token, Delim, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Delimited, Path};
+use crate::{Parse, Peek, ParseError, Parser, Delimited, Path};
 
 /// The visibility of an item (`pub`, `pub`, `pub(in path)`, or inherited).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -57,17 +55,17 @@ impl Visibility {
 }
 
 impl Parse for Visibility {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if !stream.peek::<Token![pub]>() {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if !parser.peek::<Token![pub]>() {
             return Ok(Self::Inherited);
         }
 
-        let pub_keyword = stream.parse::<Token![pub]>()?;
+        let pub_keyword = parser.parse::<Token![pub]>()?;
 
         // `pub(...)` restricted forms.
-        if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-            let (span, group_tokens) = stream.parse_group_spanned(Delim::Paren)?;
-            let mut inner = group_tokens.parse();
+        if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
+            let (span, inner) = parser.parse_group_spanned(Delim::Paren)?;
+            let inner = Parser::from_tokens(&inner);
 
             if inner.peek::<Token![crate]>() {
                 let crate_keyword = inner.parse::<Token![crate]>()?;

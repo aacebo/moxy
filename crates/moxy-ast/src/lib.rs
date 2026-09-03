@@ -25,6 +25,8 @@ pub mod ty;
 pub mod use_tree;
 pub mod vis;
 pub mod visit;
+#[macro_use]
+mod parse;
 
 #[doc(inline)]
 pub use _crate::Crate;
@@ -63,9 +65,13 @@ pub use moxy_token::{
     Lit, LitBool, LitByte, LitByteStr, LitCStr, LitChar, LitF32, LitF64, LitFloat, LitInt, LitStr, LitVerbatim,
 };
 #[doc(inline)]
+pub use parse::*;
+#[doc(inline)]
 pub use pat::Pattern;
 #[doc(inline)]
 pub use path::{Path, PathSegment};
+#[doc(inline)]
+pub use precedence::*;
 #[doc(inline)]
 pub use punctuated::*;
 #[doc(inline)]

@@ -99,6 +99,15 @@ impl<T: ToTokens> ToTokens for Vec<T> {
     }
 }
 
+impl<T: ToTokens, E: ToTokens> ToTokens for Result<T, E> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            Self::Ok(v) => v.to_tokens(tokens),
+            Self::Err(err) => err.to_tokens(tokens),
+        }
+    }
+}
+
 /// Map a Rust punctuation or keyword symbol to its [`crate`] token type.
 #[macro_export]
 macro_rules! Token {

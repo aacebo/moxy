@@ -1,6 +1,6 @@
-use crate::Token;
-use crate::span::DelimSpan;
-use crate::{Delim, Group, Ident, LexError, Lit, Punctuation, Span, ToTokenStream, ToTokens, TokenStream};
+use moxy_token::Token;
+use moxy_token::span::DelimSpan;
+use moxy_token::{Delim, Group, Ident, LexError, Lit, Punctuation, Span, ToTokenStream, ToTokens, TokenStream};
 
 #[derive(Debug, Clone)]
 pub struct ParseError {
@@ -79,5 +79,11 @@ impl std::error::Error for ParseError {}
 impl ToTokens for ParseError {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.to_compile_error().to_tokens(tokens);
+    }
+}
+
+impl<T> From<ParseError> for Result<T, ParseError> {
+    fn from(value: ParseError) -> Self {
+        Err(value)
     }
 }
