@@ -189,35 +189,6 @@ impl crate::Spanner for Ident {
     }
 }
 
-impl crate::Parse for Ident {
-    fn parse(stream: &mut crate::parser::ParseStream) -> Result<Self, crate::parser::ParseError> {
-        match stream.advance().cloned() {
-            Some(crate::TokenTree::Ident(v)) => Ok(v.clone()),
-            Some(other) => Err(crate::lex::LexError::new(stream.span())
-                .message(format!("expected Ident, received \"{}\"", other))
-                .into()),
-            None => Err(crate::lex::LexError::new(stream.span())
-                .message(format!("expected Ident, received \"{}\"", "<EOF>"))
-                .into()),
-        }
-    }
-}
-
-impl Ident {
-    pub fn parse_any(stream: &mut crate::parser::ParseStream) -> Result<Self, crate::parser::ParseError> {
-        match stream.advance().cloned() {
-            Some(TokenTree::Ident(v)) => Ok(v),
-            Some(TokenTree::Keyword(v)) => Ok(Ident::new(v.as_str()).with_span(v.span())),
-            Some(other) => Err(crate::lex::LexError::new(stream.span())
-                .message(format!("expected Ident, received \"{}\"", other))
-                .into()),
-            None => Err(crate::lex::LexError::new(stream.span())
-                .message(format!("expected Ident, received \"{}\"", "<EOF>"))
-                .into()),
-        }
-    }
-}
-
 impl std::str::FromStr for Ident {
     type Err = LexError;
 

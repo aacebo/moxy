@@ -22,4 +22,5 @@ workspace = true
 moxy-build.workspace = true
 
 [dependencies]
+moxy-ast.workspace = true
 moxy-token.workspace = true

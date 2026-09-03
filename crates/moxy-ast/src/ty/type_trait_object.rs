@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Punctuated, TypeBound};
 
@@ -13,9 +13,9 @@ pub struct TypeTraitObject {
 }
 
 impl Parse for TypeTraitObject {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let dyn_token = stream.parse_if::<Token![dyn]>();
-        let bounds = crate::TypeBound::parse_bounds(stream)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let dyn_token = parser.parse_if::<Token![dyn]>();
+        let bounds = crate::TypeBound::parse_bounds(parser)?;
         Ok(Self { dyn_token, bounds })
     }
 }

@@ -5,12 +5,12 @@ mod expr_field;
 mod expr_index;
 mod expr_method_call;
 
+use crate::{ParseError, Parser};
 pub use expr_await::*;
 pub use expr_call::*;
 pub use expr_field::*;
 pub use expr_index::*;
 pub use expr_method_call::*;
-use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
 use super::unary::ExprTry;
@@ -151,15 +151,15 @@ impl From<ExprAwait> for PostfixExpr {
 // Parser
 
 impl PostfixExpr {
-    pub fn parse_from(stream: &mut ParseStream, mut expr: Expr) -> Result<Expr, ParseError> {
+    pub fn parse_from(parser: &Parser, mut expr: Expr) -> Result<Expr, ParseError> {
         loop {
-            if stream.peek::<Token![.]>() {
-                let dot = stream.parse::<Token![.]>()?;
+            if parser.peek::<Token![.]>() {
+                let dot = parser.parse::<Token![.]>()?;
 
-                if matches!(stream.curr(), Some(tt) if tt.text() == Some("await")) {
-                    let await_span = stream.span();
+                if matches!(parser.curr(), Some(tt) if tt.text() == Some("await")) {
+                    let await_span = parser.span();
 
-                    stream.advance();
+                    parser.advance();
                     expr = Expr::Postfix(Self::Await(ExprAwait {
                         attrs: Attributes::default(),
                         base: Box::new(expr),
@@ -170,15 +170,15 @@ impl PostfixExpr {
                     continue;
                 }
 
-                let member = stream.parse::<Member>()?;
+                let member = parser.parse::<Member>()?;
 
                 if let Member::Named(method) = &member {
                     // Optional turbofish `::<...>` before the call parens.
-                    let turbofish = ExprMethodCall::parse_turbofish(stream)?;
+                    let turbofish = ExprMethodCall::parse_turbofish(parser)?;
 
-                    if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
+                    if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
                         let method = method.clone();
-                        let args = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
+                        let args = Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?;
 
                         expr = Expr::Postfix(Self::MethodCall(ExprMethodCall {
                             attrs: Attributes::default(),
@@ -203,8 +203,8 @@ impl PostfixExpr {
                 continue;
             }
 
-            if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-                let args = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
+            if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
+                let args = Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?;
                 expr = Expr::Postfix(Self::Call(ExprCall {
                     attrs: Attributes::default(),
                     func: Box::new(expr),
@@ -214,8 +214,8 @@ impl PostfixExpr {
                 continue;
             }
 
-            if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
-                let index = Delimited::parse_bracket_with(stream, |s| super::parse_expr(s, true).map(Box::new))?;
+            if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
+                let index = Delimited::parse_bracket_with(parser, |s| super::parse_expr(s, true).map(Box::new))?;
                 expr = Expr::Postfix(Self::Index(ExprIndex {
                     attrs: Attributes::default(),
                     base: Box::new(expr),
@@ -225,8 +225,8 @@ impl PostfixExpr {
                 continue;
             }
 
-            if stream.peek::<Token![?]>() {
-                let question_punct = stream.parse::<Token![?]>()?;
+            if parser.peek::<Token![?]>() {
+                let question_punct = parser.parse::<Token![?]>()?;
                 expr = Expr::Unary(UnaryExpr::Try(ExprTry {
                     attrs: Attributes::default(),
                     expr: Box::new(expr),

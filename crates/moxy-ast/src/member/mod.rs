@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Lit, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{LexError, Lit, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::Ident;
 
@@ -59,11 +59,11 @@ impl Spanner for Member {
 }
 
 impl Parse for Member {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        match stream.curr() {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.curr() {
             Some(TokenTree::Literal(_)) => {
-                let at = stream.span();
-                let lit = stream.parse::<Lit>()?;
+                let at = parser.span();
+                let lit = parser.parse::<Lit>()?;
 
                 if let Some(i) = lit.as_int() {
                     if !i.repr().chars().all(char::is_numeric) {
@@ -77,7 +77,7 @@ impl Parse for Member {
                     Err(LexError::new(at).message("expected tuple index").into())
                 }
             }
-            _ => Ok(Self::Named(stream.parse()?)),
+            _ => Ok(Self::Named(parser.parse()?)),
         }
     }
 }

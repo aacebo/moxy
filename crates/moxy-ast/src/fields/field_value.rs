@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::expr::{ExprPath, PrimaryExpr};
 use crate::{Attributes, Expr, Member};
@@ -17,13 +17,13 @@ pub struct FieldValue {
 }
 
 impl Parse for FieldValue {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let member = stream.parse::<Member>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let member = parser.parse::<Member>()?;
 
-        if stream.peek::<Token![:]>() {
-            let colon_punct = Some(stream.parse::<Token![:]>()?);
-            let expr = stream.parse::<Expr>()?;
+        if parser.peek::<Token![:]>() {
+            let colon_punct = Some(parser.parse::<Token![:]>()?);
+            let expr = parser.parse::<Expr>()?;
 
             Ok(Self {
                 attrs,
@@ -40,7 +40,7 @@ impl Parse for FieldValue {
                     path: id.clone().into(),
                 })),
                 Member::Unnamed(_) => {
-                    return Err(moxy_token::LexError::new(stream.span())
+                    return Err(moxy_token::LexError::new(parser.span())
                         .message("tuple index needs a value")
                         .into());
                 }

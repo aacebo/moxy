@@ -1,7 +1,6 @@
 use crate::lex::{Cursor, LexError, Scan};
 use crate::lit::Lit;
-use crate::parser::{ParseError, ParseStream};
-use crate::{Parse, Span, Spanner};
+use crate::{Span, Spanner};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(into = "String"))]
@@ -79,17 +78,6 @@ impl Scan for LitByte {
         match inner.and_then(decode_one_char) {
             Some(value) => Ok((end, Self::from_parts(value as u8, repr, span))),
             _ => cursor.error().into(),
-        }
-    }
-}
-
-impl Parse for LitByte {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-
-        match stream.parse::<Lit>()? {
-            Lit::Byte(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected byte literal").into()),
         }
     }
 }

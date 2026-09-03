@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::TypeBound;
 use crate::{Attributes, Ident, Punctuated, Type};
@@ -18,20 +18,20 @@ pub struct TypeParam {
 }
 
 impl Parse for TypeParam {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let ident = stream.parse::<Ident>()?;
-        let (colon_punct, bounds) = if stream.peek::<Token![:]>() {
-            let colon_punct = stream.parse::<Token![:]>()?;
-            let bounds = TypeBound::parse_bounds(stream)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let ident = parser.parse::<Ident>()?;
+        let (colon_punct, bounds) = if parser.peek::<Token![:]>() {
+            let colon_punct = parser.parse::<Token![:]>()?;
+            let bounds = TypeBound::parse_bounds(parser)?;
             (Some(colon_punct), bounds)
         } else {
             (None, Punctuated::new())
         };
 
-        let (eq_punct, default) = if stream.peek::<Token![=]>() {
-            let eq_punct = stream.parse::<Token![=]>()?;
-            let default = stream.parse::<Type>()?;
+        let (eq_punct, default) = if parser.peek::<Token![=]>() {
+            let eq_punct = parser.parse::<Token![=]>()?;
+            let default = parser.parse::<Type>()?;
             (Some(eq_punct), Some(default))
         } else {
             (None, None)

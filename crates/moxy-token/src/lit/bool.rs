@@ -1,6 +1,5 @@
 use crate::lit::Lit;
-use crate::parser::{ParseError, ParseStream};
-use crate::{LexError, Parse, Span, Spanner};
+use crate::{Span, Spanner};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(into = "String"))]
@@ -59,17 +58,6 @@ impl std::fmt::Display for LitBool {
 impl Spanner for LitBool {
     fn span(&self) -> Span {
         self.span
-    }
-}
-
-impl Parse for LitBool {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-
-        match stream.parse::<Lit>()? {
-            Lit::Bool(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected bool literal").into()),
-        }
     }
 }
 

@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Item};
 
@@ -35,9 +35,9 @@ impl Spanner for Crate {
 }
 
 impl Parse for Crate {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let items = stream.parse::<Vec<Item>>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let items = parser.parse::<Vec<Item>>()?;
         Ok(Self { attrs, items })
     }
 }

@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
 
 use super::UseTree;
 
@@ -12,10 +12,10 @@ pub struct UseGlob {
 }
 
 impl Parse for UseGlob {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let at = parser.span();
 
-        match stream.parse::<UseTree>()? {
+        match parser.parse::<UseTree>()? {
             UseTree::Glob(v) => Ok(v),
             _ => Err(LexError::new(at).message("expected `*`").into()),
         }

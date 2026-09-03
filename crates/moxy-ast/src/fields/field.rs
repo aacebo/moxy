@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Ident, Mutability, Type, Visibility};
 
@@ -17,16 +17,16 @@ pub struct Field {
 }
 
 impl Parse for Field {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let mutability = stream.parse::<Mutability>()?;
-        let (ident, colon) = if stream.peek::<Ident>() {
-            let mut fork = stream.lookahead();
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let vis = parser.parse::<Visibility>()?;
+        let mutability = parser.parse::<Mutability>()?;
+        let (ident, colon) = if parser.peek::<Ident>() {
+            let fork = parser.lookahead();
             fork.advance();
 
             if fork.peek::<Token![:]>() {
-                (Some(stream.parse()?), Some(stream.parse()?))
+                (Some(parser.parse()?), Some(parser.parse()?))
             } else {
                 (None, None)
             }
@@ -34,7 +34,7 @@ impl Parse for Field {
             (None, None)
         };
 
-        let ty = stream.parse::<Type>()?;
+        let ty = parser.parse::<Type>()?;
 
         Ok(Self {
             attrs,

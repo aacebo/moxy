@@ -1,7 +1,7 @@
+use crate::{Parse, ParseError, Parser, Peek};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::punct::Quote;
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 /// A named lifetime (e.g. `'a`, `'static`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -11,10 +11,16 @@ pub struct Lifetime {
     pub ident: LifetimeName,
 }
 
+impl Peek for Lifetime {
+    fn peek(parser: &Parser) -> bool {
+        matches!(parser.curr(), Some(TokenTree::Punct(moxy_token::Punctuation::Quote(_))))
+    }
+}
+
 impl Parse for Lifetime {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let quote = stream.parse::<Quote>()?;
-        let ident = stream.parse::<LifetimeName>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let quote = parser.parse::<Quote>()?;
+        let ident = parser.parse::<LifetimeName>()?;
         Ok(Self { quote, ident })
     }
 }
@@ -33,18 +39,16 @@ impl ToTokens for Lifetime {
 }
 
 impl Lifetime {
-    pub fn parse_bounds(
-        stream: &mut moxy_token::parser::ParseStream,
-    ) -> Result<crate::Punctuated<Self, Token![+]>, moxy_token::parser::ParseError> {
+    pub fn parse_bounds(parser: &Parser) -> Result<crate::Punctuated<Self, Token![+]>, ParseError> {
         let mut bounds = crate::Punctuated::new();
-        if stream.peek::<Token![:]>() {
-            let _ = stream.parse::<Token![:]>()?;
+        if parser.peek::<Token![:]>() {
+            let _ = parser.parse::<Token![:]>()?;
 
             loop {
-                bounds.push_value(stream.parse::<Self>()?);
+                bounds.push_value(parser.parse::<Self>()?);
 
-                if stream.peek::<Token![+]>() {
-                    bounds.push_punct(stream.parse::<Token![+]>()?);
+                if parser.peek::<Token![+]>() {
+                    bounds.push_punct(parser.parse::<Token![+]>()?);
                 } else {
                     break;
                 }
@@ -64,11 +68,11 @@ pub struct LifetimeName {
 }
 
 impl Parse for LifetimeName {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let at = parser.span();
 
         // A lifetime name may be an identifier (`'a`) or a keyword (`'static`).
-        match stream.advance() {
+        match parser.advance() {
             Some(TokenTree::Ident(id)) => {
                 let (raw, text) = if id.is_raw() {
                     (true, id.text().to_string())

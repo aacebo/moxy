@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Abi, Attributes, Delimited, ForeignItem, Unsafety};
 
@@ -14,11 +14,11 @@ pub struct ItemForeignMod {
 }
 
 impl Parse for ItemForeignMod {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let unsafety = stream.parse::<Unsafety>()?;
-        let abi = stream.parse::<Abi>()?;
-        let items = Delimited::<Vec<ForeignItem>>::parse_brace(stream)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let unsafety = parser.parse::<Unsafety>()?;
+        let abi = parser.parse::<Abi>()?;
+        let items = Delimited::<Vec<ForeignItem>>::parse_brace(parser)?;
 
         Ok(Self {
             attrs,

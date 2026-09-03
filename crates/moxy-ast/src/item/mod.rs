@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
 
 mod item_const;
 mod item_enum;
@@ -307,55 +307,55 @@ impl From<ItemForeignMod> for Item {
 }
 
 impl Parse for Item {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let at = parser.span();
 
-        if let Some(item) = stream.parse_if::<ItemMacroRules>() {
+        if let Some(item) = parser.parse_if::<ItemMacroRules>() {
             return Ok(Self::Macro2(item));
         }
-        if let Some(item) = stream.parse_if::<ItemUse>() {
+        if let Some(item) = parser.parse_if::<ItemUse>() {
             return Ok(Self::Use(item));
         }
-        if let Some(item) = stream.parse_if::<ItemExternCrate>() {
+        if let Some(item) = parser.parse_if::<ItemExternCrate>() {
             return Ok(Self::ExternCrate(item));
         }
-        if let Some(item) = stream.parse_if::<ItemForeignMod>() {
+        if let Some(item) = parser.parse_if::<ItemForeignMod>() {
             return Ok(Self::ForeignMod(item));
         }
-        if let Some(item) = stream.parse_if::<ItemMod>() {
+        if let Some(item) = parser.parse_if::<ItemMod>() {
             return Ok(Self::Mod(item));
         }
-        if let Some(item) = stream.parse_if::<ItemStruct>() {
+        if let Some(item) = parser.parse_if::<ItemStruct>() {
             return Ok(Self::Struct(item));
         }
-        if let Some(item) = stream.parse_if::<ItemEnum>() {
+        if let Some(item) = parser.parse_if::<ItemEnum>() {
             return Ok(Self::Enum(item));
         }
-        if let Some(item) = stream.parse_if::<ItemUnion>() {
+        if let Some(item) = parser.parse_if::<ItemUnion>() {
             return Ok(Self::Union(item));
         }
-        if let Some(item) = stream.parse_if::<ItemTraitAlias>() {
+        if let Some(item) = parser.parse_if::<ItemTraitAlias>() {
             return Ok(Self::TraitAlias(item));
         }
-        if let Some(item) = stream.parse_if::<ItemTrait>() {
+        if let Some(item) = parser.parse_if::<ItemTrait>() {
             return Ok(Self::Trait(item));
         }
-        if let Some(item) = stream.parse_if::<ItemImpl>() {
+        if let Some(item) = parser.parse_if::<ItemImpl>() {
             return Ok(Self::Impl(item));
         }
-        if let Some(item) = stream.parse_if::<ItemTypeAlias>() {
+        if let Some(item) = parser.parse_if::<ItemTypeAlias>() {
             return Ok(Self::TypeAlias(item));
         }
-        if let Some(item) = stream.parse_if::<ItemConst>() {
+        if let Some(item) = parser.parse_if::<ItemConst>() {
             return Ok(Self::Const(item));
         }
-        if let Some(item) = stream.parse_if::<ItemStatic>() {
+        if let Some(item) = parser.parse_if::<ItemStatic>() {
             return Ok(Self::Static(item));
         }
-        if let Some(item) = stream.parse_if::<ItemFn>() {
+        if let Some(item) = parser.parse_if::<ItemFn>() {
             return Ok(Self::Fn(item));
         }
-        if let Some(item) = stream.parse_if::<ItemMacro>() {
+        if let Some(item) = parser.parse_if::<ItemMacro>() {
             return Ok(Self::Macro(item));
         }
 

@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Delimited, Generics, Ident, Punctuated, TraitItem, TypeBound, Unsafety, Visibility};
 
@@ -21,29 +21,29 @@ pub struct ItemTrait {
 }
 
 impl Parse for ItemTrait {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let unsafety = stream.parse::<Unsafety>()?;
-        let auto_keyword = if stream.peek::<Token![auto]>() {
-            Some(stream.parse::<Token![auto]>()?)
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let vis = parser.parse::<Visibility>()?;
+        let unsafety = parser.parse::<Unsafety>()?;
+        let auto_keyword = if parser.peek::<Token![auto]>() {
+            Some(parser.parse::<Token![auto]>()?)
         } else {
             None
         };
 
-        let trait_keyword = stream.parse::<Token![trait]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let mut generics = stream.parse::<Generics>()?;
-        let (colon_punct, supertraits) = if stream.peek::<Token![:]>() {
-            let colon_punct = stream.parse::<Token![:]>()?;
-            let supertraits = crate::TypeBound::parse_bounds(stream)?;
+        let trait_keyword = parser.parse::<Token![trait]>()?;
+        let ident = parser.parse::<Ident>()?;
+        let mut generics = parser.parse::<Generics>()?;
+        let (colon_punct, supertraits) = if parser.peek::<Token![:]>() {
+            let colon_punct = parser.parse::<Token![:]>()?;
+            let supertraits = crate::TypeBound::parse_bounds(parser)?;
             (Some(colon_punct), supertraits)
         } else {
             (None, Punctuated::new())
         };
 
-        generics.where_clause = stream.parse_if();
-        let items = Delimited::<Vec<TraitItem>>::parse_brace(stream)?;
+        generics.where_clause = parser.parse_if();
+        let items = Delimited::<Vec<TraitItem>>::parse_brace(parser)?;
 
         Ok(Self {
             attrs,

@@ -1,5 +1,6 @@
 use moxy_token::{Span, TokenStream, TokenTree};
 
+/// Copyable transactional position within a token parser.
 #[derive(Copy, Clone)]
 pub struct Cursor<'a> {
     index: usize,
@@ -16,71 +17,56 @@ impl<'a> Cursor<'a> {
     }
 
     pub fn span(self) -> Span {
-        self.tokens.get(self.index).map(|t| t.span()).unwrap_or_default()
+        self.tokens.get(self.index).map(TokenTree::span).unwrap_or_default()
     }
-}
 
-impl<'a> Cursor<'a> {
     pub fn remaining(self) -> usize {
         self.tokens.len().saturating_sub(self.index)
     }
 
-    pub fn next(self) -> Option<&'a TokenTree> {
-        if self.index + 1 > self.tokens.len() - 1 {
-            return None;
-        }
-
-        self.tokens.get(self.index + 1)
+    pub fn curr(self) -> Option<&'a TokenTree> {
+        self.nth(0)
     }
 
-    pub fn curr(self) -> Option<&'a TokenTree> {
-        if self.index > self.tokens.len() - 1 {
-            return None;
-        }
+    pub fn next(self) -> Option<&'a TokenTree> {
+        self.nth(1)
+    }
 
-        self.tokens.get(self.index)
+    pub fn nth(self, n: usize) -> Option<&'a TokenTree> {
+        self.tokens.get(self.index.checked_add(n)?)
     }
 
     pub fn prev(self) -> Option<&'a TokenTree> {
-        if self.index - 1 < 0 {
-            return None;
+        self.tokens.get(self.index.checked_sub(1)?)
+    }
+
+    pub fn advance(mut self) -> (Self, Option<&'a TokenTree>) {
+        let token = self.tokens.get(self.index);
+
+        if token.is_some() {
+            self.index += 1;
         }
 
-        self.tokens.get(self.index - 1)
+        (self, token)
     }
 
-    /// Look ahead `n` tokens without consuming (`nth(0)` == `curr`). When a glued
-    /// punct has been split, the pending half is `nth(0)` and the real stream
-    /// follows it.
-    pub fn nth(self, n: usize) -> Option<&'a TokenTree> {
-        if self.index + n > self.tokens.len() - 1 {
-            return None;
+    pub fn advance_by(mut self, n: usize) -> (Self, Option<&'a [TokenTree]>) {
+        let Some(end) = self.index.checked_add(n) else {
+            return (self, None);
+        };
+
+        let tokens = self.tokens.get(self.index..end);
+
+        if tokens.is_some() {
+            self.index = end;
         }
 
-        self.tokens.get(self.index + n)
+        (self, tokens)
     }
 
-    /// move the iterator forward and return the token.
-    pub fn advance(self) -> Option<&'a TokenTree> {
-        self.advance_by(1)?.first()
-    }
-
-    /// move the iterator forward by N and return the token.
-    pub fn advance_by(mut self, n: usize) -> Option<&'a [TokenTree]> {
-        if self.index + n > self.tokens.len() {
-            return None;
-        }
-
-        let start = self.index;
-        self.index += n;
-        Some(&self.tokens[start..self.index])
-    }
-
-    /// Advance past tokens until `pred(curr())` is true (does NOT consume the matching token).
-    /// Returns `self` for chaining.
-    pub fn skip_until<F: Fn(Option<&TokenTree>) -> bool>(self, pred: F) -> Self {
+    pub fn skip_until<F: Fn(Option<&TokenTree>) -> bool>(mut self, pred: F) -> Self {
         while !self.is_empty() && !pred(self.curr()) {
-            self.advance();
+            (self, _) = self.advance();
         }
 
         self

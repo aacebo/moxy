@@ -102,15 +102,6 @@ impl crate::Spanner for Group {
     }
 }
 
-impl crate::Parse for Group {
-    fn parse(stream: &mut crate::parser::ParseStream) -> Result<Self, crate::parser::ParseError> {
-        match stream.advance() {
-            Some(crate::TokenTree::Group(v)) => Ok(v.clone()),
-            _ => Err(crate::lex::LexError::new(stream.span()).message("expected Group").into()),
-        }
-    }
-}
-
 #[cfg(feature = "serde")]
 impl serde::Serialize for Group {
     fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>

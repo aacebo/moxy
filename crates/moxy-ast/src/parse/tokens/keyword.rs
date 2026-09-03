@@ -4,7 +4,7 @@ use crate::{Parse, ParseError, Parser, Peek};
 
 impl Peek for Keyword {
     fn peek(parser: &Parser) -> bool {
-        let Some(next) = parser.next() else {
+        let Some(next) = parser.curr() else {
             return false;
         };
 
@@ -16,7 +16,7 @@ impl Parse for Keyword {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         match parser.advance() {
             Some(TokenTree::Keyword(v)) => Ok(*v),
-            _ => parser.error("expected keyword").into(),
+            _ => Err(parser.error("expected keyword")),
         }
     }
 }
@@ -26,7 +26,7 @@ macro_rules! impl_keyword_parse {
         $(
             impl Peek for keyword::$name {
                 fn peek(parser: &Parser) -> bool {
-                    let Some(next) = parser.next() else {
+                    let Some(next) = parser.curr() else {
                         return false;
                     };
 
@@ -38,9 +38,7 @@ macro_rules! impl_keyword_parse {
                 fn parse(parser: &Parser) -> Result<Self, ParseError> {
                     match parser.parse::<Keyword>()? {
                         Keyword::$name(v) => Ok(v),
-                        _ => parser
-                            .error(concat!("expected `", $text, "` keyword"))
-                            .into(),
+                        _ => Err(parser.error(concat!("expected `", $text, "` keyword"))),
                     }
                 }
             }

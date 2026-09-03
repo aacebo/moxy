@@ -1,7 +1,6 @@
 use crate::lex::Cursor;
 use crate::lit::Lit;
-use crate::parser::{ParseError, ParseStream};
-use crate::{LexError, Parse, Scan, Span, Spanner};
+use crate::{LexError, Scan, Span, Spanner};
 
 #[derive(Debug, Default, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(into = "String"))]
@@ -102,17 +101,6 @@ impl Scan for LitInt {
                 value,
             },
         ))
-    }
-}
-
-impl Parse for LitInt {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-
-        match stream.parse::<Lit>()? {
-            Lit::Int(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected integer literal").into()),
-        }
     }
 }
 

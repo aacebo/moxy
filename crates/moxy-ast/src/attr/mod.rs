@@ -2,9 +2,9 @@ pub mod meta;
 pub mod query;
 mod style;
 
+use crate::{Parse, ParseError, Parser};
 pub use meta::Meta;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 pub use style::*;
 
 use crate::Delimited;
@@ -24,10 +24,10 @@ impl Spanner for Attribute {
 }
 
 impl Parse for Attribute {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            style: stream.parse()?,
-            meta: Delimited::parse_bracket(stream)?,
+            style: parser.parse()?,
+            meta: Delimited::parse_bracket(parser)?,
         })
     }
 }
@@ -124,7 +124,7 @@ impl ToTokens for Attributes {
 }
 
 impl Parse for Attributes {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        Ok(Self(stream.parse_while::<Attribute>()))
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self(parser.parse_while::<Attribute>()))
     }
 }

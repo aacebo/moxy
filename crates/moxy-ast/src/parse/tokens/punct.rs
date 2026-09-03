@@ -4,7 +4,7 @@ use crate::{Parse, ParseError, Parser, Peek};
 
 impl Peek for Punctuation {
     fn peek(parser: &Parser) -> bool {
-        let Some(next) = parser.next() else {
+        let Some(next) = parser.curr() else {
             return false;
         };
 
@@ -16,7 +16,7 @@ impl Parse for Punctuation {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         match parser.advance() {
             Some(TokenTree::Punct(v)) => Ok(*v),
-            _ => parser.error("expected punctuation").into(),
+            _ => Err(parser.error("expected punctuation")),
         }
     }
 }
@@ -26,7 +26,7 @@ macro_rules! impl_punct_parse {
         $(
             impl Peek for punct::$name {
                 fn peek(parser: &Parser) -> bool {
-                    let Some(next) = parser.next() else {
+                    let Some(next) = parser.curr() else {
                         return false;
                     };
 
@@ -38,9 +38,7 @@ macro_rules! impl_punct_parse {
                 fn parse(parser: &Parser) -> Result<Self, ParseError> {
                     match parser.parse::<Punctuation>()? {
                         Punctuation::$name(v) => Ok(v),
-                        _ => parser
-                            .error(concat!("expected `", $text, "` punctuation"))
-                            .into(),
+                        _ => Err(parser.error(concat!("expected `", $text, "` punctuation"))),
                     }
                 }
             }

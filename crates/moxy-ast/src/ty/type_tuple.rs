@@ -1,7 +1,7 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::span::Spanner;
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Span, ToTokens, TokenStream};
 
 use super::Type;
 use crate::{Delimited, Punctuated};
@@ -14,8 +14,8 @@ pub struct TypeTuple {
 }
 
 impl Parse for TypeTuple {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let elems = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let elems = Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?;
         Ok(Self { elems })
     }
 }

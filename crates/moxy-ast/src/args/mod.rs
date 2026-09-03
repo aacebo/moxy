@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Expr, Lifetime, Type};
 
@@ -41,30 +41,30 @@ impl Spanner for GenericArgument {
 }
 
 impl Parse for GenericArgument {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let token = match stream.curr() {
-            None => return Err(ParseError::new(stream.span(), "eof")),
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let token = match parser.curr() {
+            None => return Err(ParseError::new(parser.span(), "eof")),
             Some(v) => v.clone(),
         };
 
         // Lifetime: starts with `'`.
         if token.is_punct_quote() {
-            return Ok(Self::Lifetime(stream.parse()?));
+            return Ok(Self::Lifetime(parser.parse()?));
         }
 
         // Constraint `ident [generics] : bounds` — must come before AssocType/AssocConst
         // because `:` is unambiguous.
-        if let Some(argument) = stream.parse_if::<ConstraintArgument>() {
+        if let Some(argument) = parser.parse_if::<ConstraintArgument>() {
             return Ok(argument.into_generic_argument());
         }
 
         // Associated type binding `ident [generics] = Type`.
-        if let Some(argument) = stream.parse_if::<AssocTypeArgument>() {
+        if let Some(argument) = parser.parse_if::<AssocTypeArgument>() {
             return Ok(argument.into_generic_argument());
         }
 
         // Associated const binding `ident [generics] = expr`.
-        if let Some(argument) = stream.parse_if::<AssocConstArgument>() {
+        if let Some(argument) = parser.parse_if::<AssocConstArgument>() {
             return Ok(argument.into_generic_argument());
         }
 
@@ -72,10 +72,10 @@ impl Parse for GenericArgument {
         let is_const = token.is_literal() || token.as_group().map(|g| g.delim().is_brace()).unwrap_or(false);
 
         if is_const {
-            return Ok(Self::Const(stream.parse()?));
+            return Ok(Self::Const(parser.parse()?));
         }
 
-        Ok(Self::Type(stream.parse()?))
+        Ok(Self::Type(parser.parse()?))
     }
 }
 

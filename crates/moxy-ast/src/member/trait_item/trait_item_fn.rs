@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Attributes, Signature, StmtBlock, TraitItem};
 
@@ -15,13 +15,13 @@ pub struct TraitItemFn {
 }
 
 impl Parse for TraitItemFn {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let sig = stream.parse::<Signature>()?;
-        let (body, semi) = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
-            (Some(stream.parse::<StmtBlock>()?), None)
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let sig = parser.parse::<Signature>()?;
+        let (body, semi) = if matches!(parser.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
+            (Some(parser.parse::<StmtBlock>()?), None)
         } else {
-            (None, Some(stream.parse::<Token![;]>()?))
+            (None, Some(parser.parse::<Token![;]>()?))
         };
 
         Ok(Self { attrs, sig, body, semi })

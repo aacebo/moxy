@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Lifetime, Punctuated};
 
@@ -14,9 +14,9 @@ pub struct LifetimePredicate {
 }
 
 impl Parse for LifetimePredicate {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let lifetime = stream.parse::<Lifetime>()?;
-        let bounds = Lifetime::parse_bounds(stream)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let lifetime = parser.parse::<Lifetime>()?;
+        let bounds = Lifetime::parse_bounds(parser)?;
 
         Ok(Self {
             lifetime,

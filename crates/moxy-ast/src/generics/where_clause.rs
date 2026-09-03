@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::WherePredicate;
 use crate::Punctuated;
@@ -14,14 +14,14 @@ pub struct WhereClause {
 }
 
 impl Parse for WhereClause {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let where_keyword = stream.parse::<Token![where]>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let where_keyword = parser.parse::<Token![where]>()?;
         let mut predicates = Punctuated::new();
 
-        while !stream.is_empty() && !matches!(stream.curr(), Some(moxy_token::TokenTree::Group(_))) {
-            predicates.push_value(stream.parse::<WherePredicate>()?);
-            if stream.peek::<Token![,]>() {
-                predicates.push_punct(stream.parse::<Token![,]>()?);
+        while !parser.is_empty() && !matches!(parser.curr(), Some(moxy_token::TokenTree::Group(_))) {
+            predicates.push_value(parser.parse::<WherePredicate>()?);
+            if parser.peek::<Token![,]>() {
+                predicates.push_punct(parser.parse::<Token![,]>()?);
             } else {
                 break;
             }

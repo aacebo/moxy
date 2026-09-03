@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::Expr;
 
@@ -77,25 +77,25 @@ impl Spanner for Stmt {
 }
 
 impl Parse for Stmt {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if let Some(stmt) = stream.parse_if::<StmtLocal>() {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if let Some(stmt) = parser.parse_if::<StmtLocal>() {
             return Ok(Self::Local(Box::new(stmt)));
         }
 
-        if let Some(stmt) = stream.parse_if::<StmtBlock>() {
+        if let Some(stmt) = parser.parse_if::<StmtBlock>() {
             return Ok(Self::Block(stmt));
         }
 
-        if let Some(item) = stream.parse_if::<crate::Item>() {
+        if let Some(item) = parser.parse_if::<crate::Item>() {
             return Ok(Self::Item(Box::new(item)));
         }
 
-        if let Some(stmt) = stream.parse_if::<StmtMacro>() {
+        if let Some(stmt) = parser.parse_if::<StmtMacro>() {
             return Ok(Self::Macro(stmt));
         }
 
-        let expr = stream.parse::<Expr>()?;
-        let semi = stream.parse_if::<Token![;]>();
+        let expr = parser.parse::<Expr>()?;
+        let semi = parser.parse_if::<Token![;]>();
         Ok(Self::Expr(Box::new(expr), semi))
     }
 }

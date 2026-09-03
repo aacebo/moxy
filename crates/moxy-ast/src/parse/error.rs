@@ -81,9 +81,3 @@ impl ToTokens for ParseError {
         self.to_compile_error().to_tokens(tokens);
     }
 }
-
-impl<T> From<ParseError> for Result<T, ParseError> {
-    fn from(value: ParseError) -> Self {
-        Err(value)
-    }
-}

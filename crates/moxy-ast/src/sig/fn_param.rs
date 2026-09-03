@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::{Receiver, Variadic};
 use crate::pat::PatType;
@@ -47,8 +47,8 @@ pub enum FnParam {
 }
 
 impl FnParam {
-    pub fn is_receiver(stream: &mut ParseStream) -> bool {
-        let mut fork = stream.lookahead();
+    pub fn is_receiver(parser: &Parser) -> bool {
+        let fork = parser.lookahead();
         fork.skip_while::<crate::Attribute>();
 
         if fork.peek::<Token![self]>() {
@@ -84,12 +84,12 @@ impl Spanner for FnParam {
 }
 
 impl Parse for FnParam {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if Self::is_receiver(stream) {
-            return Ok(Self::Receiver(Box::new(stream.parse()?)));
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if Self::is_receiver(parser) {
+            return Ok(Self::Receiver(Box::new(parser.parse()?)));
         }
 
-        Ok(Self::Typed(Box::new(stream.parse()?)))
+        Ok(Self::Typed(Box::new(parser.parse()?)))
     }
 }
 

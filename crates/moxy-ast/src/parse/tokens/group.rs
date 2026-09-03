@@ -4,7 +4,7 @@ use crate::{Parse, ParseError, Parser, Peek};
 
 impl Peek for Group {
     fn peek(parser: &Parser) -> bool {
-        let Some(next) = parser.next() else {
+        let Some(next) = parser.curr() else {
             return false;
         };
 
@@ -16,7 +16,7 @@ impl Parse for Group {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         match parser.advance() {
             Some(TokenTree::Group(v)) => Ok(v.clone()),
-            _ => parser.error("expected group").into(),
+            _ => Err(parser.error("expected group")),
         }
     }
 }

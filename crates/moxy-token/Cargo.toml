@@ -1,6 +1,6 @@
 [package]
 name = "moxy-token"
-description = "Rust token types/parsing/lexing"
+description = "Rust token types and lexing"
 readme = "README.md"
 version.workspace = true
 edition.workspace = true

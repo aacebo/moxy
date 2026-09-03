@@ -217,7 +217,7 @@ impl TokenStream {
             let rest = rest.skip_whitespace();
 
             if !rest.is_empty() {
-                return Err(rest.error().message("unexpected trailing input").into());
+                return rest.error().message("unexpected trailing input").into();
             }
 
             Ok(stream)

@@ -1,7 +1,7 @@
 #![allow(unused)]
 
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, LexError, Parse, Punctuation, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
+use moxy_ast::{Parse, ParseError, Parser};
+use moxy_token::{Delim, Group, LexError, Punctuation, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::Template;
 
@@ -26,15 +26,11 @@ pub struct TmplMatchArm {
 }
 
 impl TmplMatch {
-    pub fn parse_after_keyword_match(
-        stream: &mut ParseStream,
-        at_punct: Token![@],
-        match_kw: Token![match],
-    ) -> Result<Self, ParseError> {
+    pub fn parse_after_keyword_match(parser: &Parser, at_punct: Token![@], match_kw: Token![match]) -> Result<Self, ParseError> {
         let span = at_punct.span();
-        let expr = stream.parse_group(Delim::Paren)?;
-        let arms_stream = stream.parse_group(Delim::Brace)?;
-        let mut arms_ps = arms_stream.parse();
+        let expr = parser.parse_group(Delim::Paren)?;
+        let arms_stream = parser.parse_group(Delim::Brace)?;
+        let arms_ps = Parser::from_tokens(&arms_stream);
         let arms = arms_ps.parse::<Vec<TmplMatchArm>>()?;
 
         Ok(Self {
@@ -48,25 +44,25 @@ impl TmplMatch {
 }
 
 impl Parse for TmplMatchArm {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let span = stream.span();
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let span = parser.span();
         let mut pat = TokenStream::new();
 
         loop {
-            match stream.curr() {
+            match parser.curr() {
                 None => return Err(LexError::new(span).message("unexpected end of match arm").into()),
                 Some(TokenTree::Punct(Punctuation::FatArrow(_))) => break,
                 _ => {
-                    pat.extend_one(stream.advance().unwrap().clone());
+                    pat.extend_one(parser.advance().unwrap().clone());
                 }
             }
         }
 
-        let fat_arrow = stream.parse::<Token![=>]>()?;
-        let body_stream = stream.parse_group(Delim::Brace)?;
-        let mut body_ps = body_stream.parse();
+        let fat_arrow = parser.parse::<Token![=>]>()?;
+        let body_stream = parser.parse_group(Delim::Brace)?;
+        let body_ps = Parser::from_tokens(&body_stream);
         let body = body_ps.parse::<Template>()?;
-        let comma = stream.parse_if::<Token![,]>();
+        let comma = parser.parse_if::<Token![,]>();
 
         Ok(Self {
             span,

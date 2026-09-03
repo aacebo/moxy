@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Delimited, Punctuated};
 
@@ -242,27 +242,27 @@ impl From<TypeBareFn> for Type {
 }
 
 impl Parse for Type {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         // `&` reference.
-        if stream.peek::<Token![&]>() {
-            return Ok(Self::Reference(stream.parse()?));
+        if parser.peek::<Token![&]>() {
+            return Ok(Self::Reference(parser.parse()?));
         }
 
         // `*` raw pointer.
-        if stream.peek::<Token![*]>() {
-            return Ok(Self::Pointer(stream.parse()?));
+        if parser.peek::<Token![*]>() {
+            return Ok(Self::Pointer(parser.parse()?));
         }
 
         // Never `!`.
-        if stream.peek::<Token![!]>() {
-            let not = stream.parse::<Token![!]>()?;
+        if parser.peek::<Token![!]>() {
+            let not = parser.parse::<Token![!]>()?;
             return Ok(Self::Never(not));
         }
 
         // Infer `_`.
-        if matches!(stream.curr(), Some(tt) if tt.text() == Some("_")) {
-            let span = stream.span();
-            stream.advance();
+        if matches!(parser.curr(), Some(tt) if tt.text() == Some("_")) {
+            let span = parser.span();
+            parser.advance();
             return Ok(Self::Infer(moxy_token::Ident::new("_").with_span(span)));
         }
 
@@ -270,9 +270,9 @@ impl Parse for Type {
         // Both share the same `[` token so we disambiguate inline after peeking
         // inside the group rather than calling `TypeArray::parse` or
         // `TypeSlice::parse` individually (which would each consume the group).
-        if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
-            let (bracket_span, group_tokens) = stream.parse_group_spanned(Delim::Bracket)?;
-            let mut inner = group_tokens.parse();
+        if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
+            let (bracket_span, group_tokens) = parser.parse_group_spanned(Delim::Bracket)?;
+            let inner = Parser::from_tokens(&group_tokens);
             let elem = Box::new(inner.parse::<Self>()?);
 
             if inner.peek::<Token![;]>() {
@@ -290,27 +290,27 @@ impl Parse for Type {
         }
 
         // `impl Trait`.
-        if stream.peek::<Token![impl]>() {
-            return Ok(Self::ImplTrait(stream.parse()?));
+        if parser.peek::<Token![impl]>() {
+            return Ok(Self::ImplTrait(parser.parse()?));
         }
 
         // `dyn Trait`.
-        if stream.peek::<Token![dyn]>() {
-            return Ok(Self::TraitObject(stream.parse()?));
+        if parser.peek::<Token![dyn]>() {
+            return Ok(Self::TraitObject(parser.parse()?));
         }
 
         // Bare fn pointer: `fn(...)`, `extern "C" fn(...)`, `unsafe fn(...)`.
-        if stream.peek::<Token![fn]>() || stream.peek::<Token![extern]>() || stream.peek::<Token![unsafe]>() {
-            return Ok(Self::BareFn(stream.parse()?));
+        if parser.peek::<Token![fn]>() || parser.peek::<Token![extern]>() || parser.peek::<Token![unsafe]>() {
+            return Ok(Self::BareFn(parser.parse()?));
         }
 
         // `(...)` — one element with no trailing comma is a parenthesized type;
         // anything else (empty, multiple, or trailing comma) is a tuple.
         // Both variants share the same `(` token so we disambiguate inline.
-        if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-            let (paren_span, group_tokens) = stream.parse_group_spanned(Delim::Paren)?;
-            let mut inner = group_tokens.parse();
-            let elems: Punctuated<Self, Token![,]> = Punctuated::parse_terminated(&mut inner)?;
+        if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
+            let (paren_span, group_tokens) = parser.parse_group_spanned(Delim::Paren)?;
+            let inner = Parser::from_tokens(&group_tokens);
+            let elems: Punctuated<Self, Token![,]> = Punctuated::parse_terminated(&inner)?;
 
             return if elems.len() == 1 && !elems.is_trailing() {
                 let content = Delimited::paren(paren_span, Box::new(elems.into_iter().next().unwrap()));
@@ -322,13 +322,13 @@ impl Parse for Type {
         }
 
         // Macro type `m!(...)` — a path followed by `!`.
-        if let Some(mac) = stream.parse_if::<TypeMacro>() {
+        if let Some(mac) = parser.parse_if::<TypeMacro>() {
             return Ok(Self::Macro(mac));
         }
 
         // Otherwise a path type: `T`, `std::vec::Vec`, or a qualified
         // `<T as Trait>::Item` (which begins with `<`).
-        Ok(Self::Path(stream.parse()?))
+        Ok(Self::Path(parser.parse()?))
     }
 }
 

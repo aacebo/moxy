@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::expr::parse_expr;
 use crate::*;
@@ -14,10 +14,10 @@ pub struct RepeatInner {
 }
 
 impl Parse for RepeatInner {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let elem = Box::new(parse_expr(stream, true)?);
-        let semi = stream.parse::<Token![;]>()?;
-        let len = Box::new(parse_expr(stream, true)?);
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let elem = Box::new(parse_expr(parser, true)?);
+        let semi = parser.parse::<Token![;]>()?;
+        let len = Box::new(parse_expr(parser, true)?);
         Ok(Self { elem, semi, len })
     }
 }

@@ -1,6 +1,6 @@
-use moxy_token::parser::{ParseError, ParseStream};
+use crate::{Parse, ParseError, Parser};
 use moxy_token::span::{DelimSpan, Spanner};
-use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, Span, ToTokens, TokenStream, TokenTree};
 
 #[derive(Debug, Clone)]
 pub struct Delimited<T = TokenStream> {
@@ -49,53 +49,53 @@ impl<T> Delimited<T> {
 }
 
 impl<T> Delimited<T> {
-    pub fn parse_with_fn<F>(style: Delim, stream: &mut ParseStream, f: F) -> Result<Self, ParseError>
+    pub fn parse_with_fn<F>(style: Delim, parser: &Parser, f: F) -> Result<Self, ParseError>
     where
-        F: FnOnce(&mut ParseStream) -> Result<T, ParseError>,
+        F: FnOnce(&Parser) -> Result<T, ParseError>,
     {
-        let (span, group_tokens) = stream.parse_group_spanned(style)?;
-        let mut inner_stream = group_tokens.parse();
-        let inner = f(&mut inner_stream)?;
+        let (span, group_tokens) = parser.parse_group_spanned(style)?;
+        let inner_parser = Parser::from_tokens(&group_tokens);
+        let inner = f(&inner_parser)?;
         Ok(Self { style, span, inner })
     }
 
-    pub fn parse_paren_with<F>(stream: &mut ParseStream, f: F) -> Result<Self, ParseError>
+    pub fn parse_paren_with<F>(parser: &Parser, f: F) -> Result<Self, ParseError>
     where
-        F: FnOnce(&mut ParseStream) -> Result<T, ParseError>,
+        F: FnOnce(&Parser) -> Result<T, ParseError>,
     {
-        Self::parse_with_fn(Delim::Paren, stream, f)
+        Self::parse_with_fn(Delim::Paren, parser, f)
     }
 
-    pub fn parse_brace_with<F>(stream: &mut ParseStream, f: F) -> Result<Self, ParseError>
+    pub fn parse_brace_with<F>(parser: &Parser, f: F) -> Result<Self, ParseError>
     where
-        F: FnOnce(&mut ParseStream) -> Result<T, ParseError>,
+        F: FnOnce(&Parser) -> Result<T, ParseError>,
     {
-        Self::parse_with_fn(Delim::Brace, stream, f)
+        Self::parse_with_fn(Delim::Brace, parser, f)
     }
 
-    pub fn parse_bracket_with<F>(stream: &mut ParseStream, f: F) -> Result<Self, ParseError>
+    pub fn parse_bracket_with<F>(parser: &Parser, f: F) -> Result<Self, ParseError>
     where
-        F: FnOnce(&mut ParseStream) -> Result<T, ParseError>,
+        F: FnOnce(&Parser) -> Result<T, ParseError>,
     {
-        Self::parse_with_fn(Delim::Bracket, stream, f)
+        Self::parse_with_fn(Delim::Bracket, parser, f)
     }
 }
 
 impl<T: Parse> Delimited<T> {
-    pub fn parse_with(style: Delim, stream: &mut ParseStream) -> Result<Self, ParseError> {
-        Self::parse_with_fn(style, stream, |inner| inner.parse())
+    pub fn parse_with(style: Delim, parser: &Parser) -> Result<Self, ParseError> {
+        Self::parse_with_fn(style, parser, |inner| inner.parse())
     }
 
-    pub fn parse_paren(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        Self::parse_with(Delim::Paren, stream)
+    pub fn parse_paren(parser: &Parser) -> Result<Self, ParseError> {
+        Self::parse_with(Delim::Paren, parser)
     }
 
-    pub fn parse_brace(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        Self::parse_with(Delim::Brace, stream)
+    pub fn parse_brace(parser: &Parser) -> Result<Self, ParseError> {
+        Self::parse_with(Delim::Brace, parser)
     }
 
-    pub fn parse_bracket(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        Self::parse_with(Delim::Bracket, stream)
+    pub fn parse_bracket(parser: &Parser) -> Result<Self, ParseError> {
+        Self::parse_with(Delim::Bracket, parser)
     }
 }
 

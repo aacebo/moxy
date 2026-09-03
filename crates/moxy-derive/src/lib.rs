@@ -4,8 +4,8 @@ mod token {
     pub use moxy_token::*;
 }
 
-use moxy_ast::Declaration;
 use moxy_ast::item::ItemImpl;
+use moxy_ast::{Declaration, Parser};
 use moxy_diagnostic::SpanExt;
 use moxy_fmt::fmt;
 use moxy_template::template;
@@ -14,7 +14,7 @@ use moxy_token::{Spanner, TokenStream};
 #[proc_macro_derive(ToTokens, attributes(moxy))]
 pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let target = TokenStream::from(target);
-    let object: Declaration = match target.parse().parse() {
+    let object: Declaration = match Parser::from_tokens(&target).parse() {
         Err(err) => return err.to_compile_error().into(),
         Ok(v) => v,
     };
@@ -54,7 +54,7 @@ pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStr
     let debug_meta_list: Vec<_> = meta_list.iter().flat_map(|a| a.query().path("debug").collect()).collect();
 
     if let Some(debug) = debug_meta_list.first() {
-        let impl_item = match output.parse().parse::<ItemImpl>() {
+        let impl_item = match Parser::from_tokens(&output).parse::<ItemImpl>() {
             Err(err) => return err.to_compile_error().into(),
             Ok(v) => v,
         };

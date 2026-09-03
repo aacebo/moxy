@@ -588,6 +588,7 @@ dependencies = [
 name = "moxy-diagnostic"
 version = "0.1.0"
 dependencies = [
+ "moxy-ast",
  "moxy-build",
  "moxy-token",
 ]
@@ -605,6 +606,7 @@ dependencies = [
 name = "moxy-template"
 version = "0.1.0"
 dependencies = [
+ "moxy-ast",
  "moxy-token",
 ]
 

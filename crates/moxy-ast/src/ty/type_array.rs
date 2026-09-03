@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::Type;
 use crate::{Delimited, Expr};
@@ -14,10 +14,10 @@ pub struct ArrayInner {
 }
 
 impl Parse for ArrayInner {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let elem = Box::new(stream.parse::<Type>()?);
-        let semi = stream.parse::<Token![;]>()?;
-        let len = stream.parse::<Expr>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let elem = Box::new(parser.parse::<Type>()?);
+        let semi = parser.parse::<Token![;]>()?;
+        let len = parser.parse::<Expr>()?;
         Ok(Self { elem, semi, len })
     }
 }
@@ -38,8 +38,8 @@ pub struct TypeArray {
 }
 
 impl Parse for TypeArray {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let content = Delimited::<ArrayInner>::parse_bracket(stream)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let content = Delimited::<ArrayInner>::parse_bracket(parser)?;
         Ok(Self { content })
     }
 }

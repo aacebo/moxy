@@ -1,5 +1,5 @@
+use crate::{ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -21,9 +21,9 @@ impl Spanner for ExprLoop {
 }
 
 impl ExprLoop {
-    pub fn parse_from(stream: &mut ParseStream, label: Option<Label>, attrs: Attributes) -> Result<Self, ParseError> {
-        let loop_keyword = stream.parse::<Token![loop]>()?;
-        let body = stream.parse::<StmtBlock>()?;
+    pub fn parse_from(parser: &Parser, label: Option<Label>, attrs: Attributes) -> Result<Self, ParseError> {
+        let loop_keyword = parser.parse::<Token![loop]>()?;
+        let body = parser.parse::<StmtBlock>()?;
 
         Ok(Self {
             attrs,

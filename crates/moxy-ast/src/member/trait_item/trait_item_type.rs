@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Generics, Ident, Punctuated, Type, TypeBound};
 
@@ -19,25 +19,25 @@ pub struct TraitItemType {
 }
 
 impl Parse for TraitItemType {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let type_keyword = stream.parse::<Token![type]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let generics = stream.parse::<Generics>()?;
-        let (colon, bounds) = if stream.peek::<Token![:]>() {
-            (Some(stream.parse::<Token![:]>()?), TypeBound::parse_bounds(stream)?)
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let type_keyword = parser.parse::<Token![type]>()?;
+        let ident = parser.parse::<Ident>()?;
+        let generics = parser.parse::<Generics>()?;
+        let (colon, bounds) = if parser.peek::<Token![:]>() {
+            (Some(parser.parse::<Token![:]>()?), TypeBound::parse_bounds(parser)?)
         } else {
             (None, Punctuated::new())
         };
 
-        let default = if stream.peek::<Token![=]>() {
-            let eq = stream.parse::<Token![=]>()?;
-            Some((eq, stream.parse::<Type>()?))
+        let default = if parser.peek::<Token![=]>() {
+            let eq = parser.parse::<Token![=]>()?;
+            Some((eq, parser.parse::<Type>()?))
         } else {
             None
         };
 
-        let semi = stream.parse()?;
+        let semi = parser.parse()?;
 
         Ok(Self {
             attrs,

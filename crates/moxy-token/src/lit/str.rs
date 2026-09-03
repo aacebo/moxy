@@ -1,7 +1,6 @@
 use crate::lex::{Cursor, LexError, Scan};
 use crate::lit::Lit;
-use crate::parser::{ParseError, ParseStream};
-use crate::{Parse, Span, Spanner};
+use crate::{Span, Spanner};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(into = "String"))]
@@ -87,17 +86,6 @@ impl Scan for LitStr {
         match decode_string_body(repr) {
             Some(value) => Ok((end, Self::from_parts(value, repr, span))),
             None => cursor.error().into(),
-        }
-    }
-}
-
-impl Parse for LitStr {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-
-        match stream.parse::<Lit>()? {
-            Lit::Str(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected string literal").into()),
         }
     }
 }

@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -36,11 +36,11 @@ impl PatType {
 }
 
 impl Parse for PatType {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse()?;
-        let pat = Box::new(Pattern::parse_single(stream)?);
-        let colon = stream.parse()?;
-        let ty = Box::new(stream.parse()?);
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let pat = Box::new(Pattern::parse_single(parser)?);
+        let colon = parser.parse()?;
+        let ty = Box::new(parser.parse()?);
 
         Ok(Self { attrs, pat, colon, ty })
     }

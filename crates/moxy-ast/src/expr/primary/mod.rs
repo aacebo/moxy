@@ -12,6 +12,7 @@ mod expr_repeat;
 mod expr_struct;
 mod expr_tuple;
 
+use crate::{ParseError, Parser};
 pub use expr_array::*;
 pub use expr_closure::*;
 pub use expr_group::*;
@@ -23,7 +24,6 @@ pub use expr_path::*;
 pub use expr_repeat::*;
 pub use expr_struct::*;
 pub use expr_tuple::*;
-use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Delim, LexError, Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use super::block::{
@@ -283,32 +283,32 @@ impl From<ExprMacro> for PrimaryExpr {
 // Parser
 
 impl ExprClosure {
-    pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Self, ParseError> {
-        let constness = stream.parse::<Constness>()?;
-        let asyncness = stream.parse::<Asyncness>()?;
-        let capture = stream.parse_if::<Token![move]>();
-        let (pipes, inputs) = if stream.peek::<Token![||]>() {
-            let oror = stream.parse::<Token![||]>()?;
+    pub fn parse_from(parser: &Parser, attrs: Attributes) -> Result<Self, ParseError> {
+        let constness = parser.parse::<Constness>()?;
+        let asyncness = parser.parse::<Asyncness>()?;
+        let capture = parser.parse_if::<Token![move]>();
+        let (pipes, inputs) = if parser.peek::<Token![||]>() {
+            let oror = parser.parse::<Token![||]>()?;
             (ClosurePipes::Empty(oror), Punctuated::new())
         } else {
-            let open = stream.parse::<Token![|]>()?;
+            let open = parser.parse::<Token![|]>()?;
             let mut params = Punctuated::new();
 
-            while !stream.peek::<Token![|]>() && !stream.is_empty() {
-                params.push_value(stream.parse::<ClosureParam>()?);
-                if stream.peek::<Token![,]>() {
-                    params.push_punct(stream.parse::<Token![,]>()?);
+            while !parser.peek::<Token![|]>() && !parser.is_empty() {
+                params.push_value(parser.parse::<ClosureParam>()?);
+                if parser.peek::<Token![,]>() {
+                    params.push_punct(parser.parse::<Token![,]>()?);
                 } else {
                     break;
                 }
             }
 
-            let close = stream.parse::<Token![|]>()?;
+            let close = parser.parse::<Token![|]>()?;
             (ClosurePipes::Params(open, close), params)
         };
 
-        let output = stream.parse::<ReturnType>()?;
-        let body = Box::new(super::parse_expr(stream, true)?);
+        let output = parser.parse::<ReturnType>()?;
+        let body = Box::new(super::parse_expr(parser, true)?);
 
         Ok(Self {
             attrs,
@@ -327,22 +327,22 @@ impl ExprClosure {
 
 impl ExprStruct {
     pub fn parse_body(
-        stream: &mut ParseStream,
+        parser: &Parser,
     ) -> Result<(Punctuated<FieldValue, Token![,]>, Option<(Token![..], Box<Expr>)>), ParseError> {
         let mut fields = Punctuated::new();
         let mut rest = None;
 
-        while !stream.is_empty() {
-            if stream.peek::<Token![..]>() {
-                let dotdot = stream.parse::<Token![..]>()?;
-                rest = Some((dotdot, Box::new(super::parse_expr(stream, true)?)));
+        while !parser.is_empty() {
+            if parser.peek::<Token![..]>() {
+                let dotdot = parser.parse::<Token![..]>()?;
+                rest = Some((dotdot, Box::new(super::parse_expr(parser, true)?)));
                 break;
             }
 
-            fields.push_value(stream.parse::<FieldValue>()?);
+            fields.push_value(parser.parse::<FieldValue>()?);
 
-            if stream.peek::<Token![,]>() {
-                fields.push_punct(stream.parse::<Token![,]>()?);
+            if parser.peek::<Token![,]>() {
+                fields.push_punct(parser.parse::<Token![,]>()?);
             } else {
                 break;
             }
@@ -354,13 +354,13 @@ impl ExprStruct {
 
 impl ExprRepeat {
     pub fn try_parse(
-        stream: &mut ParseStream,
+        parser: &Parser,
         bracket_span: moxy_token::span::DelimSpan,
         attrs: Attributes,
     ) -> Result<Option<Self>, ParseError> {
-        let mut lookahead = stream.lookahead();
+        let lookahead = parser.lookahead();
 
-        if super::parse_expr(&mut lookahead, true).is_err() {
+        if super::parse_expr(&lookahead, true).is_err() {
             return Ok(None);
         }
 
@@ -368,9 +368,9 @@ impl ExprRepeat {
             return Ok(None);
         }
 
-        let elem = super::parse_expr(stream, true)?;
-        let semi = stream.parse::<Token![;]>()?;
-        let len = super::parse_expr(stream, true)?;
+        let elem = super::parse_expr(parser, true)?;
+        let semi = parser.parse::<Token![;]>()?;
+        let len = super::parse_expr(parser, true)?;
 
         Ok(Some(Self {
             attrs,
@@ -387,13 +387,13 @@ impl ExprRepeat {
 }
 
 impl Expr {
-    pub fn parse_if(stream: &mut ParseStream) -> Result<Option<Box<Self>>, ParseError> {
-        if stream.is_empty() || stream.peek::<Token![;]>() || stream.peek::<Token![,]>() {
+    pub fn parse_if(parser: &Parser) -> Result<Option<Box<Self>>, ParseError> {
+        if parser.is_empty() || parser.peek::<Token![;]>() || parser.peek::<Token![,]>() {
             return Ok(None);
         }
 
-        if stream.peek::<Expr>() {
-            Ok(Some(Box::new(stream.parse()?)))
+        if parser.peek::<Expr>() {
+            Ok(Some(Box::new(parser.parse()?)))
         } else {
             Ok(None)
         }
@@ -401,13 +401,13 @@ impl Expr {
 }
 
 impl PrimaryExpr {
-    pub fn parse_from(stream: &mut ParseStream, allow_struct: bool, attrs: Attributes) -> Result<Expr, ParseError> {
-        let at = stream.span();
+    pub fn parse_from(parser: &Parser, allow_struct: bool, attrs: Attributes) -> Result<Expr, ParseError> {
+        let at = parser.span();
 
-        if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-            let (paren_span, group_tokens) = stream.parse_group_spanned(Delim::Paren)?;
-            let mut inner = group_tokens.parse();
-            let elems: Punctuated<Expr, Token![,]> = Punctuated::parse_terminated(&mut inner)?;
+        if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
+            let (paren_span, group_tokens) = parser.parse_group_spanned(Delim::Paren)?;
+            let inner = Parser::from_tokens(&group_tokens);
+            let elems: Punctuated<Expr, Token![,]> = Punctuated::parse_terminated(&inner)?;
 
             return Ok(if elems.len() == 1 && !elems.is_trailing() {
                 let expr = Box::new(elems.into_iter().next().unwrap());
@@ -423,15 +423,15 @@ impl PrimaryExpr {
             });
         }
 
-        if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
-            let (bracket_span, group_tokens) = stream.parse_group_spanned(Delim::Bracket)?;
-            let mut inner = group_tokens.parse();
+        if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
+            let (bracket_span, group_tokens) = parser.parse_group_spanned(Delim::Bracket)?;
+            let inner = Parser::from_tokens(&group_tokens);
 
-            if let Some(rep) = ExprRepeat::try_parse(&mut inner, bracket_span, attrs.clone())? {
+            if let Some(rep) = ExprRepeat::try_parse(&inner, bracket_span, attrs.clone())? {
                 return Ok(Expr::Primary(Self::Repeat(rep)));
             }
 
-            let elems = Punctuated::parse_terminated(&mut inner)?;
+            let elems = Punctuated::parse_terminated(&inner)?;
 
             return Ok(Expr::Primary(Self::Array(ExprArray {
                 attrs,
@@ -440,109 +440,109 @@ impl PrimaryExpr {
         }
 
         // Labeled block / loop: `'a: { }`, `'a: loop { }`, etc.
-        if Label::is_prefix(stream) {
-            let label = Some(stream.parse::<Label>()?);
+        if Label::is_prefix(parser) {
+            let label = Some(parser.parse::<Label>()?);
 
-            if stream.peek::<Token![while]>() {
-                return Ok(Expr::Block(BlockExpr::While(ExprWhile::parse_from(stream, label, attrs)?)));
+            if parser.peek::<Token![while]>() {
+                return Ok(Expr::Block(BlockExpr::While(ExprWhile::parse_from(parser, label, attrs)?)));
             }
 
-            if stream.peek::<Token![for]>() {
+            if parser.peek::<Token![for]>() {
                 return Ok(Expr::Block(BlockExpr::ForLoop(ExprForLoop::parse_from(
-                    stream, label, attrs,
+                    parser, label, attrs,
                 )?)));
             }
 
-            if stream.peek::<Token![loop]>() {
-                return Ok(Expr::Block(BlockExpr::Loop(ExprLoop::parse_from(stream, label, attrs)?)));
+            if parser.peek::<Token![loop]>() {
+                return Ok(Expr::Block(BlockExpr::Loop(ExprLoop::parse_from(parser, label, attrs)?)));
             }
 
             return Ok(Expr::Block(BlockExpr::Brace(ExprBrace {
                 attrs,
                 label,
-                block: stream.parse()?,
+                block: parser.parse()?,
             })));
         }
 
-        if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
+        if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
             return Ok(Expr::Block(BlockExpr::Brace(ExprBrace {
                 attrs,
                 label: None,
-                block: stream.parse()?,
+                block: parser.parse()?,
             })));
         }
 
-        if stream.peek::<Token![if]>() {
-            return ExprIf::parse_from(stream, attrs);
+        if parser.peek::<Token![if]>() {
+            return ExprIf::parse_from(parser, attrs);
         }
 
-        if stream.peek::<Token![while]>() {
-            return Ok(Expr::Block(BlockExpr::While(ExprWhile::parse_from(stream, None, attrs)?)));
+        if parser.peek::<Token![while]>() {
+            return Ok(Expr::Block(BlockExpr::While(ExprWhile::parse_from(parser, None, attrs)?)));
         }
 
-        if stream.peek::<Token![for]>() {
-            return Ok(Expr::Block(BlockExpr::ForLoop(ExprForLoop::parse_from(stream, None, attrs)?)));
+        if parser.peek::<Token![for]>() {
+            return Ok(Expr::Block(BlockExpr::ForLoop(ExprForLoop::parse_from(parser, None, attrs)?)));
         }
 
-        if stream.peek::<Token![loop]>() {
-            return Ok(Expr::Block(BlockExpr::Loop(ExprLoop::parse_from(stream, None, attrs)?)));
+        if parser.peek::<Token![loop]>() {
+            return Ok(Expr::Block(BlockExpr::Loop(ExprLoop::parse_from(parser, None, attrs)?)));
         }
 
-        if stream.peek::<Token![match]>() {
-            return ExprMatch::parse_from(stream, attrs);
+        if parser.peek::<Token![match]>() {
+            return ExprMatch::parse_from(parser, attrs);
         }
 
-        if stream.peek::<Token![unsafe]>() {
-            return Ok(Expr::Block(BlockExpr::Unsafe(ExprUnsafe::parse_from(stream, attrs)?)));
+        if parser.peek::<Token![unsafe]>() {
+            return Ok(Expr::Block(BlockExpr::Unsafe(ExprUnsafe::parse_from(parser, attrs)?)));
         }
 
-        if stream.peek::<Token![const]>() && ExprBrace::is_next(stream) {
-            return Ok(Expr::Block(BlockExpr::Const(ExprConst::parse_from(stream, attrs)?)));
+        if parser.peek::<Token![const]>() && ExprBrace::is_next(parser) {
+            return Ok(Expr::Block(BlockExpr::Const(ExprConst::parse_from(parser, attrs)?)));
         }
 
-        if stream.peek::<Token![async]>() && ExprAsync::is_block(stream) {
-            return Ok(Expr::Block(BlockExpr::Async(ExprAsync::parse_from(stream, attrs)?)));
+        if parser.peek::<Token![async]>() && ExprAsync::is_block(parser) {
+            return Ok(Expr::Block(BlockExpr::Async(ExprAsync::parse_from(parser, attrs)?)));
         }
 
-        if stream.peek::<Token![try]>() && ExprBrace::is_next(stream) {
-            return Ok(Expr::Block(BlockExpr::TryBlock(ExprTryBlock::parse_from(stream, attrs)?)));
+        if parser.peek::<Token![try]>() && ExprBrace::is_next(parser) {
+            return Ok(Expr::Block(BlockExpr::TryBlock(ExprTryBlock::parse_from(parser, attrs)?)));
         }
 
-        if stream.peek::<Token![return]>() {
-            let return_keyword = stream.parse::<Token![return]>()?;
+        if parser.peek::<Token![return]>() {
+            let return_keyword = parser.parse::<Token![return]>()?;
 
             return Ok(Expr::Jump(JumpExpr::Return(ExprReturn {
                 attrs,
                 return_keyword,
-                expr: Expr::parse_if(stream)?,
+                expr: Expr::parse_if(parser)?,
             })));
         }
 
-        if stream.peek::<Token![yield]>() {
-            let yield_keyword = stream.parse::<Token![yield]>()?;
+        if parser.peek::<Token![yield]>() {
+            let yield_keyword = parser.parse::<Token![yield]>()?;
 
             return Ok(Expr::Jump(JumpExpr::Yield(ExprYield {
                 attrs,
                 yield_keyword,
-                expr: Expr::parse_if(stream)?,
+                expr: Expr::parse_if(parser)?,
             })));
         }
 
-        if stream.peek::<Token![break]>() {
-            let break_keyword = stream.parse::<Token![break]>()?;
-            let label = Label::parse_opt_break(stream);
+        if parser.peek::<Token![break]>() {
+            let break_keyword = parser.parse::<Token![break]>()?;
+            let label = Label::parse_opt_break(parser);
 
             return Ok(Expr::Jump(JumpExpr::Break(ExprBreak {
                 attrs,
                 break_keyword,
                 label,
-                expr: Expr::parse_if(stream)?,
+                expr: Expr::parse_if(parser)?,
             })));
         }
 
-        if stream.peek::<Token![continue]>() {
-            let continue_keyword = stream.parse::<Token![continue]>()?;
-            let label = Label::parse_opt_break(stream);
+        if parser.peek::<Token![continue]>() {
+            let continue_keyword = parser.parse::<Token![continue]>()?;
+            let label = Label::parse_opt_break(parser);
 
             return Ok(Expr::Jump(JumpExpr::Continue(ExprContinue {
                 attrs,
@@ -551,11 +551,11 @@ impl PrimaryExpr {
             })));
         }
 
-        if stream.peek::<Token![let]>() {
-            let let_keyword = stream.parse::<Token![let]>()?;
-            let pat = Box::new(stream.parse::<Pattern>()?);
-            let eq = stream.parse::<Token![=]>()?;
-            let expr = Box::new(super::parse_expr(stream, false)?);
+        if parser.peek::<Token![let]>() {
+            let let_keyword = parser.parse::<Token![let]>()?;
+            let pat = Box::new(parser.parse::<Pattern>()?);
+            let eq = parser.parse::<Token![=]>()?;
+            let expr = Box::new(super::parse_expr(parser, false)?);
 
             return Ok(Expr::Primary(Self::Let(ExprLet {
                 attrs,
@@ -566,24 +566,24 @@ impl PrimaryExpr {
             })));
         }
 
-        if ExprClosure::is_start(stream) {
-            return Ok(Expr::Primary(Self::Closure(ExprClosure::parse_from(stream, attrs)?)));
+        if ExprClosure::is_start(parser) {
+            return Ok(Expr::Primary(Self::Closure(ExprClosure::parse_from(parser, attrs)?)));
         }
 
-        if matches!(stream.curr(), Some(tt) if ExprLit::is_literal(tt)) {
+        if matches!(parser.curr(), Some(tt) if ExprLit::is_literal(tt)) {
             return Ok(Expr::Primary(Self::Lit(ExprLit {
                 attrs,
-                lit: stream.parse()?,
+                lit: parser.parse()?,
             })));
         }
 
-        if let Some(mac) = stream.parse_if::<crate::MacroCall>() {
+        if let Some(mac) = parser.parse_if::<crate::MacroCall>() {
             return Ok(Expr::Primary(Self::Macro(ExprMacro { attrs, mac })));
         }
 
         // Qualified path `<T as Trait>::assoc` in expression position.
-        if stream.peek::<Token![<]>() {
-            let (qself, path) = crate::ty::QSelf::parse_qualified(stream)?;
+        if parser.peek::<Token![<]>() {
+            let (qself, path) = crate::ty::QSelf::parse_qualified(parser)?;
 
             return Ok(Expr::Primary(Self::Path(ExprPath {
                 attrs,
@@ -593,14 +593,14 @@ impl PrimaryExpr {
         }
 
         if matches!(
-            stream.curr(),
+            parser.curr(),
             Some(TokenTree::Ident(_) | TokenTree::Keyword(_) | TokenTree::Punct(Punctuation::PathSep(_)))
         ) {
             use crate::Path;
-            let path = stream.parse::<Path>()?;
+            let path = parser.parse::<Path>()?;
 
-            if allow_struct && matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
-                let body = Delimited::parse_brace_with(stream, |inner| {
+            if allow_struct && matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
+                let body = Delimited::parse_brace_with(parser, |inner| {
                     let (fields, rest) = ExprStruct::parse_body(inner)?;
                     Ok(StructBody { fields, rest })
                 })?;

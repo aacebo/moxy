@@ -1,6 +1,6 @@
-use moxy_token::{Token, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, Token, TokenStream};
 
-use crate::{Parser, Parse, Peek, ParseError};
+use crate::{Parse, ParseError, Parser, Peek};
 
 macro_rules! define_leaf {
     ($(
@@ -20,9 +20,7 @@ macro_rules! define_leaf {
                 #[allow(unreachable_code)]
                 fn peek(parser: &Parser) -> bool {
                     $(
-                        if parser.peek::<$($token)?>() {
-                            return true
-                        }
+                        define_leaf!(@peek_arm parser $(=> $token)?);
                     )+
 
                     false
@@ -36,7 +34,7 @@ macro_rules! define_leaf {
                         define_leaf!(@parse_arm parser, Self::$variant $(=> $token)?);
                     )+
 
-                    parser.error(concat!("expected `", stringify!($name), "`")).into()
+                    Err(parser.error(concat!("expected `", stringify!($name), "`")))
                 }
             }
 
@@ -95,6 +93,16 @@ macro_rules! define_leaf {
 
     (@parse_arm $parser:ident, $value:expr) => {
         return Ok($value);
+    };
+
+    (@peek_arm $parser:ident => $token:ty) => {
+        if $parser.peek::<$token>() {
+            return true;
+        }
+    };
+
+    (@peek_arm $parser:ident) => {
+        return true;
     };
 
     // Build the `ToTokens` match by peeling variants into an accumulator, so the

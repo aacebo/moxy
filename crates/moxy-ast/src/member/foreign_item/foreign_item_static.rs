@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Ident, Mutability, Type, Visibility};
 
@@ -19,21 +19,21 @@ pub struct ForeignItemStatic {
 }
 
 impl Parse for ForeignItemStatic {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let at = parser.span();
+        let attrs = parser.parse::<Attributes>()?;
+        let vis = parser.parse::<Visibility>()?;
 
-        if stream.curr().and_then(|t| t.text()) != Some("static") {
+        if parser.curr().and_then(|t| t.text()) != Some("static") {
             return Err(LexError::new(at).message("expected foreign static").into());
         }
 
-        let static_keyword = stream.parse::<Token![static]>()?;
-        let mutability = stream.parse::<Mutability>()?;
-        let ident = stream.parse::<Ident>()?;
-        let colon = stream.parse::<Token![:]>()?;
-        let ty = stream.parse::<Type>()?;
-        let semi = stream.parse_if::<Token![;]>();
+        let static_keyword = parser.parse::<Token![static]>()?;
+        let mutability = parser.parse::<Mutability>()?;
+        let ident = parser.parse::<Ident>()?;
+        let colon = parser.parse::<Token![:]>()?;
+        let ty = parser.parse::<Type>()?;
+        let semi = parser.parse_if::<Token![;]>();
 
         Ok(Self {
             attrs,

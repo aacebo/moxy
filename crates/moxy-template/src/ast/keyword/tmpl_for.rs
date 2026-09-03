@@ -1,7 +1,7 @@
 #![allow(unused)]
 
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, Ident, Parse, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
+use moxy_ast::{Parse, ParseError, Parser};
+use moxy_token::{Delim, Group, Ident, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::Template;
 
@@ -18,14 +18,10 @@ pub struct TmplFor {
 }
 
 impl TmplFor {
-    pub fn parse_after_keyword_for(
-        stream: &mut ParseStream,
-        at_punct: Token![@],
-        for_kw: Token![for],
-    ) -> Result<Self, ParseError> {
+    pub fn parse_after_keyword_for(parser: &Parser, at_punct: Token![@], for_kw: Token![for]) -> Result<Self, ParseError> {
         let span = at_punct.span();
-        let paren_inner = stream.parse_group(Delim::Paren)?;
-        let mut ps = paren_inner.parse();
+        let paren_inner = parser.parse_group(Delim::Paren)?;
+        let ps = Parser::from_tokens(&paren_inner);
         let binding = ps.parse::<Ident>()?;
         let in_keyword = ps.parse::<Token![in]>()?;
         let mut iter = TokenStream::new();
@@ -34,8 +30,8 @@ impl TmplFor {
             iter.extend_one(tt.clone());
         }
 
-        let body_stream = stream.parse_group(Delim::Brace)?;
-        let mut body_ps = body_stream.parse();
+        let body_stream = parser.parse_group(Delim::Brace)?;
+        let body_ps = Parser::from_tokens(&body_stream);
         let body = body_ps.parse::<Template>()?;
 
         Ok(Self {

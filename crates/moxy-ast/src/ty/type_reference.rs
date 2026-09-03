@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::Type;
 use crate::{Lifetime, Mutability};
@@ -16,11 +16,11 @@ pub struct TypeReference {
 }
 
 impl Parse for TypeReference {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let and = stream.parse::<Token![&]>()?;
-        let lifetime = stream.parse::<Option<Lifetime>>()?;
-        let mutability = stream.parse::<Mutability>()?;
-        let elem = Box::new(stream.parse::<Type>()?);
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let and = parser.parse::<Token![&]>()?;
+        let lifetime = parser.parse::<Option<Lifetime>>()?;
+        let mutability = parser.parse::<Mutability>()?;
+        let elem = Box::new(parser.parse::<Type>()?);
 
         Ok(Self {
             and,

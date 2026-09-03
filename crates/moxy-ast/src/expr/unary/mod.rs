@@ -4,11 +4,11 @@ mod expr_reference;
 mod expr_try;
 mod expr_unary;
 
+use crate::{ParseError, Parser};
 pub use expr_cast::*;
 pub use expr_reference::*;
 pub use expr_try::*;
 pub use expr_unary::*;
-use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::binary::ExprRange;
@@ -130,15 +130,15 @@ impl From<ExprTry> for UnaryExpr {
 // Parser
 
 impl UnaryExpr {
-    pub fn parse_from(stream: &mut ParseStream, allow_struct: bool) -> Result<Expr, ParseError> {
+    pub fn parse_from(parser: &Parser, allow_struct: bool) -> Result<Expr, ParseError> {
         // Leading outer attributes apply to whichever expression node we build here.
-        let attrs = stream.parse::<Attributes>()?;
+        let attrs = parser.parse::<Attributes>()?;
 
         // Prefix range: `..b`, `..=b`, `..`.
-        if stream.peek::<Token![..]>() || stream.peek::<Token![..=]>() {
+        if parser.peek::<Token![..]>() || parser.peek::<Token![..=]>() {
             use crate::RangeLimits;
-            let limits = stream.parse::<RangeLimits>()?;
-            let end = super::binary::ExprRange::maybe_end(stream, allow_struct)?;
+            let limits = parser.parse::<RangeLimits>()?;
+            let end = super::binary::ExprRange::maybe_end(parser, allow_struct)?;
             return Ok(Expr::Binary(BinaryExpr::Range(ExprRange {
                 attrs,
                 start: None,
@@ -147,10 +147,10 @@ impl UnaryExpr {
             })));
         }
 
-        if stream.peek::<Token![&]>() {
-            let and_punct = stream.parse::<Token![&]>()?;
-            let mutability = stream.parse::<Mutability>()?;
-            let expr = Box::new(Self::parse_from(stream, allow_struct)?);
+        if parser.peek::<Token![&]>() {
+            let and_punct = parser.parse::<Token![&]>()?;
+            let mutability = parser.parse::<Mutability>()?;
+            let expr = Box::new(Self::parse_from(parser, allow_struct)?);
             return Ok(Expr::Unary(Self::Reference(ExprReference {
                 attrs,
                 and_punct,
@@ -159,13 +159,13 @@ impl UnaryExpr {
             })));
         }
 
-        if ExprUnary::is_prefix(stream) {
-            let op = stream.parse::<UnOp>()?;
-            let expr = Box::new(Self::parse_from(stream, allow_struct)?);
+        if ExprUnary::is_prefix(parser) {
+            let op = parser.parse::<UnOp>()?;
+            let expr = Box::new(Self::parse_from(parser, allow_struct)?);
             return Ok(Expr::Unary(Self::Unary(ExprUnary { attrs, op, expr })));
         }
 
-        let atom = super::primary::PrimaryExpr::parse_from(stream, allow_struct, attrs)?;
-        super::postfix::PostfixExpr::parse_from(stream, atom)
+        let atom = super::primary::PrimaryExpr::parse_from(parser, allow_struct, attrs)?;
+        super::postfix::PostfixExpr::parse_from(parser, atom)
     }
 }

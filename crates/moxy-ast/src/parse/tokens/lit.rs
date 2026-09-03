@@ -1,10 +1,12 @@
-use moxy_token::{Lit, LitBool, LitByte, LitByteStr, LitCStr, LitChar, LitFloat, LitInt, LitStr, LitVerbatim, TokenTree};
+use moxy_token::{
+    Lit, LitBool, LitByte, LitByteStr, LitCStr, LitChar, LitF32, LitF64, LitFloat, LitInt, LitStr, LitVerbatim, TokenTree,
+};
 
 use crate::{Parse, ParseError, Parser, Peek};
 
 impl Peek for Lit {
     fn peek(parser: &Parser) -> bool {
-        let Some(next) = parser.next() else {
+        let Some(next) = parser.curr() else {
             return false;
         };
 
@@ -16,7 +18,7 @@ impl Parse for Lit {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         match parser.advance() {
             Some(TokenTree::Literal(v)) => Ok(v.clone()),
-            _ => parser.error("expected literal").into(),
+            _ => Err(parser.error("expected literal")),
         }
     }
 }
@@ -26,7 +28,7 @@ macro_rules! impl_lit_parse {
         $(
             impl Peek for $ty {
                 fn peek(parser: &Parser) -> bool {
-                    let Some(next) = parser.next() else {
+                    let Some(next) = parser.curr() else {
                         return false;
                     };
 
@@ -38,9 +40,7 @@ macro_rules! impl_lit_parse {
                 fn parse(parser: &Parser) -> Result<Self, ParseError> {
                     match parser.parse::<Lit>()? {
                         Lit::$variant(v) => Ok(v),
-                        _ => parser
-                            .error(concat!("expected ", $name, " literal"))
-                            .into(),
+                        _ => Err(parser.error(concat!("expected ", $name, " literal"))),
                     }
                 }
             }
@@ -58,4 +58,34 @@ impl_lit_parse! {
     LitByte     => Byte,     "byte",
     LitBool     => Bool,     "boolean",
     LitVerbatim => Verbatim, "verbatim",
+}
+
+impl Peek for LitF32 {
+    fn peek(parser: &Parser) -> bool {
+        matches!(parser.curr(), Some(TokenTree::Literal(Lit::Float(LitFloat::F32(_)))))
+    }
+}
+
+impl Parse for LitF32 {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse::<Lit>()? {
+            Lit::Float(LitFloat::F32(value)) => Ok(value),
+            _ => Err(parser.error("expected `f32` literal")),
+        }
+    }
+}
+
+impl Peek for LitF64 {
+    fn peek(parser: &Parser) -> bool {
+        matches!(parser.curr(), Some(TokenTree::Literal(Lit::Float(LitFloat::F64(_)))))
+    }
+}
+
+impl Parse for LitF64 {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse::<Lit>()? {
+            Lit::Float(LitFloat::F64(value)) => Ok(value),
+            _ => Err(parser.error("expected `f64` literal")),
+        }
+    }
 }

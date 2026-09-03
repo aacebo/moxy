@@ -1,5 +1,5 @@
+use crate::{ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::ExprBrace;
@@ -22,19 +22,19 @@ impl Spanner for ExprAsync {
 }
 
 impl ExprAsync {
-    pub fn is_block(stream: &ParseStream) -> bool {
-        if ExprBrace::is_next(stream) {
+    pub fn is_block(parser: &Parser) -> bool {
+        if ExprBrace::is_next(parser) {
             return true;
         }
 
-        matches!(stream.nth(1), Some(tt) if tt.text() == Some("move"))
-            && matches!(stream.nth(2), Some(moxy_token::TokenTree::Group(g)) if g.delim() == moxy_token::Delim::Brace)
+        matches!(parser.nth(1), Some(tt) if tt.text() == Some("move"))
+            && matches!(parser.nth(2), Some(moxy_token::TokenTree::Group(g)) if g.delim() == moxy_token::Delim::Brace)
     }
 
-    pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Self, ParseError> {
-        let async_keyword = stream.parse::<Token![async]>()?;
-        let move_keyword = stream.parse_if::<Token![move]>();
-        let block = stream.parse::<StmtBlock>()?;
+    pub fn parse_from(parser: &Parser, attrs: Attributes) -> Result<Self, ParseError> {
+        let async_keyword = parser.parse::<Token![async]>()?;
+        let move_keyword = parser.parse_if::<Token![move]>();
+        let block = parser.parse::<StmtBlock>()?;
 
         Ok(Self {
             attrs,

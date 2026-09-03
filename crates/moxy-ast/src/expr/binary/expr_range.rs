@@ -1,4 +1,4 @@
-use moxy_token::parser::{ParseError, ParseStream};
+use crate::{ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, Token, TokenStream};
 
 use crate::*;
@@ -27,21 +27,21 @@ impl Spanner for ExprRange {
 
 impl ExprRange {
     /// Parse an optional range end — `None` if the next token cannot begin an expression.
-    pub fn maybe_end(stream: &mut ParseStream, allow_struct: bool) -> Result<Option<Box<Expr>>, ParseError> {
+    pub fn maybe_end(parser: &Parser, allow_struct: bool) -> Result<Option<Box<Expr>>, ParseError> {
         use crate::precedence::Precedence;
 
-        if stream.is_empty() || stream.peek::<Token![;]>() || stream.peek::<Token![,]>() {
+        if parser.is_empty() || parser.peek::<Token![;]>() || parser.peek::<Token![,]>() {
             return Ok(None);
         }
 
-        let mut lookahead = stream.lookahead();
+        let lookahead = parser.lookahead();
 
-        if expr::unary::UnaryExpr::parse_from(&mut lookahead, allow_struct).is_err() {
+        if expr::unary::UnaryExpr::parse_from(&lookahead, allow_struct).is_err() {
             return Ok(None);
         }
 
-        let e = expr::unary::UnaryExpr::parse_from(stream, allow_struct)?;
-        let e = super::BinaryExpr::parse_from(stream, e, Precedence::Range.next(), allow_struct)?;
+        let e = expr::unary::UnaryExpr::parse_from(parser, allow_struct)?;
+        let e = super::BinaryExpr::parse_from(parser, e, Precedence::Range.next(), allow_struct)?;
         Ok(Some(Box::new(e)))
     }
 

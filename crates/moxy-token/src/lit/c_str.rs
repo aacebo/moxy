@@ -1,7 +1,6 @@
 use crate::lex::{Cursor, LexError, Scan};
 use crate::lit::Lit;
-use crate::parser::{ParseError, ParseStream};
-use crate::{Parse, Span, Spanner};
+use crate::{Span, Spanner};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(into = "String"))]
@@ -78,17 +77,6 @@ impl Scan for LitCStr {
         match repr.strip_prefix('c').and_then(decode_string_body) {
             Some(value) => Ok((end, Self::from_parts(value.into_bytes(), repr, span))),
             None => cursor.error().into(),
-        }
-    }
-}
-
-impl Parse for LitCStr {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-
-        match stream.parse::<Lit>()? {
-            Lit::CStr(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected C string literal").into()),
         }
     }
 }

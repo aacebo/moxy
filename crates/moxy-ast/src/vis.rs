@@ -1,6 +1,6 @@
-use moxy_token::{Token, Delim, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, Token, TokenStream};
 
-use crate::{Parse, Peek, ParseError, Parser, Delimited, Path};
+use crate::{Delimited, Parse, ParseError, Parser, Path};
 
 /// The visibility of an item (`pub`, `pub`, `pub(in path)`, or inherited).
 #[derive(Debug, Clone, PartialEq, Eq)]

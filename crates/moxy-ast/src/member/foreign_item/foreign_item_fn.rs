@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Signature, Visibility};
 
@@ -15,17 +15,17 @@ pub struct ForeignItemFn {
 }
 
 impl Parse for ForeignItemFn {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let at = parser.span();
+        let attrs = parser.parse::<Attributes>()?;
+        let vis = parser.parse::<Visibility>()?;
 
-        if !crate::sig::Signature::is_start(stream) {
+        if !crate::sig::Signature::is_start(parser) {
             return Err(LexError::new(at).message("expected foreign fn").into());
         }
 
-        let sig = stream.parse::<Signature>()?;
-        let semi = stream.parse_if::<Token![;]>();
+        let sig = parser.parse::<Signature>()?;
+        let semi = parser.parse_if::<Token![;]>();
         Ok(Self { attrs, vis, sig, semi })
     }
 }

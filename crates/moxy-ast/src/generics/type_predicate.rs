@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::TypeBound;
 use crate::{BoundLifetimes, Punctuated, Type};
@@ -16,11 +16,11 @@ pub struct TypePredicate {
 }
 
 impl Parse for TypePredicate {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let lifetimes = stream.parse_if::<BoundLifetimes>();
-        let bounded_ty = stream.parse::<Type>()?;
-        let colon_punct = stream.parse::<Token![:]>()?;
-        let bounds = TypeBound::parse_bounds(stream)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let lifetimes = parser.parse_if::<BoundLifetimes>();
+        let bounded_ty = parser.parse::<Type>()?;
+        let colon_punct = parser.parse::<Token![:]>()?;
+        let bounds = TypeBound::parse_bounds(parser)?;
 
         Ok(Self {
             lifetimes,

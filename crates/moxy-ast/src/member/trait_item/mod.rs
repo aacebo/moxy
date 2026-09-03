@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 mod trait_item_const;
 mod trait_item_fn;
@@ -85,20 +85,20 @@ impl From<TraitItemConst> for TraitItem {
 }
 
 impl Parse for TraitItem {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if let Some(item) = stream.parse_if::<TraitItemConst>() {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if let Some(item) = parser.parse_if::<TraitItemConst>() {
             return Ok(Self::Const(Box::new(item)));
         }
 
-        if let Some(item) = stream.parse_if::<TraitItemType>() {
+        if let Some(item) = parser.parse_if::<TraitItemType>() {
             return Ok(Self::Type(item));
         }
 
-        if let Some(item) = stream.parse_if::<TraitItemFn>() {
+        if let Some(item) = parser.parse_if::<TraitItemFn>() {
             return Ok(Self::Fn(item));
         }
 
-        Ok(Self::Macro(stream.parse()?))
+        Ok(Self::Macro(parser.parse()?))
     }
 }
 

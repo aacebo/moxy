@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Parse, Span, Spanner, ToTokenStream, ToTokens, TokenStream, TokenTree};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Delim, Span, Spanner, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 use super::PathArguments;
 use crate::Ident;
@@ -19,16 +19,16 @@ impl PathSegment {
 }
 
 impl Parse for PathSegment {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let ident = Ident::parse_any(stream)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let ident = parser.parse_ident_any()?;
 
         // `Fn`-family segments take parenthesized args (`Fn(A) -> B`); this only
         // applies to those trait names, so it never swallows expression calls.
         let args =
-            if Self::is_fn_family(&ident) && matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Paren) {
-                PathArguments::parse_parenthesized(stream)?
+            if Self::is_fn_family(&ident) && matches!(parser.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Paren) {
+                PathArguments::parse_parenthesized(parser)?
             } else {
-                stream.parse::<PathArguments>()?
+                parser.parse::<PathArguments>()?
             };
 
         Ok(Self { ident, args })

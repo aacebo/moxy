@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Expr, MacroCall};
 
@@ -18,10 +18,10 @@ impl Spanner for ExprMacro {
 }
 
 impl Parse for ExprMacro {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         use crate::PrimaryExpr;
-        let at = stream.span();
-        match stream.parse::<Expr>()? {
+        let at = parser.span();
+        match parser.parse::<Expr>()? {
             Expr::Primary(PrimaryExpr::Macro(v)) => Ok(v),
             _ => Err(LexError::new(at).message("expected macro expression").into()),
         }

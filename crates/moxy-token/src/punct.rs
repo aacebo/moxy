@@ -1,7 +1,6 @@
 use super::ToTokens;
 use super::lex::{Cursor, LexError, Scan};
-use crate::parser::{ParseError, ParseStream};
-use crate::{Parse, Span, Spanner, TokenStream, TokenTree};
+use crate::{Span, Spanner, TokenStream, TokenTree};
 
 macro_rules! define_punct {
     ($($name:ident[$is_method:ident, $as_method:ident] $($split:ident)? => $text:literal),+ $(,)?) => {
@@ -135,8 +134,6 @@ macro_rules! define_punct {
                 }
             }
 
-            define_punct!(@parse $name, $text $(, $split)?);
-
             impl ToTokens for $name {
                 fn to_tokens(&self, tokens: &mut TokenStream) {
                     tokens.extend_one(TokenTree::Punct(Punctuation::$name(*self)));
@@ -195,45 +192,6 @@ macro_rules! define_punct {
         }
     };
 
-    // Splitting parse: accept a glued punct (`>>`, `>=`, ...) by peeling off the
-    // first char and leaving the remainder pending. Used by `Gt`/`Lt` so nested
-    // generics like `Vec<Box<T>>` parse without the lexer pre-splitting `>>`.
-    (@parse $name:ident, $text:literal, split) => {
-        impl Parse for $name {
-            fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-                let at = stream.span();
-
-                match stream.eat_punct_head($text) {
-                    Some(span) => Ok(Self::new(span)),
-                    None => Err(LexError::new(at)
-                        .message(concat!("expected `", $text, "`"))
-                        .into()),
-                }
-            }
-        }
-    };
-
-    // Exact-match parse: consume the next token only if it is exactly this punct.
-    // Reads via `curr` so a pending split half (e.g. the `>=` left after a `>`
-    // was peeled from `>>=`) is matched and consumed correctly.
-    (@parse $name:ident, $text:literal) => {
-        impl Parse for $name {
-            fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-                let at = stream.span();
-
-                match stream.curr() {
-                    Some(TokenTree::Punct(Punctuation::$name(op))) => {
-                        let span = op.span();
-                        stream.advance();
-                        Ok(Self::new(span))
-                    }
-                    _ => Err(LexError::new(at)
-                        .message(concat!("expected `", $text, "`"))
-                        .into()),
-                }
-            }
-        }
-    };
 }
 
 define_punct! {

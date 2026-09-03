@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Group, LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Group, LexError, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Attributes, Ident};
 
@@ -16,19 +16,19 @@ pub struct ItemMacroRules {
 }
 
 impl Parse for ItemMacroRules {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let macro_rules_keyword = stream.parse::<Token![macro_rules]>()?;
-        let not_punct = stream.parse::<Token![!]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let body = match stream.curr() {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let macro_rules_keyword = parser.parse::<Token![macro_rules]>()?;
+        let not_punct = parser.parse::<Token![!]>()?;
+        let ident = parser.parse::<Ident>()?;
+        let body = match parser.curr() {
             Some(TokenTree::Group(g)) => {
                 let g = g.clone();
-                stream.advance();
+                parser.advance();
                 g
             }
             _ => {
-                return Err(LexError::new(stream.span()).message("expected macro body").into());
+                return Err(LexError::new(parser.span()).message("expected macro body").into());
             }
         };
 

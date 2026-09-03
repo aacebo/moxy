@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Expr, Generics, Ident, Type};
 
@@ -19,21 +19,21 @@ pub struct TraitItemConst {
 }
 
 impl Parse for TraitItemConst {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse()?;
-        let const_keyword = stream.parse()?;
-        let ident = stream.parse()?;
-        let generics = stream.parse()?;
-        let colon = stream.parse()?;
-        let ty = stream.parse()?;
-        let default = if stream.peek::<Token![=]>() {
-            let eq = stream.parse()?;
-            Some((eq, stream.parse()?))
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let const_keyword = parser.parse()?;
+        let ident = parser.parse()?;
+        let generics = parser.parse()?;
+        let colon = parser.parse()?;
+        let ty = parser.parse()?;
+        let default = if parser.peek::<Token![=]>() {
+            let eq = parser.parse()?;
+            Some((eq, parser.parse()?))
         } else {
             None
         };
 
-        let semi = stream.parse()?;
+        let semi = parser.parse()?;
 
         Ok(Self {
             attrs,

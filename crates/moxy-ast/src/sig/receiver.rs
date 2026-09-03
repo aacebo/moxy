@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Lifetime, Mutability};
 
@@ -16,17 +16,17 @@ pub struct Receiver {
 }
 
 impl Parse for Receiver {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let reference = stream.parse_if::<Token![&]>();
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let reference = parser.parse_if::<Token![&]>();
         let lifetime = if reference.is_some() {
-            stream.parse_if::<Lifetime>()
+            parser.parse_if::<Lifetime>()
         } else {
             None
         };
 
-        let mutability = stream.parse::<Mutability>()?;
-        let self_keyword = stream.parse::<Token![self]>()?;
+        let mutability = parser.parse::<Mutability>()?;
+        let self_keyword = parser.parse::<Token![self]>()?;
 
         Ok(Self {
             attrs,

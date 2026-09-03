@@ -1,5 +1,5 @@
+use crate::{ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::Type;
@@ -21,9 +21,9 @@ impl QSelf {
     /// Parse a qualified path `<T as Trait>::a::b`, returning the `QSelf` plus the
     /// full merged path (trait segments followed by the trailing segments). Shared
     /// by `TypePath` and expression-path parsing.
-    pub fn parse_qualified(stream: &mut ParseStream) -> Result<(Self, Path), ParseError> {
-        let (qself, trait_path) = Self::parse_with_trait(stream)?;
-        let rest = stream.parse::<Path>()?;
+    pub fn parse_qualified(parser: &Parser) -> Result<(Self, Path), ParseError> {
+        let (qself, trait_path) = Self::parse_with_trait(parser)?;
+        let rest = parser.parse::<Path>()?;
         let path = if let Some(mut p) = trait_path {
             p.extend(rest);
             p
@@ -36,17 +36,17 @@ impl QSelf {
 
     /// Parse `< Type ( as Path )? >`, returning the qself plus the trait path
     /// segments (if any) that the enclosing `TypePath` must prepend to its path.
-    pub fn parse_with_trait(stream: &mut ParseStream) -> Result<(Self, Option<Path>), ParseError> {
-        let lt = stream.parse::<Token![<]>()?;
-        let ty = Box::new(stream.parse::<Type>()?);
-        let (as_keyword, trait_path) = if stream.peek::<Token![as]>() {
-            let as_keyword = stream.parse::<Token![as]>()?;
-            (Some(as_keyword), Some(stream.parse::<Path>()?))
+    pub fn parse_with_trait(parser: &Parser) -> Result<(Self, Option<Path>), ParseError> {
+        let lt = parser.parse::<Token![<]>()?;
+        let ty = Box::new(parser.parse::<Type>()?);
+        let (as_keyword, trait_path) = if parser.peek::<Token![as]>() {
+            let as_keyword = parser.parse::<Token![as]>()?;
+            (Some(as_keyword), Some(parser.parse::<Path>()?))
         } else {
             (None, None)
         };
 
-        let gt = stream.parse::<Token![>]>()?;
+        let gt = parser.parse::<Token![>]>()?;
         let position = trait_path.as_ref().map(|p| p.len()).unwrap_or(0);
 
         Ok((

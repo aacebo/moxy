@@ -1,5 +1,5 @@
+use crate::{ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -20,9 +20,9 @@ impl Spanner for ExprConst {
 }
 
 impl ExprConst {
-    pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Self, ParseError> {
-        let const_keyword = stream.parse::<Token![const]>()?;
-        let block = stream.parse::<StmtBlock>()?;
+    pub fn parse_from(parser: &Parser, attrs: Attributes) -> Result<Self, ParseError> {
+        let const_keyword = parser.parse::<Token![const]>()?;
+        let block = parser.parse::<StmtBlock>()?;
 
         Ok(Self {
             attrs,

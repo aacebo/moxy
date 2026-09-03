@@ -17,7 +17,6 @@ mod ident;
 pub mod keyword;
 pub mod lex;
 mod lit;
-pub mod parser;
 pub mod punct;
 pub mod source;
 mod spacing;
@@ -37,8 +36,6 @@ pub use keyword::*;
 pub use lex::{LexError, Scan};
 #[doc(inline)]
 pub use lit::*;
-#[doc(inline)]
-pub use parser::Parse;
 #[doc(inline)]
 pub use punct::*;
 #[doc(inline)]

@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::{ConstParam, LifetimeParam, TypeParam};
 
@@ -68,22 +68,22 @@ impl Spanner for GenericParam {
 }
 
 impl Parse for GenericParam {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if matches!(
-            stream.curr(),
+            parser.curr(),
             Some(moxy_token::TokenTree::Punct(moxy_token::Punctuation::Quote(_)))
         ) {
-            return Ok(Self::Lifetime(stream.parse()?));
+            return Ok(Self::Lifetime(parser.parse()?));
         }
 
-        let mut fork = stream.lookahead();
+        let fork = parser.lookahead();
         fork.skip_while::<crate::Attribute>();
 
         if fork.peek::<Token![const]>() {
-            return Ok(Self::Const(Box::new(stream.parse()?)));
+            return Ok(Self::Const(Box::new(parser.parse()?)));
         }
 
-        Ok(Self::Type(Box::new(stream.parse()?)))
+        Ok(Self::Type(Box::new(parser.parse()?)))
     }
 }
 

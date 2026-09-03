@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Expr, Generics, Ident, Type, Visibility};
 
@@ -21,17 +21,17 @@ pub struct ItemConst {
 }
 
 impl Parse for ItemConst {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let const_keyword = stream.parse::<Token![const]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let generics = stream.parse::<Generics>()?;
-        let colon_punct = stream.parse::<Token![:]>()?;
-        let ty = stream.parse::<Type>()?;
-        let eq_punct = stream.parse::<Token![=]>()?;
-        let expr = stream.parse::<Expr>()?;
-        let semi_punct = stream.parse::<Token![;]>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let vis = parser.parse::<Visibility>()?;
+        let const_keyword = parser.parse::<Token![const]>()?;
+        let ident = parser.parse::<Ident>()?;
+        let generics = parser.parse::<Generics>()?;
+        let colon_punct = parser.parse::<Token![:]>()?;
+        let ty = parser.parse::<Type>()?;
+        let eq_punct = parser.parse::<Token![=]>()?;
+        let expr = parser.parse::<Expr>()?;
+        let semi_punct = parser.parse::<Token![;]>()?;
 
         Ok(Self {
             attrs,

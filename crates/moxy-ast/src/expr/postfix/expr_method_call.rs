@@ -1,5 +1,5 @@
+use crate::{ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -24,8 +24,8 @@ impl Spanner for ExprMethodCall {
 
 impl ExprMethodCall {
     /// Parse an optional turbofish `::<...>` (method-call generic args).
-    pub fn parse_turbofish(stream: &mut ParseStream) -> Result<Option<AngleArguments>, ParseError> {
-        Ok(stream.parse_if())
+    pub fn parse_turbofish(parser: &Parser) -> Result<Option<AngleArguments>, ParseError> {
+        Ok(parser.parse_if())
     }
 
     pub fn into_postfix_expr(self) -> super::PostfixExpr {

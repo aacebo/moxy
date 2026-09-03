@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, Ident, Parse, Span, TokenStream, TokenTree};
+use moxy_ast::{Parse, ParseError, Parser};
+use moxy_token::{Delim, Group, Ident, Span, TokenStream, TokenTree};
 
 #[doc = "A parsed `paste!` body: a token tree where each `{{ ... }}` marker is collapsed to one identifier."]
 #[derive(Debug, Clone)]
@@ -15,9 +15,9 @@ enum PasteNode {
 }
 
 impl Parse for Paste {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            nodes: parse_nodes(stream)?,
+            nodes: parse_nodes(parser)?,
         })
     }
 }
@@ -28,7 +28,7 @@ impl Paste {
 
         for node in &self.nodes {
             match node.expand() {
-                Ok(stream) => out.extend(stream),
+                Ok(parser) => out.extend(parser),
                 Err(e) => return e.to_compile_error(),
             }
         }
@@ -37,25 +37,26 @@ impl Paste {
     }
 }
 
-fn parse_nodes(stream: &mut ParseStream) -> Result<Vec<PasteNode>, ParseError> {
+fn parse_nodes(parser: &Parser) -> Result<Vec<PasteNode>, ParseError> {
     let mut nodes = Vec::new();
 
-    while let Some(tt) = stream.curr() {
+    while let Some(tt) = parser.curr() {
         match tt {
             TokenTree::Group(g) if is_marker(g) => {
                 let span = g.span().into();
-                let outer = stream.parse_group(Delim::Brace)?;
-                let mut outer_ps = outer.parse();
+                let outer = parser.parse_group(Delim::Brace)?;
+                let outer_ps = Parser::from_tokens(&outer);
                 let inner = outer_ps.parse_group(Delim::Brace)?;
                 nodes.push(PasteNode::Splice(span, inner));
             }
             TokenTree::Group(g) => {
                 let delim = g.delim();
                 let body = g.stream();
-                stream.advance();
-                nodes.push(PasteNode::Group(delim, parse_nodes(&mut body.parse())?));
+                parser.advance();
+                let parser = Parser::from_tokens(&body);
+                nodes.push(PasteNode::Group(delim, parse_nodes(&parser)?));
             }
-            _ => nodes.push(PasteNode::Verbatim(stream.advance().unwrap().clone())),
+            _ => nodes.push(PasteNode::Verbatim(parser.advance().unwrap().clone())),
         }
     }
 

@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::Lifetime;
 
@@ -13,9 +13,9 @@ pub struct Label {
 }
 
 impl Parse for Label {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let name = stream.parse::<Lifetime>()?;
-        let colon = stream.parse::<Token![:]>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let name = parser.parse::<Lifetime>()?;
+        let colon = parser.parse::<Token![:]>()?;
         Ok(Self { name, colon })
     }
 }
@@ -34,10 +34,10 @@ impl ToTokens for Label {
 }
 
 impl Label {
-    /// Returns `true` when the stream is positioned at a lifetime (`'a`) directly
+    /// Returns `true` when the parser is positioned at a lifetime (`'a`) directly
     /// followed by `:`, which signals a loop/block label.
-    pub fn is_prefix(stream: &mut ParseStream) -> bool {
-        matches!(stream.curr(), Some(TokenTree::Punct(Punctuation::Quote(_))))
-            && matches!(stream.nth(2), Some(TokenTree::Punct(Punctuation::Colon(_))))
+    pub fn is_prefix(parser: &Parser) -> bool {
+        matches!(parser.curr(), Some(TokenTree::Punct(Punctuation::Quote(_))))
+            && matches!(parser.nth(2), Some(TokenTree::Punct(Punctuation::Colon(_))))
     }
 }

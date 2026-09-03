@@ -14,7 +14,7 @@ use moxy_token::span::DelimSpan;
 #[doc(inline)]
 pub use span::*;
 
-use moxy_token::parser::ParseError;
+use moxy_ast::ParseError;
 use moxy_token::{Delim, Group, Ident, Lit, Punctuation, Span, ToTokenStream, ToTokens, TokenStream};
 
 /// Build a note-level [`Diagnostic`].

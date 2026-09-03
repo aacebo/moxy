@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Punctuated, TypeBound};
 
@@ -13,9 +13,9 @@ pub struct TypeImplTrait {
 }
 
 impl Parse for TypeImplTrait {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let impl_keyword = stream.parse::<Token![impl]>()?;
-        let bounds = crate::TypeBound::parse_bounds(stream)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let impl_keyword = parser.parse::<Token![impl]>()?;
+        let bounds = crate::TypeBound::parse_bounds(parser)?;
         Ok(Self { impl_keyword, bounds })
     }
 }

@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Delimited, Expr, Fields, Generics, Ident, Punctuated, Visibility};
 
@@ -17,13 +17,13 @@ pub struct ItemEnum {
 }
 
 impl Parse for ItemEnum {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let enum_keyword = stream.parse::<Token![enum]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let generics = stream.parse::<Generics>()?;
-        let variants = Delimited::parse_brace_with(stream, Punctuated::parse_terminated)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let vis = parser.parse::<Visibility>()?;
+        let enum_keyword = parser.parse::<Token![enum]>()?;
+        let ident = parser.parse::<Ident>()?;
+        let generics = parser.parse::<Generics>()?;
+        let variants = Delimited::parse_brace_with(parser, Punctuated::parse_terminated)?;
 
         Ok(Self {
             attrs,
@@ -76,13 +76,13 @@ pub struct Variant {
 }
 
 impl Parse for Variant {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let ident = stream.parse::<Ident>()?;
-        let fields = stream.parse::<Fields>()?;
-        let (eq_punct, discriminant) = if stream.peek::<Token![=]>() {
-            let eq_punct = stream.parse::<Token![=]>()?;
-            let discriminant = stream.parse::<Expr>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let ident = parser.parse::<Ident>()?;
+        let fields = parser.parse::<Fields>()?;
+        let (eq_punct, discriminant) = if parser.peek::<Token![=]>() {
+            let eq_punct = parser.parse::<Token![=]>()?;
+            let discriminant = parser.parse::<Expr>()?;
             (Some(eq_punct), Some(discriminant))
         } else {
             (None, None)

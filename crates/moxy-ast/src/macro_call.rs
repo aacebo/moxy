@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, LexError, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::Path;
 
@@ -14,9 +14,9 @@ pub struct MacroCall {
 }
 
 impl MacroCall {
-    pub fn parse_semi(stream: &mut ParseStream) -> Result<(Self, Option<Token![;]>), ParseError> {
-        let mac = stream.parse::<Self>()?;
-        let semi = stream.parse_if::<Token![;]>();
+    pub fn parse_semi(parser: &Parser) -> Result<(Self, Option<Token![;]>), ParseError> {
+        let mac = parser.parse::<Self>()?;
+        let semi = parser.parse_if::<Token![;]>();
         Ok((mac, semi))
     }
 
@@ -25,24 +25,24 @@ impl MacroCall {
         self.body.delim()
     }
 
-    /// The token stream inside the macro body delimiters.
+    /// The token parser inside the macro body delimiters.
     pub fn tokens(&self) -> TokenStream {
         self.body.stream()
     }
 }
 
 impl Parse for MacroCall {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let path = stream.parse::<Path>()?;
-        let bang = stream.parse::<Token![!]>()?;
-        let body = match stream.curr() {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let path = parser.parse::<Path>()?;
+        let bang = parser.parse::<Token![!]>()?;
+        let body = match parser.curr() {
             Some(TokenTree::Group(g)) => {
                 let g = g.clone();
-                stream.advance();
+                parser.advance();
                 g
             }
             _ => {
-                return Err(LexError::new(stream.span()).message("expected macro delimiter").into());
+                return Err(LexError::new(parser.span()).message("expected macro delimiter").into());
             }
         };
 

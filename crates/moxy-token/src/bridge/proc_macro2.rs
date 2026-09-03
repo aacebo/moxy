@@ -1,14 +1,4 @@
-use crate::parser::ParseError;
 use crate::{Delim, Group, Ident, Keyword, Lit, Spacing, Span, ToTokens, TokenStream, TokenTree};
-
-// --- LexError ---
-
-impl From<proc_macro2::LexError> for ParseError {
-    fn from(value: proc_macro2::LexError) -> Self {
-        let span = Span::Fallback(value.span().into());
-        Self::new(span, value)
-    }
-}
 
 // --- Span ---
 

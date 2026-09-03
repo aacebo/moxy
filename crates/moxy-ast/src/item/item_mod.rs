@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use super::Item;
 use crate::{Attributes, Delimited, Ident, Unsafety, Visibility};
@@ -19,17 +19,17 @@ pub struct ItemMod {
 }
 
 impl Parse for ItemMod {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let unsafety = stream.parse_if::<Unsafety>().unwrap_or(Unsafety::Safe);
-        let mod_keyword = stream.parse::<Token![mod]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let (content, semi_punct) = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
-            let brace = Delimited::<Vec<Item>>::parse_brace(stream)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let vis = parser.parse::<Visibility>()?;
+        let unsafety = parser.parse_if::<Unsafety>().unwrap_or(Unsafety::Safe);
+        let mod_keyword = parser.parse::<Token![mod]>()?;
+        let ident = parser.parse::<Ident>()?;
+        let (content, semi_punct) = if matches!(parser.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
+            let brace = Delimited::<Vec<Item>>::parse_brace(parser)?;
             (Some(brace), None)
         } else {
-            let semi_punct = stream.parse::<Token![;]>()?;
+            let semi_punct = parser.parse::<Token![;]>()?;
             (None, Some(semi_punct))
         };
 

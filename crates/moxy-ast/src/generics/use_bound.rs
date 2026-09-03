@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Lifetime, Punctuated};
 
@@ -15,12 +15,12 @@ pub struct UseBound {
 }
 
 impl Parse for UseBound {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            use_keyword: stream.parse()?,
-            lt_punct: stream.parse()?,
-            lifetimes: Punctuated::parse_separated_nonempty(stream)?,
-            gt_punct: stream.parse()?,
+            use_keyword: parser.parse()?,
+            lt_punct: parser.parse()?,
+            lifetimes: Punctuated::parse_separated_nonempty(parser)?,
+            gt_punct: parser.parse()?,
         })
     }
 }

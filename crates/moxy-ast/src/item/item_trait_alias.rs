@@ -1,6 +1,6 @@
+use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Generics, Ident, Punctuated, TypeBound, Unsafety, Visibility};
 
@@ -19,22 +19,22 @@ pub struct ItemTraitAlias {
 }
 
 impl Parse for ItemTraitAlias {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let _unsafety = stream.parse::<Unsafety>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let vis = parser.parse::<Visibility>()?;
+        let _unsafety = parser.parse::<Unsafety>()?;
 
         // skip optional `auto`
-        if stream.peek::<Token![auto]>() {
-            let _ = stream.parse::<Token![auto]>()?;
+        if parser.peek::<Token![auto]>() {
+            let _ = parser.parse::<Token![auto]>()?;
         }
 
-        let trait_keyword = stream.parse::<Token![trait]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let generics = stream.parse::<Generics>()?;
-        let eq_punct = stream.parse::<Token![=]>()?;
-        let bounds = crate::TypeBound::parse_bounds(stream)?;
-        let semi_punct = stream.parse::<Token![;]>()?;
+        let trait_keyword = parser.parse::<Token![trait]>()?;
+        let ident = parser.parse::<Ident>()?;
+        let generics = parser.parse::<Generics>()?;
+        let eq_punct = parser.parse::<Token![=]>()?;
+        let bounds = crate::TypeBound::parse_bounds(parser)?;
+        let semi_punct = parser.parse::<Token![;]>()?;
 
         Ok(Self {
             attrs,

@@ -40,4 +40,8 @@ pub use moxy_token as token;
 
 #[cfg(feature = "token")]
 #[doc(inline)]
-pub use moxy_token::{Token, parse, parse_files};
+pub use moxy_token::Token;
+
+#[cfg(feature = "ast")]
+#[doc(inline)]
+pub use moxy_ast::{parse, parse_files};

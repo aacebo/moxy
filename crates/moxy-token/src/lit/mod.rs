@@ -1,6 +1,5 @@
 use crate::lex::{Cursor, LexError, Scan};
-use crate::parser::{ParseError, ParseStream};
-use crate::{Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use crate::{Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 pub mod float;
 pub mod int;
@@ -262,14 +261,5 @@ impl Scan for Lit {
 impl ToTokens for Lit {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         tokens.extend_one(TokenTree::Literal(self.clone()));
-    }
-}
-
-impl Parse for Lit {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        match stream.advance() {
-            Some(TokenTree::Literal(v)) => Ok(v.clone()),
-            _ => Err(LexError::new(stream.span()).message("expected Literal").into()),
-        }
     }
 }

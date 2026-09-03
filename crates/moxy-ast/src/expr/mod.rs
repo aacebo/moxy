@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser, Peek};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 pub mod binary;
 pub mod block;
@@ -27,6 +27,12 @@ pub enum Expr {
     Primary(PrimaryExpr),
     Infer,
     Verbatim(TokenStream),
+}
+
+impl Peek for Expr {
+    fn peek(parser: &Parser) -> bool {
+        parser.parse::<Self>().is_ok()
+    }
 }
 
 impl Expr {
@@ -397,8 +403,8 @@ impl From<ExprMacro> for Expr {
 }
 
 impl Parse for Expr {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        parse_expr(stream, true)
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        parse_expr(parser, true)
     }
 }
 
@@ -419,8 +425,8 @@ impl ToTokens for Expr {
 
 // Parser
 
-pub fn parse_expr(stream: &mut ParseStream, allow_struct: bool) -> Result<Expr, ParseError> {
+pub fn parse_expr(parser: &Parser, allow_struct: bool) -> Result<Expr, ParseError> {
     use crate::precedence::Precedence;
-    let lhs = unary::UnaryExpr::parse_from(stream, allow_struct)?;
-    binary::BinaryExpr::parse_from(stream, lhs, Precedence::Min, allow_struct)
+    let lhs = unary::UnaryExpr::parse_from(parser, allow_struct)?;
+    binary::BinaryExpr::parse_from(parser, lhs, Precedence::Min, allow_struct)
 }
