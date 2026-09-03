@@ -8,12 +8,12 @@ use super::LexError;
 #[derive(Copy, Clone)]
 pub struct Cursor<'a> {
     rest: &'a str,
-    off: u32,
+    offset: u32,
 }
 
 impl<'a> Cursor<'a> {
     pub fn new(src: &'a str, offset: u32) -> Self {
-        Self { rest: src, off: offset }
+        Self { rest: src, offset }
     }
 
     pub fn rest(&self) -> &'a str {
@@ -21,7 +21,7 @@ impl<'a> Cursor<'a> {
     }
 
     pub fn offset(&self) -> u32 {
-        self.off
+        self.offset
     }
 
     pub fn is_empty(&self) -> bool {
@@ -37,12 +37,18 @@ impl<'a> Cursor<'a> {
     }
 
     pub fn span(&self) -> Span {
-        fallback::Span::new(self.off, self.off + 1).into()
+        fallback::Span::new(self.offset, self.offset + 1).into()
     }
 
     /// Create a fallback::Span from this cursor to another.
     pub fn span_to(&self, end: &Cursor<'_>) -> Span {
-        fallback::Span::new(self.off, end.off).into()
+        fallback::Span::new(self.offset, end.offset).into()
+    }
+
+    /// Get a slice of text from the current cursor to the provided end.
+    pub fn slice_to(&self, end: Cursor<'_>) -> &'a str {
+        let len = (end.offset - self.offset) as usize;
+        &self.rest[..len]
     }
 
     /// Create an error at the current span
@@ -50,11 +56,16 @@ impl<'a> Cursor<'a> {
         LexError::new(self.span())
     }
 
+    /// Advance by 1 byte, counting characters for the offset.
+    pub fn advance(&self) -> Self {
+        self.advance_by(1)
+    }
+
     /// Advance by `n` bytes, counting characters for the offset.
-    pub fn advance(&self, n: usize) -> Self {
+    pub fn advance_by(&self, n: usize) -> Self {
         Self {
             rest: &self.rest[n..],
-            off: self.off + n as u32,
+            offset: self.offset + n as u32,
         }
     }
 
@@ -66,10 +77,11 @@ impl<'a> Cursor<'a> {
             if !pred(ch) {
                 break;
             }
+
             bytes += ch.len_utf8();
         }
 
-        self.advance(bytes)
+        self.advance_by(bytes)
     }
 
     pub fn skip_whitespace(mut self) -> Self {
@@ -87,7 +99,7 @@ impl<'a> Cursor<'a> {
                 self = self.skip_while(|ch| ch != '\n');
 
                 if self.starts_with("\n") {
-                    self = self.advance(1);
+                    self = self.advance();
                 }
 
                 continue;
@@ -124,16 +136,16 @@ impl<'a> Cursor<'a> {
     pub fn doc_comment(&self) -> Option<(Self, bool, String)> {
         if self.is_line_doc() {
             let inner = self.starts_with("//!");
-            let body = self.advance(3); // skip /// or //!
+            let body = self.advance_by(3); // skip /// or //!
             let end = body.skip_while(|ch| ch != '\n');
             let text: String = body.rest()[..(end.offset() - body.offset()) as usize].to_string();
-            let next = if end.starts_with("\n") { end.advance(1) } else { end };
+            let next = if end.starts_with("\n") { end.advance() } else { end };
             return Some((next, inner, text.trim().to_string()));
         }
 
         if self.is_block_doc() {
             let inner = self.starts_with("/*!");
-            let body = self.advance(3); // skip /** or /*!
+            let body = self.advance_by(3); // skip /** or /*!
             let close = body.skip_comment_to_close()?;
             // close is positioned just after `*/`; text is between body and `*/`.
             let len = (close.offset() - body.offset()) as usize - 2;
@@ -150,33 +162,34 @@ impl<'a> Cursor<'a> {
 
         while !cur.is_empty() {
             if cur.starts_with("*/") {
-                return Some(cur.advance(2));
+                return Some(cur.advance_by(2));
             }
+
             let ch = cur.first().unwrap();
-            cur = cur.advance(ch.len_utf8());
+            cur = cur.advance_by(ch.len_utf8());
         }
 
         None
     }
 
     pub fn skip_comment(&self) -> Option<Self> {
-        let mut cur = self.advance(2); // skip /*
+        let mut cur = self.advance_by(2); // skip /*
         let mut depth = 1u32;
 
         while !cur.is_empty() {
             if cur.starts_with("/*") {
                 depth += 1;
-                cur = cur.advance(2);
+                cur = cur.advance_by(2);
             } else if cur.starts_with("*/") {
                 depth -= 1;
-                cur = cur.advance(2);
+                cur = cur.advance_by(2);
 
                 if depth == 0 {
                     return Some(cur);
                 }
             } else {
                 let ch = cur.first().unwrap();
-                cur = cur.advance(ch.len_utf8());
+                cur = cur.advance_by(ch.len_utf8());
             }
         }
 

@@ -101,45 +101,45 @@ fn scan<'a>(c: Cursor<'a>, open: &str) -> Result<Cursor<'a>, LexError> {
     }
 
     let start = c;
-    let c = c.advance(open.len());
+    let c = c.advance_by(open.len());
     let c = match c.first() {
         None | Some('\'') => return start.error().into(),
-        Some('\\') => escape(c.advance(1))?,
-        Some(ch) => c.advance(ch.len_utf8()),
+        Some('\\') => escape(c.advance())?,
+        Some(ch) => c.advance_by(ch.len_utf8()),
     };
 
     if !c.starts_with("'") {
         return start.error().into();
     }
 
-    Ok(c.advance(1))
+    Ok(c.advance())
 }
 
 fn escape(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
     match c.first() {
         None => c.error().into(),
-        Some('n' | 'r' | 't' | '\\' | '\'' | '"' | '0') => Ok(c.advance(1)),
+        Some('n' | 'r' | 't' | '\\' | '\'' | '"' | '0') => Ok(c.advance()),
         Some('x') => {
-            let c = c.advance(1);
+            let c = c.advance();
             let c = hex_digit(c)?;
             hex_digit(c)
         }
         Some('u') => {
-            let c = c.advance(1);
+            let c = c.advance();
 
             if !c.starts_with("{") {
                 return c.error().into();
             }
 
-            let mut c = c.advance(1);
+            let mut c = c.advance();
             let mut count = 0;
 
             loop {
                 match c.first() {
-                    Some('}') if count > 0 => return Ok(c.advance(1)),
+                    Some('}') if count > 0 => return Ok(c.advance()),
                     Some(ch) if ch.is_ascii_hexdigit() && count < 6 => {
                         count += 1;
-                        c = c.advance(1);
+                        c = c.advance();
                     }
                     _ => return c.error().into(),
                 }
@@ -151,7 +151,7 @@ fn escape(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
 
 fn hex_digit(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
     match c.first() {
-        Some(ch) if ch.is_ascii_hexdigit() => Ok(c.advance(1)),
+        Some(ch) if ch.is_ascii_hexdigit() => Ok(c.advance()),
         _ => c.error().into(),
     }
 }

@@ -146,7 +146,7 @@ impl Scan for Ident {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
         // Raw ident: r#ident
         if cursor.starts_with("r#") {
-            let after = cursor.advance(2);
+            let after = cursor.advance_by(2);
             let end = after.skip_while(unicode_ident::is_xid_continue);
 
             if end.offset() == after.offset() {
@@ -164,7 +164,7 @@ impl Scan for Ident {
             return cursor.error().into();
         }
 
-        let end = cursor.advance(first.len_utf8()).skip_while(unicode_ident::is_xid_continue);
+        let end = cursor.advance_by(first.len_utf8()).skip_while(unicode_ident::is_xid_continue);
         let span = cursor.span_to(&end);
         let text = &cursor.rest()[..end.offset() as usize - cursor.offset() as usize];
         Ok((end, Self::new(text).with_span(span)))

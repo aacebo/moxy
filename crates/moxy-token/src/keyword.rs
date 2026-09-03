@@ -41,7 +41,7 @@ macro_rules! define_keyword {
 
             #[inline]
             pub fn to_token_tree(&self) -> TokenTree {
-                TokenTree::Keyword(self.clone())
+                TokenTree::Keyword(*self)
             }
 
             #[inline]

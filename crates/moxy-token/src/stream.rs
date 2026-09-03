@@ -164,18 +164,20 @@ impl Scan for TokenStream {
                 continue;
             }
 
-            if let Ok((next, ident)) = crate::Ident::scan(c) {
-                tokens.push(match crate::Keyword::from_str(ident.text(), ident.span()) {
-                    Some(kw) if !ident.is_raw() => TokenTree::Keyword(kw),
-                    _ => TokenTree::Ident(ident),
-                });
-
+            if let Ok((next, keyword)) = crate::Keyword::scan(c) {
+                tokens.push(TokenTree::Keyword(keyword));
                 c = next;
                 continue;
             }
 
-            if let Ok((next, op)) = crate::Punctuation::scan(c) {
-                tokens.push(TokenTree::Punct(op));
+            if let Ok((next, ident)) = crate::Ident::scan(c) {
+                tokens.push(TokenTree::Ident(ident));
+                c = next;
+                continue;
+            }
+
+            if let Ok((next, punct)) = crate::Punctuation::scan(c) {
+                tokens.push(TokenTree::Punct(punct));
                 c = next;
                 continue;
             }
@@ -200,7 +202,6 @@ impl FromStr for TokenStream {
 impl TokenStream {
     /// Build a token stream from an owned string while moving that allocation
     /// directly into the fallback source map.
-    #[doc(hidden)]
     pub fn from_string(s: String) -> Result<Self, LexError> {
         use crate::source::SourceMap;
 

@@ -30,7 +30,7 @@ macro_rules! define_punct {
 
             #[inline]
             pub fn to_token_tree(&self) -> TokenTree {
-                TokenTree::Punct(self.clone())
+                TokenTree::Punct(*self)
             }
 
             #[inline]
@@ -63,19 +63,22 @@ macro_rules! define_punct {
 
         impl Scan for Punctuation {
             fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
-                let mut best: Option<(Cursor<'_>, Self)> = None;
+                let mut end = cursor;
+                let mut best = None;
 
-                $(
-                    if let Ok((end, op)) = <$name as Scan>::scan(cursor) {
-                        let longer = best
-                            .as_ref()
-                            .is_none_or(|(b, _)| end.offset() > b.offset());
+                while let Some(ch) = end.first() && ch.is_ascii_punctuation() {
+                    end = end.advance_by(ch.len_utf8());
+                    let text = cursor.slice_to(end);
 
-                        if longer {
-                            best = Some((end, Self::$name(op)));
+                    $(
+                        if $name::TEXT == text {
+                            best = Some((end, Self::$name($name { span: cursor.span_to(&end) })));
+                            continue;
                         }
-                    }
-                )*
+                    )*
+
+                    break;
+                }
 
                 best.ok_or_else(|| cursor.error())
             }
@@ -125,8 +128,10 @@ macro_rules! define_punct {
 
             impl Scan for $name {
                 fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
-                    if cursor.starts_with($text) {
-                        let end = cursor.advance($text.len());
+                    let end = cursor.advance_by($text.len());
+                    let text = cursor.slice_to(end);
+
+                    if text == $text {
                         Ok((end, Self::new(cursor.span_to(&end))))
                     } else {
                         cursor.error().into()

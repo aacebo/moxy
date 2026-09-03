@@ -440,19 +440,19 @@ fn scan(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
     let mut cur = c;
 
     if first == '0' {
-        let next = cur.advance(1);
+        let next = cur.advance();
 
         match next.first() {
             Some('x' | 'X') => {
-                cur = digits(next.advance(1), |ch| ch.is_ascii_hexdigit())?;
+                cur = digits(next.advance(), |ch| ch.is_ascii_hexdigit())?;
                 return Ok(suffix(cur));
             }
             Some('o' | 'O') => {
-                cur = digits(next.advance(1), |ch| matches!(ch, '0'..='7'))?;
+                cur = digits(next.advance(), |ch| matches!(ch, '0'..='7'))?;
                 return Ok(suffix(cur));
             }
             Some('b' | 'B') => {
-                cur = digits(next.advance(1), |ch| matches!(ch, '0' | '1'))?;
+                cur = digits(next.advance(), |ch| matches!(ch, '0' | '1'))?;
                 return Ok(suffix(cur));
             }
             _ => {}
@@ -462,7 +462,7 @@ fn scan(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
     cur = digits(cur, |ch| ch.is_ascii_digit())?;
 
     if cur.starts_with(".") {
-        let after_dot = cur.advance(1);
+        let after_dot = cur.advance();
 
         if let Some(ch) = after_dot.first() {
             if ch.is_ascii_digit() {
@@ -472,10 +472,10 @@ fn scan(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
     }
 
     if let Some('e' | 'E') = cur.first() {
-        cur = cur.advance(1);
+        cur = cur.advance();
 
         if let Some('+' | '-') = cur.first() {
-            cur = cur.advance(1);
+            cur = cur.advance();
         }
 
         cur = digits(cur, |ch| ch.is_ascii_digit())?;
@@ -490,10 +490,10 @@ fn digits(c: Cursor<'_>, pred: fn(char) -> bool) -> Result<Cursor<'_>, LexError>
 
     loop {
         match cur.first() {
-            Some('_') => cur = cur.advance(1),
+            Some('_') => cur = cur.advance(),
             Some(ch) if pred(ch) => {
                 found = true;
-                cur = cur.advance(ch.len_utf8());
+                cur = cur.advance_by(ch.len_utf8());
             }
             _ => break,
         }
@@ -513,7 +513,7 @@ fn digits_opt(c: Cursor<'_>, pred: fn(char) -> bool) -> Cursor<'_> {
 fn suffix(c: Cursor<'_>) -> Cursor<'_> {
     match c.first() {
         Some(ch) if ch == '_' || unicode_ident::is_xid_start(ch) => {
-            c.advance(ch.len_utf8()).skip_while(unicode_ident::is_xid_continue)
+            c.advance_by(ch.len_utf8()).skip_while(unicode_ident::is_xid_continue)
         }
         _ => c,
     }

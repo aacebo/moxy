@@ -63,7 +63,7 @@ impl Scan for Group {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
         let ch = cursor.first().ok_or(cursor.error())?;
         let delim = Delim::from_open(ch).ok_or(cursor.error())?;
-        let c = cursor.advance(ch.len_utf8());
+        let c = cursor.advance_by(ch.len_utf8());
         let (c, inner) = TokenStream::scan(c)?;
         let close_ch = c
             .first()
@@ -82,7 +82,7 @@ impl Scan for Group {
             )));
         }
 
-        let c = c.advance(close_ch.len_utf8());
+        let c = c.advance_by(close_ch.len_utf8());
         let mut group = Self::new(delim, inner);
         group.set_span(DelimSpan::new(cursor.span(), c.span()));
 
