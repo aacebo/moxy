@@ -1,7 +1,7 @@
 #![allow(unused)]
 
 use moxy_ast::{Parse, ParseError, Parser};
-use moxy_token::{Delim, Group, LexError, Punctuation, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, LexError, Punct, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
 
 use crate::Template;
 
@@ -51,7 +51,7 @@ impl Parse for TmplMatchArm {
         loop {
             match parser.curr() {
                 None => return Err(LexError::new(span).message("unexpected end of match arm").into()),
-                Some(TokenTree::Punct(Punctuation::FatArrow(_))) => break,
+                Some(TokenTree::Punct(Punct::FatArrow(_))) => break,
                 _ => {
                     pat.extend_one(parser.advance().unwrap().clone());
                 }

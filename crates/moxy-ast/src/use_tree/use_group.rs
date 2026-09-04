@@ -1,9 +1,8 @@
-use crate::{Parse, ParseError, Parser};
-use moxy_token::Token;
 use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
 
+use crate::{Parse, ParseError, Parser, Delimited, Punctuated};
+
 use super::UseTree;
-use crate::{Delimited, Punctuated};
 
 /// A braced use group (`{a, b::c}`).
 #[derive(Debug, Clone, PartialEq, Eq)]

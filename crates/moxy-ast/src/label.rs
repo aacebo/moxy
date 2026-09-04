@@ -1,6 +1,6 @@
 use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::{Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::Lifetime;
 
@@ -37,7 +37,7 @@ impl Label {
     /// Returns `true` when the parser is positioned at a lifetime (`'a`) directly
     /// followed by `:`, which signals a loop/block label.
     pub fn is_prefix(parser: &Parser) -> bool {
-        matches!(parser.curr(), Some(TokenTree::Punct(Punctuation::Quote(_))))
-            && matches!(parser.nth(2), Some(TokenTree::Punct(Punctuation::Colon(_))))
+        matches!(parser.curr(), Some(TokenTree::Punct(Punct::Quote(_))))
+            && matches!(parser.nth(2), Some(TokenTree::Punct(Punct::Colon(_))))
     }
 }

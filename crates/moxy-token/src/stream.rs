@@ -176,7 +176,7 @@ impl Scan for TokenStream {
                 continue;
             }
 
-            if let Ok((next, punct)) = crate::Punctuation::scan(c) {
+            if let Ok((next, punct)) = crate::Punct::scan(c) {
                 tokens.push(TokenTree::Punct(punct));
                 c = next;
                 continue;
@@ -223,7 +223,7 @@ impl TokenStream {
 
 impl std::fmt::Display for TokenStream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use crate::Punctuation;
+        use crate::Punct;
 
         let mut first = true;
         let mut prev_was_tick = false;
@@ -236,7 +236,7 @@ impl std::fmt::Display for TokenStream {
             write!(f, "{}", tt)?;
             first = false;
             // A `'` glues to the following token to form a lifetime (`'a`).
-            prev_was_tick = matches!(tt, TokenTree::Punct(Punctuation::Quote(_)));
+            prev_was_tick = matches!(tt, TokenTree::Punct(Punct::Quote(_)));
         }
 
         Ok(())
@@ -260,17 +260,17 @@ impl serde::Serialize for TokenStream {
 }
 
 fn push_doc_attr(tokens: &mut Vec<TokenTree>, inner: bool, text: &str, span: Span) {
-    use crate::{Delim, Group, Ident, Punctuation};
+    use crate::{Delim, Group, Ident, Punct};
 
-    tokens.push(TokenTree::Punct(Punctuation::Pound(<Token![#]>::new(span))));
+    tokens.push(TokenTree::Punct(Punct::Pound(<Token![#]>::new(span))));
 
     if inner {
-        tokens.push(TokenTree::Punct(Punctuation::Not(<Token![!]>::new(span))));
+        tokens.push(TokenTree::Punct(Punct::Not(<Token![!]>::new(span))));
     }
 
     let mut body = TokenStream::with_capacity(3);
     body.extend_one(TokenTree::Ident(Ident::new("doc").with_span(span)));
-    body.extend_one(TokenTree::Punct(Punctuation::Eq(<Token![=]>::new(span))));
+    body.extend_one(TokenTree::Punct(Punct::Eq(<Token![=]>::new(span))));
     body.extend_one(TokenTree::Literal(crate::Lit::Str(crate::LitStr::new(text, span))));
 
     tokens.push(TokenTree::Group(Group::new(Delim::Bracket, body)));

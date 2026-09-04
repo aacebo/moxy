@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
-use moxy_token::Token;
 use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
+use crate::{Parse, ParseError, Parser};
 use crate::{Delimited, Ident};
 
 mod use_glob;

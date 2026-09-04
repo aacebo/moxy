@@ -1,6 +1,6 @@
 use crate::{Parse, ParseError, Parser};
 use moxy_token::Token;
-use moxy_token::{Delim, LexError, Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, LexError, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Attributes, Delimited, Expr, Ident, Member, Mutability, Path, Punctuated};
 
@@ -516,7 +516,7 @@ fn parse_single(parser: &Parser) -> Result<Pattern, ParseError> {
     // Path-led: ident binding, path, tuple-struct, or struct pattern.
     if matches!(
         parser.curr(),
-        Some(TokenTree::Ident(_) | TokenTree::Keyword(_) | TokenTree::Punct(Punctuation::PathSep(_)))
+        Some(TokenTree::Ident(_) | TokenTree::Keyword(_) | TokenTree::Punct(Punct::PathSep(_)))
     ) {
         // Single bare ident with no `::`/`(`/`{` → binding.
         let path = parser.parse::<Path>()?;

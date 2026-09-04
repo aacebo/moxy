@@ -1,6 +1,6 @@
-use crate::Parser;
-use moxy_token::Token;
-use moxy_token::{Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use crate::{Parser, Token};
+
+use moxy_token::{Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::expr::block::ExprBrace;
 use crate::*;
@@ -45,7 +45,7 @@ impl ExprClosure {
 
         let leads_closure = matches!(
             parser.nth(1),
-            Some(TokenTree::Punct(Punctuation::Or(_) | Punctuation::OrOr(_))) | Some(TokenTree::Keyword(_))
+            Some(TokenTree::Punct(Punct::Or(_))) | Some(TokenTree::Keyword(_))
         );
 
         (parser.peek::<Token![const]>() || parser.peek::<Token![async]>()) && leads_closure && !ExprBrace::is_next(parser)

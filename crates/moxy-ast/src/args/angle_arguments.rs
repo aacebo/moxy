@@ -1,5 +1,5 @@
-use crate::{Parse, ParseError, Parser};
-use moxy_token::{Span, Spanner, ToTokens, Token, TokenStream};
+use crate::{Parse, ParseError, Parser, Token};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::GenericArgument;
 use crate::Punctuated;

@@ -1,10 +1,10 @@
-use moxy_token::Token;
 mod expr_cast;
 mod expr_reference;
 mod expr_try;
 mod expr_unary;
 
-use crate::{ParseError, Parser};
+use crate::{ParseError, Parser, Token};
+
 pub use expr_cast::*;
 pub use expr_reference::*;
 pub use expr_try::*;

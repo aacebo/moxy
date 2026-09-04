@@ -1,4 +1,4 @@
-use moxy_token::{Delim, Span, Spanner, ToTokens, Token, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Delimited, Parse, ParseError, Parser, Path};
 

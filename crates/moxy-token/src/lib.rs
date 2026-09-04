@@ -131,33 +131,6 @@ macro_rules! Token {
     [$]     => { $crate::Dollar };
     [?]     => { $crate::Question };
 
-    // --- punctuation: multi char ---
-    [&&]    => { $crate::AndAnd };
-    [||]    => { $crate::OrOr };
-    [<<]    => { $crate::Shl };
-    [>>]    => { $crate::Shr };
-    [==]    => { $crate::EqEq };
-    [!=]    => { $crate::Ne };
-    [<=]    => { $crate::Le };
-    [>=]    => { $crate::Ge };
-    [&=]    => { $crate::AndEq };
-    [|=]    => { $crate::OrEq };
-    [+=]    => { $crate::PlusEq };
-    [-=]    => { $crate::MinusEq };
-    [*=]    => { $crate::StarEq };
-    [/=]    => { $crate::SlashEq };
-    [%=]    => { $crate::PercentEq };
-    [^=]    => { $crate::CaretEq };
-    [=>]    => { $crate::FatArrow };
-    [->]    => { $crate::RArrow };
-    [<-]    => { $crate::LArrow };
-    [::]    => { $crate::PathSep };
-    [..]    => { $crate::DotDot };
-    [<<=]   => { $crate::ShlEq };
-    [>>=]   => { $crate::ShrEq };
-    [...]   => { $crate::DotDotDot };
-    [..=]   => { $crate::DotDotEq };
-
     // --- keywords ---
     [as]          => { $crate::As };
     [async]       => { $crate::Async };

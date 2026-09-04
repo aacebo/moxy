@@ -1,5 +1,4 @@
 use crate::{Parse, ParseError, Parser, Peek};
-use moxy_token::Token;
 use moxy_token::punct::Quote;
 use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
@@ -13,7 +12,7 @@ pub struct Lifetime {
 
 impl Peek for Lifetime {
     fn peek(parser: &Parser) -> bool {
-        matches!(parser.curr(), Some(TokenTree::Punct(moxy_token::Punctuation::Quote(_))))
+        matches!(parser.curr(), Some(TokenTree::Punct(moxy_token::Punct::Quote(_))))
     }
 }
 

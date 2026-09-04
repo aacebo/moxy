@@ -5,7 +5,7 @@ mod tmpl_tokens;
 
 pub use keyword::TmplKeyword;
 use moxy_ast::{Parse, ParseError, Parser};
-use moxy_token::{Delim, Group, Keyword, LexError, Punctuation, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, Keyword, LexError, Punct, Span, ToTokens, TokenStream, TokenTree};
 pub use paste::Paste;
 pub use tmpl_interp::*;
 pub use tmpl_tokens::*;
@@ -71,7 +71,7 @@ pub fn lone_brace_child(parser: &TokenStream) -> Option<Group> {
 impl Parse for Node {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         match parser.curr() {
-            Some(TokenTree::Punct(Punctuation::At(_))) => Ok(Self::Keyword(parser.parse::<TmplKeyword>()?)),
+            Some(TokenTree::Punct(Punct::At(_))) => Ok(Self::Keyword(parser.parse::<TmplKeyword>()?)),
             Some(TokenTree::Group(g)) if Self::is_interp_group(g) => {
                 let interp = parser.parse::<TmplInterp>()?;
                 let wrap = interp.wrap;
@@ -111,7 +111,7 @@ fn is_template(parser: &TokenStream) -> bool {
     let mut iter = parser.iter();
 
     while let Some(token) = iter.next() {
-        if let TokenTree::Punct(Punctuation::At(_)) = token {
+        if let TokenTree::Punct(Punct::At(_)) = token {
             if let Some(TokenTree::Keyword(next)) = iter.next() {
                 if matches!(next, Keyword::If(_) | Keyword::Else(_) | Keyword::For(_) | Keyword::Match(_)) {
                     return true;
@@ -163,7 +163,7 @@ fn collect_tokens(parser: &Parser) -> Result<Node, ParseError> {
     loop {
         match parser.curr() {
             None => break,
-            Some(TokenTree::Punct(Punctuation::At(_))) => break,
+            Some(TokenTree::Punct(Punct::At(_))) => break,
             Some(TokenTree::Group(g)) if Node::is_interp_group(g) || Node::group_has_interp(g) => break,
             _ => {
                 tokens.extend_one(parser.advance().unwrap().clone());

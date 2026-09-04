@@ -1,6 +1,6 @@
-use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, Token, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
-use crate::{Parse, ParseError, Parser, Peek};
+use crate::{Parse, ParseError, Parser, Peek, Token};
 
 macro_rules! define_leaf {
     ($(

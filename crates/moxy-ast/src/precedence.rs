@@ -1,6 +1,4 @@
 use crate::Parser;
-use moxy_token::Token;
-
 use crate::BinOp;
 
 /// Operator precedence level used when parsing and printing expressions without parentheses.

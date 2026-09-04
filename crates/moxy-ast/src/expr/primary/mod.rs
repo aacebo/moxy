@@ -1,4 +1,3 @@
-use moxy_token::Token;
 mod expr_array;
 mod expr_closure;
 mod expr_group;
@@ -12,7 +11,8 @@ mod expr_repeat;
 mod expr_struct;
 mod expr_tuple;
 
-use crate::{ParseError, Parser};
+use crate::{ParseError, Parser, Token};
+
 pub use expr_array::*;
 pub use expr_closure::*;
 pub use expr_group::*;
@@ -24,7 +24,7 @@ pub use expr_path::*;
 pub use expr_repeat::*;
 pub use expr_struct::*;
 pub use expr_tuple::*;
-use moxy_token::{Delim, LexError, Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, LexError, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use super::block::{
     ExprAsync, ExprBrace, ExprConst, ExprForLoop, ExprIf, ExprLoop, ExprMatch, ExprTryBlock, ExprUnsafe, ExprWhile,
@@ -594,7 +594,7 @@ impl PrimaryExpr {
 
         if matches!(
             parser.curr(),
-            Some(TokenTree::Ident(_) | TokenTree::Keyword(_) | TokenTree::Punct(Punctuation::PathSep(_)))
+            Some(TokenTree::Ident(_) | TokenTree::Keyword(_) | TokenTree::Punct(Punct::PathSep(_)))
         ) {
             use crate::Path;
             let path = parser.parse::<Path>()?;

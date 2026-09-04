@@ -1,9 +1,9 @@
 use crate::{Parse, ParseError, Parser};
-use moxy_token::Token;
+
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::expr::parse_expr;
-use crate::{Attributes, BlockExpr, Delimited, Expr, Pattern};
+use crate::{Attributes, BlockExpr, Delimited, Expr, Pattern, Token};
 
 /// A match expression: `match x { pat => expr, ... }`.
 #[derive(Debug, Clone, PartialEq, Eq)]

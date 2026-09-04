@@ -1,8 +1,6 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
 
-use super::UseTree;
-use crate::Ident;
+use crate::{Parse, ParseError, Parser, Ident, UseTree};
 
 /// A leaf name in a use tree (`foo`).
 #[derive(Debug, Clone, PartialEq, Eq)]

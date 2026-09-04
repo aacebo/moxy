@@ -1,11 +1,11 @@
-use moxy_token::Token;
 mod expr_assign;
 mod expr_assign_op;
 mod expr_binary;
 mod expr_range;
 mod expr_type;
 
-use crate::{ParseError, Parser};
+use crate::{ParseError, Parser, Token};
+
 pub use expr_assign::*;
 pub use expr_assign_op::*;
 pub use expr_binary::*;

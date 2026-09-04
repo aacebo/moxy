@@ -3,13 +3,13 @@ use super::lex::{Cursor, LexError, Scan};
 use crate::{Span, Spanner, TokenStream, TokenTree};
 
 macro_rules! define_punct {
-    ($($name:ident[$is_method:ident, $as_method:ident] $($split:ident)? => $text:literal),+ $(,)?) => {
+    ($($name:ident[$is_method:ident, $as_method:ident] => $text:literal),+ $(,)?) => {
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
-        pub enum Punctuation {
+        pub enum Punct {
             $($name($name),)*
         }
 
-        impl Punctuation {
+        impl Punct {
             pub fn as_str(&self) -> &'static str {
                 match self {
                     $(Self::$name(v) => v.as_str(),)*
@@ -39,7 +39,7 @@ macro_rules! define_punct {
             }
         }
 
-        impl ToTokens for Punctuation {
+        impl ToTokens for Punct {
             fn to_tokens(&self, tokens: &mut TokenStream) {
                 match self {
                     $(Self::$name(v) => v.to_tokens(tokens),)*
@@ -47,13 +47,13 @@ macro_rules! define_punct {
             }
         }
 
-        impl Spanner for Punctuation {
+        impl Spanner for Punct {
             fn span(&self) -> Span {
                 self.span()
             }
         }
 
-        impl std::fmt::Display for Punctuation {
+        impl std::fmt::Display for Punct {
             fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
                 match self {
                     $(Self::$name(v) => v.fmt(f),)*
@@ -61,7 +61,7 @@ macro_rules! define_punct {
             }
         }
 
-        impl Scan for Punctuation {
+        impl Scan for Punct {
             fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
                 let mut end = cursor;
                 let mut best = None;
@@ -85,7 +85,7 @@ macro_rules! define_punct {
         }
 
         #[cfg(feature = "serde")]
-        impl serde::Serialize for Punctuation {
+        impl serde::Serialize for Punct {
             fn serialize<S>(&self, s: S) -> Result<S::Ok, S::Error>
             where
                 S: serde::Serializer,
@@ -141,7 +141,7 @@ macro_rules! define_punct {
 
             impl ToTokens for $name {
                 fn to_tokens(&self, tokens: &mut TokenStream) {
-                    tokens.extend_one(TokenTree::Punct(Punctuation::$name(*self)));
+                    tokens.extend_one(TokenTree::Punct(Punct::$name(*self)));
                 }
             }
 
@@ -151,7 +151,7 @@ macro_rules! define_punct {
                 }
             }
 
-            impl From<$name> for Punctuation {
+            impl From<$name> for Punct {
                 fn from(value: $name) -> Self {
                     Self::$name(value)
                 }
@@ -173,7 +173,7 @@ macro_rules! define_punct {
                 matches!(self, Self::Punct(_))
             }
 
-            pub fn as_punct(&self) -> Option<&Punctuation> {
+            pub fn as_punct(&self) -> Option<&Punct> {
                 match self {
                     Self::Punct(v) => Some(v),
                     _ => None,
@@ -183,13 +183,13 @@ macro_rules! define_punct {
             $(
                 #[doc = concat!("**", stringify!($name), "** (\"", $text, "\")")]
                 pub fn $is_method(&self) -> bool {
-                    matches!(self, Self::Punct(Punctuation::$name(_)))
+                    matches!(self, Self::Punct(Punct::$name(_)))
                 }
 
                 #[doc = concat!("**", stringify!($name), "** (\"", $text, "\")")]
                 pub fn $as_method(&self) -> Option<&$name> {
                     match self {
-                        Self::Punct(Punctuation::$name(v)) => Some(v),
+                        Self::Punct(Punct::$name(v)) => Some(v),
                         _ => None,
                     }
                 }
@@ -211,8 +211,8 @@ define_punct! {
     Percent[is_punct_percent, as_punct_percent]             => "%",
     Caret[is_punct_caret, as_punct_caret]                   => "^",
     Eq[is_punct_eq, as_punct_eq]                            => "=",
-    Lt[is_punct_lt, as_punct_lt] split                      => "<",
-    Gt[is_punct_gt, as_punct_gt] split                      => ">",
+    Lt[is_punct_lt, as_punct_lt]                            => "<",
+    Gt[is_punct_gt, as_punct_gt]                            => ">",
     At[is_punct_at, as_punct_at]                            => "@",
     Dot[is_punct_dot, as_punct_dot]                         => ".",
     Comma[is_punct_comma, as_punct_comma]                   => ",",
@@ -222,31 +222,4 @@ define_punct! {
     Dollar[is_punct_dollar, as_punct_dollar]                => "$",
     Question[is_punct_question, as_punct_question]          => "?",
     Quote[is_punct_quote, as_punct_quote]                   => "'",
-
-    AndAnd[is_punct_and_and, as_punct_and_and]              => "&&",
-    OrOr[is_punct_or_or, as_punct_or_or]                    => "||",
-    Shl[is_punct_shl, as_punct_shl]                         => "<<",
-    Shr[is_punct_shr, as_punct_shr]                         => ">>",
-    EqEq[is_punct_eq_eq, as_punct_eq_eq]                    => "==",
-    Ne[is_punct_ne, as_punct_ne]                            => "!=",
-    Le[is_punct_le, as_punct_le]                            => "<=",
-    Ge[is_punct_ge, as_punct_ge]                            => ">=",
-    AndEq[is_punct_and_eq, as_punct_and_eq]                 => "&=",
-    OrEq[is_punct_or_eq, as_punct_or_eq]                    => "|=",
-    PlusEq[is_punct_plus_eq, as_punct_plus_eq]              => "+=",
-    MinusEq[is_punct_minus_eq, as_punct_minus_eq]           => "-=",
-    StarEq[is_punct_star_eq, as_punct_star_eq]              => "*=",
-    SlashEq[is_punct_slash_eq, as_punct_slash_eq]           => "/=",
-    PercentEq[is_punct_percent_eq, as_punct_percent_eq]     => "%=",
-    CaretEq[is_punct_caret_eq, as_punct_caret_eq]           => "^=",
-    FatArrow[is_punct_fat_arrow, as_punct_fat_arrow]        => "=>",
-    RArrow[is_punct_rarrow, as_punct_rarrow]                => "->",
-    LArrow[is_punct_larrow, as_punct_larrow]                => "<-",
-    PathSep[is_punct_path_sep, as_punct_path_sep]           => "::",
-    DotDot[is_punct_dot_dot, as_punct_dot_dot]              => "..",
-
-    ShlEq[is_punct_shl_eq, as_punct_shl_eq]                 => "<<=",
-    ShrEq[is_punct_shr_eq, as_punct_shr_eq]                 => ">>=",
-    DotDotDot[is_punct_dot_dot_dot, as_punct_dot_dot_dot]   => "...",
-    DotDotEq[is_punct_dot_dot_eq, as_punct_dot_dot_eq]      => "..=",
 }

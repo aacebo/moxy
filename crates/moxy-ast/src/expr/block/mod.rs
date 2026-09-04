@@ -21,7 +21,7 @@ pub use expr_match::*;
 pub use expr_try_block::*;
 pub use expr_unsafe::*;
 pub use expr_while::*;
-use moxy_token::{Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Attributes, Label, Lifetime};
 
@@ -253,7 +253,7 @@ impl From<ExprTryBlock> for BlockExpr {
 
 impl Label {
     pub fn parse_opt_break(parser: &Parser) -> Option<Self> {
-        if !matches!(parser.curr(), Some(TokenTree::Punct(Punctuation::Quote(_)))) {
+        if !matches!(parser.curr(), Some(TokenTree::Punct(Punct::Quote(_)))) {
             return None;
         }
 

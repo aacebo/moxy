@@ -156,22 +156,6 @@ impl<'a> Cursor<'a> {
         None
     }
 
-    /// Skip to just past the matching `*/` of a (non-nested) block comment body.
-    fn skip_comment_to_close(&self) -> Option<Self> {
-        let mut cur = *self;
-
-        while !cur.is_empty() {
-            if cur.starts_with("*/") {
-                return Some(cur.advance_by(2));
-            }
-
-            let ch = cur.first().unwrap();
-            cur = cur.advance_by(ch.len_utf8());
-        }
-
-        None
-    }
-
     pub fn skip_comment(&self) -> Option<Self> {
         let mut cur = self.advance_by(2); // skip /*
         let mut depth = 1u32;
@@ -191,6 +175,22 @@ impl<'a> Cursor<'a> {
                 let ch = cur.first().unwrap();
                 cur = cur.advance_by(ch.len_utf8());
             }
+        }
+
+        None
+    }
+
+    /// Skip to just past the matching `*/` of a (non-nested) block comment body.
+    fn skip_comment_to_close(&self) -> Option<Self> {
+        let mut cur = *self;
+
+        while !cur.is_empty() {
+            if cur.starts_with("*/") {
+                return Some(cur.advance_by(2));
+            }
+
+            let ch = cur.first().unwrap();
+            cur = cur.advance_by(ch.len_utf8());
         }
 
         None

@@ -1,8 +1,8 @@
-use moxy_token::{Punctuation, TokenTree, punct};
+use moxy_token::{Punct, TokenTree, punct};
 
 use crate::{Parse, ParseError, Parser, Peek};
 
-impl Peek for Punctuation {
+impl Peek for Punct {
     fn peek(parser: &Parser) -> bool {
         let Some(next) = parser.curr() else {
             return false;
@@ -12,7 +12,7 @@ impl Peek for Punctuation {
     }
 }
 
-impl Parse for Punctuation {
+impl Parse for Punct {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         match parser.advance() {
             Some(TokenTree::Punct(v)) => Ok(*v),
@@ -22,7 +22,7 @@ impl Parse for Punctuation {
 }
 
 macro_rules! impl_punct_parse {
-    ($($name:ident => $text:literal),* $(,)?) => {
+    ($($name:ident),* $(,)?) => {
         $(
             impl Peek for punct::$name {
                 fn peek(parser: &Parser) -> bool {
@@ -30,15 +30,15 @@ macro_rules! impl_punct_parse {
                         return false;
                     };
 
-                    matches!(next, TokenTree::Punct(Punctuation::$name(_)))
+                    matches!(next, TokenTree::Punct(Punct::$name(_)))
                 }
             }
 
             impl Parse for punct::$name {
                 fn parse(parser: &Parser) -> Result<Self, ParseError> {
-                    match parser.parse::<Punctuation>()? {
-                        Punctuation::$name(v) => Ok(v),
-                        _ => Err(parser.error(concat!("expected `", $text, "` punctuation"))),
+                    match parser.parse::<Punct>()? {
+                        Punct::$name(v) => Ok(v),
+                        _ => parser.error(format!("expected `{}` punctuation", punct::$name::TEXT)).into(),
                     }
                 }
             }
@@ -47,53 +47,53 @@ macro_rules! impl_punct_parse {
 }
 
 impl_punct_parse! {
-    And => "&",
-    Or => "|",
-    Not => "!",
-    Tilde => "~",
-    Plus => "+",
-    Minus => "-",
-    Star => "*",
-    Slash => "/",
-    Percent => "%",
-    Caret => "^",
-    Eq => "=",
-    Lt => "<",
-    Gt => ">",
-    At => "@",
-    Dot => ".",
-    Comma => ",",
-    Semi => ";",
-    Colon => ":",
-    Pound => "#",
-    Dollar => "$",
-    Question => "?",
-    Quote => "'",
+    And,
+    Or,
+    Not,
+    Tilde,
+    Plus,
+    Minus,
+    Star,
+    Slash,
+    Percent,
+    Caret,
+    Eq,
+    Lt,
+    Gt,
+    At,
+    Dot,
+    Comma,
+    Semi,
+    Colon,
+    Pound,
+    Dollar,
+    Question,
+    Quote,
 
-    AndAnd => "&&",
-    OrOr => "||",
-    Shl => "<<",
-    Shr => ">>",
-    EqEq => "==",
-    Ne => "!=",
-    Le => "<=",
-    Ge => ">=",
-    AndEq => "&=",
-    OrEq => "|=",
-    PlusEq => "+=",
-    MinusEq => "-=",
-    StarEq => "*=",
-    SlashEq => "/=",
-    PercentEq => "%=",
-    CaretEq => "^=",
-    FatArrow => "=>",
-    RArrow => "->",
-    LArrow => "<-",
-    PathSep => "::",
-    DotDot => "..",
+    AndAnd,
+    OrOr,
+    Shl,
+    Shr,
+    EqEq,
+    Ne,
+    Le,
+    Ge,
+    AndEq,
+    OrEq,
+    PlusEq,
+    MinusEq,
+    StarEq,
+    SlashEq,
+    PercentEq,
+    CaretEq,
+    FatArrow,
+    RArrow,
+    LArrow,
+    PathSep,
+    DotDot,
 
-    ShlEq => "<<=",
-    ShrEq => ">>=",
-    DotDotDot => "...",
-    DotDotEq => "..=",
+    ShlEq,
+    ShrEq,
+    DotDotDot,
+    DotDotEq,
 }

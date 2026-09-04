@@ -27,6 +27,7 @@ pub mod vis;
 pub mod visit;
 #[macro_use]
 mod parse;
+mod punct;
 
 #[doc(inline)]
 pub use _crate::Crate;
@@ -86,3 +87,5 @@ pub use use_tree::UseTree;
 pub use vis::*;
 #[doc(inline)]
 pub use visit::{Visit, VisitMut};
+#[doc(inline)]
+pub use punct::*;

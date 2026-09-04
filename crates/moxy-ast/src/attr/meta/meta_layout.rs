@@ -1,4 +1,4 @@
-use moxy_token::Token;
+use crate::Token;
 
 use super::*;
 

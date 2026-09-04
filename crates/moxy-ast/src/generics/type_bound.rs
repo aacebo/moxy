@@ -82,7 +82,7 @@ impl Parse for TypeBound {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if matches!(
             parser.curr(),
-            Some(moxy_token::TokenTree::Punct(moxy_token::Punctuation::Quote(_)))
+            Some(moxy_token::TokenTree::Punct(moxy_token::Punct::Quote(_)))
         ) {
             return Ok(Self::Lifetime(parser.parse()?));
         }
