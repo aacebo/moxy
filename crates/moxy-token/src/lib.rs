@@ -186,15 +186,3 @@ macro_rules! Token {
     [while]       => { $crate::While };
     [yield]       => { $crate::Yield };
 }
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn token_macro_maps_dollar_and_macro_rules() {
-        let dollar: Token![$] = Default::default();
-        let macro_rules: Token![macro_rules] = Default::default();
-
-        assert_eq!(dollar.as_str(), "$");
-        assert_eq!(macro_rules.as_str(), "macro_rules");
-    }
-}

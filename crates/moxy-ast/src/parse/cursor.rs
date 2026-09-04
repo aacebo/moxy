@@ -9,10 +9,7 @@ pub struct Cursor<'a> {
 
 impl<'a> Cursor<'a> {
     pub fn from_tokens(tokens: &'a TokenStream) -> Self {
-        Self {
-            index: 0,
-            tokens,
-        }
+        Self { index: 0, tokens }
     }
 
     pub fn is_empty(self) -> bool {
