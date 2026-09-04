@@ -1,15 +1,19 @@
 use moxy_token::punct::*;
-use moxy_token::{Span, ToTokens, TokenStream, Spanner};
+use moxy_token::{Spacing, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use crate::{Peek, Parse, Parser, ParseError};
+use crate::{Parse, ParseError, Parser, Peek};
 
 macro_rules! define_punct {
     ($($name:ident => [ $($field:tt : $punct:ident),+ ]),+ $(,)?) => {
         $(
-            #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
+            #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
             pub struct $name($(pub $punct),*);
 
             impl $name {
+                pub fn new(span: Span) -> Self {
+                    Self($($punct::new(span)),*)
+                }
+
                 pub fn span(&self) -> Span {
                     let Self(first, .., last) = self;
                     first.span().join(last.span())
@@ -31,19 +35,44 @@ macro_rules! define_punct {
 
             impl ToTokens for $name {
                 fn to_tokens(&self, tokens: &mut TokenStream) {
-                    $(self.$field.to_tokens(tokens);)*
+                    let mut puncts = vec![$(TokenTree::from(moxy_token::Punct::from(self.$field))),*];
+                    let last = puncts.len() - 1;
+
+                    for punct in puncts.iter_mut().take(last) {
+                        if let TokenTree::Punct(punct) = punct {
+                            punct.set_spacing(Spacing::Joint);
+                        }
+                    }
+
+                    tokens.extend(puncts);
                 }
             }
 
             impl Peek for $name {
                 fn peek(parser: &Parser) -> bool {
-                    $($punct::peek(parser))&&*
+                    let parser = parser.lookahead();
+
+                    $(
+                        if !matches!(
+                            parser.advance(),
+                            Some(TokenTree::Punct(moxy_token::Punct::$punct(_)))
+                        ) {
+                            return false;
+                        }
+                    )*
+
+                    true
                 }
             }
 
             impl Parse for $name {
                 fn parse(parser: &Parser) -> Result<Self, ParseError> {
-                    Ok(Self($($punct::parse(parser)?),*))
+                    Ok(Self($({
+                        match parser.parse::<moxy_token::Punct>()? {
+                            moxy_token::Punct::$punct(value) => value,
+                            _ => return Err(parser.error(concat!("expected `", stringify!($punct), "` punctuation"))),
+                        }
+                    }),*))
                 }
             }
 
@@ -63,8 +92,8 @@ macro_rules! define_punct {
 define_punct! {
     AndAnd => [0: And, 1: And],
     OrOr => [0: Or, 1: Or],
-    Shl => [0: Gt, 1: Gt],
-    Shr => [0: Lt, 1: Lt],
+    Shl => [0: Lt, 1: Lt],
+    Shr => [0: Gt, 1: Gt],
     EqEq => [0: Eq, 1: Eq],
     Ne => [0: Not, 1: Eq],
     Le => [0: Lt, 1: Eq],
@@ -79,11 +108,11 @@ define_punct! {
     CaretEq => [0: Caret, 1: Eq],
     FatArrow => [0: Eq, 1: Gt],
     RArrow => [0: Minus, 1: Gt],
-    LArray => [0: Lt, 1: Minus],
+    LArrow => [0: Lt, 1: Minus],
     PathSep => [0: Colon, 1: Colon],
     DotDot => [0: Dot, 1: Dot],
-    ShlEq => [0: Shl, 1: Eq],
-    ShrEq => [0: Shr, 1: Eq],
+    ShlEq => [0: Lt, 1: Lt, 2: Eq],
+    ShrEq => [0: Gt, 1: Gt, 2: Eq],
     DotDotDot => [0: Dot, 1: Dot, 2: Dot],
     DotDotEq => [0: Dot, 1: Dot, 2: Eq],
 }

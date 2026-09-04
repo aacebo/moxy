@@ -1,6 +1,6 @@
 use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Parse, ParseError, Parser, Delimited, Punctuated};
+use crate::{Delimited, Parse, ParseError, Parser, Punctuated};
 
 use super::UseTree;
 

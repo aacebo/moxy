@@ -1,5 +1,5 @@
 use crate::{Parse, ParseError, Parser};
-use moxy_token::{Span, Spanner, ToTokens, Token, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{IntoIter, Peek, Punctuated};
 

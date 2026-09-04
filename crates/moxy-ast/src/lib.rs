@@ -74,6 +74,8 @@ pub use path::{Path, PathSegment};
 #[doc(inline)]
 pub use precedence::*;
 #[doc(inline)]
+pub use punct::*;
+#[doc(inline)]
 pub use punctuated::*;
 #[doc(inline)]
 pub use sig::{Abi, BareFnArg, Signature, Variadic};
@@ -87,5 +89,3 @@ pub use use_tree::UseTree;
 pub use vis::*;
 #[doc(inline)]
 pub use visit::{Visit, VisitMut};
-#[doc(inline)]
-pub use punct::*;

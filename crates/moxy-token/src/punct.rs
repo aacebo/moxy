@@ -1,6 +1,37 @@
 use super::ToTokens;
 use super::lex::{Cursor, LexError, Scan};
-use crate::{Span, Spanner, TokenStream, TokenTree};
+use crate::{Spacing, Span, Spanner, TokenStream, TokenTree};
+
+fn spacing_after(text: &str, cursor: Cursor<'_>) -> Spacing {
+    let Some(next) = cursor.first() else {
+        return Spacing::Alone;
+    };
+
+    let current = text.chars().next().unwrap_or_default();
+    let is_compound_pair = matches!(
+        (current, next),
+        ('&', '&' | '=')
+            | ('|', '|' | '=')
+            | ('<', '<' | '=' | '-')
+            | ('>', '>' | '=')
+            | ('=', '=' | '>')
+            | ('!', '=')
+            | ('+', '=')
+            | ('-', '=' | '>')
+            | ('*', '=')
+            | ('/', '=')
+            | ('%', '=')
+            | ('^', '=')
+            | (':', ':')
+            | ('.', '.' | '=')
+    );
+
+    if is_compound_pair || (current == '\'' && (next == '_' || next.is_alphabetic())) {
+        Spacing::Joint
+    } else {
+        Spacing::Alone
+    }
+}
 
 macro_rules! define_punct {
     ($($name:ident[$is_method:ident, $as_method:ident] => $text:literal),+ $(,)?) => {
@@ -25,6 +56,18 @@ macro_rules! define_punct {
             pub fn set_span(&mut self, span: Span) {
                 match self {
                     $(Self::$name(v) => v.set_span(span),)*
+                }
+            }
+
+            pub fn spacing(&self) -> Spacing {
+                match self {
+                    $(Self::$name(v) => v.spacing(),)*
+                }
+            }
+
+            pub fn set_spacing(&mut self, spacing: Spacing) {
+                match self {
+                    $(Self::$name(v) => v.set_spacing(spacing),)*
                 }
             }
 
@@ -72,7 +115,10 @@ macro_rules! define_punct {
 
                     $(
                         if $name::TEXT == text {
-                            best = Some((end, Self::$name($name { span: cursor.span_to(&end) })));
+                            best = Some((end, Self::$name($name {
+                                span: cursor.span_to(&end),
+                                spacing: spacing_after($name::TEXT, end),
+                            })));
                             continue;
                         }
                     )*
@@ -98,13 +144,17 @@ macro_rules! define_punct {
             #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
             pub struct $name {
                 span: Span,
+                spacing: Spacing,
             }
 
             impl $name {
                 pub const TEXT: &'static str = $text;
 
                 pub fn new(span: Span) -> Self {
-                    Self { span }
+                    Self {
+                        span,
+                        spacing: Spacing::Alone,
+                    }
                 }
 
                 pub fn span(&self) -> Span {
@@ -113,6 +163,19 @@ macro_rules! define_punct {
 
                 pub fn set_span(&mut self, span: Span) {
                     self.span = span;
+                }
+
+                pub fn spacing(&self) -> Spacing {
+                    self.spacing
+                }
+
+                pub fn set_spacing(&mut self, spacing: Spacing) {
+                    self.spacing = spacing;
+                }
+
+                pub fn with_spacing(mut self, spacing: Spacing) -> Self {
+                    self.spacing = spacing;
+                    self
                 }
 
                 pub fn as_str(&self) -> &'static str {
@@ -132,7 +195,10 @@ macro_rules! define_punct {
                     let text = cursor.slice_to(end);
 
                     if text == $text {
-                        Ok((end, Self::new(cursor.span_to(&end))))
+                        Ok((
+                            end,
+                            Self::new(cursor.span_to(&end)).with_spacing(spacing_after(Self::TEXT, end)),
+                        ))
                     } else {
                         cursor.error().into()
                     }

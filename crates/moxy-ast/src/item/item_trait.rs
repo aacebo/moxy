@@ -1,5 +1,5 @@
+use crate::Token;
 use crate::{Parse, ParseError, Parser};
-use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Delimited, Generics, Ident, Punctuated, TraitItem, TypeBound, Unsafety, Visibility};

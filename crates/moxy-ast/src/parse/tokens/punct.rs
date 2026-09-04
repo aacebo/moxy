@@ -30,7 +30,11 @@ macro_rules! impl_punct_parse {
                         return false;
                     };
 
-                    matches!(next, TokenTree::Punct(Punct::$name(_)))
+                    matches!(
+                        next,
+                        TokenTree::Punct(Punct::$name(v))
+                            if v.spacing().is_alone() || punct::$name::TEXT == "'"
+                    )
                 }
             }
 
@@ -69,31 +73,4 @@ impl_punct_parse! {
     Dollar,
     Question,
     Quote,
-
-    AndAnd,
-    OrOr,
-    Shl,
-    Shr,
-    EqEq,
-    Ne,
-    Le,
-    Ge,
-    AndEq,
-    OrEq,
-    PlusEq,
-    MinusEq,
-    StarEq,
-    SlashEq,
-    PercentEq,
-    CaretEq,
-    FatArrow,
-    RArrow,
-    LArrow,
-    PathSep,
-    DotDot,
-
-    ShlEq,
-    ShrEq,
-    DotDotDot,
-    DotDotEq,
 }

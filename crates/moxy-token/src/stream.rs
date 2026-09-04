@@ -223,20 +223,17 @@ impl TokenStream {
 
 impl std::fmt::Display for TokenStream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use crate::Punct;
-
         let mut first = true;
-        let mut prev_was_tick = false;
+        let mut prev_was_joint = false;
 
         for tt in self.0.iter() {
-            if !first && !prev_was_tick {
+            if !first && !prev_was_joint {
                 write!(f, " ")?;
             }
 
             write!(f, "{}", tt)?;
             first = false;
-            // A `'` glues to the following token to form a lifetime (`'a`).
-            prev_was_tick = matches!(tt, TokenTree::Punct(Punct::Quote(_)));
+            prev_was_joint = matches!(tt, TokenTree::Punct(punct) if punct.spacing().is_joint());
         }
 
         Ok(())

@@ -25,7 +25,6 @@ use moxy_token::TokenStream;
 /// # Example
 /// ```
 /// use moxy_ast::*;
-/// use moxy_token::Token;
 ///
 /// let token: Fn = parse!("fn").unwrap();
 /// let token = parse!("fn" as Fn).unwrap();

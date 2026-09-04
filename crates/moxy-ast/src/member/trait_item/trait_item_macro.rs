@@ -1,5 +1,4 @@
 use crate::{Parse, ParseError, Parser};
-use moxy_token::Token;
 use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, MacroCall};

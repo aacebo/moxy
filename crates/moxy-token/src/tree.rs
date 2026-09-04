@@ -172,15 +172,10 @@ impl ToTokens for &mut String {
     }
 }
 
-/// Lex a run of consecutive `proc_macro` punctuation chars into moxy
-/// [`Punct`] tokens, preserving each token's real compiler span.
-///
-/// `proc_macro` emits multi-char operators (`=>`, `::`, `&&`) as single-char
-/// puncts; moxy models them as one variant. We longest-match against the run's
-/// text (reusing `<Punct as Scan>`) and retag each matched variant with
-/// the joined spans of the chars it consumed.
-pub(crate) fn scan_puncts_spanned(run: &[(char, Span)], tokens: &mut TokenStream) {
-    let text: String = run.iter().map(|(c, _)| *c).collect();
+/// Lex a run of `proc_macro` punctuation chars into moxy [`Punct`] tokens,
+/// preserving each token's compiler span and joint spacing.
+pub(crate) fn scan_puncts_spanned(run: &[(char, Span, crate::Spacing)], tokens: &mut TokenStream) {
+    let text: String = run.iter().map(|(c, _, _)| *c).collect();
     let mut cursor = Cursor::new(&text, 0);
     let mut idx = 0usize;
 
@@ -190,6 +185,7 @@ pub(crate) fn scan_puncts_spanned(run: &[(char, Span)], tokens: &mut TokenStream
                 let consumed = op.as_str().chars().count();
                 let span = run[idx].1.join(run[idx + consumed - 1].1);
                 op.set_span(span);
+                op.set_spacing(run[idx + consumed - 1].2);
                 tokens.extend_one(TokenTree::Punct(op));
                 idx += consumed;
                 cursor = next;

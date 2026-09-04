@@ -22,10 +22,7 @@ impl Spanner for WherePredicate {
 
 impl Parse for WherePredicate {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if matches!(
-            parser.curr(),
-            Some(moxy_token::TokenTree::Punct(moxy_token::Punct::Quote(_)))
-        ) {
+        if matches!(parser.curr(), Some(moxy_token::TokenTree::Punct(moxy_token::Punct::Quote(_)))) {
             return Ok(Self::Lifetime(parser.parse()?));
         }
 

@@ -1,4 +1,4 @@
-use moxy_token::Token;
+use crate::Token;
 mod expr_await;
 mod expr_call;
 mod expr_field;

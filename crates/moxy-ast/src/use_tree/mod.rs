@@ -1,7 +1,7 @@
 use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use crate::{Parse, ParseError, Parser};
 use crate::{Delimited, Ident};
+use crate::{Parse, ParseError, Parser};
 
 mod use_glob;
 mod use_group;

@@ -4,7 +4,6 @@ use moxy_token::{Span, TokenStream, TokenTree};
 #[derive(Copy, Clone)]
 pub struct Cursor<'a> {
     index: usize,
-    offset: usize,
     tokens: &'a TokenStream,
 }
 
@@ -12,7 +11,6 @@ impl<'a> Cursor<'a> {
     pub fn from_tokens(tokens: &'a TokenStream) -> Self {
         Self {
             index: 0,
-            offset: 0,
             tokens,
         }
     }

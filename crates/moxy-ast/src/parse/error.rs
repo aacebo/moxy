@@ -1,4 +1,3 @@
-use moxy_token::Token;
 use moxy_token::span::DelimSpan;
 use moxy_token::{Delim, Group, Ident, LexError, Lit, Punct, Span, ToTokenStream, ToTokens, TokenStream};
 

@@ -1,5 +1,5 @@
-use crate::Parser;
 use crate::BinOp;
+use crate::Parser;
 
 /// Operator precedence level used when parsing and printing expressions without parentheses.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]

@@ -1,4 +1,4 @@
-use moxy_token::Token;
+use crate::Token;
 mod expr_async;
 mod expr_brace;
 mod expr_const;

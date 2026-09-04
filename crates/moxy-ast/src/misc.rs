@@ -139,7 +139,7 @@ impl Parse for BoundLifetimes {
             }
         }
 
-        let gt = parser.parse::<Token![>]>()?;
+        let gt = parser.parse()?;
 
         Ok(Self {
             for_keyword,

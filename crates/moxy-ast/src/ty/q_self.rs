@@ -1,5 +1,4 @@
 use crate::{ParseError, Parser};
-use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::Type;
@@ -46,7 +45,7 @@ impl QSelf {
             (None, None)
         };
 
-        let gt = parser.parse::<Token![>]>()?;
+        let gt = parser.parse()?;
         let position = trait_path.as_ref().map(|p| p.len()).unwrap_or(0);
 
         Ok((

@@ -594,7 +594,7 @@ impl PrimaryExpr {
 
         if matches!(
             parser.curr(),
-            Some(TokenTree::Ident(_) | TokenTree::Keyword(_) | TokenTree::Punct(Punct::PathSep(_)))
+            Some(TokenTree::Ident(_) | TokenTree::Keyword(_) | TokenTree::Punct(Punct::Colon(_)))
         ) {
             use crate::Path;
             let path = parser.parse::<Path>()?;

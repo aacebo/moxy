@@ -1,9 +1,8 @@
-use moxy_token::Token;
 mod tmpl_for;
 mod tmpl_if;
 mod tmpl_match;
 
-use moxy_ast::{Parse, ParseError, Parser};
+use moxy_ast::{Parse, ParseError, Parser, Token};
 use moxy_token::{LexError, ToTokens, TokenStream};
 pub use tmpl_for::*;
 pub use tmpl_if::*;

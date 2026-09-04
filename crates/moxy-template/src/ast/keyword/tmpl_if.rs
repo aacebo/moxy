@@ -1,7 +1,7 @@
 #![allow(unused)]
 
-use moxy_ast::{Parse, ParseError, Parser};
-use moxy_token::{Delim, Group, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
+use moxy_ast::{Parse, ParseError, Parser, Token};
+use moxy_token::{Delim, Group, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 use crate::Template;
 
