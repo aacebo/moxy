@@ -1,5 +1,5 @@
-use crate::Token;
 use crate::{Parse, ParseError, Parser};
+use crate::{Peek, Token};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::AngleArguments;
@@ -22,6 +22,24 @@ impl ConstraintArgument {
 
     pub fn into_generic_argument(self) -> GenericArgument {
         GenericArgument::Constraint(self)
+    }
+}
+
+impl Peek for ConstraintArgument {
+    fn peek(parser: &Parser) -> bool {
+        if !parser.parse::<Ident>().is_ok() {
+            return false;
+        }
+
+        if !parser.parse::<Option<AngleArguments>>().is_ok() {
+            return false;
+        }
+
+        if !parser.parse::<Token![:]>().is_ok() {
+            return false;
+        }
+
+        true
     }
 }
 
