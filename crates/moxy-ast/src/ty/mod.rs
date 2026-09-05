@@ -254,8 +254,7 @@ impl Parse for Type {
 
         // Never `!`.
         if parser.peek::<Token![!]>() {
-            let not = parser.parse::<Token![!]>()?;
-            return Ok(Self::Never(not));
+            return Ok(Self::Never(parser.parse()?));
         }
 
         // Infer `_`.

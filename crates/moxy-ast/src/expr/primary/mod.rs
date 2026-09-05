@@ -24,7 +24,7 @@ pub use expr_path::*;
 pub use expr_repeat::*;
 pub use expr_struct::*;
 pub use expr_tuple::*;
-use moxy_token::{Delim, LexError, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, LexError, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use super::block::{
     ExprAsync, ExprBrace, ExprConst, ExprForLoop, ExprIf, ExprLoop, ExprMatch, ExprTryBlock, ExprUnsafe, ExprWhile,
@@ -592,10 +592,7 @@ impl PrimaryExpr {
             })));
         }
 
-        if matches!(
-            parser.curr(),
-            Some(TokenTree::Ident(_) | TokenTree::Keyword(_) | TokenTree::Punct(Punct::Colon(_)))
-        ) {
+        if matches!(parser.curr(), Some(TokenTree::Ident(_) | TokenTree::Keyword(_))) || parser.peek::<Token![::]>() {
             use crate::Path;
             let path = parser.parse::<Path>()?;
 

@@ -181,6 +181,16 @@ macro_rules! define_punct {
                 pub fn as_str(&self) -> &'static str {
                     Self::TEXT
                 }
+
+                #[inline]
+                pub fn to_token_tree(&self) -> TokenTree {
+                    TokenTree::Punct((*self).into())
+                }
+
+                #[inline]
+                pub fn into_token_tree(self) -> TokenTree {
+                    TokenTree::Punct(self.into())
+                }
             }
 
             impl std::fmt::Display for $name {

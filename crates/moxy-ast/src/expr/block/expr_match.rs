@@ -25,7 +25,7 @@ impl ExprMatch {
     pub fn parse_from(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseError> {
         let match_keyword = parser.parse::<Token![match]>()?;
         let expr = Box::new(parse_expr(parser, false)?);
-        let arms = Delimited::<Vec<MatchArm>>::parse_brace(parser)?;
+        let arms = Delimited::parse_brace_with(parser, |parser| parser.parse_until_empty())?;
 
         Ok(Expr::Block(BlockExpr::Match(Self {
             attrs,

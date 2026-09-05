@@ -1,5 +1,5 @@
 use moxy_token::punct::*;
-use moxy_token::{Spacing, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Parse, ParseError, Parser, Peek};
 
@@ -35,30 +35,16 @@ macro_rules! define_punct {
 
             impl ToTokens for $name {
                 fn to_tokens(&self, tokens: &mut TokenStream) {
-                    let mut puncts = vec![$(TokenTree::from(moxy_token::Punct::from(self.$field))),*];
-                    let last = puncts.len() - 1;
-
-                    for punct in puncts.iter_mut().take(last) {
-                        if let TokenTree::Punct(punct) = punct {
-                            punct.set_spacing(Spacing::Joint);
-                        }
-                    }
-
-                    tokens.extend(puncts);
+                    $(self.$field.to_tokens(tokens);)*
                 }
             }
 
             impl Peek for $name {
                 fn peek(parser: &Parser) -> bool {
-                    let parser = parser.lookahead();
-
                     $(
-                        if !matches!(
-                            parser.advance(),
-                            Some(TokenTree::Punct(moxy_token::Punct::$punct(_)))
-                        ) {
+                        let Some(TokenTree::Punct(Punct::$punct(_))) = parser.advance() else {
                             return false;
-                        }
+                        };
                     )*
 
                     true
@@ -67,12 +53,7 @@ macro_rules! define_punct {
 
             impl Parse for $name {
                 fn parse(parser: &Parser) -> Result<Self, ParseError> {
-                    Ok(Self($({
-                        match parser.parse::<moxy_token::Punct>()? {
-                            moxy_token::Punct::$punct(value) => value,
-                            _ => return Err(parser.error(concat!("expected `", stringify!($punct), "` punctuation"))),
-                        }
-                    }),*))
+                    Ok(Self($(parser.parse::<$punct>()?),*))
                 }
             }
 

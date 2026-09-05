@@ -2,7 +2,7 @@ use crate::{Parser, Token};
 
 use moxy_token::{Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use crate::expr::block::ExprBrace;
+use crate::expr::ExprBrace;
 use crate::*;
 
 /// The pipe delimiters around a closure's parameters: either an empty `||` or a pair of `|`.

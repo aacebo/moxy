@@ -58,14 +58,14 @@ impl<'a> Parser<'a> {
         }
     }
 
+    pub fn seek(&self, other: &Self) {
+        self.cursor.set(other.cursor.get());
+    }
+
     pub fn lookahead(&self) -> Self {
         let mut fork = self.fork();
         fork.config.trace = false;
         fork
-    }
-
-    pub fn seek(&self, other: &Self) {
-        self.cursor.set(other.cursor.get());
     }
 }
 

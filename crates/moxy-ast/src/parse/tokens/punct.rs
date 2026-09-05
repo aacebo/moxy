@@ -33,7 +33,7 @@ macro_rules! impl_punct_parse {
                     matches!(
                         next,
                         TokenTree::Punct(Punct::$name(v))
-                            if v.spacing().is_alone() || punct::$name::TEXT == "'"
+                            if v.spacing().is_alone() || punct::$name::TEXT == "'",
                     )
                 }
             }
