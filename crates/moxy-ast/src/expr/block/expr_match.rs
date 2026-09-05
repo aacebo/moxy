@@ -80,6 +80,11 @@ impl Parse for MatchArm {
         };
 
         let fat_arrow = parser.parse::<Token![=>]>()?;
+
+        if !parser.peek::<Expr>() {
+            return parser.error("expected match arm expression body").into();
+        }
+
         let body = parser.parse::<Expr>()?;
         let comma = parser.parse_if::<Token![,]>();
 

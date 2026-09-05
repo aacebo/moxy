@@ -169,7 +169,7 @@ impl BinaryExpr {
             }
 
             if min == Precedence::Min {
-                if parser.peek::<Token![=]>() {
+                if parser.peek::<Token![=]>() && !parser.peek::<Token![==]>() && !parser.peek::<Token![=>]>() {
                     let eq = parser.parse::<Token![=]>()?;
                     let right = Box::new(super::parse_expr(parser, allow_struct)?);
 

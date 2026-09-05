@@ -1,4 +1,4 @@
-use crate::{Parse, ParseError, Parser};
+use crate::{Parse, ParseError, Parser, Peek};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Lifetime, Mutability};
@@ -12,6 +12,35 @@ pub struct Receiver {
     pub lifetime: Option<Lifetime>,
     pub mutability: Mutability,
     pub self_keyword: Token![self],
+}
+
+impl Peek for Receiver {
+    fn peek(parser: &Parser) -> bool {
+        let fork = parser.lookahead();
+
+        if fork.peek::<Token![&]>() {
+            fork.advance();
+
+            // Optional lifetime.
+            if fork.peek::<Lifetime>() {
+                let _ = fork.parse::<Lifetime>();
+            }
+
+            // Optional `mut`.
+            if fork.peek::<Token![mut]>() {
+                fork.advance();
+            }
+
+            return fork.peek::<Token![self]>();
+        }
+
+        if fork.peek::<Token![mut]>() {
+            fork.advance();
+            return fork.peek::<Token![self]>();
+        }
+
+        fork.peek::<Token![self]>()
+    }
 }
 
 impl Parse for Receiver {

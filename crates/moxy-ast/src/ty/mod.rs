@@ -1,5 +1,5 @@
-use crate::{Parse, ParseError, Parser};
-use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser, Peek};
+use moxy_token::{Delim, Keyword, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Delimited, Punctuated};
 
@@ -240,8 +240,42 @@ impl From<TypeBareFn> for Type {
     }
 }
 
+impl Peek for Type {
+    fn peek(parser: &Parser) -> bool {
+        match parser.curr() {
+            Some(TokenTree::Ident(_)) => true,
+
+            Some(TokenTree::Group(g)) => matches!(g.delim(), Delim::Paren | Delim::Bracket | Delim::None),
+
+            Some(TokenTree::Keyword(k)) => matches!(
+                k,
+                Keyword::Impl(_)
+                    | Keyword::Dyn(_)
+                    | Keyword::Fn(_)
+                    | Keyword::Extern(_)
+                    | Keyword::Unsafe(_)
+                    | Keyword::SelfType(_)
+                    | Keyword::SelfValue(_)
+                    | Keyword::Super(_)
+                    | Keyword::Crate(_)
+            ),
+
+            Some(TokenTree::Punct(p)) => matches!(
+                p,
+                Punct::And(_) | Punct::Star(_) | Punct::Not(_) | Punct::Colon(_) | Punct::Lt(_)
+            ),
+
+            _ => false,
+        }
+    }
+}
+
 impl Parse for Type {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if !parser.peek::<Self>() {
+            return parser.error("expected type").into();
+        }
+
         // `&` reference.
         if parser.peek::<Token![&]>() {
             return Ok(Self::Reference(parser.parse()?));

@@ -43,7 +43,7 @@ impl Parse for ItemTrait {
         };
 
         generics.where_clause = parser.parse_if();
-        let items = Delimited::<Vec<TraitItem>>::parse_brace(parser)?;
+        let items = Delimited::parse_brace_with(parser, |parser| parser.parse_until_empty::<TraitItem>())?;
 
         Ok(Self {
             attrs,

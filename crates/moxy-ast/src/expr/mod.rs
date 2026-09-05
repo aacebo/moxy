@@ -1,5 +1,5 @@
-use crate::{Parse, ParseError, Parser, Peek};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser, Peek, Token};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 pub mod binary;
 pub mod block;
@@ -27,12 +27,6 @@ pub enum Expr {
     Primary(PrimaryExpr),
     Infer,
     Verbatim(TokenStream),
-}
-
-impl Peek for Expr {
-    fn peek(parser: &Parser) -> bool {
-        parser.parse::<Self>().is_ok()
-    }
 }
 
 impl Expr {
@@ -399,6 +393,64 @@ impl From<ExprGroup> for Expr {
 impl From<ExprMacro> for Expr {
     fn from(value: ExprMacro) -> Self {
         Self::Primary(PrimaryExpr::from(value))
+    }
+}
+
+impl Peek for Expr {
+    fn peek(parser: &Parser) -> bool {
+        match parser.curr() {
+            // literals
+            Some(TokenTree::Literal(_)) => true,
+
+            // paths, `_`, etc.
+            Some(TokenTree::Ident(_)) => true,
+
+            // grouped primary expressions
+            Some(TokenTree::Group(group))
+                if matches!(group.delim(), Delim::Paren | Delim::Bracket | Delim::Brace | Delim::None) =>
+            {
+                true
+            }
+
+            _ => {
+                // unary expressions
+                parser.peek::<Token![&]>()
+                    || parser.peek::<Token![*]>()
+                    || parser.peek::<Token![!]>()
+                    || parser.peek::<Token![-]>()
+
+                    // paths beginning with ::
+                    || parser.peek::<Token![::]>()
+
+                    // closures
+                    || parser.peek::<Token![|]>()
+                    || parser.peek::<Token![||]>()
+
+                    // block expressions
+                    || parser.peek::<Token![if]>()
+                    || parser.peek::<Token![match]>()
+                    || parser.peek::<Token![while]>()
+                    || parser.peek::<Token![for]>()
+                    || parser.peek::<Token![loop]>()
+                    || parser.peek::<Token![async]>()
+                    || parser.peek::<Token![unsafe]>()
+                    || parser.peek::<Token![const]>()
+                    || parser.peek::<Token![try]>()
+
+                    // jump expressions
+                    || parser.peek::<Token![return]>()
+                    || parser.peek::<Token![break]>()
+                    || parser.peek::<Token![continue]>()
+                    || parser.peek::<Token![yield]>()
+
+                    // let expression
+                    || parser.peek::<Token![let]>()
+
+                    // range with no lhs, if supported
+                    || parser.peek::<Token![..]>()
+                    || parser.peek::<Token![..=]>()
+            }
+        }
     }
 }
 

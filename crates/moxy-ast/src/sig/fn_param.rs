@@ -1,9 +1,9 @@
-use crate::{Parse, ParseError, Parser};
+use crate::{Parse, ParseError, Parser, Peek};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::{Receiver, Variadic};
+use crate::Punctuated;
 use crate::pat::PatType;
-use crate::{Lifetime, Punctuated};
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -28,10 +28,12 @@ impl Spanner for FnParams {
 impl ToTokens for FnParams {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.inputs.to_tokens(t);
+
         if let Some(v) = &self.variadic {
             if !self.inputs.is_empty() && !self.inputs.is_trailing() {
                 <Token![,]>::default().to_tokens(t);
             }
+
             v.to_tokens(t);
         }
     }
@@ -45,34 +47,6 @@ pub enum FnParam {
     Typed(Box<PatType>),
 }
 
-impl FnParam {
-    pub fn is_receiver(parser: &Parser) -> bool {
-        let fork = parser.lookahead();
-        fork.skip_while::<crate::Attribute>();
-
-        if fork.peek::<Token![self]>() {
-            return true;
-        }
-
-        if fork.peek::<Token![&]>() {
-            fork.advance();
-
-            if fork.peek::<Lifetime>() {
-                fork.advance();
-                fork.advance();
-            }
-
-            if fork.peek::<Token![mut]>() {
-                fork.advance();
-            }
-
-            return fork.peek::<Token![self]>();
-        }
-
-        false
-    }
-}
-
 impl Spanner for FnParam {
     fn span(&self) -> Span {
         match self {
@@ -84,7 +58,7 @@ impl Spanner for FnParam {
 
 impl Parse for FnParam {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if Self::is_receiver(parser) {
+        if Receiver::peek(parser) {
             return Ok(Self::Receiver(Box::new(parser.parse()?)));
         }
 

@@ -153,7 +153,7 @@ impl From<ExprAwait> for PostfixExpr {
 impl PostfixExpr {
     pub fn parse_from(parser: &Parser, mut expr: Expr) -> Result<Expr, ParseError> {
         loop {
-            if parser.peek::<Token![.]>() {
+            if parser.peek::<Token![.]>() && !parser.peek::<Token![..]>() && !parser.peek::<Token![..=]>() {
                 let dot = parser.parse::<Token![.]>()?;
 
                 if matches!(parser.curr(), Some(tt) if tt.text() == Some("await")) {
