@@ -1,6 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Expr, Pattern, Type};
 
@@ -26,24 +25,24 @@ pub struct StmtLocalInit {
 }
 
 impl Parse for StmtLocal {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let let_keyword = stream.parse::<Token![let]>()?;
-        let pat = stream.parse::<Pattern>()?;
-        let ty = if stream.peek::<Token![:]>() {
-            let colon = stream.parse::<Token![:]>()?;
-            Some((colon, stream.parse::<Type>()?))
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let let_keyword = parser.parse::<Token![let]>()?;
+        let pat = parser.parse::<Pattern>()?;
+        let ty = if parser.peek::<Token![:]>() {
+            let colon = parser.parse::<Token![:]>()?;
+            Some((colon, parser.parse::<Type>()?))
         } else {
             None
         };
 
-        let init = if stream.peek::<Token![=]>() {
-            let eq = stream.parse::<Token![=]>()?;
-            let expr = stream.parse::<Expr>()?;
+        let init = if parser.peek::<Token![=]>() {
+            let eq = parser.parse::<Token![=]>()?;
+            let expr = parser.parse::<Expr>()?;
 
-            let diverge = if stream.peek::<Token![else]>() {
-                let else_keyword = stream.parse::<Token![else]>()?;
-                Some((else_keyword, Box::new(stream.parse::<Expr>()?)))
+            let diverge = if parser.peek::<Token![else]>() {
+                let else_keyword = parser.parse::<Token![else]>()?;
+                Some((else_keyword, Box::new(parser.parse::<Expr>()?)))
             } else {
                 None
             };
@@ -53,7 +52,7 @@ impl Parse for StmtLocal {
             None
         };
 
-        let semi = stream.parse_if::<Token![;]>();
+        let semi = parser.parse_if::<Token![;]>();
 
         Ok(Self {
             attrs,

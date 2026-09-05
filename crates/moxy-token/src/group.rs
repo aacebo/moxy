@@ -63,7 +63,7 @@ impl Scan for Group {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
         let ch = cursor.first().ok_or(cursor.error())?;
         let delim = Delim::from_open(ch).ok_or(cursor.error())?;
-        let c = cursor.advance(ch.len_utf8());
+        let c = cursor.advance_by(ch.len_utf8());
         let (c, inner) = TokenStream::scan(c)?;
         let close_ch = c
             .first()
@@ -82,7 +82,7 @@ impl Scan for Group {
             )));
         }
 
-        let c = c.advance(close_ch.len_utf8());
+        let c = c.advance_by(close_ch.len_utf8());
         let mut group = Self::new(delim, inner);
         group.set_span(DelimSpan::new(cursor.span(), c.span()));
 
@@ -99,15 +99,6 @@ impl crate::ToTokens for Group {
 impl crate::Spanner for Group {
     fn span(&self) -> Span {
         self.span.span()
-    }
-}
-
-impl crate::Parse for Group {
-    fn parse(stream: &mut crate::parser::ParseStream) -> Result<Self, crate::parser::ParseError> {
-        match stream.advance() {
-            Some(crate::TokenTree::Group(v)) => Ok(v.clone()),
-            _ => Err(crate::lex::LexError::new(stream.span()).message("expected Group").into()),
-        }
     }
 }
 

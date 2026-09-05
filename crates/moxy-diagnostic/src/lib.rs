@@ -14,8 +14,8 @@ use moxy_token::span::DelimSpan;
 #[doc(inline)]
 pub use span::*;
 
-use moxy_token::parser::ParseError;
-use moxy_token::{Delim, Group, Ident, Lit, Punctuation, Span, ToTokenStream, ToTokens, TokenStream};
+use moxy_ast::ParseError;
+use moxy_token::{Delim, Group, Ident, Lit, Punct, Span, ToTokenStream, ToTokens, TokenStream};
 
 /// Build a note-level [`Diagnostic`].
 ///
@@ -263,9 +263,9 @@ impl Diagnostic {
 
             vec![
                 ident.into_token_tree(),
-                Punctuation::from(bang).into_token_tree(),
+                Punct::from(bang).into_token_tree(),
                 group.into_token_tree(),
-                Punctuation::from(<Token![;]>::new(span)).into_token_tree(),
+                Punct::from(<Token![;]>::new(span)).into_token_tree(),
             ]
             .into_token_stream()
         }

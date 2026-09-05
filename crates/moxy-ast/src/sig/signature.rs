@@ -1,6 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::{Abi, FnParam, FnParams, Variadic};
 use crate::{Asyncness, Constness, Delimited, Generics, Ident, Punctuated, ReturnType, Unsafety};
@@ -21,20 +20,20 @@ pub struct Signature {
 }
 
 impl Parse for Signature {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let constness = stream.parse::<Constness>()?;
-        let asyncness = stream.parse::<Asyncness>()?;
-        let unsafety = stream.parse::<Unsafety>()?;
-        let abi = if stream.peek::<Token![extern]>() {
-            Some(stream.parse::<Abi>()?)
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let constness = parser.parse::<Constness>()?;
+        let asyncness = parser.parse::<Asyncness>()?;
+        let unsafety = parser.parse::<Unsafety>()?;
+        let abi = if parser.peek::<Token![extern]>() {
+            Some(parser.parse::<Abi>()?)
         } else {
             None
         };
 
-        let fn_keyword = stream.parse::<Token![fn]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let mut generics = stream.parse::<Generics>()?;
-        let params = Delimited::parse_paren_with(stream, |inner| {
+        let fn_keyword = parser.parse::<Token![fn]>()?;
+        let ident = parser.parse::<Ident>()?;
+        let mut generics = parser.parse::<Generics>()?;
+        let params = Delimited::parse_paren_with(parser, |inner| {
             let mut inputs = Punctuated::new();
             let mut variadic = None;
 
@@ -56,8 +55,8 @@ impl Parse for Signature {
             Ok(FnParams { inputs, variadic })
         })?;
 
-        let output = stream.parse::<ReturnType>()?;
-        generics.where_clause = stream.parse_if();
+        let output = parser.parse::<ReturnType>()?;
+        generics.where_clause = parser.parse_if();
 
         Ok(Self {
             constness,
@@ -103,8 +102,8 @@ impl Signature {
         }
     }
 
-    pub fn is_start(stream: &mut moxy_token::parser::ParseStream) -> bool {
-        let mut fork = stream.lookahead();
+    pub fn is_start(parser: &Parser) -> bool {
+        let fork = parser.lookahead();
 
         if fork.peek::<Token![const]>() {
             fork.advance();

@@ -1,6 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Ident, Type};
 
@@ -14,14 +13,14 @@ pub struct BareFnArg {
 }
 
 impl Parse for BareFnArg {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let name = if stream.peek::<Ident>() {
-            let mut fork = stream.lookahead();
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let name = if parser.peek::<Ident>() {
+            let fork = parser.lookahead();
             fork.advance();
 
             if fork.peek::<Token![:]>() {
-                Some((stream.parse()?, stream.parse()?))
+                Some((parser.parse()?, parser.parse()?))
             } else {
                 None
             }
@@ -29,7 +28,7 @@ impl Parse for BareFnArg {
             None
         };
 
-        let ty = stream.parse::<Type>()?;
+        let ty = parser.parse::<Type>()?;
         Ok(Self { attrs, name, ty })
     }
 }

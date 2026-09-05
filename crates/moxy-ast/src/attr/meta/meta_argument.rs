@@ -39,11 +39,11 @@ impl MetaArgument {
 }
 
 impl Parse for MetaArgument {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Path>() {
-            Ok(Self::Meta(stream.parse()?))
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<Path>() {
+            Ok(Self::Meta(parser.parse()?))
         } else {
-            Ok(Self::Value(stream.parse()?))
+            Ok(Self::Value(parser.parse()?))
         }
     }
 }

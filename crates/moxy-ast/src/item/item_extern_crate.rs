@@ -1,6 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::Token;
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Ident, Visibility};
 
@@ -19,21 +19,21 @@ pub struct ItemExternCrate {
 }
 
 impl Parse for ItemExternCrate {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let extern_keyword = stream.parse::<Token![extern]>()?;
-        let crate_keyword = stream.parse::<Token![crate]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let (as_keyword, rename) = if stream.peek::<Token![as]>() {
-            let as_keyword = stream.parse::<Token![as]>()?;
-            let rename = stream.parse::<Ident>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let vis = parser.parse::<Visibility>()?;
+        let extern_keyword = parser.parse::<Token![extern]>()?;
+        let crate_keyword = parser.parse::<Token![crate]>()?;
+        let ident = parser.parse::<Ident>()?;
+        let (as_keyword, rename) = if parser.peek::<Token![as]>() {
+            let as_keyword = parser.parse::<Token![as]>()?;
+            let rename = parser.parse::<Ident>()?;
             (Some(as_keyword), Some(rename))
         } else {
             (None, None)
         };
 
-        let semi_punct = stream.parse::<Token![;]>()?;
+        let semi_punct = parser.parse::<Token![;]>()?;
 
         Ok(Self {
             attrs,

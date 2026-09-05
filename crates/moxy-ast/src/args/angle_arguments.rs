@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, Token, TokenStream};
+use crate::{Parse, ParseError, Parser, Token};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::GenericArgument;
 use crate::Punctuated;
@@ -15,12 +15,12 @@ pub struct AngleArguments {
 }
 
 impl Parse for AngleArguments {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            colon2: stream.parse_if(),
-            lt_punct: stream.parse()?,
-            args: Punctuated::parse_separated_nonempty(stream)?,
-            gt_punct: stream.parse()?,
+            colon2: parser.parse_if(),
+            lt_punct: parser.parse()?,
+            args: Punctuated::parse_separated_nonempty(parser)?,
+            gt_punct: parser.parse()?,
         })
     }
 }

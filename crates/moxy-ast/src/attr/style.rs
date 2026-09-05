@@ -1,5 +1,7 @@
-use moxy_token::Token;
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::Token;
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
+use crate::{Parse, ParseError, Parser};
 
 /// Whether an attribute is outer (`#[...]`) or inner (`#![...]`).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -47,11 +49,11 @@ impl ToTokens for AttrStyle {
 }
 
 impl Parse for AttrStyle {
-    fn parse(stream: &mut moxy_token::parser::ParseStream) -> Result<Self, moxy_token::parser::ParseError> {
-        let pound = stream.parse::<Token![#]>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let pound = parser.parse::<Token![#]>()?;
 
-        if stream.peek::<Token![!]>() {
-            Ok(Self::Inner(pound, stream.parse()?))
+        if parser.peek::<Token![!]>() {
+            Ok(Self::Inner(pound, parser.parse()?))
         } else {
             Ok(Self::Outer(pound))
         }

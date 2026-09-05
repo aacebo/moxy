@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser, Punctuated, Token};
+use moxy_token::{Ident, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Expr, Lifetime, Type};
 
@@ -41,41 +41,75 @@ impl Spanner for GenericArgument {
 }
 
 impl Parse for GenericArgument {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let token = match stream.curr() {
-            None => return Err(ParseError::new(stream.span(), "eof")),
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let token = match parser.curr() {
+            None => return Err(ParseError::new(parser.span(), "eof")),
             Some(v) => v.clone(),
         };
 
         // Lifetime: starts with `'`.
         if token.is_punct_quote() {
-            return Ok(Self::Lifetime(stream.parse()?));
-        }
-
-        // Constraint `ident [generics] : bounds` — must come before AssocType/AssocConst
-        // because `:` is unambiguous.
-        if let Some(argument) = stream.parse_if::<ConstraintArgument>() {
-            return Ok(argument.into_generic_argument());
-        }
-
-        // Associated type binding `ident [generics] = Type`.
-        if let Some(argument) = stream.parse_if::<AssocTypeArgument>() {
-            return Ok(argument.into_generic_argument());
-        }
-
-        // Associated const binding `ident [generics] = expr`.
-        if let Some(argument) = stream.parse_if::<AssocConstArgument>() {
-            return Ok(argument.into_generic_argument());
+            return Ok(Self::Lifetime(parser.parse()?));
         }
 
         // Literal or block expression const argument.
         let is_const = token.is_literal() || token.as_group().map(|g| g.delim().is_brace()).unwrap_or(false);
 
         if is_const {
-            return Ok(Self::Const(stream.parse()?));
+            return Ok(Self::Const(parser.parse()?));
         }
 
-        Ok(Self::Type(stream.parse()?))
+        if token.is_ident() {
+            let fork = parser.fork();
+            let ident = fork.parse::<Ident>()?;
+            let generics = fork.parse_if::<AngleArguments>();
+
+            if let Ok(colon_punct) = fork.parse::<Token![:]>() {
+                let bounds = Punctuated::parse_separated_nonempty(&fork)?;
+                parser.seek(&fork);
+                return Ok(ConstraintArgument {
+                    ident,
+                    generics,
+                    colon_punct,
+                    bounds,
+                }
+                .into_generic_argument());
+            }
+
+            if let Ok(eq_punct) = fork.parse::<Token![=]>() {
+                let is_const = match fork.curr() {
+                    Some(TokenTree::Literal(_)) => true,
+                    Some(TokenTree::Group(g)) if g.delim().is_brace() => true,
+                    Some(TokenTree::Punct(Punct::Minus(_))) => true,
+                    Some(TokenTree::Punct(Punct::Not(_))) => true,
+                    _ => false,
+                };
+
+                if is_const {
+                    let expr = fork.parse()?;
+                    parser.seek(&fork);
+                    return Ok(AssocConstArgument {
+                        ident,
+                        generics,
+                        eq_punct,
+                        expr,
+                    }
+                    .into_generic_argument());
+                }
+
+                let ty = fork.parse()?;
+                parser.seek(&fork);
+                return Ok(AssocTypeArgument {
+                    ident,
+                    generics,
+                    eq_punct,
+                    ty,
+                }
+                .into_generic_argument());
+            }
+        }
+
+        Ok(Self::Type(parser.parse()?))
     }
 }
 

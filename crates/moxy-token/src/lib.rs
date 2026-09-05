@@ -17,7 +17,6 @@ mod ident;
 pub mod keyword;
 pub mod lex;
 mod lit;
-pub mod parser;
 pub mod punct;
 pub mod source;
 mod spacing;
@@ -37,8 +36,6 @@ pub use keyword::*;
 pub use lex::{LexError, Scan};
 #[doc(inline)]
 pub use lit::*;
-#[doc(inline)]
-pub use parser::Parse;
 #[doc(inline)]
 pub use punct::*;
 #[doc(inline)]
@@ -99,6 +96,15 @@ impl<T: ToTokens> ToTokens for Vec<T> {
     }
 }
 
+impl<T: ToTokens, E: ToTokens> ToTokens for Result<T, E> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        match self {
+            Self::Ok(v) => v.to_tokens(tokens),
+            Self::Err(err) => err.to_tokens(tokens),
+        }
+    }
+}
+
 /// Map a Rust punctuation or keyword symbol to its [`crate`] token type.
 #[macro_export]
 macro_rules! Token {
@@ -124,33 +130,6 @@ macro_rules! Token {
     [#]     => { $crate::Pound };
     [$]     => { $crate::Dollar };
     [?]     => { $crate::Question };
-
-    // --- punctuation: multi char ---
-    [&&]    => { $crate::AndAnd };
-    [||]    => { $crate::OrOr };
-    [<<]    => { $crate::Shl };
-    [>>]    => { $crate::Shr };
-    [==]    => { $crate::EqEq };
-    [!=]    => { $crate::Ne };
-    [<=]    => { $crate::Le };
-    [>=]    => { $crate::Ge };
-    [&=]    => { $crate::AndEq };
-    [|=]    => { $crate::OrEq };
-    [+=]    => { $crate::PlusEq };
-    [-=]    => { $crate::MinusEq };
-    [*=]    => { $crate::StarEq };
-    [/=]    => { $crate::SlashEq };
-    [%=]    => { $crate::PercentEq };
-    [^=]    => { $crate::CaretEq };
-    [=>]    => { $crate::FatArrow };
-    [->]    => { $crate::RArrow };
-    [<-]    => { $crate::LArrow };
-    [::]    => { $crate::PathSep };
-    [..]    => { $crate::DotDot };
-    [<<=]   => { $crate::ShlEq };
-    [>>=]   => { $crate::ShrEq };
-    [...]   => { $crate::DotDotDot };
-    [..=]   => { $crate::DotDotEq };
 
     // --- keywords ---
     [as]          => { $crate::As };
@@ -206,16 +185,4 @@ macro_rules! Token {
     [where]       => { $crate::Where };
     [while]       => { $crate::While };
     [yield]       => { $crate::Yield };
-}
-
-#[cfg(test)]
-mod tests {
-    #[test]
-    fn token_macro_maps_dollar_and_macro_rules() {
-        let dollar: Token![$] = Default::default();
-        let macro_rules: Token![macro_rules] = Default::default();
-
-        assert_eq!(dollar.as_str(), "$");
-        assert_eq!(macro_rules.as_str(), "macro_rules");
-    }
 }

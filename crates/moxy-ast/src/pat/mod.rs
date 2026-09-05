@@ -1,6 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, LexError, Parse, Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Delim, LexError, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Attributes, Delimited, Expr, Ident, Member, Mutability, Path, Punctuated};
 
@@ -299,26 +298,26 @@ impl From<PatParen> for Pattern {
 }
 
 impl Parse for Pattern {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         // Optional leading `|`, then one-or-more `|`-separated alternatives.
-        let leading = stream.peek::<Token![|]>();
+        let leading = parser.peek::<Token![|]>();
 
         if leading {
-            let _ = stream.parse::<Token![|]>()?;
+            let _ = parser.parse::<Token![|]>()?;
         }
 
-        let first = parse_single(stream)?;
+        let first = parse_single(parser)?;
 
-        if !leading && !stream.peek::<Token![|]>() {
+        if !leading && !parser.peek::<Token![|]>() {
             return Ok(first);
         }
 
         let mut cases = Punctuated::new();
         cases.push_value(first);
 
-        while stream.peek::<Token![|]>() {
-            cases.push_punct(stream.parse::<Token![|]>()?);
-            cases.push_value(parse_single(stream)?);
+        while parser.peek::<Token![|]>() {
+            cases.push_punct(parser.parse::<Token![|]>()?);
+            cases.push_value(parse_single(parser)?);
         }
 
         Ok(Self::Or(PatOr {
@@ -331,8 +330,8 @@ impl Parse for Pattern {
 impl Pattern {
     /// Parse a single pattern alternative (no top-level `|` or-collection).
     /// Used where `|` is a delimiter (closure params), not an or-pattern.
-    pub fn parse_single(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        parse_single(stream)
+    pub fn parse_single(parser: &Parser) -> Result<Self, ParseError> {
+        parse_single(parser)
     }
 }
 
@@ -370,13 +369,13 @@ impl ToTokens for Pattern {
 }
 
 impl PatIdent {
-    pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Self, ParseError> {
-        let by_ref = stream.parse_if::<Token![ref]>();
-        let mutability = stream.parse::<Mutability>()?;
-        let ident = stream.parse::<Ident>()?;
-        let subpat = if stream.peek::<Token![@]>() {
-            let at = stream.parse::<Token![@]>()?;
-            Some((at, Box::new(stream.parse::<Pattern>()?)))
+    pub fn parse_from(parser: &Parser, attrs: Attributes) -> Result<Self, ParseError> {
+        let by_ref = parser.parse_if::<Token![ref]>();
+        let mutability = parser.parse::<Mutability>()?;
+        let ident = parser.parse::<Ident>()?;
+        let subpat = if parser.peek::<Token![@]>() {
+            let at = parser.parse::<Token![@]>()?;
+            Some((at, Box::new(parser.parse::<Pattern>()?)))
         } else {
             None
         };
@@ -392,27 +391,27 @@ impl PatIdent {
 }
 
 impl PatStruct {
-    pub fn parse_body(stream: &mut ParseStream) -> Result<(Punctuated<PatField, Token![,]>, Option<Token![..]>), ParseError> {
+    pub fn parse_body(parser: &Parser) -> Result<(Punctuated<PatField, Token![,]>, Option<Token![..]>), ParseError> {
         let mut fields = Punctuated::new();
         let mut rest = None;
 
-        while !stream.is_empty() {
-            if stream.peek::<Token![..]>() {
-                rest = Some(stream.parse::<Token![..]>()?);
+        while !parser.is_empty() {
+            if parser.peek::<Token![..]>() {
+                rest = Some(parser.parse::<Token![..]>()?);
                 break;
             }
 
-            let field_attrs = stream.parse::<Attributes>()?;
-            let member = stream.parse::<Member>()?;
-            let (colon, pat, shorthand) = if stream.peek::<Token![:]>() {
-                let colon = stream.parse::<Token![:]>()?;
-                (Some(colon), stream.parse::<Pattern>()?, false)
+            let field_attrs = parser.parse::<Attributes>()?;
+            let member = parser.parse::<Member>()?;
+            let (colon, pat, shorthand) = if parser.peek::<Token![:]>() {
+                let colon = parser.parse::<Token![:]>()?;
+                (Some(colon), parser.parse::<Pattern>()?, false)
             } else {
                 // shorthand `{ field }`
                 let ident = match &member {
                     Member::Named(id) => id.clone(),
                     Member::Unnamed(_) => {
-                        return Err(LexError::new(stream.span()).message("tuple index needs a pattern").into());
+                        return Err(LexError::new(parser.span()).message("tuple index needs a pattern").into());
                     }
                 };
                 (
@@ -436,8 +435,8 @@ impl PatStruct {
                 shorthand,
             });
 
-            if stream.peek::<Token![,]>() {
-                fields.push_punct(stream.parse::<Token![,]>()?);
+            if parser.peek::<Token![,]>() {
+                fields.push_punct(parser.parse::<Token![,]>()?);
             } else {
                 break;
             }
@@ -447,41 +446,41 @@ impl PatStruct {
     }
 }
 
-fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
-    let at = stream.span();
-    let attrs = stream.parse::<Attributes>()?;
+fn parse_single(parser: &Parser) -> Result<Pattern, ParseError> {
+    let at = parser.span();
+    let attrs = parser.parse::<Attributes>()?;
 
     // Wildcard `_`
-    if matches!(stream.curr(), Some(tt) if tt.text() == Some("_")) {
-        stream.advance();
+    if matches!(parser.curr(), Some(tt) if tt.text() == Some("_")) {
+        parser.advance();
         return Ok(Pattern::Wild);
     }
 
     // Rest `..`
-    if stream.peek::<Token![..]>() {
-        let _ = stream.parse::<Token![..]>()?;
+    if parser.peek::<Token![..]>() {
+        let _ = parser.parse::<Token![..]>()?;
         return Ok(Pattern::Rest);
     }
 
     // `box pat`
-    if matches!(stream.curr(), Some(tt) if tt.text() == Some("box")) {
-        stream.advance();
-        return Ok(Pattern::Box(Box::new(parse_single(stream)?)));
+    if matches!(parser.curr(), Some(tt) if tt.text() == Some("box")) {
+        parser.advance();
+        return Ok(Pattern::Box(Box::new(parse_single(parser)?)));
     }
 
     // `const { ... }` block pattern
-    if matches!(stream.curr(), Some(tt) if tt.text() == Some("const"))
-        && matches!(stream.nth(1), Some(moxy_token::TokenTree::Group(g)) if g.delim() == Delim::Brace)
+    if matches!(parser.curr(), Some(tt) if tt.text() == Some("const"))
+        && matches!(parser.nth(1), Some(moxy_token::TokenTree::Group(g)) if g.delim() == Delim::Brace)
     {
-        stream.advance();
-        return Ok(Pattern::Const(stream.parse::<crate::StmtBlock>()?));
+        parser.advance();
+        return Ok(Pattern::Const(parser.parse::<crate::StmtBlock>()?));
     }
 
     // Reference `&`/`&mut`
-    if stream.peek::<Token![&]>() {
-        let and = stream.parse::<Token![&]>()?;
-        let mutability = stream.parse::<Mutability>()?;
-        let pat = Box::new(stream.parse::<Pattern>()?);
+    if parser.peek::<Token![&]>() {
+        let and = parser.parse::<Token![&]>()?;
+        let mutability = parser.parse::<Mutability>()?;
+        let pat = Box::new(parser.parse::<Pattern>()?);
         return Ok(Pattern::Reference(PatReference {
             attrs,
             and,
@@ -491,38 +490,38 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
     }
 
     // Tuple/paren `(...)`
-    if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-        let elems = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
+    if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
+        let elems = Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?;
         return Ok(Pattern::Tuple(PatTuple { attrs, elems }));
     }
 
     // Slice `[...]`
-    if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
-        let elems = Delimited::parse_bracket_with(stream, Punctuated::parse_terminated)?;
+    if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
+        let elems = Delimited::parse_bracket_with(parser, Punctuated::parse_terminated)?;
         return Ok(Pattern::Slice(PatSlice { attrs, elems }));
     }
 
     // `ref`/`mut`-led binding
-    if stream.peek::<Token![ref]>() || stream.peek::<Token![mut]>() {
-        return Ok(Pattern::Ident(PatIdent::parse_from(stream, attrs)?));
+    if parser.peek::<Token![ref]>() || parser.peek::<Token![mut]>() {
+        return Ok(Pattern::Ident(PatIdent::parse_from(parser, attrs)?));
     }
 
     // Literal pattern
-    if matches!(stream.curr(), Some(tt) if matches!(tt, TokenTree::Literal(_))) {
-        let expr = stream.parse::<Expr>()?;
+    if matches!(parser.curr(), Some(tt) if matches!(tt, TokenTree::Literal(_))) {
+        let expr = parser.parse::<Expr>()?;
         return Ok(Pattern::Lit(PatLit { attrs, expr }));
     }
 
     // Path-led: ident binding, path, tuple-struct, or struct pattern.
     if matches!(
-        stream.curr(),
-        Some(TokenTree::Ident(_) | TokenTree::Keyword(_) | TokenTree::Punct(Punctuation::PathSep(_)))
+        parser.curr(),
+        Some(TokenTree::Ident(_) | TokenTree::Keyword(_) | TokenTree::Punct(Punct::Colon(_)))
     ) {
         // Single bare ident with no `::`/`(`/`{` → binding.
-        let path = stream.parse::<Path>()?;
+        let path = parser.parse::<Path>()?;
 
-        if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-            let elems = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
+        if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
+            let elems = Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?;
 
             return Ok(Pattern::TupleStruct(PatTupleStruct {
                 attrs,
@@ -532,8 +531,8 @@ fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
             }));
         }
 
-        if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
-            let body = Delimited::parse_brace_with(stream, |inner| {
+        if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
+            let body = Delimited::parse_brace_with(parser, |inner| {
                 let (fields, rest) = PatStruct::parse_body(inner)?;
                 Ok(PatStructBody { fields, rest })
             })?;

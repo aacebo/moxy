@@ -1,6 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::Token;
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Lifetime, Punctuated};
 
@@ -15,10 +15,10 @@ pub struct LifetimeParam {
 }
 
 impl Parse for LifetimeParam {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let lifetime = stream.parse::<Lifetime>()?;
-        let bounds = Lifetime::parse_bounds(stream)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let lifetime = parser.parse::<Lifetime>()?;
+        let bounds = Lifetime::parse_bounds(parser)?;
         let colon_punct = if !bounds.is_empty() {
             Some(<Token![:]>::default())
         } else {

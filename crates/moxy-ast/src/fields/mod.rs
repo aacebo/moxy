@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 mod field;
 mod field_value;
@@ -65,10 +65,10 @@ impl Spanner for Fields {
 }
 
 impl Parse for Fields {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        match stream.curr() {
-            Some(TokenTree::Group(g)) if g.delim() == Delim::Brace => Ok(Self::Named(stream.parse()?)),
-            Some(TokenTree::Group(g)) if g.delim() == Delim::Paren => Ok(Self::Unnamed(stream.parse()?)),
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.curr() {
+            Some(TokenTree::Group(g)) if g.delim() == Delim::Brace => Ok(Self::Named(parser.parse()?)),
+            Some(TokenTree::Group(g)) if g.delim() == Delim::Paren => Ok(Self::Unnamed(parser.parse()?)),
             _ => Ok(Self::Unit),
         }
     }

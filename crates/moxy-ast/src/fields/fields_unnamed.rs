@@ -1,6 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::Token;
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::Field;
 use crate::{Delimited, Punctuated};
@@ -13,8 +13,8 @@ pub struct FieldsUnnamed {
 }
 
 impl Parse for FieldsUnnamed {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let fields = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let fields = Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?;
         Ok(Self { fields })
     }
 }

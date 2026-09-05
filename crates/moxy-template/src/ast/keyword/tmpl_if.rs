@@ -1,7 +1,7 @@
 #![allow(unused)]
 
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, Parse, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
+use moxy_ast::{Parse, ParseError, Parser, Token};
+use moxy_token::{Delim, Group, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 use crate::Template;
 
@@ -29,16 +29,16 @@ pub struct TmplIfBranch {
 }
 
 impl TmplIf {
-    pub fn parse_after_keyword_if(stream: &mut ParseStream, at_punct: Token![@], if_kw: Token![if]) -> Result<Self, ParseError> {
+    pub fn parse_after_keyword_if(parser: &Parser, at_punct: Token![@], if_kw: Token![if]) -> Result<Self, ParseError> {
         let span = at_punct.span();
-        let first = Self::parse_branch(stream, None, None, if_kw)?;
+        let first = Self::parse_branch(parser, None, None, if_kw)?;
         let mut branches = vec![first];
         let mut else_at_punct = None;
         let mut else_keyword_field = None;
         let mut else_body = None;
 
         loop {
-            let mut fork = stream.lookahead();
+            let mut fork = parser.lookahead();
 
             if !fork.peek::<Token![@]>() {
                 break;
@@ -50,14 +50,14 @@ impl TmplIf {
                 break;
             }
 
-            let at2 = stream.parse::<Token![@]>()?;
-            let else_kw = stream.parse::<Token![else]>()?;
+            let at2 = parser.parse::<Token![@]>()?;
+            let else_kw = parser.parse::<Token![else]>()?;
 
-            if let Some(if_kw2) = stream.parse_if::<Token![if]>() {
-                branches.push(Self::parse_branch(stream, Some(at2), Some(else_kw), if_kw2)?);
+            if let Some(if_kw2) = parser.parse_if::<Token![if]>() {
+                branches.push(Self::parse_branch(parser, Some(at2), Some(else_kw), if_kw2)?);
             } else {
-                let body_stream = stream.parse_group(Delim::Brace)?;
-                let mut body_ps = body_stream.parse();
+                let body_stream = parser.parse_group(Delim::Brace)?;
+                let body_ps = Parser::from_tokens(&body_stream);
                 else_at_punct = Some(at2);
                 else_keyword_field = Some(else_kw);
                 else_body = Some(Box::new(body_ps.parse::<Template>()?));
@@ -77,15 +77,15 @@ impl TmplIf {
     }
 
     pub fn parse_branch(
-        stream: &mut ParseStream,
+        parser: &Parser,
         at_punct: Option<Token![@]>,
         else_keyword: Option<Token![else]>,
         if_keyword: Token![if],
     ) -> Result<TmplIfBranch, ParseError> {
         let span = if_keyword.span();
-        let cond = stream.parse_group(Delim::Paren)?;
-        let body_stream = stream.parse_group(Delim::Brace)?;
-        let mut body_ps = body_stream.parse();
+        let cond = parser.parse_group(Delim::Paren)?;
+        let body_stream = parser.parse_group(Delim::Brace)?;
+        let body_ps = Parser::from_tokens(&body_stream);
         let body = body_ps.parse::<Template>()?;
 
         Ok(TmplIfBranch {

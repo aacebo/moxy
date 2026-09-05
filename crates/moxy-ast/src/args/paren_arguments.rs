@@ -1,6 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::Token;
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Delimited, Punctuated, ReturnType, ty};
 
@@ -13,9 +13,9 @@ pub struct ParenArguments {
 }
 
 impl Parse for ParenArguments {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let params = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
-        let output = stream.parse::<ReturnType>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let params = Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?;
+        let output = parser.parse::<ReturnType>()?;
         Ok(Self { params, output })
     }
 }

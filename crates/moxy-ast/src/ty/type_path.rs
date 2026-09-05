@@ -1,6 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::QSelf;
 use crate::{Path, PathSegment};
@@ -14,9 +13,9 @@ pub struct TypePath {
 }
 
 impl Parse for TypePath {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Token![<]>() {
-            let (qself, path) = super::QSelf::parse_qualified(stream)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<Token![<]>() {
+            let (qself, path) = super::QSelf::parse_qualified(parser)?;
 
             return Ok(Self {
                 qself: Some(qself),
@@ -26,7 +25,7 @@ impl Parse for TypePath {
 
         Ok(Self {
             qself: None,
-            path: stream.parse()?,
+            path: parser.parse()?,
         })
     }
 }

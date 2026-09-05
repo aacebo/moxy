@@ -1,4 +1,4 @@
-use moxy_token::Token;
+use crate::Token;
 
 use super::*;
 
@@ -61,22 +61,23 @@ impl MetaLayout {
 }
 
 impl Parse for MetaLayout {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Token![=]>() && !stream.peek::<Token![==]>() && !stream.peek::<Token![=>]>() {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<Token![=]>() && !parser.peek::<Token![==]>() && !parser.peek::<Token![=>]>() {
             return Ok(Self::Alias {
-                eq: stream.parse()?,
-                value: stream.parse()?,
+                eq: parser.parse()?,
+                value: parser.parse()?,
             });
         }
 
-        if let Ok((span, tokens)) = stream.parse_group_spanned(Delim::Paren) {
-            let punct = Punctuated::parse_terminated(&mut tokens.parse())?;
+        if let Ok((span, tokens)) = parser.parse_group_spanned(Delim::Paren) {
+            let inner = Parser::from_tokens(&tokens);
+            let punct = Punctuated::parse_terminated(&inner)?;
             let items = Delimited::new(Delim::Paren, span, punct);
             return Ok(Self::List { items });
         }
 
-        if matches!(stream.curr().and_then(|tt| tt.delim()), Some(d) if d.is_brace()) {
-            return Ok(Self::Value(stream.parse()?));
+        if matches!(parser.curr().and_then(|tt| tt.delim()), Some(d) if d.is_brace()) {
+            return Ok(Self::Value(parser.parse()?));
         }
 
         Ok(Self::None)

@@ -1,3 +1,4 @@
+/// Whether a Punct is followed immediately by another Punct or followed by another token or whitespace.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(rename_all = "lowercase"))]
 pub enum Spacing {

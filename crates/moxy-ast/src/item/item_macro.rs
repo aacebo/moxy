@@ -1,6 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::Token;
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, MacroCall};
 
@@ -14,10 +14,10 @@ pub struct ItemMacro {
 }
 
 impl Parse for ItemMacro {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let call = stream.parse::<MacroCall>()?;
-        let semi_punct = stream.parse_if::<Token![;]>();
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let call = parser.parse::<MacroCall>()?;
+        let semi_punct = parser.parse_if::<Token![;]>();
         Ok(Self { attrs, call, semi_punct })
     }
 }

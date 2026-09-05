@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 mod foreign_item_fn;
 mod foreign_item_macro;
@@ -80,20 +80,20 @@ impl_from! {
 }
 
 impl Parse for ForeignItem {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if let Some(item) = stream.parse_if::<ForeignItemStatic>() {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if let Some(item) = parser.parse_if::<ForeignItemStatic>() {
             return Ok(Self::Static(item));
         }
 
-        if let Some(item) = stream.parse_if::<ForeignItemType>() {
+        if let Some(item) = parser.parse_if::<ForeignItemType>() {
             return Ok(Self::Type(item));
         }
 
-        if let Some(item) = stream.parse_if::<ForeignItemFn>() {
+        if let Some(item) = parser.parse_if::<ForeignItemFn>() {
             return Ok(Self::Fn(item));
         }
 
-        Ok(Self::Macro(stream.parse()?))
+        Ok(Self::Macro(parser.parse()?))
     }
 }
 

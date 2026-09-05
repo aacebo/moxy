@@ -1,6 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::Token;
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Expr, Ident, Type};
 
@@ -18,15 +18,15 @@ pub struct ConstParam {
 }
 
 impl Parse for ConstParam {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let const_keyword = stream.parse::<Token![const]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let colon_punct = stream.parse::<Token![:]>()?;
-        let ty = stream.parse::<Type>()?;
-        let (default_eq_punct, default) = if stream.peek::<Token![=]>() {
-            let eq_punct = stream.parse::<Token![=]>()?;
-            let expr = stream.parse::<Expr>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let const_keyword = parser.parse::<Token![const]>()?;
+        let ident = parser.parse::<Ident>()?;
+        let colon_punct = parser.parse::<Token![:]>()?;
+        let ty = parser.parse::<Type>()?;
+        let (default_eq_punct, default) = if parser.peek::<Token![=]>() {
+            let eq_punct = parser.parse::<Token![=]>()?;
+            let expr = parser.parse::<Expr>()?;
             (Some(eq_punct), Some(expr))
         } else {
             (None, None)

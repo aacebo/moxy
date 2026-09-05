@@ -1,7 +1,7 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, Token, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{IntoIter, Punctuated};
+use crate::{IntoIter, Peek, Punctuated};
 
 mod arguments;
 mod segment;
@@ -55,10 +55,16 @@ impl Path {
 }
 
 impl Parse for Path {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let leading_colon = stream.parse_if::<Token![::]>();
-        let segments = Punctuated::parse_separated_nonempty(stream)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let leading_colon = parser.parse_if::<Token![::]>();
+        let segments = Punctuated::parse_separated_nonempty(parser)?;
         Ok(Self { leading_colon, segments })
+    }
+}
+
+impl Peek for Path {
+    fn peek(parser: &Parser) -> bool {
+        parser.parse::<Self>().is_ok()
     }
 }
 
@@ -87,8 +93,8 @@ impl std::str::FromStr for Path {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let stream = TokenStream::from_str(s)?;
-        stream.parse().parse()
+        let parser = TokenStream::from_str(s)?;
+        Parser::from_tokens(&parser).parse()
     }
 }
 

@@ -1,6 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::Token;
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, BoundPolarity, Defaultness, Delimited, Generics, ImplItem, TraitRef, Type, Unsafety};
 
@@ -33,29 +33,29 @@ impl ItemImpl {
 }
 
 impl Parse for ItemImpl {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let defaultness = stream.parse::<Defaultness>()?;
-        let unsafety = stream.parse::<Unsafety>()?;
-        let impl_keyword = stream.parse::<Token![impl]>()?;
-        let mut generics = stream.parse::<Generics>()?;
-        let polarity = if stream.peek::<Token![!]>() {
-            BoundPolarity::Negative(stream.parse::<Token![!]>()?)
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let defaultness = parser.parse::<Defaultness>()?;
+        let unsafety = parser.parse::<Unsafety>()?;
+        let impl_keyword = parser.parse::<Token![impl]>()?;
+        let mut generics = parser.parse::<Generics>()?;
+        let polarity = if parser.peek::<Token![!]>() {
+            BoundPolarity::Negative(parser.parse::<Token![!]>()?)
         } else {
             BoundPolarity::Positive
         };
 
-        let first = stream.parse::<Type>()?;
-        let (for_keyword, trait_ref, self_ty) = if stream.peek::<Token![for]>() {
-            let for_keyword = stream.parse::<Token![for]>()?;
-            let self_ty = stream.parse::<Type>()?;
+        let first = parser.parse::<Type>()?;
+        let (for_keyword, trait_ref, self_ty) = if parser.peek::<Token![for]>() {
+            let for_keyword = parser.parse::<Token![for]>()?;
+            let self_ty = parser.parse::<Type>()?;
             (Some(for_keyword), Some(Self::type_to_trait_ref(first, polarity)?), self_ty)
         } else {
             (None, None, first)
         };
 
-        generics.where_clause = stream.parse_if();
-        let items = Delimited::<Vec<ImplItem>>::parse_brace(stream)?;
+        generics.where_clause = parser.parse_if();
+        let items = Delimited::<Vec<ImplItem>>::parse_brace(parser)?;
 
         Ok(Self {
             attrs,

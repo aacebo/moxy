@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{BoundPolarity, Path};
 
@@ -12,9 +12,9 @@ pub struct TraitRef {
 }
 
 impl Parse for TraitRef {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let polarity = stream.parse::<BoundPolarity>()?;
-        let path = stream.parse::<Path>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let polarity = parser.parse::<BoundPolarity>()?;
+        let path = parser.parse::<Path>()?;
         Ok(Self { polarity, path })
     }
 }

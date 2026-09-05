@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser, Peek, Token};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 pub mod binary;
 pub mod block;
@@ -396,9 +396,67 @@ impl From<ExprMacro> for Expr {
     }
 }
 
+impl Peek for Expr {
+    fn peek(parser: &Parser) -> bool {
+        match parser.curr() {
+            // literals
+            Some(TokenTree::Literal(_)) => true,
+
+            // paths, `_`, etc.
+            Some(TokenTree::Ident(_)) => true,
+
+            // grouped primary expressions
+            Some(TokenTree::Group(group))
+                if matches!(group.delim(), Delim::Paren | Delim::Bracket | Delim::Brace | Delim::None) =>
+            {
+                true
+            }
+
+            _ => {
+                // unary expressions
+                parser.peek::<Token![&]>()
+                    || parser.peek::<Token![*]>()
+                    || parser.peek::<Token![!]>()
+                    || parser.peek::<Token![-]>()
+
+                    // paths beginning with ::
+                    || parser.peek::<Token![::]>()
+
+                    // closures
+                    || parser.peek::<Token![|]>()
+                    || parser.peek::<Token![||]>()
+
+                    // block expressions
+                    || parser.peek::<Token![if]>()
+                    || parser.peek::<Token![match]>()
+                    || parser.peek::<Token![while]>()
+                    || parser.peek::<Token![for]>()
+                    || parser.peek::<Token![loop]>()
+                    || parser.peek::<Token![async]>()
+                    || parser.peek::<Token![unsafe]>()
+                    || parser.peek::<Token![const]>()
+                    || parser.peek::<Token![try]>()
+
+                    // jump expressions
+                    || parser.peek::<Token![return]>()
+                    || parser.peek::<Token![break]>()
+                    || parser.peek::<Token![continue]>()
+                    || parser.peek::<Token![yield]>()
+
+                    // let expression
+                    || parser.peek::<Token![let]>()
+
+                    // range with no lhs, if supported
+                    || parser.peek::<Token![..]>()
+                    || parser.peek::<Token![..=]>()
+            }
+        }
+    }
+}
+
 impl Parse for Expr {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        parse_expr(stream, true)
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        parse_expr(parser, true)
     }
 }
 
@@ -419,8 +477,8 @@ impl ToTokens for Expr {
 
 // Parser
 
-pub fn parse_expr(stream: &mut ParseStream, allow_struct: bool) -> Result<Expr, ParseError> {
+pub fn parse_expr(parser: &Parser, allow_struct: bool) -> Result<Expr, ParseError> {
     use crate::precedence::Precedence;
-    let lhs = unary::UnaryExpr::parse_from(stream, allow_struct)?;
-    binary::BinaryExpr::parse_from(stream, lhs, Precedence::Min, allow_struct)
+    let lhs = unary::UnaryExpr::parse_from(parser, allow_struct)?;
+    binary::BinaryExpr::parse_from(parser, lhs, Precedence::Min, allow_struct)
 }

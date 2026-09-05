@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::MacroCall;
 
@@ -11,9 +11,9 @@ pub struct TypeMacro {
 }
 
 impl Parse for TypeMacro {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            mac: stream.parse::<MacroCall>()?,
+            mac: parser.parse::<MacroCall>()?,
         })
     }
 }

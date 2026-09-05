@@ -2,8 +2,8 @@
 
 use std::str::FromStr;
 
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_ast::{Parse, ParseError, Parser};
+use moxy_token::{Delim, Group, Span, ToTokens, TokenStream, TokenTree};
 
 #[doc = "A template interpolation: `{{ expr }}`."]
 #[derive(Debug, Clone)]
@@ -14,13 +14,13 @@ pub struct TmplInterp {
 }
 
 impl Parse for TmplInterp {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let span = stream.span();
-        let mut inner = stream.parse_group(Delim::Brace)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let span = parser.span();
+        let mut inner = parser.parse_group(Delim::Brace)?;
         let mut layers: usize = 1;
 
         while super::lone_brace_child(&inner).is_some() {
-            inner = inner.parse().parse_group(Delim::Brace)?;
+            inner = Parser::from_tokens(&inner).parse_group(Delim::Brace)?;
             layers += 1;
         }
 

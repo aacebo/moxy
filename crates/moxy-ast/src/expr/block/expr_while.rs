@@ -1,5 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
+use crate::Token;
+use crate::{ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::expr::parse_expr;
@@ -23,10 +23,10 @@ impl Spanner for ExprWhile {
 }
 
 impl ExprWhile {
-    pub fn parse_from(stream: &mut ParseStream, label: Option<Label>, attrs: Attributes) -> Result<Self, ParseError> {
-        let while_keyword = stream.parse::<Token![while]>()?;
-        let cond = Box::new(parse_expr(stream, false)?);
-        let body = stream.parse::<StmtBlock>()?;
+    pub fn parse_from(parser: &Parser, label: Option<Label>, attrs: Attributes) -> Result<Self, ParseError> {
+        let while_keyword = parser.parse::<Token![while]>()?;
+        let cond = Box::new(parse_expr(parser, false)?);
+        let body = parser.parse::<StmtBlock>()?;
 
         Ok(Self {
             attrs,

@@ -1,8 +1,8 @@
-use moxy_token::Token;
-use moxy_token::parser::ParseStream;
-use moxy_token::{Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use crate::{Parser, Token};
 
-use crate::expr::block::ExprBrace;
+use moxy_token::{Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
+
+use crate::expr::ExprBrace;
 use crate::*;
 
 /// The pipe delimiters around a closure's parameters: either an empty `||` or a pair of `|`.
@@ -36,19 +36,19 @@ impl Spanner for ExprClosure {
 }
 
 impl ExprClosure {
-    /// Returns `true` when the stream is positioned at the start of a closure
+    /// Returns `true` when the parser is positioned at the start of a closure
     /// expression (`|...|`, `||`, `move`, or a `const`/`async` not followed by a block).
-    pub fn is_start(stream: &mut ParseStream) -> bool {
-        if stream.peek::<Token![|]>() || stream.peek::<Token![||]>() || stream.peek::<Token![move]>() {
+    pub fn is_start(parser: &Parser) -> bool {
+        if parser.peek::<Token![|]>() || parser.peek::<Token![||]>() || parser.peek::<Token![move]>() {
             return true;
         }
 
         let leads_closure = matches!(
-            stream.nth(1),
-            Some(TokenTree::Punct(Punctuation::Or(_) | Punctuation::OrOr(_))) | Some(TokenTree::Keyword(_))
+            parser.nth(1),
+            Some(TokenTree::Punct(Punct::Or(_))) | Some(TokenTree::Keyword(_))
         );
 
-        (stream.peek::<Token![const]>() || stream.peek::<Token![async]>()) && leads_closure && !ExprBrace::is_next(stream)
+        (parser.peek::<Token![const]>() || parser.peek::<Token![async]>()) && leads_closure && !ExprBrace::is_next(parser)
     }
 
     pub fn into_primary_expr(self) -> super::PrimaryExpr {

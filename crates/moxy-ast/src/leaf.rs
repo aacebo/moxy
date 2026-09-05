@@ -1,5 +1,6 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
+
+use crate::{Parse, ParseError, Parser, Peek, Token};
 
 macro_rules! define_leaf {
     ($(
@@ -15,16 +16,25 @@ macro_rules! define_leaf {
                 $($variant $(( $token ))? ,)+
             }
 
-            impl Parse for $name {
+            impl Peek for $name {
                 #[allow(unreachable_code)]
-                fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+                fn peek(parser: &Parser) -> bool {
                     $(
-                        define_leaf!(@parse_arm stream, Self::$variant $(=> $token)?);
+                        define_leaf!(@peek_arm parser $(=> $token)?);
                     )+
 
-                    Err(LexError::new(stream.span())
-                        .message(concat!("expected `", stringify!($name), "`"))
-                        .into())
+                    false
+                }
+            }
+
+            impl Parse for $name {
+                #[allow(unreachable_code)]
+                fn parse(parser: &Parser) -> Result<Self, ParseError> {
+                    $(
+                        define_leaf!(@parse_arm parser, Self::$variant $(=> $token)?);
+                    )+
+
+                    Err(parser.error(concat!("expected `", stringify!($name), "`")))
                 }
             }
 
@@ -74,15 +84,25 @@ macro_rules! define_leaf {
         )+
     };
 
-    (@parse_arm $stream:ident, $value:expr => $token:ty) => {
-        if $stream.peek::<$token>() {
-            let tok: $token = $stream.parse()?;
+    (@parse_arm $parser:ident, $value:expr => $token:ty) => {
+        if $parser.peek::<$token>() {
+            let tok: $token = $parser.parse()?;
             return Ok($value(tok));
         }
     };
 
-    (@parse_arm $stream:ident, $value:expr) => {
+    (@parse_arm $parser:ident, $value:expr) => {
         return Ok($value);
+    };
+
+    (@peek_arm $parser:ident => $token:ty) => {
+        if $parser.peek::<$token>() {
+            return true;
+        }
+    };
+
+    (@peek_arm $parser:ident) => {
+        return true;
     };
 
     // Build the `ToTokens` match by peeling variants into an accumulator, so the
@@ -123,8 +143,6 @@ macro_rules! define_leaf {
         match $self { $($arms)* }
     };
 }
-
-use moxy_token::Token;
 
 define_leaf! {
     /// A binary operator (`+`, `==`, `&&`, ...).

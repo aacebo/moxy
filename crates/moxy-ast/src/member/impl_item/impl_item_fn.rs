@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Defaultness, Signature, StmtBlock, Visibility};
 
@@ -15,18 +15,18 @@ pub struct ImplItemFn {
 }
 
 impl Parse for ImplItemFn {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let defaultness = stream.parse::<Defaultness>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let at = parser.span();
+        let attrs = parser.parse::<Attributes>()?;
+        let vis = parser.parse::<Visibility>()?;
+        let defaultness = parser.parse::<Defaultness>()?;
 
-        if !crate::sig::Signature::is_start(stream) {
+        if !crate::sig::Signature::is_start(parser) {
             return Err(LexError::new(at).message("expected impl fn").into());
         }
 
-        let sig = stream.parse::<Signature>()?;
-        let body = stream.parse::<StmtBlock>()?;
+        let sig = parser.parse::<Signature>()?;
+        let body = parser.parse::<StmtBlock>()?;
 
         Ok(Self {
             attrs,

@@ -1,6 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, MacroCall};
 
@@ -14,9 +13,9 @@ pub struct TraitItemMacro {
 }
 
 impl Parse for TraitItemMacro {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let (mac, semi) = crate::MacroCall::parse_semi(stream)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let (mac, semi) = crate::MacroCall::parse_semi(parser)?;
 
         if semi.is_none() {
             return Err(LexError::new(mac.span()).message("expected ';'").into());

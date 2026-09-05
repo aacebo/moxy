@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 mod impl_item_const;
 mod impl_item_fn;
@@ -85,20 +85,20 @@ impl From<ImplItemConst> for ImplItem {
 }
 
 impl Parse for ImplItem {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if let Some(item) = stream.parse_if::<ImplItemConst>() {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if let Some(item) = parser.parse_if::<ImplItemConst>() {
             return Ok(Self::Const(Box::new(item)));
         }
 
-        if let Some(item) = stream.parse_if::<ImplItemType>() {
+        if let Some(item) = parser.parse_if::<ImplItemType>() {
             return Ok(Self::Type(item));
         }
 
-        if let Some(item) = stream.parse_if::<ImplItemFn>() {
+        if let Some(item) = parser.parse_if::<ImplItemFn>() {
             return Ok(Self::Fn(item));
         }
 
-        Ok(Self::Macro(stream.parse()?))
+        Ok(Self::Macro(parser.parse()?))
     }
 }
 

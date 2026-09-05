@@ -2,10 +2,10 @@ mod meta_argument;
 mod meta_layout;
 mod meta_value;
 
+use crate::{Parse, ParseError, Parser};
 pub use meta_argument::*;
 pub use meta_layout::*;
 pub use meta_value::*;
-use moxy_token::parser::{Parse, ParseError, ParseStream};
 use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Delimited, Lit, Path, Punctuated};
@@ -33,10 +33,10 @@ impl std::ops::DerefMut for Meta {
 }
 
 impl Parse for Meta {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            path: stream.parse()?,
-            content: stream.parse()?,
+            path: parser.parse()?,
+            content: parser.parse()?,
         })
     }
 }

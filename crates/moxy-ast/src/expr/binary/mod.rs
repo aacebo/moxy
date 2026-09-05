@@ -1,16 +1,16 @@
-use moxy_token::Token;
 mod expr_assign;
 mod expr_assign_op;
 mod expr_binary;
 mod expr_range;
 mod expr_type;
 
+use crate::{ParseError, Parser, Token};
+
 pub use expr_assign::*;
 pub use expr_assign_op::*;
 pub use expr_binary::*;
 pub use expr_range::*;
 pub use expr_type::*;
-use moxy_token::parser::{ParseError, ParseStream};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::unary::ExprCast;
@@ -152,11 +152,11 @@ impl From<ExprType> for BinaryExpr {
 // Parser
 
 impl BinaryExpr {
-    pub fn parse_from(stream: &mut ParseStream, mut lhs: Expr, min: Precedence, allow_struct: bool) -> Result<Expr, ParseError> {
+    pub fn parse_from(parser: &Parser, mut lhs: Expr, min: Precedence, allow_struct: bool) -> Result<Expr, ParseError> {
         loop {
-            if Precedence::Cast >= min && stream.peek::<Token![as]>() {
-                let as_keyword = stream.parse::<Token![as]>()?;
-                let ty = Box::new(stream.parse::<Type>()?);
+            if Precedence::Cast >= min && parser.peek::<Token![as]>() {
+                let as_keyword = parser.parse::<Token![as]>()?;
+                let ty = Box::new(parser.parse::<Type>()?);
 
                 lhs = Expr::Unary(UnaryExpr::Cast(ExprCast {
                     attrs: Attributes::default(),
@@ -169,9 +169,9 @@ impl BinaryExpr {
             }
 
             if min == Precedence::Min {
-                if stream.peek::<Token![=]>() {
-                    let eq = stream.parse::<Token![=]>()?;
-                    let right = Box::new(super::parse_expr(stream, allow_struct)?);
+                if parser.peek::<Token![=]>() && !parser.peek::<Token![==]>() && !parser.peek::<Token![=>]>() {
+                    let eq = parser.parse::<Token![=]>()?;
+                    let right = Box::new(super::parse_expr(parser, allow_struct)?);
 
                     lhs = Expr::Binary(Self::Assign(ExprAssign {
                         attrs: Attributes::default(),
@@ -183,9 +183,9 @@ impl BinaryExpr {
                     continue;
                 }
 
-                if stream.peek::<AssignOp>() {
-                    let op = stream.parse::<AssignOp>()?;
-                    let right = Box::new(super::parse_expr(stream, allow_struct)?);
+                if parser.peek::<AssignOp>() {
+                    let op = parser.parse::<AssignOp>()?;
+                    let right = Box::new(super::parse_expr(parser, allow_struct)?);
 
                     lhs = Expr::Binary(Self::AssignOp(ExprAssignOp {
                         attrs: Attributes::default(),
@@ -199,9 +199,9 @@ impl BinaryExpr {
             }
 
             // Range with a left operand: `a..b`, `a..=b`, `a..` (Precedence::Range).
-            if Precedence::Range >= min && (stream.peek::<Token![..]>() || stream.peek::<Token![..=]>()) {
-                let limits = stream.parse::<RangeLimits>()?;
-                let end = ExprRange::maybe_end(stream, allow_struct)?;
+            if Precedence::Range >= min && (parser.peek::<Token![..]>() || parser.peek::<Token![..=]>()) {
+                let limits = parser.parse::<RangeLimits>()?;
+                let end = ExprRange::maybe_end(parser, allow_struct)?;
 
                 lhs = Expr::Binary(Self::Range(ExprRange {
                     attrs: Attributes::default(),
@@ -213,12 +213,12 @@ impl BinaryExpr {
                 continue;
             }
 
-            match Precedence::peek(stream) {
+            match Precedence::peek(parser) {
                 Some(prec) if prec >= min => {
-                    let op = stream.parse::<BinOp>()?;
-                    let mut rhs = super::unary::UnaryExpr::parse_from(stream, allow_struct)?;
+                    let op = parser.parse::<BinOp>()?;
+                    let mut rhs = super::unary::UnaryExpr::parse_from(parser, allow_struct)?;
 
-                    rhs = Self::parse_from(stream, rhs, prec.next(), allow_struct)?;
+                    rhs = Self::parse_from(parser, rhs, prec.next(), allow_struct)?;
                     lhs = Expr::Binary(Self::Binary(ExprBinary {
                         attrs: Attributes::default(),
                         left: Box::new(lhs),

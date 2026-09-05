@@ -1,5 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
+use crate::Token;
+use crate::{ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::expr::parse_expr;
@@ -30,14 +30,14 @@ impl Spanner for ExprIf {
 }
 
 impl ExprIf {
-    pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Expr, ParseError> {
-        let if_keyword = stream.parse::<Token![if]>()?;
-        let cond = Box::new(parse_expr(stream, false)?);
-        let then_branch = stream.parse::<StmtBlock>()?;
-        let (else_keyword, else_branch) = if matches!(stream.curr(), Some(tt) if tt.text() == Some("else")) {
-            let else_kw = stream.parse::<Token![else]>()?;
-            let else_attrs = stream.parse::<Attributes>()?;
-            let branch = Some(Box::new(PrimaryExpr::parse_from(stream, true, else_attrs)?));
+    pub fn parse_from(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseError> {
+        let if_keyword = parser.parse::<Token![if]>()?;
+        let cond = Box::new(parse_expr(parser, false)?);
+        let then_branch = parser.parse::<StmtBlock>()?;
+        let (else_keyword, else_branch) = if matches!(parser.curr(), Some(tt) if tt.text() == Some("else")) {
+            let else_kw = parser.parse::<Token![else]>()?;
+            let else_attrs = parser.parse::<Attributes>()?;
+            let branch = Some(Box::new(PrimaryExpr::parse_from(parser, true, else_attrs)?));
             (Some(else_kw), branch)
         } else {
             (None, None)

@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Signature, StmtBlock, Visibility};
 
@@ -14,11 +14,11 @@ pub struct ItemFn {
 }
 
 impl Parse for ItemFn {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let sig = stream.parse::<Signature>()?;
-        let body = stream.parse::<StmtBlock>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let vis = parser.parse::<Visibility>()?;
+        let sig = parser.parse::<Signature>()?;
+        let body = parser.parse::<StmtBlock>()?;
         Ok(Self { attrs, vis, sig, body })
     }
 }

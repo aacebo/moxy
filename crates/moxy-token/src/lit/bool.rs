@@ -1,6 +1,6 @@
+use crate::lex::Cursor;
 use crate::lit::Lit;
-use crate::parser::{ParseError, ParseStream};
-use crate::{LexError, Parse, Span, Spanner};
+use crate::{Ident, LexError, Scan, Span, Spanner};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(into = "String"))]
@@ -62,20 +62,21 @@ impl Spanner for LitBool {
     }
 }
 
-impl Parse for LitBool {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-
-        match stream.parse::<Lit>()? {
-            Lit::Bool(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected bool literal").into()),
-        }
-    }
-}
-
 impl From<LitBool> for Lit {
     fn from(value: LitBool) -> Self {
         Self::Bool(value)
+    }
+}
+
+impl Scan for LitBool {
+    fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
+        let (cursor, ident) = Ident::scan(cursor)?;
+
+        if !ident.is_raw() && (ident.text() == "true" || ident.text() == "false") {
+            Ok((cursor, Self::new(ident.text() == "true", ident.span())))
+        } else {
+            cursor.error().message("expected bool literal").into()
+        }
     }
 }
 

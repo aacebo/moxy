@@ -1,9 +1,9 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::expr::parse_expr;
-use crate::{Attributes, BlockExpr, Delimited, Expr, Pattern};
+use crate::{Attributes, BlockExpr, Delimited, Expr, Pattern, Token};
 
 /// A match expression: `match x { pat => expr, ... }`.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -22,10 +22,10 @@ impl Spanner for ExprMatch {
 }
 
 impl ExprMatch {
-    pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Expr, ParseError> {
-        let match_keyword = stream.parse::<Token![match]>()?;
-        let expr = Box::new(parse_expr(stream, false)?);
-        let arms = Delimited::<Vec<MatchArm>>::parse_brace(stream)?;
+    pub fn parse_from(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseError> {
+        let match_keyword = parser.parse::<Token![match]>()?;
+        let expr = Box::new(parse_expr(parser, false)?);
+        let arms = Delimited::parse_brace_with(parser, |parser| parser.parse_until_empty())?;
 
         Ok(Expr::Block(BlockExpr::Match(Self {
             attrs,
@@ -70,18 +70,23 @@ impl Spanner for MatchArm {
 }
 
 impl Parse for MatchArm {
-    fn parse(stream: &mut moxy_token::parser::ParseStream) -> Result<Self, moxy_token::parser::ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let pat = stream.parse::<Pattern>()?;
-        let (if_keyword, guard) = if let Some(if_kw) = stream.parse_if::<Token![if]>() {
-            (Some(if_kw), Some(Box::new(stream.parse::<Expr>()?)))
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let pat = parser.parse::<Pattern>()?;
+        let (if_keyword, guard) = if let Some(if_kw) = parser.parse_if::<Token![if]>() {
+            (Some(if_kw), Some(Box::new(parser.parse::<Expr>()?)))
         } else {
             (None, None)
         };
 
-        let fat_arrow = stream.parse::<Token![=>]>()?;
-        let body = stream.parse::<Expr>()?;
-        let comma = stream.parse_if::<Token![,]>();
+        let fat_arrow = parser.parse::<Token![=>]>()?;
+
+        if !parser.peek::<Expr>() {
+            return parser.error("expected match arm expression body").into();
+        }
+
+        let body = parser.parse::<Expr>()?;
+        let comma = parser.parse_if::<Token![,]>();
 
         Ok(Self {
             attrs,

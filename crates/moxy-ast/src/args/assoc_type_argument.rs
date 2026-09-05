@@ -1,6 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use crate::{Peek, Token};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::AngleArguments;
 use crate::{GenericArgument, Ident, Type};
@@ -25,13 +25,31 @@ impl AssocTypeArgument {
     }
 }
 
+impl Peek for AssocTypeArgument {
+    fn peek(parser: &Parser) -> bool {
+        if !parser.parse::<Ident>().is_ok() {
+            return false;
+        }
+
+        if !parser.parse::<Option<AngleArguments>>().is_ok() {
+            return false;
+        }
+
+        if !parser.parse::<Token![=]>().is_ok() {
+            return false;
+        }
+
+        true
+    }
+}
+
 impl Parse for AssocTypeArgument {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            ident: stream.parse()?,
-            generics: stream.parse_if(),
-            eq_punct: stream.parse()?,
-            ty: stream.parse()?,
+            ident: parser.parse()?,
+            generics: parser.parse_if(),
+            eq_punct: parser.parse()?,
+            ty: parser.parse()?,
         })
     }
 }

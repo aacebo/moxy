@@ -1,7 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::ParseStream;
-
 use crate::BinOp;
+use crate::Parser;
 
 /// Operator precedence level used when parsing and printing expressions without parentheses.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -22,30 +20,30 @@ pub enum Precedence {
 }
 
 impl Precedence {
-    pub fn peek(stream: &mut ParseStream) -> Option<Self> {
-        if stream.peek::<Token![&&]>() {
+    pub fn peek(parser: &Parser) -> Option<Self> {
+        if parser.peek::<Token![&&]>() {
             Some(Self::And)
-        } else if stream.peek::<Token![||]>() {
+        } else if parser.peek::<Token![||]>() {
             Some(Self::Or)
-        } else if stream.peek::<Token![<<]>() || stream.peek::<Token![>>]>() {
+        } else if parser.peek::<Token![<<]>() || parser.peek::<Token![>>]>() {
             Some(Self::Shift)
-        } else if stream.peek::<Token![==]>()
-            || stream.peek::<Token![!=]>()
-            || stream.peek::<Token![<=]>()
-            || stream.peek::<Token![>=]>()
-            || stream.peek::<Token![<]>()
-            || stream.peek::<Token![>]>()
+        } else if parser.peek::<Token![==]>()
+            || parser.peek::<Token![!=]>()
+            || parser.peek::<Token![<=]>()
+            || parser.peek::<Token![>=]>()
+            || parser.peek::<Token![<]>()
+            || parser.peek::<Token![>]>()
         {
             Some(Self::Compare)
-        } else if stream.peek::<Token![+]>() || stream.peek::<Token![-]>() {
+        } else if parser.peek::<Token![+]>() || parser.peek::<Token![-]>() {
             Some(Self::Add)
-        } else if stream.peek::<Token![*]>() || stream.peek::<Token![/]>() || stream.peek::<Token![%]>() {
+        } else if parser.peek::<Token![*]>() || parser.peek::<Token![/]>() || parser.peek::<Token![%]>() {
             Some(Self::Mul)
-        } else if stream.peek::<Token![^]>() {
+        } else if parser.peek::<Token![^]>() {
             Some(Self::BitXor)
-        } else if stream.peek::<Token![&]>() {
+        } else if parser.peek::<Token![&]>() {
             Some(Self::BitAnd)
-        } else if stream.peek::<Token![|]>() {
+        } else if parser.peek::<Token![|]>() {
             Some(Self::BitOr)
         } else {
             None

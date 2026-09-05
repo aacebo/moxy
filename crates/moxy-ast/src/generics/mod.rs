@@ -1,6 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::Token;
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::Punctuated;
 
@@ -41,17 +41,17 @@ pub struct Generics {
 }
 
 impl Parse for Generics {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let lt = stream.parse_if();
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let lt = parser.parse_if();
 
         let params = if lt.is_some() {
-            Punctuated::parse_separated_nonempty(stream)?
+            Punctuated::parse_separated_nonempty(parser)?
         } else {
             Punctuated::new()
         };
 
-        let gt = stream.parse_if();
-        let where_clause = stream.parse_if();
+        let gt = parser.parse_if();
+        let where_clause = parser.parse_if();
 
         Ok(Self {
             lt,

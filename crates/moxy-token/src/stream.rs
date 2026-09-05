@@ -2,7 +2,6 @@ use std::str::FromStr;
 
 use super::ToTokens;
 use crate::lex::{Cursor, LexError, Scan};
-use crate::parser::{ParseError, ParseStream};
 use crate::span::DelimSpan;
 use crate::{Span, Spanner, Token, TokenTree};
 
@@ -53,11 +52,6 @@ impl TokenStream {
     #[inline]
     pub fn extend_one(&mut self, token: TokenTree) {
         self.0.push(token);
-    }
-
-    #[inline]
-    pub fn parse(&self) -> ParseStream<'_> {
-        ParseStream::new(self)
     }
 
     #[inline]
@@ -159,34 +153,31 @@ impl Scan for TokenStream {
 
             // Try group first (opening delimiter)
             if let Ok((next, group)) = crate::Group::scan(c) {
-                tokens.push(crate::TokenTree::Group(group));
+                tokens.push(TokenTree::Group(group));
                 c = next;
                 continue;
             }
 
             if let Ok((next, lit)) = crate::Lit::scan(c) {
-                tokens.push(crate::TokenTree::Literal(lit));
+                tokens.push(TokenTree::Literal(lit));
+                c = next;
+                continue;
+            }
+
+            if let Ok((next, keyword)) = crate::Keyword::scan(c) {
+                tokens.push(TokenTree::Keyword(keyword));
                 c = next;
                 continue;
             }
 
             if let Ok((next, ident)) = crate::Ident::scan(c) {
-                let tt = if !ident.is_raw() && (ident.text() == "true" || ident.text() == "false") {
-                    crate::TokenTree::Literal(crate::Lit::Bool(crate::LitBool::new(ident.text() == "true", ident.span())))
-                } else {
-                    match crate::Keyword::from_str(ident.text(), ident.span()) {
-                        Some(kw) if !ident.is_raw() => crate::TokenTree::Keyword(kw),
-                        _ => crate::TokenTree::Ident(ident),
-                    }
-                };
-
-                tokens.push(tt);
+                tokens.push(TokenTree::Ident(ident));
                 c = next;
                 continue;
             }
 
-            if let Ok((next, op)) = crate::Punctuation::scan(c) {
-                tokens.push(crate::TokenTree::Punct(op));
+            if let Ok((next, punct)) = crate::Punct::scan(c) {
+                tokens.push(TokenTree::Punct(punct));
                 c = next;
                 continue;
             }
@@ -201,7 +192,7 @@ impl Scan for TokenStream {
 }
 
 impl FromStr for TokenStream {
-    type Err = ParseError;
+    type Err = LexError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         Self::from_string(s.to_owned())
@@ -211,8 +202,7 @@ impl FromStr for TokenStream {
 impl TokenStream {
     /// Build a token stream from an owned string while moving that allocation
     /// directly into the fallback source map.
-    #[doc(hidden)]
-    pub fn from_string(s: String) -> Result<Self, ParseError> {
+    pub fn from_string(s: String) -> Result<Self, LexError> {
         use crate::source::SourceMap;
 
         SourceMap::with_mut(|sm| {
@@ -223,7 +213,7 @@ impl TokenStream {
             let rest = rest.skip_whitespace();
 
             if !rest.is_empty() {
-                return Err(rest.error().message("unexpected trailing input").into());
+                return rest.error().message("unexpected trailing input").into();
             }
 
             Ok(stream)
@@ -233,20 +223,17 @@ impl TokenStream {
 
 impl std::fmt::Display for TokenStream {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        use crate::Punctuation;
-
         let mut first = true;
-        let mut prev_was_tick = false;
+        let mut prev_was_joint = false;
 
         for tt in self.0.iter() {
-            if !first && !prev_was_tick {
+            if !first && !prev_was_joint {
                 write!(f, " ")?;
             }
 
             write!(f, "{}", tt)?;
             first = false;
-            // A `'` glues to the following token to form a lifetime (`'a`).
-            prev_was_tick = matches!(tt, TokenTree::Punct(Punctuation::Quote(_)));
+            prev_was_joint = matches!(tt, TokenTree::Punct(punct) if punct.spacing().is_joint());
         }
 
         Ok(())
@@ -270,18 +257,18 @@ impl serde::Serialize for TokenStream {
 }
 
 fn push_doc_attr(tokens: &mut Vec<TokenTree>, inner: bool, text: &str, span: Span) {
-    use crate::{Delim, Group, Ident, Punctuation};
+    use crate::{Delim, Group, Ident, Punct};
 
-    tokens.push(crate::TokenTree::Punct(Punctuation::Pound(<Token![#]>::new(span))));
+    tokens.push(TokenTree::Punct(Punct::Pound(<Token![#]>::new(span))));
 
     if inner {
-        tokens.push(crate::TokenTree::Punct(Punctuation::Not(<Token![!]>::new(span))));
+        tokens.push(TokenTree::Punct(Punct::Not(<Token![!]>::new(span))));
     }
 
     let mut body = TokenStream::with_capacity(3);
-    body.extend_one(crate::TokenTree::Ident(Ident::new("doc").with_span(span)));
-    body.extend_one(crate::TokenTree::Punct(Punctuation::Eq(<Token![=]>::new(span))));
-    body.extend_one(crate::TokenTree::Literal(crate::Lit::Str(crate::LitStr::new(text, span))));
+    body.extend_one(TokenTree::Ident(Ident::new("doc").with_span(span)));
+    body.extend_one(TokenTree::Punct(Punct::Eq(<Token![=]>::new(span))));
+    body.extend_one(TokenTree::Literal(crate::Lit::Str(crate::LitStr::new(text, span))));
 
     tokens.push(TokenTree::Group(Group::new(Delim::Bracket, body)));
 }

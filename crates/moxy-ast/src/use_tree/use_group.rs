@@ -1,9 +1,8 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
+
+use crate::{Delimited, Parse, ParseError, Parser, Punctuated};
 
 use super::UseTree;
-use crate::{Delimited, Punctuated};
 
 /// A braced use group (`{a, b::c}`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,10 +12,10 @@ pub struct UseGroup {
 }
 
 impl Parse for UseGroup {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let at = parser.span();
 
-        match stream.parse::<UseTree>()? {
+        match parser.parse::<UseTree>()? {
             UseTree::Group(v) => Ok(v),
             _ => Err(LexError::new(at).message("expected use group").into()),
         }

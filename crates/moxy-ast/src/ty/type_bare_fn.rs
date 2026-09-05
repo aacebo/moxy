@@ -1,6 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Abi, BareFnArg, BoundLifetimes, Delimited, Punctuated, ReturnType, Unsafety, Variadic};
 
@@ -38,22 +37,22 @@ pub struct TypeBareFn {
 }
 
 impl Parse for TypeBareFn {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let lifetimes = stream.parse_if::<BoundLifetimes>();
-        let unsafety = stream.parse::<Unsafety>()?;
-        let abi = if stream.peek::<Token![extern]>() {
-            Some(stream.parse::<Abi>()?)
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let lifetimes = parser.parse_if::<BoundLifetimes>();
+        let unsafety = parser.parse::<Unsafety>()?;
+        let abi = if parser.peek::<Token![extern]>() {
+            Some(parser.parse::<Abi>()?)
         } else {
             None
         };
 
-        let fn_keyword = stream.parse::<Token![fn]>()?;
-        let params = Delimited::parse_paren_with(stream, |inner| {
+        let fn_keyword = parser.parse::<Token![fn]>()?;
+        let params = Delimited::parse_paren_with(parser, |inner| {
             let inputs = Punctuated::parse_terminated(inner)?;
             Ok(BareFnParams { inputs, variadic: None })
         })?;
 
-        let output = stream.parse::<ReturnType>()?;
+        let output = parser.parse::<ReturnType>()?;
 
         Ok(Self {
             lifetimes,

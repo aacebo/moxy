@@ -151,7 +151,7 @@ fn bench_invalid_pair(c: &mut Criterion) {
 }
 
 pub fn run(c: &mut Criterion) {
-    bench_file_pair(c, "attributed_uses", ATTRIBUTED_USES, 11);
+    bench_file_pair(c, "attributed_uses", ATTRIBUTED_USES, 12);
     bench_file_pair(c, "mixed_items", MIXED_ITEMS, 6);
     bench_expression_pair(c);
     bench_type_pair(c);

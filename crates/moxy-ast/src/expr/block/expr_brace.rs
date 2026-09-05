@@ -1,4 +1,4 @@
-use moxy_token::parser::ParseStream;
+use crate::Parser;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -20,8 +20,8 @@ impl Spanner for ExprBrace {
 
 impl ExprBrace {
     /// Returns `true` when the token at position 1 (peek-ahead) is a brace group.
-    pub fn is_next(stream: &ParseStream) -> bool {
-        stream
+    pub fn is_next(parser: &Parser) -> bool {
+        parser
             .nth(1)
             .and_then(|t| t.as_group())
             .map(|g| g.delim().is_brace())

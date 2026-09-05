@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{BoundLifetimes, BoundPolarity, Path, TraitBoundModifier};
 
@@ -14,11 +14,11 @@ pub struct TraitBound {
 }
 
 impl Parse for TraitBound {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let polarity = stream.parse::<BoundPolarity>()?;
-        let lifetimes = stream.parse::<Option<BoundLifetimes>>()?;
-        let modifier = stream.parse::<TraitBoundModifier>()?;
-        let path = stream.parse::<Path>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let polarity = parser.parse::<BoundPolarity>()?;
+        let lifetimes = parser.parse::<Option<BoundLifetimes>>()?;
+        let modifier = parser.parse::<TraitBoundModifier>()?;
+        let path = parser.parse::<Path>()?;
 
         Ok(Self {
             polarity,

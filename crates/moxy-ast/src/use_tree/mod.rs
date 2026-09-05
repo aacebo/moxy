@@ -1,8 +1,7 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Delimited, Ident};
+use crate::{Parse, ParseError, Parser};
 
 mod use_glob;
 mod use_group;
@@ -82,23 +81,23 @@ impl Spanner for UseTree {
 }
 
 impl Parse for UseTree {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Token![*]>() {
-            let star = stream.parse::<Token![*]>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<Token![*]>() {
+            let star = parser.parse::<Token![*]>()?;
             return Ok(Self::Glob(UseGlob { star }));
         }
 
-        if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
-            let items = Delimited::parse_brace_with(stream, crate::Punctuated::parse_terminated)?;
+        if matches!(parser.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
+            let items = Delimited::parse_brace_with(parser, crate::Punctuated::parse_terminated)?;
             return Ok(Self::Group(UseGroup { items }));
         }
 
-        let prefix = stream.parse_if::<Token![::]>();
-        let ident = stream.parse::<Ident>()?;
+        let prefix = parser.parse_if::<Token![::]>();
+        let ident = parser.parse::<Ident>()?;
 
-        if stream.peek::<Token![::]>() {
-            let path_sep = stream.parse::<Token![::]>()?;
-            let tree = Box::new(stream.parse::<Self>()?);
+        if parser.peek::<Token![::]>() {
+            let path_sep = parser.parse::<Token![::]>()?;
+            let tree = Box::new(parser.parse::<Self>()?);
             return Ok(Self::Path(UsePath {
                 prefix,
                 ident,
@@ -107,9 +106,9 @@ impl Parse for UseTree {
             }));
         }
 
-        if stream.peek::<Token![as]>() {
-            let as_keyword = stream.parse::<Token![as]>()?;
-            let rename = stream.parse::<Ident>()?;
+        if parser.peek::<Token![as]>() {
+            let as_keyword = parser.parse::<Token![as]>()?;
+            let rename = parser.parse::<Ident>()?;
             return Ok(Self::Rename(UseRename {
                 ident,
                 as_keyword,

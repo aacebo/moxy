@@ -1,4 +1,4 @@
-use moxy_token::Token;
+use crate::Token;
 mod expr_async;
 mod expr_brace;
 mod expr_const;
@@ -10,6 +10,7 @@ mod expr_try_block;
 mod expr_unsafe;
 mod expr_while;
 
+use crate::Parser;
 pub use expr_async::*;
 pub use expr_brace::*;
 pub use expr_const::*;
@@ -20,8 +21,7 @@ pub use expr_match::*;
 pub use expr_try_block::*;
 pub use expr_unsafe::*;
 pub use expr_while::*;
-use moxy_token::parser::ParseStream;
-use moxy_token::{Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Attributes, Label, Lifetime};
 
@@ -252,13 +252,13 @@ impl From<ExprTryBlock> for BlockExpr {
 }
 
 impl Label {
-    pub fn parse_opt_break(stream: &mut ParseStream) -> Option<Self> {
-        if !matches!(stream.curr(), Some(TokenTree::Punct(Punctuation::Quote(_)))) {
+    pub fn parse_opt_break(parser: &Parser) -> Option<Self> {
+        if !matches!(parser.curr(), Some(TokenTree::Punct(Punct::Quote(_)))) {
             return None;
         }
 
-        let name = stream.parse_if::<Lifetime>()?;
-        let colon = stream.parse_if::<Token![:]>().unwrap_or_default();
+        let name = parser.parse_if::<Lifetime>()?;
+        let colon = parser.parse_if::<Token![:]>().unwrap_or_default();
         Some(Self { name, colon })
     }
 }

@@ -1,6 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser, Peek};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Lifetime, Mutability};
 
@@ -15,18 +14,47 @@ pub struct Receiver {
     pub self_keyword: Token![self],
 }
 
+impl Peek for Receiver {
+    fn peek(parser: &Parser) -> bool {
+        let fork = parser.lookahead();
+
+        if fork.peek::<Token![&]>() {
+            fork.advance();
+
+            // Optional lifetime.
+            if fork.peek::<Lifetime>() {
+                let _ = fork.parse::<Lifetime>();
+            }
+
+            // Optional `mut`.
+            if fork.peek::<Token![mut]>() {
+                fork.advance();
+            }
+
+            return fork.peek::<Token![self]>();
+        }
+
+        if fork.peek::<Token![mut]>() {
+            fork.advance();
+            return fork.peek::<Token![self]>();
+        }
+
+        fork.peek::<Token![self]>()
+    }
+}
+
 impl Parse for Receiver {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let reference = stream.parse_if::<Token![&]>();
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let reference = parser.parse_if::<Token![&]>();
         let lifetime = if reference.is_some() {
-            stream.parse_if::<Lifetime>()
+            parser.parse_if::<Lifetime>()
         } else {
             None
         };
 
-        let mutability = stream.parse::<Mutability>()?;
-        let self_keyword = stream.parse::<Token![self]>()?;
+        let mutability = parser.parse::<Mutability>()?;
+        let self_keyword = parser.parse::<Token![self]>()?;
 
         Ok(Self {
             attrs,

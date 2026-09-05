@@ -37,21 +37,21 @@ impl MetaValue {
 }
 
 impl Parse for MetaValue {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Lit>() {
-            return Ok(Self::Literal(stream.parse()?));
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<Lit>() {
+            return Ok(Self::Literal(parser.parse()?));
         }
 
-        if let Ok((span, tokens)) = stream.parse_group_spanned(Delim::Brace) {
+        if let Ok((span, tokens)) = parser.parse_group_spanned(Delim::Brace) {
             return Ok(Self::Verbatim(Delimited::new(Delim::Brace, span, tokens)));
         }
 
-        if let Ok((span, tokens)) = stream.parse_group_spanned(Delim::None) {
+        if let Ok((span, tokens)) = parser.parse_group_spanned(Delim::None) {
             return Ok(Self::Verbatim(Delimited::new(Delim::None, span, tokens)));
         }
 
-        let span = stream.span();
-        let tokens = stream.advance_by(stream.remaining()).ok_or(ParseError::new(span, "EOF"))?;
+        let span = parser.span();
+        let tokens = parser.advance_by(parser.remaining()).ok_or(ParseError::new(span, "EOF"))?;
 
         Ok(Self::Verbatim(Delimited::new(
             Delim::None,

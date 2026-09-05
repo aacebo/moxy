@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::Stmt;
 use crate::Delimited;
@@ -12,8 +12,8 @@ pub struct StmtBlock {
 }
 
 impl Parse for StmtBlock {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let stmts = Delimited::<Vec<Stmt>>::parse_brace(stream)?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let stmts = Delimited::<Vec<Stmt>>::parse_brace(parser)?;
         Ok(Self { stmts })
     }
 }

@@ -1,6 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Defaultness, Generics, Ident, Type, Visibility};
 
@@ -20,16 +19,16 @@ pub struct ImplItemType {
 }
 
 impl Parse for ImplItemType {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let defaultness = stream.parse::<Defaultness>()?;
-        let type_keyword = stream.parse::<Token![type]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let generics = stream.parse::<Generics>()?;
-        let eq = stream.parse::<Token![=]>()?;
-        let ty = stream.parse::<Type>()?;
-        let semi = stream.parse_if::<Token![;]>();
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse::<Attributes>()?;
+        let vis = parser.parse::<Visibility>()?;
+        let defaultness = parser.parse::<Defaultness>()?;
+        let type_keyword = parser.parse::<Token![type]>()?;
+        let ident = parser.parse::<Ident>()?;
+        let generics = parser.parse::<Generics>()?;
+        let eq = parser.parse::<Token![=]>()?;
+        let ty = parser.parse::<Type>()?;
+        let semi = parser.parse_if::<Token![;]>();
 
         Ok(Self {
             attrs,

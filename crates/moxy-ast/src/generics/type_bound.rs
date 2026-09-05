@@ -1,6 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::Token;
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::{TraitBound, UseBound};
 use crate::Lifetime;
@@ -39,16 +39,14 @@ impl TypeBound {
         if let Self::Use(v) = self { Some(v) } else { None }
     }
 
-    pub fn parse_bounds(
-        stream: &mut moxy_token::parser::ParseStream,
-    ) -> Result<crate::Punctuated<Self, Token![+]>, moxy_token::parser::ParseError> {
+    pub fn parse_bounds(parser: &Parser) -> Result<crate::Punctuated<Self, Token![+]>, ParseError> {
         let mut bounds = crate::Punctuated::new();
 
         loop {
-            bounds.push_value(stream.parse::<Self>()?);
+            bounds.push_value(parser.parse::<Self>()?);
 
-            if stream.peek::<Token![+]>() {
-                bounds.push_punct(stream.parse::<Token![+]>()?);
+            if parser.peek::<Token![+]>() {
+                bounds.push_punct(parser.parse::<Token![+]>()?);
             } else {
                 break;
             }
@@ -81,19 +79,16 @@ impl From<UseBound> for TypeBound {
 }
 
 impl Parse for TypeBound {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if matches!(
-            stream.curr(),
-            Some(moxy_token::TokenTree::Punct(moxy_token::Punctuation::Quote(_)))
-        ) {
-            return Ok(Self::Lifetime(stream.parse()?));
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if matches!(parser.curr(), Some(moxy_token::TokenTree::Punct(moxy_token::Punct::Quote(_)))) {
+            return Ok(Self::Lifetime(parser.parse()?));
         }
 
-        if stream.peek::<Token![use]>() {
-            return Ok(Self::Use(stream.parse()?));
+        if parser.peek::<Token![use]>() {
+            return Ok(Self::Use(parser.parse()?));
         }
 
-        Ok(Self::Trait(stream.parse()?))
+        Ok(Self::Trait(parser.parse()?))
     }
 }
 

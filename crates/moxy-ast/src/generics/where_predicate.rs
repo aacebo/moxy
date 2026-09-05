@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::{LifetimePredicate, TypePredicate};
 
@@ -21,15 +21,12 @@ impl Spanner for WherePredicate {
 }
 
 impl Parse for WherePredicate {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if matches!(
-            stream.curr(),
-            Some(moxy_token::TokenTree::Punct(moxy_token::Punctuation::Quote(_)))
-        ) {
-            return Ok(Self::Lifetime(stream.parse()?));
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if matches!(parser.curr(), Some(moxy_token::TokenTree::Punct(moxy_token::Punct::Quote(_)))) {
+            return Ok(Self::Lifetime(parser.parse()?));
         }
 
-        Ok(Self::Type(Box::new(stream.parse()?)))
+        Ok(Self::Type(Box::new(parser.parse()?)))
     }
 }
 

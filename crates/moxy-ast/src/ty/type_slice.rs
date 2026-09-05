@@ -1,6 +1,6 @@
-use moxy_token::parser::{ParseError, ParseStream};
+use crate::{Parse, ParseError, Parser};
 use moxy_token::span::Spanner;
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Span, ToTokens, TokenStream};
 
 use super::Type;
 use crate::Delimited;
@@ -13,8 +13,8 @@ pub struct TypeSlice {
 }
 
 impl Parse for TypeSlice {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let elem = Delimited::parse_bracket_with(stream, |stream| Ok(Box::new(stream.parse::<Type>()?)))?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let elem = Delimited::parse_bracket_with(parser, |parser| Ok(Box::new(parser.parse::<Type>()?)))?;
         Ok(Self { elem })
     }
 }

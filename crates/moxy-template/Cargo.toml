@@ -20,4 +20,5 @@ doctest = false
 workspace = true
 
 [dependencies]
+moxy-ast.workspace = true
 moxy-token.workspace = true

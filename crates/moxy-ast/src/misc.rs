@@ -1,6 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Lifetime, Pattern, Punctuated, Type};
 
@@ -29,12 +28,12 @@ impl ClosureParam {
 }
 
 impl Parse for ClosureParam {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let pat = Box::new(Pattern::parse_single(stream)?);
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let pat = Box::new(Pattern::parse_single(parser)?);
 
-        if stream.peek::<Token![:]>() {
-            let colon = stream.parse::<Token![:]>()?;
-            let ty = Box::new(stream.parse::<Type>()?);
+        if parser.peek::<Token![:]>() {
+            let colon = parser.parse::<Token![:]>()?;
+            let ty = Box::new(parser.parse::<Type>()?);
             Ok(Self::Typed { pat, colon, ty })
         } else {
             Ok(Self::Inferred { pat })
@@ -87,10 +86,10 @@ impl ReturnType {
 }
 
 impl Parse for ReturnType {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Token![->]>() {
-            let arrow = stream.parse::<Token![->]>()?;
-            Ok(Self::Type(arrow, Box::new(stream.parse::<crate::Type>()?)))
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<Token![->]>() {
+            let arrow = parser.parse::<Token![->]>()?;
+            Ok(Self::Type(arrow, Box::new(parser.parse::<crate::Type>()?)))
         } else {
             Ok(Self::Default)
         }
@@ -126,21 +125,21 @@ pub struct BoundLifetimes {
 }
 
 impl Parse for BoundLifetimes {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let for_keyword = stream.parse::<Token![for]>()?;
-        let lt = stream.parse::<Token![<]>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let for_keyword = parser.parse::<Token![for]>()?;
+        let lt = parser.parse::<Token![<]>()?;
         let mut params = Punctuated::new();
 
-        while !stream.peek::<Token![>]>() && !stream.is_empty() {
-            params.push_value(stream.parse::<Lifetime>()?);
-            if stream.peek::<Token![,]>() {
-                params.push_punct(stream.parse::<Token![,]>()?);
+        while !parser.peek::<Token![>]>() && !parser.is_empty() {
+            params.push_value(parser.parse::<Lifetime>()?);
+            if parser.peek::<Token![,]>() {
+                params.push_punct(parser.parse::<Token![,]>()?);
             } else {
                 break;
             }
         }
 
-        let gt = stream.parse::<Token![>]>()?;
+        let gt = parser.parse()?;
 
         Ok(Self {
             for_keyword,

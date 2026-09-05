@@ -1,6 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use super::Type;
 
@@ -22,12 +21,12 @@ pub struct TypePointer {
 }
 
 impl Parse for TypePointer {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let star = stream.parse::<Token![*]>()?;
-        let at = stream.span();
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let star = parser.parse::<Token![*]>()?;
+        let at = parser.span();
 
         // A raw pointer requires an explicit `const` or `mut` after the `*`.
-        let mutability = match stream.advance() {
+        let mutability = match parser.advance() {
             Some(TokenTree::Keyword(kw)) if kw.as_str() == "mut" => PointerMutability::Mut(<Token![mut]>::new(kw.span())),
             Some(TokenTree::Keyword(kw)) if kw.as_str() == "const" => PointerMutability::Const(<Token![const]>::new(kw.span())),
             _ => {
@@ -38,7 +37,7 @@ impl Parse for TypePointer {
         Ok(Self {
             star,
             mutability,
-            elem: Box::new(stream.parse()?),
+            elem: Box::new(parser.parse()?),
         })
     }
 }
