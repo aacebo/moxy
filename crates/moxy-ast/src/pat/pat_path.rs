@@ -17,15 +17,24 @@ impl Spanner for PatPath {
     }
 }
 
-impl ToTokens for PatPath {
-    fn to_tokens(&self, t: &mut TokenStream) {
-        self.attrs.to_tokens(t);
-        self.path.to_tokens(t);
+impl Parse for PatPath {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<QSelf>() || cursor.peek::<Path>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            attrs: parser.parse()?,
+            qself: parser.parse()?,
+            path: parser.parse()?,
+        })
     }
 }
 
-impl PatPath {
-    pub fn into_pattern(self) -> super::Pattern {
-        super::Pattern::from(self)
+impl ToTokens for PatPath {
+    fn to_tokens(&self, t: &mut TokenStream) {
+        self.attrs.to_tokens(t);
+        self.qself.to_tokens(t);
+        self.path.to_tokens(t);
     }
 }

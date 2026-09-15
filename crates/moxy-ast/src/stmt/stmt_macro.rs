@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, MacroCall};
+use crate::*;
 
 /// A macro invocation used as a statement (`name!(...);` or `name!(...)`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,11 +12,16 @@ pub struct StmtMacro {
 }
 
 impl Parse for StmtMacro {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<MacroCall>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let mac = parser.parse::<MacroCall>()?;
-        let semi = parser.parse_if::<Token![;]>();
-        Ok(Self { attrs, mac, semi })
+        Ok(Self {
+            attrs: parser.parse()?,
+            mac: parser.parse()?,
+            semi: parser.parse()?,
+        })
     }
 }
 
@@ -33,11 +37,5 @@ impl ToTokens for StmtMacro {
         self.attrs.to_tokens(t);
         self.mac.to_tokens(t);
         self.semi.to_tokens(t);
-    }
-}
-
-impl StmtMacro {
-    pub fn into_stmt(self) -> super::Stmt {
-        super::Stmt::Macro(self)
     }
 }

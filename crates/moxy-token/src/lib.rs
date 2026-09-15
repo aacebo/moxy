@@ -115,6 +115,7 @@ macro_rules! Token {
     [~]     => { $crate::Tilde };
     [+]     => { $crate::Plus };
     [-]     => { $crate::Minus };
+    [_]     => { $crate::Underscore };
     [*]     => { $crate::Star };
     [/]     => { $crate::Slash };
     [%]     => { $crate::Percent };

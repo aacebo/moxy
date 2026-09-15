@@ -1,8 +1,7 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use super::{Abi, FnParam, FnParams, Variadic};
-use crate::{Asyncness, Constness, Delimited, Generics, Ident, Punctuated, ReturnType, Unsafety};
+use super::{Abi, FnParams, Variadic};
+use crate::*;
 
 /// A function signature.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -20,33 +19,52 @@ pub struct Signature {
 }
 
 impl Parse for Signature {
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let constness = parser.parse::<Constness>()?;
-        let asyncness = parser.parse::<Asyncness>()?;
-        let unsafety = parser.parse::<Unsafety>()?;
-        let abi = if parser.peek::<Token![extern]>() {
-            Some(parser.parse::<Abi>()?)
-        } else {
-            None
-        };
+    fn peek(cursor: Cursor<'_>) -> bool {
+        if cursor.peek::<Token![const]>() {
+            cursor.advance();
+        }
 
-        let fn_keyword = parser.parse::<Token![fn]>()?;
-        let ident = parser.parse::<Ident>()?;
-        let mut generics = parser.parse::<Generics>()?;
-        let params = Delimited::parse_paren_with(parser, |inner| {
+        if cursor.peek::<Token![async]>() {
+            cursor.advance();
+        }
+
+        if cursor.peek::<Token![unsafe]>() {
+            cursor.advance();
+        }
+
+        if cursor.peek::<Token![extern]>() {
+            cursor.advance();
+
+            if matches!(cursor.curr(), Some(moxy_token::TokenTree::Literal(lit)) if lit.repr().starts_with('"')) {
+                cursor.advance();
+            }
+        }
+
+        cursor.peek::<Token![fn]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let constness = parser.parse()?;
+        let asyncness = parser.parse()?;
+        let unsafety = parser.parse()?;
+        let abi = parser.parse()?;
+        let fn_keyword = parser.parse()?;
+        let ident = parser.parse()?;
+        let mut generics = parser.parse()?;
+        let params = Delimited::parse_paren_with(parser, |parser| {
             let mut inputs = Punctuated::new();
             let mut variadic = None;
 
-            while !inner.is_empty() {
-                if let Some(v) = inner.parse_if::<Variadic>() {
-                    variadic = Some(v);
+            while !parser.is_empty() {
+                if let Some(v) = parser.peek::<Variadic>()? {
+                    variadic = Some(parser.parse()?);
                     break;
                 }
 
-                inputs.push_value(inner.parse::<FnParam>()?);
+                inputs.push_value(parser.parse()?);
 
-                if inner.peek::<Token![,]>() {
-                    inputs.push_punct(inner.parse::<Token![,]>()?);
+                if parser.peek::<Token![,]>() {
+                    inputs.push_punct(parser.parse()?);
                 } else {
                     break;
                 }
@@ -55,8 +73,8 @@ impl Parse for Signature {
             Ok(FnParams { inputs, variadic })
         })?;
 
-        let output = parser.parse::<ReturnType>()?;
-        generics.where_clause = parser.parse_if();
+        let output = parser.parse()?;
+        generics.where_clause = parser.parse()?;
 
         Ok(Self {
             constness,
@@ -85,44 +103,13 @@ impl Spanner for Signature {
         } else {
             self.fn_keyword.span()
         };
+
         let end = match &self.output {
             ReturnType::Type(_, ty) => ty.span(),
             ReturnType::Default => self.params.span(),
         };
+
         start.join(end)
-    }
-}
-
-impl Signature {
-    pub fn emit_angle_params(generics: &Generics, t: &mut TokenStream) {
-        if !generics.params.is_empty() {
-            <Token![<]>::default().to_tokens(t);
-            generics.params.to_tokens(t);
-            <Token![>]>::default().to_tokens(t);
-        }
-    }
-
-    pub fn is_start(parser: &Parser) -> bool {
-        let fork = parser.lookahead();
-
-        if fork.peek::<Token![const]>() {
-            fork.advance();
-        }
-        if fork.peek::<Token![async]>() {
-            fork.advance();
-        }
-        if fork.peek::<Token![unsafe]>() {
-            fork.advance();
-        }
-
-        if fork.peek::<Token![extern]>() {
-            fork.advance();
-            if matches!(fork.curr(), Some(moxy_token::TokenTree::Literal(lit)) if lit.repr().starts_with('"')) {
-                fork.advance();
-            }
-        }
-
-        fork.peek::<Token![fn]>()
     }
 }
 
@@ -131,19 +118,14 @@ impl ToTokens for Signature {
         self.constness.to_tokens(t);
         self.asyncness.to_tokens(t);
         self.unsafety.to_tokens(t);
-
-        if let Some(abi) = &self.abi {
-            abi.to_tokens(t);
-        }
-
+        self.abi.to_tokens(t);
         self.fn_keyword.to_tokens(t);
         self.ident.to_tokens(t);
-        Self::emit_angle_params(&self.generics, t);
+        self.generics.lt.to_tokens(t);
+        self.generics.params.to_tokens(t);
+        self.generics.gt.to_tokens(t);
         self.params.to_tokens(t);
         self.output.to_tokens(t);
-
-        if let Some(w) = &self.generics.where_clause {
-            w.to_tokens(t);
-        }
+        self.generics.where_clause.to_tokens(t);
     }
 }

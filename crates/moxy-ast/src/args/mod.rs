@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser, Punctuated, Token};
 use moxy_token::{Ident, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use crate::{Expr, Lifetime, Type};
+use crate::{Cursor, Expr, Lifetime, Parse, ParseError, Parser, Punctuated, Token, Type};
 
 mod angle_arguments;
 mod assoc_const_argument;
@@ -41,6 +40,15 @@ impl Spanner for GenericArgument {
 }
 
 impl Parse for GenericArgument {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Lifetime>()
+            || cursor.peek::<AssocTypeArgument>()
+            || cursor.peek::<AssocConstArgument>()
+            || cursor.peek::<ConstraintArgument>()
+            || cursor.peek::<Type>()
+            || cursor.peek::<Expr>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let token = match parser.curr() {
             None => return Err(ParseError::new(parser.span(), "eof")),
@@ -110,6 +118,16 @@ impl Parse for GenericArgument {
         }
 
         Ok(Self::Type(parser.parse()?))
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor
+            .skip::<Lifetime>()
+            .and_then(|| cursor.skip::<AssocTypeArgument>())
+            .and_then(|| cursor.skip::<AssocConstArgument>())
+            .and_then(|| cursor.skip::<ConstraintArgument>())
+            .and_then(|| cursor.skip::<Type>())
+            .and_then(|| cursor.skip::<Expr>())
     }
 }
 

@@ -1,13 +1,12 @@
-use crate::{Parse, ParseError, Parser};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
-
-use crate::{IntoIter, Peek, Punctuated};
-
 mod arguments;
 mod segment;
 
 pub use arguments::*;
 pub use segment::*;
+
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
+use crate::*;
 
 #[macro_export]
 macro_rules! path {
@@ -55,16 +54,15 @@ impl Path {
 }
 
 impl Parse for Path {
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let leading_colon = parser.parse_if::<Token![::]>();
-        let segments = Punctuated::parse_separated_nonempty(parser)?;
-        Ok(Self { leading_colon, segments })
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![::]>() || cursor.peek::<PathSegment>()
     }
-}
 
-impl Peek for Path {
-    fn peek(parser: &Parser) -> bool {
-        parser.parse::<Self>().is_ok()
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            leading_colon: parser.parse()?,
+            segments: Punctuated::parse_separated_nonempty(parser)?,
+        })
     }
 }
 
@@ -81,10 +79,7 @@ impl Spanner for Path {
 
 impl ToTokens for Path {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        if let Some(colon) = self.leading_colon {
-            colon.to_tokens(tokens);
-        }
-
+        self.leading_colon.to_tokens(tokens);
         self.segments.to_tokens(tokens);
     }
 }

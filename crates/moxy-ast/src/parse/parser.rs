@@ -1,9 +1,9 @@
 use std::cell::Cell;
 
 use moxy_token::span::DelimSpan;
-use moxy_token::{Delim, Span, TokenStream, TokenTree};
+use moxy_token::{Delim, Span, ToTokens, TokenStream, TokenTree};
 
-use crate::parse::{Ansi, Cursor, Parse, ParseConfig, ParseError, Peek};
+use crate::parse::{Ansi, Cursor, Parse, ParseConfig, ParseError};
 
 #[derive(Clone)]
 pub struct Parser<'a> {
@@ -25,9 +25,21 @@ impl<'a> Parser<'a> {
         }
     }
 
+    pub fn from_cursor(cursor: Cursor<'a>) -> Self {
+        Self {
+            cursor: Cell::new(cursor),
+            config: Default::default(),
+            depth: 0,
+        }
+    }
+
     pub fn traceable(mut self) -> Self {
         self.config.trace = true;
         self
+    }
+
+    pub fn cursor(&self) -> Cursor<'a> {
+        self.cursor.get()
     }
 
     pub fn config(&self) -> &ParseConfig {
@@ -61,31 +73,9 @@ impl<'a> Parser<'a> {
     pub fn seek(&self, other: &Self) {
         self.cursor.set(other.cursor.get());
     }
-
-    pub fn lookahead(&self) -> Self {
-        let mut fork = self.fork();
-        fork.config.trace = false;
-        fork
-    }
 }
 
 impl<'a> Parser<'a> {
-    pub fn curr(&self) -> Option<&'a TokenTree> {
-        self.cursor.get().curr()
-    }
-
-    pub fn next(&self) -> Option<&'a TokenTree> {
-        self.cursor.get().next()
-    }
-
-    pub fn nth(&self, n: usize) -> Option<&'a TokenTree> {
-        self.cursor.get().nth(n)
-    }
-
-    pub fn prev(&self) -> Option<&'a TokenTree> {
-        self.cursor.get().prev()
-    }
-
     pub fn advance(&self) -> Option<&'a TokenTree> {
         let (cursor, token) = self.cursor.get().advance();
         self.cursor.set(cursor);
@@ -110,10 +100,6 @@ impl<'a> Parser<'a> {
 }
 
 impl Parser<'_> {
-    pub fn peek<T: Peek>(&self) -> bool {
-        T::peek(&self.lookahead())
-    }
-
     pub fn parse<T: Parse>(&self) -> Result<T, ParseError> {
         let name = std::any::type_name::<T>();
 
@@ -155,10 +141,6 @@ impl Parser<'_> {
         Ok(value)
     }
 
-    pub fn parse_if<T: Parse>(&self) -> Option<T> {
-        self.parse().ok()
-    }
-
     pub fn parse_while<T: Parse>(&self) -> Vec<T> {
         let mut items = Vec::new();
 
@@ -191,21 +173,21 @@ impl Parser<'_> {
 }
 
 impl Parser<'_> {
-    pub fn parse_group(&self, delim: Delim) -> Result<TokenStream, ParseError> {
+    pub fn parse_group(&self, delim: Delim) -> Result<Parser, ParseError> {
         match self.curr() {
             Some(TokenTree::Group(group)) if group.delim() == delim => {
                 self.advance();
-                Ok(group.stream())
+                Ok(Self::from_config(&group.stream(), self.config))
             }
             _ => Err(self.error(format!("expected `{}` delimiter", delim.as_str()))),
         }
     }
 
-    pub fn parse_group_spanned(&self, delim: Delim) -> Result<(DelimSpan, TokenStream), ParseError> {
+    pub fn parse_group_spanned(&self, delim: Delim) -> Result<(DelimSpan, Parser), ParseError> {
         match self.curr() {
             Some(TokenTree::Group(group)) if group.delim() == delim => {
                 self.advance();
-                Ok((group.span(), group.stream()))
+                Ok((group.span(), Self::from_config(&group.stream(), self.config)))
             }
             _ => Err(self.error(format!("expected `{}` delimiter", delim.as_str()))),
         }
@@ -218,5 +200,25 @@ impl Parser<'_> {
             Some(other) => Err(self.error(format!("expected Ident, received \"{}\"", other))),
             None => Err(self.error("expected Ident, received \"<EOF>\"")),
         }
+    }
+}
+
+impl<'a> ToTokens for Parser<'a> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.cursor.get().to_tokens(tokens);
+    }
+}
+
+impl<'a> std::ops::Deref for Parser<'a> {
+    type Target = Cursor<'a>;
+
+    fn deref(&self) -> &Self::Target {
+        &self.cursor.get()
+    }
+}
+
+impl<'a> std::ops::DerefMut for Parser<'a> {
+    fn deref_mut(&mut self) -> &mut Self::Target {
+        self.cursor.get_mut()
     }
 }

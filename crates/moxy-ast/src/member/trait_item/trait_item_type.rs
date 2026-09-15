@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Generics, Ident, Punctuated, Type, TypeBound};
+use crate::*;
 
 /// An associated type inside a trait definition (`type Name: Bound = Default;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,20 +17,24 @@ pub struct TraitItemType {
 }
 
 impl Parse for TraitItemType {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![type]>() && cursor.offset(1).peek::<Ident>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let type_keyword = parser.parse::<Token![type]>()?;
-        let ident = parser.parse::<Ident>()?;
-        let generics = parser.parse::<Generics>()?;
+        let attrs = parser.parse()?;
+        let type_keyword = parser.parse()?;
+        let ident = parser.parse()?;
+        let generics = parser.parse()?;
         let (colon, bounds) = if parser.peek::<Token![:]>() {
-            (Some(parser.parse::<Token![:]>()?), TypeBound::parse_bounds(parser)?)
+            (Some(parser.parse()?), Punctuated::parse_separated_nonempty(parser)?)
         } else {
             (None, Punctuated::new())
         };
 
         let default = if parser.peek::<Token![=]>() {
-            let eq = parser.parse::<Token![=]>()?;
-            Some((eq, parser.parse::<Type>()?))
+            let eq = parser.parse()?;
+            Some((eq, parser.parse()?))
         } else {
             None
         };
@@ -72,11 +75,5 @@ impl ToTokens for TraitItemType {
         }
 
         self.semi.to_tokens(t);
-    }
-}
-
-impl TraitItemType {
-    pub fn into_trait_item(self) -> super::TraitItem {
-        super::TraitItem::from(self)
     }
 }

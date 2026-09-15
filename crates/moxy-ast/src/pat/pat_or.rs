@@ -21,15 +21,22 @@ impl Spanner for PatOr {
     }
 }
 
+impl Parse for PatOr {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Pattern>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            attrs: parser.parse()?,
+            cases: Punctuated::parse_separated_nonempty(parser)?,
+        })
+    }
+}
+
 impl ToTokens for PatOr {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.cases.to_tokens(t);
-    }
-}
-
-impl PatOr {
-    pub fn into_pattern(self) -> super::Pattern {
-        super::Pattern::from(self)
     }
 }

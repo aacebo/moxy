@@ -1,7 +1,7 @@
 use moxy_token::punct::*;
 use moxy_token::{Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use crate::{Parse, ParseError, Parser, Peek};
+use crate::{Cursor, Parse, ParseError, Parser};
 
 macro_rules! define_punct {
     ($($name:ident($len:literal) => [ $($field:tt : $punct:ident),+ ]),+ $(,)?) => {
@@ -39,12 +39,12 @@ macro_rules! define_punct {
                 }
             }
 
-            impl Peek for $name {
-                fn peek(parser: &Parser) -> bool {
+            impl Parse for $name {
+                fn peek(cursor: Cursor<'_>) -> bool {
                     let mut i = 0;
 
                     $(
-                        let Some(TokenTree::Punct(Punct::$punct(token))) = parser.advance() else {
+                        let Some(TokenTree::Punct(Punct::$punct(token))) = cursor.curr() else {
                             return false;
                         };
 
@@ -57,11 +57,14 @@ macro_rules! define_punct {
 
                     true
                 }
-            }
 
-            impl Parse for $name {
                 fn parse(parser: &Parser) -> Result<Self, ParseError> {
                     Ok(Self($(parser.parse::<$punct>()?),*))
+                }
+
+                fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+                    $(let cursor = cursor.skip::<$punct>()?;)*
+                    Some(cursor)
                 }
             }
 

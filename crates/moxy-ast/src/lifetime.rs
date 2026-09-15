@@ -1,6 +1,6 @@
-use crate::{Parse, ParseError, Parser, Peek};
-use moxy_token::punct::Quote;
-use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Keyword, LexError, Quote, Span, Spanner, ToTokens, TokenStream, TokenTree};
+
+use crate::*;
 
 /// A named lifetime (e.g. `'a`, `'static`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -10,17 +10,16 @@ pub struct Lifetime {
     pub ident: LifetimeName,
 }
 
-impl Peek for Lifetime {
-    fn peek(parser: &Parser) -> bool {
-        matches!(parser.curr(), Some(TokenTree::Punct(moxy_token::Punct::Quote(_))))
-    }
-}
-
 impl Parse for Lifetime {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Quote>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let quote = parser.parse::<Quote>()?;
-        let ident = parser.parse::<LifetimeName>()?;
-        Ok(Self { quote, ident })
+        Ok(Self {
+            quote: parser.parse()?,
+            ident: parser.parse()?,
+        })
     }
 }
 
@@ -37,26 +36,6 @@ impl ToTokens for Lifetime {
     }
 }
 
-impl Lifetime {
-    pub fn parse_bounds(parser: &Parser) -> Result<crate::Punctuated<Self, Token![+]>, ParseError> {
-        let mut bounds = crate::Punctuated::new();
-        if parser.peek::<Token![:]>() {
-            let _ = parser.parse::<Token![:]>()?;
-
-            loop {
-                bounds.push_value(parser.parse::<Self>()?);
-
-                if parser.peek::<Token![+]>() {
-                    bounds.push_punct(parser.parse::<Token![+]>()?);
-                } else {
-                    break;
-                }
-            }
-        }
-        Ok(bounds)
-    }
-}
-
 /// The name part of a lifetime (e.g. the `a` in `'a`, or the `static` in `'static`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -67,31 +46,32 @@ pub struct LifetimeName {
 }
 
 impl Parse for LifetimeName {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Ident>() || cursor.peek::<Keyword>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let at = parser.span();
+        if parser.peek::<Ident>() {
+            let token = parser.parse::<Ident>()?;
 
-        // A lifetime name may be an identifier (`'a`) or a keyword (`'static`).
-        match parser.advance() {
-            Some(TokenTree::Ident(id)) => {
-                let (raw, text) = if id.is_raw() {
-                    (true, id.text().to_string())
-                } else {
-                    (false, id.text().to_string())
-                };
-
-                Ok(Self {
-                    span: id.span(),
-                    text,
-                    raw,
-                })
-            }
-            Some(TokenTree::Keyword(kw)) => Ok(Self {
-                span: kw.span(),
-                text: kw.as_str().to_string(),
-                raw: false,
-            }),
-            _ => Err(LexError::new(at).message("expected lifetime name").into()),
+            return Ok(Self {
+                span: token.span(),
+                text: token.text().to_string(),
+                raw: token.is_raw(),
+            });
         }
+
+        if parser.peek::<Keyword>() {
+            let token = parser.parse::<Keyword>()?;
+
+            return Ok(Self {
+                span: token.span(),
+                text: token.text().to_string(),
+                raw: false,
+            });
+        }
+
+        parser.error("expected lifetime name").into()
     }
 }
 

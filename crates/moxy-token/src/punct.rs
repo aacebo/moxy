@@ -282,6 +282,7 @@ define_punct! {
     Tilde[is_punct_tilde, as_punct_tilde]                   => "~",
     Plus[is_punct_plus, as_punct_plus]                      => "+",
     Minus[is_punct_minus, as_punct_minus]                   => "-",
+    Underscore[is_punct_underscore, as_punct_underscore]    => "_",
     Star[is_punct_star, as_punct_star]                      => "*",
     Slash[is_punct_slash, as_punct_slash]                   => "/",
     Percent[is_punct_percent, as_punct_percent]             => "%",

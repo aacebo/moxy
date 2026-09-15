@@ -1,4 +1,3 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -19,28 +18,26 @@ impl Spanner for PatType {
     }
 }
 
+impl Parse for PatType {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Pattern>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            attrs: parser.parse()?,
+            pat: parser.parse()?,
+            colon: parser.parse()?,
+            ty: parser.parse()?,
+        })
+    }
+}
+
 impl ToTokens for PatType {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.pat.to_tokens(t);
         self.colon.to_tokens(t);
         self.ty.to_tokens(t);
-    }
-}
-
-impl PatType {
-    pub fn into_pattern(self) -> super::Pattern {
-        super::Pattern::from(self)
-    }
-}
-
-impl Parse for PatType {
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let pat = Box::new(Pattern::parse_single(parser)?);
-        let colon = parser.parse()?;
-        let ty = Box::new(parser.parse()?);
-
-        Ok(Self { attrs, pat, colon, ty })
     }
 }

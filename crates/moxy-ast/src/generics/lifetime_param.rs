@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Lifetime, Punctuated};
+use crate::*;
 
 /// A lifetime parameter (`'a: 'b + 'c`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,21 +13,16 @@ pub struct LifetimeParam {
 }
 
 impl Parse for LifetimeParam {
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let lifetime = parser.parse::<Lifetime>()?;
-        let bounds = Lifetime::parse_bounds(parser)?;
-        let colon_punct = if !bounds.is_empty() {
-            Some(<Token![:]>::default())
-        } else {
-            None
-        };
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Lifetime>()
+    }
 
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs,
-            lifetime,
-            colon_punct,
-            bounds,
+            attrs: parser.parse()?,
+            lifetime: parser.parse()?,
+            colon_punct: parser.parse()?,
+            bounds: parser.parse()?,
         })
     }
 }
@@ -45,18 +38,7 @@ impl ToTokens for LifetimeParam {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.lifetime.to_tokens(t);
-
-        if !self.bounds.is_empty() {
-            if let Some(colon_punct) = &self.colon_punct {
-                colon_punct.to_tokens(t);
-            }
-            self.bounds.to_tokens(t);
-        }
-    }
-}
-
-impl LifetimeParam {
-    pub fn into_generic_param(self) -> super::GenericParam {
-        super::GenericParam::from(self)
+        self.colon_punct.to_tokens(t);
+        self.bounds.to_tokens(t);
     }
 }

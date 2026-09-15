@@ -6,8 +6,10 @@ use target::*;
 
 use std::sync::Arc;
 
-use crate::visit::{Visit, walk_meta};
-use crate::{Attributes, Meta};
+use crate::{
+    Attributes, Meta,
+    visit::{Visit, walk_meta},
+};
 
 type Project<'p, T> = Arc<dyn for<'x> Fn(&'x Meta) -> Option<&'x T> + 'p>;
 

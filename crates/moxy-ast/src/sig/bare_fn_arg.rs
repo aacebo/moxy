@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Ident, Type};
+use crate::*;
 
 /// An argument of a bare function pointer type.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,22 +12,21 @@ pub struct BareFnArg {
 }
 
 impl Parse for BareFnArg {
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let name = if parser.peek::<Ident>() {
-            let fork = parser.lookahead();
-            fork.advance();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        (cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![:]>()) || cursor.peek::<Type>()
+    }
 
-            if fork.peek::<Token![:]>() {
-                Some((parser.parse()?, parser.parse()?))
-            } else {
-                None
-            }
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let name = if parser.peek::<Ident>() {
+            Some((parser.parse()?, parser.parse()?))
         } else {
             None
         };
 
-        let ty = parser.parse::<Type>()?;
+        let colon = parser.parse()?;
+        let ty = parser.parse()?;
+
         Ok(Self { attrs, name, ty })
     }
 }

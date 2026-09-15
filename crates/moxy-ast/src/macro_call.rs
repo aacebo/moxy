@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
-use moxy_token::{Delim, Group, LexError, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, Span, Spanner, ToTokens, TokenStream};
 
-use crate::Path;
+use crate::*;
 
 /// A macro invocation (`path!(...)`, `path![...]`, `path!{...}`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -11,15 +9,10 @@ pub struct MacroCall {
     pub path: Path,
     pub bang: Token![!],
     pub body: Group,
+    pub semi: Option<Token![;]>,
 }
 
 impl MacroCall {
-    pub fn parse_semi(parser: &Parser) -> Result<(Self, Option<Token![;]>), ParseError> {
-        let mac = parser.parse::<Self>()?;
-        let semi = parser.parse_if::<Token![;]>();
-        Ok((mac, semi))
-    }
-
     /// The delimiter of the macro body (`(`, `[`, or `{`).
     pub fn delim(&self) -> Delim {
         self.body.delim()
@@ -32,21 +25,17 @@ impl MacroCall {
 }
 
 impl Parse for MacroCall {
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let path = parser.parse::<Path>()?;
-        let bang = parser.parse::<Token![!]>()?;
-        let body = match parser.curr() {
-            Some(TokenTree::Group(g)) => {
-                let g = g.clone();
-                parser.advance();
-                g
-            }
-            _ => {
-                return Err(LexError::new(parser.span()).message("expected macro delimiter").into());
-            }
-        };
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Path>()
+    }
 
-        Ok(Self { path, bang, body })
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            path: parser.parse()?,
+            bang: parser.parse()?,
+            body: parser.parser()?,
+            semi: parser.parse()?,
+        })
     }
 }
 
@@ -60,6 +49,7 @@ impl ToTokens for MacroCall {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.path.to_tokens(tokens);
         self.bang.to_tokens(tokens);
-        tokens.extend_one(TokenTree::Group(self.body.clone()));
+        self.body.to_tokens(tokens);
+        self.semi.to_tokens(tokens);
     }
 }

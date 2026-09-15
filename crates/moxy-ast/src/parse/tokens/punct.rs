@@ -1,32 +1,34 @@
 use moxy_token::{Punct, TokenTree, punct};
 
-use crate::{Parse, ParseError, Parser, Peek};
+use crate::{Cursor, Parse, ParseError, Parser};
 
-impl Peek for Punct {
-    fn peek(parser: &Parser) -> bool {
-        let Some(next) = parser.curr() else {
+impl Parse for Punct {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
             return false;
         };
 
         next.is_punct()
     }
-}
 
-impl Parse for Punct {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         match parser.advance() {
             Some(TokenTree::Punct(v)) => Ok(*v),
             _ => Err(parser.error("expected punctuation")),
         }
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.offset(1).into()
+    }
 }
 
 macro_rules! impl_punct_parse {
     ($($name:ident),* $(,)?) => {
         $(
-            impl Peek for punct::$name {
-                fn peek(parser: &Parser) -> bool {
-                    let Some(next) = parser.curr() else {
+            impl Parse for punct::$name {
+                fn peek(cursor: Cursor<'_>) -> bool {
+                    let Some(next) = cursor.curr() else {
                         return false;
                     };
 
@@ -35,14 +37,16 @@ macro_rules! impl_punct_parse {
                         TokenTree::Punct(Punct::$name(_)),
                     )
                 }
-            }
 
-            impl Parse for punct::$name {
                 fn parse(parser: &Parser) -> Result<Self, ParseError> {
                     match parser.parse::<Punct>()? {
                         Punct::$name(v) => Ok(v),
                         _ => parser.error(format!("expected `{}` punctuation", punct::$name::TEXT)).into(),
                     }
+                }
+
+                fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+                    cursor.offset(1).into()
                 }
             }
         )*

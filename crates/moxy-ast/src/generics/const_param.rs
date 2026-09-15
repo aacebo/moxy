@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Expr, Ident, Type};
+use crate::*;
 
 /// A const generic parameter (`const N: usize = 0`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,15 +16,19 @@ pub struct ConstParam {
 }
 
 impl Parse for ConstParam {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![const]>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let const_keyword = parser.parse::<Token![const]>()?;
-        let ident = parser.parse::<Ident>()?;
-        let colon_punct = parser.parse::<Token![:]>()?;
-        let ty = parser.parse::<Type>()?;
+        let attrs = parser.parse()?;
+        let const_keyword = parser.parse()?;
+        let ident = parser.parse()?;
+        let colon_punct = parser.parse()?;
+        let ty = parser.parse()?;
         let (default_eq_punct, default) = if parser.peek::<Token![=]>() {
-            let eq_punct = parser.parse::<Token![=]>()?;
-            let expr = parser.parse::<Expr>()?;
+            let eq_punct = parser.parse()?;
+            let expr = parser.parse()?;
             (Some(eq_punct), Some(expr))
         } else {
             (None, None)
@@ -63,18 +65,7 @@ impl ToTokens for ConstParam {
         self.ident.to_tokens(t);
         self.colon_punct.to_tokens(t);
         self.ty.to_tokens(t);
-
-        if let Some(eq_punct) = &self.default_eq_punct {
-            eq_punct.to_tokens(t);
-        }
-        if let Some(d) = &self.default {
-            d.to_tokens(t);
-        }
-    }
-}
-
-impl ConstParam {
-    pub fn into_generic_param(self) -> super::GenericParam {
-        super::GenericParam::from(self)
+        self.default_eq_punct.to_tokens(t);
+        self.default.to_tokens(t);
     }
 }

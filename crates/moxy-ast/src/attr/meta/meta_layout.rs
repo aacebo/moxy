@@ -1,4 +1,6 @@
-use crate::Token;
+use moxy_token::Group;
+
+use crate::{Cursor, Token};
 
 use super::*;
 
@@ -61,6 +63,22 @@ impl MetaLayout {
 }
 
 impl Parse for MetaLayout {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        if cursor.is_empty() {
+            return true;
+        }
+
+        if cursor.peek::<Token![=]>() && cursor.offset(1).peek::<MetaValue>() {
+            return true;
+        }
+
+        if cursor.peek::<MetaValue>() {
+            return true;
+        }
+
+        cursor.peek::<Group>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if parser.peek::<Token![=]>() && !parser.peek::<Token![==]>() && !parser.peek::<Token![=>]>() {
             return Ok(Self::Alias {
@@ -69,9 +87,8 @@ impl Parse for MetaLayout {
             });
         }
 
-        if let Ok((span, tokens)) = parser.parse_group_spanned(Delim::Paren) {
-            let inner = Parser::from_tokens(&tokens);
-            let punct = Punctuated::parse_terminated(&inner)?;
+        if let Ok((span, parser)) = parser.parse_group_spanned(Delim::Paren) {
+            let punct = Punctuated::parse_terminated(&parser)?;
             let items = Delimited::new(Delim::Paren, span, punct);
             return Ok(Self::List { items });
         }
@@ -81,6 +98,23 @@ impl Parse for MetaLayout {
         }
 
         Ok(Self::None)
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.is_empty() {
+            return Some(cursor);
+        }
+
+        if cursor.peek::<Token![=]>() && cursor.offset(1).peek::<MetaValue>() {
+            cursor = cursor.skip::<Token![=]>()?;
+            return cursor.skip::<MetaValue>();
+        }
+
+        if cursor.peek::<MetaValue>() {
+            return cursor.skip::<MetaValue>();
+        }
+
+        cursor.skip::<Group>()
     }
 }
 

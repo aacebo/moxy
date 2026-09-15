@@ -1,6 +1,3 @@
-use crate::{Parse, ParseError, Parser};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
-
 mod impl_item_const;
 mod impl_item_fn;
 mod impl_item_macro;
@@ -10,6 +7,10 @@ pub use impl_item_const::*;
 pub use impl_item_fn::*;
 pub use impl_item_macro::*;
 pub use impl_item_type::*;
+
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
+use crate::*;
 
 /// An item inside an `impl` block.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -85,17 +86,24 @@ impl From<ImplItemConst> for ImplItem {
 }
 
 impl Parse for ImplItem {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<ImplItemConst>()
+            || cursor.peek::<ImplItemType>()
+            || cursor.peek::<ImplItemFn>()
+            || cursor.peek::<ImplItemMacro>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if let Some(item) = parser.parse_if::<ImplItemConst>() {
-            return Ok(Self::Const(Box::new(item)));
+        if parser.peek::<ImplItemConst>() {
+            return Ok(Self::Const(Box::new(parser.parse()?)));
         }
 
-        if let Some(item) = parser.parse_if::<ImplItemType>() {
-            return Ok(Self::Type(item));
+        if parser.peek::<ImplItemType>() {
+            return Ok(Self::Const(Box::new(parser.parse()?)));
         }
 
-        if let Some(item) = parser.parse_if::<ImplItemFn>() {
-            return Ok(Self::Fn(item));
+        if parser.peek::<ImplItemFn>() {
+            return Ok(Self::Const(Box::new(parser.parse()?)));
         }
 
         Ok(Self::Macro(parser.parse()?))

@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Defaultness, Expr, Generics, Ident, Type, Visibility};
+use crate::*;
 
 /// A constant item inside an `impl` block (`const NAME: Type = expr;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -21,31 +20,24 @@ pub struct ImplItemConst {
 }
 
 impl Parse for ImplItemConst {
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let vis = parser.parse::<Visibility>()?;
-        let defaultness = parser.parse::<Defaultness>()?;
-        let const_keyword = parser.parse::<Token![const]>()?;
-        let ident = parser.parse::<Ident>()?;
-        let generics = parser.parse::<Generics>()?;
-        let colon = parser.parse::<Token![:]>()?;
-        let ty = parser.parse::<Type>()?;
-        let eq = parser.parse::<Token![=]>()?;
-        let expr = parser.parse::<Expr>()?;
-        let semi = parser.parse_if::<Token![;]>();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        (cursor.peek::<Token![pub]>() || cursor.peek::<Token![default]>() || cursor.peek::<Token![const]>())
+            && cursor.offset(1).peek::<Ident>()
+    }
 
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs,
-            vis,
-            defaultness,
-            const_keyword,
-            ident,
-            generics,
-            colon,
-            ty,
-            eq,
-            expr,
-            semi,
+            attrs: parser.parse()?,
+            vis: parser.parse()?,
+            defaultness: parser.parse()?,
+            const_keyword: parser.parse()?,
+            ident: parser.parse()?,
+            generics: parser.parse()?,
+            colon: parser.parse()?,
+            ty: parser.parse()?,
+            eq: parser.parse()?,
+            expr: parser.parse()?,
+            semi: parser.parse()?,
         })
     }
 }
@@ -70,11 +62,5 @@ impl ToTokens for ImplItemConst {
         self.eq.to_tokens(t);
         self.expr.to_tokens(t);
         self.semi.to_tokens(t);
-    }
-}
-
-impl ImplItemConst {
-    pub fn into_impl_item(self) -> super::ImplItem {
-        super::ImplItem::from(self)
     }
 }

@@ -7,7 +7,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatLit {
     pub attrs: Attributes,
-    pub expr: Expr,
+    pub lit: Lit,
 }
 
 impl Spanner for PatLit {
@@ -16,15 +16,22 @@ impl Spanner for PatLit {
     }
 }
 
+impl Parse for PatLit {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Lit>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            attrs: parser.parse()?,
+            lit: parser.parse()?,
+        })
+    }
+}
+
 impl ToTokens for PatLit {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.expr.to_tokens(t);
-    }
-}
-
-impl PatLit {
-    pub fn into_pattern(self) -> super::Pattern {
-        super::Pattern::from(self)
     }
 }

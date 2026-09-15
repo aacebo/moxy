@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Generics, Ident, Visibility};
+use crate::*;
 
 /// A foreign opaque type declaration inside an `extern` block (`type Name;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -16,21 +15,18 @@ pub struct ForeignItemType {
 }
 
 impl Parse for ForeignItemType {
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let vis = parser.parse::<Visibility>()?;
-        let type_keyword = parser.parse::<Token![type]>()?;
-        let ident = parser.parse::<Ident>()?;
-        let generics = parser.parse::<Generics>()?;
-        let semi = parser.parse_if::<Token![;]>();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![type]>() || (cursor.peek::<Token![pub]>() && cursor.offset(1).peek::<Token![type]>())
+    }
 
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs,
-            vis,
-            type_keyword,
-            ident,
-            generics,
-            semi,
+            attrs: parser.parse()?,
+            vis: parser.parse()?,
+            type_keyword: parser.parse()?,
+            ident: parser.parse()?,
+            generics: parser.parse()?,
+            semi: parser.parse()?,
         })
     }
 }

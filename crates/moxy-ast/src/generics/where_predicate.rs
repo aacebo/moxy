@@ -1,7 +1,7 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::{LifetimePredicate, TypePredicate};
+use crate::*;
 
 /// A `where` clause predicate (lifetime or type).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -21,8 +21,12 @@ impl Spanner for WherePredicate {
 }
 
 impl Parse for WherePredicate {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<LifetimePredicate>() || cursor.peek::<TypePredicate>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if matches!(parser.curr(), Some(moxy_token::TokenTree::Punct(moxy_token::Punct::Quote(_)))) {
+        if parser.peek::<LifetimePredicate>() {
             return Ok(Self::Lifetime(parser.parse()?));
         }
 

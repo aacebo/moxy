@@ -1,8 +1,7 @@
-use crate::{Parse, ParseError, Parser};
-use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::UseTree;
-use crate::Ident;
+use crate::*;
 
 /// A use path segment (`foo::<rest>`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,13 +14,17 @@ pub struct UsePath {
 }
 
 impl Parse for UsePath {
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let at = parser.span();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![::]>() || (cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![::]>())
+    }
 
-        match parser.parse::<UseTree>()? {
-            UseTree::Path(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected use path").into()),
-        }
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            prefix: parser.parse()?,
+            ident: parser.parse()?,
+            path_sep: parser.parse()?,
+            tree: Box::new(parser.parse()?),
+        })
     }
 }
 
@@ -37,11 +40,5 @@ impl ToTokens for UsePath {
         self.ident.to_tokens(t);
         self.path_sep.to_tokens(t);
         self.tree.to_tokens(t);
-    }
-}
-
-impl UsePath {
-    pub fn into_use_tree(self) -> super::UseTree {
-        super::UseTree::Path(self)
     }
 }

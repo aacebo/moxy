@@ -40,7 +40,7 @@ pub use declaration::*;
 #[doc(inline)]
 pub use delimited::Delimited;
 #[doc(inline)]
-pub use expr::{BinaryExpr, BlockExpr, Expr, JumpExpr, MatchArm, PostfixExpr, PrimaryExpr, UnaryExpr};
+pub use expr::Expr;
 #[doc(inline)]
 pub use fields::{FieldValue, Fields, FieldsNamed};
 #[doc(inline)]

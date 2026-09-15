@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Ident};
+use crate::*;
 
 /// A C-style variadic marker (`...`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,10 +12,16 @@ pub struct Variadic {
 }
 
 impl Parse for Variadic {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![...]>() || (cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![...]>())
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let dots = parser.parse::<Token![...]>()?;
-        Ok(Self { attrs, name: None, dots })
+        Ok(Self {
+            attrs: parser.parse()?,
+            name: parser.parse()?,
+            dots: parser.parse()?,
+        })
     }
 }
 
@@ -29,6 +34,7 @@ impl Spanner for Variadic {
 impl ToTokens for Variadic {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
+        self.name.to_tokens(t);
         self.dots.to_tokens(t);
     }
 }

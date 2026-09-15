@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{BoundLifetimes, BoundPolarity, Path, TraitBoundModifier};
+use crate::*;
 
 /// A trait bound (`Trait`, `?Sized`, `for<'a> Trait`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,17 +13,16 @@ pub struct TraitBound {
 }
 
 impl Parse for TraitBound {
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let polarity = parser.parse::<BoundPolarity>()?;
-        let lifetimes = parser.parse::<Option<BoundLifetimes>>()?;
-        let modifier = parser.parse::<TraitBoundModifier>()?;
-        let path = parser.parse::<Path>()?;
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![!]>() || cursor.peek::<Token![for]>() || cursor.peek::<Token![?]>() || cursor.peek::<Path>()
+    }
 
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            polarity,
-            lifetimes,
-            modifier,
-            path,
+            polarity: parser.parse()?,
+            lifetimes: parser.parse()?,
+            modifier: parser.parse()?,
+            path: parser.parse()?,
         })
     }
 }
@@ -55,11 +53,5 @@ impl ToTokens for TraitBound {
         self.lifetimes.to_tokens(tokens);
         self.modifier.to_tokens(tokens);
         self.path.to_tokens(tokens);
-    }
-}
-
-impl TraitBound {
-    pub fn into_type_bound(self) -> super::TypeBound {
-        super::TypeBound::from(self)
     }
 }

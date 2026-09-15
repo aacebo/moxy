@@ -1,28 +1,6 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Abi, BareFnArg, BoundLifetimes, Delimited, Punctuated, ReturnType, Unsafety, Variadic};
-
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
-pub struct BareFnParams {
-    pub inputs: Punctuated<BareFnArg, Token![,]>,
-    pub variadic: Option<Variadic>,
-}
-
-impl ToTokens for BareFnParams {
-    fn to_tokens(&self, t: &mut TokenStream) {
-        self.inputs.to_tokens(t);
-
-        if let Some(v) = &self.variadic {
-            if !self.inputs.is_empty() && !self.inputs.is_trailing() {
-                <Token![,]>::default().to_tokens(t);
-            }
-
-            v.to_tokens(t);
-        }
-    }
-}
+use crate::*;
 
 /// A bare function pointer type (e.g. `fn(u8) -> u8`, `extern "C" fn()`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -37,22 +15,34 @@ pub struct TypeBareFn {
 }
 
 impl Parse for TypeBareFn {
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let lifetimes = parser.parse_if::<BoundLifetimes>();
-        let unsafety = parser.parse::<Unsafety>()?;
-        let abi = if parser.peek::<Token![extern]>() {
-            Some(parser.parse::<Abi>()?)
-        } else {
-            None
-        };
+    fn peek(mut cursor: Cursor<'_>) -> bool {
+        if cursor.peek::<BoundLifetimes>() {
+            cursor = cursor.skip_until(|t| t.map(|t| t.is_punct_gt()).unwrap_or_default());
+            cursor = cursor.offset(1);
+        }
 
-        let fn_keyword = parser.parse::<Token![fn]>()?;
+        if cursor.peek::<Token![unsafe]>() {
+            cursor = cursor.offset(1);
+        }
+
+        if cursor.peek::<Token![extern]>() {
+            cursor = cursor.offset(2);
+        }
+
+        cursor.peek::<Token![fn]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let lifetimes = parser.parse()?;
+        let unsafety = parser.parse()?;
+        let abi = parser.parse()?;
+        let fn_keyword = parser.parse()?;
         let params = Delimited::parse_paren_with(parser, |inner| {
             let inputs = Punctuated::parse_terminated(inner)?;
             Ok(BareFnParams { inputs, variadic: None })
         })?;
 
-        let output = parser.parse::<ReturnType>()?;
+        let output = parser.parse()?;
 
         Ok(Self {
             lifetimes,
@@ -69,7 +59,7 @@ impl Spanner for TypeBareFn {
     fn span(&self) -> Span {
         let start = if let Some(l) = &self.lifetimes {
             l.span()
-        } else if !matches!(self.unsafety, crate::Unsafety::Safe) {
+        } else if !matches!(self.unsafety, Unsafety::Safe) {
             self.unsafety.span()
         } else if let Some(abi) = &self.abi {
             abi.span()
@@ -88,18 +78,25 @@ impl Spanner for TypeBareFn {
 
 impl ToTokens for TypeBareFn {
     fn to_tokens(&self, t: &mut TokenStream) {
-        if let Some(l) = &self.lifetimes {
-            l.to_tokens(t);
-        }
-
+        self.lifetimes.to_tokens(t);
         self.unsafety.to_tokens(t);
-
-        if let Some(abi) = &self.abi {
-            abi.to_tokens(t);
-        }
-
+        self.abi.to_tokens(t);
         self.fn_keyword.to_tokens(t);
         self.params.to_tokens(t);
         self.output.to_tokens(t);
+    }
+}
+
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct BareFnParams {
+    pub inputs: Punctuated<BareFnArg, Token![,]>,
+    pub variadic: Option<Variadic>,
+}
+
+impl ToTokens for BareFnParams {
+    fn to_tokens(&self, t: &mut TokenStream) {
+        self.inputs.to_tokens(t);
+        self.variadic.to_tokens(t);
     }
 }

@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, MacroCall};
+use crate::*;
 
 /// A macro invocation inside an `extern` block.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,10 +12,16 @@ pub struct ForeignItemMacro {
 }
 
 impl Parse for ForeignItemMacro {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<MacroCall>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let (mac, semi) = crate::MacroCall::parse_semi(parser)?;
-        Ok(Self { attrs, mac, semi })
+        Ok(Self {
+            attrs: parser.parse()?,
+            mac: parser.parse()?,
+            semi: parser.parse()?,
+        })
     }
 }
 
@@ -32,11 +37,5 @@ impl ToTokens for ForeignItemMacro {
         self.attrs.to_tokens(t);
         self.mac.to_tokens(t);
         self.semi.to_tokens(t);
-    }
-}
-
-impl ForeignItemMacro {
-    pub fn into_foreign_item(self) -> super::ForeignItem {
-        super::ForeignItem::from(self)
     }
 }

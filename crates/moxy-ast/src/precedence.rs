@@ -1,5 +1,5 @@
 use crate::BinOp;
-use crate::Parser;
+use crate::Cursor;
 
 /// Operator precedence level used when parsing and printing expressions without parentheses.
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
@@ -20,30 +20,44 @@ pub enum Precedence {
 }
 
 impl Precedence {
-    pub fn peek(parser: &Parser) -> Option<Self> {
-        if parser.peek::<Token![&&]>() {
+    pub fn of(op: &BinOp) -> Self {
+        match op {
+            BinOp::Add(_) | BinOp::Sub(_) => Self::Add,
+            BinOp::Mul(_) | BinOp::Div(_) | BinOp::Rem(_) => Self::Mul,
+            BinOp::And(_) => Self::And,
+            BinOp::Or(_) => Self::Or,
+            BinOp::BitXor(_) => Self::BitXor,
+            BinOp::BitAnd(_) => Self::BitAnd,
+            BinOp::BitOr(_) => Self::BitOr,
+            BinOp::Shl(_) | BinOp::Shr(_) => Self::Shift,
+            BinOp::Eq(_) | BinOp::Lt(_) | BinOp::Le(_) | BinOp::Ne(_) | BinOp::Ge(_) | BinOp::Gt(_) => Self::Compare,
+        }
+    }
+
+    pub fn peek(cursor: Cursor) -> Option<Self> {
+        if cursor.peek::<Token![&&]>() {
             Some(Self::And)
-        } else if parser.peek::<Token![||]>() {
+        } else if cursor.peek::<Token![||]>() {
             Some(Self::Or)
-        } else if parser.peek::<Token![<<]>() || parser.peek::<Token![>>]>() {
+        } else if cursor.peek::<Token![<<]>() || cursor.peek::<Token![>>]>() {
             Some(Self::Shift)
-        } else if parser.peek::<Token![==]>()
-            || parser.peek::<Token![!=]>()
-            || parser.peek::<Token![<=]>()
-            || parser.peek::<Token![>=]>()
-            || parser.peek::<Token![<]>()
-            || parser.peek::<Token![>]>()
+        } else if cursor.peek::<Token![==]>()
+            || cursor.peek::<Token![!=]>()
+            || cursor.peek::<Token![<=]>()
+            || cursor.peek::<Token![>=]>()
+            || cursor.peek::<Token![<]>()
+            || cursor.peek::<Token![>]>()
         {
             Some(Self::Compare)
-        } else if parser.peek::<Token![+]>() || parser.peek::<Token![-]>() {
+        } else if cursor.peek::<Token![+]>() || cursor.peek::<Token![-]>() {
             Some(Self::Add)
-        } else if parser.peek::<Token![*]>() || parser.peek::<Token![/]>() || parser.peek::<Token![%]>() {
+        } else if cursor.peek::<Token![*]>() || cursor.peek::<Token![/]>() || cursor.peek::<Token![%]>() {
             Some(Self::Mul)
-        } else if parser.peek::<Token![^]>() {
+        } else if cursor.peek::<Token![^]>() {
             Some(Self::BitXor)
-        } else if parser.peek::<Token![&]>() {
+        } else if cursor.peek::<Token![&]>() {
             Some(Self::BitAnd)
-        } else if parser.peek::<Token![|]>() {
+        } else if cursor.peek::<Token![|]>() {
             Some(Self::BitOr)
         } else {
             None
@@ -63,20 +77,6 @@ impl Precedence {
             Self::Shift => Self::Add,
             Self::Add => Self::Mul,
             Self::Mul | Self::Cast => Self::Cast,
-        }
-    }
-
-    pub fn of(op: &BinOp) -> Self {
-        match op {
-            BinOp::Add(_) | BinOp::Sub(_) => Self::Add,
-            BinOp::Mul(_) | BinOp::Div(_) | BinOp::Rem(_) => Self::Mul,
-            BinOp::And(_) => Self::And,
-            BinOp::Or(_) => Self::Or,
-            BinOp::BitXor(_) => Self::BitXor,
-            BinOp::BitAnd(_) => Self::BitAnd,
-            BinOp::BitOr(_) => Self::BitOr,
-            BinOp::Shl(_) | BinOp::Shr(_) => Self::Shift,
-            BinOp::Eq(_) | BinOp::Lt(_) | BinOp::Le(_) | BinOp::Ne(_) | BinOp::Ge(_) | BinOp::Gt(_) => Self::Compare,
         }
     }
 }

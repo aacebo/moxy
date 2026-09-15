@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
-use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Defaultness, Signature, StmtBlock, Visibility};
+use crate::*;
 
 /// A method or associated function inside an `impl` block.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,25 +14,17 @@ pub struct ImplItemFn {
 }
 
 impl Parse for ImplItemFn {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![pub]>() || cursor.peek::<Token![default]>() || cursor.peek::<Signature>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let at = parser.span();
-        let attrs = parser.parse::<Attributes>()?;
-        let vis = parser.parse::<Visibility>()?;
-        let defaultness = parser.parse::<Defaultness>()?;
-
-        if !crate::sig::Signature::is_start(parser) {
-            return Err(LexError::new(at).message("expected impl fn").into());
-        }
-
-        let sig = parser.parse::<Signature>()?;
-        let body = parser.parse::<StmtBlock>()?;
-
         Ok(Self {
-            attrs,
-            vis,
-            defaultness,
-            sig,
-            body,
+            attrs: parser.parse()?,
+            vis: parser.parse()?,
+            defaultness: parser.parse()?,
+            sig: parser.parse()?,
+            body: parser.parse()?,
         })
     }
 }
@@ -51,11 +42,5 @@ impl ToTokens for ImplItemFn {
         self.defaultness.to_tokens(t);
         self.sig.to_tokens(t);
         self.body.to_tokens(t);
-    }
-}
-
-impl ImplItemFn {
-    pub fn into_impl_item(self) -> super::ImplItem {
-        super::ImplItem::from(self)
     }
 }

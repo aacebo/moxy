@@ -1,8 +1,3 @@
-use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
-
-use crate::{Delimited, Ident};
-use crate::{Parse, ParseError, Parser};
-
 mod use_glob;
 mod use_group;
 mod use_name;
@@ -14,6 +9,10 @@ pub use use_group::*;
 pub use use_name::*;
 pub use use_path::*;
 pub use use_rename::*;
+
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
+use crate::*;
 
 /// A `use` import tree.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -81,42 +80,32 @@ impl Spanner for UseTree {
 }
 
 impl Parse for UseTree {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<UseGlob>()
+            || cursor.peek::<UseGroup>()
+            || cursor.peek::<UsePath>()
+            || cursor.peek::<UseRename>()
+            || cursor.peek::<UseName>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<Token![*]>() {
-            let star = parser.parse::<Token![*]>()?;
-            return Ok(Self::Glob(UseGlob { star }));
+        if parser.peek::<UseGlob>() {
+            return Ok(Self::Glob(parser.parse()?));
         }
 
-        if matches!(parser.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
-            let items = Delimited::parse_brace_with(parser, crate::Punctuated::parse_terminated)?;
-            return Ok(Self::Group(UseGroup { items }));
+        if parser.peek::<UseGroup>() {
+            return Ok(Self::Group(parser.parse()?));
         }
 
-        let prefix = parser.parse_if::<Token![::]>();
-        let ident = parser.parse::<Ident>()?;
-
-        if parser.peek::<Token![::]>() {
-            let path_sep = parser.parse::<Token![::]>()?;
-            let tree = Box::new(parser.parse::<Self>()?);
-            return Ok(Self::Path(UsePath {
-                prefix,
-                ident,
-                path_sep,
-                tree,
-            }));
+        if parser.peek::<UsePath>() {
+            return Ok(Self::Path(parser.parse()?));
         }
 
-        if parser.peek::<Token![as]>() {
-            let as_keyword = parser.parse::<Token![as]>()?;
-            let rename = parser.parse::<Ident>()?;
-            return Ok(Self::Rename(UseRename {
-                ident,
-                as_keyword,
-                rename,
-            }));
+        if parser.peek::<UseRename>() {
+            return Ok(Self::Rename(parser.parse()?));
         }
 
-        Ok(Self::Name(UseName { ident }))
+        Ok(Self::Name(parser.parse()?))
     }
 }
 

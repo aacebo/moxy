@@ -1,8 +1,9 @@
 use std::ops::{Index, IndexMut};
 use std::{slice, vec};
 
-use crate::{Parse, ParseError, Parser, Peek};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
+use crate::*;
 
 pub struct Punctuated<T, P> {
     pub inner: Vec<(T, P)>,
@@ -174,7 +175,7 @@ impl<T, P> Punctuated<T, P> {
     }
 }
 
-impl<T: Parse, P: Parse + Peek> Punctuated<T, P> {
+impl<T: Parse, P: Parse> Punctuated<T, P> {
     pub fn parse_terminated(parser: &Parser) -> Result<Self, ParseError> {
         let mut punctuated = Self::new();
 

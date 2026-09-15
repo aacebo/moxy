@@ -101,27 +101,63 @@ pub mod __private {
 }
 
 pub trait Parse: Sized {
+    fn peek(cursor: Cursor<'_>) -> bool;
     fn parse(parser: &Parser) -> Result<Self, ParseError>;
-}
-
-pub trait Peek: Sized {
-    fn peek(parser: &Parser) -> bool;
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>>;
 }
 
 impl<T: Parse> Parse for Option<T> {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        T::peek(cursor)
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(parser.parse_if())
+        if parser.peek::<T>() {
+            Ok(Some(parser.parse::<T>()?))
+        } else {
+            Ok(None)
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        // Option<T> returns Some when peek == false since its an optional
+        // node
+        if cursor.peek::<T>() {
+            cursor.skip::<T>()
+        } else {
+            Some(cursor)
+        }
     }
 }
 
 impl<T: Parse> Parse for Vec<T> {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        T::peek(cursor)
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(parser.parse_while::<T>())
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        while let Some(next) = T::skip(cursor) {
+            cursor = next;
+        }
+
+        Some(cursor)
     }
 }
 
 impl<T: Parse> Parse for Box<T> {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        T::peek(cursor)
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self::new(parser.parse()?))
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.skip::<T>()
     }
 }

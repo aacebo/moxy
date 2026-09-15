@@ -1,18 +1,22 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
-use super::Field;
-use crate::{Delimited, Punctuated};
+use crate::*;
 
 /// Tuple-struct fields (`(A, B)`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldsUnnamed {
-    pub fields: Delimited<Punctuated<Field, Token![,]>>,
+    pub fields: Delimited<Punctuated<fields::Field, Token![,]>>,
 }
 
 impl Parse for FieldsUnnamed {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor
+            .descend(Delim::Brace)
+            .map(|c| c.peek::<fields::Field>())
+            .unwrap_or_default()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let fields = Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?;
         Ok(Self { fields })

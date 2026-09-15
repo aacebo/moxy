@@ -1,9 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::expr::{ExprPath, PrimaryExpr};
-use crate::{Attributes, Expr, Member};
+use crate::*;
 
 /// A struct literal field (`member: expr` or shorthand `member`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,45 +10,45 @@ pub struct FieldValue {
     pub member: Member,
     pub colon_punct: Option<Token![:]>,
     pub expr: Expr,
-    pub shorthand: bool,
+}
+
+impl FieldValue {
+    pub fn is_shorthand(&self) -> bool {
+        self.colon_punct.is_none()
+    }
 }
 
 impl Parse for FieldValue {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Member>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
         let member = parser.parse::<Member>()?;
 
         if parser.peek::<Token![:]>() {
-            let colon_punct = Some(parser.parse::<Token![:]>()?);
-            let expr = parser.parse::<Expr>()?;
-
             Ok(Self {
-                attrs,
+                attrs: Default::default(),
                 member,
-                colon_punct,
-                expr,
-                shorthand: false,
+                colon_punct: parser.parse()?,
+                expr: parser.parse()?,
             })
         } else {
-            let expr = match &member {
-                Member::Named(id) => Expr::Primary(PrimaryExpr::Path(ExprPath {
-                    attrs: Attributes::default(),
-                    qself: None,
-                    path: id.clone().into(),
-                })),
-                Member::Unnamed(_) => {
-                    return Err(moxy_token::LexError::new(parser.span())
-                        .message("tuple index needs a value")
-                        .into());
-                }
-            };
-
             Ok(Self {
-                attrs,
+                attrs: Default::default(),
                 member,
                 colon_punct: None,
-                expr,
-                shorthand: true,
+                expr: match &member {
+                    Member::Named(id) => expr::ExprPath {
+                        attrs: Attributes::default(),
+                        qself: None,
+                        path: id.clone().into(),
+                    }
+                    .into(),
+                    Member::Unnamed(_) => {
+                        return parser.error("tuple index needs a value").into();
+                    }
+                },
             })
         }
     }

@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -18,16 +18,31 @@ impl Spanner for PatTupleStruct {
     }
 }
 
-impl ToTokens for PatTupleStruct {
-    fn to_tokens(&self, t: &mut TokenStream) {
-        self.attrs.to_tokens(t);
-        self.path.to_tokens(t);
-        self.elems.to_tokens(t);
+impl Parse for PatTupleStruct {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<QSelf>() || cursor.peek::<Path>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let qself = parser.parse()?;
+        let path = parser.parse()?;
+        let (span, parser) = parser.parse_group_spanned(Delim::Paren)?;
+
+        Ok(Self {
+            attrs,
+            qself,
+            path,
+            elems: Delimited::paren(span, Punctuated::parse_separated_nonempty(&parser)?),
+        })
     }
 }
 
-impl PatTupleStruct {
-    pub fn into_pattern(self) -> super::Pattern {
-        super::Pattern::from(self)
+impl ToTokens for PatTupleStruct {
+    fn to_tokens(&self, t: &mut TokenStream) {
+        self.attrs.to_tokens(t);
+        self.qself.to_tokens(t);
+        self.path.to_tokens(t);
+        self.elems.to_tokens(t);
     }
 }

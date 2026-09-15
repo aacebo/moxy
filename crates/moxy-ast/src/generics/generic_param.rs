@@ -1,16 +1,14 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use super::{ConstParam, LifetimeParam, TypeParam};
+use crate::*;
 
 /// A generic parameter (lifetime, type, or const).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum GenericParam {
-    Lifetime(LifetimeParam),
-    Type(Box<TypeParam>),
-    Const(Box<ConstParam>),
+    Lifetime(generics::LifetimeParam),
+    Type(Box<generics::TypeParam>),
+    Const(Box<generics::ConstParam>),
 }
 
 impl GenericParam {
@@ -26,33 +24,33 @@ impl GenericParam {
         matches!(self, Self::Const(_))
     }
 
-    pub fn as_lifetime(&self) -> Option<&LifetimeParam> {
+    pub fn as_lifetime(&self) -> Option<&generics::LifetimeParam> {
         if let Self::Lifetime(v) = self { Some(v) } else { None }
     }
 
-    pub fn as_type(&self) -> Option<&TypeParam> {
+    pub fn as_type(&self) -> Option<&generics::TypeParam> {
         if let Self::Type(v) = self { Some(v.as_ref()) } else { None }
     }
 
-    pub fn as_const(&self) -> Option<&ConstParam> {
+    pub fn as_const(&self) -> Option<&generics::ConstParam> {
         if let Self::Const(v) = self { Some(v.as_ref()) } else { None }
     }
 }
 
-impl From<LifetimeParam> for GenericParam {
-    fn from(v: LifetimeParam) -> Self {
+impl From<generics::LifetimeParam> for GenericParam {
+    fn from(v: generics::LifetimeParam) -> Self {
         Self::Lifetime(v)
     }
 }
 
-impl From<TypeParam> for GenericParam {
-    fn from(v: TypeParam) -> Self {
+impl From<generics::TypeParam> for GenericParam {
+    fn from(v: generics::TypeParam) -> Self {
         Self::Type(Box::new(v))
     }
 }
 
-impl From<ConstParam> for GenericParam {
-    fn from(v: ConstParam) -> Self {
+impl From<generics::ConstParam> for GenericParam {
+    fn from(v: generics::ConstParam) -> Self {
         Self::Const(Box::new(v))
     }
 }
@@ -68,15 +66,20 @@ impl Spanner for GenericParam {
 }
 
 impl Parse for GenericParam {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<generics::LifetimeParam>() || cursor.peek::<generics::ConstParam>() || cursor.peek::<generics::TypeParam>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if matches!(parser.curr(), Some(moxy_token::TokenTree::Punct(moxy_token::Punct::Quote(_)))) {
+        if parser.peek::<generics::LifetimeParam>() {
             return Ok(Self::Lifetime(parser.parse()?));
         }
 
-        let fork = parser.lookahead();
-        fork.skip_while::<crate::Attribute>();
+        if parser.peek::<Attributes>() {
+            let _ = parser.parse::<Attributes>();
+        }
 
-        if fork.peek::<Token![const]>() {
+        if parser.peek::<generics::ConstParam>() {
             return Ok(Self::Const(Box::new(parser.parse()?)));
         }
 

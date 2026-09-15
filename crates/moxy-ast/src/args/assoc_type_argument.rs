@@ -1,9 +1,6 @@
-use crate::{Parse, ParseError, Parser};
-use crate::{Peek, Token};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use super::AngleArguments;
-use crate::{GenericArgument, Ident, Type};
+use crate::{AngleArguments, Cursor, GenericArgument, Ident, Parse, ParseError, Parser, Token, Type};
 
 /// An associated type binding (`Item = T`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -25,32 +22,25 @@ impl AssocTypeArgument {
     }
 }
 
-impl Peek for AssocTypeArgument {
-    fn peek(parser: &Parser) -> bool {
-        if !parser.parse::<Ident>().is_ok() {
-            return false;
-        }
-
-        if !parser.parse::<Option<AngleArguments>>().is_ok() {
-            return false;
-        }
-
-        if !parser.parse::<Token![=]>().is_ok() {
-            return false;
-        }
-
-        true
-    }
-}
-
 impl Parse for AssocTypeArgument {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Ident>() && (cursor.offset(1).peek::<AngleArguments>() || cursor.offset(1).peek::<Token![=]>())
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
             ident: parser.parse()?,
-            generics: parser.parse_if(),
+            generics: parser.parse()?,
             eq_punct: parser.parse()?,
             ty: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Ident>()?;
+        cursor = cursor.after::<Option<AngleArguments>>()?;
+        cursor = cursor.skip::<Token![=]>()?;
+        cursor.skip::<Type>()
     }
 }
 

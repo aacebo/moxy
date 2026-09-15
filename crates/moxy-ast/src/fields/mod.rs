@@ -1,6 +1,3 @@
-use crate::{Parse, ParseError, Parser};
-use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
-
 mod field;
 mod field_value;
 mod fields_named;
@@ -10,6 +7,10 @@ pub use field::*;
 pub use field_value::*;
 pub use fields_named::*;
 pub use fields_unnamed::*;
+
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
+
+use crate::*;
 
 /// The fields of a struct/enum variant (named, unnamed, or unit).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -65,6 +66,10 @@ impl Spanner for Fields {
 }
 
 impl Parse for Fields {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<FieldsNamed>() || cursor.peek::<FieldsUnnamed>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         match parser.curr() {
             Some(TokenTree::Group(g)) if g.delim() == Delim::Brace => Ok(Self::Named(parser.parse()?)),

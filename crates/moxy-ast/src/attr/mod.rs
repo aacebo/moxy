@@ -2,12 +2,12 @@ pub mod meta;
 pub mod query;
 mod style;
 
-use crate::{Parse, ParseError, Parser};
 pub use meta::Meta;
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 pub use style::*;
 
-use crate::Delimited;
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
+use crate::{Cursor, Delimited, Parse, ParseError, Parser};
 
 /// A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -24,11 +24,20 @@ impl Spanner for Attribute {
 }
 
 impl Parse for Attribute {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<AttrStyle>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
             style: parser.parse()?,
             meta: Delimited::parse_bracket(parser)?,
         })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<AttrStyle>()?;
+        cursor.skip::<Delimited<Meta>>()
     }
 }
 
@@ -124,7 +133,19 @@ impl ToTokens for Attributes {
 }
 
 impl Parse for Attributes {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Attribute>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self(parser.parse_while::<Attribute>()))
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        while let Some(next) = cursor.skip::<Attribute>() {
+            cursor = next;
+        }
+
+        Some(cursor)
     }
 }

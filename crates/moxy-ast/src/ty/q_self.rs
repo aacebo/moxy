@@ -1,8 +1,7 @@
-use crate::{ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::Type;
-use crate::Path;
+use crate::*;
 
 /// The `<T as Trait>` qualifier of a qualified path.
 #[derive(Debug, Clone, PartialEq, Eq)]

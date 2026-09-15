@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use crate::Lifetime;
+use crate::*;
 
 /// A loop label (`'outer:`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,6 +11,10 @@ pub struct Label {
 }
 
 impl Parse for Label {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Lifetime>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let name = parser.parse::<Lifetime>()?;
         let colon = parser.parse::<Token![:]>()?;

@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Defaultness, Generics, Ident, Type, Visibility};
+use crate::*;
 
 /// An associated type definition inside an `impl` block (`type Name = Type;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -19,27 +18,22 @@ pub struct ImplItemType {
 }
 
 impl Parse for ImplItemType {
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let vis = parser.parse::<Visibility>()?;
-        let defaultness = parser.parse::<Defaultness>()?;
-        let type_keyword = parser.parse::<Token![type]>()?;
-        let ident = parser.parse::<Ident>()?;
-        let generics = parser.parse::<Generics>()?;
-        let eq = parser.parse::<Token![=]>()?;
-        let ty = parser.parse::<Type>()?;
-        let semi = parser.parse_if::<Token![;]>();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        (cursor.peek::<Token![pub]>() || cursor.peek::<Token![default]>() || cursor.peek::<Token![type]>())
+            && cursor.offset(1).peek::<Ident>()
+    }
 
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs,
-            vis,
-            defaultness,
-            type_keyword,
-            ident,
-            generics,
-            eq,
-            ty,
-            semi,
+            attrs: parser.parse()?,
+            vis: parser.parse()?,
+            defaultness: parser.parse()?,
+            type_keyword: parser.parse()?,
+            ident: parser.parse()?,
+            generics: parser.parse()?,
+            eq: parser.parse()?,
+            ty: parser.parse()?,
+            semi: parser.parse()?,
         })
     }
 }
@@ -62,11 +56,5 @@ impl ToTokens for ImplItemType {
         self.eq.to_tokens(t);
         self.ty.to_tokens(t);
         self.semi.to_tokens(t);
-    }
-}
-
-impl ImplItemType {
-    pub fn into_impl_item(self) -> super::ImplItem {
-        super::ImplItem::from(self)
     }
 }

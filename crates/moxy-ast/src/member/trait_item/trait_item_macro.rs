@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
-use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, MacroCall};
+use crate::*;
 
 /// A macro invocation inside a trait definition.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,19 +12,16 @@ pub struct TraitItemMacro {
 }
 
 impl Parse for TraitItemMacro {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<MacroCall>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let (mac, semi) = crate::MacroCall::parse_semi(parser)?;
-
-        if semi.is_none() {
-            return Err(LexError::new(mac.span()).message("expected ';'").into());
-        }
-
-        if let Some(semi) = semi {
-            Ok(Self { attrs, mac, semi })
-        } else {
-            Err(LexError::new(mac.span()).message("expected ';'").into())
-        }
+        Ok(Self {
+            attrs: parser.parse()?,
+            mac: parser.parse()?,
+            semi: parser.parse()?,
+        })
     }
 }
 
@@ -40,11 +36,5 @@ impl ToTokens for TraitItemMacro {
         self.attrs.to_tokens(t);
         self.mac.to_tokens(t);
         self.semi.to_tokens(t);
-    }
-}
-
-impl TraitItemMacro {
-    pub fn into_trait_item(self) -> super::TraitItem {
-        super::TraitItem::from(self)
     }
 }

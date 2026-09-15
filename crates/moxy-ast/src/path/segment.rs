@@ -1,35 +1,27 @@
-use crate::{Parse, ParseError, Parser};
-use moxy_token::{Delim, Span, Spanner, ToTokenStream, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Keyword, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
-use super::PathArguments;
-use crate::Ident;
+use crate::*;
 
 /// A single segment of a path (an identifier optionally followed by generic arguments).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PathSegment {
     pub ident: Ident,
-    pub args: PathArguments,
-}
-
-impl PathSegment {
-    pub fn is_fn_family(ident: &Ident) -> bool {
-        matches!(ident.text(), "Fn" | "FnMut" | "FnOnce")
-    }
+    pub args: path::PathArguments,
 }
 
 impl Parse for PathSegment {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Keyword>() || cursor.peek::<Ident>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let ident = parser.parse_ident_any()?;
-
-        // `Fn`-family segments take parenthesized args (`Fn(A) -> B`); this only
-        // applies to those trait names, so it never swallows expression calls.
-        let args =
-            if Self::is_fn_family(&ident) && matches!(parser.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Paren) {
-                PathArguments::parse_parenthesized(parser)?
-            } else {
-                parser.parse::<PathArguments>()?
-            };
+        let args = if matches!(ident.text(), "Fn" | "FnMut" | "FnOnce") {
+            path::PathArguments::Parenthesized(parser.parse()?)
+        } else {
+            parser.parse()?
+        };
 
         Ok(Self { ident, args })
     }

@@ -1,7 +1,6 @@
-use crate::Token;
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Parse, ParseError, Parser};
+use crate::{Cursor, Parse, ParseError, Parser, Token};
 
 /// Whether an attribute is outer (`#[...]`) or inner (`#![...]`).
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -49,6 +48,20 @@ impl ToTokens for AttrStyle {
 }
 
 impl Parse for AttrStyle {
+    fn peek(mut cursor: Cursor<'_>) -> bool {
+        if !cursor.peek::<Token![#]>() {
+            return false;
+        }
+
+        cursor = cursor.offset(1);
+
+        if cursor.peek::<Token![!]>() {
+            cursor = cursor.offset(1);
+        }
+
+        cursor.is_delimited(Delim::Bracket)
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let pound = parser.parse::<Token![#]>()?;
 
@@ -56,6 +69,16 @@ impl Parse for AttrStyle {
             Ok(Self::Inner(pound, parser.parse()?))
         } else {
             Ok(Self::Outer(pound))
+        }
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Token![#]>()?;
+
+        if cursor.peek::<Token![!]>() {
+            cursor.skip::<Token![!]>()
+        } else {
+            Some(cursor)
         }
     }
 }

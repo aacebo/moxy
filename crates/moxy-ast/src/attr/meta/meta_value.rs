@@ -1,4 +1,6 @@
-use moxy_token::span::DelimSpan;
+use moxy_token::{Group, ToTokenStream, span::DelimSpan};
+
+use crate::Cursor;
 
 use super::*;
 
@@ -37,17 +39,21 @@ impl MetaValue {
 }
 
 impl Parse for MetaValue {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Lit>() || cursor.peek::<Group>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if parser.peek::<Lit>() {
             return Ok(Self::Literal(parser.parse()?));
         }
 
-        if let Ok((span, tokens)) = parser.parse_group_spanned(Delim::Brace) {
-            return Ok(Self::Verbatim(Delimited::new(Delim::Brace, span, tokens)));
+        if let Ok((span, parser)) = parser.parse_group_spanned(Delim::Brace) {
+            return Ok(Self::Verbatim(Delimited::new(Delim::Brace, span, parser.into_token_stream())));
         }
 
-        if let Ok((span, tokens)) = parser.parse_group_spanned(Delim::None) {
-            return Ok(Self::Verbatim(Delimited::new(Delim::None, span, tokens)));
+        if let Ok((span, parser)) = parser.parse_group_spanned(Delim::None) {
+            return Ok(Self::Verbatim(Delimited::new(Delim::None, span, parser.into_token_stream())));
         }
 
         let span = parser.span();
@@ -58,6 +64,10 @@ impl Parse for MetaValue {
             DelimSpan::new(span, span),
             tokens.into(),
         )))
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.skip::<Lit>().and_then(|| cursor.skip::<Group>())
     }
 }
 

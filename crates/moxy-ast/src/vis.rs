@@ -1,6 +1,6 @@
 use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Delimited, Parse, ParseError, Parser, Path};
+use crate::*;
 
 /// The visibility of an item (`pub`, `pub`, `pub(in path)`, or inherited).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -55,20 +55,27 @@ impl Visibility {
 }
 
 impl Parse for Visibility {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![pub]>().and_then(|| {
+            cursor
+                .descend(Delim::Paren)
+                .map(|cursor| cursor.peek::<Token![crate]>() || cursor.peek::<Token![self]>() || cursor.peek::<Token![super]>())
+        })
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if !parser.peek::<Token![pub]>() {
             return Ok(Self::Inherited);
         }
 
-        let pub_keyword = parser.parse::<Token![pub]>()?;
+        let pub_keyword = parser.parse()?;
 
         // `pub(...)` restricted forms.
-        if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-            let (span, inner) = parser.parse_group_spanned(Delim::Paren)?;
-            let inner = Parser::from_tokens(&inner);
+        if parser.is_delimited(Delim::Paren) {
+            let (span, parser) = parser.parse_group_spanned(Delim::Paren)?;
 
-            if inner.peek::<Token![crate]>() {
-                let crate_keyword = inner.parse::<Token![crate]>()?;
+            if parser.peek::<Token![crate]>() {
+                let crate_keyword = parser.parse()?;
 
                 return Ok(Self::Crate {
                     pub_keyword,
@@ -76,8 +83,8 @@ impl Parse for Visibility {
                 });
             }
 
-            if inner.peek::<Token![self]>() {
-                let self_keyword = inner.parse::<Token![self]>()?;
+            if parser.peek::<Token![self]>() {
+                let self_keyword = parser.parse()?;
 
                 return Ok(Self::SelfValue {
                     pub_keyword,
@@ -85,8 +92,8 @@ impl Parse for Visibility {
                 });
             }
 
-            if inner.peek::<Token![super]>() {
-                let super_keyword = inner.parse::<Token![super]>()?;
+            if parser.peek::<Token![super]>() {
+                let super_keyword = parser.parse()?;
 
                 return Ok(Self::Super {
                     pub_keyword,
@@ -94,8 +101,8 @@ impl Parse for Visibility {
                 });
             }
 
-            let in_keyword = inner.parse::<Token![in]>()?;
-            let path = inner.parse::<Path>()?;
+            let in_keyword = parser.parse()?;
+            let path = parser.parse()?;
 
             return Ok(Self::Restricted {
                 pub_keyword,
@@ -104,6 +111,22 @@ impl Parse for Visibility {
         }
 
         Ok(Self::Public { pub_keyword })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Option<Token![pub]>>()?;
+
+        if cursor.peek::<Delimited<Token![crate]>>() {
+            cursor = cursor.skip::<Delimited<Token![crate]>>()?;
+        } else if cursor.peek::<Delimited<Token![self]>>() {
+            cursor = cursor.skip::<Delimited<Token![self]>>()?;
+        } else if cursor.peek::<Delimited<Token![super]>>() {
+            cursor = cursor.skip::<Delimited<Token![super]>>()?;
+        } else if cursor.peek::<Delimited<(Token![in], Path)>>() {
+            cursor = cursor.skip::<Delimited<(Token![in], Path)>>()?;
+        }
+
+        Some(cursor)
     }
 }
 

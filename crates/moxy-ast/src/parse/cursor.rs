@@ -1,4 +1,6 @@
-use moxy_token::{Span, TokenStream, TokenTree};
+use moxy_token::{Delim, Span, ToTokens, TokenStream, TokenTree};
+
+use crate::Parse;
 
 /// Copyable transactional position within a token parser.
 #[derive(Copy, Clone)]
@@ -40,6 +42,47 @@ impl<'a> Cursor<'a> {
         self.tokens.get(self.index.checked_sub(1)?)
     }
 
+    pub fn peek<T: Parse>(self) -> bool {
+        T::peek(self)
+    }
+
+    pub fn skip<T: Parse>(self) -> Option<Self> {
+        if T::peek(self) { T::skip(self) } else { None }
+    }
+
+    pub fn is_delimited(self, delim: Delim) -> bool {
+        match self.curr() {
+            Some(TokenTree::Group(v)) => v.delim() == delim,
+            _ => false,
+        }
+    }
+
+    pub fn descend(self, delim: Delim) -> Option<Self> {
+        if !self.curr()?.is_group() {
+            return None;
+        }
+
+        let (_, Some(TokenTree::Group(group))) = self.advance() else {
+            return None;
+        };
+
+        if group.delim() != delim {
+            return None;
+        }
+
+        Some(Cursor::from_tokens(&group.stream()))
+    }
+
+    pub fn seek(mut self, i: usize) -> Self {
+        self.index = i;
+        self
+    }
+
+    pub fn offset(mut self, n: usize) -> Self {
+        self.index += n;
+        self
+    }
+
     pub fn advance(mut self) -> (Self, Option<&'a TokenTree>) {
         let token = self.tokens.get(self.index);
 
@@ -70,5 +113,11 @@ impl<'a> Cursor<'a> {
         }
 
         self
+    }
+}
+
+impl<'a> ToTokens for Cursor<'a> {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend(&self.tokens[self.index..]);
     }
 }

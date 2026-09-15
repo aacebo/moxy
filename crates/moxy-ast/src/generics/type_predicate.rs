@@ -1,9 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use super::TypeBound;
-use crate::{BoundLifetimes, Punctuated, Type};
+use crate::*;
 
 /// A type predicate in a `where` clause (`T: Bound`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -16,17 +13,16 @@ pub struct TypePredicate {
 }
 
 impl Parse for TypePredicate {
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let lifetimes = parser.parse_if::<BoundLifetimes>();
-        let bounded_ty = parser.parse::<Type>()?;
-        let colon_punct = parser.parse::<Token![:]>()?;
-        let bounds = TypeBound::parse_bounds(parser)?;
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<BoundLifetimes>() || cursor.peek::<Type>()
+    }
 
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            lifetimes,
-            bounded_ty,
-            colon_punct,
-            bounds,
+            lifetimes: parser.parse()?,
+            bounded_ty: parser.parse()?,
+            colon_punct: parser.parse()?,
+            bounds: parser.parse()?,
         })
     }
 }
@@ -50,10 +46,7 @@ impl Spanner for TypePredicate {
 
 impl ToTokens for TypePredicate {
     fn to_tokens(&self, t: &mut TokenStream) {
-        if let Some(l) = &self.lifetimes {
-            l.to_tokens(t);
-        }
-
+        self.lifetimes.to_tokens(t);
         self.bounded_ty.to_tokens(t);
         self.colon_punct.to_tokens(t);
         self.bounds.to_tokens(t);

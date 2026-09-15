@@ -24,6 +24,21 @@ impl Spanner for PatRange {
     }
 }
 
+impl Parse for PatRange {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Expr>() || cursor.peek::<RangeLimits>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            attrs: parser.parse()?,
+            start: parser.parse()?,
+            limits: parser.parse()?,
+            end: parser.parse()?,
+        })
+    }
+}
+
 impl ToTokens for PatRange {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
@@ -37,11 +52,5 @@ impl ToTokens for PatRange {
         if let Some(e) = &self.end {
             e.to_tokens(t);
         }
-    }
-}
-
-impl PatRange {
-    pub fn into_pattern(self) -> super::Pattern {
-        super::Pattern::from(self)
     }
 }

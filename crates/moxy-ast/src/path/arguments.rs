@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{AngleArguments, ParenArguments};
+use crate::*;
 
 /// The arguments of a path segment: none, angle-bracketed (`<T>`), or parenthesized (`Fn(A) -> B`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -25,19 +24,18 @@ impl From<ParenArguments> for PathArguments {
 }
 
 impl Parse for PathArguments {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        true
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if let Some(args) = parser.parse_if::<AngleArguments>() {
-            Ok(args.into())
+        if parser.peek::<AngleArguments>() {
+            Ok(Self::AngleBracketed(parser.parse()?))
+        } else if parser.peek::<ParenArguments>() {
+            Ok(Self::Parenthesized(parser.parse()?))
         } else {
             Ok(Self::None)
         }
-    }
-}
-
-impl PathArguments {
-    pub fn parse_parenthesized(parser: &Parser) -> Result<Self, ParseError> {
-        let args = parser.parse::<ParenArguments>()?;
-        Ok(Self::Parenthesized(args))
     }
 }
 

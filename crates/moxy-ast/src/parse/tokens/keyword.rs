@@ -1,45 +1,49 @@
 use moxy_token::{Keyword, TokenTree, keyword};
 
-use crate::{Parse, ParseError, Parser, Peek};
+use crate::{Cursor, Parse, ParseError, Parser};
 
-impl Peek for Keyword {
-    fn peek(parser: &Parser) -> bool {
-        let Some(next) = parser.curr() else {
+impl Parse for Keyword {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
             return false;
         };
 
         next.is_keyword()
     }
-}
 
-impl Parse for Keyword {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         match parser.advance() {
             Some(TokenTree::Keyword(v)) => Ok(*v),
             _ => Err(parser.error("expected keyword")),
         }
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.offset(1).into()
+    }
 }
 
 macro_rules! impl_keyword_parse {
     ($($name:ident),* $(,)?) => {
         $(
-            impl Peek for keyword::$name {
-                fn peek(parser: &Parser) -> bool {
-                    let Some(next) = parser.curr() else {
+            impl Parse for keyword::$name {
+                fn peek(cursor: Cursor<'_>) -> bool {
+                    let Some(next) = cursor.curr() else {
                         return false;
                     };
 
                     matches!(next, TokenTree::Keyword(Keyword::$name(_)))
                 }
-            }
 
-            impl Parse for keyword::$name {
                 fn parse(parser: &Parser) -> Result<Self, ParseError> {
                     match parser.parse::<Keyword>()? {
                         Keyword::$name(v) => Ok(v),
                         _ => Err(parser.error(format!("expected `{}` keyword", keyword::$name::TEXT))),
                     }
+                }
+
+                fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+                    cursor.offset(1).into()
                 }
             }
         )*

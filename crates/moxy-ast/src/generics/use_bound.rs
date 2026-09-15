@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Lifetime, Punctuated};
+use crate::*;
 
 /// A `use<'a, T>` bound (precise capturing).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,6 +13,10 @@ pub struct UseBound {
 }
 
 impl Parse for UseBound {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![use]>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
             use_keyword: parser.parse()?,
@@ -37,11 +39,5 @@ impl ToTokens for UseBound {
         self.lt_punct.to_tokens(t);
         self.lifetimes.to_tokens(t);
         self.gt_punct.to_tokens(t);
-    }
-}
-
-impl UseBound {
-    pub fn into_type_bound(self) -> super::TypeBound {
-        super::TypeBound::from(self)
     }
 }

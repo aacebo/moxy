@@ -1,9 +1,7 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::{TraitBound, UseBound};
-use crate::Lifetime;
+use crate::*;
 
 /// A bound on a type parameter (`Trait`, `'a`, `use<>`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -79,12 +77,16 @@ impl From<UseBound> for TypeBound {
 }
 
 impl Parse for TypeBound {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Lifetime>() || cursor.peek::<UseBound>() || cursor.peek::<TraitBound>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if matches!(parser.curr(), Some(moxy_token::TokenTree::Punct(moxy_token::Punct::Quote(_)))) {
+        if parser.peek::<Lifetime>() {
             return Ok(Self::Lifetime(parser.parse()?));
         }
 
-        if parser.peek::<Token![use]>() {
+        if parser.peek::<UseBound>() {
             return Ok(Self::Use(parser.parse()?));
         }
 

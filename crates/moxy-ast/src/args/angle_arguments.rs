@@ -1,8 +1,6 @@
-use crate::{Parse, ParseError, Parser, Token};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use super::GenericArgument;
-use crate::Punctuated;
+use crate::{Cursor, GenericArgument, Parse, ParseError, Parser, Punctuated, Token};
 
 /// A `<...>` argument list.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,13 +13,24 @@ pub struct AngleArguments {
 }
 
 impl Parse for AngleArguments {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![<]>() || (cursor.peek::<Token![::]>() && cursor.offset(1).peek::<Token![<]>())
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            colon2: parser.parse_if(),
+            colon2: parser.parse()?,
             lt_punct: parser.parse()?,
             args: Punctuated::parse_separated_nonempty(parser)?,
             gt_punct: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Option<Token![::]>>()?;
+        cursor = cursor.skip::<Token![<]>()?;
+        cursor = cursor.skip::<Punctuated<GenericArgument, Token![,]>>()?;
+        cursor.skip::<Token![>]>()
     }
 }
 

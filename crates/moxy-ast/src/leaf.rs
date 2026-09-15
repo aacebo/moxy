@@ -1,6 +1,6 @@
 use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
-use crate::{Parse, ParseError, Parser, Peek, Token};
+use crate::{Cursor, Parse, ParseError, Parser, Token};
 
 macro_rules! define_leaf {
     ($(
@@ -16,18 +16,15 @@ macro_rules! define_leaf {
                 $($variant $(( $token ))? ,)+
             }
 
-            impl Peek for $name {
-                #[allow(unreachable_code)]
-                fn peek(parser: &Parser) -> bool {
+            impl Parse for $name {
+                fn peek(cursor: Cursor<'_>) -> bool {
                     $(
-                        define_leaf!(@peek_arm parser $(=> $token)?);
+                        define_leaf!(@peek_arm cursor $(=> $token)?);
                     )+
 
                     false
                 }
-            }
 
-            impl Parse for $name {
                 #[allow(unreachable_code)]
                 fn parse(parser: &Parser) -> Result<Self, ParseError> {
                     $(
@@ -95,13 +92,13 @@ macro_rules! define_leaf {
         return Ok($value);
     };
 
-    (@peek_arm $parser:ident => $token:ty) => {
-        if $parser.peek::<$token>() {
+    (@peek_arm $cursor:ident => $token:ty) => {
+        if $cursor.peek::<$token>() {
             return true;
         }
     };
 
-    (@peek_arm $parser:ident) => {
+    (@peek_arm $cursor:ident) => {
         return true;
     };
 
@@ -165,17 +162,6 @@ define_leaf! {
         BitOr => Token![|],
         Lt => Token![<],
         Gt => Token![>],
-    }
-
-    /// A unary operator (`*`, `!`, `-`).
-    pub enum UnOp {
-        Deref => Token![*],
-        Not => Token![!],
-        Neg => Token![-],
-    }
-
-    /// A compound assignment operator (`+=`, `<<=`, ...).
-    pub enum AssignOp {
         ShlAssign => Token![<<=],
         ShrAssign => Token![>>=],
         AddAssign => Token![+=],
@@ -186,6 +172,13 @@ define_leaf! {
         BitXorAssign => Token![^=],
         BitAndAssign => Token![&=],
         BitOrAssign => Token![|=],
+    }
+
+    /// A unary operator (`*`, `!`, `-`).
+    pub enum UnOp {
+        Deref => Token![*],
+        Not => Token![!],
+        Neg => Token![-],
     }
 
     /// Whether a function is `async`.
@@ -240,5 +233,11 @@ define_leaf! {
     pub enum BoundPolarity {
         Negative => Token![!],
         Positive,
+    }
+
+    /// Whether a raw pointer is `*const` or `*mut`.
+    pub enum PointerMutability {
+        Const => Token![const],
+        Mut => Token![mut],
     }
 }

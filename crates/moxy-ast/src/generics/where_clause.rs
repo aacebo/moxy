@@ -1,9 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use super::WherePredicate;
-use crate::Punctuated;
+use crate::*;
 
 /// A `where` clause.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,22 +11,14 @@ pub struct WhereClause {
 }
 
 impl Parse for WhereClause {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![where]>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let where_keyword = parser.parse::<Token![where]>()?;
-        let mut predicates = Punctuated::new();
-
-        while !parser.is_empty() && !matches!(parser.curr(), Some(moxy_token::TokenTree::Group(_))) {
-            predicates.push_value(parser.parse::<WherePredicate>()?);
-            if parser.peek::<Token![,]>() {
-                predicates.push_punct(parser.parse::<Token![,]>()?);
-            } else {
-                break;
-            }
-        }
-
         Ok(Self {
-            where_keyword,
-            predicates,
+            where_keyword: parser.parse()?,
+            predicates: Punctuated::parse_separated_nonempty(parser)?,
         })
     }
 }

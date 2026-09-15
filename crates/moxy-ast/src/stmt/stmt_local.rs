@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Expr, Pattern, Type};
+use crate::*;
 
 /// A `let` binding statement.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,44 +14,24 @@ pub struct StmtLocal {
     pub semi: Option<Token![;]>,
 }
 
-/// The initializer of a `let` binding.
-#[derive(Debug, Clone, PartialEq, Eq)]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
-pub struct StmtLocalInit {
-    pub eq: Token![=],
-    pub expr: Expr,
-    pub diverge: Option<(Token![else], Box<Expr>)>,
-}
-
 impl Parse for StmtLocal {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![let]>() && cursor.offset(1).peek::<Pattern>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let let_keyword = parser.parse::<Token![let]>()?;
-        let pat = parser.parse::<Pattern>()?;
+        let attrs = parser.parse()?;
+        let let_keyword = parser.parse()?;
+        let pat = parser.parse()?;
         let ty = if parser.peek::<Token![:]>() {
-            let colon = parser.parse::<Token![:]>()?;
-            Some((colon, parser.parse::<Type>()?))
+            let colon = parser.parse()?;
+            Some((colon, parser.parse()?))
         } else {
             None
         };
 
-        let init = if parser.peek::<Token![=]>() {
-            let eq = parser.parse::<Token![=]>()?;
-            let expr = parser.parse::<Expr>()?;
-
-            let diverge = if parser.peek::<Token![else]>() {
-                let else_keyword = parser.parse::<Token![else]>()?;
-                Some((else_keyword, Box::new(parser.parse::<Expr>()?)))
-            } else {
-                None
-            };
-
-            Some(StmtLocalInit { eq, expr, diverge })
-        } else {
-            None
-        };
-
-        let semi = parser.parse_if::<Token![;]>();
+        let init = parser.parse()?;
+        let semi = parser.parse()?;
 
         Ok(Self {
             attrs,
@@ -62,12 +41,6 @@ impl Parse for StmtLocal {
             init,
             semi,
         })
-    }
-}
-
-impl Spanner for StmtLocalInit {
-    fn span(&self) -> Span {
-        self.eq.span().join(self.expr.span())
     }
 }
 
@@ -96,22 +69,52 @@ impl ToTokens for StmtLocal {
             ty.to_tokens(t);
         }
 
-        if let Some(init) = &self.init {
-            init.eq.to_tokens(t);
-            init.expr.to_tokens(t);
-
-            if let Some((else_keyword, div)) = &init.diverge {
-                else_keyword.to_tokens(t);
-                div.to_tokens(t);
-            }
-        }
-
+        self.init.to_tokens(t);
         self.semi.to_tokens(t);
     }
 }
 
-impl StmtLocal {
-    pub fn into_stmt(self) -> super::Stmt {
-        super::Stmt::Local(Box::new(self))
+/// The initializer of a `let` binding.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct StmtLocalInit {
+    pub eq: Token![=],
+    pub expr: Expr,
+    pub diverge: Option<(Token![else], Box<Expr>)>,
+}
+
+impl Spanner for StmtLocalInit {
+    fn span(&self) -> Span {
+        self.eq.span().join(self.expr.span())
+    }
+}
+
+impl Parse for StmtLocalInit {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![=]>() && cursor.peek::<Expr>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            eq: parser.parse()?,
+            expr: parser.parse()?,
+            diverge: if parser.peek::<Token![else]>() {
+                Some((parser.parse()?, Box::new(parser.parse()?)))
+            } else {
+                None
+            },
+        })
+    }
+}
+
+impl ToTokens for StmtLocalInit {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.eq.to_tokens(tokens);
+        self.expr.to_tokens(tokens);
+
+        if let Some((keyword, expr)) = &self.diverge {
+            keyword.to_tokens(tokens);
+            expr.to_tokens(tokens);
+        }
     }
 }

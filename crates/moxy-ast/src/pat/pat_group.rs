@@ -16,15 +16,22 @@ impl Spanner for PatGroup {
     }
 }
 
+impl Parse for PatGroup {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Pattern>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            attrs: parser.parse()?,
+            pat: parser.parse()?,
+        })
+    }
+}
+
 impl ToTokens for PatGroup {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.pat.to_tokens(t);
-    }
-}
-
-impl PatGroup {
-    pub fn into_pattern(self) -> super::Pattern {
-        super::Pattern::from(self)
     }
 }

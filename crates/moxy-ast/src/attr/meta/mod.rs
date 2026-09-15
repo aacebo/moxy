@@ -2,13 +2,13 @@ mod meta_argument;
 mod meta_layout;
 mod meta_value;
 
-use crate::{Parse, ParseError, Parser};
 pub use meta_argument::*;
 pub use meta_layout::*;
 pub use meta_value::*;
+
 use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Delimited, Lit, Path, Punctuated};
+use crate::{Cursor, Delimited, Lit, Parse, ParseError, Parser, Path, Punctuated};
 
 /// A structured attribute meta item (`name`, `name(...)`, `name = expr`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -33,11 +33,20 @@ impl std::ops::DerefMut for Meta {
 }
 
 impl Parse for Meta {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Path>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
             path: parser.parse()?,
             content: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Path>()?;
+        cursor.skip::<MetaLayout>()
     }
 }
 

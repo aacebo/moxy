@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
-use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Signature, StmtBlock, TraitItem};
+use crate::*;
 
 /// A method declaration or default implementation inside a trait definition.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,13 +13,17 @@ pub struct TraitItemFn {
 }
 
 impl Parse for TraitItemFn {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Signature>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let sig = parser.parse::<Signature>()?;
-        let (body, semi) = if matches!(parser.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
-            (Some(parser.parse::<StmtBlock>()?), None)
+        let attrs = parser.parse()?;
+        let sig = parser.parse()?;
+        let (body, semi) = if parser.is_delimited(Delim::Brace) {
+            (Some(parser.parse()?), None)
         } else {
-            (None, Some(parser.parse::<Token![;]>()?))
+            (None, Some(parser.parse()?))
         };
 
         Ok(Self { attrs, sig, body, semi })
@@ -45,11 +48,5 @@ impl ToTokens for TraitItemFn {
         self.sig.to_tokens(t);
         self.body.to_tokens(t);
         self.semi.to_tokens(t);
-    }
-}
-
-impl TraitItemFn {
-    pub fn into_trait_item(self) -> TraitItem {
-        self.into()
     }
 }

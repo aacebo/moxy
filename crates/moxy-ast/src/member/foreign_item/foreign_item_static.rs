@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
-use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Ident, Mutability, Type, Visibility};
+use crate::*;
 
 /// A foreign static declaration inside an `extern` block (`static NAME: Type;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,31 +17,20 @@ pub struct ForeignItemStatic {
 }
 
 impl Parse for ForeignItemStatic {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![static]>() || (cursor.peek::<Token![pub]>() && cursor.offset(1).peek::<Token![static]>())
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let at = parser.span();
-        let attrs = parser.parse::<Attributes>()?;
-        let vis = parser.parse::<Visibility>()?;
-
-        if parser.curr().and_then(|t| t.text()) != Some("static") {
-            return Err(LexError::new(at).message("expected foreign static").into());
-        }
-
-        let static_keyword = parser.parse::<Token![static]>()?;
-        let mutability = parser.parse::<Mutability>()?;
-        let ident = parser.parse::<Ident>()?;
-        let colon = parser.parse::<Token![:]>()?;
-        let ty = parser.parse::<Type>()?;
-        let semi = parser.parse_if::<Token![;]>();
-
         Ok(Self {
-            attrs,
-            vis,
-            static_keyword,
-            mutability,
-            ident,
-            colon,
-            ty,
-            semi,
+            attrs: parser.parse()?,
+            vis: parser.parse()?,
+            static_keyword: parser.parse()?,
+            mutability: parser.parse()?,
+            ident: parser.parse()?,
+            colon: parser.parse()?,
+            ty: parser.parse()?,
+            semi: parser.parse()?,
         })
     }
 }
@@ -64,11 +52,5 @@ impl ToTokens for ForeignItemStatic {
         self.colon.to_tokens(t);
         self.ty.to_tokens(t);
         self.semi.to_tokens(t);
-    }
-}
-
-impl ForeignItemStatic {
-    pub fn into_foreign_item(self) -> super::ForeignItem {
-        super::ForeignItem::from(self)
     }
 }

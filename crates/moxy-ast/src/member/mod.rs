@@ -1,15 +1,14 @@
-use crate::{Parse, ParseError, Parser};
-use moxy_token::{LexError, Lit, Span, Spanner, ToTokens, TokenStream, TokenTree};
-
-use crate::Ident;
-
-pub mod foreign_item;
-pub mod impl_item;
-pub mod trait_item;
+mod foreign_item;
+mod impl_item;
+mod trait_item;
 
 pub use foreign_item::*;
 pub use impl_item::*;
 pub use trait_item::*;
+
+use moxy_token::{Lit, Span, Spanner, ToTokens, TokenStream};
+
+use crate::*;
 
 /// A struct/tuple field accessor — a named field (`.field`) or a tuple index (`.0`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -59,25 +58,27 @@ impl Spanner for Member {
 }
 
 impl Parse for Member {
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.curr() {
-            Some(TokenTree::Literal(_)) => {
-                let at = parser.span();
-                let lit = parser.parse::<Lit>()?;
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Lit>() || cursor.peek::<Ident>()
+    }
 
-                if let Some(i) = lit.as_int() {
-                    if !i.repr().chars().all(char::is_numeric) {
-                        Err(LexError::new(at).message("expected tuple index").into())
-                    } else if i.value() > 4294967295 {
-                        Err(LexError::new(at).message("tuple index exceeds max size 4294967295").into())
-                    } else {
-                        Ok(Self::Unnamed(lit))
-                    }
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<Lit>() {
+            let lit = parser.parse()?;
+
+            if let Some(i) = lit.as_int() {
+                if !i.repr().chars().all(char::is_numeric) {
+                    parser.error("expected tuple index").into()
+                } else if i.value() > 4294967295 {
+                    parser.error("tuple index exceeds max size 4294967295").into()
                 } else {
-                    Err(LexError::new(at).message("expected tuple index").into())
+                    Ok(Self::Unnamed(lit))
                 }
+            } else {
+                parser.error("expected tuple index").into()
             }
-            _ => Ok(Self::Named(parser.parse()?)),
+        } else {
+            Ok(Self::Named(parser.parse()?))
         }
     }
 }

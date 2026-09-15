@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Expr, Generics, Ident, Type};
+use crate::*;
 
 /// A constant item inside a trait definition (`const NAME: Type;` or `const NAME: Type = expr;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,6 +17,10 @@ pub struct TraitItemConst {
 }
 
 impl Parse for TraitItemConst {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![const]>() && cursor.offset(1).peek::<Ident>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
         let const_keyword = parser.parse()?;
@@ -68,11 +71,5 @@ impl ToTokens for TraitItemConst {
         }
 
         self.semi.to_tokens(t);
-    }
-}
-
-impl TraitItemConst {
-    pub fn into_trait_item(self) -> super::TraitItem {
-        super::TraitItem::from(self)
     }
 }

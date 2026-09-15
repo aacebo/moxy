@@ -18,17 +18,26 @@ impl Spanner for PatReference {
     }
 }
 
+impl Parse for PatReference {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![&]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            attrs: parser.parse()?,
+            and: parser.parse()?,
+            mutability: parser.parse()?,
+            pat: parser.parse()?,
+        })
+    }
+}
+
 impl ToTokens for PatReference {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.and.to_tokens(t);
         self.mutability.to_tokens(t);
         self.pat.to_tokens(t);
-    }
-}
-
-impl PatReference {
-    pub fn into_pattern(self) -> super::Pattern {
-        super::Pattern::from(self)
     }
 }
