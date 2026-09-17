@@ -325,17 +325,12 @@ impl Parse for Expr {
             // paths, `_`, etc.
             Some(TokenTree::Ident(_)) => true,
 
-            Some(TokenTree::Keyword(keyword))
-                if matches!(
-                    keyword,
-                    moxy_token::Keyword::SelfType(_)
-                        | moxy_token::Keyword::SelfValue(_)
-                        | moxy_token::Keyword::Super(_)
-                        | moxy_token::Keyword::Crate(_)
-                ) =>
-            {
-                true
-            }
+            Some(TokenTree::Keyword(
+                moxy_token::Keyword::SelfType(_)
+                | moxy_token::Keyword::SelfValue(_)
+                | moxy_token::Keyword::Super(_)
+                | moxy_token::Keyword::Crate(_),
+            )) => true,
 
             // grouped primary expressions
             Some(TokenTree::Group(group))
@@ -1375,7 +1370,7 @@ pub(crate) fn parse_closure(parser: &Parser, attrs: Attributes) -> Result<Expr, 
     let output = parser.parse()?;
     let body = Box::new(parser.parse()?);
 
-    return Ok(ExprClosure {
+    Ok(ExprClosure {
         attrs,
         lifetimes,
         constness,
@@ -1387,5 +1382,5 @@ pub(crate) fn parse_closure(parser: &Parser, attrs: Attributes) -> Result<Expr, 
         output,
         body,
     }
-    .into());
+    .into())
 }

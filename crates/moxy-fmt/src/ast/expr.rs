@@ -1,15 +1,6 @@
-use moxy_ast::expr::binary::{ExprAssign, ExprAssignOp, ExprBinary, ExprRange, ExprType};
-use moxy_ast::expr::block::{
-    ExprAsync, ExprBrace, ExprConst, ExprForLoop, ExprIf, ExprLoop, ExprMatch, ExprTryBlock, ExprUnsafe, ExprWhile,
-};
-use moxy_ast::expr::jump::{ExprBreak, ExprContinue, ExprReturn, ExprYield};
-use moxy_ast::expr::postfix::{ExprAwait, ExprCall, ExprField, ExprIndex, ExprMethodCall};
-use moxy_ast::expr::primary::{
-    ExprArray, ExprClosure, ExprGroup, ExprLet, ExprLit, ExprMacro, ExprParen, ExprPath, ExprRepeat, ExprStruct, ExprTuple,
-};
-use moxy_ast::expr::unary::{ExprCast, ExprReference, ExprTry, ExprUnary};
+use moxy_ast::expr::*;
 use moxy_ast::fields::FieldValue;
-use moxy_ast::{BinaryExpr, BlockExpr, ClosureParam, Expr, JumpExpr, MatchArm, Member, PostfixExpr, PrimaryExpr, UnaryExpr};
+use moxy_ast::*;
 
 use crate::{FmtError, Format, Formatter};
 
@@ -18,21 +9,31 @@ impl Format for Expr {
         match self {
             Self::Unary(v) => v.format(f),
             Self::Binary(v) => v.format(f),
-            Self::Postfix(v) => v.format(f),
             Self::Block(v) => v.format(f),
-            Self::Jump(v) => v.format(f),
-            Self::Primary(v) => v.format(f),
-            Self::Infer => f.text("_"),
-            Self::Verbatim(v) => f.text(v),
-        }
-    }
-}
-
-// ── Primary ──────────────────────────────────────────────────────────────────
-
-impl Format for PrimaryExpr {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
+            Self::Infer(v) => v.format(f),
+            Self::Return(v) => v.format(f),
+            Self::Break(v) => v.format(f),
+            Self::Continue(v) => v.format(f),
+            Self::Yield(v) => v.format(f),
+            Self::Call(v) => v.format(f),
+            Self::MethodCall(v) => v.format(f),
+            Self::Field(v) => v.format(f),
+            Self::Index(v) => v.format(f),
+            Self::Await(v) => v.format(f),
+            Self::If(v) => v.format(f),
+            Self::While(v) => v.format(f),
+            Self::ForLoop(v) => v.format(f),
+            Self::Loop(v) => v.format(f),
+            Self::Match(v) => v.format(f),
+            Self::Async(v) => v.format(f),
+            Self::Unsafe(v) => v.format(f),
+            Self::Const(v) => v.format(f),
+            Self::TryBlock(v) => v.format(f),
+            Self::Assign(v) => v.format(f),
+            Self::Range(v) => v.format(f),
+            Self::Reference(v) => v.format(f),
+            Self::Cast(v) => v.format(f),
+            Self::Try(v) => v.format(f),
             Self::Lit(v) => v.format(f),
             Self::Path(v) => v.format(f),
             Self::Struct(v) => v.format(f),
@@ -44,7 +45,27 @@ impl Format for PrimaryExpr {
             Self::Paren(v) => v.format(f),
             Self::Group(v) => v.format(f),
             Self::Macro(v) => v.format(f),
+            Self::RawAddr(v) => v.format(f),
+            Self::Verbatim(v) => f.text(v),
         }
+    }
+}
+
+impl Format for ExprInfer {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+        self.underscore.format(f)
+    }
+}
+
+impl Format for ExprRawAddr {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+        f.text("&raw")?;
+        f.space()?;
+        self.mutability.format(f)?;
+        f.space()?;
+        self.expr.format(f)
     }
 }
 
@@ -149,7 +170,7 @@ impl Format for FieldValue {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
 
-        if self.shorthand {
+        if self.is_shorthand() {
             self.member.format(f)
         } else {
             self.member.format(f)?;
@@ -274,19 +295,6 @@ impl Format for ExprMacro {
     }
 }
 
-// ── Unary ─────────────────────────────────────────────────────────────────────
-
-impl Format for UnaryExpr {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::Reference(v) => v.format(f),
-            Self::Unary(v) => v.format(f),
-            Self::Cast(v) => v.format(f),
-            Self::Try(v) => v.format(f),
-        }
-    }
-}
-
 impl Format for ExprReference {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
@@ -326,20 +334,6 @@ impl Format for ExprTry {
     }
 }
 
-// ── Binary ────────────────────────────────────────────────────────────────────
-
-impl Format for BinaryExpr {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::Binary(v) => v.format(f),
-            Self::Assign(v) => v.format(f),
-            Self::AssignOp(v) => v.format(f),
-            Self::Range(v) => v.format(f),
-            Self::Type(v) => v.format(f),
-        }
-    }
-}
-
 impl Format for ExprBinary {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
@@ -360,17 +354,6 @@ impl Format for ExprAssign {
     }
 }
 
-impl Format for ExprAssignOp {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
-        self.left.format(f)?;
-        f.text(" ")?;
-        self.op.format(f)?;
-        f.text(" ")?;
-        self.right.format(f)
-    }
-}
-
 impl Format for ExprRange {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
@@ -386,29 +369,6 @@ impl Format for ExprRange {
         }
 
         Ok(())
-    }
-}
-
-impl Format for ExprType {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
-        self.expr.format(f)?;
-        f.text(": ")?;
-        self.ty.format(f)
-    }
-}
-
-// ── Postfix ───────────────────────────────────────────────────────────────────
-
-impl Format for PostfixExpr {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::Call(v) => v.format(f),
-            Self::MethodCall(v) => v.format(f),
-            Self::Field(v) => v.format(f),
-            Self::Index(v) => v.format(f),
-            Self::Await(v) => v.format(f),
-        }
     }
 }
 
@@ -466,26 +426,7 @@ impl Format for ExprAwait {
     }
 }
 
-// ── Block ─────────────────────────────────────────────────────────────────────
-
-impl Format for BlockExpr {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::Brace(v) => v.format(f),
-            Self::If(v) => v.format(f),
-            Self::While(v) => v.format(f),
-            Self::ForLoop(v) => v.format(f),
-            Self::Loop(v) => v.format(f),
-            Self::Match(v) => v.format(f),
-            Self::Async(v) => v.format(f),
-            Self::Unsafe(v) => v.format(f),
-            Self::Const(v) => v.format(f),
-            Self::TryBlock(v) => v.format(f),
-        }
-    }
-}
-
-impl Format for ExprBrace {
+impl Format for ExprBlock {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
 
@@ -633,19 +574,6 @@ impl Format for ExprTryBlock {
         self.attrs.format(f)?;
         f.text("try ")?;
         self.block.format(f)
-    }
-}
-
-// ── Jump ──────────────────────────────────────────────────────────────────────
-
-impl Format for JumpExpr {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::Return(v) => v.format(f),
-            Self::Break(v) => v.format(f),
-            Self::Continue(v) => v.format(f),
-            Self::Yield(v) => v.format(f),
-        }
     }
 }
 

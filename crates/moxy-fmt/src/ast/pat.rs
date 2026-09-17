@@ -1,5 +1,4 @@
 use moxy_ast::Pattern;
-use moxy_ast::pat;
 use moxy_ast::pat::*;
 
 use crate::{FmtError, Format, Formatter};
@@ -7,8 +6,8 @@ use crate::{FmtError, Format, Formatter};
 impl Format for Pattern {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Wild => f.text("_"),
-            Self::Rest => f.text(".."),
+            Self::Wild(v) => v.format(f),
+            Self::Rest(v) => v.format(f),
             Self::Ident(v) => v.format(f),
             Self::Path(v) => v.format(f),
             Self::Tuple(v) => v.format(f),
@@ -23,14 +22,8 @@ impl Format for Pattern {
             Self::Type(v) => v.format(f),
             Self::Group(v) => v.format(f),
             Self::Paren(v) => v.format(f),
-            Self::Box(v) => {
-                f.text("box ")?;
-                v.format(f)
-            }
-            Self::Const(v) => {
-                f.text("const ")?;
-                v.format(f)
-            }
+            Self::Box(v) => v.format(f),
+            Self::Const(v) => v.format(f),
         }
     }
 }
@@ -107,7 +100,7 @@ impl Format for PatStruct {
                 }
             }
 
-            if self.body.inner.rest.is_some() {
+            if self.body.inner.dotdot.is_some() {
                 f.hard_break()?;
                 f.text("..")?;
             }
@@ -115,7 +108,7 @@ impl Format for PatStruct {
             Ok(())
         })?;
 
-        if !self.body.inner.fields.is_empty() || self.body.inner.rest.is_some() {
+        if !self.body.inner.fields.is_empty() || self.body.inner.dotdot.is_some() {
             f.hard_break()?;
         }
 
@@ -127,7 +120,7 @@ impl Format for PatField {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
 
-        if self.shorthand {
+        if self.is_shorthand() {
             self.pat.format(f)
         } else {
             self.member.format(f)?;
@@ -183,7 +176,7 @@ impl Format for PatOr {
 impl Format for PatLit {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
-        self.expr.format(f)
+        self.lit.format(f)
     }
 }
 
@@ -205,7 +198,7 @@ impl Format for PatRange {
     }
 }
 
-impl Format for pat::PatType {
+impl Format for PatType {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
         self.pat.format(f)?;
@@ -227,5 +220,44 @@ impl Format for PatParen {
         f.text("(")?;
         self.content.inner.format(f)?;
         f.text(")")
+    }
+}
+
+impl Format for PatBox {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+        self.keyword.format(f)?;
+        f.space()?;
+        self.pattern.format(f)
+    }
+}
+
+impl Format for PatConst {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+        self.keyword.format(f)?;
+        f.space()?;
+        self.block.format(f)
+    }
+}
+
+impl Format for PatWild {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+        self.token.format(f)
+    }
+}
+
+impl Format for PatRest {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+        self.token.format(f)
+    }
+}
+
+impl Format for PatMacro {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+        self.call.format(f)
     }
 }

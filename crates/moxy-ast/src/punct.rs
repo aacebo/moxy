@@ -40,6 +40,7 @@ macro_rules! define_punct {
             }
 
             impl Parse for $name {
+                #[allow(unused_assignments)]
                 fn peek(cursor: Cursor<'_>) -> bool {
                     let mut cursor = cursor;
                     let mut i = 0;

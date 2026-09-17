@@ -66,7 +66,7 @@ impl<'a> Cursor<'a> {
             return None;
         }
 
-        Some(Cursor::from_tokens(&group.stream()))
+        Some(Cursor::from_tokens(group.stream()))
     }
 
     pub fn seek(mut self, i: usize) -> Self {

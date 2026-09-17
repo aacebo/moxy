@@ -157,7 +157,7 @@ impl<T: Parse> Parse for Box<T> {
         Ok(Self::new(parser.parse()?))
     }
 
-    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor.skip::<T>()
     }
 }

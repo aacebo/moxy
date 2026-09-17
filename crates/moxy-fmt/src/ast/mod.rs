@@ -9,6 +9,7 @@ mod macro_call;
 mod pat;
 mod path;
 mod stmt;
+mod tokens;
 mod ty;
 
 impl crate::Format for moxy_ast::Declaration {

@@ -17,6 +17,7 @@ macro_rules! define_leaf {
             }
 
             impl Parse for $name {
+                #[allow(unreachable_code)]
                 fn peek(cursor: Cursor<'_>) -> bool {
                     $(
                         define_leaf!(@peek_arm cursor $(=> $token)?);
@@ -34,10 +35,12 @@ macro_rules! define_leaf {
                     Err(parser.error(concat!("expected `", stringify!($name), "`")))
                 }
 
+                #[allow(unreachable_code)]
                 fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
                     $(
                         define_leaf!(@skip_arm cursor $(=> $token)?);
                     )+
+
                     None
                 }
             }

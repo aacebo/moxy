@@ -102,7 +102,7 @@ impl ReturnType {
 }
 
 impl Parse for ReturnType {
-    fn peek(cursor: Cursor<'_>) -> bool {
+    fn peek(_cursor: Cursor<'_>) -> bool {
         true
     }
 
