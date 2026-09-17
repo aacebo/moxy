@@ -67,7 +67,15 @@ impl Parse for MetaValue {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.skip::<Lit>().and_then(|| cursor.skip::<Group>())
+        if cursor.peek::<Lit>() {
+            cursor.skip::<Lit>()
+        } else if cursor.peek::<Group>() {
+            cursor.skip::<Group>()
+        } else if !cursor.is_empty() {
+            Some(cursor.offset(cursor.remaining()))
+        } else {
+            None
+        }
     }
 }
 

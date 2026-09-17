@@ -21,6 +21,18 @@ impl Parse for UseGroup {
             items: Delimited::brace(span, Punctuated::parse_separated_nonempty(&parser)?),
         })
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let mut inner = cursor.descend(Delim::Brace)?;
+        inner = inner.skip::<UseTree>()?;
+
+        while inner.peek::<Token![,]>() {
+            inner = inner.skip::<Token![,]>()?;
+            inner = inner.skip::<UseTree>()?;
+        }
+
+        if inner.is_empty() { Some(cursor.offset(1)) } else { None }
+    }
 }
 
 impl Spanner for UseGroup {

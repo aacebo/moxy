@@ -46,7 +46,7 @@ impl Parse for Meta {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = cursor.skip::<Path>()?;
-        cursor.skip::<MetaLayout>()
+        MetaLayout::skip(cursor)
     }
 }
 

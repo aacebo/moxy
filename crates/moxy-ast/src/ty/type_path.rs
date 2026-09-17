@@ -1,4 +1,4 @@
-use crate::{Parse, ParseError, Parser};
+use crate::{Cursor, Parse, ParseError, Parser, Type};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::QSelf;
@@ -13,6 +13,10 @@ pub struct TypePath {
 }
 
 impl Parse for TypePath {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![<]>() || cursor.peek::<Path>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if parser.peek::<Token![<]>() {
             let (qself, path) = super::QSelf::parse_qualified(parser)?;
@@ -27,6 +31,23 @@ impl Parse for TypePath {
             qself: None,
             path: parser.parse()?,
         })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if !cursor.peek::<Token![<]>() {
+            return cursor.skip::<Path>();
+        }
+
+        let mut cursor = cursor.skip::<Token![<]>()?;
+        cursor = cursor.skip::<Type>()?;
+
+        if cursor.peek::<Token![as]>() {
+            cursor = cursor.skip::<Token![as]>()?;
+            cursor = cursor.skip::<Path>()?;
+        }
+
+        cursor = cursor.skip::<Token![>]>()?;
+        cursor.skip::<Path>()
     }
 }
 

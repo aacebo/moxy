@@ -23,6 +23,10 @@ impl Parse for TypePointer {
             elem: Box::new(parser.parse()?),
         })
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.skip::<Token![*]>()?.skip::<PointerMutability>()?.skip::<Type>()
+    }
 }
 
 impl Spanner for TypePointer {

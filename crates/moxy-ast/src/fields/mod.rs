@@ -77,6 +77,16 @@ impl Parse for Fields {
             _ => Ok(Self::Unit),
         }
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<FieldsNamed>() {
+            cursor.skip::<FieldsNamed>()
+        } else if cursor.peek::<FieldsUnnamed>() {
+            cursor.skip::<FieldsUnnamed>()
+        } else {
+            Some(cursor)
+        }
+    }
 }
 
 impl ToTokens for Fields {

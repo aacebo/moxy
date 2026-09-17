@@ -108,7 +108,7 @@ impl Parse for ReturnType {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if parser.peek::<Token![->]>() {
-            let arrow = parser.parse::<Token![->]>()?;
+            let arrow = parser.parse()?;
             Ok(Self::Type(arrow, parser.parse()?))
         } else {
             Ok(Self::Default)
@@ -158,8 +158,8 @@ impl Parse for BoundLifetimes {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let for_keyword = parser.parse::<Token![for]>()?;
-        let lt = parser.parse::<Token![<]>()?;
+        let for_keyword = parser.parse()?;
+        let lt = parser.parse()?;
         let params = Punctuated::parse_separated_nonempty(parser)?;
         let gt = parser.parse()?;
 
@@ -172,11 +172,16 @@ impl Parse for BoundLifetimes {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor
-            .skip::<Token![for]>()?
-            .skip::<Token![<]>()?
-            .skip::<Punctuated<Lifetime, Token![,]>>()?
-            .skip::<Token![>]>()
+        let mut cursor = cursor.skip::<Token![for]>()?;
+        cursor = cursor.skip::<Token![<]>()?;
+        cursor = cursor.skip::<Lifetime>()?;
+
+        while cursor.peek::<Token![,]>() {
+            cursor = cursor.skip::<Token![,]>()?;
+            cursor = cursor.skip::<Lifetime>()?;
+        }
+
+        cursor.skip::<Token![>]>()
     }
 }
 

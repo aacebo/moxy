@@ -17,7 +17,9 @@ pub struct ConstParam {
 
 impl Parse for ConstParam {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![const]>()
+        Attributes::skip(cursor)
+            .map(|cursor| cursor.peek::<Token![const]>())
+            .unwrap_or(false)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -43,6 +45,21 @@ impl Parse for ConstParam {
             default_eq_punct,
             default,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<Token![const]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = cursor.skip::<Token![:]>()?;
+        cursor = cursor.skip::<Type>()?;
+
+        if cursor.peek::<Token![=]>() {
+            cursor = cursor.skip::<Token![=]>()?;
+            cursor = cursor.skip::<Expr>()?;
+        }
+
+        Some(cursor)
     }
 }
 

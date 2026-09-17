@@ -14,12 +14,25 @@ pub struct ItemFn {
 }
 
 impl Parse for ItemFn {
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Signature>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let vis = parser.parse::<Visibility>()?;
-        let sig = parser.parse::<Signature>()?;
-        let body = parser.parse::<StmtBlock>()?;
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let sig = parser.parse()?;
+        let body = parser.parse()?;
         Ok(Self { attrs, vis, sig, body })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Signature>()?;
+        cursor.skip::<StmtBlock>()
     }
 }
 

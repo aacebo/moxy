@@ -54,7 +54,11 @@ impl Parse for MetaArgument {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.skip::<MetaValue>().and_then(|| cursor.skip::<Meta>())
+        if cursor.peek::<Path>() {
+            cursor.skip::<Meta>()
+        } else {
+            cursor.skip::<MetaValue>()
+        }
     }
 }
 

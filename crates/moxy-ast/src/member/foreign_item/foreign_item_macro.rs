@@ -13,7 +13,9 @@ pub struct ForeignItemMacro {
 
 impl Parse for ForeignItemMacro {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<MacroCall>()
+        Attributes::skip(cursor)
+            .map(|cursor| cursor.peek::<MacroCall>())
+            .unwrap_or(false)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -22,6 +24,12 @@ impl Parse for ForeignItemMacro {
             mac: parser.parse()?,
             semi: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<MacroCall>()?;
+        cursor.skip::<Option<Token![;]>>()
     }
 }
 

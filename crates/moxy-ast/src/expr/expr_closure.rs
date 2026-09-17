@@ -59,25 +59,3 @@ pub enum ClosurePipes {
     Empty(Token![||]),
     Params(Token![|], Token![|]),
 }
-
-impl Parse for ClosurePipes {
-    fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![|]>() || cursor.peek::<Token![||]>()
-    }
-
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<Token![|]>() {
-            Ok(Self::Empty(parser.parse()?))
-        } else {
-            Ok(Self::Params(parser.parse()?, parser.parse()?))
-        }
-    }
-
-    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<Token![|]>() {
-            cursor.skip::<Token![|]>()?.skip::<Token![|]>()
-        } else {
-            cursor.skip::<Token![||]>()
-        }
-    }
-}

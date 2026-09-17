@@ -16,7 +16,7 @@ pub struct TypeParam {
 
 impl Parse for TypeParam {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Ident>()
+        Attributes::skip(cursor).map(|cursor| cursor.peek::<Ident>()).unwrap_or(false)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -24,7 +24,7 @@ impl Parse for TypeParam {
         let ident = parser.parse()?;
         let (colon_punct, bounds) = if parser.peek::<Token![:]>() {
             let colon_punct = parser.parse()?;
-            let bounds = parser.parse()?;
+            let bounds = TypeBound::parse_bounds(parser)?;
             (Some(colon_punct), bounds)
         } else {
             (None, Punctuated::new())
@@ -46,6 +46,28 @@ impl Parse for TypeParam {
             eq_punct,
             default,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<Ident>()?;
+
+        if cursor.peek::<Token![:]>() {
+            cursor = cursor.skip::<Token![:]>()?;
+            cursor = cursor.skip::<TypeBound>()?;
+
+            while cursor.peek::<Token![+]>() {
+                cursor = cursor.skip::<Token![+]>()?;
+                cursor = cursor.skip::<TypeBound>()?;
+            }
+        }
+
+        if cursor.peek::<Token![=]>() {
+            cursor = cursor.skip::<Token![=]>()?;
+            cursor = cursor.skip::<Type>()?;
+        }
+
+        Some(cursor)
     }
 }
 

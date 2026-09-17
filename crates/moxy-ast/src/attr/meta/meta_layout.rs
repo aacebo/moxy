@@ -1,5 +1,3 @@
-use moxy_token::Group;
-
 use crate::{Cursor, Token};
 
 use super::*;
@@ -76,7 +74,7 @@ impl Parse for MetaLayout {
             return true;
         }
 
-        cursor.peek::<Group>()
+        cursor.is_delimited(Delim::Paren)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -93,7 +91,7 @@ impl Parse for MetaLayout {
             return Ok(Self::List { items });
         }
 
-        if matches!(parser.curr().and_then(|tt| tt.delim()), Some(d) if d.is_brace()) {
+        if matches!(parser.cursor().curr().and_then(|tt| tt.delim()), Some(d) if d.is_brace()) {
             return Ok(Self::Value(parser.parse()?));
         }
 
@@ -114,7 +112,20 @@ impl Parse for MetaLayout {
             return cursor.skip::<MetaValue>();
         }
 
-        cursor.skip::<Group>()
+        let outer = cursor;
+        let mut inner = cursor.descend(Delim::Paren)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<MetaArgument>()?;
+
+            if inner.is_empty() {
+                break;
+            }
+
+            inner = inner.skip::<Token![,]>()?;
+        }
+
+        Some(outer.offset(1))
     }
 }
 

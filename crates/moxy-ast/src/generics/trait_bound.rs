@@ -25,6 +25,13 @@ impl Parse for TraitBound {
             path: parser.parse()?,
         })
     }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = BoundPolarity::skip(cursor)?;
+        cursor = cursor.skip::<Option<BoundLifetimes>>()?;
+        cursor = TraitBoundModifier::skip(cursor)?;
+        cursor.skip::<Path>()
+    }
 }
 
 impl Spanner for TraitBound {

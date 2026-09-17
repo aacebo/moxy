@@ -1,4 +1,4 @@
-use moxy_token::{Keyword, LexError, Quote, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Keyword, Quote, Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -12,7 +12,7 @@ pub struct Lifetime {
 
 impl Parse for Lifetime {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Quote>()
+        cursor.peek::<Quote>() && cursor.offset(1).peek::<LifetimeName>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -20,6 +20,10 @@ impl Parse for Lifetime {
             quote: parser.parse()?,
             ident: parser.parse()?,
         })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.skip::<Quote>()?.skip::<LifetimeName>()
     }
 }
 
@@ -66,12 +70,20 @@ impl Parse for LifetimeName {
 
             return Ok(Self {
                 span: token.span(),
-                text: token.text().to_string(),
+                text: token.as_str().to_string(),
                 raw: false,
             });
         }
 
         parser.error("expected lifetime name").into()
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<Ident>() {
+            cursor.skip::<Ident>()
+        } else {
+            cursor.skip::<Keyword>()
+        }
     }
 }
 

@@ -108,6 +108,18 @@ impl Parse for TraitItem {
 
         Ok(Self::Macro(parser.parse()?))
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<TraitItemConst>() {
+            cursor.skip::<TraitItemConst>()
+        } else if cursor.peek::<TraitItemType>() {
+            cursor.skip::<TraitItemType>()
+        } else if cursor.peek::<TraitItemFn>() {
+            cursor.skip::<TraitItemFn>()
+        } else {
+            cursor.skip::<TraitItemMacro>()
+        }
+    }
 }
 
 impl ToTokens for TraitItem {

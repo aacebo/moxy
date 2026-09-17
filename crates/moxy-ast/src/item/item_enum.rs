@@ -17,12 +17,18 @@ pub struct ItemEnum {
 }
 
 impl Parse for ItemEnum {
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![enum]>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let vis = parser.parse::<Visibility>()?;
-        let enum_keyword = parser.parse::<Token![enum]>()?;
-        let ident = parser.parse::<Ident>()?;
-        let generics = parser.parse::<Generics>()?;
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let enum_keyword = parser.parse()?;
+        let ident = parser.parse()?;
+        let generics = parser.parse()?;
         let variants = Delimited::parse_brace_with(parser, Punctuated::parse_terminated)?;
 
         Ok(Self {
@@ -33,6 +39,27 @@ impl Parse for ItemEnum {
             generics,
             variants,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Token![enum]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Generics::skip(cursor)?;
+        let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<Variant>()?;
+
+            if inner.is_empty() {
+                break;
+            }
+
+            inner = inner.skip::<Token![,]>()?;
+        }
+
+        Some(cursor.offset(1))
     }
 }
 
@@ -76,13 +103,17 @@ pub struct Variant {
 }
 
 impl Parse for Variant {
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        Attributes::skip(cursor).map(|cursor| cursor.peek::<Ident>()).unwrap_or(false)
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let ident = parser.parse::<Ident>()?;
-        let fields = parser.parse::<Fields>()?;
+        let attrs = parser.parse()?;
+        let ident = parser.parse()?;
+        let fields = parser.parse()?;
         let (eq_punct, discriminant) = if parser.peek::<Token![=]>() {
-            let eq_punct = parser.parse::<Token![=]>()?;
-            let discriminant = parser.parse::<Expr>()?;
+            let eq_punct = parser.parse()?;
+            let discriminant = parser.parse()?;
             (Some(eq_punct), Some(discriminant))
         } else {
             (None, None)
@@ -95,6 +126,19 @@ impl Parse for Variant {
             eq_punct,
             discriminant,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Fields::skip(cursor)?;
+
+        if cursor.peek::<Token![=]>() {
+            cursor = cursor.skip::<Token![=]>()?;
+            cursor = cursor.skip::<Expr>()?;
+        }
+
+        Some(cursor)
     }
 }
 

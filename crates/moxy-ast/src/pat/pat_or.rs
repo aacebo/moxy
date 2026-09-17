@@ -23,14 +23,32 @@ impl Spanner for PatOr {
 
 impl Parse for PatOr {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Pattern>()
+        let mut cursor = Attributes::skip(cursor).unwrap_or(cursor);
+
+        if cursor.peek::<Token![|]>() {
+            return true;
+        }
+
+        while !cursor.is_empty() {
+            if cursor.peek::<Token![|]>() {
+                return true;
+            }
+
+            cursor = cursor.offset(1);
+        }
+
+        false
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self {
-            attrs: parser.parse()?,
-            cases: Punctuated::parse_separated_nonempty(parser)?,
-        })
+        match parser.parse()? {
+            Pattern::Or(value) => Ok(value),
+            _ => parser.error("expected or-pattern").into(),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if Self::peek(cursor) { Pattern::skip(cursor) } else { None }
     }
 }
 

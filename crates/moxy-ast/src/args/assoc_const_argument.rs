@@ -1,3 +1,4 @@
+use moxy_token::{Punct, TokenTree};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{AngleArguments, Cursor, Expr, GenericArgument, Ident, Parse, ParseError, Parser, Token};
@@ -24,7 +25,24 @@ impl AssocConstArgument {
 
 impl Parse for AssocConstArgument {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Ident>() && (cursor.offset(1).peek::<AngleArguments>() || cursor.offset(1).peek::<Token![=]>())
+        let Some(cursor) = cursor.skip::<Ident>() else {
+            return false;
+        };
+
+        let Some(cursor) = Option::<AngleArguments>::skip(cursor) else {
+            return false;
+        };
+
+        let Some(cursor) = cursor.skip::<Token![=]>() else {
+            return false;
+        };
+
+        match cursor.curr() {
+            Some(TokenTree::Literal(_)) => true,
+            Some(TokenTree::Group(group)) => group.delim().is_brace(),
+            Some(TokenTree::Punct(Punct::Minus(_) | Punct::Not(_))) => true,
+            _ => false,
+        }
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -53,11 +71,7 @@ impl Spanner for AssocConstArgument {
 impl ToTokens for AssocConstArgument {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.ident.to_tokens(t);
-
-        if let Some(g) = &self.generics {
-            g.to_tokens(t);
-        }
-
+        self.generics.to_tokens(t);
         self.eq_punct.to_tokens(t);
         self.expr.to_tokens(t);
     }

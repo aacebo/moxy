@@ -24,7 +24,7 @@ impl From<ParenArguments> for PathArguments {
 }
 
 impl Parse for PathArguments {
-    fn peek(cursor: Cursor<'_>) -> bool {
+    fn peek(_cursor: Cursor<'_>) -> bool {
         true
     }
 
@@ -35,6 +35,16 @@ impl Parse for PathArguments {
             Ok(Self::Parenthesized(parser.parse()?))
         } else {
             Ok(Self::None)
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<AngleArguments>() {
+            cursor.skip::<AngleArguments>()
+        } else if cursor.peek::<ParenArguments>() {
+            cursor.skip::<ParenArguments>()
+        } else {
+            Some(cursor)
         }
     }
 }

@@ -1,6 +1,6 @@
-use moxy_token::{Ident, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use crate::{Cursor, Expr, Lifetime, Parse, ParseError, Parser, Punctuated, Token, Type};
+use crate::{Cursor, Expr, Lifetime, Parse, ParseError, Parser, Punctuated, Type};
 
 mod angle_arguments;
 mod assoc_const_argument;
@@ -41,16 +41,29 @@ impl Spanner for GenericArgument {
 
 impl Parse for GenericArgument {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Lifetime>()
-            || cursor.peek::<AssocTypeArgument>()
+        if cursor.peek::<Lifetime>() {
+            return true;
+        }
+
+        let is_const = match cursor.curr() {
+            Some(TokenTree::Literal(_)) => true,
+            Some(TokenTree::Group(group)) => group.delim().is_brace(),
+            Some(TokenTree::Punct(Punct::Minus(_) | Punct::Not(_))) => true,
+            _ => false,
+        };
+
+        if is_const {
+            return true;
+        }
+
+        cursor.peek::<ConstraintArgument>()
             || cursor.peek::<AssocConstArgument>()
-            || cursor.peek::<ConstraintArgument>()
+            || cursor.peek::<AssocTypeArgument>()
             || cursor.peek::<Type>()
-            || cursor.peek::<Expr>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let token = match parser.curr() {
+        let token = match parser.cursor().curr() {
             None => return Err(ParseError::new(parser.span(), "eof")),
             Some(v) => v.clone(),
         };
@@ -61,7 +74,10 @@ impl Parse for GenericArgument {
         }
 
         // Literal or block expression const argument.
-        let is_const = token.is_literal() || token.as_group().map(|g| g.delim().is_brace()).unwrap_or(false);
+        let is_const = token.is_literal()
+            || token.as_group().map(|g| g.delim().is_brace()).unwrap_or(false)
+            || token.is_punct_minus()
+            || token.is_punct_not();
 
         if is_const {
             return Ok(Self::Const(parser.parse()?));
@@ -69,10 +85,10 @@ impl Parse for GenericArgument {
 
         if token.is_ident() {
             let fork = parser.fork();
-            let ident = fork.parse::<Ident>()?;
-            let generics = fork.parse_if::<AngleArguments>();
+            let ident = fork.parse()?;
+            let generics = fork.parse()?;
 
-            if let Ok(colon_punct) = fork.parse::<Token![:]>() {
+            if let Ok(colon_punct) = fork.parse() {
                 let bounds = Punctuated::parse_separated_nonempty(&fork)?;
                 parser.seek(&fork);
                 return Ok(ConstraintArgument {
@@ -84,8 +100,8 @@ impl Parse for GenericArgument {
                 .into_generic_argument());
             }
 
-            if let Ok(eq_punct) = fork.parse::<Token![=]>() {
-                let is_const = match fork.curr() {
+            if let Ok(eq_punct) = fork.parse() {
+                let is_const = match fork.cursor().curr() {
                     Some(TokenTree::Literal(_)) => true,
                     Some(TokenTree::Group(g)) if g.delim().is_brace() => true,
                     Some(TokenTree::Punct(Punct::Minus(_))) => true,
@@ -120,14 +136,35 @@ impl Parse for GenericArgument {
         Ok(Self::Type(parser.parse()?))
     }
 
-    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor
-            .skip::<Lifetime>()
-            .and_then(|| cursor.skip::<AssocTypeArgument>())
-            .and_then(|| cursor.skip::<AssocConstArgument>())
-            .and_then(|| cursor.skip::<ConstraintArgument>())
-            .and_then(|| cursor.skip::<Type>())
-            .and_then(|| cursor.skip::<Expr>())
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<Lifetime>() {
+            return cursor.skip::<Lifetime>();
+        }
+
+        let is_const = match cursor.curr() {
+            Some(TokenTree::Literal(_)) => true,
+            Some(TokenTree::Group(group)) => group.delim().is_brace(),
+            Some(TokenTree::Punct(Punct::Minus(_) | Punct::Not(_))) => true,
+            _ => false,
+        };
+
+        if is_const {
+            return cursor.skip::<Expr>();
+        }
+
+        if cursor.peek::<ConstraintArgument>() {
+            return cursor.skip::<ConstraintArgument>();
+        }
+
+        if cursor.peek::<AssocConstArgument>() {
+            return cursor.skip::<AssocConstArgument>();
+        }
+
+        if cursor.peek::<AssocTypeArgument>() {
+            return cursor.skip::<AssocTypeArgument>();
+        }
+
+        cursor.skip::<Type>()
     }
 }
 

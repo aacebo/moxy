@@ -14,10 +14,20 @@ pub struct ItemForeignMod {
 }
 
 impl Parse for ItemForeignMod {
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Unsafety::skip(cursor).unwrap_or(cursor);
+        let Some(cursor) = cursor.skip::<Abi>() else {
+            return false;
+        };
+
+        cursor.is_delimited(moxy_token::Delim::Brace)
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let unsafety = parser.parse::<Unsafety>()?;
-        let abi = parser.parse::<Abi>()?;
+        let attrs = parser.parse()?;
+        let unsafety = parser.parse()?;
+        let abi = parser.parse()?;
         let items = Delimited::<Vec<ForeignItem>>::parse_brace(parser)?;
 
         Ok(Self {
@@ -26,6 +36,19 @@ impl Parse for ItemForeignMod {
             abi,
             items,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Unsafety::skip(cursor)?;
+        cursor = cursor.skip::<Abi>()?;
+        let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<ForeignItem>()?;
+        }
+
+        Some(cursor.offset(1))
     }
 }
 

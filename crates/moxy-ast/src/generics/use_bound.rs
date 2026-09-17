@@ -25,6 +25,19 @@ impl Parse for UseBound {
             gt_punct: parser.parse()?,
         })
     }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Token![use]>()?;
+        cursor = cursor.skip::<Token![<]>()?;
+        cursor = cursor.skip::<Lifetime>()?;
+
+        while cursor.peek::<Token![,]>() {
+            cursor = cursor.skip::<Token![,]>()?;
+            cursor = cursor.skip::<Lifetime>()?;
+        }
+
+        cursor.skip::<Token![>]>()
+    }
 }
 
 impl Spanner for UseBound {

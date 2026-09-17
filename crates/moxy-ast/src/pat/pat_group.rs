@@ -18,14 +18,30 @@ impl Spanner for PatGroup {
 
 impl Parse for PatGroup {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Pattern>()
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let Some(inner) = cursor.descend(moxy_token::Delim::None) else {
+            return false;
+        };
+
+        let Some(inner) = inner.skip::<Pattern>() else {
+            return false;
+        };
+
+        inner.is_empty()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let inner = parser.parse_group(moxy_token::Delim::None)?;
         Ok(Self {
-            attrs: parser.parse()?,
-            pat: parser.parse()?,
+            attrs,
+            pat: inner.parse()?,
         })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let cursor = Attributes::skip(cursor)?;
+        Self::peek(cursor).then(|| cursor.offset(1))
     }
 }
 

@@ -1,7 +1,7 @@
 use std::cell::Cell;
 
 use moxy_token::span::DelimSpan;
-use moxy_token::{Delim, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Ident, Span, ToTokens, TokenStream, TokenTree};
 
 use crate::parse::{Ansi, Cursor, Parse, ParseConfig, ParseError};
 
@@ -72,6 +72,50 @@ impl<'a> Parser<'a> {
 
     pub fn seek(&self, other: &Self) {
         self.cursor.set(other.cursor.get());
+    }
+
+    pub fn peek<T: Parse>(&self) -> bool {
+        self.cursor.get().peek::<T>()
+    }
+
+    pub fn skip<T: Parse>(&self) -> &Self {
+        let Some(next) = self.cursor.get().skip::<T>() else {
+            return self;
+        };
+
+        self.cursor.set(next);
+        self
+    }
+
+    pub fn curr(&self) -> Option<&'a TokenTree> {
+        self.cursor.get().curr()
+    }
+
+    pub fn next(&self) -> Option<&'a TokenTree> {
+        self.cursor.get().next()
+    }
+
+    pub fn nth(&self, n: usize) -> Option<&'a TokenTree> {
+        self.cursor.get().nth(n)
+    }
+
+    pub fn prev(&self) -> Option<&'a TokenTree> {
+        self.cursor.get().prev()
+    }
+
+    pub fn offset(&self, n: usize) -> &Self {
+        let next = self.cursor.get().offset(n);
+        self.cursor.set(next);
+        self
+    }
+
+    pub fn is_delimited(&self, delim: Delim) -> bool {
+        self.cursor.get().is_delimited(delim)
+    }
+
+    pub fn descend<P: FnOnce(&Parser) -> bool + 'static>(&self, delim: Delim, p: P) -> Result<bool, ParseError> {
+        let parser = self.parse_group(delim)?;
+        Ok(p(&parser))
     }
 }
 
@@ -144,7 +188,9 @@ impl Parser<'_> {
     pub fn parse_while<T: Parse>(&self) -> Vec<T> {
         let mut items = Vec::new();
 
-        while let Some(item) = self.parse_if::<T>() {
+        while self.peek::<T>()
+            && let Ok(item) = self.parse::<T>()
+        {
             items.push(item);
         }
 
@@ -160,43 +206,33 @@ impl Parser<'_> {
 
         Ok(items)
     }
-
-    pub fn skip_while<T: Parse>(&self) -> &Self {
-        while self.parse_if::<T>().is_some() {}
-        self
-    }
-
-    pub fn skip_if<T: Parse>(&self) -> &Self {
-        self.parse_if::<T>();
-        self
-    }
 }
 
-impl Parser<'_> {
-    pub fn parse_group(&self, delim: Delim) -> Result<Parser, ParseError> {
-        match self.curr() {
+impl<'a> Parser<'a> {
+    pub fn parse_group(&self, delim: Delim) -> Result<Parser<'a>, ParseError> {
+        match self.cursor().curr() {
             Some(TokenTree::Group(group)) if group.delim() == delim => {
                 self.advance();
-                Ok(Self::from_config(&group.stream(), self.config))
+                Ok(Self::from_config(group.stream(), self.config))
             }
             _ => Err(self.error(format!("expected `{}` delimiter", delim.as_str()))),
         }
     }
 
-    pub fn parse_group_spanned(&self, delim: Delim) -> Result<(DelimSpan, Parser), ParseError> {
-        match self.curr() {
+    pub fn parse_group_spanned(&self, delim: Delim) -> Result<(DelimSpan, Parser<'a>), ParseError> {
+        match self.cursor().curr() {
             Some(TokenTree::Group(group)) if group.delim() == delim => {
                 self.advance();
-                Ok((group.span(), Self::from_config(&group.stream(), self.config)))
+                Ok((group.span(), Self::from_config(group.stream(), self.config)))
             }
             _ => Err(self.error(format!("expected `{}` delimiter", delim.as_str()))),
         }
     }
 
-    pub fn parse_ident_any(&self) -> Result<moxy_token::Ident, ParseError> {
+    pub fn parse_ident_any(&self) -> Result<Ident, ParseError> {
         match self.advance() {
             Some(TokenTree::Ident(ident)) => Ok(ident.clone()),
-            Some(TokenTree::Keyword(keyword)) => Ok(moxy_token::Ident::new(keyword.as_str()).with_span(keyword.span())),
+            Some(TokenTree::Keyword(keyword)) => Ok(Ident::new(keyword.as_str()).with_span(keyword.span())),
             Some(other) => Err(self.error(format!("expected Ident, received \"{}\"", other))),
             None => Err(self.error("expected Ident, received \"<EOF>\"")),
         }
@@ -206,19 +242,5 @@ impl Parser<'_> {
 impl<'a> ToTokens for Parser<'a> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.cursor.get().to_tokens(tokens);
-    }
-}
-
-impl<'a> std::ops::Deref for Parser<'a> {
-    type Target = Cursor<'a>;
-
-    fn deref(&self) -> &Self::Target {
-        &self.cursor.get()
-    }
-}
-
-impl<'a> std::ops::DerefMut for Parser<'a> {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        self.cursor.get_mut()
     }
 }

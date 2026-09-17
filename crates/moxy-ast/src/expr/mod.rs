@@ -78,7 +78,7 @@ pub use expr_unsafe::*;
 pub use expr_while::*;
 pub use expr_yield::*;
 
-use moxy_token::{Delim, Group, Span, Spanner, ToTokenStream, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Span, Spanner, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 use crate::*;
 
@@ -316,12 +316,26 @@ impl ToTokens for Expr {
 
 impl Parse for Expr {
     fn peek(cursor: Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+
         match cursor.curr() {
             // literals
             Some(TokenTree::Literal(_)) => true,
 
             // paths, `_`, etc.
             Some(TokenTree::Ident(_)) => true,
+
+            Some(TokenTree::Keyword(keyword))
+                if matches!(
+                    keyword,
+                    moxy_token::Keyword::SelfType(_)
+                        | moxy_token::Keyword::SelfValue(_)
+                        | moxy_token::Keyword::Super(_)
+                        | moxy_token::Keyword::Crate(_)
+                ) =>
+            {
+                true
+            }
 
             // grouped primary expressions
             Some(TokenTree::Group(group))
@@ -339,10 +353,13 @@ impl Parse for Expr {
 
                     // paths beginning with ::
                     || cursor.peek::<Token![::]>()
+                    || cursor.peek::<Token![<]>()
 
                     // closures
                     || cursor.peek::<Token![|]>()
                     || cursor.peek::<Token![||]>()
+                    || cursor.peek::<Token![move]>()
+                    || cursor.peek::<Token![static]>()
 
                     // block expressions
                     || cursor.peek::<Token![if]>()
@@ -367,6 +384,9 @@ impl Parse for Expr {
                     // range with no lhs, if supported
                     || cursor.peek::<Token![..]>()
                     || cursor.peek::<Token![..=]>()
+
+                    // labeled block or loop expression
+                    || cursor.peek::<Label>()
             }
         }
     }
@@ -375,14 +395,408 @@ impl Parse for Expr {
         let attrs = parser.parse()?;
         parse_assignment(parser, attrs)
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        skip_expr(cursor)
+    }
+}
+
+fn skip_expr(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+    skip_expr_with(cursor, false)
+}
+
+pub(crate) fn skip_pattern_bound(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+    skip_expr_with(cursor, true)
+}
+
+fn skip_expr_with(cursor: Cursor<'_>, pattern_bound: bool) -> Option<Cursor<'_>> {
+    fn skip_list(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        while !cursor.is_empty() {
+            cursor = cursor.skip::<Expr>()?;
+
+            if cursor.is_empty() {
+                break;
+            }
+
+            cursor = cursor.skip::<Token![,]>()?;
+        }
+
+        Some(cursor)
+    }
+
+    fn skip_pattern_single(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.skip::<Pattern>()
+    }
+
+    fn skip_closure_param(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = skip_pattern_single(cursor)?;
+
+        if cursor.peek::<Token![:]>() {
+            cursor = cursor.skip::<Token![:]>()?;
+            cursor = cursor.skip::<Type>()?;
+        }
+
+        Some(cursor)
+    }
+
+    fn skip_primary(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let mut closure = cursor;
+        closure = BoundLifetimes::skip(closure).unwrap_or(closure);
+        closure = Constness::skip(closure)?;
+        closure = Movability::skip(closure)?;
+        closure = Asyncness::skip(closure)?;
+        closure = closure.skip::<Option<Token![move]>>()?;
+
+        if closure.peek::<Token![||]>() || closure.peek::<Token![|]>() {
+            cursor = BoundLifetimes::skip(cursor).unwrap_or(cursor);
+            cursor = Constness::skip(cursor)?;
+            cursor = Movability::skip(cursor)?;
+            cursor = Asyncness::skip(cursor)?;
+            cursor = cursor.skip::<Option<Token![move]>>()?;
+
+            if cursor.peek::<Token![||]>() {
+                cursor = cursor.skip::<Token![||]>()?;
+            } else {
+                cursor = cursor.skip::<Token![|]>()?;
+
+                while !cursor.peek::<Token![|]>() {
+                    cursor = skip_closure_param(cursor)?;
+
+                    if cursor.peek::<Token![,]>() {
+                        cursor = cursor.skip::<Token![,]>()?;
+                    } else {
+                        break;
+                    }
+                }
+
+                cursor = cursor.skip::<Token![|]>()?;
+            }
+
+            cursor = ReturnType::skip(cursor)?;
+            return cursor.skip::<Expr>();
+        }
+
+        if cursor.peek::<Lit>() {
+            return cursor.skip::<Lit>();
+        }
+
+        if cursor.peek::<Token![_]>() {
+            return cursor.skip::<Token![_]>();
+        }
+
+        if cursor.is_delimited(Delim::Paren) {
+            let inner = cursor.descend(Delim::Paren)?;
+            let inner = skip_list(inner)?;
+            return inner.is_empty().then(|| cursor.offset(1));
+        }
+
+        if cursor.is_delimited(Delim::Bracket) {
+            let mut inner = cursor.descend(Delim::Bracket)?;
+
+            if inner.is_empty() {
+                return Some(cursor.offset(1));
+            }
+
+            inner = inner.skip::<Expr>()?;
+
+            if inner.peek::<Token![;]>() {
+                inner = inner.skip::<Token![;]>()?;
+                inner = inner.skip::<Expr>()?;
+            } else {
+                while !inner.is_empty() {
+                    inner = inner.skip::<Token![,]>()?;
+
+                    if !inner.is_empty() {
+                        inner = inner.skip::<Expr>()?;
+                    }
+                }
+            }
+
+            return inner.is_empty().then(|| cursor.offset(1));
+        }
+
+        if cursor.is_delimited(Delim::Brace) {
+            return cursor.skip::<StmtBlock>();
+        }
+
+        if cursor.is_delimited(Delim::None) {
+            let inner = cursor.descend(Delim::None)?.skip::<Expr>()?;
+            return inner.is_empty().then(|| cursor.offset(1));
+        }
+
+        if cursor.peek::<Token![let]>() {
+            cursor = cursor.skip::<Token![let]>()?;
+            cursor = cursor.skip::<Pattern>()?;
+            cursor = cursor.skip::<Token![=]>()?;
+            return cursor.skip::<Expr>();
+        }
+
+        if cursor.peek::<Token![if]>() {
+            cursor = cursor.skip::<Token![if]>()?;
+            cursor = cursor.skip::<Expr>()?;
+            cursor = cursor.skip::<StmtBlock>()?;
+
+            if cursor.peek::<Token![else]>() {
+                cursor = cursor.skip::<Token![else]>()?;
+                cursor = cursor.skip::<Expr>()?;
+            }
+
+            return Some(cursor);
+        }
+
+        let label = Label::skip(cursor);
+
+        if cursor.peek::<Token![while]>() || label.is_some_and(|cursor| cursor.peek::<Token![while]>()) {
+            cursor = cursor.skip::<Option<Label>>()?;
+            cursor = cursor.skip::<Token![while]>()?;
+            cursor = cursor.skip::<Expr>()?;
+            return cursor.skip::<StmtBlock>();
+        }
+
+        if cursor.peek::<Token![for]>() || label.is_some_and(|cursor| cursor.peek::<Token![for]>()) {
+            cursor = cursor.skip::<Option<Label>>()?;
+            cursor = cursor.skip::<Token![for]>()?;
+            cursor = cursor.skip::<Pattern>()?;
+            cursor = cursor.skip::<Token![in]>()?;
+            cursor = cursor.skip::<Expr>()?;
+            return cursor.skip::<StmtBlock>();
+        }
+
+        if cursor.peek::<Token![loop]>() || label.is_some_and(|cursor| cursor.peek::<Token![loop]>()) {
+            cursor = cursor.skip::<Option<Label>>()?;
+            cursor = cursor.skip::<Token![loop]>()?;
+            return cursor.skip::<StmtBlock>();
+        }
+
+        if label.is_some_and(|cursor| cursor.is_delimited(Delim::Brace)) {
+            cursor = cursor.skip::<Label>()?;
+            return cursor.skip::<StmtBlock>();
+        }
+
+        if cursor.peek::<Token![match]>() {
+            cursor = cursor.skip::<Token![match]>()?;
+            cursor = cursor.skip::<Expr>()?;
+            let mut inner = cursor.descend(Delim::Brace)?;
+
+            while !inner.is_empty() {
+                inner = inner.skip::<MatchArm>()?;
+            }
+
+            return Some(cursor.offset(1));
+        }
+
+        if cursor.peek::<Token![unsafe]>() {
+            return cursor.skip::<Token![unsafe]>()?.skip::<StmtBlock>();
+        }
+
+        if cursor.peek::<Token![const]>() {
+            return cursor.skip::<Token![const]>()?.skip::<StmtBlock>();
+        }
+
+        if cursor.peek::<Token![async]>() {
+            cursor = cursor.skip::<Token![async]>()?;
+            cursor = cursor.skip::<Option<Token![move]>>()?;
+            return cursor.skip::<StmtBlock>();
+        }
+
+        if cursor.peek::<Token![try]>() {
+            return cursor.skip::<Token![try]>()?.skip::<StmtBlock>();
+        }
+
+        if cursor.peek::<Token![return]>() {
+            return cursor.skip::<Token![return]>()?.skip::<Option<Box<Expr>>>();
+        }
+
+        if cursor.peek::<Token![break]>() {
+            cursor = cursor.skip::<Token![break]>()?;
+            cursor = cursor.skip::<Option<Label>>()?;
+            return cursor.skip::<Option<Box<Expr>>>();
+        }
+
+        if cursor.peek::<Token![continue]>() {
+            return cursor.skip::<Token![continue]>()?.skip::<Option<Label>>();
+        }
+
+        if cursor.peek::<Token![yield]>() {
+            return cursor.skip::<Token![yield]>()?.skip::<Option<Box<Expr>>>();
+        }
+
+        let path_start = cursor;
+        let qualified = cursor.peek::<Token![<]>();
+        cursor = if qualified {
+            cursor.skip::<ty::TypePath>()?
+        } else {
+            cursor.skip::<Path>()?
+        };
+
+        if !qualified && cursor.peek::<Token![!]>() {
+            return MacroCall::skip(path_start);
+        }
+
+        if cursor.is_delimited(Delim::Brace) {
+            let inner = cursor.descend(Delim::Brace)?.skip::<StructBody>()?;
+            return inner.is_empty().then(|| cursor.offset(1));
+        }
+
+        Some(cursor)
+    }
+
+    fn skip_postfix(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = skip_primary(cursor)?;
+
+        loop {
+            if cursor.is_delimited(Delim::Paren) {
+                let inner = skip_list(cursor.descend(Delim::Paren)?)?;
+
+                if !inner.is_empty() {
+                    return None;
+                }
+
+                cursor = cursor.offset(1);
+                continue;
+            }
+
+            if cursor.is_delimited(Delim::Bracket) {
+                let inner = cursor.descend(Delim::Bracket)?.skip::<Expr>()?;
+
+                if !inner.is_empty() {
+                    return None;
+                }
+
+                cursor = cursor.offset(1);
+                continue;
+            }
+
+            if cursor.peek::<Token![.]>() {
+                cursor = cursor.skip::<Token![.]>()?;
+
+                if cursor.peek::<Token![await]>() {
+                    cursor = cursor.skip::<Token![await]>()?;
+                    continue;
+                }
+
+                if cursor.peek::<Ident>() {
+                    let after_method = cursor.skip::<Ident>()?;
+                    let args = after_method.skip::<Option<AngleArguments>>()?;
+
+                    if args.is_delimited(Delim::Paren) {
+                        cursor = args;
+                        let inner = skip_list(cursor.descend(Delim::Paren)?)?;
+
+                        if !inner.is_empty() {
+                            return None;
+                        }
+
+                        cursor = cursor.offset(1);
+                        continue;
+                    }
+                }
+
+                cursor = cursor.skip::<Member>()?;
+                continue;
+            }
+
+            if cursor.peek::<Token![?]>() {
+                cursor = cursor.skip::<Token![?]>()?;
+                continue;
+            }
+
+            break;
+        }
+
+        Some(cursor)
+    }
+
+    fn skip_unary(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<Token![&]>() && cursor.offset(1).peek::<Token![raw]>() {
+            return cursor
+                .skip::<Token![&]>()?
+                .skip::<Token![raw]>()?
+                .skip::<PointerMutability>()
+                .and_then(skip_unary);
+        }
+
+        if cursor.peek::<Token![&]>() {
+            return cursor.skip::<Token![&]>()?.skip::<Mutability>().and_then(skip_unary);
+        }
+
+        if cursor.peek::<UnOp>() {
+            return cursor.skip::<UnOp>().and_then(skip_unary);
+        }
+
+        skip_postfix(cursor)
+    }
+
+    fn skip_cast(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = skip_unary(cursor)?;
+
+        while cursor.peek::<Token![as]>() {
+            cursor = cursor.skip::<Token![as]>()?;
+            cursor = cursor.skip::<Type>()?;
+        }
+
+        Some(cursor)
+    }
+
+    fn skip_binary(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = skip_cast(cursor)?;
+
+        while cursor.peek::<BinOp>() {
+            cursor = cursor.skip::<BinOp>()?;
+            cursor = skip_cast(cursor)?;
+        }
+
+        Some(cursor)
+    }
+
+    fn skip_range(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<RangeLimits>() {
+            cursor = cursor.skip::<RangeLimits>()?;
+
+            if !cursor.is_empty() && !cursor.peek::<Token![,]>() && !cursor.peek::<Token![;]>() && cursor.peek::<Expr>() {
+                cursor = skip_binary(cursor)?;
+            }
+
+            return Some(cursor);
+        }
+
+        cursor = skip_binary(cursor)?;
+
+        if cursor.peek::<RangeLimits>() {
+            cursor = cursor.skip::<RangeLimits>()?;
+
+            if !cursor.is_empty() && !cursor.peek::<Token![,]>() && !cursor.peek::<Token![;]>() && cursor.peek::<Expr>() {
+                cursor = skip_binary(cursor)?;
+            }
+        }
+
+        Some(cursor)
+    }
+
+    fn skip_assignment(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = skip_range(cursor)?;
+
+        if cursor.peek::<Token![=]>() {
+            cursor = cursor.skip::<Token![=]>()?;
+            cursor = skip_assignment(cursor)?;
+        }
+
+        Some(cursor)
+    }
+
+    if pattern_bound {
+        skip_unary(cursor)
+    } else {
+        skip_assignment(Attributes::skip(cursor)?)
+    }
 }
 
 pub(crate) fn parse_assignment(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseError> {
-    let left = parse_range(parser, attrs)?;
+    let left = parse_range(parser, attrs.clone())?;
 
     if parser.peek::<Token![=]>() {
         return Ok(ExprAssign {
-            attrs,
+            attrs: attrs.clone(),
             left: Box::new(left),
             eq: parser.parse()?,
             right: Box::new(parse_assignment(parser, attrs)?),
@@ -399,7 +813,7 @@ pub(crate) fn parse_range(parser: &Parser, attrs: Attributes) -> Result<Expr, Pa
         let mut end = None;
 
         if !parser.is_empty() && !parser.peek::<Token![,]>() && !parser.peek::<Token![;]>() && parser.peek::<Expr>() {
-            end = Some(Box::new(parse_binary(parser, attrs)?));
+            end = Some(Box::new(parse_binary(parser, attrs.clone())?));
         }
 
         return Ok(ExprRange {
@@ -411,19 +825,19 @@ pub(crate) fn parse_range(parser: &Parser, attrs: Attributes) -> Result<Expr, Pa
         .into());
     }
 
-    let left = parser.parse()?;
+    let left = parse_binary(parser, attrs.clone())?;
 
     if parser.peek::<RangeLimits>() {
         let limits = parser.parse()?;
         let mut end = None;
 
         if !parser.is_empty() && !parser.peek::<Token![,]>() && !parser.peek::<Token![;]>() && parser.peek::<Expr>() {
-            end = Some(Box::new(parse_binary(parser, attrs)?));
+            end = Some(Box::new(parse_binary(parser, attrs.clone())?));
         }
 
         return Ok(ExprRange {
             attrs: Default::default(),
-            start: None,
+            start: Some(Box::new(left)),
             limits,
             end,
         }
@@ -434,14 +848,14 @@ pub(crate) fn parse_range(parser: &Parser, attrs: Attributes) -> Result<Expr, Pa
 }
 
 pub(crate) fn parse_binary(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseError> {
-    let mut left = parse_cast(parser, attrs)?;
+    let mut left = parse_cast(parser, attrs.clone())?;
 
     while parser.peek::<BinOp>() {
         left = ExprBinary {
-            attrs,
+            attrs: attrs.clone(),
             left: Box::new(left),
             op: parser.parse()?,
-            right: Box::new(parse_cast(parser, attrs)?),
+            right: Box::new(parse_cast(parser, attrs.clone())?),
         }
         .into();
     }
@@ -467,6 +881,17 @@ pub(crate) fn parse_cast(parser: &Parser, attrs: Attributes) -> Result<Expr, Par
 
 pub(crate) fn parse_unary(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseError> {
     if parser.peek::<Token![&]>() {
+        if parser.cursor().offset(1).peek::<Token![raw]>() {
+            return Ok(ExprRawAddr {
+                attrs: Default::default(),
+                and: parser.parse()?,
+                raw: parser.parse()?,
+                mutability: parser.parse()?,
+                expr: Box::new(parse_unary(parser, attrs)?),
+            }
+            .into());
+        }
+
         return Ok(ExprReference {
             attrs: Default::default(),
             and: parser.parse()?,
@@ -496,18 +921,22 @@ pub(crate) fn parse_postfix(parser: &Parser, attrs: Attributes) -> Result<Expr, 
             expr = ExprCall {
                 attrs: Default::default(),
                 func: Box::new(expr),
-                args: parser.parse()?,
+                args: Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?,
             }
             .into();
+
+            continue;
         }
 
         if parser.is_delimited(Delim::Bracket) {
             expr = ExprIndex {
                 attrs: Default::default(),
                 base: Box::new(expr),
-                index: parser.parse()?,
+                index: Delimited::parse_bracket_with(parser, |inner| Ok(Box::new(inner.parse()?)))?,
             }
             .into();
+
+            continue;
         }
 
         if parser.peek::<Token![.]>() {
@@ -519,16 +948,29 @@ pub(crate) fn parse_postfix(parser: &Parser, attrs: Attributes) -> Result<Expr, 
                     await_keyword: parser.parse()?,
                 }
                 .into();
-            } else if parser.offset(1).peek::<Ident>() && parser.offset(2).is_delimited(Delim::Paren) {
-                expr = ExprMethodCall {
-                    attrs: Default::default(),
-                    receiver: Box::new(expr),
-                    dot: parser.parse()?,
-                    method: parser.parse()?,
-                    turbofish: parser.parse()?,
-                    args: parser.parse()?,
+            } else if parser.offset(1).peek::<Ident>() {
+                let method = parser.cursor().offset(2);
+                let args = Option::<AngleArguments>::skip(method).unwrap_or(method);
+
+                if !args.is_delimited(Delim::Paren) {
+                    expr = ExprField {
+                        attrs: Default::default(),
+                        base: Box::new(expr),
+                        dot: parser.parse()?,
+                        member: parser.parse()?,
+                    }
+                    .into();
+                } else {
+                    expr = ExprMethodCall {
+                        attrs: Default::default(),
+                        receiver: Box::new(expr),
+                        dot: parser.parse()?,
+                        method: parser.parse()?,
+                        turbofish: parser.parse()?,
+                        args: Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?,
+                    }
+                    .into();
                 }
-                .into();
             } else {
                 expr = ExprField {
                     attrs: Default::default(),
@@ -538,6 +980,8 @@ pub(crate) fn parse_postfix(parser: &Parser, attrs: Attributes) -> Result<Expr, 
                 }
                 .into();
             }
+
+            continue;
         }
 
         if parser.peek::<Token![?]>() {
@@ -547,6 +991,8 @@ pub(crate) fn parse_postfix(parser: &Parser, attrs: Attributes) -> Result<Expr, 
                 question_punct: parser.parse()?,
             }
             .into();
+
+            continue;
         }
 
         break;
@@ -556,6 +1002,17 @@ pub(crate) fn parse_postfix(parser: &Parser, attrs: Attributes) -> Result<Expr, 
 }
 
 pub(crate) fn parse_primary(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseError> {
+    let mut closure = parser.cursor();
+    closure = BoundLifetimes::skip(closure).unwrap_or(closure);
+    closure = Constness::skip(closure).unwrap_or(closure);
+    closure = Movability::skip(closure).unwrap_or(closure);
+    closure = Asyncness::skip(closure).unwrap_or(closure);
+    closure = Option::<Token![move]>::skip(closure).unwrap_or(closure);
+
+    if closure.peek::<Token![||]>() || closure.peek::<Token![|]>() {
+        return parse_closure(parser, attrs);
+    }
+
     if parser.peek::<Lit>() {
         return Ok(ExprLit {
             attrs,
@@ -564,11 +1021,10 @@ pub(crate) fn parse_primary(parser: &Parser, attrs: Attributes) -> Result<Expr, 
         .into());
     }
 
-    if parser.peek::<Path>() {
-        return Ok(ExprPath {
+    if parser.peek::<Token![_]>() {
+        return Ok(ExprInfer {
             attrs,
-            path: parser.parse()?,
-            qself: parser.parse()?,
+            underscore: parser.parse()?,
         }
         .into());
     }
@@ -584,18 +1040,19 @@ pub(crate) fn parse_primary(parser: &Parser, attrs: Attributes) -> Result<Expr, 
     if parser.is_delimited(Delim::Brace) {
         return Ok(ExprBlock {
             attrs,
-            label: parser.parse()?,
+            label: None,
             block: parser.parse()?,
         }
         .into());
     }
 
-    if parser.peek::<Token![|]>()
-        || parser.peek::<Token![||]>()
-        || parser.peek::<Token![move]>()
-        || parser.peek::<Token![async]>()
-    {
-        return parse_closure(parser, attrs);
+    if parser.is_delimited(Delim::None) {
+        let inner = parser.parse_group(Delim::None)?;
+        return Ok(ExprGroup {
+            attrs,
+            expr: Box::new(inner.parse()?),
+        }
+        .into());
     }
 
     if parser.peek::<Token![let]>() {
@@ -610,18 +1067,29 @@ pub(crate) fn parse_primary(parser: &Parser, attrs: Attributes) -> Result<Expr, 
     }
 
     if parser.peek::<Token![if]>() {
+        let if_keyword = parser.parse()?;
+        let cond = parser.parse()?;
+        let then_branch = parser.parse()?;
+        let (else_keyword, else_branch) = if parser.peek::<Token![else]>() {
+            (Some(parser.parse()?), Some(parser.parse()?))
+        } else {
+            (None, None)
+        };
+
         return Ok(ExprIf {
             attrs,
-            if_keyword: parser.parse()?,
-            cond: parser.parse()?,
-            then_branch: parser.parse()?,
-            else_keyword: parser.parse()?,
-            else_branch: parser.parse()?,
+            if_keyword,
+            cond,
+            then_branch,
+            else_keyword,
+            else_branch,
         }
         .into());
     }
 
-    if parser.peek::<Token![while]>() {
+    let label_cursor = Label::skip(parser.cursor());
+
+    if parser.peek::<Token![while]>() || label_cursor.is_some_and(|cursor| cursor.peek::<Token![while]>()) {
         return Ok(ExprWhile {
             attrs,
             label: parser.parse()?,
@@ -632,7 +1100,7 @@ pub(crate) fn parse_primary(parser: &Parser, attrs: Attributes) -> Result<Expr, 
         .into());
     }
 
-    if parser.peek::<Token![for]>() {
+    if parser.peek::<Token![for]>() || label_cursor.is_some_and(|cursor| cursor.peek::<Token![for]>()) {
         return Ok(ExprForLoop {
             attrs,
             label: parser.parse()?,
@@ -645,7 +1113,7 @@ pub(crate) fn parse_primary(parser: &Parser, attrs: Attributes) -> Result<Expr, 
         .into());
     }
 
-    if parser.peek::<Token![loop]>() {
+    if parser.peek::<Token![loop]>() || label_cursor.is_some_and(|cursor| cursor.peek::<Token![loop]>()) {
         return Ok(ExprLoop {
             attrs,
             label: parser.parse()?,
@@ -655,12 +1123,27 @@ pub(crate) fn parse_primary(parser: &Parser, attrs: Attributes) -> Result<Expr, 
         .into());
     }
 
+    if let Some(cursor) = label_cursor
+        && cursor.is_delimited(Delim::Brace)
+    {
+        return Ok(ExprBlock {
+            attrs,
+            label: parser.parse()?,
+            block: parser.parse()?,
+        }
+        .into());
+    }
+
     if parser.peek::<Token![match]>() {
+        let match_keyword = parser.parse()?;
+        let expr = parser.parse()?;
+        let (span, arms) = parser.parse_group_spanned(Delim::Brace)?;
+
         return Ok(ExprMatch {
             attrs,
-            match_keyword: parser.parse()?,
-            expr: parser.parse()?,
-            arms: parser.parse()?,
+            match_keyword,
+            expr,
+            arms: Delimited::brace(span, arms.parse_until_empty()?),
         }
         .into());
     }
@@ -739,19 +1222,42 @@ pub(crate) fn parse_primary(parser: &Parser, attrs: Attributes) -> Result<Expr, 
         .into());
     }
 
-    if parser.peek::<Token![_]>() {
-        return Ok(ExprInfer {
-            attrs,
-            underscore: parser.parse()?,
+    if parser.peek::<Token![<]>() || parser.peek::<Path>() {
+        let (qself, path) = if parser.peek::<Token![<]>() {
+            let (qself, path) = QSelf::parse_qualified(parser)?;
+            (Some(qself), path)
+        } else {
+            (None, parser.parse()?)
+        };
+
+        if qself.is_none() && parser.peek::<Token![!]>() {
+            let mac = MacroCall {
+                path,
+                bang: parser.parse()?,
+                body: parser.parse()?,
+                semi: parser.parse()?,
+            };
+
+            return Ok(ExprMacro { attrs, mac }.into());
         }
-        .into());
+
+        if parser.is_delimited(Delim::Brace) {
+            return Ok(ExprStruct {
+                attrs,
+                qself,
+                path,
+                body: Delimited::parse_brace(parser)?,
+            }
+            .into());
+        }
+
+        return Ok(ExprPath { attrs, qself, path }.into());
     }
 
-    if parser.peek::<Group>() {
-        return parser.parse();
-    }
-
-    Ok(Expr::Verbatim(parser.to_token_stream()))
+    let remaining = parser.remaining();
+    let tokens = parser.to_token_stream();
+    parser.advance_by(remaining);
+    Ok(Expr::Verbatim(tokens))
 }
 
 pub(crate) fn parse_paren_or_tuple(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseError> {
@@ -760,7 +1266,7 @@ pub(crate) fn parse_paren_or_tuple(parser: &Parser, attrs: Attributes) -> Result
     if parser.is_empty() {
         return Ok(ExprTuple {
             attrs,
-            elems: Delimited::bracket(span, Default::default()),
+            elems: Delimited::paren(span, Default::default()),
         }
         .into());
     }
@@ -771,7 +1277,7 @@ pub(crate) fn parse_paren_or_tuple(parser: &Parser, attrs: Attributes) -> Result
         let mut elems = Punctuated::new();
         elems.push_value(first);
 
-        while !parser.peek::<Token![,]>() {
+        while parser.peek::<Token![,]>() {
             elems.push_punct(parser.parse()?);
 
             if !parser.is_empty() {
@@ -781,7 +1287,7 @@ pub(crate) fn parse_paren_or_tuple(parser: &Parser, attrs: Attributes) -> Result
 
         return Ok(ExprTuple {
             attrs,
-            elems: Delimited::bracket(span, elems),
+            elems: Delimited::paren(span, elems),
         }
         .into());
     }
@@ -821,25 +1327,35 @@ pub(crate) fn parse_array_or_repeat(parser: &Parser, attrs: Attributes) -> Resul
         .into());
     }
 
-    let mut elems = vec![first];
-    elems.extend(parser.parse_until_empty()?);
+    let mut elems = Punctuated::new();
+    elems.push_value(first);
+
+    while parser.peek::<Token![,]>() {
+        elems.push_punct(parser.parse()?);
+
+        if !parser.is_empty() {
+            elems.push_value(parser.parse()?);
+        }
+    }
 
     Ok(ExprArray {
         attrs,
-        elems: Delimited::bracket(span, Punctuated::from_iter(elems)),
+        elems: Delimited::bracket(span, elems),
     }
     .into())
 }
 
 pub(crate) fn parse_closure(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseError> {
+    let lifetimes = parser.parse()?;
     let constness = parser.parse()?;
+    let movability = parser.parse()?;
     let asyncness = parser.parse()?;
     let capture = parser.parse()?;
     let (pipes, inputs) = if parser.peek::<Token![||]>() {
         let oror = parser.parse()?;
         (ClosurePipes::Empty(oror), Punctuated::new())
     } else {
-        let open = parser.parse::<Token![|]>()?;
+        let open = parser.parse()?;
         let mut params = Punctuated::new();
 
         while !parser.peek::<Token![|]>() && !parser.is_empty() {
@@ -861,9 +1377,9 @@ pub(crate) fn parse_closure(parser: &Parser, attrs: Attributes) -> Result<Expr, 
 
     return Ok(ExprClosure {
         attrs,
-        lifetimes: None,
+        lifetimes,
         constness,
-        movability: Movability::Movable,
+        movability,
         asyncness,
         capture,
         pipes,

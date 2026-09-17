@@ -1,5 +1,6 @@
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
+use crate::ty::TypePath;
 use crate::*;
 
 /// A struct pattern, e.g. `Point { x, y }` or `Point { x, .. }`.
@@ -20,16 +21,53 @@ impl Spanner for PatStruct {
 
 impl Parse for PatStruct {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<QSelf>() || cursor.peek::<Path>()
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = if cursor.peek::<Token![<]>() {
+            let Some(cursor) = cursor.skip::<TypePath>() else {
+                return false;
+            };
+
+            cursor
+        } else {
+            let Some(cursor) = cursor.skip::<Path>() else {
+                return false;
+            };
+
+            cursor
+        };
+
+        cursor.is_delimited(moxy_token::Delim::Brace)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let (qself, path) = if parser.peek::<Token![<]>() {
+            let (qself, path) = QSelf::parse_qualified(parser)?;
+            (Some(qself), path)
+        } else {
+            (None, parser.parse()?)
+        };
+
+        let body = Delimited::parse_brace(parser)?;
         Ok(Self {
-            attrs: parser.parse()?,
-            qself: parser.parse()?,
-            path: parser.parse()?,
-            body: parser.parse()?,
+            attrs,
+            qself,
+            path,
+            body,
         })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let mut cursor = Attributes::skip(cursor)?;
+        cursor = if cursor.peek::<Token![<]>() {
+            cursor.skip::<TypePath>()?
+        } else {
+            cursor.skip::<Path>()?
+        };
+
+        let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
+        inner = PatStructBody::skip(inner)?;
+        inner.is_empty().then(|| cursor.offset(1))
     }
 }
 
@@ -61,14 +99,47 @@ impl Spanner for PatStructBody {
 
 impl Parse for PatStructBody {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<pat::PatField>()
+        cursor.is_empty() || cursor.peek::<pat::PatField>() || cursor.peek::<Token![..]>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self {
-            fields: Punctuated::parse_separated_nonempty(parser)?,
-            dotdot: parser.parse()?,
-        })
+        let mut fields = Punctuated::new();
+        let mut dotdot = None;
+
+        while !parser.is_empty() {
+            if parser.peek::<Token![..]>() {
+                dotdot = Some(parser.parse()?);
+                break;
+            }
+
+            fields.push_value(parser.parse()?);
+
+            if parser.peek::<Token![,]>() {
+                fields.push_punct(parser.parse()?);
+            } else {
+                break;
+            }
+        }
+
+        Ok(Self { fields, dotdot })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        while !cursor.is_empty() {
+            if cursor.peek::<Token![..]>() {
+                return cursor.skip::<Token![..]>();
+            }
+
+            cursor = cursor.skip::<pat::PatField>()?;
+
+            if cursor.peek::<Token![,]>() {
+                cursor = cursor.skip::<Token![,]>()?;
+            } else {
+                break;
+            }
+        }
+
+        Some(cursor)
     }
 }
 

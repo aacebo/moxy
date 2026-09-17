@@ -19,21 +19,27 @@ pub struct ItemExternCrate {
 }
 
 impl Parse for ItemExternCrate {
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![extern]>() && cursor.offset(1).peek::<Token![crate]>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let vis = parser.parse::<Visibility>()?;
-        let extern_keyword = parser.parse::<Token![extern]>()?;
-        let crate_keyword = parser.parse::<Token![crate]>()?;
-        let ident = parser.parse::<Ident>()?;
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let extern_keyword = parser.parse()?;
+        let crate_keyword = parser.parse()?;
+        let ident = parser.parse()?;
         let (as_keyword, rename) = if parser.peek::<Token![as]>() {
-            let as_keyword = parser.parse::<Token![as]>()?;
-            let rename = parser.parse::<Ident>()?;
+            let as_keyword = parser.parse()?;
+            let rename = parser.parse()?;
             (Some(as_keyword), Some(rename))
         } else {
             (None, None)
         };
 
-        let semi_punct = parser.parse::<Token![;]>()?;
+        let semi_punct = parser.parse()?;
 
         Ok(Self {
             attrs,
@@ -45,6 +51,21 @@ impl Parse for ItemExternCrate {
             rename,
             semi_punct,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Token![extern]>()?;
+        cursor = cursor.skip::<Token![crate]>()?;
+        cursor = cursor.skip::<Ident>()?;
+
+        if cursor.peek::<Token![as]>() {
+            cursor = cursor.skip::<Token![as]>()?;
+            cursor = cursor.skip::<Ident>()?;
+        }
+
+        cursor.skip::<Token![;]>()
     }
 }
 

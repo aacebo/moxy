@@ -20,36 +20,53 @@ impl FieldValue {
 
 impl Parse for FieldValue {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Member>()
+        Attributes::skip(cursor).unwrap_or(cursor).peek::<Member>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let member = parser.parse::<Member>()?;
+        let attrs = parser.parse()?;
+        let member = parser.parse()?;
 
         if parser.peek::<Token![:]>() {
             Ok(Self {
-                attrs: Default::default(),
+                attrs,
                 member,
                 colon_punct: parser.parse()?,
                 expr: parser.parse()?,
             })
         } else {
+            let expr = match &member {
+                Member::Named(id) => expr::ExprPath {
+                    attrs: Attributes::default(),
+                    qself: None,
+                    path: id.clone().into(),
+                }
+                .into(),
+                Member::Unnamed(_) => {
+                    return parser.error("tuple index needs a value").into();
+                }
+            };
+
             Ok(Self {
-                attrs: Default::default(),
+                attrs,
                 member,
                 colon_punct: None,
-                expr: match &member {
-                    Member::Named(id) => expr::ExprPath {
-                        attrs: Attributes::default(),
-                        qself: None,
-                        path: id.clone().into(),
-                    }
-                    .into(),
-                    Member::Unnamed(_) => {
-                        return parser.error("tuple index needs a value").into();
-                    }
-                },
+                expr,
             })
+        }
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        let shorthand = cursor.peek::<Ident>();
+        cursor = cursor.skip::<Member>()?;
+
+        if cursor.peek::<Token![:]>() {
+            cursor.skip::<Token![:]>()?.skip::<Expr>()
+        } else if shorthand {
+            Some(cursor)
+        } else {
+            None
         }
     }
 }
@@ -63,12 +80,10 @@ impl Spanner for FieldValue {
 impl ToTokens for FieldValue {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
+        self.member.to_tokens(t);
+        self.colon_punct.to_tokens(t);
 
-        if self.shorthand {
-            self.member.to_tokens(t);
-        } else {
-            self.member.to_tokens(t);
-            self.colon_punct.to_tokens(t);
+        if !self.is_shorthand() {
             self.expr.to_tokens(t);
         }
     }

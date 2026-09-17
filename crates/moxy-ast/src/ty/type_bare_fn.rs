@@ -16,17 +16,14 @@ pub struct TypeBareFn {
 
 impl Parse for TypeBareFn {
     fn peek(mut cursor: Cursor<'_>) -> bool {
-        if cursor.peek::<BoundLifetimes>() {
-            cursor = cursor.skip_until(|t| t.map(|t| t.is_punct_gt()).unwrap_or_default());
-            cursor = cursor.offset(1);
-        }
+        cursor = BoundLifetimes::skip(cursor).unwrap_or(cursor);
 
         if cursor.peek::<Token![unsafe]>() {
             cursor = cursor.offset(1);
         }
 
         if cursor.peek::<Token![extern]>() {
-            cursor = cursor.offset(2);
+            cursor = Abi::skip(cursor).unwrap_or(cursor);
         }
 
         cursor.peek::<Token![fn]>()
@@ -38,8 +35,25 @@ impl Parse for TypeBareFn {
         let abi = parser.parse()?;
         let fn_keyword = parser.parse()?;
         let params = Delimited::parse_paren_with(parser, |inner| {
-            let inputs = Punctuated::parse_terminated(inner)?;
-            Ok(BareFnParams { inputs, variadic: None })
+            let mut inputs = Punctuated::new();
+            let mut variadic = None;
+
+            while !inner.is_empty() {
+                if inner.peek::<Variadic>() {
+                    variadic = Some(inner.parse()?);
+                    break;
+                }
+
+                inputs.push_value(inner.parse()?);
+
+                if inner.peek::<Token![,]>() {
+                    inputs.push_punct(inner.parse()?);
+                } else {
+                    break;
+                }
+            }
+
+            Ok(BareFnParams { inputs, variadic })
         })?;
 
         let output = parser.parse()?;
@@ -52,6 +66,35 @@ impl Parse for TypeBareFn {
             params,
             output,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = BoundLifetimes::skip(cursor).unwrap_or(cursor);
+        cursor = Unsafety::skip(cursor)?;
+        cursor = cursor.skip::<Option<Abi>>()?;
+        cursor = cursor.skip::<Token![fn]>()?;
+        let mut inner = cursor.descend(moxy_token::Delim::Paren)?;
+
+        while !inner.is_empty() {
+            if inner.peek::<Variadic>() {
+                inner = inner.skip::<Variadic>()?;
+                break;
+            }
+
+            inner = inner.skip::<BareFnArg>()?;
+
+            if inner.peek::<Token![,]>() {
+                inner = inner.skip::<Token![,]>()?;
+            } else {
+                break;
+            }
+        }
+
+        if !inner.is_empty() {
+            return None;
+        }
+
+        cursor.offset(1).skip::<ReturnType>()
     }
 }
 

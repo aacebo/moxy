@@ -46,6 +46,50 @@ pub struct MatchArm {
     pub comma: Option<Token![,]>,
 }
 
+impl Parse for MatchArm {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        Attributes::skip(cursor).unwrap_or(cursor).peek::<Pattern>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let pat = parser.parse()?;
+        let (if_keyword, guard) = if parser.peek::<Token![if]>() {
+            (Some(parser.parse()?), Some(parser.parse()?))
+        } else {
+            (None, None)
+        };
+
+        let fat_arrow = parser.parse()?;
+        let body = parser.parse()?;
+        let comma = parser.parse()?;
+
+        Ok(Self {
+            attrs,
+            pat,
+            if_keyword,
+            guard,
+            fat_arrow,
+            body,
+            comma,
+        })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<Pattern>()?;
+
+        if cursor.peek::<Token![if]>() {
+            cursor = cursor.skip::<Token![if]>()?;
+            cursor = cursor.skip::<Expr>()?;
+        }
+
+        cursor = cursor.skip::<Token![=>]>()?;
+        cursor = cursor.skip::<Expr>()?;
+        cursor.skip::<Option<Token![,]>>()
+    }
+}
+
 impl Spanner for MatchArm {
     fn span(&self) -> Span {
         let end = self.comma.as_ref().map(|c| c.span()).unwrap_or_else(|| self.body.span());

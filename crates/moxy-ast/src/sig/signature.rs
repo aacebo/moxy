@@ -20,23 +20,25 @@ pub struct Signature {
 
 impl Parse for Signature {
     fn peek(cursor: Cursor<'_>) -> bool {
+        let mut cursor = cursor;
+
         if cursor.peek::<Token![const]>() {
-            cursor.advance();
+            cursor = cursor.offset(1);
         }
 
         if cursor.peek::<Token![async]>() {
-            cursor.advance();
+            cursor = cursor.offset(1);
         }
 
         if cursor.peek::<Token![unsafe]>() {
-            cursor.advance();
+            cursor = cursor.offset(1);
         }
 
         if cursor.peek::<Token![extern]>() {
-            cursor.advance();
+            cursor = cursor.offset(1);
 
             if matches!(cursor.curr(), Some(moxy_token::TokenTree::Literal(lit)) if lit.repr().starts_with('"')) {
-                cursor.advance();
+                cursor = cursor.offset(1);
             }
         }
 
@@ -50,13 +52,13 @@ impl Parse for Signature {
         let abi = parser.parse()?;
         let fn_keyword = parser.parse()?;
         let ident = parser.parse()?;
-        let mut generics = parser.parse()?;
+        let mut generics: Generics = parser.parse()?;
         let params = Delimited::parse_paren_with(parser, |parser| {
             let mut inputs = Punctuated::new();
             let mut variadic = None;
 
             while !parser.is_empty() {
-                if let Some(v) = parser.peek::<Variadic>()? {
+                if parser.peek::<Variadic>() {
                     variadic = Some(parser.parse()?);
                     break;
                 }
@@ -87,6 +89,40 @@ impl Parse for Signature {
             params,
             output,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Constness::skip(cursor)?;
+        cursor = Asyncness::skip(cursor)?;
+        cursor = Unsafety::skip(cursor)?;
+        cursor = cursor.skip::<Option<Abi>>()?;
+        cursor = cursor.skip::<Token![fn]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Generics::skip(cursor)?;
+        let mut inner = cursor.descend(moxy_token::Delim::Paren)?;
+
+        while !inner.is_empty() {
+            if inner.peek::<Variadic>() {
+                inner = inner.skip::<Variadic>()?;
+                break;
+            }
+
+            inner = inner.skip::<super::FnParam>()?;
+
+            if inner.is_empty() {
+                break;
+            }
+
+            inner = inner.skip::<Token![,]>()?;
+        }
+
+        if !inner.is_empty() {
+            return None;
+        }
+
+        cursor = cursor.offset(1);
+        cursor = ReturnType::skip(cursor)?;
+        cursor.skip::<Option<WhereClause>>()
     }
 }
 

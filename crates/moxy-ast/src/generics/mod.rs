@@ -44,7 +44,7 @@ impl Parse for Generics {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let lt = parser.parse()?;
+        let lt: Option<Token![<]> = parser.parse()?;
         let params = if lt.is_some() {
             Punctuated::parse_separated_nonempty(parser)?
         } else {
@@ -61,6 +61,22 @@ impl Parse for Generics {
             params,
             where_clause,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<Token![<]>() {
+            cursor = cursor.skip::<Token![<]>()?;
+            cursor = cursor.skip::<GenericParam>()?;
+
+            while cursor.peek::<Token![,]>() {
+                cursor = cursor.skip::<Token![,]>()?;
+                cursor = cursor.skip::<GenericParam>()?;
+            }
+
+            cursor = cursor.skip::<Token![>]>()?;
+        }
+
+        cursor.skip::<Option<WhereClause>>()
     }
 }
 

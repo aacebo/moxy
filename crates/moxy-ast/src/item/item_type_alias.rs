@@ -19,15 +19,21 @@ pub struct ItemTypeAlias {
 }
 
 impl Parse for ItemTypeAlias {
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![type]>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let vis = parser.parse::<Visibility>()?;
-        let type_keyword = parser.parse::<Token![type]>()?;
-        let ident = parser.parse::<Ident>()?;
-        let generics = parser.parse::<Generics>()?;
-        let eq_punct = parser.parse::<Token![=]>()?;
-        let ty = parser.parse::<Type>()?;
-        let semi_punct = parser.parse::<Token![;]>()?;
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let type_keyword = parser.parse()?;
+        let ident = parser.parse()?;
+        let generics = parser.parse()?;
+        let eq_punct = parser.parse()?;
+        let ty = parser.parse()?;
+        let semi_punct = parser.parse()?;
 
         Ok(Self {
             attrs,
@@ -39,6 +45,17 @@ impl Parse for ItemTypeAlias {
             ty,
             semi_punct,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Token![type]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Generics::skip(cursor)?;
+        cursor = cursor.skip::<Token![=]>()?;
+        cursor = cursor.skip::<Type>()?;
+        cursor.skip::<Token![;]>()
     }
 }
 

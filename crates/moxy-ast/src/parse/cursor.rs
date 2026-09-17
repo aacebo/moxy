@@ -58,10 +58,6 @@ impl<'a> Cursor<'a> {
     }
 
     pub fn descend(self, delim: Delim) -> Option<Self> {
-        if !self.curr()?.is_group() {
-            return None;
-        }
-
         let (_, Some(TokenTree::Group(group))) = self.advance() else {
             return None;
         };
@@ -118,6 +114,7 @@ impl<'a> Cursor<'a> {
 
 impl<'a> ToTokens for Cursor<'a> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        tokens.extend(&self.tokens[self.index..]);
+        let slice = &self.tokens[self.index..];
+        tokens.extend(slice.to_vec());
     }
 }

@@ -20,16 +20,23 @@ impl Spanner for PatType {
 
 impl Parse for PatType {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Pattern>()
+        Self::skip(cursor).is_some()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
             attrs: parser.parse()?,
-            pat: parser.parse()?,
+            pat: Box::new(parser.parse()?),
             colon: parser.parse()?,
             ty: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<Pattern>()?;
+        cursor = cursor.skip::<Token![:]>()?;
+        cursor.skip::<Type>()
     }
 }
 

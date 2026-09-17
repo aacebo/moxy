@@ -21,6 +21,10 @@ impl Parse for TraitRef {
             path: parser.parse()?,
         })
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        BoundPolarity::skip(cursor)?.skip::<Path>()
+    }
 }
 
 impl Spanner for TraitRef {

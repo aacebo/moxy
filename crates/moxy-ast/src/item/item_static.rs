@@ -21,17 +21,23 @@ pub struct ItemStatic {
 }
 
 impl Parse for ItemStatic {
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![static]>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let vis = parser.parse::<Visibility>()?;
-        let static_keyword = parser.parse::<Token![static]>()?;
-        let mutability = parser.parse::<Mutability>()?;
-        let ident = parser.parse::<Ident>()?;
-        let colon_punct = parser.parse::<Token![:]>()?;
-        let ty = parser.parse::<Type>()?;
-        let eq_punct = parser.parse::<Token![=]>()?;
-        let expr = parser.parse::<Expr>()?;
-        let semi_punct = parser.parse::<Token![;]>()?;
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let static_keyword = parser.parse()?;
+        let mutability = parser.parse()?;
+        let ident = parser.parse()?;
+        let colon_punct = parser.parse()?;
+        let ty = parser.parse()?;
+        let eq_punct = parser.parse()?;
+        let expr = parser.parse()?;
+        let semi_punct = parser.parse()?;
 
         Ok(Self {
             attrs,
@@ -45,6 +51,19 @@ impl Parse for ItemStatic {
             expr,
             semi_punct,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Token![static]>()?;
+        cursor = Mutability::skip(cursor)?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = cursor.skip::<Token![:]>()?;
+        cursor = cursor.skip::<Type>()?;
+        cursor = cursor.skip::<Token![=]>()?;
+        cursor = cursor.skip::<Expr>()?;
+        cursor.skip::<Token![;]>()
     }
 }
 

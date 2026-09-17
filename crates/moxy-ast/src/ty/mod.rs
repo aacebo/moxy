@@ -1,4 +1,4 @@
-use crate::{Parse, ParseError, Parser, Peek};
+use crate::{BoundLifetimes, Cursor, Parse, ParseError, Parser};
 use moxy_token::{Delim, Keyword, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Delimited, Punctuated};
@@ -240,9 +240,9 @@ impl From<TypeBareFn> for Type {
     }
 }
 
-impl Peek for Type {
-    fn peek(parser: &Parser) -> bool {
-        match parser.curr() {
+impl Parse for Type {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        match cursor.curr() {
             Some(TokenTree::Ident(_)) => true,
 
             Some(TokenTree::Group(g)) => matches!(g.delim(), Delim::Paren | Delim::Bracket | Delim::None),
@@ -253,6 +253,7 @@ impl Peek for Type {
                     | Keyword::Dyn(_)
                     | Keyword::Fn(_)
                     | Keyword::Extern(_)
+                    | Keyword::For(_)
                     | Keyword::Unsafe(_)
                     | Keyword::SelfType(_)
                     | Keyword::SelfValue(_)
@@ -268,9 +269,7 @@ impl Peek for Type {
             _ => false,
         }
     }
-}
 
-impl Parse for Type {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if !parser.peek::<Self>() {
             return parser.error("expected type").into();
@@ -303,13 +302,12 @@ impl Parse for Type {
         // inside the group rather than calling `TypeArray::parse` or
         // `TypeSlice::parse` individually (which would each consume the group).
         if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
-            let (bracket_span, group_tokens) = parser.parse_group_spanned(Delim::Bracket)?;
-            let inner = Parser::from_tokens(&group_tokens);
-            let elem = Box::new(inner.parse::<Self>()?);
+            let (bracket_span, inner) = parser.parse_group_spanned(Delim::Bracket)?;
+            let elem = Box::new(inner.parse()?);
 
             if inner.peek::<Token![;]>() {
-                let semi = inner.parse::<Token![;]>()?;
-                let len = inner.parse::<crate::Expr>()?;
+                let semi = inner.parse()?;
+                let len = inner.parse()?;
                 return Ok(Self::Array(TypeArray {
                     content: Delimited::bracket(bracket_span, type_array::ArrayInner { elem, semi, len }),
                 }));
@@ -332,7 +330,11 @@ impl Parse for Type {
         }
 
         // Bare fn pointer: `fn(...)`, `extern "C" fn(...)`, `unsafe fn(...)`.
-        if parser.peek::<Token![fn]>() || parser.peek::<Token![extern]>() || parser.peek::<Token![unsafe]>() {
+        if parser.peek::<Token![fn]>()
+            || parser.peek::<Token![extern]>()
+            || parser.peek::<Token![unsafe]>()
+            || parser.peek::<BoundLifetimes>()
+        {
             return Ok(Self::BareFn(parser.parse()?));
         }
 
@@ -340,8 +342,7 @@ impl Parse for Type {
         // anything else (empty, multiple, or trailing comma) is a tuple.
         // Both variants share the same `(` token so we disambiguate inline.
         if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-            let (paren_span, group_tokens) = parser.parse_group_spanned(Delim::Paren)?;
-            let inner = Parser::from_tokens(&group_tokens);
+            let (paren_span, inner) = parser.parse_group_spanned(Delim::Paren)?;
             let elems: Punctuated<Self, Token![,]> = Punctuated::parse_terminated(&inner)?;
 
             return if elems.len() == 1 && !elems.is_trailing() {
@@ -353,14 +354,82 @@ impl Parse for Type {
             };
         }
 
+        if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::None)) {
+            let (span, inner) = parser.parse_group_spanned(Delim::None)?;
+            return Ok(Self::Group(TypeGroup {
+                span: span.span(),
+                elem: Box::new(inner.parse()?),
+            }));
+        }
+
         // Macro type `m!(...)` — a path followed by `!`.
-        if let Some(mac) = parser.parse_if::<TypeMacro>() {
-            return Ok(Self::Macro(mac));
+        if parser.peek::<TypeMacro>() {
+            return Ok(Self::Macro(parser.parse()?));
         }
 
         // Otherwise a path type: `T`, `std::vec::Vec`, or a qualified
         // `<T as Trait>::Item` (which begins with `<`).
         Ok(Self::Path(parser.parse()?))
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<Token![&]>() {
+            return cursor.skip::<TypeReference>();
+        }
+
+        if cursor.peek::<Token![*]>() {
+            return cursor.skip::<TypePointer>();
+        }
+
+        if cursor.peek::<Token![!]>() {
+            return cursor.skip::<Token![!]>();
+        }
+
+        if matches!(cursor.curr(), Some(tt) if tt.text() == Some("_")) {
+            return Some(cursor.offset(1));
+        }
+
+        if cursor.is_delimited(Delim::Bracket) {
+            if cursor.peek::<TypeArray>() {
+                return cursor.skip::<TypeArray>();
+            }
+
+            return cursor.skip::<TypeSlice>();
+        }
+
+        if cursor.peek::<Token![impl]>() {
+            return cursor.skip::<TypeImplTrait>();
+        }
+
+        if cursor.peek::<Token![dyn]>() {
+            return cursor.skip::<TypeTraitObject>();
+        }
+
+        if cursor.peek::<Token![fn]>()
+            || cursor.peek::<Token![extern]>()
+            || cursor.peek::<Token![unsafe]>()
+            || cursor.peek::<BoundLifetimes>()
+        {
+            return cursor.skip::<TypeBareFn>();
+        }
+
+        if cursor.is_delimited(Delim::Paren) {
+            if cursor.peek::<TypeParen>() {
+                return cursor.skip::<TypeParen>();
+            }
+
+            return cursor.skip::<TypeTuple>();
+        }
+
+        if cursor.is_delimited(Delim::None) {
+            return cursor.skip::<TypeGroup>();
+        }
+
+        if cursor.peek::<TypeMacro>() {
+            return cursor.skip::<TypeMacro>();
+        }
+
+        cursor.skip::<TypePath>()
     }
 }
 

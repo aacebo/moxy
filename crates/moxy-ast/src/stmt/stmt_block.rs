@@ -12,13 +12,23 @@ pub struct StmtBlock {
 
 impl Parse for StmtBlock {
     fn peek(cursor: Cursor<'_>) -> bool {
-        !cursor.is_empty()
+        cursor.is_delimited(moxy_token::Delim::Brace)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
             stmts: Delimited::<Vec<Stmt>>::parse_brace(parser)?,
         })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<Stmt>()?;
+        }
+
+        Some(cursor.offset(1))
     }
 }
 

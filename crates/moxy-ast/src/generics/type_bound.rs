@@ -41,10 +41,10 @@ impl TypeBound {
         let mut bounds = crate::Punctuated::new();
 
         loop {
-            bounds.push_value(parser.parse::<Self>()?);
+            bounds.push_value(parser.parse()?);
 
             if parser.peek::<Token![+]>() {
-                bounds.push_punct(parser.parse::<Token![+]>()?);
+                bounds.push_punct(parser.parse()?);
             } else {
                 break;
             }
@@ -91,6 +91,16 @@ impl Parse for TypeBound {
         }
 
         Ok(Self::Trait(parser.parse()?))
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<Lifetime>() {
+            cursor.skip::<Lifetime>()
+        } else if cursor.peek::<UseBound>() {
+            cursor.skip::<UseBound>()
+        } else {
+            cursor.skip::<TraitBound>()
+        }
     }
 }
 

@@ -34,7 +34,7 @@ impl Spanner for Crate {
 }
 
 impl Parse for Crate {
-    fn peek(cursor: Cursor<'_>) -> bool {
+    fn peek(_cursor: Cursor<'_>) -> bool {
         true
     }
 
@@ -43,6 +43,16 @@ impl Parse for Crate {
             attrs: parser.parse()?,
             items: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+
+        while cursor.peek::<Item>() {
+            cursor = cursor.skip::<Item>()?;
+        }
+
+        Some(cursor)
     }
 }
 

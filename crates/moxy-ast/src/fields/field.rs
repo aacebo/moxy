@@ -16,18 +16,45 @@ pub struct Field {
 
 impl Parse for Field {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![pub]>() || cursor.peek::<Token![mut]>() || cursor.peek::<Ident>()
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        let cursor = Mutability::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Type>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let mutability = parser.parse()?;
+        let (ident, colon) = if parser.peek::<Ident>() && parser.cursor().offset(1).peek::<Token![:]>() {
+            (Some(parser.parse()?), Some(parser.parse()?))
+        } else {
+            (None, None)
+        };
+
+        let ty = parser.parse()?;
+
         Ok(Self {
-            attrs: parser.parse()?,
-            vis: parser.parse()?,
-            mutability: parser.parse()?,
-            ident: parser.parse()?,
-            colon: parser.parse()?,
-            ty: parser.parse()?,
+            attrs,
+            vis,
+            mutability,
+            ident,
+            colon,
+            ty,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = Mutability::skip(cursor)?;
+
+        if cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![:]>() {
+            cursor = cursor.skip::<Ident>()?;
+            cursor = cursor.skip::<Token![:]>()?;
+        }
+
+        cursor.skip::<Type>()
     }
 }
 

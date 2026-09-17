@@ -39,6 +39,53 @@ pub struct StructBody {
     pub rest: Option<(Token![..], Box<Expr>)>,
 }
 
+impl Parse for StructBody {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.is_empty() || cursor.peek::<FieldValue>() || cursor.peek::<Token![..]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let mut fields = Punctuated::new();
+        let mut rest = None;
+
+        while !parser.is_empty() {
+            if parser.peek::<Token![..]>() {
+                rest = Some((parser.parse()?, parser.parse()?));
+                break;
+            }
+
+            fields.push_value(parser.parse()?);
+
+            if parser.peek::<Token![,]>() {
+                fields.push_punct(parser.parse()?);
+            } else {
+                break;
+            }
+        }
+
+        Ok(Self { fields, rest })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        while !cursor.is_empty() {
+            if cursor.peek::<Token![..]>() {
+                cursor = cursor.skip::<Token![..]>()?;
+                return cursor.skip::<Expr>();
+            }
+
+            cursor = cursor.skip::<FieldValue>()?;
+
+            if cursor.peek::<Token![,]>() {
+                cursor = cursor.skip::<Token![,]>()?;
+            } else {
+                break;
+            }
+        }
+
+        Some(cursor)
+    }
+}
+
 impl ToTokens for StructBody {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.fields.to_tokens(t);

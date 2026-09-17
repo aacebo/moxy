@@ -64,6 +64,18 @@ impl Parse for Path {
             segments: Punctuated::parse_separated_nonempty(parser)?,
         })
     }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Option<Token![::]>>()?;
+        cursor = cursor.skip::<PathSegment>()?;
+
+        while cursor.skip::<Token![::]>().is_some_and(|cursor| cursor.peek::<PathSegment>()) {
+            cursor = cursor.skip::<Token![::]>()?;
+            cursor = cursor.skip::<PathSegment>()?;
+        }
+
+        Some(cursor)
+    }
 }
 
 impl Spanner for Path {

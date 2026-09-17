@@ -13,7 +13,9 @@ pub struct TraitItemMacro {
 
 impl Parse for TraitItemMacro {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<MacroCall>()
+        Attributes::skip(cursor)
+            .map(|cursor| cursor.peek::<MacroCall>())
+            .unwrap_or(false)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -22,6 +24,12 @@ impl Parse for TraitItemMacro {
             mac: parser.parse()?,
             semi: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<MacroCall>()?;
+        cursor.skip::<Token![;]>()
     }
 }
 

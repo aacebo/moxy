@@ -16,7 +16,9 @@ pub struct ForeignItemType {
 
 impl Parse for ForeignItemType {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![type]>() || (cursor.peek::<Token![pub]>() && cursor.offset(1).peek::<Token![type]>())
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![type]>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -28,6 +30,15 @@ impl Parse for ForeignItemType {
             generics: parser.parse()?,
             semi: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Token![type]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Generics::skip(cursor)?;
+        cursor.skip::<Option<Token![;]>>()
     }
 }
 

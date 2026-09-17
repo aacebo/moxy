@@ -1,4 +1,4 @@
-use moxy_token::{Delim, Group, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Cursor, Delimited, Parse, ParseError, Parser, Punctuated, ReturnType, Token, Type};
 
@@ -12,7 +12,7 @@ pub struct ParenArguments {
 
 impl Parse for ParenArguments {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Group>() && cursor.descend(Delim::Paren).map(|c| c.peek::<Type>()).unwrap_or_default()
+        cursor.is_delimited(Delim::Paren)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -22,8 +22,20 @@ impl Parse for ParenArguments {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Delimited<Punctuated<Type, Token![,]>>>()?;
-        cursor.skip::<ReturnType>()
+        let mut inner = cursor.descend(Delim::Paren)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<Type>()?;
+
+            if inner.is_empty() {
+                break;
+            }
+
+            inner = inner.skip::<Token![,]>()?;
+        }
+
+        cursor = cursor.offset(1);
+        ReturnType::skip(cursor)
     }
 }
 

@@ -56,11 +56,7 @@ impl Visibility {
 
 impl Parse for Visibility {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![pub]>().and_then(|| {
-            cursor
-                .descend(Delim::Paren)
-                .map(|cursor| cursor.peek::<Token![crate]>() || cursor.peek::<Token![self]>() || cursor.peek::<Token![super]>())
-        })
+        cursor.peek::<Token![pub]>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -114,19 +110,28 @@ impl Parse for Visibility {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Option<Token![pub]>>()?;
-
-        if cursor.peek::<Delimited<Token![crate]>>() {
-            cursor = cursor.skip::<Delimited<Token![crate]>>()?;
-        } else if cursor.peek::<Delimited<Token![self]>>() {
-            cursor = cursor.skip::<Delimited<Token![self]>>()?;
-        } else if cursor.peek::<Delimited<Token![super]>>() {
-            cursor = cursor.skip::<Delimited<Token![super]>>()?;
-        } else if cursor.peek::<Delimited<(Token![in], Path)>>() {
-            cursor = cursor.skip::<Delimited<(Token![in], Path)>>()?;
+        if !cursor.peek::<Token![pub]>() {
+            return Some(cursor);
         }
 
-        Some(cursor)
+        cursor = cursor.skip::<Token![pub]>()?;
+
+        if !cursor.is_delimited(Delim::Paren) {
+            return Some(cursor);
+        }
+
+        let inner = cursor.descend(Delim::Paren)?;
+        let inner = if inner.peek::<Token![crate]>() {
+            inner.skip::<Token![crate]>()?
+        } else if inner.peek::<Token![self]>() {
+            inner.skip::<Token![self]>()?
+        } else if inner.peek::<Token![super]>() {
+            inner.skip::<Token![super]>()?
+        } else {
+            inner.skip::<Token![in]>()?.skip::<Path>()?
+        };
+
+        if inner.is_empty() { Some(cursor.offset(1)) } else { None }
     }
 }
 

@@ -16,12 +16,18 @@ pub struct ItemUse {
 }
 
 impl Parse for ItemUse {
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![use]>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let vis = parser.parse::<Visibility>()?;
-        let use_keyword = parser.parse::<Token![use]>()?;
-        let tree = parser.parse::<UseTree>()?;
-        let semi_punct = parser.parse::<Token![;]>().unwrap_or_default();
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let use_keyword = parser.parse()?;
+        let tree = parser.parse()?;
+        let semi_punct = parser.parse()?;
 
         Ok(Self {
             attrs,
@@ -30,6 +36,14 @@ impl Parse for ItemUse {
             tree,
             semi_punct,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Token![use]>()?;
+        cursor = cursor.skip::<UseTree>()?;
+        cursor.skip::<Token![;]>()
     }
 }
 

@@ -15,7 +15,8 @@ pub struct UsePath {
 
 impl Parse for UsePath {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![::]>() || (cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![::]>())
+        let cursor = Option::<Token![::]>::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![::]>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -25,6 +26,13 @@ impl Parse for UsePath {
             path_sep: parser.parse()?,
             tree: Box::new(parser.parse()?),
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Option<Token![::]>>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = cursor.skip::<Token![::]>()?;
+        cursor.skip::<UseTree>()
     }
 }
 

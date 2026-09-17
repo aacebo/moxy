@@ -24,7 +24,19 @@ impl AssocTypeArgument {
 
 impl Parse for AssocTypeArgument {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Ident>() && (cursor.offset(1).peek::<AngleArguments>() || cursor.offset(1).peek::<Token![=]>())
+        let Some(cursor) = cursor.skip::<Ident>() else {
+            return false;
+        };
+
+        let Some(cursor) = Option::<AngleArguments>::skip(cursor) else {
+            return false;
+        };
+
+        let Some(cursor) = cursor.skip::<Token![=]>() else {
+            return false;
+        };
+
+        cursor.peek::<Type>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -38,7 +50,7 @@ impl Parse for AssocTypeArgument {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = cursor.skip::<Ident>()?;
-        cursor = cursor.after::<Option<AngleArguments>>()?;
+        cursor = cursor.skip::<Option<AngleArguments>>()?;
         cursor = cursor.skip::<Token![=]>()?;
         cursor.skip::<Type>()
     }
@@ -53,11 +65,7 @@ impl Spanner for AssocTypeArgument {
 impl ToTokens for AssocTypeArgument {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.ident.to_tokens(t);
-
-        if let Some(g) = &self.generics {
-            g.to_tokens(t);
-        }
-
+        self.generics.to_tokens(t);
         self.eq_punct.to_tokens(t);
         self.ty.to_tokens(t);
     }

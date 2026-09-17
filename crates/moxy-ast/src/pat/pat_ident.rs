@@ -27,6 +27,8 @@ impl Spanner for PatIdent {
 
 impl Parse for PatIdent {
     fn peek(mut cursor: Cursor<'_>) -> bool {
+        cursor = Attributes::skip(cursor).unwrap_or(cursor);
+
         if cursor.peek::<Token![ref]>() {
             cursor = cursor.offset(1);
         }
@@ -36,6 +38,10 @@ impl Parse for PatIdent {
         }
 
         cursor.peek::<Ident>()
+            && !cursor.offset(1).peek::<Token![::]>()
+            && !cursor.offset(1).peek::<Token![!]>()
+            && !cursor.offset(1).is_delimited(moxy_token::Delim::Paren)
+            && !cursor.offset(1).is_delimited(moxy_token::Delim::Brace)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -50,6 +56,20 @@ impl Parse for PatIdent {
                 None
             },
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![ref]>>()?;
+        cursor = cursor.skip::<Mutability>()?;
+        cursor = cursor.skip::<Ident>()?;
+
+        if cursor.peek::<Token![@]>() {
+            cursor = cursor.skip::<Token![@]>()?;
+            cursor = cursor.skip::<Pattern>()?;
+        }
+
+        Some(cursor)
     }
 }
 

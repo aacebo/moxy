@@ -1,4 +1,4 @@
-use crate::{Parse, ParseError, Parser};
+use crate::{Cursor, Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::MacroCall;
@@ -11,10 +11,16 @@ pub struct TypeMacro {
 }
 
 impl Parse for TypeMacro {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<MacroCall>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self {
-            mac: parser.parse::<MacroCall>()?,
-        })
+        Ok(Self { mac: parser.parse()? })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.skip::<MacroCall>()
     }
 }
 

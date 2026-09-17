@@ -18,14 +18,20 @@ pub struct ItemStruct {
 }
 
 impl Parse for ItemStruct {
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![struct]>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let vis = parser.parse::<Visibility>()?;
-        let struct_keyword = parser.parse::<Token![struct]>()?;
-        let ident = parser.parse::<Ident>()?;
-        let generics = parser.parse::<Generics>()?;
-        let fields = parser.parse::<Fields>()?;
-        let semi = parser.parse_if::<Token![;]>();
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let struct_keyword = parser.parse()?;
+        let ident = parser.parse()?;
+        let generics = parser.parse()?;
+        let fields = parser.parse()?;
+        let semi = parser.parse()?;
 
         Ok(Self {
             attrs,
@@ -36,6 +42,16 @@ impl Parse for ItemStruct {
             fields,
             semi,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Token![struct]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Generics::skip(cursor)?;
+        cursor = Fields::skip(cursor)?;
+        cursor.skip::<Option<Token![;]>>()
     }
 }
 

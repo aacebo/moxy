@@ -15,12 +15,12 @@ pub struct Receiver {
 
 impl Parse for Receiver {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![&]>() || cursor.peek::<Lifetime>() || cursor.peek::<Token![mut]>() || cursor.peek::<Token![self]>()
+        Self::skip(cursor).is_some()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
-        let reference = parser.parse()?;
+        let reference: Option<Token![&]> = parser.parse()?;
         let lifetime = if reference.is_some() { parser.parse()? } else { None };
 
         let mutability = parser.parse()?;
@@ -33,6 +33,19 @@ impl Parse for Receiver {
             mutability,
             self_keyword,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        let reference = cursor.peek::<Token![&]>();
+        cursor = cursor.skip::<Option<Token![&]>>()?;
+
+        if reference {
+            cursor = cursor.skip::<Option<Lifetime>>()?;
+        }
+
+        cursor = Mutability::skip(cursor)?;
+        cursor.skip::<Token![self]>()
     }
 }
 

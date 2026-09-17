@@ -15,7 +15,10 @@ pub struct ImplItemFn {
 
 impl Parse for ImplItemFn {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![pub]>() || cursor.peek::<Token![default]>() || cursor.peek::<Signature>()
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        let cursor = Defaultness::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Signature>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -26,6 +29,14 @@ impl Parse for ImplItemFn {
             sig: parser.parse()?,
             body: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = Defaultness::skip(cursor)?;
+        cursor = cursor.skip::<Signature>()?;
+        cursor.skip::<StmtBlock>()
     }
 }
 

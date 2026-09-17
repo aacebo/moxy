@@ -26,31 +26,59 @@ impl Spanner for PatRange {
 
 impl Parse for PatRange {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Expr>() || cursor.peek::<RangeLimits>()
+        Self::skip(cursor).is_some()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let start = if parser.peek::<RangeLimits>() {
+            None
+        } else {
+            Some(expr::parse_unary(parser, Attributes::default())?)
+        };
+        let limits = parser.parse()?;
+        let end = if parser.is_empty() || parser.peek::<Token![,]>() || parser.peek::<Token![|]>() || parser.peek::<Token![:]>() {
+            None
+        } else {
+            Some(expr::parse_unary(parser, Attributes::default())?)
+        };
+
+        if start.is_none() && end.is_none() && matches!(limits, RangeLimits::HalfOpen(_)) {
+            return parser.error("expected range pattern").into();
+        }
+
         Ok(Self {
-            attrs: parser.parse()?,
-            start: parser.parse()?,
-            limits: parser.parse()?,
-            end: parser.parse()?,
+            attrs,
+            start,
+            limits,
+            end,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        let has_start = !cursor.peek::<RangeLimits>();
+
+        if has_start {
+            cursor = expr::skip_pattern_bound(cursor)?;
+        }
+
+        let closed = cursor.peek::<Token![..=]>();
+        cursor = cursor.skip::<RangeLimits>()?;
+
+        if cursor.is_empty() || cursor.peek::<Token![,]>() || cursor.peek::<Token![|]>() || cursor.peek::<Token![:]>() {
+            return (has_start || closed).then_some(cursor);
+        }
+
+        expr::skip_pattern_bound(cursor)
     }
 }
 
 impl ToTokens for PatRange {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
-
-        if let Some(s) = &self.start {
-            s.to_tokens(t);
-        }
-
+        self.start.to_tokens(t);
         self.limits.to_tokens(t);
-
-        if let Some(e) = &self.end {
-            e.to_tokens(t);
-        }
+        self.end.to_tokens(t);
     }
 }

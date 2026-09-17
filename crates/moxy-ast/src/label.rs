@@ -12,13 +12,21 @@ pub struct Label {
 
 impl Parse for Label {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Lifetime>()
+        let Some(cursor) = cursor.skip::<Lifetime>() else {
+            return false;
+        };
+
+        cursor.peek::<Token![:]>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let name = parser.parse::<Lifetime>()?;
-        let colon = parser.parse::<Token![:]>()?;
+        let name = parser.parse()?;
+        let colon = parser.parse()?;
         Ok(Self { name, colon })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.skip::<Lifetime>()?.skip::<Token![:]>()
     }
 }
 

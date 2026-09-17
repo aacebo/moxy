@@ -13,21 +13,32 @@ pub struct BareFnArg {
 
 impl Parse for BareFnArg {
     fn peek(cursor: Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         (cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![:]>()) || cursor.peek::<Type>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
-        let name = if parser.peek::<Ident>() {
+        let name = if parser.peek::<Ident>() && parser.cursor().offset(1).peek::<Token![:]>() {
             Some((parser.parse()?, parser.parse()?))
         } else {
             None
         };
 
-        let colon = parser.parse()?;
         let ty = parser.parse()?;
 
         Ok(Self { attrs, name, ty })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+
+        if cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![:]>() {
+            cursor = cursor.skip::<Ident>()?;
+            cursor = cursor.skip::<Token![:]>()?;
+        }
+
+        cursor.skip::<Type>()
     }
 }
 

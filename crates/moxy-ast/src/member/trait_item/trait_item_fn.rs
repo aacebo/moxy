@@ -14,7 +14,9 @@ pub struct TraitItemFn {
 
 impl Parse for TraitItemFn {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Signature>()
+        Attributes::skip(cursor)
+            .map(|cursor| cursor.peek::<Signature>())
+            .unwrap_or(false)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -27,6 +29,17 @@ impl Parse for TraitItemFn {
         };
 
         Ok(Self { attrs, sig, body, semi })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<Signature>()?;
+
+        if cursor.peek::<StmtBlock>() {
+            cursor.skip::<StmtBlock>()
+        } else {
+            cursor.skip::<Token![;]>()
+        }
     }
 }
 

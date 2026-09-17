@@ -33,28 +33,35 @@ impl ItemImpl {
 }
 
 impl Parse for ItemImpl {
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Defaultness::skip(cursor).unwrap_or(cursor);
+        let cursor = Unsafety::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![impl]>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let defaultness = parser.parse::<Defaultness>()?;
-        let unsafety = parser.parse::<Unsafety>()?;
-        let impl_keyword = parser.parse::<Token![impl]>()?;
-        let mut generics = parser.parse::<Generics>()?;
+        let attrs = parser.parse()?;
+        let defaultness = parser.parse()?;
+        let unsafety = parser.parse()?;
+        let impl_keyword = parser.parse()?;
+        let mut generics: Generics = parser.parse()?;
         let polarity = if parser.peek::<Token![!]>() {
-            BoundPolarity::Negative(parser.parse::<Token![!]>()?)
+            BoundPolarity::Negative(parser.parse()?)
         } else {
             BoundPolarity::Positive
         };
 
-        let first = parser.parse::<Type>()?;
+        let first = parser.parse()?;
         let (for_keyword, trait_ref, self_ty) = if parser.peek::<Token![for]>() {
-            let for_keyword = parser.parse::<Token![for]>()?;
-            let self_ty = parser.parse::<Type>()?;
+            let for_keyword = parser.parse()?;
+            let self_ty = parser.parse()?;
             (Some(for_keyword), Some(Self::type_to_trait_ref(first, polarity)?), self_ty)
         } else {
             (None, None, first)
         };
 
-        generics.where_clause = parser.parse_if();
+        generics.where_clause = parser.parse()?;
         let items = Delimited::<Vec<ImplItem>>::parse_brace(parser)?;
 
         Ok(Self {
@@ -68,6 +75,30 @@ impl Parse for ItemImpl {
             self_ty,
             items,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Defaultness::skip(cursor)?;
+        cursor = Unsafety::skip(cursor)?;
+        cursor = cursor.skip::<Token![impl]>()?;
+        cursor = Generics::skip(cursor)?;
+        cursor = BoundPolarity::skip(cursor)?;
+        cursor = cursor.skip::<Type>()?;
+
+        if cursor.peek::<Token![for]>() {
+            cursor = cursor.skip::<Token![for]>()?;
+            cursor = cursor.skip::<Type>()?;
+        }
+
+        cursor = cursor.skip::<Option<crate::WhereClause>>()?;
+        let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<ImplItem>()?;
+        }
+
+        Some(cursor.offset(1))
     }
 }
 
@@ -84,14 +115,8 @@ impl ToTokens for ItemImpl {
         self.unsafety.to_tokens(t);
         self.impl_keyword.to_tokens(t);
         self.generics.to_tokens(t);
-
-        if let Some(tr) = &self.trait_ref {
-            tr.to_tokens(t);
-            if let Some(for_keyword) = &self.for_keyword {
-                for_keyword.to_tokens(t);
-            }
-        }
-
+        self.trait_ref.to_tokens(t);
+        self.for_keyword.to_tokens(t);
         self.self_ty.to_tokens(t);
         self.items.to_tokens(t);
     }

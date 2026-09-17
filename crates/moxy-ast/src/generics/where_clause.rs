@@ -21,6 +21,18 @@ impl Parse for WhereClause {
             predicates: Punctuated::parse_separated_nonempty(parser)?,
         })
     }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Token![where]>()?;
+        cursor = cursor.skip::<WherePredicate>()?;
+
+        while cursor.peek::<Token![,]>() {
+            cursor = cursor.skip::<Token![,]>()?;
+            cursor = cursor.skip::<WherePredicate>()?;
+        }
+
+        Some(cursor)
+    }
 }
 
 impl Spanner for WhereClause {

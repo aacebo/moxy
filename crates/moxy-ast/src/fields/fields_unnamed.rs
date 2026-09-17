@@ -11,15 +11,28 @@ pub struct FieldsUnnamed {
 
 impl Parse for FieldsUnnamed {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor
-            .descend(Delim::Brace)
-            .map(|c| c.peek::<fields::Field>())
-            .unwrap_or_default()
+        cursor.is_delimited(Delim::Paren)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let fields = Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?;
         Ok(Self { fields })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let mut inner = cursor.descend(Delim::Paren)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<fields::Field>()?;
+
+            if inner.is_empty() {
+                break;
+            }
+
+            inner = inner.skip::<Token![,]>()?;
+        }
+
+        Some(cursor.offset(1))
     }
 }
 

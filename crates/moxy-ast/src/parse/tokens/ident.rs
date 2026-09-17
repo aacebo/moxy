@@ -20,6 +20,6 @@ impl Parse for Ident {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.offset(1).into()
+        Self::peek(cursor).then(|| cursor.offset(1))
     }
 }

@@ -2,41 +2,41 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-/// A literal pattern, e.g. `42`, `'a'`, or `"hello"`.
+/// A macro call pattern, e.g. `format!(...)`.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
-pub struct PatLit {
+pub struct PatMacro {
     pub attrs: Attributes,
-    pub lit: Lit,
+    pub call: MacroCall,
 }
 
-impl Spanner for PatLit {
+impl Spanner for PatMacro {
     fn span(&self) -> Span {
-        self.attrs.span().join(self.lit.span())
+        self.attrs.span().join(self.call.span())
     }
 }
 
-impl Parse for PatLit {
+impl Parse for PatMacro {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Lit>()
+        cursor.peek::<MacroCall>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
             attrs: parser.parse()?,
-            lit: parser.parse()?,
+            call: parser.parse()?,
         })
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        Attributes::skip(cursor)?.skip::<Lit>()
+        Attributes::skip(cursor)?.skip::<MacroCall>()
     }
 }
 
-impl ToTokens for PatLit {
+impl ToTokens for PatMacro {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
-        self.lit.to_tokens(t);
+        self.call.to_tokens(t);
     }
 }

@@ -99,14 +99,26 @@ impl Parse for ImplItem {
         }
 
         if parser.peek::<ImplItemType>() {
-            return Ok(Self::Const(Box::new(parser.parse()?)));
+            return Ok(Self::Type(parser.parse()?));
         }
 
         if parser.peek::<ImplItemFn>() {
-            return Ok(Self::Const(Box::new(parser.parse()?)));
+            return Ok(Self::Fn(parser.parse()?));
         }
 
         Ok(Self::Macro(parser.parse()?))
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<ImplItemConst>() {
+            cursor.skip::<ImplItemConst>()
+        } else if cursor.peek::<ImplItemType>() {
+            cursor.skip::<ImplItemType>()
+        } else if cursor.peek::<ImplItemFn>() {
+            cursor.skip::<ImplItemFn>()
+        } else {
+            cursor.skip::<ImplItemMacro>()
+        }
     }
 }
 

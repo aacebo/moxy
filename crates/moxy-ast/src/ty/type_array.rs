@@ -22,6 +22,12 @@ impl Parse for TypeArray {
         let content = Delimited::parse_bracket(parser)?;
         Ok(Self { content })
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let inner = cursor.descend(Delim::Bracket)?;
+        let inner = inner.skip::<ArrayInner>()?;
+        inner.is_empty().then(|| cursor.offset(1))
+    }
 }
 
 impl Spanner for TypeArray {
@@ -54,6 +60,10 @@ impl Parse for ArrayInner {
         let semi = parser.parse()?;
         let len = parser.parse()?;
         Ok(Self { elem, semi, len })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.skip::<Type>()?.skip::<Token![;]>()?.skip::<Expr>()
     }
 }
 

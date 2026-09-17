@@ -1,4 +1,4 @@
-use crate::{Parse, ParseError, Parser};
+use crate::{Cursor, Parse, ParseError, Parser};
 use moxy_token::span::Spanner;
 use moxy_token::{Span, ToTokens, TokenStream};
 
@@ -13,9 +13,25 @@ pub struct TypeSlice {
 }
 
 impl Parse for TypeSlice {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(inner) = cursor.descend(moxy_token::Delim::Bracket) else {
+            return false;
+        };
+
+        let Some(inner) = inner.skip::<Type>() else {
+            return false;
+        };
+
+        inner.is_empty()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let elem = Delimited::parse_bracket_with(parser, |parser| Ok(Box::new(parser.parse::<Type>()?)))?;
+        let elem = Delimited::parse_bracket_with(parser, |parser| Ok(Box::new(parser.parse()?)))?;
         Ok(Self { elem })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
     }
 }
 

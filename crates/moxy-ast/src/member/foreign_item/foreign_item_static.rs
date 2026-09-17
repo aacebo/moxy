@@ -18,7 +18,9 @@ pub struct ForeignItemStatic {
 
 impl Parse for ForeignItemStatic {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![static]>() || (cursor.peek::<Token![pub]>() && cursor.offset(1).peek::<Token![static]>())
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![static]>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -32,6 +34,17 @@ impl Parse for ForeignItemStatic {
             ty: parser.parse()?,
             semi: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Token![static]>()?;
+        cursor = Mutability::skip(cursor)?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = cursor.skip::<Token![:]>()?;
+        cursor = cursor.skip::<Type>()?;
+        cursor.skip::<Option<Token![;]>>()
     }
 }
 

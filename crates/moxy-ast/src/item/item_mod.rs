@@ -19,17 +19,24 @@ pub struct ItemMod {
 }
 
 impl Parse for ItemMod {
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        let cursor = Unsafety::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![mod]>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let vis = parser.parse::<Visibility>()?;
-        let unsafety = parser.parse_if::<Unsafety>().unwrap_or(Unsafety::Safe);
-        let mod_keyword = parser.parse::<Token![mod]>()?;
-        let ident = parser.parse::<Ident>()?;
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let unsafety = parser.parse()?;
+        let mod_keyword = parser.parse()?;
+        let ident = parser.parse()?;
         let (content, semi_punct) = if matches!(parser.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
             let brace = Delimited::<Vec<Item>>::parse_brace(parser)?;
             (Some(brace), None)
         } else {
-            let semi_punct = parser.parse::<Token![;]>()?;
+            let semi_punct = parser.parse()?;
             (None, Some(semi_punct))
         };
 
@@ -42,6 +49,26 @@ impl Parse for ItemMod {
             content,
             semi_punct,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = Unsafety::skip(cursor)?;
+        cursor = cursor.skip::<Token![mod]>()?;
+        cursor = cursor.skip::<Ident>()?;
+
+        if cursor.is_delimited(Delim::Brace) {
+            let mut inner = cursor.descend(Delim::Brace)?;
+
+            while !inner.is_empty() {
+                inner = inner.skip::<Item>()?;
+            }
+
+            Some(cursor.offset(1))
+        } else {
+            cursor.skip::<Token![;]>()
+        }
     }
 }
 

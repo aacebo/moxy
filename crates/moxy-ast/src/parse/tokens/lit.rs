@@ -21,7 +21,7 @@ impl Parse for Lit {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.offset(1).into()
+        Self::peek(cursor).then(|| cursor.offset(1))
     }
 }
 
@@ -31,14 +31,14 @@ impl Parse for LitF32 {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse::<Lit>()? {
+        match parser.parse()? {
             Lit::Float(LitFloat::F32(value)) => Ok(value),
             _ => Err(parser.error("expected `f32` literal")),
         }
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.offset(1).into()
+        Self::peek(cursor).then(|| cursor.offset(1))
     }
 }
 
@@ -48,14 +48,14 @@ impl Parse for LitF64 {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse::<Lit>()? {
+        match parser.parse()? {
             Lit::Float(LitFloat::F64(value)) => Ok(value),
             _ => Err(parser.error("expected `f64` literal")),
         }
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.offset(1).into()
+        Self::peek(cursor).then(|| cursor.offset(1))
     }
 }
 
@@ -72,14 +72,14 @@ macro_rules! impl_lit_parse {
                 }
 
                 fn parse(parser: &Parser) -> Result<Self, ParseError> {
-                    match parser.parse::<Lit>()? {
+                    match parser.parse()? {
                         Lit::$variant(v) => Ok(v),
                         _ => Err(parser.error(concat!("expected ", $name, " literal"))),
                     }
                 }
 
                 fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-                    cursor.offset(1).into()
+                    Self::peek(cursor).then(|| cursor.offset(1))
                 }
             }
         )*

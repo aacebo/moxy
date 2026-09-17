@@ -63,7 +63,7 @@ impl Parse for AttrStyle {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let pound = parser.parse::<Token![#]>()?;
+        let pound = parser.parse()?;
 
         if parser.peek::<Token![!]>() {
             Ok(Self::Inner(pound, parser.parse()?))

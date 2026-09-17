@@ -36,8 +36,11 @@ impl Parse for Attribute {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<AttrStyle>()?;
-        cursor.skip::<Delimited<Meta>>()
+        let cursor = cursor.skip::<AttrStyle>()?;
+        let inner = cursor.descend(moxy_token::Delim::Bracket)?;
+        let inner = inner.skip::<Meta>()?;
+
+        if inner.is_empty() { Some(cursor.offset(1)) } else { None }
     }
 }
 

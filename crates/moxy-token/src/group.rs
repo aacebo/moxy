@@ -30,8 +30,8 @@ impl Group {
     }
 
     #[inline]
-    pub fn stream(&self) -> TokenStream {
-        self.tokens.clone()
+    pub fn stream(&self) -> &TokenStream {
+        &self.tokens
     }
 
     #[inline]

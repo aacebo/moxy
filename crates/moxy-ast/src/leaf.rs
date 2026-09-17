@@ -33,6 +33,13 @@ macro_rules! define_leaf {
 
                     Err(parser.error(concat!("expected `", stringify!($name), "`")))
                 }
+
+                fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+                    $(
+                        define_leaf!(@skip_arm cursor $(=> $token)?);
+                    )+
+                    None
+                }
             }
 
             impl ToTokens for $name {
@@ -102,6 +109,16 @@ macro_rules! define_leaf {
         return true;
     };
 
+    (@skip_arm $cursor:ident => $token:ty) => {
+        if $cursor.peek::<$token>() {
+            return $cursor.skip::<$token>();
+        }
+    };
+
+    (@skip_arm $cursor:ident) => {
+        return Some($cursor);
+    };
+
     // Build the `ToTokens` match by peeling variants into an accumulator, so the
     // bound token `tok` and its use stay in one expansion (hygiene) and no macro
     // call sits in match-arm position.
@@ -144,6 +161,16 @@ macro_rules! define_leaf {
 define_leaf! {
     /// A binary operator (`+`, `==`, `&&`, ...).
     pub enum BinOp {
+        ShlAssign => Token![<<=],
+        ShrAssign => Token![>>=],
+        AddAssign => Token![+=],
+        SubAssign => Token![-=],
+        MulAssign => Token![*=],
+        DivAssign => Token![/=],
+        RemAssign => Token![%=],
+        BitXorAssign => Token![^=],
+        BitAndAssign => Token![&=],
+        BitOrAssign => Token![|=],
         And => Token![&&],
         Or => Token![||],
         Shl => Token![<<],
@@ -162,16 +189,6 @@ define_leaf! {
         BitOr => Token![|],
         Lt => Token![<],
         Gt => Token![>],
-        ShlAssign => Token![<<=],
-        ShrAssign => Token![>>=],
-        AddAssign => Token![+=],
-        SubAssign => Token![-=],
-        MulAssign => Token![*=],
-        DivAssign => Token![/=],
-        RemAssign => Token![%=],
-        BitXorAssign => Token![^=],
-        BitAndAssign => Token![&=],
-        BitOrAssign => Token![|=],
     }
 
     /// A unary operator (`*`, `!`, `-`).

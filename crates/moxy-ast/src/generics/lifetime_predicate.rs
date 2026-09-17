@@ -20,8 +20,21 @@ impl Parse for LifetimePredicate {
         Ok(Self {
             lifetime: parser.parse()?,
             colon_punct: parser.parse()?,
-            bounds: parser.parse()?,
+            bounds: Punctuated::parse_separated_nonempty(parser)?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Lifetime>()?;
+        cursor = cursor.skip::<Token![:]>()?;
+        cursor = cursor.skip::<Lifetime>()?;
+
+        while cursor.peek::<Token![+]>() {
+            cursor = cursor.skip::<Token![+]>()?;
+            cursor = cursor.skip::<Lifetime>()?;
+        }
+
+        Some(cursor)
     }
 }
 

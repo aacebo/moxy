@@ -107,6 +107,20 @@ impl Parse for UseTree {
 
         Ok(Self::Name(parser.parse()?))
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<UseGlob>() {
+            cursor.skip::<UseGlob>()
+        } else if cursor.peek::<UseGroup>() {
+            cursor.skip::<UseGroup>()
+        } else if cursor.peek::<UsePath>() {
+            cursor.skip::<UsePath>()
+        } else if cursor.peek::<UseRename>() {
+            cursor.skip::<UseRename>()
+        } else {
+            cursor.skip::<UseName>()
+        }
+    }
 }
 
 impl ToTokens for UseTree {

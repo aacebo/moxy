@@ -59,6 +59,14 @@ impl Parse for FnParam {
 
         Ok(Self::Typed(Box::new(parser.parse()?)))
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<Receiver>() {
+            cursor.skip::<Receiver>()
+        } else {
+            cursor.skip::<pat::PatType>()
+        }
+    }
 }
 
 impl ToTokens for FnParam {

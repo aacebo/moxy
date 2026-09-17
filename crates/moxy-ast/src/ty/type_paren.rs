@@ -1,4 +1,4 @@
-use crate::{Parse, ParseError, Parser};
+use crate::{Cursor, Parse, ParseError, Parser};
 use moxy_token::span::Spanner;
 use moxy_token::{Span, ToTokens, TokenStream};
 
@@ -13,9 +13,25 @@ pub struct TypeParen {
 }
 
 impl Parse for TypeParen {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(inner) = cursor.descend(moxy_token::Delim::Paren) else {
+            return false;
+        };
+
+        let Some(inner) = inner.skip::<Type>() else {
+            return false;
+        };
+
+        inner.is_empty()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let content = Delimited::parse_paren_with(parser, |parser| Ok(Box::new(parser.parse::<Type>()?)))?;
+        let content = Delimited::parse_paren_with(parser, |parser| Ok(Box::new(parser.parse()?)))?;
         Ok(Self { content })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
     }
 }
 

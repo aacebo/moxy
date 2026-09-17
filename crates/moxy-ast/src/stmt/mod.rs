@@ -104,6 +104,20 @@ impl Parse for Stmt {
         let semi = parser.parse()?;
         Ok(Self::Expr(Box::new(expr), semi))
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<StmtLocal>() {
+            cursor.skip::<StmtLocal>()
+        } else if cursor.peek::<StmtMacro>() {
+            cursor.skip::<StmtMacro>()
+        } else if cursor.peek::<StmtBlock>() {
+            cursor.skip::<StmtBlock>()
+        } else if cursor.peek::<Item>() {
+            cursor.skip::<Item>()
+        } else {
+            cursor.skip::<Expr>()?.skip::<Option<Token![;]>>()
+        }
+    }
 }
 
 impl ToTokens for Stmt {

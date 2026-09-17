@@ -1,5 +1,6 @@
 use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
+use crate::ty::TypePath;
 use crate::*;
 
 /// A tuple-struct pattern, e.g. `Point(x, y)`.
@@ -20,21 +21,64 @@ impl Spanner for PatTupleStruct {
 
 impl Parse for PatTupleStruct {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<QSelf>() || cursor.peek::<Path>()
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = if cursor.peek::<Token![<]>() {
+            let Some(cursor) = cursor.skip::<TypePath>() else {
+                return false;
+            };
+
+            cursor
+        } else {
+            let Some(cursor) = cursor.skip::<Path>() else {
+                return false;
+            };
+
+            cursor
+        };
+
+        cursor.is_delimited(Delim::Paren)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
-        let qself = parser.parse()?;
-        let path = parser.parse()?;
+        let (qself, path) = if parser.peek::<Token![<]>() {
+            let (qself, path) = QSelf::parse_qualified(parser)?;
+            (Some(qself), path)
+        } else {
+            (None, parser.parse()?)
+        };
+
         let (span, parser) = parser.parse_group_spanned(Delim::Paren)?;
 
         Ok(Self {
             attrs,
             qself,
             path,
-            elems: Delimited::paren(span, Punctuated::parse_separated_nonempty(&parser)?),
+            elems: Delimited::paren(span, Punctuated::parse_terminated(&parser)?),
         })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let mut cursor = Attributes::skip(cursor)?;
+        cursor = if cursor.peek::<Token![<]>() {
+            cursor.skip::<TypePath>()?
+        } else {
+            cursor.skip::<Path>()?
+        };
+
+        let mut inner = cursor.descend(Delim::Paren)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<Pattern>()?;
+
+            if inner.is_empty() {
+                break;
+            }
+
+            inner = inner.skip::<Token![,]>()?;
+        }
+
+        Some(cursor.offset(1))
     }
 }
 

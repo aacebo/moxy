@@ -23,10 +23,21 @@ impl Parse for Abi {
                 parser.advance();
                 Some(repr.trim_matches('"').to_string())
             }
+
             _ => None,
         };
 
         Ok(Self { extern_keyword, name })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Token![extern]>()?;
+
+        if matches!(cursor.curr(), Some(TokenTree::Literal(lit)) if lit.repr().starts_with('"')) {
+            cursor = cursor.offset(1);
+        }
+
+        Some(cursor)
     }
 }
 

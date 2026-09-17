@@ -1,4 +1,4 @@
-use crate::{Parse, ParseError, Parser};
+use crate::{Cursor, Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Punctuated, TypeBound};
@@ -12,10 +12,26 @@ pub struct TypeImplTrait {
 }
 
 impl Parse for TypeImplTrait {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![impl]>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let impl_keyword = parser.parse::<Token![impl]>()?;
+        let impl_keyword = parser.parse()?;
         let bounds = crate::TypeBound::parse_bounds(parser)?;
         Ok(Self { impl_keyword, bounds })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let mut cursor = cursor.skip::<Token![impl]>()?;
+        cursor = cursor.skip::<TypeBound>()?;
+
+        while cursor.peek::<Token![+]>() {
+            cursor = cursor.skip::<Token![+]>()?;
+            cursor = cursor.skip::<TypeBound>()?;
+        }
+
+        Some(cursor)
     }
 }
 

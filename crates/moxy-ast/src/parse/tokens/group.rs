@@ -19,6 +19,6 @@ impl Parse for Group {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.offset(1).into()
+        Self::peek(cursor).then(|| cursor.offset(1))
     }
 }

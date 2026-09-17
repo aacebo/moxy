@@ -18,7 +18,21 @@ impl Spanner for PatTuple {
 
 impl Parse for PatTuple {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.descend(Delim::Paren).map(|c| c.peek::<Pattern>()).unwrap_or_default()
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let Some(mut inner) = cursor.descend(Delim::Paren) else {
+            return false;
+        };
+
+        if inner.is_empty() {
+            return true;
+        }
+
+        let Some(next) = inner.skip::<Pattern>() else {
+            return false;
+        };
+
+        inner = next;
+        !inner.is_empty() && inner.peek::<Token![,]>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -27,8 +41,25 @@ impl Parse for PatTuple {
 
         Ok(Self {
             attrs,
-            elems: Delimited::paren(span, Punctuated::parse_separated_nonempty(&parser)?),
+            elems: Delimited::paren(span, Punctuated::parse_terminated(&parser)?),
         })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let cursor = Attributes::skip(cursor)?;
+        let mut inner = cursor.descend(Delim::Paren)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<Pattern>()?;
+
+            if inner.is_empty() {
+                break;
+            }
+
+            inner = inner.skip::<Token![,]>()?;
+        }
+
+        Some(cursor.offset(1))
     }
 }
 

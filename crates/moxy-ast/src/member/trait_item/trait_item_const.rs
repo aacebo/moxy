@@ -18,7 +18,9 @@ pub struct TraitItemConst {
 
 impl Parse for TraitItemConst {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![const]>() && cursor.offset(1).peek::<Ident>()
+        Attributes::skip(cursor)
+            .map(|cursor| cursor.peek::<Token![const]>() && cursor.offset(1).peek::<Ident>())
+            .unwrap_or(false)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -47,6 +49,22 @@ impl Parse for TraitItemConst {
             default,
             semi,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<Token![const]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Generics::skip(cursor)?;
+        cursor = cursor.skip::<Token![:]>()?;
+        cursor = cursor.skip::<Type>()?;
+
+        if cursor.peek::<Token![=]>() {
+            cursor = cursor.skip::<Token![=]>()?;
+            cursor = cursor.skip::<Expr>()?;
+        }
+
+        cursor.skip::<Token![;]>()
     }
 }
 

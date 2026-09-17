@@ -17,13 +17,19 @@ pub struct ItemUnion {
 }
 
 impl Parse for ItemUnion {
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![union]>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let vis = parser.parse::<Visibility>()?;
-        let union_keyword = parser.parse::<Token![union]>()?;
-        let ident = parser.parse::<Ident>()?;
-        let generics = parser.parse::<Generics>()?;
-        let fields = parser.parse::<FieldsNamed>()?;
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let union_keyword = parser.parse()?;
+        let ident = parser.parse()?;
+        let generics = parser.parse()?;
+        let fields = parser.parse()?;
 
         Ok(Self {
             attrs,
@@ -33,6 +39,15 @@ impl Parse for ItemUnion {
             generics,
             fields,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Token![union]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Generics::skip(cursor)?;
+        cursor.skip::<FieldsNamed>()
     }
 }
 

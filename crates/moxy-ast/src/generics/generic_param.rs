@@ -75,15 +75,21 @@ impl Parse for GenericParam {
             return Ok(Self::Lifetime(parser.parse()?));
         }
 
-        if parser.peek::<Attributes>() {
-            let _ = parser.parse::<Attributes>();
-        }
-
         if parser.peek::<generics::ConstParam>() {
             return Ok(Self::Const(Box::new(parser.parse()?)));
         }
 
         Ok(Self::Type(Box::new(parser.parse()?)))
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<generics::LifetimeParam>() {
+            cursor.skip::<generics::LifetimeParam>()
+        } else if cursor.peek::<generics::ConstParam>() {
+            cursor.skip::<generics::ConstParam>()
+        } else {
+            cursor.skip::<generics::TypeParam>()
+        }
     }
 }
 

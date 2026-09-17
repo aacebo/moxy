@@ -17,6 +17,10 @@ impl Parse for UseGlob {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self { star: parser.parse()? })
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.skip::<Token![*]>()
+    }
 }
 
 impl Spanner for UseGlob {

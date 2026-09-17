@@ -17,6 +17,10 @@ impl Parse for UseName {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self { ident: parser.parse()? })
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.skip::<Ident>()
+    }
 }
 
 impl Spanner for UseName {

@@ -21,17 +21,23 @@ pub struct ItemConst {
 }
 
 impl Parse for ItemConst {
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![const]>() && cursor.offset(1).peek::<Ident>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse::<Attributes>()?;
-        let vis = parser.parse::<Visibility>()?;
-        let const_keyword = parser.parse::<Token![const]>()?;
-        let ident = parser.parse::<Ident>()?;
-        let generics = parser.parse::<Generics>()?;
-        let colon_punct = parser.parse::<Token![:]>()?;
-        let ty = parser.parse::<Type>()?;
-        let eq_punct = parser.parse::<Token![=]>()?;
-        let expr = parser.parse::<Expr>()?;
-        let semi_punct = parser.parse::<Token![;]>()?;
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let const_keyword = parser.parse()?;
+        let ident = parser.parse()?;
+        let generics = parser.parse()?;
+        let colon_punct = parser.parse()?;
+        let ty = parser.parse()?;
+        let eq_punct = parser.parse()?;
+        let expr = parser.parse()?;
+        let semi_punct = parser.parse()?;
 
         Ok(Self {
             attrs,
@@ -45,6 +51,19 @@ impl Parse for ItemConst {
             expr,
             semi_punct,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Token![const]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Generics::skip(cursor)?;
+        cursor = cursor.skip::<Token![:]>()?;
+        cursor = cursor.skip::<Type>()?;
+        cursor = cursor.skip::<Token![=]>()?;
+        cursor = cursor.skip::<Expr>()?;
+        cursor.skip::<Token![;]>()
     }
 }
 

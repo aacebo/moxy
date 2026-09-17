@@ -17,7 +17,6 @@ pub mod member;
 mod misc;
 pub mod pat;
 pub mod path;
-mod precedence;
 mod punctuated;
 pub mod sig;
 pub mod stmt;
@@ -71,8 +70,6 @@ pub use parse::*;
 pub use pat::Pattern;
 #[doc(inline)]
 pub use path::{Path, PathSegment};
-#[doc(inline)]
-pub use precedence::*;
 #[doc(inline)]
 pub use punct::*;
 #[doc(inline)]

@@ -19,7 +19,7 @@ impl Parse for Punct {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.offset(1).into()
+        Self::peek(cursor).then(|| cursor.offset(1))
     }
 }
 
@@ -39,14 +39,14 @@ macro_rules! impl_punct_parse {
                 }
 
                 fn parse(parser: &Parser) -> Result<Self, ParseError> {
-                    match parser.parse::<Punct>()? {
+                    match parser.parse()? {
                         Punct::$name(v) => Ok(v),
                         _ => parser.error(format!("expected `{}` punctuation", punct::$name::TEXT)).into(),
                     }
                 }
 
                 fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-                    cursor.offset(1).into()
+                    Self::peek(cursor).then(|| cursor.offset(1))
                 }
             }
         )*
@@ -76,4 +76,5 @@ impl_punct_parse! {
     Dollar,
     Question,
     Quote,
+    Underscore,
 }

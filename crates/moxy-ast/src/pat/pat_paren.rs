@@ -18,14 +18,27 @@ impl Spanner for PatParen {
 
 impl Parse for PatParen {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.is_delimited(Delim::Paren)
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let Some(inner) = cursor.descend(Delim::Paren) else {
+            return false;
+        };
+
+        let Some(inner) = inner.skip::<Pattern>() else {
+            return false;
+        };
+
+        inner.is_empty()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self {
-            attrs: parser.parse()?,
-            content: parser.parse()?,
-        })
+        let attrs = parser.parse()?;
+        let content = Delimited::parse_paren_with(parser, |inner| Ok(Box::new(inner.parse()?)))?;
+        Ok(Self { attrs, content })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let cursor = Attributes::skip(cursor)?;
+        Self::peek(cursor).then(|| cursor.offset(1))
     }
 }
 

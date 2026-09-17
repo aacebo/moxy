@@ -32,6 +32,14 @@ impl Parse for WherePredicate {
 
         Ok(Self::Type(Box::new(parser.parse()?)))
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<LifetimePredicate>() {
+            cursor.skip::<LifetimePredicate>()
+        } else {
+            cursor.skip::<TypePredicate>()
+        }
+    }
 }
 
 impl ToTokens for WherePredicate {

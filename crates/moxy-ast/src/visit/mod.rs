@@ -528,8 +528,8 @@ define_visit! {
         visit: visit_pattern, visit_mut: visit_pattern_mut,
         walk: walk_pattern, walk_mut: walk_pattern_mut,
         variants {
-            Wild,
-            Rest,
+            Wild(visit_pat_wild / visit_pat_wild_mut),
+            Rest(visit_pat_rest / visit_pat_rest_mut),
             Ident(visit_pat_ident / visit_pat_ident_mut),
             Path(visit_pat_path / visit_pat_path_mut),
             Tuple(visit_pat_tuple / visit_pat_tuple_mut),
@@ -540,12 +540,12 @@ define_visit! {
             Or(visit_pat_or / visit_pat_or_mut),
             Lit(visit_pat_lit / visit_pat_lit_mut),
             Range(visit_pat_range / visit_pat_range_mut),
-            Macro(visit_macro_call / visit_macro_call_mut),
+            Macro(visit_pat_macro / visit_pat_macro_mut),
             Type(visit_pat_type / visit_pat_type_mut),
             Group(visit_pat_group / visit_pat_group_mut),
             Paren(visit_pat_paren / visit_pat_paren_mut),
-            Box(visit_pattern / visit_pattern_mut),
-            Const(visit_stmt_block / visit_stmt_block_mut),
+            Box(visit_pat_box / visit_pat_box_mut),
+            Const(visit_pat_const / visit_pat_const_mut),
         }
     }
     struct PatIdent {
@@ -646,7 +646,7 @@ define_visit! {
         walk: walk_pat_lit, walk_mut: walk_pat_lit_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
-            expr => visit_expr / visit_expr_mut,
+            lit: skip,
         }
     }
     struct PatRange {
@@ -683,6 +683,48 @@ define_visit! {
         fields {
             attrs => visit_attributes / visit_attributes_mut,
             content: delim => visit_pattern / visit_pattern_mut,
+        }
+    }
+    struct PatMacro {
+        visit: visit_pat_macro, visit_mut: visit_pat_macro_mut,
+        walk: walk_pat_macro, walk_mut: walk_pat_macro_mut,
+        fields {
+            attrs => visit_attributes / visit_attributes_mut,
+            call => visit_macro_call / visit_macro_call_mut,
+        }
+    }
+    struct PatWild {
+        visit: visit_pat_wild, visit_mut: visit_pat_wild_mut,
+        walk: walk_pat_wild, walk_mut: walk_pat_wild_mut,
+        fields {
+            attrs => visit_attributes / visit_attributes_mut,
+            token: skip,
+        }
+    }
+    struct PatRest {
+        visit: visit_pat_rest, visit_mut: visit_pat_rest_mut,
+        walk: walk_pat_rest, walk_mut: walk_pat_rest_mut,
+        fields {
+            attrs => visit_attributes / visit_attributes_mut,
+            token: skip,
+        }
+    }
+    struct PatBox {
+        visit: visit_pat_box, visit_mut: visit_pat_box_mut,
+        walk: walk_pat_box, walk_mut: walk_pat_box_mut,
+        fields {
+            attrs => visit_attributes / visit_attributes_mut,
+            token: skip,
+            pattern => visit_pattern / visit_pattern_mut,
+        }
+    }
+    struct PatConst {
+        visit: visit_pat_const, visit_mut: visit_pat_const_mut,
+        walk: walk_pat_const, walk_mut: walk_pat_const_mut,
+        fields {
+            attrs => visit_attributes / visit_attributes_mut,
+            token: skip,
+            block => visit_stmt_block / visit_stmt_block_mut,
         }
     }
 

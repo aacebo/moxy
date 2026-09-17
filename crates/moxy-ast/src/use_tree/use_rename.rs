@@ -23,6 +23,10 @@ impl Parse for UseRename {
             rename: parser.parse()?,
         })
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.skip::<Ident>()?.skip::<Token![as]>()?.skip::<Ident>()
+    }
 }
 
 impl Spanner for UseRename {

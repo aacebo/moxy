@@ -103,6 +103,18 @@ impl Parse for ForeignItem {
 
         Ok(Self::Macro(parser.parse()?))
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<ForeignItemStatic>() {
+            cursor.skip::<ForeignItemStatic>()
+        } else if cursor.peek::<ForeignItemType>() {
+            cursor.skip::<ForeignItemType>()
+        } else if cursor.peek::<ForeignItemFn>() {
+            cursor.skip::<ForeignItemFn>()
+        } else {
+            cursor.skip::<ForeignItemMacro>()
+        }
+    }
 }
 
 impl ToTokens for ForeignItem {

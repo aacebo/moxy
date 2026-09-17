@@ -59,12 +59,20 @@ impl Spanner for Member {
 
 impl Parse for Member {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Lit>() || cursor.peek::<Ident>()
+        if cursor.peek::<Ident>() {
+            return true;
+        }
+
+        let Some(moxy_token::TokenTree::Literal(Lit::Int(value))) = cursor.curr() else {
+            return false;
+        };
+
+        value.repr().chars().all(char::is_numeric) && value.value() <= 4294967295
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if parser.peek::<Lit>() {
-            let lit = parser.parse()?;
+            let lit: Lit = parser.parse()?;
 
             if let Some(i) = lit.as_int() {
                 if !i.repr().chars().all(char::is_numeric) {
@@ -79,6 +87,18 @@ impl Parse for Member {
             }
         } else {
             Ok(Self::Named(parser.parse()?))
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if !Self::peek(cursor) {
+            return None;
+        }
+
+        if cursor.peek::<Lit>() {
+            cursor.skip::<Lit>()
+        } else {
+            cursor.skip::<Ident>()
         }
     }
 }

@@ -19,23 +19,34 @@ impl MacroCall {
     }
 
     /// The token parser inside the macro body delimiters.
-    pub fn tokens(&self) -> TokenStream {
+    pub fn tokens(&self) -> &TokenStream {
         self.body.stream()
     }
 }
 
 impl Parse for MacroCall {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Path>()
+        let Some(cursor) = cursor.skip::<Path>() else {
+            return false;
+        };
+
+        cursor.peek::<Token![!]>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
             path: parser.parse()?,
             bang: parser.parse()?,
-            body: parser.parser()?,
+            body: parser.parse()?,
             semi: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Path>()?;
+        cursor = cursor.skip::<Token![!]>()?;
+        cursor = cursor.skip::<Group>()?;
+        cursor.skip::<Option<Token![;]>>()
     }
 }
 

@@ -25,6 +25,21 @@ impl Parse for PathSegment {
 
         Ok(Self { ident, args })
     }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let is_fn = matches!(cursor.curr().and_then(|token| token.text()), Some("Fn" | "FnMut" | "FnOnce"));
+        cursor = if cursor.peek::<Ident>() {
+            cursor.skip::<Ident>()?
+        } else {
+            cursor.skip::<Keyword>()?
+        };
+
+        if is_fn {
+            cursor.skip::<ParenArguments>()
+        } else {
+            path::PathArguments::skip(cursor)
+        }
+    }
 }
 
 impl Spanner for PathSegment {

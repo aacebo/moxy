@@ -19,7 +19,7 @@ impl Parse for Keyword {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.offset(1).into()
+        Self::peek(cursor).then(|| cursor.offset(1))
     }
 }
 
@@ -36,14 +36,14 @@ macro_rules! impl_keyword_parse {
                 }
 
                 fn parse(parser: &Parser) -> Result<Self, ParseError> {
-                    match parser.parse::<Keyword>()? {
+                    match parser.parse()? {
                         Keyword::$name(v) => Ok(v),
                         _ => Err(parser.error(format!("expected `{}` keyword", keyword::$name::TEXT))),
                     }
                 }
 
                 fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-                    cursor.offset(1).into()
+                    Self::peek(cursor).then(|| cursor.offset(1))
                 }
             }
         )*

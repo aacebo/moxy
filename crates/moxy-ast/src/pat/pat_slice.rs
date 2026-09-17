@@ -18,10 +18,7 @@ impl Spanner for PatSlice {
 
 impl Parse for PatSlice {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor
-            .descend(Delim::Bracket)
-            .map(|c| c.peek::<Pattern>())
-            .unwrap_or_default()
+        Attributes::skip(cursor).unwrap_or(cursor).is_delimited(Delim::Bracket)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -30,8 +27,25 @@ impl Parse for PatSlice {
 
         Ok(Self {
             attrs,
-            elems: Delimited::bracket(span, Punctuated::parse_separated_nonempty(&parser)?),
+            elems: Delimited::bracket(span, Punctuated::parse_terminated(&parser)?),
         })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let cursor = Attributes::skip(cursor)?;
+        let mut inner = cursor.descend(Delim::Bracket)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<Pattern>()?;
+
+            if inner.is_empty() {
+                break;
+            }
+
+            inner = inner.skip::<Token![,]>()?;
+        }
+
+        Some(cursor.offset(1))
     }
 }
 

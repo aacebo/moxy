@@ -22,8 +22,22 @@ impl Parse for TypePredicate {
             lifetimes: parser.parse()?,
             bounded_ty: parser.parse()?,
             colon_punct: parser.parse()?,
-            bounds: parser.parse()?,
+            bounds: TypeBound::parse_bounds(parser)?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Option<BoundLifetimes>>()?;
+        cursor = cursor.skip::<Type>()?;
+        cursor = cursor.skip::<Token![:]>()?;
+        cursor = cursor.skip::<TypeBound>()?;
+
+        while cursor.peek::<Token![+]>() {
+            cursor = cursor.skip::<Token![+]>()?;
+            cursor = cursor.skip::<TypeBound>()?;
+        }
+
+        Some(cursor)
     }
 }
 

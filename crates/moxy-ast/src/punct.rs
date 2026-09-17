@@ -41,6 +41,7 @@ macro_rules! define_punct {
 
             impl Parse for $name {
                 fn peek(cursor: Cursor<'_>) -> bool {
+                    let mut cursor = cursor;
                     let mut i = 0;
 
                     $(
@@ -50,8 +51,12 @@ macro_rules! define_punct {
 
                         i += 1;
 
-                        if i < $len && !token.spacing().is_joint() {
-                            return false;
+                        if i < $len {
+                            if !token.spacing().is_joint() {
+                                return false;
+                            }
+
+                            cursor = cursor.offset(1);
                         }
                     )*
 
@@ -59,12 +64,15 @@ macro_rules! define_punct {
                 }
 
                 fn parse(parser: &Parser) -> Result<Self, ParseError> {
+                    if !Self::peek(parser.cursor()) {
+                        return Err(parser.error(format!("expected `{}` punctuation", Self::default())));
+                    }
+
                     Ok(Self($(parser.parse::<$punct>()?),*))
                 }
 
                 fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-                    $(let cursor = cursor.skip::<$punct>()?;)*
-                    Some(cursor)
+                    Self::peek(cursor).then(|| cursor.offset($len))
                 }
             }
 
@@ -103,8 +111,8 @@ define_punct! {
     LArrow(2) => [0: Lt, 1: Minus],
     PathSep(2) => [0: Colon, 1: Colon],
     DotDot(2) => [0: Dot, 1: Dot],
-    ShlEq(2) => [0: Lt, 1: Lt, 2: Eq],
-    ShrEq(2) => [0: Gt, 1: Gt, 2: Eq],
+    ShlEq(3) => [0: Lt, 1: Lt, 2: Eq],
+    ShrEq(3) => [0: Gt, 1: Gt, 2: Eq],
     DotDotDot(3) => [0: Dot, 1: Dot, 2: Dot],
     DotDotEq(3) => [0: Dot, 1: Dot, 2: Eq],
 }

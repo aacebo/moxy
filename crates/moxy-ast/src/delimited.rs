@@ -53,9 +53,8 @@ impl<T> Delimited<T> {
     where
         F: FnOnce(&Parser) -> Result<T, ParseError>,
     {
-        let (span, group_tokens) = parser.parse_group_spanned(style)?;
-        let inner_parser = Parser::from_tokens(&group_tokens);
-        let inner = f(&inner_parser)?;
+        let (span, parser) = parser.parse_group_spanned(style)?;
+        let inner = f(&parser)?;
         Ok(Self { style, span, inner })
     }
 

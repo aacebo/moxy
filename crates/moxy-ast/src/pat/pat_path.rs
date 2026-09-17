@@ -1,5 +1,6 @@
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
+use crate::ty::TypePath;
 use crate::*;
 
 /// A path pattern, e.g. `Some` or `std::option::Option::None`.
@@ -19,15 +20,46 @@ impl Spanner for PatPath {
 
 impl Parse for PatPath {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<QSelf>() || cursor.peek::<Path>()
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = if cursor.peek::<Token![<]>() {
+            let Some(cursor) = cursor.skip::<TypePath>() else {
+                return false;
+            };
+
+            cursor
+        } else {
+            let Some(cursor) = cursor.skip::<Path>() else {
+                return false;
+            };
+
+            cursor
+        };
+
+        !cursor.peek::<Token![!]>()
+            && !cursor.is_delimited(moxy_token::Delim::Paren)
+            && !cursor.is_delimited(moxy_token::Delim::Brace)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self {
-            attrs: parser.parse()?,
-            qself: parser.parse()?,
-            path: parser.parse()?,
-        })
+        let attrs = parser.parse()?;
+        let (qself, path) = if parser.peek::<Token![<]>() {
+            let (qself, path) = QSelf::parse_qualified(parser)?;
+            (Some(qself), path)
+        } else {
+            (None, parser.parse()?)
+        };
+
+        Ok(Self { attrs, qself, path })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let cursor = Attributes::skip(cursor)?;
+
+        if cursor.peek::<Token![<]>() {
+            cursor.skip::<TypePath>()
+        } else {
+            cursor.skip::<Path>()
+        }
     }
 }
 

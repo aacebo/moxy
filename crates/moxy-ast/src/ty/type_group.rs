@@ -10,6 +10,32 @@ pub struct TypeGroup {
     pub elem: Box<Type>,
 }
 
+impl Parse for TypeGroup {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(inner) = cursor.descend(moxy_token::Delim::None) else {
+            return false;
+        };
+
+        let Some(inner) = inner.skip::<Type>() else {
+            return false;
+        };
+
+        inner.is_empty()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let (span, inner) = parser.parse_group_spanned(moxy_token::Delim::None)?;
+        Ok(Self {
+            span: span.span(),
+            elem: Box::new(inner.parse()?),
+        })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
 impl Spanner for TypeGroup {
     fn span(&self) -> Span {
         self.span
