@@ -5,10 +5,18 @@ on:
     branches: [master]
     paths:
       - "**/*.rs"
+      - "Cargo.toml"
+      - "crates/**/Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/ci.yaml"
   pull_request:
     branches: [master]
     paths:
       - "**/*.rs"
+      - "Cargo.toml"
+      - "crates/**/Cargo.toml"
+      - "Cargo.lock"
+      - ".github/workflows/ci.yaml"
 
 jobs:
   test:
@@ -54,6 +62,22 @@ jobs:
 
       - name: Clippy
         run: cargo clippy --workspace --all-targets --all-features --locked -- -D warnings
+
+  docs:
+    name: Documentation
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Rustdoc
+        run: RUSTDOCFLAGS='-D warnings' cargo doc --workspace --all-features --no-deps --locked
 
   coverage:
     name: Coverage
