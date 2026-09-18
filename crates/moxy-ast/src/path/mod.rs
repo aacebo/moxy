@@ -51,6 +51,30 @@ impl Path {
 
         None
     }
+
+    pub(crate) fn parse_rest(parser: &Parser, first: PathSegment) -> Result<Self, ParseError> {
+        let mut segments = Punctuated::new();
+        segments.push_value(first);
+
+        while parser.peek::<Token![::]>() {
+            segments.push_punct(parser.parse()?);
+            segments.push_value(parser.parse()?);
+        }
+
+        Ok(Self {
+            leading_colon: None,
+            segments,
+        })
+    }
+
+    pub(crate) fn skip_rest(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        while cursor.skip::<Token![::]>().is_some_and(|cursor| cursor.peek::<PathSegment>()) {
+            cursor = cursor.skip::<Token![::]>()?;
+            cursor = cursor.skip::<PathSegment>()?;
+        }
+
+        Some(cursor)
+    }
 }
 
 impl Parse for Path {
@@ -59,22 +83,17 @@ impl Parse for Path {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self {
-            leading_colon: parser.parse()?,
-            segments: Punctuated::parse_separated_nonempty(parser)?,
-        })
+        let leading_colon = parser.parse()?;
+        let first = parser.parse()?;
+        let mut path = Self::parse_rest(parser, first)?;
+        path.leading_colon = leading_colon;
+        Ok(path)
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = cursor.skip::<Option<Token![::]>>()?;
         cursor = cursor.skip::<PathSegment>()?;
-
-        while cursor.skip::<Token![::]>().is_some_and(|cursor| cursor.peek::<PathSegment>()) {
-            cursor = cursor.skip::<Token![::]>()?;
-            cursor = cursor.skip::<PathSegment>()?;
-        }
-
-        Some(cursor)
+        Self::skip_rest(cursor)
     }
 }
 

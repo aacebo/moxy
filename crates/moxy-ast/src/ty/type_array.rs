@@ -12,10 +12,7 @@ pub struct TypeArray {
 
 impl Parse for TypeArray {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor
-            .descend(Delim::Bracket)
-            .map(|c| c.peek::<ArrayInner>())
-            .unwrap_or_default()
+        Self::skip(cursor).is_some()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {

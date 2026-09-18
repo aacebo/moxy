@@ -1,8 +1,3 @@
-use crate::{BoundLifetimes, Cursor, Parse, ParseError, Parser};
-use moxy_token::{Delim, Keyword, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
-
-use crate::{Delimited, Punctuated};
-
 mod q_self;
 mod type_array;
 mod type_bare_fn;
@@ -30,6 +25,10 @@ pub use type_reference::*;
 pub use type_slice::*;
 pub use type_trait_object::*;
 pub use type_tuple::*;
+
+use moxy_token::{Delim, Group, Keyword, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
+
+use crate::*;
 
 /// A Rust type expression. Covers all positions where a type can appear in source code.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -244,9 +243,7 @@ impl Parse for Type {
     fn peek(cursor: Cursor<'_>) -> bool {
         match cursor.curr() {
             Some(TokenTree::Ident(_)) => true,
-
             Some(TokenTree::Group(g)) => matches!(g.delim(), Delim::Paren | Delim::Bracket | Delim::None),
-
             Some(TokenTree::Keyword(k)) => matches!(
                 k,
                 Keyword::Impl(_)
@@ -260,12 +257,10 @@ impl Parse for Type {
                     | Keyword::Super(_)
                     | Keyword::Crate(_)
             ),
-
             Some(TokenTree::Punct(p)) => matches!(
                 p,
                 Punct::And(_) | Punct::Star(_) | Punct::Not(_) | Punct::Colon(_) | Punct::Lt(_)
             ),
-
             _ => false,
         }
     }
@@ -308,15 +303,22 @@ impl Parse for Type {
             if inner.peek::<Token![;]>() {
                 let semi = inner.parse()?;
                 let len = inner.parse()?;
+
+                if !inner.is_empty() {
+                    return inner.error("unexpected trailing input").into();
+                }
+
                 return Ok(Self::Array(TypeArray {
                     content: Delimited::bracket(bracket_span, type_array::ArrayInner { elem, semi, len }),
                 }));
             }
 
-            {
-                let elem = Delimited::bracket(bracket_span, elem);
-                return Ok(Self::Slice(TypeSlice { elem }));
+            if !inner.is_empty() {
+                return inner.error("unexpected trailing input").into();
             }
+
+            let elem = Delimited::bracket(bracket_span, elem);
+            return Ok(Self::Slice(TypeSlice { elem }));
         }
 
         // `impl Trait`.
@@ -362,14 +364,25 @@ impl Parse for Type {
             }));
         }
 
-        // Macro type `m!(...)` — a path followed by `!`.
-        if parser.peek::<TypeMacro>() {
-            return Ok(Self::Macro(parser.parse()?));
-        }
-
         // Otherwise a path type: `T`, `std::vec::Vec`, or a qualified
         // `<T as Trait>::Item` (which begins with `<`).
-        Ok(Self::Path(parser.parse()?))
+        if parser.peek::<Token![<]>() {
+            return Ok(Self::Path(parser.parse()?));
+        }
+
+        let path = parser.parse()?;
+
+        if parser.peek::<Token![!]>() {
+            return Ok(Self::Macro(TypeMacro {
+                mac: MacroCall {
+                    path,
+                    bang: parser.parse()?,
+                    body: parser.parse()?,
+                },
+            }));
+        }
+
+        Ok(Self::Path(TypePath { qself: None, path }))
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
@@ -390,11 +403,15 @@ impl Parse for Type {
         }
 
         if cursor.is_delimited(Delim::Bracket) {
-            if cursor.peek::<TypeArray>() {
-                return cursor.skip::<TypeArray>();
+            let mut inner = cursor.descend(Delim::Bracket)?;
+            inner = inner.skip::<Type>()?;
+
+            if inner.peek::<Token![;]>() {
+                inner = inner.skip::<Token![;]>()?;
+                inner = inner.skip::<Expr>()?;
             }
 
-            return cursor.skip::<TypeSlice>();
+            return inner.is_empty().then(|| cursor.offset(1));
         }
 
         if cursor.peek::<Token![impl]>() {
@@ -425,11 +442,18 @@ impl Parse for Type {
             return cursor.skip::<TypeGroup>();
         }
 
-        if cursor.peek::<TypeMacro>() {
-            return cursor.skip::<TypeMacro>();
+        if cursor.peek::<Token![<]>() {
+            return cursor.skip::<TypePath>();
         }
 
-        cursor.skip::<TypePath>()
+        let mut cursor = cursor.skip::<Path>()?;
+
+        if cursor.peek::<Token![!]>() {
+            cursor = cursor.skip::<Token![!]>()?;
+            cursor = cursor.skip::<Group>()?;
+        }
+
+        Some(cursor)
     }
 }
 
