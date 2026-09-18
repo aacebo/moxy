@@ -9,7 +9,6 @@ pub struct MacroCall {
     pub path: Path,
     pub bang: Token![!],
     pub body: Group,
-    pub semi: Option<Token![;]>,
 }
 
 impl MacroCall {
@@ -38,15 +37,13 @@ impl Parse for MacroCall {
             path: parser.parse()?,
             bang: parser.parse()?,
             body: parser.parse()?,
-            semi: parser.parse()?,
         })
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = cursor.skip::<Path>()?;
         cursor = cursor.skip::<Token![!]>()?;
-        cursor = cursor.skip::<Group>()?;
-        cursor.skip::<Option<Token![;]>>()
+        cursor.skip::<Group>()
     }
 }
 
@@ -61,6 +58,5 @@ impl ToTokens for MacroCall {
         self.path.to_tokens(tokens);
         self.bang.to_tokens(tokens);
         self.body.to_tokens(tokens);
-        self.semi.to_tokens(tokens);
     }
 }

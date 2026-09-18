@@ -667,9 +667,11 @@ impl Format for ItemForeignMod {
         f.indent(|f| {
             for (i, item) in self.items.inner.iter().enumerate() {
                 f.hard_break()?;
+
                 if i > 0 {
                     f.hard_break()?;
                 }
+
                 item.format(f)?;
             }
 

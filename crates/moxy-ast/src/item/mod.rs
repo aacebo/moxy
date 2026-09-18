@@ -1,5 +1,5 @@
 use crate::{Parse, ParseError, Parser};
-use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 mod item_const;
 mod item_enum;
@@ -327,8 +327,6 @@ impl Parse for Item {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let at = parser.span();
-
         if parser.peek::<ItemMacroRules>() {
             return Ok(Self::Macro2(parser.parse()?));
         }
@@ -393,7 +391,7 @@ impl Parse for Item {
             return Ok(Self::Macro(parser.parse()?));
         }
 
-        Err(LexError::new(at).message("expected item").into())
+        parser.error("expected item").into()
     }
 
     fn skip(cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {

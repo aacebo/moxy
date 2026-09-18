@@ -35,7 +35,7 @@ fn alternatives_ranges_references_and_typed_patterns_render_exactly() {
     ] {
         let pattern: Pattern = moxy::parse!(source).unwrap();
         assert_eq!(
-            [pattern.is_or(), pattern.is_lit(), pattern.is_reference()],
+            [pattern.is_or(), pattern.is_range(), pattern.is_reference()],
             std::array::from_fn(|index| index == expected_kind)
         );
         assert!(!pattern.span().is_empty());

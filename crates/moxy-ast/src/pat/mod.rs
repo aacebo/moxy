@@ -18,6 +18,9 @@ mod pat_tuple_struct;
 mod pat_type;
 mod pat_wild;
 
+pub(crate) mod parse;
+pub(crate) mod skip;
+
 pub use pat_box::*;
 pub use pat_const::*;
 pub use pat_field::*;
@@ -304,75 +307,7 @@ impl Parse for Pattern {
             let _: Token![|] = parser.parse()?;
         }
 
-        fn parse_single(parser: &Parser) -> Result<Pattern, ParseError> {
-            if parser.peek::<PatWild>() {
-                return Ok(Pattern::Wild(parser.parse()?));
-            }
-
-            if parser.peek::<PatRange>() {
-                return Ok(Pattern::Range(parser.parse()?));
-            }
-
-            if parser.peek::<PatRest>() {
-                return Ok(Pattern::Rest(parser.parse()?));
-            }
-
-            if parser.peek::<PatBox>() {
-                return Ok(Pattern::Box(parser.parse()?));
-            }
-
-            if parser.peek::<PatConst>() {
-                return Ok(Pattern::Const(parser.parse()?));
-            }
-
-            if parser.peek::<PatReference>() {
-                return Ok(Pattern::Reference(parser.parse()?));
-            }
-
-            if parser.peek::<PatGroup>() {
-                return Ok(Pattern::Group(parser.parse()?));
-            }
-
-            if parser.peek::<PatSlice>() {
-                return Ok(Pattern::Slice(parser.parse()?));
-            }
-
-            if parser.peek::<PatTuple>() {
-                return Ok(Pattern::Tuple(parser.parse()?));
-            }
-
-            if parser.peek::<PatParen>() {
-                return Ok(Pattern::Paren(parser.parse()?));
-            }
-
-            if parser.peek::<PatMacro>() {
-                return Ok(Pattern::Macro(parser.parse()?));
-            }
-
-            if parser.peek::<PatTupleStruct>() {
-                return Ok(Pattern::TupleStruct(parser.parse()?));
-            }
-
-            if parser.peek::<PatStruct>() {
-                return Ok(Pattern::Struct(parser.parse()?));
-            }
-
-            if parser.peek::<PatIdent>() {
-                return Ok(Pattern::Ident(parser.parse()?));
-            }
-
-            if parser.peek::<PatPath>() {
-                return Ok(Pattern::Path(parser.parse()?));
-            }
-
-            if parser.peek::<PatLit>() {
-                return Ok(Pattern::Lit(parser.parse()?));
-            }
-
-            parser.error("expected pattern").into()
-        }
-
-        let first = parse_single(parser)?;
+        let first = parse::single(parser)?;
 
         if !leading && !parser.peek::<Token![|]>() {
             return Ok(first);
@@ -383,77 +318,13 @@ impl Parse for Pattern {
 
         while parser.peek::<Token![|]>() {
             cases.push_punct(parser.parse()?);
-            cases.push_value(parse_single(parser)?);
+            cases.push_value(parse::single(parser)?);
         }
 
         Ok(Self::Or(PatOr { attrs, cases }))
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        fn skip_single(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-            if cursor.peek::<PatWild>() {
-                return cursor.skip::<PatWild>();
-            }
-
-            if cursor.peek::<PatRange>() {
-                return cursor.skip::<PatRange>();
-            }
-
-            if cursor.peek::<PatRest>() {
-                return cursor.skip::<PatRest>();
-            }
-
-            if cursor.peek::<PatBox>() {
-                return cursor.skip::<PatBox>();
-            }
-
-            if cursor.peek::<PatConst>() {
-                return cursor.skip::<PatConst>();
-            }
-
-            if cursor.peek::<PatReference>() {
-                return cursor.skip::<PatReference>();
-            }
-
-            if cursor.is_delimited(moxy_token::Delim::None) {
-                return cursor.skip::<PatGroup>();
-            }
-
-            if cursor.is_delimited(moxy_token::Delim::Bracket) {
-                return cursor.skip::<PatSlice>();
-            }
-
-            if cursor.is_delimited(moxy_token::Delim::Paren) {
-                if cursor.peek::<PatTuple>() {
-                    return cursor.skip::<PatTuple>();
-                }
-
-                return cursor.skip::<PatParen>();
-            }
-
-            if cursor.peek::<MacroCall>() {
-                return cursor.skip::<MacroCall>();
-            }
-
-            if cursor.peek::<PatTupleStruct>() {
-                return cursor.skip::<PatTupleStruct>();
-            }
-
-            if cursor.peek::<PatStruct>() {
-                return cursor.skip::<PatStruct>();
-            }
-
-            if cursor.peek::<PatIdent>() {
-                return cursor.skip::<PatIdent>();
-            }
-
-            if cursor.peek::<PatPath>() {
-                return cursor.skip::<PatPath>();
-            }
-
-            cursor.skip::<PatLit>()
-        }
-
         let bare = Attributes::skip(cursor)?;
 
         if bare.peek::<Token![|]>() {
@@ -461,11 +332,11 @@ impl Parse for Pattern {
             cursor = cursor.skip::<Token![|]>()?;
         }
 
-        cursor = skip_single(cursor)?;
+        cursor = skip::single(cursor)?;
 
         while cursor.peek::<Token![|]>() {
             cursor = cursor.skip::<Token![|]>()?;
-            cursor = skip_single(cursor)?;
+            cursor = skip::single(cursor)?;
         }
 
         Some(cursor)

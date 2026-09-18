@@ -35,21 +35,6 @@ fn list(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     Some(cursor)
 }
 
-fn pattern_single(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-    cursor.skip::<Pattern>()
-}
-
-fn closure_param(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-    cursor = pattern_single(cursor)?;
-
-    if cursor.peek::<Token![:]>() {
-        cursor = cursor.skip::<Token![:]>()?;
-        cursor = cursor.skip::<Type>()?;
-    }
-
-    Some(cursor)
-}
-
 fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     let mut closure = cursor;
     closure = BoundLifetimes::skip(closure).unwrap_or(closure);
@@ -71,7 +56,7 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
             cursor = cursor.skip::<Token![|]>()?;
 
             while !cursor.peek::<Token![|]>() {
-                cursor = closure_param(cursor)?;
+                cursor = cursor.skip::<ClosureParam>()?;
 
                 if cursor.peek::<Token![,]>() {
                     cursor = cursor.skip::<Token![,]>()?;
@@ -247,7 +232,7 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
         cursor.skip::<Path>()?
     };
 
-    if !qualified && cursor.peek::<Token![!]>() {
+    if !qualified && cursor.peek::<Token![!]>() && !cursor.peek::<Token![!=]>() {
         return MacroCall::skip(path_start);
     }
 
@@ -285,7 +270,7 @@ fn postfix(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
             continue;
         }
 
-        if cursor.peek::<Token![.]>() {
+        if cursor.peek::<Token![.]>() && !cursor.peek::<Token![..]>() && !cursor.peek::<Token![..=]>() {
             cursor = cursor.skip::<Token![.]>()?;
 
             if cursor.peek::<Token![await]>() {

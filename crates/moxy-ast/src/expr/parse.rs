@@ -17,7 +17,7 @@ fn optional_expr(parser: &Parser, context: ExprContext) -> Result<Option<Box<Exp
 fn assignment(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
     let left = range(parser, attrs.clone(), context)?;
 
-    if parser.peek::<Token![=]>() {
+    if parser.peek::<Token![=]>() && !parser.peek::<Token![==]>() && !parser.peek::<Token![=>]>() {
         return Ok(ExprAssign {
             attrs: attrs.clone(),
             left: Box::new(left),
@@ -166,7 +166,7 @@ fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
             continue;
         }
 
-        if parser.peek::<Token![.]>() {
+        if parser.peek::<Token![.]>() && !parser.peek::<Token![..]>() && !parser.peek::<Token![..=]>() {
             if parser.cursor().offset(1).peek::<Token![await]>() {
                 expr = ExprAwait {
                     attrs: Default::default(),
@@ -457,12 +457,11 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
             (None, parser.parse()?)
         };
 
-        if qself.is_none() && parser.peek::<Token![!]>() {
+        if qself.is_none() && parser.peek::<Token![!]>() && !parser.peek::<Token![!=]>() {
             let mac = MacroCall {
                 path,
                 bang: parser.parse()?,
                 body: parser.parse()?,
-                semi: parser.parse()?,
             };
 
             return Ok(ExprMacro { attrs, mac }.into());
