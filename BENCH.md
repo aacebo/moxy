@@ -17,19 +17,19 @@ Continuous Criterion benchmarks comparing **moxy** with **syn**.
 
 | Benchmark | moxy | syn | Faster |
 | --- | ---: | ---: | :--- |
-| `parse_expr/control_flow` |    23.717 µs |    34.207 µs | **moxy 30.7%** |
-| `parse_file/attributed_uses` |    70.270 µs |    60.600 µs | **syn 13.8%** |
-| `parse_file/attributes_derives` |   115.730 µs |   114.900 µs | **syn 0.7%** |
-| `parse_file/large_items` |  1092.700 µs |  3300.500 µs | **moxy 66.9%** |
-| `parse_file/macro_heavy` |   105.880 µs |   125.170 µs | **moxy 15.4%** |
-| `parse_file/mixed_items` |    65.417 µs |    76.188 µs | **moxy 14.1%** |
-| `parse_invalid/deep_generic` |    13.997 µs |    19.430 µs | **moxy 28.0%** |
-| `parse_invalid/expression` |     1.227 µs |     2.034 µs | **moxy 39.7%** |
-| `parse_invalid/large_file_tail` |   322.030 µs |   200.760 µs | **syn 37.7%** |
-| `parse_invalid/macro` |     4.549 µs |     2.673 µs | **syn 41.2%** |
-| `parse_type/generic_depth_8` |    10.984 µs |    14.638 µs | **moxy 25.0%** |
-| `parse_type/generic_depth_32` |    31.893 µs |    42.796 µs | **moxy 25.5%** |
-| `parse_type/generic_depth_128` |   122.670 µs |   157.940 µs | **moxy 22.3%** |
+| `parse_expr/control_flow` |    23.680 µs |    32.075 µs | **moxy 26.2%** |
+| `parse_file/attributed_uses` |    74.311 µs |    62.648 µs | **syn 15.7%** |
+| `parse_file/attributes_derives` |   110.250 µs |   106.030 µs | **syn 3.8%** |
+| `parse_file/large_items` |  1105.800 µs |  2881.900 µs | **moxy 61.6%** |
+| `parse_file/macro_heavy` |    99.617 µs |   113.350 µs | **moxy 12.1%** |
+| `parse_file/mixed_items` |    63.236 µs |    71.360 µs | **moxy 11.4%** |
+| `parse_invalid/deep_generic` |    15.068 µs |    19.301 µs | **moxy 21.9%** |
+| `parse_invalid/expression` |     1.260 µs |     2.082 µs | **moxy 39.5%** |
+| `parse_invalid/large_file_tail` |   336.750 µs |   202.800 µs | **syn 39.8%** |
+| `parse_invalid/macro` |     5.100 µs |     2.806 µs | **syn 45.0%** |
+| `parse_type/generic_depth_8` |    11.968 µs |    14.638 µs | **moxy 18.2%** |
+| `parse_type/generic_depth_32` |    35.119 µs |    43.067 µs | **moxy 18.5%** |
+| `parse_type/generic_depth_128` |   132.930 µs |   163.780 µs | **moxy 18.8%** |
 
 ## Parse File — Attributed Uses
 
