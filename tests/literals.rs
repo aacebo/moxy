@@ -200,3 +200,18 @@ fn proc_macro_boolean_literals_complete_the_syntax_pipeline() {
         assert_eq!(moxy::fmt!(&expression).unwrap(), source);
     }
 }
+
+#[cfg(feature = "proc-macro2")]
+#[test]
+fn boolean_literals_bridge_back_to_proc_macro_identifiers() {
+    for source in ["true", "false"] {
+        let owned: moxy::token::TokenStream = source.parse().unwrap();
+        assert!(owned[0].as_literal().unwrap().is_bool());
+        let bridged = proc_macro2::TokenStream::from(owned);
+        let tree = bridged.into_iter().next().unwrap();
+        assert!(
+            matches!(&tree, proc_macro2::TokenTree::Ident(ident) if ident == source),
+            "{tree:?}"
+        );
+    }
+}

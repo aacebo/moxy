@@ -96,6 +96,7 @@ pub fn __parse_owned<T: Parse>(source: String, config: ParseConfig) -> Result<T,
 
 #[doc(hidden)]
 pub mod __private {
+    pub use moxy_token;
     pub use moxy_token::TokenStream;
     pub use moxy_token::source::glob;
 }
