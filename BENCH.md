@@ -15,11 +15,11 @@ Continuous Criterion benchmarks comparing **moxy** with **syn**.
 
 | Benchmark                    |       moxy |      syn | Faster          |
 | ---------------------------- | ---------: | -------: | :-------------- |
-| `parse_expr/control_flow`    |  23.916 µs | 33.077 µs | **moxy 27.7%** |
-| `parse_file/attributed_uses` |  70.639 µs | 61.314 µs | **syn 13.2%**  |
-| `parse_file/mixed_items`     |  69.135 µs | 77.272 µs | **moxy 10.5%** |
-| `parse_invalid/expression`   |   1.196 µs |  2.130 µs | **moxy 43.8%** |
-| `parse_type/nested`          | 148.270 µs | 15.744 µs | **syn 89.4%**  |
+| `parse_expr/control_flow`    | 23.494 µs | 31.448 µs | **moxy 25.3%** |
+| `parse_file/attributed_uses` | 70.113 µs | 59.960 µs | **syn 14.5%**  |
+| `parse_file/mixed_items`     | 65.181 µs | 73.156 µs | **moxy 10.9%** |
+| `parse_invalid/expression`   |  1.174 µs |  2.021 µs | **moxy 41.9%** |
+| `parse_type/nested`          | 12.185 µs | 15.929 µs | **moxy 23.5%** |
 
 ## Parse File — Attributed Uses
 
