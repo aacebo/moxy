@@ -130,6 +130,7 @@ impl ToTokens for TypeBareFn {
     }
 }
 
+/// An AST representation of Rust bare fn params syntax.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct BareFnParams {

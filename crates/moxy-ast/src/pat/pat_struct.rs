@@ -80,6 +80,7 @@ impl ToTokens for PatStruct {
     }
 }
 
+/// The AST node for a Rust struct body pattern.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatStructBody {

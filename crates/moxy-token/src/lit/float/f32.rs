@@ -2,6 +2,7 @@ use super::LitFloat;
 use crate::lit::Lit;
 use crate::{Span, Spanner};
 
+/// A parsed Rust f32 literal token.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(into = "String"))]
 pub struct LitF32 {

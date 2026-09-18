@@ -1,5 +1,24 @@
 #![cfg_attr(nightly, feature(proc_macro_diagnostic))]
 
+//! # Moxy diagnostics
+//!
+//! Span-aware diagnostics for procedural macros.
+//!
+//! ## Quick start
+//!
+//! Build an error and optional child guidance, then emit it as tokens:
+//!
+//! ```ignore
+//! let tokens = moxy::error!(
+//!     "missing field",
+//!     [moxy::help!("add `name: String`")],
+//! ).emit();
+//! ```
+//!
+//! [`error!`], [`warn!`], [`note!`], and [`help!`] return [`Diagnostic`] values.
+//! On stable Rust, emitted errors become `compile_error!` tokens; nightly
+//! compiler diagnostics are used when available.
+
 use moxy_token::Token;
 
 extern crate proc_macro;
@@ -198,6 +217,13 @@ macro_rules! help {
     }};
 }
 
+/// A structured diagnostic with a severity, optional spans and message, and
+/// nested child diagnostics.
+///
+/// Construct values through [`Diagnostic::new`] or the severity macros, then
+/// call [`Diagnostic::emit`] from a procedural-macro expansion. On stable Rust,
+/// error diagnostics produce `compile_error!` tokens; non-errors do not emit
+/// fallback tokens.
 #[derive(Debug, Clone)]
 pub struct Diagnostic {
     level: Level,
@@ -207,31 +233,41 @@ pub struct Diagnostic {
 }
 
 impl Diagnostic {
+    /// Starts building a diagnostic.
     pub fn new() -> build::Builder {
         build::Builder::new()
     }
 
+    /// Returns this diagnostic's severity.
     pub fn level(&self) -> Level {
         self.level
     }
 
+    /// Returns the spans associated with this diagnostic.
     pub fn spans(&self) -> &[Span] {
         &self.spans
     }
 
+    /// Returns the primary message, if one was supplied.
     pub fn message(&self) -> Option<&str> {
         self.message.as_deref()
     }
 
+    /// Returns diagnostics attached as children.
     pub fn children(&self) -> &[Self] {
         &self.children
     }
 
+    /// Attaches a child diagnostic and returns the updated value.
     pub fn child(mut self, child: Self) -> Self {
         self.children.push(child);
         self
     }
 
+    /// Emits the diagnostic through compiler diagnostics when available.
+    ///
+    /// On stable Rust, error diagnostics are returned as `compile_error!`
+    /// tokens; warnings, notes, and help diagnostics return an empty stream.
     pub fn emit(self) -> TokenStream {
         #[cfg(nightly)]
         if proc_macro::is_available() {
@@ -246,6 +282,7 @@ impl Diagnostic {
         self.to_compile_error()
     }
 
+    /// Renders this diagnostic and its children as `compile_error!` tokens.
     pub fn to_compile_error(&self) -> TokenStream {
         let mut tokens = TokenStream::new();
         let start = self.spans.first().copied().unwrap_or_default();
@@ -359,6 +396,7 @@ impl ToTokens for Diagnostic {
     }
 }
 
+/// Builder types used to configure a [`Diagnostic`] before emission.
 #[doc(hidden)]
 pub mod build {
     use super::*;

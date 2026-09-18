@@ -1,5 +1,6 @@
 use crate::{Attributes, Meta, Visit};
 
+/// A tagged AST representation of Rust query target syntax.
 #[derive(Debug, Clone, Copy)]
 pub enum QueryTarget<'a> {
     Attributes(&'a Attributes),

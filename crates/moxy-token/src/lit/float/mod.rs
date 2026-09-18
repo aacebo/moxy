@@ -7,6 +7,7 @@ pub use f64::*;
 use crate::lex::{Cursor, LexError, Scan};
 use crate::{Lit, Span, Spanner};
 
+/// A parsed Rust float literal token.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(untagged))]
 pub enum LitFloat {

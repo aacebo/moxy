@@ -1,5 +1,6 @@
 use crate::Span;
 
+/// An error returned while lexing Rust source into tokens.
 #[derive(Debug, Clone)]
 pub struct LexError {
     span: Span,

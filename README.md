@@ -228,8 +228,8 @@ let tokens = Generated { value: "seven".into() }.to_token_stream();
 assert!(tokens.to_string().contains("VALUE"));
 ```
 
-Add `#[debug]` beside `#[template]` to print the parsed declaration and
-generated implementation as compiler notes.
+Add `#[moxy(debug)]` beside `#[moxy(template { ... })]` to print the parsed
+declaration and generated implementation as compiler notes.
 
 ### Integrations
 

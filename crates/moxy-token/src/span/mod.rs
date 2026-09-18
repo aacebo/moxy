@@ -9,10 +9,12 @@ pub use range::*;
 
 use crate::source::Location;
 
+/// Provides the source span occupied by a value.
 pub trait Spanner {
     fn span(&self) -> Span;
 }
 
+/// A compiler or fallback source span.
 #[derive(Debug, Copy, Clone)]
 pub enum Span {
     Compiler(proc_macro::Span),

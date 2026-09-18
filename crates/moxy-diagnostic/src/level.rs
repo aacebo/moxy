@@ -1,43 +1,56 @@
+/// The severity assigned to a [`crate::Diagnostic`].
 #[derive(Debug, Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
 pub enum Level {
+    /// A severity unavailable from the compiler or not yet specified.
     Unknown,
+    /// Supplemental information about a diagnostic.
     Note,
+    /// Suggested corrective action.
     Help,
+    /// A non-fatal problem.
     Warning,
+    /// A compilation-stopping problem.
     Error,
 }
 
 impl Level {
+    /// Returns whether this is [`Level::Unknown`].
     #[inline]
     pub fn is_unknown(&self) -> bool {
         matches!(self, Self::Unknown)
     }
 
+    /// Returns whether this is [`Level::Note`].
     #[inline]
     pub fn is_note(&self) -> bool {
         matches!(self, Self::Note)
     }
 
+    /// Returns whether this is [`Level::Help`].
     #[inline]
     pub fn is_help(&self) -> bool {
         matches!(self, Self::Help)
     }
 
+    /// Returns whether this is [`Level::Warning`].
     #[inline]
     pub fn is_warning(&self) -> bool {
         matches!(self, Self::Warning)
     }
 
+    /// Returns whether this is [`Level::Error`].
     #[inline]
     pub fn is_error(&self) -> bool {
         matches!(self, Self::Error)
     }
 
+    /// Returns the discriminant used for this severity.
     #[inline]
     pub fn as_u8(&self) -> u8 {
         *self as u8
     }
 
+    /// Returns the lowercase label used when displaying this severity.
     #[inline]
     pub fn as_str(&self) -> &'static str {
         match self {

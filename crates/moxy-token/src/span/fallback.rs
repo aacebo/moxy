@@ -1,5 +1,6 @@
 use crate::source::{Location, SourceMap};
 
+/// A source range associated with a token.
 #[derive(Debug, Default, Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Span {

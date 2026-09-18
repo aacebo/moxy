@@ -35,6 +35,7 @@ fn spacing_after(text: &str, cursor: Cursor<'_>) -> Spacing {
 
 macro_rules! define_punct {
     ($($name:ident[$is_method:ident, $as_method:ident] => $text:literal),+ $(,)?) => {
+        /// A Rust punctuation token.
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
         pub enum Punct {
             $($name($name),)*
@@ -141,6 +142,7 @@ macro_rules! define_punct {
         }
 
         $(
+            #[doc = concat!("The Rust punctuation token `", $text, "`. ")]
             #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
             pub struct $name {
                 span: Span,

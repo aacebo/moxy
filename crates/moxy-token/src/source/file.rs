@@ -7,6 +7,7 @@ use crate::span::fallback::Span;
 
 /// Primarily used to map spans (0 based character index ranges)
 /// to bytes.
+/// Source text with a stable identifier for span resolution.
 #[derive(Debug)]
 pub struct Source {
     /// the filepath if this source belongs to a file

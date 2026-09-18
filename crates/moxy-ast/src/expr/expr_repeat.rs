@@ -29,6 +29,7 @@ impl ToTokens for ExprRepeat {
     }
 }
 
+/// An AST representation of Rust repeat inner syntax.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct RepeatInner {

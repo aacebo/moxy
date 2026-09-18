@@ -2,6 +2,7 @@ use crate::lex::Cursor;
 use crate::lit::Lit;
 use crate::{LexError, Scan, Span, Spanner};
 
+/// A parsed Rust int literal token.
 #[derive(Debug, Default, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(into = "String"))]
 pub struct LitInt {
@@ -289,6 +290,7 @@ impl Lit {
     }
 }
 
+/// The radix used by an integer literal.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[repr(u8)]
@@ -346,6 +348,7 @@ impl std::str::FromStr for Radix {
     }
 }
 
+/// The optional primitive-integer suffix of an integer literal.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum IntSuffix {

@@ -47,6 +47,7 @@ macro_rules! define_visit {
             }
         )+
     ) => {
+/// A trait used while working with Moxy AST syntax.
         pub trait Visit<'ast>: Sized {
             $(
                 #[allow(unused_variables)]
@@ -56,6 +57,7 @@ macro_rules! define_visit {
             )+
         }
 
+/// A trait used while working with Moxy AST syntax.
         pub trait VisitMut: Sized {
             $(
                 #[allow(unused_variables)]

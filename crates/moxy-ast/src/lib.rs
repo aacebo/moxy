@@ -1,11 +1,41 @@
+//! # Moxy AST
+//!
+//! Typed, lossless Rust syntax trees built on `moxy-token`. Each top-level
+//! grammar family—such as [`Expr`], [`Item`], [`Pattern`], and [`Type`]—is an
+//! enum whose variants hold the concrete syntax node.
+//!
+//! ## Quick start
+//!
+//! Parse at the grammar level needed by a tool, inspect the resulting node, and
+//! emit it again with `moxy::token::ToTokens`:
+//!
+//! ```
+//! use moxy::ast::Item;
+//!
+//! let item: Item = moxy::parse!("pub struct User;").unwrap();
+//! assert!(item.is_struct());
+//! ```
+//!
+//! ## Traversal and integrations
+//!
+//! Use [`Visit`] or [`VisitMut`] to traverse syntax trees. Enable `serde` to
+//! serialize supported nodes. The `parse!` macro also accepts `trace = true` to
+//! print parser activity while debugging a grammar.
+
 mod _crate;
+/// Generic argument syntax.
 pub mod args;
+/// Attributes and attribute metadata.
 pub mod attr;
 mod declaration;
 mod delimited;
+/// Expression syntax.
 pub mod expr;
+/// Struct, enum, and union field syntax.
 pub mod fields;
+/// Generic parameters, bounds, and where clauses.
 pub mod generics;
+/// Item-level Rust syntax.
 pub mod item;
 mod label;
 mod leaf;
@@ -13,16 +43,25 @@ mod macro_call;
 #[macro_use]
 mod macros;
 mod lifetime;
+/// Members of traits, implementations, and foreign modules.
 pub mod member;
 mod misc;
+/// Pattern syntax.
 pub mod pat;
+/// Path syntax and path arguments.
 pub mod path;
 mod punctuated;
+/// Function signatures and parameters.
 pub mod sig;
+/// Statement syntax.
 pub mod stmt;
+/// Type syntax.
 pub mod ty;
+/// `use`-tree syntax.
 pub mod use_tree;
+/// Visibility syntax.
 pub mod vis;
+/// Read-only and mutable AST traversal traits.
 pub mod visit;
 #[macro_use]
 mod parse;

@@ -2,6 +2,7 @@ use crate::Cursor;
 
 use super::*;
 
+/// A tagged AST representation of Rust meta argument syntax.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(untagged))]
 pub enum MetaArgument {

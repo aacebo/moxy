@@ -2,6 +2,7 @@ use crate::lex::{Cursor, LexError, Scan};
 use crate::span::DelimSpan;
 use crate::{Delim, Span, TokenStream, TokenTree};
 
+/// A delimited sequence of token trees.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Group {
     pub(crate) delim: Delim,

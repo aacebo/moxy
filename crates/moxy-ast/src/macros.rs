@@ -64,6 +64,10 @@ macro_rules! punctuated {
     }};
 }
 
+/// Maps a Rust punctuation or keyword spelling to its corresponding AST token type.
+///
+/// For example, `Token![::]` is the AST's `PathSep` token type; other token
+/// spellings are delegated to `moxy::token::Token!`.
 #[macro_export]
 macro_rules! Token {
     [&&]    => { $crate::AndAnd };

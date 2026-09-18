@@ -1,3 +1,19 @@
+//! # Moxy formatting
+//!
+//! Pretty-printing for Moxy syntax trees.
+//!
+//! ## Quick start
+//!
+//! Parse a node, then pass it to [`fmt!`]:
+//!
+//! ```ignore
+//! let item: moxy::ast::Item = moxy::parse!("struct User { id: u64 }")?;
+//! let source = moxy::fmt!(&item)?;
+//! ```
+//!
+//! [`FmtConfig`] controls maximum width, indentation, and line endings.
+//! Implement [`Format`] to integrate custom nodes with [`Formatter`].
+
 mod ast;
 mod config;
 mod error;

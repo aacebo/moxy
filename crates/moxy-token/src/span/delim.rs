@@ -1,5 +1,6 @@
 use crate::Span;
 
+/// The opening and closing spans of a delimited token group.
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct DelimSpan {

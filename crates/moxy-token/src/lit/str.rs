@@ -2,6 +2,7 @@ use crate::lex::{Cursor, LexError, Scan};
 use crate::lit::Lit;
 use crate::{Span, Spanner};
 
+/// A parsed Rust str literal token.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(into = "String"))]
 pub struct LitStr {

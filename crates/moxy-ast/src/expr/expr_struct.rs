@@ -32,6 +32,7 @@ impl ToTokens for ExprStruct {
     }
 }
 
+/// An AST representation of Rust struct body syntax.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StructBody {

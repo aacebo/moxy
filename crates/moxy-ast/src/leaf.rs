@@ -4,13 +4,13 @@ use crate::{Cursor, Parse, ParseError, Parser, Token};
 
 macro_rules! define_leaf {
     ($(
-        $(#[doc = $doc:literal])?
+        $(#[doc = $doc:literal])*
         pub enum $name:ident {
             $($variant:ident $(=> $token:ty)?),+ $(,)?
         }
     )+) => {
         $(
-            $(#[doc = $doc])?
+            $(#[doc = $doc])*
             #[derive(Debug, Clone)]
             pub enum $name {
                 $($variant $(( $token ))? ,)+
@@ -163,6 +163,7 @@ macro_rules! define_leaf {
 
 define_leaf! {
     /// A binary operator (`+`, `==`, `&&`, ...).
+/// A tagged AST representation of Rust bin op syntax.
     pub enum BinOp {
         ShlAssign => Token![<<=],
         ShrAssign => Token![>>=],
@@ -195,6 +196,7 @@ define_leaf! {
     }
 
     /// A unary operator (`*`, `!`, `-`).
+/// A tagged AST representation of Rust un op syntax.
     pub enum UnOp {
         Deref => Token![*],
         Not => Token![!],
@@ -202,60 +204,70 @@ define_leaf! {
     }
 
     /// Whether a function is `async`.
+/// A tagged AST representation of Rust asyncness syntax.
     pub enum Asyncness {
         Async => Token![async],
         Sync,
     }
 
     /// Whether an item is `const`.
+/// A tagged AST representation of Rust constness syntax.
     pub enum Constness {
         Const => Token![const],
         NoConst,
     }
 
     /// Whether an item is `unsafe`.
+/// A tagged AST representation of Rust unsafety syntax.
     pub enum Unsafety {
         Unsafe => Token![unsafe],
         Safe,
     }
 
     /// Whether an impl item is `default`.
+/// A tagged AST representation of Rust defaultness syntax.
     pub enum Defaultness {
         Default => Token![default],
         Final,
     }
 
     /// Whether a binding, reference, or pointer is `mut`.
+/// A tagged AST representation of Rust mutability syntax.
     pub enum Mutability {
         Mutable => Token![mut],
         Immutable,
     }
 
     /// Whether a closure is `static` (immovable).
+/// A tagged AST representation of Rust movability syntax.
     pub enum Movability {
         Static => Token![static],
         Movable,
     }
 
     /// The limits of a range expression (`..` or `..=`).
+/// A tagged AST representation of Rust range limits syntax.
     pub enum RangeLimits {
         Closed => Token![..=],
         HalfOpen => Token![..],
     }
 
     /// A trait bound modifier (`?Sized`).
+/// A tagged AST representation of Rust trait bound modifier syntax.
     pub enum TraitBoundModifier {
         Maybe => Token![?],
         None,
     }
 
     /// The polarity of a trait bound (`Trait` or `!Trait`).
+/// A tagged AST representation of Rust bound polarity syntax.
     pub enum BoundPolarity {
         Negative => Token![!],
         Positive,
     }
 
     /// Whether a raw pointer is `*const` or `*mut`.
+/// A tagged AST representation of Rust pointer mutability syntax.
     pub enum PointerMutability {
         Const => Token![const],
         Mut => Token![mut],

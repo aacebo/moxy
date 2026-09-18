@@ -7,6 +7,7 @@ thread_local! {
     static GLOBAL: RefCell<SourceMap> = RefCell::new(SourceMap::new());
 }
 
+/// A collection of source files used to resolve token locations.
 #[derive(Debug, Default)]
 pub struct SourceMap(Vec<Source>);
 

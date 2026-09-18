@@ -1,4 +1,5 @@
 /// 0 indexed char based location
+/// A byte, line, and column location within a source file.
 #[derive(Debug, Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub struct Location {
     index: usize,

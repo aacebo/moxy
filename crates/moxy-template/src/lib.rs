@@ -1,3 +1,23 @@
+//! # Moxy templates
+//!
+//! Procedural macros for runtime token templates and identifier pasting.
+//!
+//! ## Template syntax
+//!
+//! [`template!`] returns a `moxy::token::TokenStream`. `{{ expr }}` emits a
+//! value implementing `moxy::token::ToTokens`; `@for`, `@if`/`@else`, and
+//! `@match` evaluate ordinary Rust control flow while building the stream.
+//!
+//! ```ignore
+//! let fields = ["id", "name"];
+//! let tokens = moxy::template! {
+//!     struct User { @for (field in fields) { {{ field }}: String, } }
+//! };
+//! ```
+//!
+//! [`paste!`] instead joins tokens inside `{{ ... }}` into an identifier in
+//! declaration position, such as `fn {{ get_ value }}() {}`.
+
 mod ast;
 
 use ast::{Paste, Template};

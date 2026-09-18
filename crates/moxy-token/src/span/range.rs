@@ -1,5 +1,6 @@
 use crate::Span;
 
+/// A span covering a byte range in a source file.
 #[derive(Debug, Copy, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct RangeSpan {

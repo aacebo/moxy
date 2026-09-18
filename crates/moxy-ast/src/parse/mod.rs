@@ -24,7 +24,7 @@ use moxy_token::TokenStream;
 ///
 /// # Example
 /// ```
-/// use moxy_ast::*;
+/// use moxy::ast::*;
 ///
 /// let token: Fn = parse!("fn").unwrap();
 /// let token = parse!("fn" as Fn).unwrap();
@@ -52,7 +52,7 @@ macro_rules! parse {
 ///
 /// # Example
 /// ```ignore
-/// use moxy_ast::*;
+/// use moxy::ast::*;
 ///
 /// let tokens = parse_files!("src/**/*.rs");
 /// ```
@@ -101,6 +101,7 @@ pub mod __private {
     pub use moxy_token::source::glob;
 }
 
+/// A trait used while working with Moxy AST syntax.
 pub trait Parse: Sized {
     fn peek(cursor: Cursor<'_>) -> bool;
     fn parse(parser: &Parser) -> Result<Self, ParseError>;

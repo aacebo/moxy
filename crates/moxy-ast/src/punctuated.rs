@@ -5,6 +5,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
+/// An AST representation of Rust punctuated syntax.
 pub struct Punctuated<T, P> {
     pub inner: Vec<(T, P)>,
     pub last: Option<Box<T>>,
@@ -407,6 +408,7 @@ impl<T: ToTokens, P: ToTokens> ToTokens for Punctuated<T, P> {
     }
 }
 
+/// A tagged AST representation of Rust pair syntax.
 #[derive(Debug)]
 pub enum Pair<T, P> {
     Punctuated(T, P),
@@ -482,6 +484,7 @@ impl<T: ToTokens, P: ToTokens> ToTokens for Pair<T, P> {
     }
 }
 
+/// An AST representation of Rust into iter syntax.
 pub struct IntoIter<T> {
     inner: vec::IntoIter<T>,
 }
@@ -571,6 +574,7 @@ where
     }
 }
 
+/// An AST representation of Rust iter syntax.
 pub struct Iter<'a, T: 'a> {
     inner: Box<dyn IterTrait<'a, T> + 'a>,
 }
@@ -645,6 +649,7 @@ impl<'a, T: 'a, I> IterMutTrait<'a, T> for I where
 {
 }
 
+/// An AST representation of Rust iter mut syntax.
 pub struct IterMut<'a, T: 'a> {
     inner: Box<dyn IterMutTrait<'a, T> + 'a>,
 }
@@ -675,6 +680,7 @@ impl<'a, T> ExactSizeIterator for IterMut<'a, T> {
 
 // Pairs
 
+/// An AST representation of Rust pairs syntax.
 pub struct Pairs<'a, T: 'a, P: 'a> {
     inner: slice::Iter<'a, (T, P)>,
     last: std::option::IntoIter<&'a T>,
@@ -721,6 +727,7 @@ impl<'a, T, P> Clone for Pairs<'a, T, P> {
 
 // PairsMut
 
+/// An AST representation of Rust pairs mut syntax.
 pub struct PairsMut<'a, T: 'a, P: 'a> {
     inner: slice::IterMut<'a, (T, P)>,
     last: std::option::IntoIter<&'a mut T>,
@@ -758,6 +765,7 @@ impl<'a, T, P> ExactSizeIterator for PairsMut<'a, T, P> {
 
 // IntoPairs
 
+/// An AST representation of Rust into pairs syntax.
 pub struct IntoPairs<T, P> {
     inner: vec::IntoIter<(T, P)>,
     last: std::option::IntoIter<T>,

@@ -33,6 +33,7 @@ impl Meta {
     }
 }
 
+/// An AST representation of Rust query builder syntax.
 #[derive(Clone)]
 pub struct QueryBuilder<'a, T = Meta> {
     target: QueryTarget<'a>,

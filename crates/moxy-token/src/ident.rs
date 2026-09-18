@@ -12,8 +12,8 @@ use crate::{Span, TokenTree};
 ///
 /// # Examples
 ///
-/// ```
-/// use moxy_token::ident;
+/// ```ignore
+/// use moxy::token::ident;
 ///
 /// // Bare identifier
 /// let counter = ident!(counter);
@@ -70,6 +70,7 @@ macro_rules! ident {
     }};
 }
 
+/// A Rust identifier token, including its source span and raw-identifier form.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Ident {
     text: Box<str>,

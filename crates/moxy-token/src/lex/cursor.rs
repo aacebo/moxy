@@ -5,6 +5,7 @@ use super::LexError;
 
 /// Zero-copy immutable cursor over source text.
 /// Each parse step returns a new advanced cursor.
+/// A copyable cursor over source text during lexing.
 #[derive(Copy, Clone)]
 pub struct Cursor<'a> {
     rest: &'a str,

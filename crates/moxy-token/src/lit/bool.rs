@@ -2,6 +2,7 @@ use crate::lex::Cursor;
 use crate::lit::Lit;
 use crate::{Ident, LexError, Scan, Span, Spanner};
 
+/// A parsed Rust bool literal token.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(into = "String"))]
 pub struct LitBool {

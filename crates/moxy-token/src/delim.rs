@@ -1,3 +1,4 @@
+/// The delimiter kind of a grouped token sequence.
 #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(rename_all = "lowercase"))]
 pub enum Delim {

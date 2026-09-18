@@ -4,6 +4,7 @@ use crate::{Span, Spanner, TokenStream, TokenTree};
 
 macro_rules! define_keyword {
     ($($name:ident[$is_method:ident, $as_method:ident] => $text:literal),+ $(,)?) => {
+        /// A Rust keyword token.
         #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
         pub enum Keyword {
             $($name($name),)*
@@ -98,6 +99,7 @@ macro_rules! define_keyword {
         }
 
         $(
+            #[doc = concat!("The Rust keyword token `", $text, "`. ")]
             #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
             pub struct $name {
                 span: Span,

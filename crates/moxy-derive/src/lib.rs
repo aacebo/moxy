@@ -1,3 +1,33 @@
+//! # Moxy derive
+//!
+//! Derive support for `moxy::token::ToTokens`.
+//!
+//! ## Syntax
+//!
+//! `#[derive(ToTokens)]` requires `#[moxy(template { ... })]`. Its template is
+//! expanded by `moxy::template!`, and `self` is available in the generated
+//! `to_tokens` method.
+//!
+//! ```ignore
+//! #[derive(moxy::ToTokens)]
+//! #[moxy(template { struct {{ self.name }}; })]
+//! struct Generated { name: String }
+//! ```
+//!
+//! ## Debugging expansions
+//!
+//! Add `#[moxy(debug)]` alongside the template attribute to emit compiler notes
+//! with the parsed input declaration and the generated `ToTokens`
+//! implementation. The option is intended for inspecting derive output during
+//! development and does not change the generated implementation.
+//!
+//! ```ignore
+//! #[derive(moxy::ToTokens)]
+//! #[moxy(template { struct {{ self.name }}; })]
+//! #[moxy(debug)]
+//! struct Generated { name: String }
+//! ```
+
 extern crate self as moxy;
 
 mod token {
@@ -11,6 +41,40 @@ use moxy_fmt::fmt;
 use moxy_template::template;
 use moxy_token::{Spanner, TokenStream};
 
+/// Derives [`moxy::token::ToTokens`] from a token template.
+///
+/// The derive generates an implementation of `ToTokens` for the annotated
+/// type. Its required `#[moxy(template { ... })]` attribute contains a
+/// [`moxy::template!`] body; the generated method makes `self` available to
+/// template interpolations.
+///
+/// # Example
+///
+/// ```ignore
+/// use moxy::token::ToTokenStream;
+///
+/// #[derive(moxy::ToTokens)]
+/// #[moxy(template {
+///     pub const GENERATED: &str = {{ self.value }};
+/// })]
+/// struct Model {
+///     value: String,
+/// }
+///
+/// let tokens = Model { value: "ready".into() }.to_token_stream();
+/// assert_eq!(tokens.to_string(), "pub const GENERATED : & str = \"ready\" ;");
+/// ```
+///
+/// # Attributes
+///
+/// - `#[moxy(template { ... })]` is required exactly once. Its value must be a
+///   braced Rust token block accepted by `moxy::template!`.
+/// - `#[moxy(debug)]` is optional. It emits compiler notes containing the parsed
+///   input declaration and the generated `ToTokens` implementation, which is
+///   useful when inspecting an expansion during development.
+///
+/// A missing, repeated, or malformed template attribute produces a
+/// span-targeted compiler error.
 #[proc_macro_derive(ToTokens, attributes(moxy))]
 pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let target = TokenStream::from(target);

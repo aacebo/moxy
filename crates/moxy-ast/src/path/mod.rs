@@ -8,6 +8,10 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
+/// Constructs a [`Path`] from identifier segments separated by `::`.
+///
+/// `path!(std::collections::HashMap)` parses the equivalent Rust path and
+/// panics when its input is not valid path syntax.
 #[macro_export]
 macro_rules! path {
     ($x:ident) => { $crate::Path::try_from_str(stringify!($x)).expect("invalid syntax") };

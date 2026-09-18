@@ -3,6 +3,7 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use super::{Receiver, Variadic};
 use crate::*;
 
+/// An AST representation of Rust fn params syntax.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FnParams {

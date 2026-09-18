@@ -5,6 +5,7 @@ use crate::lex::{Cursor, LexError, Scan};
 use crate::span::DelimSpan;
 use crate::{Span, Spanner, Token, TokenTree};
 
+/// An ordered, owned sequence of Rust token trees.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 pub struct TokenStream(Vec<TokenTree>);
 

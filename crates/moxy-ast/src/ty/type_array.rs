@@ -39,6 +39,7 @@ impl ToTokens for TypeArray {
     }
 }
 
+/// An AST representation of Rust array inner syntax.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ArrayInner {

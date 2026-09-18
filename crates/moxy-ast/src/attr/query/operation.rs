@@ -1,5 +1,6 @@
 use std::sync::Arc;
 
+/// A tagged AST representation of Rust operation syntax.
 #[derive(Default, Clone)]
 pub enum Operation<T> {
     #[default]

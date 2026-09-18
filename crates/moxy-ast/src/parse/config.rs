@@ -1,9 +1,11 @@
+/// An AST representation of Rust parse config syntax.
 #[derive(Debug, Default, Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize, serde::Deserialize))]
 pub struct ParseConfig {
     pub trace: bool,
 }
 
+/// A tagged AST representation of Rust ansi syntax.
 pub enum Ansi {
     Blue,
     Green,

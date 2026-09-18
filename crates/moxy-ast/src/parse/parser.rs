@@ -5,6 +5,7 @@ use moxy_token::{Delim, Ident, Span, ToTokens, TokenStream, TokenTree};
 
 use crate::parse::{Ansi, Cursor, Parse, ParseConfig, ParseError};
 
+/// An AST representation of Rust parser syntax.
 #[derive(Clone)]
 pub struct Parser<'a> {
     cursor: Cell<Cursor<'a>>,

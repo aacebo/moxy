@@ -1,7 +1,9 @@
 use crate::lex::{Cursor, LexError, Scan};
 use crate::{Span, Spanner, ToTokens, TokenStream, TokenTree};
 
+/// Floating-point literal parsing and representation.
 pub mod float;
+/// Integer literal parsing, radix, and suffix representation.
 pub mod int;
 
 mod r#bool;
@@ -22,6 +24,7 @@ pub use int::*;
 pub use str::*;
 pub use verbatim::*;
 
+/// A parsed Rust  literal token.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(into = "String"))]
 pub enum Lit {

@@ -1,6 +1,7 @@
 use crate::lex::{Cursor, Scan};
 use crate::{Delim, Group, Ident, Keyword, Lit, Punct, Span, Spanner, ToTokens, TokenStream};
 
+/// One Rust token: a group, identifier, literal, punctuation mark, or keyword.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(untagged))]
 pub enum TokenTree {

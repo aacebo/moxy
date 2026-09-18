@@ -1,25 +1,51 @@
-#![cfg_attr(
-    nightly,
-    feature(
-        proc_macro_diagnostic,
-        proc_macro_span,
-        // proc_macro_totokens,
-        proc_macro_def_site,
-    )
-)]
+#![cfg_attr(nightly, feature(proc_macro_diagnostic, proc_macro_span, proc_macro_def_site,))]
+
+//! # Moxy tokens
+//!
+//! Token types, lexing, spans, and compiler-token conversions for Rust syntax
+//! tooling. [`TokenStream`] is an owned sequence of [`TokenTree`] values that
+//! preserves token text, punctuation spacing, and source spans.
+//!
+//! ## Quick start
+//!
+//! Parse source into a token stream, or construct individual token types with
+//! the provided macros:
+//!
+//! ```ignore
+//! use moxy::token::{ident, TokenStream};
+//! use moxy::Token;
+//!
+//! let stream: TokenStream = "fn generated() {}".parse().unwrap();
+//! let name = ident!(generated);
+//! let semi: Token![;] = Default::default();
+//! assert_eq!(name.to_string(), "generated");
+//! assert_eq!(semi.to_string(), ";");
+//! ```
+//!
+//! ## Integrations
+//!
+//! Enable `serde` to serialize supported token types. Enable `proc-macro2` for
+//! conversions with `proc_macro2`; compiler `proc_macro` conversions are
+//! available through [`bridge`].
 
 extern crate proc_macro;
 
+/// Conversions to and from compiler token-stream representations.
 pub mod bridge;
 mod delim;
 mod group;
 mod ident;
+/// Rust keyword token types.
 pub mod keyword;
+/// Lexing primitives and lexical errors.
 pub mod lex;
 mod lit;
+/// Rust punctuation token types.
 pub mod punct;
+/// Source files, locations, and source maps used by spans.
 pub mod source;
 mod spacing;
+/// Source-span types and the [`Spanner`] trait.
 pub mod span;
 mod stream;
 mod tree;
@@ -47,10 +73,14 @@ pub use stream::*;
 #[doc(inline)]
 pub use tree::*;
 
+/// Emits a value as tokens into a destination token stream.
+/// A public Rust token API type for to tokens<t.
 pub trait ToTokens<T = TokenStream> {
     fn to_tokens(&self, tokens: &mut T);
 }
 
+/// Convenience methods for values that can emit a [`TokenStream`].
+/// A public Rust token API type for to token stream:.
 pub trait ToTokenStream: ToTokens<TokenStream> {
     fn to_token_stream(&self) -> TokenStream {
         let mut tokens = TokenStream::new();

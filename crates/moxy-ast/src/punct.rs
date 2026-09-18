@@ -6,6 +6,7 @@ use crate::{Cursor, Parse, ParseError, Parser};
 macro_rules! define_punct {
     ($($name:ident($len:literal) => [ $($field:tt : $punct:ident),+ ]),+ $(,)?) => {
         $(
+            #[doc = concat!("A compound Rust punctuation AST token represented by `", stringify!($name), "`.")]
             #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
             pub struct $name($(pub $punct),*);
 

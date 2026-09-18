@@ -1,4 +1,6 @@
+/// Attribute metadata syntax.
 pub mod meta;
+/// Attribute metadata queries.
 pub mod query;
 mod style;
 
