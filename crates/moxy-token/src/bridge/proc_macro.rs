@@ -112,11 +112,11 @@ impl From<proc_macro::Ident> for Ident {
 impl From<Ident> for proc_macro::Ident {
     fn from(value: Ident) -> Self {
         let span: proc_macro::Span = value.span().into();
-        let name = value.text();
 
-        match name.strip_prefix("r#") {
-            Some(raw) => Self::new_raw(raw, span),
-            None => Self::new(name, span),
+        if value.is_raw() {
+            Self::new_raw(value.text(), span)
+        } else {
+            Self::new(value.text(), span)
         }
     }
 }
@@ -210,6 +210,11 @@ impl ToTokens<proc_macro::TokenStream> for TokenTree {
             Self::Ident(v) => out.extend(vec![proc_macro::TokenTree::Ident(v.clone().into())]),
             Self::Keyword(kw) => {
                 let id = proc_macro::Ident::new(kw.as_str(), kw.span().into());
+                out.extend(vec![proc_macro::TokenTree::Ident(id)])
+            }
+            // `true`/`false` are identifiers to the compiler, not literals.
+            Self::Literal(Lit::Bool(v)) => {
+                let id = proc_macro::Ident::new(v.repr(), v.span().into());
                 out.extend(vec![proc_macro::TokenTree::Ident(id)])
             }
             Self::Literal(v) => out.extend(vec![proc_macro::TokenTree::Literal(v.clone().into())]),

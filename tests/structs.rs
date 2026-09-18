@@ -67,3 +67,16 @@ fn proc_macro_tokens_complete_a_struct_syntax_pipeline() {
     assert_eq!(structure.fields.as_named().unwrap().fields.inner.len(), 1);
     assert_eq!(moxy::fmt!(&item).unwrap(), "struct Bridged {\n\tvalue: u32,\n}");
 }
+
+#[cfg(feature = "proc-macro2")]
+#[test]
+fn raw_identifiers_bridge_back_to_proc_macro_raw_identifiers() {
+    let owned: moxy::token::TokenStream = "struct Bridged { r#type: u32 }".parse().unwrap();
+    let bridged = proc_macro2::TokenStream::from(owned);
+    let rendered = bridged.to_string();
+    assert!(rendered.contains("r#type"), "{rendered}");
+    assert_eq!(
+        moxy::token::TokenStream::from(bridged).to_string(),
+        "struct Bridged {r#type : u32}"
+    );
+}

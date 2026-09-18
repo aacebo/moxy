@@ -92,6 +92,6 @@ macro_rules! Token {
     [...]   => { $crate::DotDotDot };
     [..=]   => { $crate::DotDotEq };
     [$($tt:tt)*] => {
-        ::moxy_token::Token![$($tt)*]
+        $crate::__private::moxy_token::Token![$($tt)*]
     };
 }
