@@ -1,6 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Cursor, Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Punctuated, TypeBound};
 
@@ -13,10 +12,26 @@ pub struct TypeTraitObject {
 }
 
 impl Parse for TypeTraitObject {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let dyn_token = stream.parse_if::<Token![dyn]>();
-        let bounds = crate::TypeBound::parse_bounds(stream)?;
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![dyn]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let dyn_token = parser.parse()?;
+        let bounds = crate::TypeBound::parse_bounds(parser)?;
         Ok(Self { dyn_token, bounds })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let mut cursor = cursor.skip::<Option<Token![dyn]>>()?;
+        cursor = cursor.skip::<TypeBound>()?;
+
+        while cursor.peek::<Token![+]>() {
+            cursor = cursor.skip::<Token![+]>()?;
+            cursor = cursor.skip::<TypeBound>()?;
+        }
+
+        Some(cursor)
     }
 }
 

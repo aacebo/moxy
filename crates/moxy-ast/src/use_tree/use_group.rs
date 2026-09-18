@@ -1,9 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
-use super::UseTree;
-use crate::{Delimited, Punctuated};
+use crate::*;
 
 /// A braced use group (`{a, b::c}`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,13 +10,28 @@ pub struct UseGroup {
 }
 
 impl Parse for UseGroup {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.descend(Delim::Brace).map(|c| c.peek::<UseTree>()).unwrap_or_default()
+    }
 
-        match stream.parse::<UseTree>()? {
-            UseTree::Group(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected use group").into()),
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let (span, parser) = parser.parse_group_spanned(Delim::Brace)?;
+
+        Ok(Self {
+            items: Delimited::brace(span, Punctuated::parse_separated_nonempty(&parser)?),
+        })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let mut inner = cursor.descend(Delim::Brace)?;
+        inner = inner.skip::<UseTree>()?;
+
+        while inner.peek::<Token![,]>() {
+            inner = inner.skip::<Token![,]>()?;
+            inner = inner.skip::<UseTree>()?;
         }
+
+        if inner.is_empty() { Some(cursor.offset(1)) } else { None }
     }
 }
 
@@ -32,11 +44,5 @@ impl Spanner for UseGroup {
 impl ToTokens for UseGroup {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.items.to_tokens(t);
-    }
-}
-
-impl UseGroup {
-    pub fn into_use_tree(self) -> super::UseTree {
-        super::UseTree::Group(self)
     }
 }

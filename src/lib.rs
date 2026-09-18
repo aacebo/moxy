@@ -38,6 +38,10 @@ pub use moxy_template::*;
 #[doc(inline)]
 pub use moxy_token as token;
 
-#[cfg(feature = "token")]
+#[cfg(all(feature = "token", not(feature = "ast")))]
 #[doc(inline)]
-pub use moxy_token::{Token, parse, parse_files};
+pub use moxy_token::Token;
+
+#[cfg(feature = "ast")]
+#[doc(inline)]
+pub use moxy_ast::{Token, parse, parse_files};

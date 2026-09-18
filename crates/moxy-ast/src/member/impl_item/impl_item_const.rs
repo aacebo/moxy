@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Defaultness, Expr, Generics, Ident, Type, Visibility};
+use crate::*;
 
 /// A constant item inside an `impl` block (`const NAME: Type = expr;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -22,32 +20,41 @@ pub struct ImplItemConst {
 }
 
 impl Parse for ImplItemConst {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let defaultness = stream.parse::<Defaultness>()?;
-        let const_keyword = stream.parse::<Token![const]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let generics = stream.parse::<Generics>()?;
-        let colon = stream.parse::<Token![:]>()?;
-        let ty = stream.parse::<Type>()?;
-        let eq = stream.parse::<Token![=]>()?;
-        let expr = stream.parse::<Expr>()?;
-        let semi = stream.parse_if::<Token![;]>();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        let cursor = Defaultness::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![const]>() && cursor.offset(1).peek::<Ident>()
+    }
 
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs,
-            vis,
-            defaultness,
-            const_keyword,
-            ident,
-            generics,
-            colon,
-            ty,
-            eq,
-            expr,
-            semi,
+            attrs: parser.parse()?,
+            vis: parser.parse()?,
+            defaultness: parser.parse()?,
+            const_keyword: parser.parse()?,
+            ident: parser.parse()?,
+            generics: parser.parse()?,
+            colon: parser.parse()?,
+            ty: parser.parse()?,
+            eq: parser.parse()?,
+            expr: parser.parse()?,
+            semi: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = Defaultness::skip(cursor)?;
+        cursor = cursor.skip::<Token![const]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Generics::skip(cursor)?;
+        cursor = cursor.skip::<Token![:]>()?;
+        cursor = cursor.skip::<Type>()?;
+        cursor = cursor.skip::<Token![=]>()?;
+        cursor = cursor.skip::<Expr>()?;
+        cursor.skip::<Option<Token![;]>>()
     }
 }
 
@@ -71,11 +78,5 @@ impl ToTokens for ImplItemConst {
         self.eq.to_tokens(t);
         self.expr.to_tokens(t);
         self.semi.to_tokens(t);
-    }
-}
-
-impl ImplItemConst {
-    pub fn into_impl_item(self) -> super::ImplItem {
-        super::ImplItem::from(self)
     }
 }

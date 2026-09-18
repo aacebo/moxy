@@ -1,6 +1,6 @@
 use moxy_ast::Ident;
 use moxy_token::Token;
-use moxy_token::{Delim, Group, Lit, Punctuation, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, Lit, Punct, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 #[derive(Debug)]
 pub enum FmtError {
@@ -17,7 +17,7 @@ impl FmtError {
 
         vec![
             TokenTree::from(ident),
-            TokenTree::from(Punctuation::from(bang)),
+            TokenTree::from(Punct::from(bang)),
             TokenTree::from(group),
         ]
         .into()

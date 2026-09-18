@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Signature, StmtBlock, TraitItem};
+use crate::*;
 
 /// A method declaration or default implementation inside a trait definition.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,16 +13,33 @@ pub struct TraitItemFn {
 }
 
 impl Parse for TraitItemFn {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let sig = stream.parse::<Signature>()?;
-        let (body, semi) = if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
-            (Some(stream.parse::<StmtBlock>()?), None)
+    fn peek(cursor: Cursor<'_>) -> bool {
+        Attributes::skip(cursor)
+            .map(|cursor| cursor.peek::<Signature>())
+            .unwrap_or(false)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let sig = parser.parse()?;
+        let (body, semi) = if parser.is_delimited(Delim::Brace) {
+            (Some(parser.parse()?), None)
         } else {
-            (None, Some(stream.parse::<Token![;]>()?))
+            (None, Some(parser.parse()?))
         };
 
         Ok(Self { attrs, sig, body, semi })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<Signature>()?;
+
+        if cursor.peek::<StmtBlock>() {
+            cursor.skip::<StmtBlock>()
+        } else {
+            cursor.skip::<Token![;]>()
+        }
     }
 }
 
@@ -46,11 +61,5 @@ impl ToTokens for TraitItemFn {
         self.sig.to_tokens(t);
         self.body.to_tokens(t);
         self.semi.to_tokens(t);
-    }
-}
-
-impl TraitItemFn {
-    pub fn into_trait_item(self) -> TraitItem {
-        self.into()
     }
 }

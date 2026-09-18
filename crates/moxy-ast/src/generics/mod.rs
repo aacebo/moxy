@@ -1,9 +1,3 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
-
-use crate::Punctuated;
-
 mod const_param;
 mod generic_param;
 mod lifetime_param;
@@ -30,28 +24,36 @@ pub use use_bound::*;
 pub use where_clause::*;
 pub use where_predicate::*;
 
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
+use crate::*;
+
 /// Generic parameters and an optional `where` clause.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Generics {
     pub lt: Option<Token![<]>,
-    pub gt: Option<Token![>]>,
     pub params: Punctuated<GenericParam, Token![,]>,
+    pub gt: Option<Token![>]>,
     pub where_clause: Option<WhereClause>,
 }
 
 impl Parse for Generics {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let lt = stream.parse_if();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![<]>() || cursor.peek::<WhereClause>()
+    }
 
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let lt: Option<Token![<]> = parser.parse()?;
         let params = if lt.is_some() {
-            Punctuated::parse_separated_nonempty(stream)?
+            Punctuated::parse_separated_nonempty(parser)?
         } else {
             Punctuated::new()
         };
 
-        let gt = stream.parse_if();
-        let where_clause = stream.parse_if();
+        let gt = if lt.is_some() { Some(parser.parse()?) } else { None };
+
+        let where_clause = parser.parse()?;
 
         Ok(Self {
             lt,
@@ -59,6 +61,22 @@ impl Parse for Generics {
             params,
             where_clause,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<Token![<]>() {
+            cursor = cursor.skip::<Token![<]>()?;
+            cursor = cursor.skip::<GenericParam>()?;
+
+            while cursor.peek::<Token![,]>() {
+                cursor = cursor.skip::<Token![,]>()?;
+                cursor = cursor.skip::<GenericParam>()?;
+            }
+
+            cursor = cursor.skip::<Token![>]>()?;
+        }
+
+        cursor.skip::<Option<WhereClause>>()
     }
 }
 

@@ -1,4 +1,6 @@
-use moxy_token::span::DelimSpan;
+use moxy_token::{Group, ToTokenStream, span::DelimSpan};
+
+use crate::Cursor;
 
 use super::*;
 
@@ -37,27 +39,43 @@ impl MetaValue {
 }
 
 impl Parse for MetaValue {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Lit>() {
-            return Ok(Self::Literal(stream.parse()?));
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Lit>() || cursor.peek::<Group>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<Lit>() {
+            return Ok(Self::Literal(parser.parse()?));
         }
 
-        if let Ok((span, tokens)) = stream.parse_group_spanned(Delim::Brace) {
-            return Ok(Self::Verbatim(Delimited::new(Delim::Brace, span, tokens)));
+        if let Ok((span, parser)) = parser.parse_group_spanned(Delim::Brace) {
+            return Ok(Self::Verbatim(Delimited::new(Delim::Brace, span, parser.into_token_stream())));
         }
 
-        if let Ok((span, tokens)) = stream.parse_group_spanned(Delim::None) {
-            return Ok(Self::Verbatim(Delimited::new(Delim::None, span, tokens)));
+        if let Ok((span, parser)) = parser.parse_group_spanned(Delim::None) {
+            return Ok(Self::Verbatim(Delimited::new(Delim::None, span, parser.into_token_stream())));
         }
 
-        let span = stream.span();
-        let tokens = stream.advance_by(stream.remaining()).ok_or(ParseError::new(span, "EOF"))?;
+        let span = parser.span();
+        let tokens = parser.advance_by(parser.remaining()).ok_or(ParseError::new(span, "EOF"))?;
 
         Ok(Self::Verbatim(Delimited::new(
             Delim::None,
             DelimSpan::new(span, span),
             tokens.into(),
         )))
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<Lit>() {
+            cursor.skip::<Lit>()
+        } else if cursor.peek::<Group>() {
+            cursor.skip::<Group>()
+        } else if !cursor.is_empty() {
+            Some(cursor.offset(cursor.remaining()))
+        } else {
+            None
+        }
     }
 }
 

@@ -1,45 +1,56 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, LexError, Parse, Punctuation, Span, Spanner, ToTokens, TokenStream, TokenTree};
-
-use crate::{Attributes, Delimited, Expr, Ident, Member, Mutability, Path, Punctuated};
-
+mod pat_box;
+mod pat_const;
 mod pat_field;
 mod pat_group;
 mod pat_ident;
 mod pat_lit;
+mod pat_macro;
 mod pat_or;
 mod pat_paren;
 mod pat_path;
 mod pat_range;
 mod pat_reference;
+mod pat_rest;
 mod pat_slice;
 mod pat_struct;
 mod pat_tuple;
 mod pat_tuple_struct;
 mod pat_type;
+mod pat_wild;
 
+pub(crate) mod parse;
+pub(crate) mod skip;
+
+pub use pat_box::*;
+pub use pat_const::*;
 pub use pat_field::*;
 pub use pat_group::*;
 pub use pat_ident::*;
 pub use pat_lit::*;
+pub use pat_macro::*;
 pub use pat_or::*;
 pub use pat_paren::*;
 pub use pat_path::*;
 pub use pat_range::*;
 pub use pat_reference::*;
+pub use pat_rest::*;
 pub use pat_slice::*;
 pub use pat_struct::*;
 pub use pat_tuple::*;
 pub use pat_tuple_struct::*;
 pub use pat_type::*;
+pub use pat_wild::*;
+
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
+use crate::*;
 
 /// A Rust pattern (in `let`, `match`, function params, etc.).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Pattern {
-    Wild,
-    Rest,
+    Wild(PatWild),
+    Rest(PatRest),
     Ident(PatIdent),
     Path(PatPath),
     Tuple(PatTuple),
@@ -50,21 +61,21 @@ pub enum Pattern {
     Or(PatOr),
     Lit(PatLit),
     Range(Box<PatRange>),
-    Macro(crate::MacroCall),
+    Macro(PatMacro),
     Type(PatType),
     Group(PatGroup),
     Paren(PatParen),
-    Box(Box<Self>),
-    Const(crate::StmtBlock),
+    Box(PatBox),
+    Const(PatConst),
 }
 
 impl Pattern {
     pub fn is_wild(&self) -> bool {
-        matches!(self, Self::Wild)
+        matches!(self, Self::Wild(_))
     }
 
     pub fn is_rest(&self) -> bool {
-        matches!(self, Self::Rest)
+        matches!(self, Self::Rest(_))
     }
 
     pub fn is_ident(&self) -> bool {
@@ -129,94 +140,6 @@ impl Pattern {
 
     pub fn is_const(&self) -> bool {
         matches!(self, Self::Const(_))
-    }
-
-    pub fn as_ident(&self) -> Option<&PatIdent> {
-        if let Self::Ident(v) = self { Some(v) } else { None }
-    }
-
-    pub fn as_path(&self) -> Option<&PatPath> {
-        if let Self::Path(v) = self { Some(v) } else { None }
-    }
-
-    pub fn as_tuple(&self) -> Option<&PatTuple> {
-        if let Self::Tuple(v) = self { Some(v) } else { None }
-    }
-
-    pub fn as_tuple_struct(&self) -> Option<&PatTupleStruct> {
-        if let Self::TupleStruct(v) = self { Some(v) } else { None }
-    }
-
-    pub fn as_struct(&self) -> Option<&PatStruct> {
-        if let Self::Struct(v) = self { Some(v) } else { None }
-    }
-
-    pub fn as_slice(&self) -> Option<&PatSlice> {
-        if let Self::Slice(v) = self { Some(v) } else { None }
-    }
-
-    pub fn as_reference(&self) -> Option<&PatReference> {
-        if let Self::Reference(v) = self { Some(v) } else { None }
-    }
-
-    pub fn as_or(&self) -> Option<&PatOr> {
-        if let Self::Or(v) = self { Some(v) } else { None }
-    }
-
-    pub fn as_lit(&self) -> Option<&PatLit> {
-        if let Self::Lit(v) = self { Some(v) } else { None }
-    }
-
-    pub fn as_range(&self) -> Option<&PatRange> {
-        if let Self::Range(v) = self { Some(v.as_ref()) } else { None }
-    }
-
-    pub fn as_macro(&self) -> Option<&crate::MacroCall> {
-        if let Self::Macro(v) = self { Some(v) } else { None }
-    }
-
-    pub fn as_type(&self) -> Option<&PatType> {
-        if let Self::Type(v) = self { Some(v) } else { None }
-    }
-
-    pub fn as_group(&self) -> Option<&PatGroup> {
-        if let Self::Group(v) = self { Some(v) } else { None }
-    }
-
-    pub fn as_paren(&self) -> Option<&PatParen> {
-        if let Self::Paren(v) = self { Some(v) } else { None }
-    }
-
-    pub fn as_box(&self) -> Option<&Self> {
-        if let Self::Box(v) = self { Some(v.as_ref()) } else { None }
-    }
-
-    pub fn as_const(&self) -> Option<&crate::StmtBlock> {
-        if let Self::Const(v) = self { Some(v) } else { None }
-    }
-}
-
-impl Spanner for Pattern {
-    fn span(&self) -> Span {
-        match self {
-            Self::Wild | Self::Rest => Span::call_site(),
-            Self::Ident(v) => v.span(),
-            Self::Path(v) => v.span(),
-            Self::Tuple(v) => v.span(),
-            Self::TupleStruct(v) => v.span(),
-            Self::Struct(v) => v.span(),
-            Self::Slice(v) => v.span(),
-            Self::Reference(v) => v.span(),
-            Self::Or(v) => v.span(),
-            Self::Lit(v) => v.span(),
-            Self::Range(v) => v.span(),
-            Self::Macro(v) => v.span(),
-            Self::Type(v) => v.span(),
-            Self::Group(v) => v.span(),
-            Self::Paren(v) => v.span(),
-            Self::Box(p) => p.span(),
-            Self::Const(b) => b.span(),
-        }
     }
 }
 
@@ -298,51 +221,133 @@ impl From<PatParen> for Pattern {
     }
 }
 
+impl From<PatConst> for Pattern {
+    fn from(value: PatConst) -> Self {
+        Self::Const(value)
+    }
+}
+
+impl From<PatBox> for Pattern {
+    fn from(value: PatBox) -> Self {
+        Self::Box(value)
+    }
+}
+
+impl From<PatMacro> for Pattern {
+    fn from(value: PatMacro) -> Self {
+        Self::Macro(value)
+    }
+}
+
+impl From<PatWild> for Pattern {
+    fn from(value: PatWild) -> Self {
+        Self::Wild(value)
+    }
+}
+
+impl From<PatRest> for Pattern {
+    fn from(value: PatRest) -> Self {
+        Self::Rest(value)
+    }
+}
+
+impl Spanner for Pattern {
+    fn span(&self) -> Span {
+        match self {
+            Self::Wild(v) => v.span(),
+            Self::Rest(v) => v.span(),
+            Self::Ident(v) => v.span(),
+            Self::Path(v) => v.span(),
+            Self::Tuple(v) => v.span(),
+            Self::TupleStruct(v) => v.span(),
+            Self::Struct(v) => v.span(),
+            Self::Slice(v) => v.span(),
+            Self::Reference(v) => v.span(),
+            Self::Or(v) => v.span(),
+            Self::Lit(v) => v.span(),
+            Self::Range(v) => v.span(),
+            Self::Macro(v) => v.span(),
+            Self::Type(v) => v.span(),
+            Self::Group(v) => v.span(),
+            Self::Paren(v) => v.span(),
+            Self::Box(v) => v.span(),
+            Self::Const(v) => v.span(),
+        }
+    }
+}
+
 impl Parse for Pattern {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        // Optional leading `|`, then one-or-more `|`-separated alternatives.
-        let leading = stream.peek::<Token![|]>();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+
+        cursor.peek::<PatOr>()
+            || cursor.peek::<PatWild>()
+            || cursor.peek::<PatRange>()
+            || cursor.peek::<PatRest>()
+            || cursor.peek::<PatBox>()
+            || cursor.peek::<PatConst>()
+            || cursor.peek::<PatReference>()
+            || cursor.peek::<PatGroup>()
+            || cursor.peek::<PatSlice>()
+            || cursor.is_delimited(moxy_token::Delim::Paren)
+            || cursor.peek::<MacroCall>()
+            || cursor.peek::<PatTupleStruct>()
+            || cursor.peek::<PatStruct>()
+            || cursor.peek::<PatIdent>()
+            || cursor.peek::<PatPath>()
+            || cursor.peek::<PatLit>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let bare = Attributes::skip(parser.cursor()).unwrap_or(parser.cursor());
+        let leading = bare.peek::<Token![|]>();
+        let attrs = if leading { parser.parse()? } else { Attributes::default() };
 
         if leading {
-            let _ = stream.parse::<Token![|]>()?;
+            let _: Token![|] = parser.parse()?;
         }
 
-        let first = parse_single(stream)?;
+        let first = parse::single(parser)?;
 
-        if !leading && !stream.peek::<Token![|]>() {
+        if !leading && !parser.peek::<Token![|]>() {
             return Ok(first);
         }
 
         let mut cases = Punctuated::new();
         cases.push_value(first);
 
-        while stream.peek::<Token![|]>() {
-            cases.push_punct(stream.parse::<Token![|]>()?);
-            cases.push_value(parse_single(stream)?);
+        while parser.peek::<Token![|]>() {
+            cases.push_punct(parser.parse()?);
+            cases.push_value(parse::single(parser)?);
         }
 
-        Ok(Self::Or(PatOr {
-            attrs: Attributes::default(),
-            cases,
-        }))
+        Ok(Self::Or(PatOr { attrs, cases }))
     }
-}
 
-impl Pattern {
-    /// Parse a single pattern alternative (no top-level `|` or-collection).
-    /// Used where `|` is a delimiter (closure params), not an or-pattern.
-    pub fn parse_single(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        parse_single(stream)
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let bare = Attributes::skip(cursor)?;
+
+        if bare.peek::<Token![|]>() {
+            cursor = bare;
+            cursor = cursor.skip::<Token![|]>()?;
+        }
+
+        cursor = skip::single(cursor)?;
+
+        while cursor.peek::<Token![|]>() {
+            cursor = cursor.skip::<Token![|]>()?;
+            cursor = skip::single(cursor)?;
+        }
+
+        Some(cursor)
     }
 }
 
 impl ToTokens for Pattern {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            Self::Wild => {
-                moxy_token::Ident::new("_").to_tokens(t);
-            }
-            Self::Rest => <Token![..]>::default().to_tokens(t),
+            Self::Wild(v) => v.to_tokens(t),
+            Self::Rest(v) => v.to_tokens(t),
             Self::Ident(v) => v.to_tokens(t),
             Self::Path(v) => v.to_tokens(t),
             Self::Tuple(v) => v.to_tokens(t),
@@ -357,212 +362,8 @@ impl ToTokens for Pattern {
             Self::Type(v) => v.to_tokens(t),
             Self::Group(v) => v.to_tokens(t),
             Self::Paren(v) => v.to_tokens(t),
-            Self::Box(p) => {
-                <Token![box]>::default().to_tokens(t);
-                p.to_tokens(t);
-            }
-            Self::Const(b) => {
-                <Token![const]>::default().to_tokens(t);
-                b.to_tokens(t);
-            }
+            Self::Box(v) => v.to_tokens(t),
+            Self::Const(v) => v.to_tokens(t),
         }
     }
-}
-
-impl PatIdent {
-    pub fn parse_from(stream: &mut ParseStream, attrs: Attributes) -> Result<Self, ParseError> {
-        let by_ref = stream.parse_if::<Token![ref]>();
-        let mutability = stream.parse::<Mutability>()?;
-        let ident = stream.parse::<Ident>()?;
-        let subpat = if stream.peek::<Token![@]>() {
-            let at = stream.parse::<Token![@]>()?;
-            Some((at, Box::new(stream.parse::<Pattern>()?)))
-        } else {
-            None
-        };
-
-        Ok(Self {
-            attrs,
-            by_ref,
-            mutability,
-            ident,
-            subpat,
-        })
-    }
-}
-
-impl PatStruct {
-    pub fn parse_body(stream: &mut ParseStream) -> Result<(Punctuated<PatField, Token![,]>, Option<Token![..]>), ParseError> {
-        let mut fields = Punctuated::new();
-        let mut rest = None;
-
-        while !stream.is_empty() {
-            if stream.peek::<Token![..]>() {
-                rest = Some(stream.parse::<Token![..]>()?);
-                break;
-            }
-
-            let field_attrs = stream.parse::<Attributes>()?;
-            let member = stream.parse::<Member>()?;
-            let (colon, pat, shorthand) = if stream.peek::<Token![:]>() {
-                let colon = stream.parse::<Token![:]>()?;
-                (Some(colon), stream.parse::<Pattern>()?, false)
-            } else {
-                // shorthand `{ field }`
-                let ident = match &member {
-                    Member::Named(id) => id.clone(),
-                    Member::Unnamed(_) => {
-                        return Err(LexError::new(stream.span()).message("tuple index needs a pattern").into());
-                    }
-                };
-                (
-                    None,
-                    Pattern::Ident(PatIdent {
-                        attrs: Attributes::default(),
-                        by_ref: None,
-                        mutability: Mutability::Immutable,
-                        ident,
-                        subpat: None,
-                    }),
-                    true,
-                )
-            };
-
-            fields.push_value(PatField {
-                attrs: field_attrs,
-                member,
-                colon,
-                pat,
-                shorthand,
-            });
-
-            if stream.peek::<Token![,]>() {
-                fields.push_punct(stream.parse::<Token![,]>()?);
-            } else {
-                break;
-            }
-        }
-
-        Ok((fields, rest))
-    }
-}
-
-fn parse_single(stream: &mut ParseStream) -> Result<Pattern, ParseError> {
-    let at = stream.span();
-    let attrs = stream.parse::<Attributes>()?;
-
-    // Wildcard `_`
-    if matches!(stream.curr(), Some(tt) if tt.text() == Some("_")) {
-        stream.advance();
-        return Ok(Pattern::Wild);
-    }
-
-    // Rest `..`
-    if stream.peek::<Token![..]>() {
-        let _ = stream.parse::<Token![..]>()?;
-        return Ok(Pattern::Rest);
-    }
-
-    // `box pat`
-    if matches!(stream.curr(), Some(tt) if tt.text() == Some("box")) {
-        stream.advance();
-        return Ok(Pattern::Box(Box::new(parse_single(stream)?)));
-    }
-
-    // `const { ... }` block pattern
-    if matches!(stream.curr(), Some(tt) if tt.text() == Some("const"))
-        && matches!(stream.nth(1), Some(moxy_token::TokenTree::Group(g)) if g.delim() == Delim::Brace)
-    {
-        stream.advance();
-        return Ok(Pattern::Const(stream.parse::<crate::StmtBlock>()?));
-    }
-
-    // Reference `&`/`&mut`
-    if stream.peek::<Token![&]>() {
-        let and = stream.parse::<Token![&]>()?;
-        let mutability = stream.parse::<Mutability>()?;
-        let pat = Box::new(stream.parse::<Pattern>()?);
-        return Ok(Pattern::Reference(PatReference {
-            attrs,
-            and,
-            mutability,
-            pat,
-        }));
-    }
-
-    // Tuple/paren `(...)`
-    if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-        let elems = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
-        return Ok(Pattern::Tuple(PatTuple { attrs, elems }));
-    }
-
-    // Slice `[...]`
-    if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
-        let elems = Delimited::parse_bracket_with(stream, Punctuated::parse_terminated)?;
-        return Ok(Pattern::Slice(PatSlice { attrs, elems }));
-    }
-
-    // `ref`/`mut`-led binding
-    if stream.peek::<Token![ref]>() || stream.peek::<Token![mut]>() {
-        return Ok(Pattern::Ident(PatIdent::parse_from(stream, attrs)?));
-    }
-
-    // Literal pattern
-    if matches!(stream.curr(), Some(tt) if matches!(tt, TokenTree::Literal(_))) {
-        let expr = stream.parse::<Expr>()?;
-        return Ok(Pattern::Lit(PatLit { attrs, expr }));
-    }
-
-    // Path-led: ident binding, path, tuple-struct, or struct pattern.
-    if matches!(
-        stream.curr(),
-        Some(TokenTree::Ident(_) | TokenTree::Keyword(_) | TokenTree::Punct(Punctuation::PathSep(_)))
-    ) {
-        // Single bare ident with no `::`/`(`/`{` → binding.
-        let path = stream.parse::<Path>()?;
-
-        if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-            let elems = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
-
-            return Ok(Pattern::TupleStruct(PatTupleStruct {
-                attrs,
-                qself: None,
-                path,
-                elems,
-            }));
-        }
-
-        if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Brace)) {
-            let body = Delimited::parse_brace_with(stream, |inner| {
-                let (fields, rest) = PatStruct::parse_body(inner)?;
-                Ok(PatStructBody { fields, rest })
-            })?;
-
-            return Ok(Pattern::Struct(PatStruct {
-                attrs,
-                qself: None,
-                path,
-                body,
-            }));
-        }
-
-        // Bare single-segment path with no leading colon → binding ident.
-        return if let Some(ident) = path.as_ident().cloned() {
-            Ok(Pattern::Ident(PatIdent {
-                attrs,
-                by_ref: None,
-                mutability: Mutability::Immutable,
-                ident,
-                subpat: None,
-            }))
-        } else {
-            Ok(Pattern::Path(PatPath {
-                attrs,
-                qself: None,
-                path,
-            }))
-        };
-    }
-
-    Err(LexError::new(at).message("expected pattern").into())
 }

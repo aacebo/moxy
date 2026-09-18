@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Lifetime, Punctuated};
+use crate::*;
 
 /// A `use<'a, T>` bound (precise capturing).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,13 +13,30 @@ pub struct UseBound {
 }
 
 impl Parse for UseBound {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![use]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            use_keyword: stream.parse()?,
-            lt_punct: stream.parse()?,
-            lifetimes: Punctuated::parse_separated_nonempty(stream)?,
-            gt_punct: stream.parse()?,
+            use_keyword: parser.parse()?,
+            lt_punct: parser.parse()?,
+            lifetimes: Punctuated::parse_separated_nonempty(parser)?,
+            gt_punct: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Token![use]>()?;
+        cursor = cursor.skip::<Token![<]>()?;
+        cursor = cursor.skip::<Lifetime>()?;
+
+        while cursor.peek::<Token![,]>() {
+            cursor = cursor.skip::<Token![,]>()?;
+            cursor = cursor.skip::<Lifetime>()?;
+        }
+
+        cursor.skip::<Token![>]>()
     }
 }
 
@@ -37,11 +52,5 @@ impl ToTokens for UseBound {
         self.lt_punct.to_tokens(t);
         self.lifetimes.to_tokens(t);
         self.gt_punct.to_tokens(t);
-    }
-}
-
-impl UseBound {
-    pub fn into_type_bound(self) -> super::TypeBound {
-        super::TypeBound::from(self)
     }
 }

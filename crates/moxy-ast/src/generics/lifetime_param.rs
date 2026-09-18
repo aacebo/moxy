@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Lifetime, Punctuated};
+use crate::*;
 
 /// A lifetime parameter (`'a: 'b + 'c`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,14 +13,21 @@ pub struct LifetimeParam {
 }
 
 impl Parse for LifetimeParam {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let lifetime = stream.parse::<Lifetime>()?;
-        let bounds = Lifetime::parse_bounds(stream)?;
-        let colon_punct = if !bounds.is_empty() {
-            Some(<Token![:]>::default())
+    fn peek(cursor: Cursor<'_>) -> bool {
+        Attributes::skip(cursor)
+            .map(|cursor| cursor.peek::<Lifetime>())
+            .unwrap_or(false)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let lifetime = parser.parse()?;
+        let (colon_punct, bounds) = if parser.peek::<Token![:]>() {
+            let colon_punct = Some(parser.parse()?);
+            let bounds = Punctuated::parse_separated_nonempty(parser)?;
+            (colon_punct, bounds)
         } else {
-            None
+            (None, Punctuated::new())
         };
 
         Ok(Self {
@@ -31,6 +36,23 @@ impl Parse for LifetimeParam {
             colon_punct,
             bounds,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<Lifetime>()?;
+
+        if cursor.peek::<Token![:]>() {
+            cursor = cursor.skip::<Token![:]>()?;
+            cursor = cursor.skip::<Lifetime>()?;
+
+            while cursor.peek::<Token![+]>() {
+                cursor = cursor.skip::<Token![+]>()?;
+                cursor = cursor.skip::<Lifetime>()?;
+            }
+        }
+
+        Some(cursor)
     }
 }
 
@@ -45,18 +67,7 @@ impl ToTokens for LifetimeParam {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.lifetime.to_tokens(t);
-
-        if !self.bounds.is_empty() {
-            if let Some(colon_punct) = &self.colon_punct {
-                colon_punct.to_tokens(t);
-            }
-            self.bounds.to_tokens(t);
-        }
-    }
-}
-
-impl LifetimeParam {
-    pub fn into_generic_param(self) -> super::GenericParam {
-        super::GenericParam::from(self)
+        self.colon_punct.to_tokens(t);
+        self.bounds.to_tokens(t);
     }
 }

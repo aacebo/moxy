@@ -1,6 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Cursor, Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::Type;
 use crate::{Lifetime, Mutability};
@@ -16,11 +15,15 @@ pub struct TypeReference {
 }
 
 impl Parse for TypeReference {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let and = stream.parse::<Token![&]>()?;
-        let lifetime = stream.parse::<Option<Lifetime>>()?;
-        let mutability = stream.parse::<Mutability>()?;
-        let elem = Box::new(stream.parse::<Type>()?);
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![&]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let and = parser.parse()?;
+        let lifetime = parser.parse()?;
+        let mutability = parser.parse()?;
+        let elem = Box::new(parser.parse()?);
 
         Ok(Self {
             and,
@@ -28,6 +31,14 @@ impl Parse for TypeReference {
             mutability,
             elem,
         })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor
+            .skip::<Token![&]>()?
+            .skip::<Option<Lifetime>>()?
+            .skip::<Mutability>()?
+            .skip::<Type>()
     }
 }
 

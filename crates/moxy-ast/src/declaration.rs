@@ -1,7 +1,6 @@
-use moxy_token::parser::ParseError;
-use moxy_token::{Parse, Span, Spanner, ToTokens};
+use moxy_token::{Span, Spanner, ToTokens};
 
-use crate::{Attributes, Generics, Ident, Visibility, item};
+use crate::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(tag = "type", rename_all = "snake_case"))]
@@ -117,15 +116,29 @@ impl ToTokens for Declaration {
 }
 
 impl Parse for Declaration {
-    fn parse(stream: &mut moxy_token::parser::ParseStream) -> Result<Self, moxy_token::parser::ParseError> {
-        if let Some(v) = stream.parse_if::<item::ItemEnum>() {
-            Ok(v.into())
-        } else if let Some(v) = stream.parse_if::<item::ItemStruct>() {
-            Ok(v.into())
-        } else if let Some(v) = stream.parse_if::<item::ItemUnion>() {
-            Ok(v.into())
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<item::ItemEnum>() || cursor.peek::<item::ItemStruct>() || cursor.peek::<item::ItemUnion>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<item::ItemEnum>() {
+            Ok(Self::Enum(parser.parse()?))
+        } else if parser.peek::<item::ItemStruct>() {
+            Ok(Self::Struct(parser.parse()?))
+        } else if parser.peek::<item::ItemUnion>() {
+            Ok(Self::Union(parser.parse()?))
         } else {
-            Err(ParseError::new(stream.span(), "expected a user defined type declaration"))
+            parser.error("expected a user defined type declaration").into()
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<item::ItemEnum>() {
+            cursor.skip::<item::ItemEnum>()
+        } else if cursor.peek::<item::ItemStruct>() {
+            cursor.skip::<item::ItemStruct>()
+        } else {
+            cursor.skip::<item::ItemUnion>()
         }
     }
 }

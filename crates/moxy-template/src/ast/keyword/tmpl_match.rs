@@ -1,7 +1,7 @@
 #![allow(unused)]
 
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, LexError, Parse, Punctuation, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
+use moxy_ast::{Cursor, Delimited, Parse, ParseError, Parser, Token};
+use moxy_token::{Delim, Group, LexError, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 use crate::Template;
 
@@ -9,10 +9,58 @@ use crate::Template;
 #[derive(Debug, Clone)]
 pub struct TmplMatch {
     pub span: Span,
-    pub at_punct: Token![@],
-    pub match_keyword: Token![match],
+    pub at: Token![@],
+    pub keyword: Token![match],
     pub expr: TokenStream,
-    pub arms: Vec<TmplMatchArm>,
+    pub arms: Delimited<Vec<TmplMatchArm>>,
+}
+
+impl Parse for TmplMatch {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(cursor) = cursor.skip::<Token![@]>() else {
+            return false;
+        };
+
+        cursor.peek::<Token![match]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let at: Token![@] = parser.parse()?;
+        let keyword = parser.parse()?;
+        let span = at.span();
+        let expr = parser.parse_group(Delim::Paren)?.to_token_stream();
+        let arms = Delimited::parse_brace(parser)?;
+
+        Ok(Self {
+            span,
+            at,
+            keyword,
+            expr,
+            arms,
+        })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let cursor = cursor.skip::<Token![@]>()?;
+        let cursor = cursor.skip::<Token![match]>()?;
+        let inner = cursor.descend(Delim::Paren)?;
+        let cursor = inner.offset(inner.remaining()).is_empty().then(|| cursor.offset(1))?;
+        let mut inner = cursor.descend(Delim::Brace)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<TmplMatchArm>()?;
+        }
+
+        Some(cursor.offset(1))
+    }
+}
+
+impl ToTokens for TmplMatch {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.keyword.to_tokens(tokens);
+        self.expr.to_tokens(tokens);
+        self.arms.to_tokens(tokens);
+    }
 }
 
 #[doc = "A single arm of a `@match` directive: `pat => { body }`."]
@@ -20,77 +68,70 @@ pub struct TmplMatch {
 pub struct TmplMatchArm {
     pub span: Span,
     pub pat: TokenStream,
-    pub fat_arrow: Token![=>],
-    pub body: Template,
+    pub arrow: Token![=>],
+    pub body: Delimited<Template>,
     pub comma: Option<Token![,]>,
 }
 
-impl TmplMatch {
-    pub fn parse_after_keyword_match(
-        stream: &mut ParseStream,
-        at_punct: Token![@],
-        match_kw: Token![match],
-    ) -> Result<Self, ParseError> {
-        let span = at_punct.span();
-        let expr = stream.parse_group(Delim::Paren)?;
-        let arms_stream = stream.parse_group(Delim::Brace)?;
-        let mut arms_ps = arms_stream.parse();
-        let arms = arms_ps.parse::<Vec<TmplMatchArm>>()?;
-
-        Ok(Self {
-            span,
-            at_punct,
-            match_keyword: match_kw,
-            expr,
-            arms,
-        })
-    }
-}
-
 impl Parse for TmplMatchArm {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let span = stream.span();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        Self::skip(cursor).is_some()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let span = parser.span();
         let mut pat = TokenStream::new();
 
         loop {
-            match stream.curr() {
+            if parser.peek::<Token![=>]>() {
+                break;
+            }
+
+            match parser.curr() {
                 None => return Err(LexError::new(span).message("unexpected end of match arm").into()),
-                Some(TokenTree::Punct(Punctuation::FatArrow(_))) => break,
                 _ => {
-                    pat.extend_one(stream.advance().unwrap().clone());
+                    pat.extend_one(parser.advance().unwrap().clone());
                 }
             }
         }
 
-        let fat_arrow = stream.parse::<Token![=>]>()?;
-        let body_stream = stream.parse_group(Delim::Brace)?;
-        let mut body_ps = body_stream.parse();
-        let body = body_ps.parse::<Template>()?;
-        let comma = stream.parse_if::<Token![,]>();
+        let arrow = parser.parse()?;
+        let body = Delimited::parse_brace(parser)?;
+        let comma = parser.parse()?;
 
         Ok(Self {
             span,
             pat,
-            fat_arrow,
+            arrow,
             body,
             comma,
         })
     }
-}
 
-impl ToTokens for TmplMatch {
-    fn to_tokens(&self, out: &mut TokenStream) {
-        <Token![match]>::new(Span::call_site()).to_tokens(out);
-        self.expr.to_tokens(out);
-        let mut arms = TokenStream::new();
-
-        for arm in &self.arms {
-            arm.pat.to_tokens(&mut arms);
-            <Token![=>]>::new(Span::call_site()).to_tokens(&mut arms);
-            arms.extend_one(TokenTree::Group(Group::new(Delim::Brace, arm.body.to_token_stream())));
-            <Token![,]>::new(Span::call_site()).to_tokens(&mut arms);
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        while !cursor.peek::<Token![=>]>() {
+            cursor.curr()?;
+            cursor = cursor.offset(1);
         }
 
-        out.extend_one(TokenTree::Group(Group::new(Delim::Brace, arms)));
+        cursor = cursor.skip::<Token![=>]>()?;
+        let inner = cursor.descend(Delim::Brace)?;
+        let inner = Template::skip(inner)?;
+
+        if !inner.is_empty() {
+            return None;
+        }
+
+        cursor = cursor.offset(1);
+        cursor.skip::<Option<Token![,]>>()
+    }
+}
+
+impl ToTokens for TmplMatchArm {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.pat.to_tokens(tokens);
+        self.arrow.to_tokens(tokens);
+        self.body.to_tokens(tokens);
+        self.comma.to_tokens(tokens);
     }
 }

@@ -1,7 +1,6 @@
 use super::LitFloat;
 use crate::lit::Lit;
-use crate::parser::{ParseError, ParseStream};
-use crate::{LexError, Parse, Span, Spanner};
+use crate::{Span, Spanner};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(into = "String"))]
@@ -88,17 +87,6 @@ impl std::fmt::Display for LitF32 {
 impl Spanner for LitF32 {
     fn span(&self) -> Span {
         self.span
-    }
-}
-
-impl Parse for LitF32 {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-
-        match stream.parse::<Lit>()? {
-            Lit::Float(LitFloat::F32(v)) => Ok(v),
-            _ => Err(LexError::new(at).message("expected `f32` literal").into()),
-        }
     }
 }
 

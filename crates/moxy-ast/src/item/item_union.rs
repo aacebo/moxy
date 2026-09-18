@@ -1,6 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::Token;
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, FieldsNamed, Generics, Ident, Visibility};
 
@@ -17,13 +17,19 @@ pub struct ItemUnion {
 }
 
 impl Parse for ItemUnion {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let union_keyword = stream.parse::<Token![union]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let generics = stream.parse::<Generics>()?;
-        let fields = stream.parse::<FieldsNamed>()?;
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![union]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let union_keyword = parser.parse()?;
+        let ident = parser.parse()?;
+        let generics = parser.parse()?;
+        let fields = parser.parse()?;
 
         Ok(Self {
             attrs,
@@ -33,6 +39,15 @@ impl Parse for ItemUnion {
             generics,
             fields,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Token![union]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Generics::skip(cursor)?;
+        cursor.skip::<FieldsNamed>()
     }
 }
 

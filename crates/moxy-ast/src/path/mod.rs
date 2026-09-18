@@ -1,13 +1,12 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, Token, TokenStream};
-
-use crate::{IntoIter, Punctuated};
-
 mod arguments;
 mod segment;
 
 pub use arguments::*;
 pub use segment::*;
+
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
+use crate::*;
 
 #[macro_export]
 macro_rules! path {
@@ -55,10 +54,27 @@ impl Path {
 }
 
 impl Parse for Path {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let leading_colon = stream.parse_if::<Token![::]>();
-        let segments = Punctuated::parse_separated_nonempty(stream)?;
-        Ok(Self { leading_colon, segments })
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![::]>() || cursor.peek::<PathSegment>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            leading_colon: parser.parse()?,
+            segments: Punctuated::parse_separated_nonempty(parser)?,
+        })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Option<Token![::]>>()?;
+        cursor = cursor.skip::<PathSegment>()?;
+
+        while cursor.skip::<Token![::]>().is_some_and(|cursor| cursor.peek::<PathSegment>()) {
+            cursor = cursor.skip::<Token![::]>()?;
+            cursor = cursor.skip::<PathSegment>()?;
+        }
+
+        Some(cursor)
     }
 }
 
@@ -75,10 +91,7 @@ impl Spanner for Path {
 
 impl ToTokens for Path {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        if let Some(colon) = self.leading_colon {
-            colon.to_tokens(tokens);
-        }
-
+        self.leading_colon.to_tokens(tokens);
         self.segments.to_tokens(tokens);
     }
 }
@@ -87,8 +100,8 @@ impl std::str::FromStr for Path {
     type Err = ParseError;
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
-        let stream = TokenStream::from_str(s)?;
-        stream.parse().parse()
+        let parser = TokenStream::from_str(s)?;
+        Parser::from_tokens(&parser).parse()
     }
 }
 

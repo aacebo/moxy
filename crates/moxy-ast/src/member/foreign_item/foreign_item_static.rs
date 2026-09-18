@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Ident, Mutability, Type, Visibility};
+use crate::*;
 
 /// A foreign static declaration inside an `extern` block (`static NAME: Type;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -19,32 +17,34 @@ pub struct ForeignItemStatic {
 }
 
 impl Parse for ForeignItemStatic {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![static]>()
+    }
 
-        if stream.curr().and_then(|t| t.text()) != Some("static") {
-            return Err(LexError::new(at).message("expected foreign static").into());
-        }
-
-        let static_keyword = stream.parse::<Token![static]>()?;
-        let mutability = stream.parse::<Mutability>()?;
-        let ident = stream.parse::<Ident>()?;
-        let colon = stream.parse::<Token![:]>()?;
-        let ty = stream.parse::<Type>()?;
-        let semi = stream.parse_if::<Token![;]>();
-
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs,
-            vis,
-            static_keyword,
-            mutability,
-            ident,
-            colon,
-            ty,
-            semi,
+            attrs: parser.parse()?,
+            vis: parser.parse()?,
+            static_keyword: parser.parse()?,
+            mutability: parser.parse()?,
+            ident: parser.parse()?,
+            colon: parser.parse()?,
+            ty: parser.parse()?,
+            semi: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Token![static]>()?;
+        cursor = Mutability::skip(cursor)?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = cursor.skip::<Token![:]>()?;
+        cursor = cursor.skip::<Type>()?;
+        cursor.skip::<Option<Token![;]>>()
     }
 }
 
@@ -65,11 +65,5 @@ impl ToTokens for ForeignItemStatic {
         self.colon.to_tokens(t);
         self.ty.to_tokens(t);
         self.semi.to_tokens(t);
-    }
-}
-
-impl ForeignItemStatic {
-    pub fn into_foreign_item(self) -> super::ForeignItem {
-        super::ForeignItem::from(self)
     }
 }

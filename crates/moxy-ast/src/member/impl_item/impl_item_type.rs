@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Defaultness, Generics, Ident, Type, Visibility};
+use crate::*;
 
 /// An associated type definition inside an `impl` block (`type Name = Type;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -20,28 +18,37 @@ pub struct ImplItemType {
 }
 
 impl Parse for ImplItemType {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let defaultness = stream.parse::<Defaultness>()?;
-        let type_keyword = stream.parse::<Token![type]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let generics = stream.parse::<Generics>()?;
-        let eq = stream.parse::<Token![=]>()?;
-        let ty = stream.parse::<Type>()?;
-        let semi = stream.parse_if::<Token![;]>();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        let cursor = Defaultness::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![type]>() && cursor.offset(1).peek::<Ident>()
+    }
 
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs,
-            vis,
-            defaultness,
-            type_keyword,
-            ident,
-            generics,
-            eq,
-            ty,
-            semi,
+            attrs: parser.parse()?,
+            vis: parser.parse()?,
+            defaultness: parser.parse()?,
+            type_keyword: parser.parse()?,
+            ident: parser.parse()?,
+            generics: parser.parse()?,
+            eq: parser.parse()?,
+            ty: parser.parse()?,
+            semi: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = Defaultness::skip(cursor)?;
+        cursor = cursor.skip::<Token![type]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Generics::skip(cursor)?;
+        cursor = cursor.skip::<Token![=]>()?;
+        cursor = cursor.skip::<Type>()?;
+        cursor.skip::<Option<Token![;]>>()
     }
 }
 
@@ -63,11 +70,5 @@ impl ToTokens for ImplItemType {
         self.eq.to_tokens(t);
         self.ty.to_tokens(t);
         self.semi.to_tokens(t);
-    }
-}
-
-impl ImplItemType {
-    pub fn into_impl_item(self) -> super::ImplItem {
-        super::ImplItem::from(self)
     }
 }

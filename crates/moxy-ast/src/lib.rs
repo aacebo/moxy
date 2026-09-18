@@ -17,7 +17,6 @@ pub mod member;
 mod misc;
 pub mod pat;
 pub mod path;
-mod precedence;
 mod punctuated;
 pub mod sig;
 pub mod stmt;
@@ -25,6 +24,9 @@ pub mod ty;
 pub mod use_tree;
 pub mod vis;
 pub mod visit;
+#[macro_use]
+mod parse;
+mod punct;
 
 #[doc(inline)]
 pub use _crate::Crate;
@@ -37,7 +39,7 @@ pub use declaration::*;
 #[doc(inline)]
 pub use delimited::Delimited;
 #[doc(inline)]
-pub use expr::{BinaryExpr, BlockExpr, Expr, JumpExpr, MatchArm, PostfixExpr, PrimaryExpr, UnaryExpr};
+pub use expr::Expr;
 #[doc(inline)]
 pub use fields::{FieldValue, Fields, FieldsNamed};
 #[doc(inline)]
@@ -63,9 +65,13 @@ pub use moxy_token::{
     Lit, LitBool, LitByte, LitByteStr, LitCStr, LitChar, LitF32, LitF64, LitFloat, LitInt, LitStr, LitVerbatim,
 };
 #[doc(inline)]
+pub use parse::*;
+#[doc(inline)]
 pub use pat::Pattern;
 #[doc(inline)]
 pub use path::{Path, PathSegment};
+#[doc(inline)]
+pub use punct::*;
 #[doc(inline)]
 pub use punctuated::*;
 #[doc(inline)]

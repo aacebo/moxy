@@ -1,7 +1,6 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{BoundLifetimes, BoundPolarity, Path, TraitBoundModifier};
+use crate::*;
 
 /// A trait bound (`Trait`, `?Sized`, `for<'a> Trait`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,18 +13,24 @@ pub struct TraitBound {
 }
 
 impl Parse for TraitBound {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let polarity = stream.parse::<BoundPolarity>()?;
-        let lifetimes = stream.parse::<Option<BoundLifetimes>>()?;
-        let modifier = stream.parse::<TraitBoundModifier>()?;
-        let path = stream.parse::<Path>()?;
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![!]>() || cursor.peek::<Token![for]>() || cursor.peek::<Token![?]>() || cursor.peek::<Path>()
+    }
 
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            polarity,
-            lifetimes,
-            modifier,
-            path,
+            polarity: parser.parse()?,
+            lifetimes: parser.parse()?,
+            modifier: parser.parse()?,
+            path: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = BoundPolarity::skip(cursor)?;
+        cursor = cursor.skip::<Option<BoundLifetimes>>()?;
+        cursor = TraitBoundModifier::skip(cursor)?;
+        cursor.skip::<Path>()
     }
 }
 
@@ -55,11 +60,5 @@ impl ToTokens for TraitBound {
         self.lifetimes.to_tokens(tokens);
         self.modifier.to_tokens(tokens);
         self.path.to_tokens(tokens);
-    }
-}
-
-impl TraitBound {
-    pub fn into_type_bound(self) -> super::TypeBound {
-        super::TypeBound::from(self)
     }
 }

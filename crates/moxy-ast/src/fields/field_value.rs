@@ -1,9 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::expr::{ExprPath, PrimaryExpr};
-use crate::{Attributes, Expr, Member};
+use crate::*;
 
 /// A struct literal field (`member: expr` or shorthand `member`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -13,36 +10,40 @@ pub struct FieldValue {
     pub member: Member,
     pub colon_punct: Option<Token![:]>,
     pub expr: Expr,
-    pub shorthand: bool,
+}
+
+impl FieldValue {
+    pub fn is_shorthand(&self) -> bool {
+        self.colon_punct.is_none()
+    }
 }
 
 impl Parse for FieldValue {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let member = stream.parse::<Member>()?;
+    fn peek(cursor: Cursor<'_>) -> bool {
+        Attributes::skip(cursor).unwrap_or(cursor).peek::<Member>()
+    }
 
-        if stream.peek::<Token![:]>() {
-            let colon_punct = Some(stream.parse::<Token![:]>()?);
-            let expr = stream.parse::<Expr>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let member = parser.parse()?;
 
+        if parser.peek::<Token![:]>() {
             Ok(Self {
                 attrs,
                 member,
-                colon_punct,
-                expr,
-                shorthand: false,
+                colon_punct: parser.parse()?,
+                expr: parser.parse()?,
             })
         } else {
             let expr = match &member {
-                Member::Named(id) => Expr::Primary(PrimaryExpr::Path(ExprPath {
+                Member::Named(id) => expr::ExprPath {
                     attrs: Attributes::default(),
                     qself: None,
                     path: id.clone().into(),
-                })),
+                }
+                .into(),
                 Member::Unnamed(_) => {
-                    return Err(moxy_token::LexError::new(stream.span())
-                        .message("tuple index needs a value")
-                        .into());
+                    return parser.error("tuple index needs a value").into();
                 }
             };
 
@@ -51,8 +52,21 @@ impl Parse for FieldValue {
                 member,
                 colon_punct: None,
                 expr,
-                shorthand: true,
             })
+        }
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        let shorthand = cursor.peek::<Ident>();
+        cursor = cursor.skip::<Member>()?;
+
+        if cursor.peek::<Token![:]>() {
+            cursor.skip::<Token![:]>()?.skip::<Expr>()
+        } else if shorthand {
+            Some(cursor)
+        } else {
+            None
         }
     }
 }
@@ -66,12 +80,10 @@ impl Spanner for FieldValue {
 impl ToTokens for FieldValue {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
+        self.member.to_tokens(t);
+        self.colon_punct.to_tokens(t);
 
-        if self.shorthand {
-            self.member.to_tokens(t);
-        } else {
-            self.member.to_tokens(t);
-            self.colon_punct.to_tokens(t);
+        if !self.is_shorthand() {
             self.expr.to_tokens(t);
         }
     }

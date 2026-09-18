@@ -1,5 +1,4 @@
-use moxy_token::Token;
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -17,15 +16,56 @@ impl Spanner for PatTuple {
     }
 }
 
+impl Parse for PatTuple {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let Some(mut inner) = cursor.descend(Delim::Paren) else {
+            return false;
+        };
+
+        if inner.is_empty() {
+            return true;
+        }
+
+        let Some(next) = inner.skip::<Pattern>() else {
+            return false;
+        };
+
+        inner = next;
+        !inner.is_empty() && inner.peek::<Token![,]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let (span, parser) = parser.parse_group_spanned(Delim::Paren)?;
+
+        Ok(Self {
+            attrs,
+            elems: Delimited::paren(span, Punctuated::parse_terminated(&parser)?),
+        })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let cursor = Attributes::skip(cursor)?;
+        let mut inner = cursor.descend(Delim::Paren)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<Pattern>()?;
+
+            if inner.is_empty() {
+                break;
+            }
+
+            inner = inner.skip::<Token![,]>()?;
+        }
+
+        Some(cursor.offset(1))
+    }
+}
+
 impl ToTokens for PatTuple {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.elems.to_tokens(t);
-    }
-}
-
-impl PatTuple {
-    pub fn into_pattern(self) -> super::Pattern {
-        super::Pattern::from(self)
     }
 }

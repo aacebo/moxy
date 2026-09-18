@@ -3,11 +3,11 @@ pub mod query;
 mod style;
 
 pub use meta::Meta;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
 pub use style::*;
 
-use crate::Delimited;
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
+use crate::{Cursor, Delimited, Parse, ParseError, Parser};
 
 /// A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -24,11 +24,23 @@ impl Spanner for Attribute {
 }
 
 impl Parse for Attribute {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<AttrStyle>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            style: stream.parse()?,
-            meta: Delimited::parse_bracket(stream)?,
+            style: parser.parse()?,
+            meta: Delimited::parse_bracket(parser)?,
         })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let cursor = cursor.skip::<AttrStyle>()?;
+        let inner = cursor.descend(moxy_token::Delim::Bracket)?;
+        let inner = inner.skip::<Meta>()?;
+
+        if inner.is_empty() { Some(cursor.offset(1)) } else { None }
     }
 }
 
@@ -124,7 +136,19 @@ impl ToTokens for Attributes {
 }
 
 impl Parse for Attributes {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        Ok(Self(stream.parse_while::<Attribute>()))
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Attribute>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self(parser.parse_while::<Attribute>()))
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        while let Some(next) = cursor.skip::<Attribute>() {
+            cursor = next;
+        }
+
+        Some(cursor)
     }
 }

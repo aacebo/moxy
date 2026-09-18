@@ -1,4 +1,3 @@
-use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -22,15 +21,40 @@ impl Spanner for PatOr {
     }
 }
 
+impl Parse for PatOr {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let mut cursor = Attributes::skip(cursor).unwrap_or(cursor);
+
+        if cursor.peek::<Token![|]>() {
+            return true;
+        }
+
+        while !cursor.is_empty() {
+            if cursor.peek::<Token![|]>() {
+                return true;
+            }
+
+            cursor = cursor.offset(1);
+        }
+
+        false
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Pattern::Or(value) => Ok(value),
+            _ => parser.error("expected or-pattern").into(),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if Self::peek(cursor) { Pattern::skip(cursor) } else { None }
+    }
+}
+
 impl ToTokens for PatOr {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.cases.to_tokens(t);
-    }
-}
-
-impl PatOr {
-    pub fn into_pattern(self) -> super::Pattern {
-        super::Pattern::from(self)
     }
 }

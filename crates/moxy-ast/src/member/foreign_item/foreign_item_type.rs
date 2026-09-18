@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Generics, Ident, Visibility};
+use crate::*;
 
 /// A foreign opaque type declaration inside an `extern` block (`type Name;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -17,22 +15,30 @@ pub struct ForeignItemType {
 }
 
 impl Parse for ForeignItemType {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let type_keyword = stream.parse::<Token![type]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let generics = stream.parse::<Generics>()?;
-        let semi = stream.parse_if::<Token![;]>();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![type]>()
+    }
 
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs,
-            vis,
-            type_keyword,
-            ident,
-            generics,
-            semi,
+            attrs: parser.parse()?,
+            vis: parser.parse()?,
+            type_keyword: parser.parse()?,
+            ident: parser.parse()?,
+            generics: parser.parse()?,
+            semi: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Token![type]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Generics::skip(cursor)?;
+        cursor.skip::<Option<Token![;]>>()
     }
 }
 

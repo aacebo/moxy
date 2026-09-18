@@ -1,4 +1,4 @@
-use moxy_token::Token;
+use crate::{Cursor, Token};
 
 use super::*;
 
@@ -61,25 +61,71 @@ impl MetaLayout {
 }
 
 impl Parse for MetaLayout {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Token![=]>() && !stream.peek::<Token![==]>() && !stream.peek::<Token![=>]>() {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        if cursor.is_empty() {
+            return true;
+        }
+
+        if cursor.peek::<Token![=]>() && cursor.offset(1).peek::<MetaValue>() {
+            return true;
+        }
+
+        if cursor.peek::<MetaValue>() {
+            return true;
+        }
+
+        cursor.is_delimited(Delim::Paren)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<Token![=]>() && !parser.peek::<Token![==]>() && !parser.peek::<Token![=>]>() {
             return Ok(Self::Alias {
-                eq: stream.parse()?,
-                value: stream.parse()?,
+                eq: parser.parse()?,
+                value: parser.parse()?,
             });
         }
 
-        if let Ok((span, tokens)) = stream.parse_group_spanned(Delim::Paren) {
-            let punct = Punctuated::parse_terminated(&mut tokens.parse())?;
+        if let Ok((span, parser)) = parser.parse_group_spanned(Delim::Paren) {
+            let punct = Punctuated::parse_terminated(&parser)?;
             let items = Delimited::new(Delim::Paren, span, punct);
             return Ok(Self::List { items });
         }
 
-        if matches!(stream.curr().and_then(|tt| tt.delim()), Some(d) if d.is_brace()) {
-            return Ok(Self::Value(stream.parse()?));
+        if matches!(parser.cursor().curr().and_then(|tt| tt.delim()), Some(d) if d.is_brace()) {
+            return Ok(Self::Value(parser.parse()?));
         }
 
         Ok(Self::None)
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.is_empty() {
+            return Some(cursor);
+        }
+
+        if cursor.peek::<Token![=]>() && cursor.offset(1).peek::<MetaValue>() {
+            cursor = cursor.skip::<Token![=]>()?;
+            return cursor.skip::<MetaValue>();
+        }
+
+        if cursor.peek::<MetaValue>() {
+            return cursor.skip::<MetaValue>();
+        }
+
+        let outer = cursor;
+        let mut inner = cursor.descend(Delim::Paren)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<MetaArgument>()?;
+
+            if inner.is_empty() {
+                break;
+            }
+
+            inner = inner.skip::<Token![,]>()?;
+        }
+
+        Some(outer.offset(1))
     }
 }
 

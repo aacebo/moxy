@@ -15,7 +15,7 @@ fn absolute_generic_paths_preserve_segments_and_arguments() {
 #[test]
 fn associated_and_turbofish_paths_render_in_expressions() {
     let expression: Expr = moxy::parse!("Type::VALUE").unwrap();
-    assert!(!expression.is_postfix());
+    assert!(expression.is_path());
     assert!(!expression.span().is_empty());
     assert_eq!(moxy::fmt!(&expression).unwrap(), "Type::VALUE");
 }
@@ -24,7 +24,7 @@ fn associated_and_turbofish_paths_render_in_expressions() {
 fn turbofish_paths_render_complete_valid_syntax() {
     for source in ["function::<T>(a, b)", "object.method::<T>(a, b)"] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        assert!(expression.is_postfix());
+        assert!(expression.is_call() || expression.is_method_call());
         assert!(!expression.span().is_empty());
         assert_eq!(moxy::fmt!(&expression).unwrap(), source);
     }

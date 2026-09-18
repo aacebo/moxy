@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Generics, Ident, Punctuated, Type, TypeBound};
+use crate::*;
 
 /// An associated type inside a trait definition (`type Name: Bound = Default;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -19,25 +17,31 @@ pub struct TraitItemType {
 }
 
 impl Parse for TraitItemType {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let type_keyword = stream.parse::<Token![type]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let generics = stream.parse::<Generics>()?;
-        let (colon, bounds) = if stream.peek::<Token![:]>() {
-            (Some(stream.parse::<Token![:]>()?), TypeBound::parse_bounds(stream)?)
+    fn peek(cursor: Cursor<'_>) -> bool {
+        Attributes::skip(cursor)
+            .map(|cursor| cursor.peek::<Token![type]>() && cursor.offset(1).peek::<Ident>())
+            .unwrap_or(false)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let type_keyword = parser.parse()?;
+        let ident = parser.parse()?;
+        let generics = parser.parse()?;
+        let (colon, bounds) = if parser.peek::<Token![:]>() {
+            (Some(parser.parse()?), Punctuated::parse_separated_nonempty(parser)?)
         } else {
             (None, Punctuated::new())
         };
 
-        let default = if stream.peek::<Token![=]>() {
-            let eq = stream.parse::<Token![=]>()?;
-            Some((eq, stream.parse::<Type>()?))
+        let default = if parser.peek::<Token![=]>() {
+            let eq = parser.parse()?;
+            Some((eq, parser.parse()?))
         } else {
             None
         };
 
-        let semi = stream.parse()?;
+        let semi = parser.parse()?;
 
         Ok(Self {
             attrs,
@@ -49,6 +53,30 @@ impl Parse for TraitItemType {
             default,
             semi,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<Token![type]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Generics::skip(cursor)?;
+
+        if cursor.peek::<Token![:]>() {
+            cursor = cursor.skip::<Token![:]>()?;
+            cursor = cursor.skip::<TypeBound>()?;
+
+            while cursor.peek::<Token![+]>() {
+                cursor = cursor.skip::<Token![+]>()?;
+                cursor = cursor.skip::<TypeBound>()?;
+            }
+        }
+
+        if cursor.peek::<Token![=]>() {
+            cursor = cursor.skip::<Token![=]>()?;
+            cursor = cursor.skip::<Type>()?;
+        }
+
+        cursor.skip::<Token![;]>()
     }
 }
 
@@ -73,11 +101,5 @@ impl ToTokens for TraitItemType {
         }
 
         self.semi.to_tokens(t);
-    }
-}
-
-impl TraitItemType {
-    pub fn into_trait_item(self) -> super::TraitItem {
-        super::TraitItem::from(self)
     }
 }

@@ -1,21 +1,38 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
-use super::Field;
-use crate::{Delimited, Punctuated};
+use crate::*;
 
 /// Named struct fields (`{ a: A, b: B }`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldsNamed {
-    pub fields: Delimited<Punctuated<Field, Token![,]>>,
+    pub fields: Delimited<Punctuated<fields::Field, Token![,]>>,
 }
 
 impl Parse for FieldsNamed {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let fields = Delimited::parse_brace_with(stream, Punctuated::parse_terminated)?;
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.is_delimited(Delim::Brace)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let fields = Delimited::parse_brace_with(parser, Punctuated::parse_terminated)?;
         Ok(Self { fields })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let mut inner = cursor.descend(Delim::Brace)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<fields::Field>()?;
+
+            if inner.is_empty() {
+                break;
+            }
+
+            inner = inner.skip::<Token![,]>()?;
+        }
+
+        Some(cursor.offset(1))
     }
 }
 

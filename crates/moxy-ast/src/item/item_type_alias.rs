@@ -1,6 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::Token;
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Generics, Ident, Type, Visibility};
 
@@ -19,15 +19,21 @@ pub struct ItemTypeAlias {
 }
 
 impl Parse for ItemTypeAlias {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let type_keyword = stream.parse::<Token![type]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let generics = stream.parse::<Generics>()?;
-        let eq_punct = stream.parse::<Token![=]>()?;
-        let ty = stream.parse::<Type>()?;
-        let semi_punct = stream.parse::<Token![;]>()?;
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![type]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let type_keyword = parser.parse()?;
+        let ident = parser.parse()?;
+        let generics = parser.parse()?;
+        let eq_punct = parser.parse()?;
+        let ty = parser.parse()?;
+        let semi_punct = parser.parse()?;
 
         Ok(Self {
             attrs,
@@ -39,6 +45,17 @@ impl Parse for ItemTypeAlias {
             ty,
             semi_punct,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Token![type]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Generics::skip(cursor)?;
+        cursor = cursor.skip::<Token![=]>()?;
+        cursor = cursor.skip::<Type>()?;
+        cursor.skip::<Token![;]>()
     }
 }
 

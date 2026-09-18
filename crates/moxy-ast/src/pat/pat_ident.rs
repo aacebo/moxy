@@ -1,4 +1,3 @@
-use moxy_token::Token;
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
@@ -26,6 +25,54 @@ impl Spanner for PatIdent {
     }
 }
 
+impl Parse for PatIdent {
+    fn peek(mut cursor: Cursor<'_>) -> bool {
+        cursor = Attributes::skip(cursor).unwrap_or(cursor);
+
+        if cursor.peek::<Token![ref]>() {
+            cursor = cursor.offset(1);
+        }
+
+        if cursor.peek::<Token![mut]>() {
+            cursor = cursor.offset(1);
+        }
+
+        cursor.peek::<Ident>()
+            && !cursor.offset(1).peek::<Token![::]>()
+            && !cursor.offset(1).peek::<Token![!]>()
+            && !cursor.offset(1).is_delimited(moxy_token::Delim::Paren)
+            && !cursor.offset(1).is_delimited(moxy_token::Delim::Brace)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            attrs: parser.parse()?,
+            by_ref: parser.parse()?,
+            mutability: parser.parse()?,
+            ident: parser.parse()?,
+            subpat: if parser.peek::<Token![@]>() {
+                Some((parser.parse()?, parser.parse()?))
+            } else {
+                None
+            },
+        })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![ref]>>()?;
+        cursor = cursor.skip::<Mutability>()?;
+        cursor = cursor.skip::<Ident>()?;
+
+        if cursor.peek::<Token![@]>() {
+            cursor = cursor.skip::<Token![@]>()?;
+            cursor = cursor.skip::<Pattern>()?;
+        }
+
+        Some(cursor)
+    }
+}
+
 impl ToTokens for PatIdent {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
@@ -37,11 +84,5 @@ impl ToTokens for PatIdent {
             at.to_tokens(t);
             sub.to_tokens(t);
         }
-    }
-}
-
-impl PatIdent {
-    pub fn into_pattern(self) -> super::Pattern {
-        super::Pattern::from(self)
     }
 }

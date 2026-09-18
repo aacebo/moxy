@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Signature, StmtBlock, Visibility};
 
@@ -14,12 +14,25 @@ pub struct ItemFn {
 }
 
 impl Parse for ItemFn {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let sig = stream.parse::<Signature>()?;
-        let body = stream.parse::<StmtBlock>()?;
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Signature>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let sig = parser.parse()?;
+        let body = parser.parse()?;
         Ok(Self { attrs, vis, sig, body })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Signature>()?;
+        cursor.skip::<StmtBlock>()
     }
 }
 

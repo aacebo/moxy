@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Ident, Mutability, Type, Visibility};
+use crate::*;
 
 /// A struct/enum field definition (`pub name: Type` or `pub Type`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -17,24 +15,24 @@ pub struct Field {
 }
 
 impl Parse for Field {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let mutability = stream.parse::<Mutability>()?;
-        let (ident, colon) = if stream.peek::<Ident>() {
-            let mut fork = stream.lookahead();
-            fork.advance();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        let cursor = Mutability::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Type>()
+    }
 
-            if fork.peek::<Token![:]>() {
-                (Some(stream.parse()?), Some(stream.parse()?))
-            } else {
-                (None, None)
-            }
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let mutability = parser.parse()?;
+        let (ident, colon) = if parser.peek::<Ident>() && parser.cursor().offset(1).peek::<Token![:]>() {
+            (Some(parser.parse()?), Some(parser.parse()?))
         } else {
             (None, None)
         };
 
-        let ty = stream.parse::<Type>()?;
+        let ty = parser.parse()?;
 
         Ok(Self {
             attrs,
@@ -44,6 +42,19 @@ impl Parse for Field {
             colon,
             ty,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = Mutability::skip(cursor)?;
+
+        if cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![:]>() {
+            cursor = cursor.skip::<Ident>()?;
+            cursor = cursor.skip::<Token![:]>()?;
+        }
+
+        cursor.skip::<Type>()
     }
 }
 
@@ -58,14 +69,8 @@ impl ToTokens for Field {
         self.attrs.to_tokens(t);
         self.vis.to_tokens(t);
         self.mutability.to_tokens(t);
-
-        if let Some(id) = &self.ident {
-            id.to_tokens(t);
-            if let Some(colon) = &self.colon {
-                colon.to_tokens(t);
-            }
-        }
-
+        self.ident.to_tokens(t);
+        self.colon.to_tokens(t);
         self.ty.to_tokens(t);
     }
 }

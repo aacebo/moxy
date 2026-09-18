@@ -1,8 +1,6 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use super::UseTree;
-use crate::Ident;
+use crate::*;
 
 /// A leaf name in a use tree (`foo`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -12,13 +10,16 @@ pub struct UseName {
 }
 
 impl Parse for UseName {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Ident>()
+    }
 
-        match stream.parse::<UseTree>()? {
-            UseTree::Name(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected use name").into()),
-        }
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self { ident: parser.parse()? })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.skip::<Ident>()
     }
 }
 
@@ -31,11 +32,5 @@ impl Spanner for UseName {
 impl ToTokens for UseName {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.ident.to_tokens(t);
-    }
-}
-
-impl UseName {
-    pub fn into_use_tree(self) -> super::UseTree {
-        super::UseTree::Name(self)
     }
 }

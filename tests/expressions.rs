@@ -10,13 +10,12 @@ fn collection_and_struct_expressions_complete_the_pipeline() {
         ("Point { x: 1, y, ..base }", "Point {\n\tx: 1,\n\ty,\n\t..base\n}", 3),
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        let primary = expression.as_primary().unwrap();
         assert_eq!(
             [
-                primary.is_tuple(),
-                primary.is_array(),
-                primary.is_repeat(),
-                primary.is_struct()
+                expression.is_tuple(),
+                expression.is_array(),
+                expression.is_repeat(),
+                expression.is_struct()
             ],
             std::array::from_fn(|index| index == expected_kind)
         );
@@ -28,11 +27,11 @@ fn collection_and_struct_expressions_complete_the_pipeline() {
 #[test]
 fn control_flow_expressions_preserve_conditions_arms_and_bodies() {
     let conditional: Expr = moxy::parse!("if ready { yes() } else { no() }").unwrap();
-    assert!(conditional.is_block());
+    assert!(conditional.is_if());
     assert_eq!(moxy::fmt!(&conditional).unwrap(), "if ready {\n\tyes()\n} else {\n\tno()\n}");
 
     let matching: Expr = moxy::parse!("match value { Some(x) if x > 0 => x, None => 0, _ => 1 }").unwrap();
-    assert!(matching.is_block());
+    assert!(matching.is_match());
     assert!(!matching.span().is_empty());
     assert_eq!(
         moxy::fmt!(&matching).unwrap(),
@@ -49,7 +48,7 @@ fn closures_loops_and_jumps_render_exact_rust() {
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
         assert_eq!(
-            [expression.is_primary(), expression.is_block(), expression.is_jump()],
+            [expression.is_closure(), expression.is_loop(), expression.is_return()],
             std::array::from_fn(|index| index == expected_kind)
         );
         assert!(!expression.span().is_empty());
@@ -72,7 +71,7 @@ fn async_const_unsafe_and_try_blocks_complete_the_pipeline() {
         ("try { operation()? }", "try {\n\toperation()?\n}"),
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        assert!(expression.is_block());
+        assert!(expression.is_async() || expression.is_const() || expression.is_unsafe() || expression.is_try_block());
         assert!(!expression.span().is_empty());
         assert!(!expression.to_token_stream().is_empty());
         assert_eq!(moxy::fmt!(&expression).unwrap(), expected);
@@ -81,23 +80,32 @@ fn async_const_unsafe_and_try_blocks_complete_the_pipeline() {
 
 #[test]
 fn while_for_break_continue_and_yield_complete_the_pipeline() {
-    for (source, expected, is_jump) in [
+    for (source, expected, expected_kind) in [
         (
             "while let Some(value) = next() { consume(value); }",
             "while let Some(value) = next() {\n\tconsume(value);\n}",
-            false,
+            0,
         ),
         (
             "for item in items { consume(item); }",
             "for item in items {\n\tconsume(item);\n}",
-            false,
+            1,
         ),
-        ("break value", "break value", true),
-        ("continue", "continue", true),
-        ("yield value", "yield value", true),
+        ("break value", "break value", 2),
+        ("continue", "continue", 3),
+        ("yield value", "yield value", 4),
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        assert_eq!(expression.is_jump(), is_jump);
+        assert_eq!(
+            [
+                expression.is_while(),
+                expression.is_for_loop(),
+                expression.is_break(),
+                expression.is_continue(),
+                expression.is_yield(),
+            ],
+            std::array::from_fn(|index| index == expected_kind)
+        );
         assert!(!expression.span().is_empty());
         assert!(!expression.to_token_stream().is_empty());
         assert_eq!(moxy::fmt!(&expression).unwrap(), expected);
@@ -106,16 +114,25 @@ fn while_for_break_continue_and_yield_complete_the_pipeline() {
 
 #[test]
 fn postfix_expression_families_complete_the_pipeline() {
-    for (source, expected) in [
-        ("function(a, b)", "function(a, b)"),
-        ("object.method(a, b)", "object.method(a, b)"),
-        ("object.field", "object.field"),
-        ("tuple.0", "tuple.0"),
-        ("array[index]", "array[index]"),
-        ("future.await", "future.await"),
+    for (source, expected, expected_kind) in [
+        ("function(a, b)", "function(a, b)", 0),
+        ("object.method(a, b)", "object.method(a, b)", 1),
+        ("object.field", "object.field", 2),
+        ("tuple.0", "tuple.0", 2),
+        ("array[index]", "array[index]", 3),
+        ("future.await", "future.await", 4),
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        assert!(expression.is_postfix());
+        assert_eq!(
+            [
+                expression.is_call(),
+                expression.is_method_call(),
+                expression.is_field(),
+                expression.is_index(),
+                expression.is_await(),
+            ],
+            std::array::from_fn(|index| index == expected_kind)
+        );
         assert!(!expression.span().is_empty());
         assert!(!expression.to_token_stream().is_empty());
         assert_eq!(moxy::fmt!(&expression).unwrap(), expected);
@@ -125,24 +142,24 @@ fn postfix_expression_families_complete_the_pipeline() {
 #[cfg(feature = "serde")]
 #[test]
 fn expression_syntax_has_concrete_serde_tags_and_exact_output() {
-    for (source, outer, inner, expected) in [
-        ("-value", "Unary", "Unary", "-value"),
-        ("target = value", "Binary", "Assign", "target = value"),
-        ("function(a)", "Postfix", "Call", "function(a)"),
-        ("if ready { yes() }", "Block", "If", "if ready {\n\tyes()\n}"),
-        ("return value", "Jump", "Return", "return value"),
-        ("[a, b]", "Primary", "Array", "[a, b]"),
+    for (source, variant, expected) in [
+        ("-value", "Unary", "-value"),
+        ("target = value", "Assign", "target = value"),
+        ("function(a)", "Call", "function(a)"),
+        ("if ready { yes() }", "If", "if ready {\n\tyes()\n}"),
+        ("return value", "Return", "return value"),
+        ("[a, b]", "Array", "[a, b]"),
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
         let serialized = serde_json::to_value(&expression).unwrap();
-        assert!(serialized.get(outer).and_then(|value| value.get(inner)).is_some());
+        assert!(serialized.get(variant).is_some());
         assert!(!expression.span().is_empty());
         assert_eq!(moxy::fmt!(&expression).unwrap(), expected);
     }
 }
 
 #[test]
-fn unary_binary_and_postfix_public_variants_match_rendered_syntax() {
+fn expression_public_variants_match_rendered_syntax() {
     for (source, expected, kind) in [
         ("&mut value", "&mut value", 0),
         ("-value", "-value", 1),
@@ -150,22 +167,24 @@ fn unary_binary_and_postfix_public_variants_match_rendered_syntax() {
         ("value?", "value?", 3),
     ] {
         let mut expression: Expr = moxy::parse!(source).unwrap();
-        let unary = expression.as_unary().unwrap();
         assert_eq!(
-            [unary.is_reference(), unary.is_unary(), unary.is_cast(), unary.is_try()],
+            [
+                expression.is_reference(),
+                expression.is_unary(),
+                expression.is_cast(),
+                expression.is_try(),
+            ],
             std::array::from_fn(|index| index == kind)
         );
         assert_eq!(
             [
-                unary.as_reference().is_some(),
-                unary.as_unary().is_some(),
-                unary.as_cast().is_some(),
-                unary.as_try().is_some(),
+                expression.as_reference().is_some(),
+                expression.as_unary().is_some(),
+                expression.as_cast().is_some(),
+                expression.as_try().is_some(),
             ],
             std::array::from_fn(|index| index == kind)
         );
-        assert!(unary.attrs().is_empty());
-        assert!(unary.clone().into_expr().is_unary());
         assert!(expression.attrs_mut().unwrap().is_empty());
         assert_eq!(moxy::fmt!(&expression).unwrap(), expected);
     }
@@ -173,33 +192,22 @@ fn unary_binary_and_postfix_public_variants_match_rendered_syntax() {
     for (source, expected, kind) in [
         ("a + b", "a + b", 0),
         ("target = value", "target = value", 1),
-        ("target += value", "target += value", 2),
-        ("start..=end", "start..=end", 3),
+        ("start..=end", "start..=end", 2),
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        let binary = expression.as_binary().unwrap();
         assert_eq!(
-            [
-                binary.is_binary(),
-                binary.is_assign(),
-                binary.is_assign_op(),
-                binary.is_range(),
-                binary.is_type(),
-            ],
+            [expression.is_binary(), expression.is_assign(), expression.is_range(),],
             std::array::from_fn(|index| index == kind)
         );
         assert_eq!(
             [
-                binary.as_binary().is_some(),
-                binary.as_assign().is_some(),
-                binary.as_assign_op().is_some(),
-                binary.as_range().is_some(),
-                binary.as_type().is_some(),
+                expression.as_binary().is_some(),
+                expression.as_assign().is_some(),
+                expression.as_range().is_some(),
             ],
             std::array::from_fn(|index| index == kind)
         );
-        assert!(binary.attrs().is_empty());
-        assert!(binary.clone().into_expr().is_binary());
+        assert!(expression.attrs().unwrap().is_empty());
         assert_eq!(moxy::fmt!(&expression).unwrap(), expected);
     }
 
@@ -211,35 +219,33 @@ fn unary_binary_and_postfix_public_variants_match_rendered_syntax() {
         ("future.await", "future.await", 4),
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        let postfix = expression.as_postfix().unwrap();
         assert_eq!(
             [
-                postfix.is_call(),
-                postfix.is_method_call(),
-                postfix.is_field(),
-                postfix.is_index(),
-                postfix.is_await(),
+                expression.is_call(),
+                expression.is_method_call(),
+                expression.is_field(),
+                expression.is_index(),
+                expression.is_await(),
             ],
             std::array::from_fn(|index| index == kind)
         );
         assert_eq!(
             [
-                postfix.as_call().is_some(),
-                postfix.as_method_call().is_some(),
-                postfix.as_field().is_some(),
-                postfix.as_index().is_some(),
-                postfix.as_await().is_some(),
+                expression.as_call().is_some(),
+                expression.as_method_call().is_some(),
+                expression.as_field().is_some(),
+                expression.as_index().is_some(),
+                expression.as_await().is_some(),
             ],
             std::array::from_fn(|index| index == kind)
         );
-        assert!(postfix.attrs().is_empty());
-        assert!(postfix.clone().into_expr().is_postfix());
+        assert!(expression.attrs().unwrap().is_empty());
         assert_eq!(moxy::fmt!(&expression).unwrap(), expected);
     }
 }
 
 #[test]
-fn block_jump_and_primary_public_variants_match_rendered_syntax() {
+fn remaining_expression_public_variants_match_rendered_syntax() {
     for (source, expected, kind) in [
         ("{ value }", "{\n\tvalue\n}", 0),
         ("if ready { yes() }", "if ready {\n\tyes()\n}", 1),
@@ -261,39 +267,37 @@ fn block_jump_and_primary_public_variants_match_rendered_syntax() {
         ("try { work()? }", "try {\n\twork()?\n}", 9),
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        let block = expression.as_block().unwrap();
         assert_eq!(
             [
-                block.is_brace(),
-                block.is_if(),
-                block.is_while(),
-                block.is_for_loop(),
-                block.is_loop(),
-                block.is_match(),
-                block.is_async(),
-                block.is_unsafe(),
-                block.is_const(),
-                block.is_try_block(),
+                expression.is_block(),
+                expression.is_if(),
+                expression.is_while(),
+                expression.is_for_loop(),
+                expression.is_loop(),
+                expression.is_match(),
+                expression.is_async(),
+                expression.is_unsafe(),
+                expression.is_const(),
+                expression.is_try_block(),
             ],
             std::array::from_fn(|index| index == kind)
         );
         assert_eq!(
             [
-                block.as_brace().is_some(),
-                block.as_if().is_some(),
-                block.as_while().is_some(),
-                block.as_for_loop().is_some(),
-                block.as_loop().is_some(),
-                block.as_match().is_some(),
-                block.as_async().is_some(),
-                block.as_unsafe().is_some(),
-                block.as_const().is_some(),
-                block.as_try_block().is_some(),
+                expression.as_block().is_some(),
+                expression.as_if().is_some(),
+                expression.as_while().is_some(),
+                expression.as_for_loop().is_some(),
+                expression.as_loop().is_some(),
+                expression.as_match().is_some(),
+                expression.as_async().is_some(),
+                expression.as_unsafe().is_some(),
+                expression.as_const().is_some(),
+                expression.as_try_block().is_some(),
             ],
             std::array::from_fn(|index| index == kind)
         );
-        assert!(block.attrs().is_empty());
-        assert!(block.clone().into_expr().is_block());
+        assert!(expression.attrs().unwrap().is_empty());
         assert_eq!(moxy::fmt!(&expression).unwrap(), expected);
     }
 
@@ -304,22 +308,25 @@ fn block_jump_and_primary_public_variants_match_rendered_syntax() {
         ("yield value", "yield value", 3),
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        let jump = expression.as_jump().unwrap();
         assert_eq!(
-            [jump.is_return(), jump.is_break(), jump.is_continue(), jump.is_yield()],
+            [
+                expression.is_return(),
+                expression.is_break(),
+                expression.is_continue(),
+                expression.is_yield(),
+            ],
             std::array::from_fn(|index| index == kind)
         );
         assert_eq!(
             [
-                jump.as_return().is_some(),
-                jump.as_break().is_some(),
-                jump.as_continue().is_some(),
-                jump.as_yield().is_some(),
+                expression.as_return().is_some(),
+                expression.as_break().is_some(),
+                expression.as_continue().is_some(),
+                expression.as_yield().is_some(),
             ],
             std::array::from_fn(|index| index == kind)
         );
-        assert!(jump.attrs().is_empty());
-        assert!(jump.clone().into_expr().is_jump());
+        assert!(expression.attrs().unwrap().is_empty());
         assert_eq!(moxy::fmt!(&expression).unwrap(), expected);
     }
 
@@ -336,41 +343,39 @@ fn block_jump_and_primary_public_variants_match_rendered_syntax() {
         ("macro_call!(tokens)", "macro_call!(tokens)", 10),
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        let primary = expression.as_primary().unwrap();
         assert_eq!(
             [
-                primary.is_lit(),
-                primary.is_path(),
-                primary.is_struct(),
-                primary.is_closure(),
-                primary.is_tuple(),
-                primary.is_array(),
-                primary.is_repeat(),
-                primary.is_let(),
-                primary.is_paren(),
-                primary.is_group(),
-                primary.is_macro(),
+                expression.is_lit(),
+                expression.is_path(),
+                expression.is_struct(),
+                expression.is_closure(),
+                expression.is_tuple(),
+                expression.is_array(),
+                expression.is_repeat(),
+                expression.is_let(),
+                expression.is_paren(),
+                expression.is_group(),
+                expression.is_macro(),
             ],
             std::array::from_fn(|index| index == kind)
         );
         assert_eq!(
             [
-                primary.as_lit().is_some(),
-                primary.as_path().is_some(),
-                primary.as_struct().is_some(),
-                primary.as_closure().is_some(),
-                primary.as_tuple().is_some(),
-                primary.as_array().is_some(),
-                primary.as_repeat().is_some(),
-                primary.as_let().is_some(),
-                primary.as_paren().is_some(),
-                primary.as_group().is_some(),
-                primary.as_macro().is_some(),
+                expression.as_lit().is_some(),
+                expression.as_path().is_some(),
+                expression.as_struct().is_some(),
+                expression.as_closure().is_some(),
+                expression.as_tuple().is_some(),
+                expression.as_array().is_some(),
+                expression.as_repeat().is_some(),
+                expression.as_let().is_some(),
+                expression.as_paren().is_some(),
+                expression.as_group().is_some(),
+                expression.as_macro().is_some(),
             ],
             std::array::from_fn(|index| index == kind)
         );
-        assert!(primary.attrs().is_empty());
-        assert!(primary.clone().into_expr().is_primary());
+        assert!(expression.attrs().unwrap().is_empty());
         assert_eq!(moxy::fmt!(&expression).unwrap(), expected);
     }
 }

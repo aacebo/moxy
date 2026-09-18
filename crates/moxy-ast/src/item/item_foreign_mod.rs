@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Abi, Attributes, Delimited, ForeignItem, Unsafety};
 
@@ -14,11 +14,21 @@ pub struct ItemForeignMod {
 }
 
 impl Parse for ItemForeignMod {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let unsafety = stream.parse::<Unsafety>()?;
-        let abi = stream.parse::<Abi>()?;
-        let items = Delimited::<Vec<ForeignItem>>::parse_brace(stream)?;
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Unsafety::skip(cursor).unwrap_or(cursor);
+        let Some(cursor) = cursor.skip::<Abi>() else {
+            return false;
+        };
+
+        cursor.is_delimited(moxy_token::Delim::Brace)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let unsafety = parser.parse()?;
+        let abi = parser.parse()?;
+        let items = Delimited::<Vec<ForeignItem>>::parse_brace(parser)?;
 
         Ok(Self {
             attrs,
@@ -26,6 +36,19 @@ impl Parse for ItemForeignMod {
             abi,
             items,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Unsafety::skip(cursor)?;
+        cursor = cursor.skip::<Abi>()?;
+        let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<ForeignItem>()?;
+        }
+
+        Some(cursor.offset(1))
     }
 }
 

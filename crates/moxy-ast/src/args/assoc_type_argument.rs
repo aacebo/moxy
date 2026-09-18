@@ -1,9 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use super::AngleArguments;
-use crate::{GenericArgument, Ident, Type};
+use crate::{AngleArguments, Cursor, GenericArgument, Ident, Parse, ParseError, Parser, Token, Type};
 
 /// An associated type binding (`Item = T`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -26,13 +23,36 @@ impl AssocTypeArgument {
 }
 
 impl Parse for AssocTypeArgument {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(cursor) = cursor.skip::<Ident>() else {
+            return false;
+        };
+
+        let Some(cursor) = Option::<AngleArguments>::skip(cursor) else {
+            return false;
+        };
+
+        let Some(cursor) = cursor.skip::<Token![=]>() else {
+            return false;
+        };
+
+        cursor.peek::<Type>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            ident: stream.parse()?,
-            generics: stream.parse_if(),
-            eq_punct: stream.parse()?,
-            ty: stream.parse()?,
+            ident: parser.parse()?,
+            generics: parser.parse()?,
+            eq_punct: parser.parse()?,
+            ty: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Ident>()?;
+        cursor = cursor.skip::<Option<AngleArguments>>()?;
+        cursor = cursor.skip::<Token![=]>()?;
+        cursor.skip::<Type>()
     }
 }
 
@@ -45,11 +65,7 @@ impl Spanner for AssocTypeArgument {
 impl ToTokens for AssocTypeArgument {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.ident.to_tokens(t);
-
-        if let Some(g) = &self.generics {
-            g.to_tokens(t);
-        }
-
+        self.generics.to_tokens(t);
         self.eq_punct.to_tokens(t);
         self.ty.to_tokens(t);
     }

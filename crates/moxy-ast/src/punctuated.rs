@@ -1,8 +1,9 @@
 use std::ops::{Index, IndexMut};
 use std::{slice, vec};
 
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
+use crate::*;
 
 pub struct Punctuated<T, P> {
     pub inner: Vec<(T, P)>,
@@ -175,37 +176,37 @@ impl<T, P> Punctuated<T, P> {
 }
 
 impl<T: Parse, P: Parse> Punctuated<T, P> {
-    pub fn parse_terminated(stream: &mut ParseStream<'_>) -> Result<Self, ParseError> {
+    pub fn parse_terminated(parser: &Parser) -> Result<Self, ParseError> {
         let mut punctuated = Self::new();
 
         loop {
-            if stream.is_empty() {
+            if parser.is_empty() {
                 break;
             }
 
-            punctuated.push_value(stream.parse::<T>()?);
+            punctuated.push_value(parser.parse::<T>()?);
 
-            if stream.is_empty() {
+            if parser.is_empty() {
                 break;
             }
 
-            punctuated.push_punct(stream.parse::<P>()?);
+            punctuated.push_punct(parser.parse::<P>()?);
         }
 
         Ok(punctuated)
     }
 
-    pub fn parse_separated_nonempty(stream: &mut ParseStream<'_>) -> Result<Self, ParseError> {
+    pub fn parse_separated_nonempty(parser: &Parser) -> Result<Self, ParseError> {
         let mut punctuated = Self::new();
 
         loop {
-            punctuated.push_value(stream.parse()?);
+            punctuated.push_value(parser.parse()?);
 
-            if !stream.peek::<P>() {
+            if !parser.peek::<P>() {
                 break;
             }
 
-            punctuated.push_punct(stream.parse()?);
+            punctuated.push_punct(parser.parse()?);
         }
 
         Ok(punctuated)

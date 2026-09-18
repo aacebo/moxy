@@ -1,0 +1,42 @@
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
+use crate::*;
+
+/// A spread pattern, e.g. `..`.
+#[derive(Debug, Clone, PartialEq, Eq)]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct PatRest {
+    pub attrs: Attributes,
+    pub token: Token![..],
+}
+
+impl Spanner for PatRest {
+    fn span(&self) -> Span {
+        self.attrs.span().join(self.token.span())
+    }
+}
+
+impl Parse for PatRest {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![..]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            attrs: parser.parse()?,
+            token: parser.parse()?,
+        })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Attributes::skip(cursor)?.skip::<Token![..]>()
+    }
+}
+
+impl ToTokens for PatRest {
+    fn to_tokens(&self, t: &mut TokenStream) {
+        self.attrs.to_tokens(t);
+        self.token.to_tokens(t);
+    }
+}

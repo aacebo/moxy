@@ -1,8 +1,6 @@
 use moxy_ast::fields::{Field, Fields, FieldsNamed, FieldsUnnamed};
 use moxy_ast::item::*;
-use moxy_ast::member::foreign_item::*;
-use moxy_ast::member::impl_item::*;
-use moxy_ast::member::trait_item::*;
+use moxy_ast::member::*;
 use moxy_ast::member::{ForeignItem, ImplItem, TraitItem};
 use moxy_ast::sig::{FnParam, Receiver, Signature, Variadic};
 use moxy_ast::use_tree::*;
@@ -669,9 +667,11 @@ impl Format for ItemForeignMod {
         f.indent(|f| {
             for (i, item) in self.items.inner.iter().enumerate() {
                 f.hard_break()?;
+
                 if i > 0 {
                     f.hard_break()?;
                 }
+
                 item.format(f)?;
             }
 

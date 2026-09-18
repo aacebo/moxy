@@ -1,7 +1,6 @@
 use crate::lex::{Cursor, LexError, Scan};
 use crate::lit::Lit;
-use crate::parser::{ParseError, ParseStream};
-use crate::{Parse, Span, Spanner};
+use crate::{Span, Spanner};
 
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(into = "String"))]
@@ -91,17 +90,6 @@ impl Scan for LitStr {
     }
 }
 
-impl Parse for LitStr {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-
-        match stream.parse::<Lit>()? {
-            Lit::Str(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected string literal").into()),
-        }
-    }
-}
-
 impl From<LitStr> for Lit {
     fn from(value: LitStr) -> Self {
         Self::Str(value)
@@ -120,14 +108,14 @@ fn scan_cooked<'a>(c: Cursor<'a>, open: &str) -> Result<Cursor<'a>, LexError> {
         return c.error().into();
     }
 
-    let mut c = c.advance(open.len());
+    let mut c = c.advance_by(open.len());
 
     loop {
         match c.first() {
             None => return c.error().into(),
-            Some('"') => return Ok(c.advance(1)),
-            Some('\\') => c = escape(c.advance(1))?,
-            Some(ch) => c = c.advance(ch.len_utf8()),
+            Some('"') => return Ok(c.advance()),
+            Some('\\') => c = escape(c.advance())?,
+            Some(ch) => c = c.advance_by(ch.len_utf8()),
         }
     }
 }
@@ -137,19 +125,19 @@ fn scan_raw<'a>(start: Cursor<'a>, open: &str) -> Result<Cursor<'a>, LexError> {
         return start.error().into();
     }
 
-    let mut cur = start.advance(open.len());
+    let mut cur = start.advance_by(open.len());
     let mut hashes = 0u32;
 
     while cur.starts_with("#") {
         hashes += 1;
-        cur = cur.advance(1);
+        cur = cur.advance();
     }
 
     if !cur.starts_with("\"") {
         return start.error().into();
     }
 
-    cur = cur.advance(1);
+    cur = cur.advance();
 
     let closing: String = std::iter::once('"')
         .chain(std::iter::repeat_n('#', hashes as usize))
@@ -161,11 +149,11 @@ fn scan_raw<'a>(start: Cursor<'a>, open: &str) -> Result<Cursor<'a>, LexError> {
         }
 
         if cur.starts_with(&closing) {
-            return Ok(cur.advance(closing.len()));
+            return Ok(cur.advance_by(closing.len()));
         }
 
         if let Some(ch) = cur.first() {
-            cur = cur.advance(ch.len_utf8());
+            cur = cur.advance_by(ch.len_utf8());
         } else {
             return start.error().into();
         }
@@ -175,28 +163,28 @@ fn scan_raw<'a>(start: Cursor<'a>, open: &str) -> Result<Cursor<'a>, LexError> {
 fn escape(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
     match c.first() {
         None => c.error().into(),
-        Some('n' | 'r' | 't' | '\\' | '\'' | '"' | '0') => Ok(c.advance(1)),
+        Some('n' | 'r' | 't' | '\\' | '\'' | '"' | '0') => Ok(c.advance()),
         Some('x') => {
-            let c = c.advance(1);
+            let c = c.advance();
             let c = hex_digit(c)?;
             hex_digit(c)
         }
         Some('u') => {
-            let c = c.advance(1);
+            let c = c.advance();
 
             if !c.starts_with("{") {
                 return c.error().into();
             }
 
-            let mut c = c.advance(1);
+            let mut c = c.advance();
             let mut count = 0;
 
             loop {
                 match c.first() {
-                    Some('}') if count > 0 => return Ok(c.advance(1)),
+                    Some('}') if count > 0 => return Ok(c.advance()),
                     Some(ch) if ch.is_ascii_hexdigit() && count < 6 => {
                         count += 1;
-                        c = c.advance(1);
+                        c = c.advance();
                     }
                     _ => return c.error().into(),
                 }
@@ -208,7 +196,7 @@ fn escape(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
 
 fn hex_digit(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
     match c.first() {
-        Some(ch) if ch.is_ascii_hexdigit() => Ok(c.advance(1)),
+        Some(ch) if ch.is_ascii_hexdigit() => Ok(c.advance()),
         _ => c.error().into(),
     }
 }

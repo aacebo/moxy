@@ -146,7 +146,7 @@ impl Scan for Ident {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
         // Raw ident: r#ident
         if cursor.starts_with("r#") {
-            let after = cursor.advance(2);
+            let after = cursor.advance_by(2);
             let end = after.skip_while(unicode_ident::is_xid_continue);
 
             if end.offset() == after.offset() {
@@ -164,7 +164,7 @@ impl Scan for Ident {
             return cursor.error().into();
         }
 
-        let end = cursor.advance(first.len_utf8()).skip_while(unicode_ident::is_xid_continue);
+        let end = cursor.advance_by(first.len_utf8()).skip_while(unicode_ident::is_xid_continue);
         let span = cursor.span_to(&end);
         let text = &cursor.rest()[..end.offset() as usize - cursor.offset() as usize];
         Ok((end, Self::new(text).with_span(span)))
@@ -186,35 +186,6 @@ impl ToTokens for Ident {
 impl crate::Spanner for Ident {
     fn span(&self) -> Span {
         self.span
-    }
-}
-
-impl crate::Parse for Ident {
-    fn parse(stream: &mut crate::parser::ParseStream) -> Result<Self, crate::parser::ParseError> {
-        match stream.advance().cloned() {
-            Some(crate::TokenTree::Ident(v)) => Ok(v.clone()),
-            Some(other) => Err(crate::lex::LexError::new(stream.span())
-                .message(format!("expected Ident, received \"{}\"", other))
-                .into()),
-            None => Err(crate::lex::LexError::new(stream.span())
-                .message(format!("expected Ident, received \"{}\"", "<EOF>"))
-                .into()),
-        }
-    }
-}
-
-impl Ident {
-    pub fn parse_any(stream: &mut crate::parser::ParseStream) -> Result<Self, crate::parser::ParseError> {
-        match stream.advance().cloned() {
-            Some(TokenTree::Ident(v)) => Ok(v),
-            Some(TokenTree::Keyword(v)) => Ok(Ident::new(v.as_str()).with_span(v.span())),
-            Some(other) => Err(crate::lex::LexError::new(stream.span())
-                .message(format!("expected Ident, received \"{}\"", other))
-                .into()),
-            None => Err(crate::lex::LexError::new(stream.span())
-                .message(format!("expected Ident, received \"{}\"", "<EOF>"))
-                .into()),
-        }
     }
 }
 

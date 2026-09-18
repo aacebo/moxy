@@ -1,6 +1,3 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
-
 mod foreign_item_fn;
 mod foreign_item_macro;
 mod foreign_item_static;
@@ -10,6 +7,10 @@ pub use foreign_item_fn::*;
 pub use foreign_item_macro::*;
 pub use foreign_item_static::*;
 pub use foreign_item_type::*;
+
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
+use crate::*;
 
 /// An item inside an `extern` block.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -80,20 +81,39 @@ impl_from! {
 }
 
 impl Parse for ForeignItem {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if let Some(item) = stream.parse_if::<ForeignItemStatic>() {
-            return Ok(Self::Static(item));
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<ForeignItemStatic>()
+            || cursor.peek::<ForeignItemType>()
+            || cursor.peek::<ForeignItemFn>()
+            || cursor.peek::<ForeignItemMacro>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<ForeignItemStatic>() {
+            return Ok(Self::Static(parser.parse()?));
         }
 
-        if let Some(item) = stream.parse_if::<ForeignItemType>() {
-            return Ok(Self::Type(item));
+        if parser.peek::<ForeignItemType>() {
+            return Ok(Self::Type(parser.parse()?));
         }
 
-        if let Some(item) = stream.parse_if::<ForeignItemFn>() {
-            return Ok(Self::Fn(item));
+        if parser.peek::<ForeignItemFn>() {
+            return Ok(Self::Fn(parser.parse()?));
         }
 
-        Ok(Self::Macro(stream.parse()?))
+        Ok(Self::Macro(parser.parse()?))
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<ForeignItemStatic>() {
+            cursor.skip::<ForeignItemStatic>()
+        } else if cursor.peek::<ForeignItemType>() {
+            cursor.skip::<ForeignItemType>()
+        } else if cursor.peek::<ForeignItemFn>() {
+            cursor.skip::<ForeignItemFn>()
+        } else {
+            cursor.skip::<ForeignItemMacro>()
+        }
     }
 }
 

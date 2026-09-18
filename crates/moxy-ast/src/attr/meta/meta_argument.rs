@@ -1,3 +1,5 @@
+use crate::Cursor;
+
 use super::*;
 
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -39,11 +41,23 @@ impl MetaArgument {
 }
 
 impl Parse for MetaArgument {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Path>() {
-            Ok(Self::Meta(stream.parse()?))
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<MetaValue>() || cursor.peek::<Meta>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<Path>() {
+            Ok(Self::Meta(parser.parse()?))
         } else {
-            Ok(Self::Value(stream.parse()?))
+            Ok(Self::Value(parser.parse()?))
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<Path>() {
+            cursor.skip::<Meta>()
+        } else {
+            cursor.skip::<MetaValue>()
         }
     }
 }

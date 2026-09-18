@@ -1,6 +1,5 @@
 use crate::lex::{Cursor, LexError, Scan};
-use crate::parser::{ParseError, ParseStream};
-use crate::{Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use crate::{Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 pub mod float;
 pub mod int;
@@ -226,7 +225,10 @@ impl From<Lit> for String {
 
 impl Scan for Lit {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
-        // Strings / chars / bytes first — their prefix bytes (b c r ' ") are unambiguous.
+        if let Ok((end, v)) = LitBool::scan(cursor) {
+            return Ok((end, Self::Bool(v)));
+        }
+
         if let Ok((end, v)) = LitByte::scan(cursor) {
             return Ok((end, Self::Byte(v)));
         }
@@ -262,14 +264,5 @@ impl Scan for Lit {
 impl ToTokens for Lit {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         tokens.extend_one(TokenTree::Literal(self.clone()));
-    }
-}
-
-impl Parse for Lit {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        match stream.advance() {
-            Some(TokenTree::Literal(v)) => Ok(v.clone()),
-            _ => Err(LexError::new(stream.span()).message("expected Literal").into()),
-        }
     }
 }

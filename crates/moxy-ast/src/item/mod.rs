@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 mod item_const;
 mod item_enum;
@@ -307,59 +307,127 @@ impl From<ItemForeignMod> for Item {
 }
 
 impl Parse for Item {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        cursor.peek::<ItemMacroRules>()
+            || cursor.peek::<ItemUse>()
+            || cursor.peek::<ItemExternCrate>()
+            || cursor.peek::<ItemForeignMod>()
+            || cursor.peek::<ItemMod>()
+            || cursor.peek::<ItemStruct>()
+            || cursor.peek::<ItemEnum>()
+            || cursor.peek::<ItemUnion>()
+            || cursor.peek::<ItemTraitAlias>()
+            || cursor.peek::<ItemTrait>()
+            || cursor.peek::<ItemImpl>()
+            || cursor.peek::<ItemTypeAlias>()
+            || cursor.peek::<ItemConst>()
+            || cursor.peek::<ItemStatic>()
+            || cursor.peek::<ItemFn>()
+            || cursor.peek::<ItemMacro>()
+    }
 
-        if let Some(item) = stream.parse_if::<ItemMacroRules>() {
-            return Ok(Self::Macro2(item));
-        }
-        if let Some(item) = stream.parse_if::<ItemUse>() {
-            return Ok(Self::Use(item));
-        }
-        if let Some(item) = stream.parse_if::<ItemExternCrate>() {
-            return Ok(Self::ExternCrate(item));
-        }
-        if let Some(item) = stream.parse_if::<ItemForeignMod>() {
-            return Ok(Self::ForeignMod(item));
-        }
-        if let Some(item) = stream.parse_if::<ItemMod>() {
-            return Ok(Self::Mod(item));
-        }
-        if let Some(item) = stream.parse_if::<ItemStruct>() {
-            return Ok(Self::Struct(item));
-        }
-        if let Some(item) = stream.parse_if::<ItemEnum>() {
-            return Ok(Self::Enum(item));
-        }
-        if let Some(item) = stream.parse_if::<ItemUnion>() {
-            return Ok(Self::Union(item));
-        }
-        if let Some(item) = stream.parse_if::<ItemTraitAlias>() {
-            return Ok(Self::TraitAlias(item));
-        }
-        if let Some(item) = stream.parse_if::<ItemTrait>() {
-            return Ok(Self::Trait(item));
-        }
-        if let Some(item) = stream.parse_if::<ItemImpl>() {
-            return Ok(Self::Impl(item));
-        }
-        if let Some(item) = stream.parse_if::<ItemTypeAlias>() {
-            return Ok(Self::TypeAlias(item));
-        }
-        if let Some(item) = stream.parse_if::<ItemConst>() {
-            return Ok(Self::Const(item));
-        }
-        if let Some(item) = stream.parse_if::<ItemStatic>() {
-            return Ok(Self::Static(item));
-        }
-        if let Some(item) = stream.parse_if::<ItemFn>() {
-            return Ok(Self::Fn(item));
-        }
-        if let Some(item) = stream.parse_if::<ItemMacro>() {
-            return Ok(Self::Macro(item));
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<ItemMacroRules>() {
+            return Ok(Self::Macro2(parser.parse()?));
         }
 
-        Err(LexError::new(at).message("expected item").into())
+        if parser.peek::<ItemUse>() {
+            return Ok(Self::Use(parser.parse()?));
+        }
+
+        if parser.peek::<ItemExternCrate>() {
+            return Ok(Self::ExternCrate(parser.parse()?));
+        }
+
+        if parser.peek::<ItemForeignMod>() {
+            return Ok(Self::ForeignMod(parser.parse()?));
+        }
+
+        if parser.peek::<ItemMod>() {
+            return Ok(Self::Mod(parser.parse()?));
+        }
+
+        if parser.peek::<ItemStruct>() {
+            return Ok(Self::Struct(parser.parse()?));
+        }
+
+        if parser.peek::<ItemEnum>() {
+            return Ok(Self::Enum(parser.parse()?));
+        }
+
+        if parser.peek::<ItemUnion>() {
+            return Ok(Self::Union(parser.parse()?));
+        }
+
+        if parser.peek::<ItemTraitAlias>() {
+            return Ok(Self::TraitAlias(parser.parse()?));
+        }
+
+        if parser.peek::<ItemTrait>() {
+            return Ok(Self::Trait(parser.parse()?));
+        }
+
+        if parser.peek::<ItemImpl>() {
+            return Ok(Self::Impl(parser.parse()?));
+        }
+
+        if parser.peek::<ItemTypeAlias>() {
+            return Ok(Self::TypeAlias(parser.parse()?));
+        }
+
+        if parser.peek::<ItemConst>() {
+            return Ok(Self::Const(parser.parse()?));
+        }
+
+        if parser.peek::<ItemStatic>() {
+            return Ok(Self::Static(parser.parse()?));
+        }
+
+        if parser.peek::<ItemFn>() {
+            return Ok(Self::Fn(parser.parse()?));
+        }
+
+        if parser.peek::<ItemMacro>() {
+            return Ok(Self::Macro(parser.parse()?));
+        }
+
+        parser.error("expected item").into()
+    }
+
+    fn skip(cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        if cursor.peek::<ItemMacroRules>() {
+            cursor.skip::<ItemMacroRules>()
+        } else if cursor.peek::<ItemUse>() {
+            cursor.skip::<ItemUse>()
+        } else if cursor.peek::<ItemExternCrate>() {
+            cursor.skip::<ItemExternCrate>()
+        } else if cursor.peek::<ItemForeignMod>() {
+            cursor.skip::<ItemForeignMod>()
+        } else if cursor.peek::<ItemMod>() {
+            cursor.skip::<ItemMod>()
+        } else if cursor.peek::<ItemStruct>() {
+            cursor.skip::<ItemStruct>()
+        } else if cursor.peek::<ItemEnum>() {
+            cursor.skip::<ItemEnum>()
+        } else if cursor.peek::<ItemUnion>() {
+            cursor.skip::<ItemUnion>()
+        } else if cursor.peek::<ItemTraitAlias>() {
+            cursor.skip::<ItemTraitAlias>()
+        } else if cursor.peek::<ItemTrait>() {
+            cursor.skip::<ItemTrait>()
+        } else if cursor.peek::<ItemImpl>() {
+            cursor.skip::<ItemImpl>()
+        } else if cursor.peek::<ItemTypeAlias>() {
+            cursor.skip::<ItemTypeAlias>()
+        } else if cursor.peek::<ItemConst>() {
+            cursor.skip::<ItemConst>()
+        } else if cursor.peek::<ItemStatic>() {
+            cursor.skip::<ItemStatic>()
+        } else if cursor.peek::<ItemFn>() {
+            cursor.skip::<ItemFn>()
+        } else {
+            cursor.skip::<ItemMacro>()
+        }
     }
 }
 

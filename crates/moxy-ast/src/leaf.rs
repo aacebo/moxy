@@ -1,5 +1,6 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
+
+use crate::{Cursor, Parse, ParseError, Parser, Token};
 
 macro_rules! define_leaf {
     ($(
@@ -17,14 +18,30 @@ macro_rules! define_leaf {
 
             impl Parse for $name {
                 #[allow(unreachable_code)]
-                fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+                fn peek(cursor: Cursor<'_>) -> bool {
                     $(
-                        define_leaf!(@parse_arm stream, Self::$variant $(=> $token)?);
+                        define_leaf!(@peek_arm cursor $(=> $token)?);
                     )+
 
-                    Err(LexError::new(stream.span())
-                        .message(concat!("expected `", stringify!($name), "`"))
-                        .into())
+                    false
+                }
+
+                #[allow(unreachable_code)]
+                fn parse(parser: &Parser) -> Result<Self, ParseError> {
+                    $(
+                        define_leaf!(@parse_arm parser, Self::$variant $(=> $token)?);
+                    )+
+
+                    Err(parser.error(concat!("expected `", stringify!($name), "`")))
+                }
+
+                #[allow(unreachable_code)]
+                fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+                    $(
+                        define_leaf!(@skip_arm cursor $(=> $token)?);
+                    )+
+
+                    None
                 }
             }
 
@@ -74,15 +91,35 @@ macro_rules! define_leaf {
         )+
     };
 
-    (@parse_arm $stream:ident, $value:expr => $token:ty) => {
-        if $stream.peek::<$token>() {
-            let tok: $token = $stream.parse()?;
+    (@parse_arm $parser:ident, $value:expr => $token:ty) => {
+        if $parser.peek::<$token>() {
+            let tok: $token = $parser.parse()?;
             return Ok($value(tok));
         }
     };
 
-    (@parse_arm $stream:ident, $value:expr) => {
+    (@parse_arm $parser:ident, $value:expr) => {
         return Ok($value);
+    };
+
+    (@peek_arm $cursor:ident => $token:ty) => {
+        if $cursor.peek::<$token>() {
+            return true;
+        }
+    };
+
+    (@peek_arm $cursor:ident) => {
+        return true;
+    };
+
+    (@skip_arm $cursor:ident => $token:ty) => {
+        if $cursor.peek::<$token>() {
+            return $cursor.skip::<$token>();
+        }
+    };
+
+    (@skip_arm $cursor:ident) => {
+        return Some($cursor);
     };
 
     // Build the `ToTokens` match by peeling variants into an accumulator, so the
@@ -124,11 +161,19 @@ macro_rules! define_leaf {
     };
 }
 
-use moxy_token::Token;
-
 define_leaf! {
     /// A binary operator (`+`, `==`, `&&`, ...).
     pub enum BinOp {
+        ShlAssign => Token![<<=],
+        ShrAssign => Token![>>=],
+        AddAssign => Token![+=],
+        SubAssign => Token![-=],
+        MulAssign => Token![*=],
+        DivAssign => Token![/=],
+        RemAssign => Token![%=],
+        BitXorAssign => Token![^=],
+        BitAndAssign => Token![&=],
+        BitOrAssign => Token![|=],
         And => Token![&&],
         Or => Token![||],
         Shl => Token![<<],
@@ -154,20 +199,6 @@ define_leaf! {
         Deref => Token![*],
         Not => Token![!],
         Neg => Token![-],
-    }
-
-    /// A compound assignment operator (`+=`, `<<=`, ...).
-    pub enum AssignOp {
-        ShlAssign => Token![<<=],
-        ShrAssign => Token![>>=],
-        AddAssign => Token![+=],
-        SubAssign => Token![-=],
-        MulAssign => Token![*=],
-        DivAssign => Token![/=],
-        RemAssign => Token![%=],
-        BitXorAssign => Token![^=],
-        BitAndAssign => Token![&=],
-        BitOrAssign => Token![|=],
     }
 
     /// Whether a function is `async`.
@@ -222,5 +253,11 @@ define_leaf! {
     pub enum BoundPolarity {
         Negative => Token![!],
         Positive,
+    }
+
+    /// Whether a raw pointer is `*const` or `*mut`.
+    pub enum PointerMutability {
+        Const => Token![const],
+        Mut => Token![mut],
     }
 }

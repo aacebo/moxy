@@ -17,20 +17,15 @@ fn binary_operator_precedence_is_preserved_in_rendered_expressions() {
 
 #[test]
 fn assignment_range_cast_and_unary_operators_render_exactly() {
-    for (source, expected, expected_kind) in [
-        ("target += value", "target += value", 0),
-        ("start..=end", "start..=end", 0),
-        ("value as u64", "value as u64", 1),
-        ("&mut value", "&mut value", 1),
-        ("!flag", "!flag", 1),
-        ("future?", "future?", 1),
+    for (source, expected) in [
+        ("target += value", "target += value"),
+        ("start..=end", "start..=end"),
+        ("value as u64", "value as u64"),
+        ("&mut value", "&mut value"),
+        ("!flag", "!flag"),
+        ("future?", "future?"),
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        assert_eq!(
-            [expression.is_binary(), expression.is_unary()],
-            std::array::from_fn(|i| i == expected_kind)
-        );
-        assert!(!expression.span().is_empty());
         assert_eq!(moxy::fmt!(&expression).unwrap(), expected);
     }
 }

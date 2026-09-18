@@ -1,9 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use super::UseTree;
-use crate::Ident;
+use crate::*;
 
 /// A renamed use leaf (`foo as bar`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,13 +12,20 @@ pub struct UseRename {
 }
 
 impl Parse for UseRename {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![as]>() && cursor.offset(2).peek::<Ident>()
+    }
 
-        match stream.parse::<UseTree>()? {
-            UseTree::Rename(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected use rename").into()),
-        }
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            ident: parser.parse()?,
+            as_keyword: parser.parse()?,
+            rename: parser.parse()?,
+        })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.skip::<Ident>()?.skip::<Token![as]>()?.skip::<Ident>()
     }
 }
 
@@ -36,11 +40,5 @@ impl ToTokens for UseRename {
         self.ident.to_tokens(t);
         self.as_keyword.to_tokens(t);
         self.rename.to_tokens(t);
-    }
-}
-
-impl UseRename {
-    pub fn into_use_tree(self) -> super::UseTree {
-        super::UseTree::Rename(self)
     }
 }

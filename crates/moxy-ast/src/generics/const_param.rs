@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Expr, Ident, Type};
+use crate::*;
 
 /// A const generic parameter (`const N: usize = 0`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,15 +16,21 @@ pub struct ConstParam {
 }
 
 impl Parse for ConstParam {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let const_keyword = stream.parse::<Token![const]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let colon_punct = stream.parse::<Token![:]>()?;
-        let ty = stream.parse::<Type>()?;
-        let (default_eq_punct, default) = if stream.peek::<Token![=]>() {
-            let eq_punct = stream.parse::<Token![=]>()?;
-            let expr = stream.parse::<Expr>()?;
+    fn peek(cursor: Cursor<'_>) -> bool {
+        Attributes::skip(cursor)
+            .map(|cursor| cursor.peek::<Token![const]>())
+            .unwrap_or(false)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let const_keyword = parser.parse()?;
+        let ident = parser.parse()?;
+        let colon_punct = parser.parse()?;
+        let ty = parser.parse()?;
+        let (default_eq_punct, default) = if parser.peek::<Token![=]>() {
+            let eq_punct = parser.parse()?;
+            let expr = parser.parse()?;
             (Some(eq_punct), Some(expr))
         } else {
             (None, None)
@@ -41,6 +45,21 @@ impl Parse for ConstParam {
             default_eq_punct,
             default,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<Token![const]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = cursor.skip::<Token![:]>()?;
+        cursor = cursor.skip::<Type>()?;
+
+        if cursor.peek::<Token![=]>() {
+            cursor = cursor.skip::<Token![=]>()?;
+            cursor = cursor.skip::<Expr>()?;
+        }
+
+        Some(cursor)
     }
 }
 
@@ -63,18 +82,7 @@ impl ToTokens for ConstParam {
         self.ident.to_tokens(t);
         self.colon_punct.to_tokens(t);
         self.ty.to_tokens(t);
-
-        if let Some(eq_punct) = &self.default_eq_punct {
-            eq_punct.to_tokens(t);
-        }
-        if let Some(d) = &self.default {
-            d.to_tokens(t);
-        }
-    }
-}
-
-impl ConstParam {
-    pub fn into_generic_param(self) -> super::GenericParam {
-        super::GenericParam::from(self)
+        self.default_eq_punct.to_tokens(t);
+        self.default.to_tokens(t);
     }
 }

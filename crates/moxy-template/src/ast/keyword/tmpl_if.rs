@@ -1,7 +1,7 @@
 #![allow(unused)]
 
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, Parse, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
+use moxy_ast::{Cursor, Parse, ParseError, Parser, Token};
+use moxy_token::{Delim, Group, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 use crate::Template;
 
@@ -28,39 +28,70 @@ pub struct TmplIfBranch {
     pub body: Template,
 }
 
-impl TmplIf {
-    pub fn parse_after_keyword_if(stream: &mut ParseStream, at_punct: Token![@], if_kw: Token![if]) -> Result<Self, ParseError> {
+impl Parse for TmplIfBranch {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![if]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let if_keyword: Token![if] = parser.parse()?;
+        let span = if_keyword.span();
+        let cond = parser.parse_group(Delim::Paren)?.to_token_stream();
+        let body = parser.parse_group(Delim::Brace)?.parse()?;
+
+        Ok(Self {
+            span,
+            at_punct: None,
+            else_keyword: None,
+            if_keyword,
+            cond,
+            body,
+        })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let cursor = cursor.skip::<Token![if]>()?;
+        let inner = cursor.descend(Delim::Paren)?;
+        let cursor = inner.offset(inner.remaining()).is_empty().then(|| cursor.offset(1))?;
+        let inner = cursor.descend(Delim::Brace)?;
+        let inner = Template::skip(inner)?;
+        inner.is_empty().then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for TmplIf {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(cursor) = cursor.skip::<Token![@]>() else {
+            return false;
+        };
+
+        cursor.peek::<Token![if]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let at_punct: Token![@] = parser.parse()?;
         let span = at_punct.span();
-        let first = Self::parse_branch(stream, None, None, if_kw)?;
+        let first: TmplIfBranch = parser.parse()?;
         let mut branches = vec![first];
         let mut else_at_punct = None;
-        let mut else_keyword_field = None;
+        let mut else_keyword = None;
         let mut else_body = None;
 
-        loop {
-            let mut fork = stream.lookahead();
+        while let Some(cursor) = parser.cursor().skip::<Token![@]>()
+            && cursor.peek::<Token![else]>()
+        {
+            let at_punct = parser.parse()?;
+            let keyword = parser.parse()?;
 
-            if !fork.peek::<Token![@]>() {
-                break;
-            }
-
-            fork.advance();
-
-            if !fork.peek::<Token![else]>() {
-                break;
-            }
-
-            let at2 = stream.parse::<Token![@]>()?;
-            let else_kw = stream.parse::<Token![else]>()?;
-
-            if let Some(if_kw2) = stream.parse_if::<Token![if]>() {
-                branches.push(Self::parse_branch(stream, Some(at2), Some(else_kw), if_kw2)?);
+            if parser.peek::<Token![if]>() {
+                let mut branch: TmplIfBranch = parser.parse()?;
+                branch.at_punct = Some(at_punct);
+                branch.else_keyword = Some(keyword);
+                branches.push(branch);
             } else {
-                let body_stream = stream.parse_group(Delim::Brace)?;
-                let mut body_ps = body_stream.parse();
-                else_at_punct = Some(at2);
-                else_keyword_field = Some(else_kw);
-                else_body = Some(Box::new(body_ps.parse::<Template>()?));
+                else_at_punct = Some(at_punct);
+                else_keyword = Some(keyword);
+                else_body = Some(Box::new(parser.parse_group(Delim::Brace)?.parse()?));
                 break;
             }
         }
@@ -71,31 +102,30 @@ impl TmplIf {
             if_keyword: branches[0].if_keyword,
             branches,
             else_at_punct,
-            else_keyword: else_keyword_field,
+            else_keyword,
             else_body,
         })
     }
 
-    pub fn parse_branch(
-        stream: &mut ParseStream,
-        at_punct: Option<Token![@]>,
-        else_keyword: Option<Token![else]>,
-        if_keyword: Token![if],
-    ) -> Result<TmplIfBranch, ParseError> {
-        let span = if_keyword.span();
-        let cond = stream.parse_group(Delim::Paren)?;
-        let body_stream = stream.parse_group(Delim::Brace)?;
-        let mut body_ps = body_stream.parse();
-        let body = body_ps.parse::<Template>()?;
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Token![@]>()?;
+        cursor = cursor.skip::<TmplIfBranch>()?;
 
-        Ok(TmplIfBranch {
-            span,
-            at_punct,
-            else_keyword,
-            if_keyword,
-            cond,
-            body,
-        })
+        while let Some(next) = cursor.skip::<Token![@]>()
+            && next.peek::<Token![else]>()
+        {
+            cursor = next.skip::<Token![else]>()?;
+
+            if cursor.peek::<Token![if]>() {
+                cursor = cursor.skip::<TmplIfBranch>()?;
+            } else {
+                let inner = cursor.descend(Delim::Brace)?;
+                let inner = Template::skip(inner)?;
+                return inner.is_empty().then(|| cursor.offset(1));
+            }
+        }
+
+        Some(cursor)
     }
 }
 
@@ -103,16 +133,16 @@ impl ToTokens for TmplIf {
     fn to_tokens(&self, out: &mut TokenStream) {
         for (i, branch) in self.branches.iter().enumerate() {
             if i > 0 {
-                <Token![else]>::new(Span::call_site()).to_tokens(out);
+                branch.else_keyword.to_tokens(out);
             }
 
-            <Token![if]>::new(Span::call_site()).to_tokens(out);
+            branch.if_keyword.to_tokens(out);
             branch.cond.to_tokens(out);
             out.extend_one(TokenTree::Group(Group::new(Delim::Brace, branch.body.to_token_stream())));
         }
 
         if let Some(else_b) = &self.else_body {
-            <Token![else]>::new(Span::call_site()).to_tokens(out);
+            self.else_keyword.to_tokens(out);
             out.extend_one(TokenTree::Group(Group::new(Delim::Brace, else_b.to_token_stream())));
         }
     }

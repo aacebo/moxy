@@ -1,6 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::Token;
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, MacroCall};
 
@@ -14,11 +14,23 @@ pub struct ItemMacro {
 }
 
 impl Parse for ItemMacro {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let call = stream.parse::<MacroCall>()?;
-        let semi_punct = stream.parse_if::<Token![;]>();
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        Attributes::skip(cursor)
+            .map(|cursor| cursor.peek::<MacroCall>())
+            .unwrap_or(false)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let call = parser.parse()?;
+        let semi_punct = parser.parse()?;
         Ok(Self { attrs, call, semi_punct })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<MacroCall>()?;
+        cursor.skip::<Option<Token![;]>>()
     }
 }
 
@@ -33,10 +45,7 @@ impl ToTokens for ItemMacro {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.call.to_tokens(t);
-
-        if let Some(semi_punct) = &self.semi_punct {
-            semi_punct.to_tokens(t);
-        }
+        self.semi_punct.to_tokens(t);
     }
 }
 

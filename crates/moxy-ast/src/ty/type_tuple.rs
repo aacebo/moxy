@@ -1,7 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
+use crate::{Cursor, Parse, ParseError, Parser};
 use moxy_token::span::Spanner;
-use moxy_token::{Parse, Span, ToTokens, TokenStream};
+use moxy_token::{Span, ToTokens, TokenStream};
 
 use super::Type;
 use crate::{Delimited, Punctuated};
@@ -14,9 +13,53 @@ pub struct TypeTuple {
 }
 
 impl Parse for TypeTuple {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let elems = Delimited::parse_paren_with(stream, Punctuated::parse_terminated)?;
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(mut inner) = cursor.descend(moxy_token::Delim::Paren) else {
+            return false;
+        };
+
+        if inner.is_empty() {
+            return true;
+        }
+
+        let Some(next) = inner.skip::<Type>() else {
+            return false;
+        };
+
+        inner = next;
+
+        if inner.is_empty() {
+            return false;
+        }
+
+        while !inner.is_empty() {
+            let Some(next) = inner.skip::<Token![,]>() else {
+                return false;
+            };
+
+            inner = next;
+
+            if inner.is_empty() {
+                return true;
+            }
+
+            let Some(next) = inner.skip::<Type>() else {
+                return false;
+            };
+
+            inner = next;
+        }
+
+        true
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let elems = Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?;
         Ok(Self { elems })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
     }
 }
 

@@ -1,5 +1,5 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, Ident, Parse, Span, TokenStream, TokenTree};
+use moxy_ast::{Cursor, Parse, ParseError, Parser};
+use moxy_token::{Delim, Group, Ident, Span, ToTokenStream, TokenStream, TokenTree};
 
 #[doc = "A parsed `paste!` body: a token tree where each `{{ ... }}` marker is collapsed to one identifier."]
 #[derive(Debug, Clone)]
@@ -15,10 +15,20 @@ enum PasteNode {
 }
 
 impl Parse for Paste {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        Ok(Self {
-            nodes: parse_nodes(stream)?,
-        })
+    fn peek(_: Cursor<'_>) -> bool {
+        true
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self { nodes: parser.parse()? })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        while !cursor.is_empty() {
+            cursor = cursor.skip::<PasteNode>()?;
+        }
+
+        Some(cursor)
     }
 }
 
@@ -28,7 +38,7 @@ impl Paste {
 
         for node in &self.nodes {
             match node.expand() {
-                Ok(stream) => out.extend(stream),
+                Ok(parser) => out.extend(parser),
                 Err(e) => return e.to_compile_error(),
             }
         }
@@ -37,38 +47,37 @@ impl Paste {
     }
 }
 
-fn parse_nodes(stream: &mut ParseStream) -> Result<Vec<PasteNode>, ParseError> {
-    let mut nodes = Vec::new();
+impl Parse for PasteNode {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        !cursor.is_empty()
+    }
 
-    while let Some(tt) = stream.curr() {
-        match tt {
-            TokenTree::Group(g) if is_marker(g) => {
-                let span = g.span().into();
-                let outer = stream.parse_group(Delim::Brace)?;
-                let mut outer_ps = outer.parse();
-                let inner = outer_ps.parse_group(Delim::Brace)?;
-                nodes.push(PasteNode::Splice(span, inner));
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.curr() {
+            Some(TokenTree::Group(group))
+                if group.delim() == Delim::Brace && super::lone_brace_child(group.stream()).is_some() =>
+            {
+                let span = group.span().into();
+                let outer = parser.parse_group(Delim::Brace)?;
+                let inner = outer.parse_group(Delim::Brace)?;
+                Ok(Self::Splice(span, inner.to_token_stream()))
             }
-            TokenTree::Group(g) => {
-                let delim = g.delim();
-                let body = g.stream();
-                stream.advance();
-                nodes.push(PasteNode::Group(delim, parse_nodes(&mut body.parse())?));
+            Some(TokenTree::Group(group)) => {
+                let delim = group.delim();
+                let body = parser.parse_group(delim)?;
+                Ok(Self::Group(delim, body.parse()?))
             }
-            _ => nodes.push(PasteNode::Verbatim(stream.advance().unwrap().clone())),
+            Some(_) => {
+                let token = parser.advance().ok_or_else(|| parser.error("expected paste node"))?.clone();
+                Ok(Self::Verbatim(token))
+            }
+            None => parser.error("expected paste node").into(),
         }
     }
 
-    Ok(nodes)
-}
-
-fn is_marker(g: &Group) -> bool {
-    if g.delim() != Delim::Brace {
-        return false;
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.curr().map(|_| cursor.offset(1))
     }
-
-    let inner = g.stream();
-    inner.len() == 1 && matches!(inner.get(0), Some(TokenTree::Group(ig)) if ig.delim() == Delim::Brace)
 }
 
 impl PasteNode {

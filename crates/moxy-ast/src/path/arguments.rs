@@ -1,7 +1,6 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{AngleArguments, ParenArguments};
+use crate::*;
 
 /// The arguments of a path segment: none, angle-bracketed (`<T>`), or parenthesized (`Fn(A) -> B`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -25,19 +24,28 @@ impl From<ParenArguments> for PathArguments {
 }
 
 impl Parse for PathArguments {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if let Some(args) = stream.parse_if::<AngleArguments>() {
-            Ok(args.into())
+    fn peek(_cursor: Cursor<'_>) -> bool {
+        true
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<AngleArguments>() {
+            Ok(Self::AngleBracketed(parser.parse()?))
+        } else if parser.peek::<ParenArguments>() {
+            Ok(Self::Parenthesized(parser.parse()?))
         } else {
             Ok(Self::None)
         }
     }
-}
 
-impl PathArguments {
-    pub fn parse_parenthesized(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let args = stream.parse::<ParenArguments>()?;
-        Ok(Self::Parenthesized(args))
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<AngleArguments>() {
+            cursor.skip::<AngleArguments>()
+        } else if cursor.peek::<ParenArguments>() {
+            cursor.skip::<ParenArguments>()
+        } else {
+            Some(cursor)
+        }
     }
 }
 

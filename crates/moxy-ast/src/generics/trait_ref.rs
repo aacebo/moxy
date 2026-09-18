@@ -1,7 +1,6 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{BoundPolarity, Path};
+use crate::*;
 
 /// A trait reference (`Trait`, `!Trait`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -12,10 +11,19 @@ pub struct TraitRef {
 }
 
 impl Parse for TraitRef {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let polarity = stream.parse::<BoundPolarity>()?;
-        let path = stream.parse::<Path>()?;
-        Ok(Self { polarity, path })
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![!]>() || cursor.peek::<Path>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            polarity: parser.parse()?,
+            path: parser.parse()?,
+        })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        BoundPolarity::skip(cursor)?.skip::<Path>()
     }
 }
 

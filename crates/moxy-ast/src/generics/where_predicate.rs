@@ -1,7 +1,7 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::{LifetimePredicate, TypePredicate};
+use crate::*;
 
 /// A `where` clause predicate (lifetime or type).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -21,15 +21,24 @@ impl Spanner for WherePredicate {
 }
 
 impl Parse for WherePredicate {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if matches!(
-            stream.curr(),
-            Some(moxy_token::TokenTree::Punct(moxy_token::Punctuation::Quote(_)))
-        ) {
-            return Ok(Self::Lifetime(stream.parse()?));
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<LifetimePredicate>() || cursor.peek::<TypePredicate>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<LifetimePredicate>() {
+            return Ok(Self::Lifetime(parser.parse()?));
         }
 
-        Ok(Self::Type(Box::new(stream.parse()?)))
+        Ok(Self::Type(Box::new(parser.parse()?)))
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<LifetimePredicate>() {
+            cursor.skip::<LifetimePredicate>()
+        } else {
+            cursor.skip::<TypePredicate>()
+        }
     }
 }
 

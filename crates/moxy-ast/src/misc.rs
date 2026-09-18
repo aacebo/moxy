@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Lifetime, Pattern, Punctuated, Type};
+use crate::*;
 
 /// A closure parameter, either type-annotated (`pat: ty`) or inferred (`pat`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -29,16 +27,33 @@ impl ClosureParam {
 }
 
 impl Parse for ClosureParam {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let pat = Box::new(Pattern::parse_single(stream)?);
+    fn peek(cursor: Cursor<'_>) -> bool {
+        pat::skip::single(cursor).is_some()
+    }
 
-        if stream.peek::<Token![:]>() {
-            let colon = stream.parse::<Token![:]>()?;
-            let ty = Box::new(stream.parse::<Type>()?);
-            Ok(Self::Typed { pat, colon, ty })
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let pat = Box::new(pat::parse::single(parser)?);
+
+        if parser.peek::<Token![:]>() {
+            Ok(Self::Typed {
+                pat,
+                colon: parser.parse()?,
+                ty: parser.parse()?,
+            })
         } else {
             Ok(Self::Inferred { pat })
         }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let mut cursor = pat::skip::single(cursor)?;
+
+        if cursor.peek::<Token![:]>() {
+            cursor = cursor.skip::<Token![:]>()?;
+            cursor = cursor.skip::<Type>()?;
+        }
+
+        Some(cursor)
     }
 }
 
@@ -87,12 +102,24 @@ impl ReturnType {
 }
 
 impl Parse for ReturnType {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Token![->]>() {
-            let arrow = stream.parse::<Token![->]>()?;
-            Ok(Self::Type(arrow, Box::new(stream.parse::<crate::Type>()?)))
+    fn peek(_cursor: Cursor<'_>) -> bool {
+        true
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<Token![->]>() {
+            let arrow = parser.parse()?;
+            Ok(Self::Type(arrow, parser.parse()?))
         } else {
             Ok(Self::Default)
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<Token![->]>() {
+            cursor.skip::<Token![->]>()?.skip::<Type>()
+        } else {
+            Some(cursor)
         }
     }
 }
@@ -126,21 +153,15 @@ pub struct BoundLifetimes {
 }
 
 impl Parse for BoundLifetimes {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let for_keyword = stream.parse::<Token![for]>()?;
-        let lt = stream.parse::<Token![<]>()?;
-        let mut params = Punctuated::new();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![for]>()
+    }
 
-        while !stream.peek::<Token![>]>() && !stream.is_empty() {
-            params.push_value(stream.parse::<Lifetime>()?);
-            if stream.peek::<Token![,]>() {
-                params.push_punct(stream.parse::<Token![,]>()?);
-            } else {
-                break;
-            }
-        }
-
-        let gt = stream.parse::<Token![>]>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let for_keyword = parser.parse()?;
+        let lt = parser.parse()?;
+        let params = Punctuated::parse_separated_nonempty(parser)?;
+        let gt = parser.parse()?;
 
         Ok(Self {
             for_keyword,
@@ -148,6 +169,19 @@ impl Parse for BoundLifetimes {
             params,
             gt,
         })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let mut cursor = cursor.skip::<Token![for]>()?;
+        cursor = cursor.skip::<Token![<]>()?;
+        cursor = cursor.skip::<Lifetime>()?;
+
+        while cursor.peek::<Token![,]>() {
+            cursor = cursor.skip::<Token![,]>()?;
+            cursor = cursor.skip::<Lifetime>()?;
+        }
+
+        cursor.skip::<Token![>]>()
     }
 }
 

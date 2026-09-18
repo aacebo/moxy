@@ -1,7 +1,6 @@
 use super::ToTokens;
 use super::lex::{Cursor, LexError, Scan};
-use crate::parser::{ParseError, ParseStream};
-use crate::{Parse, Span, Spanner, TokenStream, TokenTree};
+use crate::{Span, Spanner, TokenStream, TokenTree};
 
 macro_rules! define_keyword {
     ($($name:ident[$is_method:ident, $as_method:ident] => $text:literal),+ $(,)?) => {
@@ -42,7 +41,7 @@ macro_rules! define_keyword {
 
             #[inline]
             pub fn to_token_tree(&self) -> TokenTree {
-                TokenTree::Keyword(self.clone())
+                TokenTree::Keyword(*self)
             }
 
             #[inline]
@@ -142,21 +141,6 @@ macro_rules! define_keyword {
                         Ok((end, Self::new(id.span())))
                     } else {
                         cursor.error().into()
-                    }
-                }
-            }
-
-            impl Parse for $name {
-                fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-                    let at = stream.span();
-
-                    match stream.advance() {
-                        Some(TokenTree::Keyword(Keyword::$name(kw))) => {
-                            Ok(Self::new(kw.span()))
-                        }
-                        _ => Err(LexError::new(at)
-                            .message(concat!("expected `", $text, "`"))
-                            .into()),
                     }
                 }
             }

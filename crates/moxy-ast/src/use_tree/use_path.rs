@@ -1,9 +1,7 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::UseTree;
-use crate::Ident;
+use crate::*;
 
 /// A use path segment (`foo::<rest>`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -16,13 +14,25 @@ pub struct UsePath {
 }
 
 impl Parse for UsePath {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let cursor = Option::<Token![::]>::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![::]>()
+    }
 
-        match stream.parse::<UseTree>()? {
-            UseTree::Path(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected use path").into()),
-        }
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            prefix: parser.parse()?,
+            ident: parser.parse()?,
+            path_sep: parser.parse()?,
+            tree: Box::new(parser.parse()?),
+        })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Option<Token![::]>>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = cursor.skip::<Token![::]>()?;
+        cursor.skip::<UseTree>()
     }
 }
 
@@ -38,11 +48,5 @@ impl ToTokens for UsePath {
         self.ident.to_tokens(t);
         self.path_sep.to_tokens(t);
         self.tree.to_tokens(t);
-    }
-}
-
-impl UsePath {
-    pub fn into_use_tree(self) -> super::UseTree {
-        super::UseTree::Path(self)
     }
 }

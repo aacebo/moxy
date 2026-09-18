@@ -1,14 +1,5 @@
-use crate::parser::ParseError;
 use crate::span::fallback;
 use crate::{Delim, Group, Ident, Keyword, Lit, Spacing, Span, ToTokens, TokenStream, TokenTree};
-
-// --- LexError ---
-
-impl From<proc_macro::LexError> for ParseError {
-    fn from(e: proc_macro::LexError) -> Self {
-        Self::new(Span::default(), e)
-    }
-}
 
 // --- Span (fallback) ---
 
@@ -184,18 +175,18 @@ impl ToTokens<TokenStream> for proc_macro::TokenTree {
             }
             Self::Literal(v) => tokens.extend_one(TokenTree::Literal(v.clone().into())),
             Self::Group(v) => tokens.extend_one(TokenTree::Group(v.clone().into())),
-            Self::Punct(p) => crate::scan_puncts_spanned(&[(p.as_char(), p.span().into())], tokens),
+            Self::Punct(p) => crate::scan_puncts_spanned(&[(p.as_char(), p.span().into(), p.spacing().into())], tokens),
         }
     }
 }
 
 impl ToTokens<TokenStream> for proc_macro::TokenStream {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let mut punct_run: Vec<(char, Span)> = Vec::new();
+        let mut punct_run: Vec<(char, Span, Spacing)> = Vec::new();
 
         for tt in self.clone() {
             match tt {
-                proc_macro::TokenTree::Punct(p) => punct_run.push((p.as_char(), p.span().into())),
+                proc_macro::TokenTree::Punct(p) => punct_run.push((p.as_char(), p.span().into(), p.spacing().into())),
                 other => {
                     if !punct_run.is_empty() {
                         crate::scan_puncts_spanned(&punct_run, tokens);
@@ -226,11 +217,10 @@ impl ToTokens<proc_macro::TokenStream> for TokenTree {
                 let text = op.as_str();
                 let span: proc_macro::Span = op.span().into();
                 let last = text.chars().count() - 1;
-                let joint_last = text == "'";
 
                 for (i, ch) in text.chars().enumerate() {
-                    let spacing = if i == last && !joint_last {
-                        proc_macro::Spacing::Alone
+                    let spacing = if i == last {
+                        op.spacing().into()
                     } else {
                         proc_macro::Spacing::Joint
                     };

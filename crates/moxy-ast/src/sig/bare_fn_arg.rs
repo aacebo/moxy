@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Ident, Type};
+use crate::*;
 
 /// An argument of a bare function pointer type.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,23 +12,33 @@ pub struct BareFnArg {
 }
 
 impl Parse for BareFnArg {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let name = if stream.peek::<Ident>() {
-            let mut fork = stream.lookahead();
-            fork.advance();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        (cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![:]>()) || cursor.peek::<Type>()
+    }
 
-            if fork.peek::<Token![:]>() {
-                Some((stream.parse()?, stream.parse()?))
-            } else {
-                None
-            }
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let name = if parser.peek::<Ident>() && parser.cursor().offset(1).peek::<Token![:]>() {
+            Some((parser.parse()?, parser.parse()?))
         } else {
             None
         };
 
-        let ty = stream.parse::<Type>()?;
+        let ty = parser.parse()?;
+
         Ok(Self { attrs, name, ty })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+
+        if cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![:]>() {
+            cursor = cursor.skip::<Ident>()?;
+            cursor = cursor.skip::<Token![:]>()?;
+        }
+
+        cursor.skip::<Type>()
     }
 }
 

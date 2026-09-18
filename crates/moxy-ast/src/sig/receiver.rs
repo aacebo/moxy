@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Lifetime, Mutability};
+use crate::*;
 
 /// A method receiver parameter (`self`, `&self`, `&mut self`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -16,17 +14,17 @@ pub struct Receiver {
 }
 
 impl Parse for Receiver {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let reference = stream.parse_if::<Token![&]>();
-        let lifetime = if reference.is_some() {
-            stream.parse_if::<Lifetime>()
-        } else {
-            None
-        };
+    fn peek(cursor: Cursor<'_>) -> bool {
+        Self::skip(cursor).is_some()
+    }
 
-        let mutability = stream.parse::<Mutability>()?;
-        let self_keyword = stream.parse::<Token![self]>()?;
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let reference: Option<Token![&]> = parser.parse()?;
+        let lifetime = if reference.is_some() { parser.parse()? } else { None };
+
+        let mutability = parser.parse()?;
+        let self_keyword = parser.parse()?;
 
         Ok(Self {
             attrs,
@@ -35,6 +33,19 @@ impl Parse for Receiver {
             mutability,
             self_keyword,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        let reference = cursor.peek::<Token![&]>();
+        cursor = cursor.skip::<Option<Token![&]>>()?;
+
+        if reference {
+            cursor = cursor.skip::<Option<Lifetime>>()?;
+        }
+
+        cursor = Mutability::skip(cursor)?;
+        cursor.skip::<Token![self]>()
     }
 }
 
@@ -47,15 +58,8 @@ impl Spanner for Receiver {
 impl ToTokens for Receiver {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
-
-        if let Some(amp) = &self.reference {
-            amp.to_tokens(t);
-
-            if let Some(l) = &self.lifetime {
-                l.to_tokens(t);
-            }
-        }
-
+        self.reference.to_tokens(t);
+        self.lifetime.to_tokens(t);
         self.mutability.to_tokens(t);
         self.self_keyword.to_tokens(t);
     }

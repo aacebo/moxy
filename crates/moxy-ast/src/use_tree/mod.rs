@@ -1,9 +1,3 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
-
-use crate::{Delimited, Ident};
-
 mod use_glob;
 mod use_group;
 mod use_name;
@@ -15,6 +9,10 @@ pub use use_group::*;
 pub use use_name::*;
 pub use use_path::*;
 pub use use_rename::*;
+
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
+use crate::*;
 
 /// A `use` import tree.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -82,42 +80,46 @@ impl Spanner for UseTree {
 }
 
 impl Parse for UseTree {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if stream.peek::<Token![*]>() {
-            let star = stream.parse::<Token![*]>()?;
-            return Ok(Self::Glob(UseGlob { star }));
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<UseGlob>()
+            || cursor.peek::<UseGroup>()
+            || cursor.peek::<UsePath>()
+            || cursor.peek::<UseRename>()
+            || cursor.peek::<UseName>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<UseGlob>() {
+            return Ok(Self::Glob(parser.parse()?));
         }
 
-        if matches!(stream.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
-            let items = Delimited::parse_brace_with(stream, crate::Punctuated::parse_terminated)?;
-            return Ok(Self::Group(UseGroup { items }));
+        if parser.peek::<UseGroup>() {
+            return Ok(Self::Group(parser.parse()?));
         }
 
-        let prefix = stream.parse_if::<Token![::]>();
-        let ident = stream.parse::<Ident>()?;
-
-        if stream.peek::<Token![::]>() {
-            let path_sep = stream.parse::<Token![::]>()?;
-            let tree = Box::new(stream.parse::<Self>()?);
-            return Ok(Self::Path(UsePath {
-                prefix,
-                ident,
-                path_sep,
-                tree,
-            }));
+        if parser.peek::<UsePath>() {
+            return Ok(Self::Path(parser.parse()?));
         }
 
-        if stream.peek::<Token![as]>() {
-            let as_keyword = stream.parse::<Token![as]>()?;
-            let rename = stream.parse::<Ident>()?;
-            return Ok(Self::Rename(UseRename {
-                ident,
-                as_keyword,
-                rename,
-            }));
+        if parser.peek::<UseRename>() {
+            return Ok(Self::Rename(parser.parse()?));
         }
 
-        Ok(Self::Name(UseName { ident }))
+        Ok(Self::Name(parser.parse()?))
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<UseGlob>() {
+            cursor.skip::<UseGlob>()
+        } else if cursor.peek::<UseGroup>() {
+            cursor.skip::<UseGroup>()
+        } else if cursor.peek::<UsePath>() {
+            cursor.skip::<UsePath>()
+        } else if cursor.peek::<UseRename>() {
+            cursor.skip::<UseRename>()
+        } else {
+            cursor.skip::<UseName>()
+        }
     }
 }
 

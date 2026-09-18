@@ -1,14 +1,4 @@
-use crate::parser::ParseError;
 use crate::{Delim, Group, Ident, Keyword, Lit, Spacing, Span, ToTokens, TokenStream, TokenTree};
-
-// --- LexError ---
-
-impl From<proc_macro2::LexError> for ParseError {
-    fn from(value: proc_macro2::LexError) -> Self {
-        let span = Span::Fallback(value.span().into());
-        Self::new(span, value)
-    }
-}
 
 // --- Span ---
 
@@ -128,11 +118,11 @@ impl From<Group> for proc_macro2::Group {
 
 impl ToTokens<TokenStream> for proc_macro2::TokenStream {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let mut punct_run: Vec<(char, Span)> = Vec::new();
+        let mut punct_run: Vec<(char, Span, Spacing)> = Vec::new();
 
         for tt in self.clone() {
             match tt {
-                proc_macro2::TokenTree::Punct(p) => punct_run.push((p.as_char(), p.span().into())),
+                proc_macro2::TokenTree::Punct(p) => punct_run.push((p.as_char(), p.span().into(), p.spacing().into())),
                 other => {
                     if !punct_run.is_empty() {
                         crate::scan_puncts_spanned(&punct_run, tokens);
@@ -174,11 +164,10 @@ impl ToTokens<proc_macro2::TokenStream> for TokenTree {
             Self::Punct(op) => {
                 let text = op.as_str();
                 let last = text.chars().count() - 1;
-                let joint_last = text == "'";
 
                 for (i, ch) in text.chars().enumerate() {
-                    let spacing = if i == last && !joint_last {
-                        proc_macro2::Spacing::Alone
+                    let spacing = if i == last {
+                        op.spacing().into()
                     } else {
                         proc_macro2::Spacing::Joint
                     };

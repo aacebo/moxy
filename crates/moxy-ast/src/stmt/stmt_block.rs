@@ -1,8 +1,7 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::Stmt;
-use crate::Delimited;
+use crate::*;
 
 /// A braced block of statements (`{ stmt; stmt; expr }`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -12,9 +11,24 @@ pub struct StmtBlock {
 }
 
 impl Parse for StmtBlock {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let stmts = Delimited::<Vec<Stmt>>::parse_brace(stream)?;
-        Ok(Self { stmts })
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.is_delimited(moxy_token::Delim::Brace)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            stmts: Delimited::<Vec<Stmt>>::parse_brace(parser)?,
+        })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<Stmt>()?;
+        }
+
+        Some(cursor.offset(1))
     }
 }
 

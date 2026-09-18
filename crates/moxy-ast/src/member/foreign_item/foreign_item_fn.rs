@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Signature, Visibility};
+use crate::*;
 
 /// A foreign function declaration inside an `extern` block.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,18 +13,26 @@ pub struct ForeignItemFn {
 }
 
 impl Parse for ForeignItemFn {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Signature>()
+    }
 
-        if !crate::sig::Signature::is_start(stream) {
-            return Err(LexError::new(at).message("expected foreign fn").into());
-        }
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            attrs: parser.parse()?,
+            vis: parser.parse()?,
+            sig: parser.parse()?,
+            semi: parser.parse()?,
+        })
+    }
 
-        let sig = stream.parse::<Signature>()?;
-        let semi = stream.parse_if::<Token![;]>();
-        Ok(Self { attrs, vis, sig, semi })
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Signature>()?;
+        cursor.skip::<Option<Token![;]>>()
     }
 }
 
@@ -43,11 +49,5 @@ impl ToTokens for ForeignItemFn {
         self.vis.to_tokens(t);
         self.sig.to_tokens(t);
         self.semi.to_tokens(t);
-    }
-}
-
-impl ForeignItemFn {
-    pub fn into_foreign_item(self) -> super::ForeignItem {
-        super::ForeignItem::from(self)
     }
 }

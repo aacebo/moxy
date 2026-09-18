@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Expr, Generics, Ident, Type};
+use crate::*;
 
 /// A constant item inside a trait definition (`const NAME: Type;` or `const NAME: Type = expr;`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -19,21 +17,27 @@ pub struct TraitItemConst {
 }
 
 impl Parse for TraitItemConst {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse()?;
-        let const_keyword = stream.parse()?;
-        let ident = stream.parse()?;
-        let generics = stream.parse()?;
-        let colon = stream.parse()?;
-        let ty = stream.parse()?;
-        let default = if stream.peek::<Token![=]>() {
-            let eq = stream.parse()?;
-            Some((eq, stream.parse()?))
+    fn peek(cursor: Cursor<'_>) -> bool {
+        Attributes::skip(cursor)
+            .map(|cursor| cursor.peek::<Token![const]>() && cursor.offset(1).peek::<Ident>())
+            .unwrap_or(false)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let const_keyword = parser.parse()?;
+        let ident = parser.parse()?;
+        let generics = parser.parse()?;
+        let colon = parser.parse()?;
+        let ty = parser.parse()?;
+        let default = if parser.peek::<Token![=]>() {
+            let eq = parser.parse()?;
+            Some((eq, parser.parse()?))
         } else {
             None
         };
 
-        let semi = stream.parse()?;
+        let semi = parser.parse()?;
 
         Ok(Self {
             attrs,
@@ -45,6 +49,22 @@ impl Parse for TraitItemConst {
             default,
             semi,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<Token![const]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Generics::skip(cursor)?;
+        cursor = cursor.skip::<Token![:]>()?;
+        cursor = cursor.skip::<Type>()?;
+
+        if cursor.peek::<Token![=]>() {
+            cursor = cursor.skip::<Token![=]>()?;
+            cursor = cursor.skip::<Expr>()?;
+        }
+
+        cursor.skip::<Token![;]>()
     }
 }
 
@@ -69,11 +89,5 @@ impl ToTokens for TraitItemConst {
         }
 
         self.semi.to_tokens(t);
-    }
-}
-
-impl TraitItemConst {
-    pub fn into_trait_item(self) -> super::TraitItem {
-        super::TraitItem::from(self)
     }
 }

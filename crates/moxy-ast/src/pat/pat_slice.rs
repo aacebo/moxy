@@ -1,5 +1,4 @@
-use moxy_token::Token;
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -17,15 +16,42 @@ impl Spanner for PatSlice {
     }
 }
 
+impl Parse for PatSlice {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        Attributes::skip(cursor).unwrap_or(cursor).is_delimited(Delim::Bracket)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let (span, parser) = parser.parse_group_spanned(Delim::Bracket)?;
+
+        Ok(Self {
+            attrs,
+            elems: Delimited::bracket(span, Punctuated::parse_terminated(&parser)?),
+        })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let cursor = Attributes::skip(cursor)?;
+        let mut inner = cursor.descend(Delim::Bracket)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<Pattern>()?;
+
+            if inner.is_empty() {
+                break;
+            }
+
+            inner = inner.skip::<Token![,]>()?;
+        }
+
+        Some(cursor.offset(1))
+    }
+}
+
 impl ToTokens for PatSlice {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.elems.to_tokens(t);
-    }
-}
-
-impl PatSlice {
-    pub fn into_pattern(self) -> super::Pattern {
-        super::Pattern::from(self)
     }
 }

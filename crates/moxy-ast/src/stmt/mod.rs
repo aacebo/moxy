@@ -1,9 +1,3 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
-
-use crate::Expr;
-
 mod stmt_block;
 mod stmt_local;
 mod stmt_macro;
@@ -12,13 +6,17 @@ pub use stmt_block::*;
 pub use stmt_local::*;
 pub use stmt_macro::*;
 
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
+use crate::*;
+
 /// A statement in a block.
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Stmt {
     Local(Box<StmtLocal>),
     Block(StmtBlock),
-    Item(Box<crate::Item>),
+    Item(Box<Item>),
     Expr(Box<Expr>, Option<Token![;]>),
     Macro(StmtMacro),
 }
@@ -52,7 +50,7 @@ impl Stmt {
         if let Self::Block(v) = self { Some(v) } else { None }
     }
 
-    pub fn as_item(&self) -> Option<&crate::Item> {
+    pub fn as_item(&self) -> Option<&Item> {
         if let Self::Item(v) = self { Some(v.as_ref()) } else { None }
     }
 
@@ -77,26 +75,48 @@ impl Spanner for Stmt {
 }
 
 impl Parse for Stmt {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if let Some(stmt) = stream.parse_if::<StmtLocal>() {
-            return Ok(Self::Local(Box::new(stmt)));
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<StmtLocal>()
+            || cursor.peek::<StmtMacro>()
+            || cursor.peek::<StmtBlock>()
+            || cursor.peek::<Item>()
+            || cursor.peek::<Expr>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<StmtLocal>() {
+            return Ok(Self::Local(Box::new(parser.parse()?)));
         }
 
-        if let Some(stmt) = stream.parse_if::<StmtBlock>() {
-            return Ok(Self::Block(stmt));
+        if parser.peek::<StmtMacro>() {
+            return Ok(Self::Macro(parser.parse()?));
         }
 
-        if let Some(item) = stream.parse_if::<crate::Item>() {
-            return Ok(Self::Item(Box::new(item)));
+        if parser.peek::<StmtBlock>() {
+            return Ok(Self::Block(parser.parse()?));
         }
 
-        if let Some(stmt) = stream.parse_if::<StmtMacro>() {
-            return Ok(Self::Macro(stmt));
+        if parser.peek::<Item>() {
+            return Ok(Self::Item(parser.parse()?));
         }
 
-        let expr = stream.parse::<Expr>()?;
-        let semi = stream.parse_if::<Token![;]>();
+        let expr = parser.parse()?;
+        let semi = parser.parse()?;
         Ok(Self::Expr(Box::new(expr), semi))
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<StmtLocal>() {
+            cursor.skip::<StmtLocal>()
+        } else if cursor.peek::<StmtMacro>() {
+            cursor.skip::<StmtMacro>()
+        } else if cursor.peek::<StmtBlock>() {
+            cursor.skip::<StmtBlock>()
+        } else if cursor.peek::<Item>() {
+            cursor.skip::<Item>()
+        } else {
+            cursor.skip::<Expr>()?.skip::<Option<Token![;]>>()
+        }
     }
 }
 
@@ -108,9 +128,7 @@ impl ToTokens for Stmt {
             Self::Item(v) => v.to_tokens(t),
             Self::Expr(v, semi) => {
                 v.to_tokens(t);
-                if let Some(s) = semi {
-                    s.to_tokens(t);
-                }
+                semi.to_tokens(t);
             }
             Self::Macro(v) => v.to_tokens(t),
         }

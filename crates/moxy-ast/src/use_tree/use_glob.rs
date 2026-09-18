@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use super::UseTree;
+use crate::*;
 
 /// A glob import (`*`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -12,13 +10,16 @@ pub struct UseGlob {
 }
 
 impl Parse for UseGlob {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![*]>()
+    }
 
-        match stream.parse::<UseTree>()? {
-            UseTree::Glob(v) => Ok(v),
-            _ => Err(LexError::new(at).message("expected `*`").into()),
-        }
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self { star: parser.parse()? })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor.skip::<Token![*]>()
     }
 }
 
@@ -31,11 +32,5 @@ impl Spanner for UseGlob {
 impl ToTokens for UseGlob {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.star.to_tokens(t);
-    }
-}
-
-impl UseGlob {
-    pub fn into_use_tree(self) -> super::UseTree {
-        super::UseTree::Glob(self)
     }
 }

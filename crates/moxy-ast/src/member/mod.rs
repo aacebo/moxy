@@ -1,15 +1,14 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Lit, Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
-
-use crate::Ident;
-
-pub mod foreign_item;
-pub mod impl_item;
-pub mod trait_item;
+mod foreign_item;
+mod impl_item;
+mod trait_item;
 
 pub use foreign_item::*;
 pub use impl_item::*;
 pub use trait_item::*;
+
+use moxy_token::{Lit, Span, Spanner, ToTokens, TokenStream};
+
+use crate::*;
 
 /// A struct/tuple field accessor — a named field (`.field`) or a tuple index (`.0`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -59,25 +58,47 @@ impl Spanner for Member {
 }
 
 impl Parse for Member {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        match stream.curr() {
-            Some(TokenTree::Literal(_)) => {
-                let at = stream.span();
-                let lit = stream.parse::<Lit>()?;
+    fn peek(cursor: Cursor<'_>) -> bool {
+        if cursor.peek::<Ident>() {
+            return true;
+        }
 
-                if let Some(i) = lit.as_int() {
-                    if !i.repr().chars().all(char::is_numeric) {
-                        Err(LexError::new(at).message("expected tuple index").into())
-                    } else if i.value() > 4294967295 {
-                        Err(LexError::new(at).message("tuple index exceeds max size 4294967295").into())
-                    } else {
-                        Ok(Self::Unnamed(lit))
-                    }
+        let Some(moxy_token::TokenTree::Literal(Lit::Int(value))) = cursor.curr() else {
+            return false;
+        };
+
+        value.repr().chars().all(char::is_numeric) && value.value() <= 4294967295
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<Lit>() {
+            let lit: Lit = parser.parse()?;
+
+            if let Some(i) = lit.as_int() {
+                if !i.repr().chars().all(char::is_numeric) {
+                    parser.error("expected tuple index").into()
+                } else if i.value() > 4294967295 {
+                    parser.error("tuple index exceeds max size 4294967295").into()
                 } else {
-                    Err(LexError::new(at).message("expected tuple index").into())
+                    Ok(Self::Unnamed(lit))
                 }
+            } else {
+                parser.error("expected tuple index").into()
             }
-            _ => Ok(Self::Named(stream.parse()?)),
+        } else {
+            Ok(Self::Named(parser.parse()?))
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if !Self::peek(cursor) {
+            return None;
+        }
+
+        if cursor.peek::<Lit>() {
+            cursor.skip::<Lit>()
+        } else {
+            cursor.skip::<Ident>()
         }
     }
 }

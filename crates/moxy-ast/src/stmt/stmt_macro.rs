@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, MacroCall};
+use crate::*;
 
 /// A macro invocation used as a statement (`name!(...);` or `name!(...)`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,11 +12,24 @@ pub struct StmtMacro {
 }
 
 impl Parse for StmtMacro {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let mac = stream.parse::<MacroCall>()?;
-        let semi = stream.parse_if::<Token![;]>();
-        Ok(Self { attrs, mac, semi })
+    fn peek(cursor: Cursor<'_>) -> bool {
+        Attributes::skip(cursor)
+            .map(|cursor| cursor.peek::<MacroCall>())
+            .unwrap_or(false)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            attrs: parser.parse()?,
+            mac: parser.parse()?,
+            semi: parser.parse()?,
+        })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<MacroCall>()?;
+        cursor.skip::<Option<Token![;]>>()
     }
 }
 
@@ -34,11 +45,5 @@ impl ToTokens for StmtMacro {
         self.attrs.to_tokens(t);
         self.mac.to_tokens(t);
         self.semi.to_tokens(t);
-    }
-}
-
-impl StmtMacro {
-    pub fn into_stmt(self) -> super::Stmt {
-        super::Stmt::Macro(self)
     }
 }

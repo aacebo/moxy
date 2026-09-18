@@ -1,9 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use super::TypeBound;
-use crate::{Attributes, Ident, Punctuated, Type};
+use crate::*;
 
 /// A type parameter (`T: Bound = Default`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -18,20 +15,24 @@ pub struct TypeParam {
 }
 
 impl Parse for TypeParam {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let ident = stream.parse::<Ident>()?;
-        let (colon_punct, bounds) = if stream.peek::<Token![:]>() {
-            let colon_punct = stream.parse::<Token![:]>()?;
-            let bounds = TypeBound::parse_bounds(stream)?;
+    fn peek(cursor: Cursor<'_>) -> bool {
+        Attributes::skip(cursor).map(|cursor| cursor.peek::<Ident>()).unwrap_or(false)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let ident = parser.parse()?;
+        let (colon_punct, bounds) = if parser.peek::<Token![:]>() {
+            let colon_punct = parser.parse()?;
+            let bounds = TypeBound::parse_bounds(parser)?;
             (Some(colon_punct), bounds)
         } else {
             (None, Punctuated::new())
         };
 
-        let (eq_punct, default) = if stream.peek::<Token![=]>() {
-            let eq_punct = stream.parse::<Token![=]>()?;
-            let default = stream.parse::<Type>()?;
+        let (eq_punct, default) = if parser.peek::<Token![=]>() {
+            let eq_punct = parser.parse()?;
+            let default = parser.parse()?;
             (Some(eq_punct), Some(default))
         } else {
             (None, None)
@@ -45,6 +46,28 @@ impl Parse for TypeParam {
             eq_punct,
             default,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<Ident>()?;
+
+        if cursor.peek::<Token![:]>() {
+            cursor = cursor.skip::<Token![:]>()?;
+            cursor = cursor.skip::<TypeBound>()?;
+
+            while cursor.peek::<Token![+]>() {
+                cursor = cursor.skip::<Token![+]>()?;
+                cursor = cursor.skip::<TypeBound>()?;
+            }
+        }
+
+        if cursor.peek::<Token![=]>() {
+            cursor = cursor.skip::<Token![=]>()?;
+            cursor = cursor.skip::<Type>()?;
+        }
+
+        Some(cursor)
     }
 }
 
@@ -66,20 +89,10 @@ impl ToTokens for TypeParam {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.ident.to_tokens(t);
-
-        if !self.bounds.is_empty() {
-            if let Some(colon_punct) = &self.colon_punct {
-                colon_punct.to_tokens(t);
-            }
-            self.bounds.to_tokens(t);
-        }
-
-        if let Some(d) = &self.default {
-            if let Some(eq_punct) = &self.eq_punct {
-                eq_punct.to_tokens(t);
-            }
-            d.to_tokens(t);
-        }
+        self.colon_punct.to_tokens(t);
+        self.bounds.to_tokens(t);
+        self.eq_punct.to_tokens(t);
+        self.default.to_tokens(t);
     }
 }
 

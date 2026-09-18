@@ -1,6 +1,5 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::{BoundLifetimes, Cursor, Parse, ParseError, Parser};
+use moxy_token::{Delim, Keyword, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Delimited, Punctuated};
 
@@ -242,27 +241,59 @@ impl From<TypeBareFn> for Type {
 }
 
 impl Parse for Type {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        match cursor.curr() {
+            Some(TokenTree::Ident(_)) => true,
+
+            Some(TokenTree::Group(g)) => matches!(g.delim(), Delim::Paren | Delim::Bracket | Delim::None),
+
+            Some(TokenTree::Keyword(k)) => matches!(
+                k,
+                Keyword::Impl(_)
+                    | Keyword::Dyn(_)
+                    | Keyword::Fn(_)
+                    | Keyword::Extern(_)
+                    | Keyword::For(_)
+                    | Keyword::Unsafe(_)
+                    | Keyword::SelfType(_)
+                    | Keyword::SelfValue(_)
+                    | Keyword::Super(_)
+                    | Keyword::Crate(_)
+            ),
+
+            Some(TokenTree::Punct(p)) => matches!(
+                p,
+                Punct::And(_) | Punct::Star(_) | Punct::Not(_) | Punct::Colon(_) | Punct::Lt(_)
+            ),
+
+            _ => false,
+        }
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if !parser.peek::<Self>() {
+            return parser.error("expected type").into();
+        }
+
         // `&` reference.
-        if stream.peek::<Token![&]>() {
-            return Ok(Self::Reference(stream.parse()?));
+        if parser.peek::<Token![&]>() {
+            return Ok(Self::Reference(parser.parse()?));
         }
 
         // `*` raw pointer.
-        if stream.peek::<Token![*]>() {
-            return Ok(Self::Pointer(stream.parse()?));
+        if parser.peek::<Token![*]>() {
+            return Ok(Self::Pointer(parser.parse()?));
         }
 
         // Never `!`.
-        if stream.peek::<Token![!]>() {
-            let not = stream.parse::<Token![!]>()?;
-            return Ok(Self::Never(not));
+        if parser.peek::<Token![!]>() {
+            return Ok(Self::Never(parser.parse()?));
         }
 
         // Infer `_`.
-        if matches!(stream.curr(), Some(tt) if tt.text() == Some("_")) {
-            let span = stream.span();
-            stream.advance();
+        if matches!(parser.curr(), Some(tt) if tt.text() == Some("_")) {
+            let span = parser.span();
+            parser.advance();
             return Ok(Self::Infer(moxy_token::Ident::new("_").with_span(span)));
         }
 
@@ -270,14 +301,13 @@ impl Parse for Type {
         // Both share the same `[` token so we disambiguate inline after peeking
         // inside the group rather than calling `TypeArray::parse` or
         // `TypeSlice::parse` individually (which would each consume the group).
-        if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
-            let (bracket_span, group_tokens) = stream.parse_group_spanned(Delim::Bracket)?;
-            let mut inner = group_tokens.parse();
-            let elem = Box::new(inner.parse::<Self>()?);
+        if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
+            let (bracket_span, inner) = parser.parse_group_spanned(Delim::Bracket)?;
+            let elem = Box::new(inner.parse()?);
 
             if inner.peek::<Token![;]>() {
-                let semi = inner.parse::<Token![;]>()?;
-                let len = inner.parse::<crate::Expr>()?;
+                let semi = inner.parse()?;
+                let len = inner.parse()?;
                 return Ok(Self::Array(TypeArray {
                     content: Delimited::bracket(bracket_span, type_array::ArrayInner { elem, semi, len }),
                 }));
@@ -290,27 +320,30 @@ impl Parse for Type {
         }
 
         // `impl Trait`.
-        if stream.peek::<Token![impl]>() {
-            return Ok(Self::ImplTrait(stream.parse()?));
+        if parser.peek::<Token![impl]>() {
+            return Ok(Self::ImplTrait(parser.parse()?));
         }
 
         // `dyn Trait`.
-        if stream.peek::<Token![dyn]>() {
-            return Ok(Self::TraitObject(stream.parse()?));
+        if parser.peek::<Token![dyn]>() {
+            return Ok(Self::TraitObject(parser.parse()?));
         }
 
         // Bare fn pointer: `fn(...)`, `extern "C" fn(...)`, `unsafe fn(...)`.
-        if stream.peek::<Token![fn]>() || stream.peek::<Token![extern]>() || stream.peek::<Token![unsafe]>() {
-            return Ok(Self::BareFn(stream.parse()?));
+        if parser.peek::<Token![fn]>()
+            || parser.peek::<Token![extern]>()
+            || parser.peek::<Token![unsafe]>()
+            || parser.peek::<BoundLifetimes>()
+        {
+            return Ok(Self::BareFn(parser.parse()?));
         }
 
         // `(...)` — one element with no trailing comma is a parenthesized type;
         // anything else (empty, multiple, or trailing comma) is a tuple.
         // Both variants share the same `(` token so we disambiguate inline.
-        if matches!(stream.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-            let (paren_span, group_tokens) = stream.parse_group_spanned(Delim::Paren)?;
-            let mut inner = group_tokens.parse();
-            let elems: Punctuated<Self, Token![,]> = Punctuated::parse_terminated(&mut inner)?;
+        if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
+            let (paren_span, inner) = parser.parse_group_spanned(Delim::Paren)?;
+            let elems: Punctuated<Self, Token![,]> = Punctuated::parse_terminated(&inner)?;
 
             return if elems.len() == 1 && !elems.is_trailing() {
                 let content = Delimited::paren(paren_span, Box::new(elems.into_iter().next().unwrap()));
@@ -321,14 +354,82 @@ impl Parse for Type {
             };
         }
 
+        if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::None)) {
+            let (span, inner) = parser.parse_group_spanned(Delim::None)?;
+            return Ok(Self::Group(TypeGroup {
+                span: span.span(),
+                elem: Box::new(inner.parse()?),
+            }));
+        }
+
         // Macro type `m!(...)` — a path followed by `!`.
-        if let Some(mac) = stream.parse_if::<TypeMacro>() {
-            return Ok(Self::Macro(mac));
+        if parser.peek::<TypeMacro>() {
+            return Ok(Self::Macro(parser.parse()?));
         }
 
         // Otherwise a path type: `T`, `std::vec::Vec`, or a qualified
         // `<T as Trait>::Item` (which begins with `<`).
-        Ok(Self::Path(stream.parse()?))
+        Ok(Self::Path(parser.parse()?))
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<Token![&]>() {
+            return cursor.skip::<TypeReference>();
+        }
+
+        if cursor.peek::<Token![*]>() {
+            return cursor.skip::<TypePointer>();
+        }
+
+        if cursor.peek::<Token![!]>() {
+            return cursor.skip::<Token![!]>();
+        }
+
+        if matches!(cursor.curr(), Some(tt) if tt.text() == Some("_")) {
+            return Some(cursor.offset(1));
+        }
+
+        if cursor.is_delimited(Delim::Bracket) {
+            if cursor.peek::<TypeArray>() {
+                return cursor.skip::<TypeArray>();
+            }
+
+            return cursor.skip::<TypeSlice>();
+        }
+
+        if cursor.peek::<Token![impl]>() {
+            return cursor.skip::<TypeImplTrait>();
+        }
+
+        if cursor.peek::<Token![dyn]>() {
+            return cursor.skip::<TypeTraitObject>();
+        }
+
+        if cursor.peek::<Token![fn]>()
+            || cursor.peek::<Token![extern]>()
+            || cursor.peek::<Token![unsafe]>()
+            || cursor.peek::<BoundLifetimes>()
+        {
+            return cursor.skip::<TypeBareFn>();
+        }
+
+        if cursor.is_delimited(Delim::Paren) {
+            if cursor.peek::<TypeParen>() {
+                return cursor.skip::<TypeParen>();
+            }
+
+            return cursor.skip::<TypeTuple>();
+        }
+
+        if cursor.is_delimited(Delim::None) {
+            return cursor.skip::<TypeGroup>();
+        }
+
+        if cursor.peek::<TypeMacro>() {
+            return cursor.skip::<TypeMacro>();
+        }
+
+        cursor.skip::<TypePath>()
     }
 }
 

@@ -1,9 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use super::AngleArguments;
-use crate::{GenericArgument, Ident, Punctuated, TypeBound};
+use crate::{AngleArguments, Cursor, GenericArgument, Ident, Parse, ParseError, Parser, Punctuated, Token, TypeBound};
 
 /// An associated type bound constraint (`Item: Bound`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -26,13 +23,43 @@ impl ConstraintArgument {
 }
 
 impl Parse for ConstraintArgument {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(cursor) = cursor.skip::<Ident>() else {
+            return false;
+        };
+
+        let Some(cursor) = Option::<AngleArguments>::skip(cursor) else {
+            return false;
+        };
+
+        let Some(cursor) = cursor.skip::<Token![:]>() else {
+            return false;
+        };
+
+        cursor.peek::<TypeBound>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            ident: stream.parse()?,
-            generics: stream.parse_if(),
-            colon_punct: stream.parse()?,
-            bounds: Punctuated::parse_separated_nonempty(stream)?,
+            ident: parser.parse()?,
+            generics: parser.parse()?,
+            colon_punct: parser.parse()?,
+            bounds: Punctuated::parse_separated_nonempty(parser)?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Ident>()?;
+        cursor = cursor.skip::<Option<AngleArguments>>()?;
+        cursor = cursor.skip::<Token![:]>()?;
+        cursor = cursor.skip::<TypeBound>()?;
+
+        while cursor.peek::<Token![+]>() {
+            cursor = cursor.skip::<Token![+]>()?;
+            cursor = cursor.skip::<TypeBound>()?;
+        }
+
+        Some(cursor)
     }
 }
 
@@ -50,11 +77,7 @@ impl Spanner for ConstraintArgument {
 impl ToTokens for ConstraintArgument {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.ident.to_tokens(t);
-
-        if let Some(g) = &self.generics {
-            g.to_tokens(t);
-        }
-
+        self.generics.to_tokens(t);
         self.colon_punct.to_tokens(t);
         self.bounds.to_tokens(t);
     }

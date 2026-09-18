@@ -1,6 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::Token;
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Generics, Ident, Punctuated, TypeBound, Unsafety, Visibility};
 
@@ -19,22 +19,42 @@ pub struct ItemTraitAlias {
 }
 
 impl Parse for ItemTraitAlias {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let _unsafety = stream.parse::<Unsafety>()?;
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        let cursor = Unsafety::skip(cursor).unwrap_or(cursor);
+        let cursor = cursor.skip::<Option<Token![auto]>>().unwrap_or(cursor);
+        let Some(cursor) = cursor.skip::<Token![trait]>() else {
+            return false;
+        };
+
+        let Some(cursor) = cursor.skip::<Ident>() else {
+            return false;
+        };
+
+        let Some(cursor) = Generics::skip(cursor) else {
+            return false;
+        };
+
+        cursor.peek::<Token![=]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let _unsafety: Unsafety = parser.parse()?;
 
         // skip optional `auto`
-        if stream.peek::<Token![auto]>() {
-            let _ = stream.parse::<Token![auto]>()?;
+        if parser.peek::<Token![auto]>() {
+            let _: Token![auto] = parser.parse()?;
         }
 
-        let trait_keyword = stream.parse::<Token![trait]>()?;
-        let ident = stream.parse::<Ident>()?;
-        let generics = stream.parse::<Generics>()?;
-        let eq_punct = stream.parse::<Token![=]>()?;
-        let bounds = crate::TypeBound::parse_bounds(stream)?;
-        let semi_punct = stream.parse::<Token![;]>()?;
+        let trait_keyword = parser.parse()?;
+        let ident = parser.parse()?;
+        let generics = parser.parse()?;
+        let eq_punct = parser.parse()?;
+        let bounds = crate::TypeBound::parse_bounds(parser)?;
+        let semi_punct = parser.parse()?;
 
         Ok(Self {
             attrs,
@@ -46,6 +66,25 @@ impl Parse for ItemTraitAlias {
             bounds,
             semi_punct,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = Unsafety::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![auto]>>()?;
+        cursor = cursor.skip::<Token![trait]>()?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = Generics::skip(cursor)?;
+        cursor = cursor.skip::<Token![=]>()?;
+        cursor = cursor.skip::<TypeBound>()?;
+
+        while cursor.peek::<Token![+]>() {
+            cursor = cursor.skip::<Token![+]>()?;
+            cursor = cursor.skip::<TypeBound>()?;
+        }
+
+        cursor.skip::<Token![;]>()
     }
 }
 

@@ -2,8 +2,8 @@
 
 use std::str::FromStr;
 
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Delim, Group, Parse, Span, ToTokens, TokenStream, TokenTree};
+use moxy_ast::{Cursor, Parse, ParseError, Parser};
+use moxy_token::{Delim, Group, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 #[doc = "A template interpolation: `{{ expr }}`."]
 #[derive(Debug, Clone)]
@@ -14,21 +14,29 @@ pub struct TmplInterp {
 }
 
 impl Parse for TmplInterp {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let span = stream.span();
-        let mut inner = stream.parse_group(Delim::Brace)?;
+    fn peek(cursor: Cursor<'_>) -> bool {
+        matches!(cursor.curr(), Some(TokenTree::Group(group)) if super::Node::is_interp_group(group))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let span = parser.span();
+        let mut inner = parser.parse_group(Delim::Brace)?;
         let mut layers: usize = 1;
 
-        while super::lone_brace_child(&inner).is_some() {
-            inner = inner.parse().parse_group(Delim::Brace)?;
+        while super::lone_brace_child(&inner.to_token_stream()).is_some() {
+            inner = inner.parse_group(Delim::Brace)?;
             layers += 1;
         }
 
         Ok(Self {
             span,
-            expr: inner,
+            expr: inner.to_token_stream(),
             wrap: layers.saturating_sub(2),
         })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
     }
 }
 

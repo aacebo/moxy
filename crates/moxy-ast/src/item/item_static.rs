@@ -1,6 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use crate::Token;
+use crate::{Parse, ParseError, Parser};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::{Attributes, Expr, Ident, Mutability, Type, Visibility};
 
@@ -21,17 +21,23 @@ pub struct ItemStatic {
 }
 
 impl Parse for ItemStatic {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let static_keyword = stream.parse::<Token![static]>()?;
-        let mutability = stream.parse::<Mutability>()?;
-        let ident = stream.parse::<Ident>()?;
-        let colon_punct = stream.parse::<Token![:]>()?;
-        let ty = stream.parse::<Type>()?;
-        let eq_punct = stream.parse::<Token![=]>()?;
-        let expr = stream.parse::<Expr>()?;
-        let semi_punct = stream.parse::<Token![;]>()?;
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Token![static]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = parser.parse()?;
+        let vis = parser.parse()?;
+        let static_keyword = parser.parse()?;
+        let mutability = parser.parse()?;
+        let ident = parser.parse()?;
+        let colon_punct = parser.parse()?;
+        let ty = parser.parse()?;
+        let eq_punct = parser.parse()?;
+        let expr = parser.parse()?;
+        let semi_punct = parser.parse()?;
 
         Ok(Self {
             attrs,
@@ -45,6 +51,19 @@ impl Parse for ItemStatic {
             expr,
             semi_punct,
         })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = cursor.skip::<Token![static]>()?;
+        cursor = Mutability::skip(cursor)?;
+        cursor = cursor.skip::<Ident>()?;
+        cursor = cursor.skip::<Token![:]>()?;
+        cursor = cursor.skip::<Type>()?;
+        cursor = cursor.skip::<Token![=]>()?;
+        cursor = cursor.skip::<Expr>()?;
+        cursor.skip::<Token![;]>()
     }
 }
 

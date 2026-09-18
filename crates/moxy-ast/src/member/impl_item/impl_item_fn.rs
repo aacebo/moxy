@@ -1,7 +1,6 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{LexError, Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Defaultness, Signature, StmtBlock, Visibility};
+use crate::*;
 
 /// A method or associated function inside an `impl` block.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -15,26 +14,29 @@ pub struct ImplItemFn {
 }
 
 impl Parse for ImplItemFn {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let at = stream.span();
-        let attrs = stream.parse::<Attributes>()?;
-        let vis = stream.parse::<Visibility>()?;
-        let defaultness = stream.parse::<Defaultness>()?;
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
+        let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        let cursor = Defaultness::skip(cursor).unwrap_or(cursor);
+        cursor.peek::<Signature>()
+    }
 
-        if !crate::sig::Signature::is_start(stream) {
-            return Err(LexError::new(at).message("expected impl fn").into());
-        }
-
-        let sig = stream.parse::<Signature>()?;
-        let body = stream.parse::<StmtBlock>()?;
-
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs,
-            vis,
-            defaultness,
-            sig,
-            body,
+            attrs: parser.parse()?,
+            vis: parser.parse()?,
+            defaultness: parser.parse()?,
+            sig: parser.parse()?,
+            body: parser.parse()?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = Defaultness::skip(cursor)?;
+        cursor = cursor.skip::<Signature>()?;
+        cursor.skip::<StmtBlock>()
     }
 }
 
@@ -51,11 +53,5 @@ impl ToTokens for ImplItemFn {
         self.defaultness.to_tokens(t);
         self.sig.to_tokens(t);
         self.body.to_tokens(t);
-    }
-}
-
-impl ImplItemFn {
-    pub fn into_impl_item(self) -> super::ImplItem {
-        super::ImplItem::from(self)
     }
 }

@@ -37,57 +37,18 @@ define_visit! {
         visit: visit_expr, visit_mut: visit_expr_mut,
         walk: walk_expr, walk_mut: walk_expr_mut,
         variants {
-            Unary(visit_unary_expr / visit_unary_expr_mut),
-            Binary(visit_binary_expr / visit_binary_expr_mut),
-            Postfix(visit_postfix_expr / visit_postfix_expr_mut),
-            Block(visit_block_expr / visit_block_expr_mut),
-            Jump(visit_jump_expr / visit_jump_expr_mut),
-            Primary(visit_primary_expr / visit_primary_expr_mut),
-            Infer,
-            Verbatim(skip),
-        }
-    }
-
-    enum UnaryExpr {
-        visit: visit_unary_expr, visit_mut: visit_unary_expr_mut,
-        walk: walk_unary_expr, walk_mut: walk_unary_expr_mut,
-        variants {
-            Reference(visit_expr_reference / visit_expr_reference_mut),
             Unary(visit_expr_unary / visit_expr_unary_mut),
             Cast(visit_expr_cast / visit_expr_cast_mut),
             Try(visit_expr_try / visit_expr_try_mut),
-        }
-    }
-
-    enum BinaryExpr {
-        visit: visit_binary_expr, visit_mut: visit_binary_expr_mut,
-        walk: walk_binary_expr, walk_mut: walk_binary_expr_mut,
-        variants {
             Binary(visit_expr_binary / visit_expr_binary_mut),
             Assign(visit_expr_assign / visit_expr_assign_mut),
-            AssignOp(visit_expr_assign_op / visit_expr_assign_op_mut),
             Range(visit_expr_range / visit_expr_range_mut),
-            Type(visit_expr_type / visit_expr_type_mut),
-        }
-    }
-
-    enum PostfixExpr {
-        visit: visit_postfix_expr, visit_mut: visit_postfix_expr_mut,
-        walk: walk_postfix_expr, walk_mut: walk_postfix_expr_mut,
-        variants {
             Call(visit_expr_call / visit_expr_call_mut),
             MethodCall(visit_expr_method_call / visit_expr_method_call_mut),
             Field(visit_expr_field / visit_expr_field_mut),
             Index(visit_expr_index / visit_expr_index_mut),
             Await(visit_expr_await / visit_expr_await_mut),
-        }
-    }
-
-    enum BlockExpr {
-        visit: visit_block_expr, visit_mut: visit_block_expr_mut,
-        walk: walk_block_expr, walk_mut: walk_block_expr_mut,
-        variants {
-            Brace(visit_expr_brace / visit_expr_brace_mut),
+            Block(visit_expr_block / visit_expr_block_mut),
             If(visit_expr_if / visit_expr_if_mut),
             While(visit_expr_while / visit_expr_while_mut),
             ForLoop(visit_expr_for_loop / visit_expr_for_loop_mut),
@@ -97,24 +58,10 @@ define_visit! {
             Unsafe(visit_expr_unsafe / visit_expr_unsafe_mut),
             Const(visit_expr_const / visit_expr_const_mut),
             TryBlock(visit_expr_try_block / visit_expr_try_block_mut),
-        }
-    }
-
-    enum JumpExpr {
-        visit: visit_jump_expr, visit_mut: visit_jump_expr_mut,
-        walk: walk_jump_expr, walk_mut: walk_jump_expr_mut,
-        variants {
             Return(visit_expr_return / visit_expr_return_mut),
             Break(visit_expr_break / visit_expr_break_mut),
             Continue(visit_expr_continue / visit_expr_continue_mut),
             Yield(visit_expr_yield / visit_expr_yield_mut),
-        }
-    }
-
-    enum PrimaryExpr {
-        visit: visit_primary_expr, visit_mut: visit_primary_expr_mut,
-        walk: walk_primary_expr, walk_mut: walk_primary_expr_mut,
-        variants {
             Lit(visit_expr_lit / visit_expr_lit_mut),
             Path(visit_expr_path / visit_expr_path_mut),
             Struct(visit_expr_struct / visit_expr_struct_mut),
@@ -122,14 +69,16 @@ define_visit! {
             Tuple(visit_expr_tuple / visit_expr_tuple_mut),
             Array(visit_expr_array / visit_expr_array_mut),
             Repeat(visit_expr_repeat / visit_expr_repeat_mut),
+            RawAddr(visit_expr_raw_addr / visit_expr_raw_addr_mut),
             Let(visit_expr_let / visit_expr_let_mut),
             Paren(visit_expr_paren / visit_expr_paren_mut),
             Group(visit_expr_group / visit_expr_group_mut),
             Macro(visit_expr_macro / visit_expr_macro_mut),
+            Reference(visit_expr_reference / visit_expr_reference_mut),
+            Infer(visit_expr_infer / visit_expr_infer_mut),
+            Verbatim(skip),
         }
     }
-
-    // -- unary --
     struct ExprReference {
         visit: visit_expr_reference, visit_mut: visit_expr_reference_mut,
         walk: walk_expr_reference, walk_mut: walk_expr_reference_mut,
@@ -168,8 +117,6 @@ define_visit! {
             question_punct: skip,
         }
     }
-
-    // -- binary --
     struct ExprBinary {
         visit: visit_expr_binary, visit_mut: visit_expr_binary_mut,
         walk: walk_expr_binary, walk_mut: walk_expr_binary_mut,
@@ -190,16 +137,6 @@ define_visit! {
             right: box => visit_expr / visit_expr_mut,
         }
     }
-    struct ExprAssignOp {
-        visit: visit_expr_assign_op, visit_mut: visit_expr_assign_op_mut,
-        walk: walk_expr_assign_op, walk_mut: walk_expr_assign_op_mut,
-        fields {
-            attrs => visit_attributes / visit_attributes_mut,
-            left: box => visit_expr / visit_expr_mut,
-            op: leaf,
-            right: box => visit_expr / visit_expr_mut,
-        }
-    }
     struct ExprRange {
         visit: visit_expr_range, visit_mut: visit_expr_range_mut,
         walk: walk_expr_range, walk_mut: walk_expr_range_mut,
@@ -210,18 +147,6 @@ define_visit! {
             end: opt_box => visit_expr / visit_expr_mut,
         }
     }
-    struct ExprType {
-        visit: visit_expr_type, visit_mut: visit_expr_type_mut,
-        walk: walk_expr_type, walk_mut: walk_expr_type_mut,
-        fields {
-            attrs => visit_attributes / visit_attributes_mut,
-            expr: box => visit_expr / visit_expr_mut,
-            colon_punct: skip,
-            ty: box => visit_type / visit_type_mut,
-        }
-    }
-
-    // -- postfix --
     struct ExprCall {
         visit: visit_expr_call, visit_mut: visit_expr_call_mut,
         walk: walk_expr_call, walk_mut: walk_expr_call_mut,
@@ -272,11 +197,9 @@ define_visit! {
             await_keyword: skip,
         }
     }
-
-    // -- block --
-    struct ExprBrace {
-        visit: visit_expr_brace, visit_mut: visit_expr_brace_mut,
-        walk: walk_expr_brace, walk_mut: walk_expr_brace_mut,
+    struct ExprBlock {
+        visit: visit_expr_block, visit_mut: visit_expr_block_mut,
+        walk: walk_expr_block, walk_mut: walk_expr_block_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
             label: skip,
@@ -428,8 +351,6 @@ define_visit! {
             expr: opt_box => visit_expr / visit_expr_mut,
         }
     }
-
-    // -- primary --
     struct ExprLit {
         visit: visit_expr_lit, visit_mut: visit_expr_lit_mut,
         walk: walk_expr_lit, walk_mut: walk_expr_lit_mut,
@@ -454,7 +375,7 @@ define_visit! {
             attrs => visit_attributes / visit_attributes_mut,
             qself: opt => visit_qself / visit_qself_mut,
             path => visit_path / visit_path_mut,
-            body: delim => visit_struct_body / visit_struct_body_mut,
+            body: skip,
         }
     }
     struct ExprClosure {
@@ -541,16 +462,28 @@ define_visit! {
             mac => visit_macro_call / visit_macro_call_mut,
         }
     }
-    struct StructBody {
-        visit: visit_struct_body, visit_mut: visit_struct_body_mut,
-        walk: walk_struct_body, walk_mut: walk_struct_body_mut,
+    struct ExprInfer {
+        visit: visit_expr_infer, visit_mut: visit_expr_infer_mut,
+        walk: walk_expr_infer, walk_mut: walk_expr_infer_mut,
         fields {
-            fields: punct => visit_field_value / visit_field_value_mut,
-            rest: opt_pair => visit_expr / visit_expr_mut,
+            attrs => visit_attributes / visit_attributes_mut,
+            underscore: skip,
+        }
+    }
+    struct ExprRawAddr {
+        visit: visit_expr_raw_addr, visit_mut: visit_expr_raw_addr_mut,
+        walk: walk_expr_raw_addr, walk_mut: walk_expr_raw_addr_mut,
+        fields {
+            attrs => visit_attributes / visit_attributes_mut,
+            and: skip,
+            raw: leaf,
+            mutability: leaf,
+            expr: box => visit_expr / visit_expr_mut,
         }
     }
 
     // ===== statements ====================================================
+
     struct StmtBlock {
         visit: visit_stmt_block, visit_mut: visit_stmt_block_mut,
         walk: walk_stmt_block, walk_mut: walk_stmt_block_mut,
@@ -590,12 +523,13 @@ define_visit! {
     }
 
     // ===== patterns ======================================================
+
     enum Pattern {
         visit: visit_pattern, visit_mut: visit_pattern_mut,
         walk: walk_pattern, walk_mut: walk_pattern_mut,
         variants {
-            Wild,
-            Rest,
+            Wild(visit_pat_wild / visit_pat_wild_mut),
+            Rest(visit_pat_rest / visit_pat_rest_mut),
             Ident(visit_pat_ident / visit_pat_ident_mut),
             Path(visit_pat_path / visit_pat_path_mut),
             Tuple(visit_pat_tuple / visit_pat_tuple_mut),
@@ -606,12 +540,12 @@ define_visit! {
             Or(visit_pat_or / visit_pat_or_mut),
             Lit(visit_pat_lit / visit_pat_lit_mut),
             Range(visit_pat_range / visit_pat_range_mut),
-            Macro(visit_macro_call / visit_macro_call_mut),
+            Macro(visit_pat_macro / visit_pat_macro_mut),
             Type(visit_pat_type / visit_pat_type_mut),
             Group(visit_pat_group / visit_pat_group_mut),
             Paren(visit_pat_paren / visit_pat_paren_mut),
-            Box(visit_pattern / visit_pattern_mut),
-            Const(visit_stmt_block / visit_stmt_block_mut),
+            Box(visit_pat_box / visit_pat_box_mut),
+            Const(visit_pat_const / visit_pat_const_mut),
         }
     }
     struct PatIdent {
@@ -712,7 +646,7 @@ define_visit! {
         walk: walk_pat_lit, walk_mut: walk_pat_lit_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
-            expr => visit_expr / visit_expr_mut,
+            lit: skip,
         }
     }
     struct PatRange {
@@ -751,8 +685,51 @@ define_visit! {
             content: delim => visit_pattern / visit_pattern_mut,
         }
     }
+    struct PatMacro {
+        visit: visit_pat_macro, visit_mut: visit_pat_macro_mut,
+        walk: walk_pat_macro, walk_mut: walk_pat_macro_mut,
+        fields {
+            attrs => visit_attributes / visit_attributes_mut,
+            call => visit_macro_call / visit_macro_call_mut,
+        }
+    }
+    struct PatWild {
+        visit: visit_pat_wild, visit_mut: visit_pat_wild_mut,
+        walk: walk_pat_wild, walk_mut: walk_pat_wild_mut,
+        fields {
+            attrs => visit_attributes / visit_attributes_mut,
+            token: skip,
+        }
+    }
+    struct PatRest {
+        visit: visit_pat_rest, visit_mut: visit_pat_rest_mut,
+        walk: walk_pat_rest, walk_mut: walk_pat_rest_mut,
+        fields {
+            attrs => visit_attributes / visit_attributes_mut,
+            token: skip,
+        }
+    }
+    struct PatBox {
+        visit: visit_pat_box, visit_mut: visit_pat_box_mut,
+        walk: walk_pat_box, walk_mut: walk_pat_box_mut,
+        fields {
+            attrs => visit_attributes / visit_attributes_mut,
+            token: skip,
+            pattern => visit_pattern / visit_pattern_mut,
+        }
+    }
+    struct PatConst {
+        visit: visit_pat_const, visit_mut: visit_pat_const_mut,
+        walk: walk_pat_const, walk_mut: walk_pat_const_mut,
+        fields {
+            attrs => visit_attributes / visit_attributes_mut,
+            token: skip,
+            block => visit_stmt_block / visit_stmt_block_mut,
+        }
+    }
 
     // ===== types =========================================================
+
     enum Type {
         visit: visit_type, visit_mut: visit_type_mut,
         walk: walk_type, walk_mut: walk_type_mut,
@@ -900,6 +877,7 @@ define_visit! {
     }
 
     // ===== items =========================================================
+
     enum Item {
         visit: visit_item, visit_mut: visit_item_mut,
         walk: walk_item, walk_mut: walk_item_mut,
@@ -1142,6 +1120,7 @@ define_visit! {
     }
 
     // ===== members =======================================================
+
     enum ForeignItem {
         visit: visit_foreign_item, visit_mut: visit_foreign_item_mut,
         walk: walk_foreign_item, walk_mut: walk_foreign_item_mut,
@@ -1318,6 +1297,7 @@ define_visit! {
     }
 
     // ===== fields ========================================================
+
     enum Fields {
         visit: visit_fields, visit_mut: visit_fields_mut,
         walk: walk_fields, walk_mut: walk_fields_mut,
@@ -1366,6 +1346,7 @@ define_visit! {
     }
 
     // ===== signatures ====================================================
+
     struct Signature {
         visit: visit_signature, visit_mut: visit_signature_mut,
         walk: walk_signature, walk_mut: walk_signature_mut,
@@ -1428,6 +1409,7 @@ define_visit! {
     }
 
     // ===== generics ======================================================
+
     struct Generics {
         visit: visit_generics, visit_mut: visit_generics_mut,
         walk: walk_generics, walk_mut: walk_generics_mut,
@@ -1566,6 +1548,7 @@ define_visit! {
     }
 
     // ===== generic arguments =============================================
+
     struct AngleArguments {
         visit: visit_angle_arguments, visit_mut: visit_angle_arguments_mut,
         walk: walk_angle_arguments, walk_mut: walk_angle_arguments_mut,
@@ -1627,6 +1610,7 @@ define_visit! {
     }
 
     // ===== attributes ====================================================
+
     struct Attribute {
         visit: visit_attribute, visit_mut: visit_attribute_mut,
         walk: walk_attribute, walk_mut: walk_attribute_mut,
@@ -1680,6 +1664,7 @@ define_visit! {
     }
 
     // ===== misc ==========================================================
+
     struct MacroCall {
         visit: visit_macro_call, visit_mut: visit_macro_call_mut,
         walk: walk_macro_call, walk_mut: walk_macro_call_mut,
@@ -1708,6 +1693,7 @@ define_visit! {
     }
 
     // ===== use trees =====================================================
+
     enum UseTree {
         visit: visit_use_tree, visit_mut: visit_use_tree_mut,
         walk: walk_use_tree, walk_mut: walk_use_tree_mut,
@@ -1760,6 +1746,7 @@ define_visit! {
     }
 
     // ===== irregular nodes (walkers hand-written below) ==================
+
     manual Attributes {
         visit: visit_attributes, visit_mut: visit_attributes_mut,
         walk: walk_attributes, walk_mut: walk_attributes_mut,

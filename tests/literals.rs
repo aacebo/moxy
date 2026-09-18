@@ -16,8 +16,6 @@ fn every_rust_literal_family_preserves_its_representation() {
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
         let literal = &expression
-            .as_primary()
-            .unwrap()
             .as_lit()
             .unwrap_or_else(|| panic!("{source} did not parse as a literal expression"))
             .lit;
@@ -47,7 +45,7 @@ fn every_rust_literal_family_preserves_its_representation() {
 fn large_unsuffixed_integer_literals_survive_the_syntax_pipeline() {
     let source = "340282366920938463463374607431768211455";
     let expression: Expr = moxy::parse!(source).unwrap();
-    let literal = &expression.as_primary().unwrap().as_lit().unwrap().lit;
+    let literal = &expression.as_lit().unwrap().lit;
     assert!(literal.is_int());
     assert_eq!(literal.repr(), source);
     assert_eq!(moxy::fmt!(&expression).unwrap(), source);
@@ -56,7 +54,7 @@ fn large_unsuffixed_integer_literals_survive_the_syntax_pipeline() {
 #[test]
 fn unicode_character_literals_complete_the_syntax_pipeline() {
     let expression: Expr = moxy::parse!("'λ'").unwrap();
-    let literal = &expression.as_primary().unwrap().as_lit().unwrap().lit;
+    let literal = &expression.as_lit().unwrap().lit;
     assert!(literal.is_char());
     assert_eq!(literal.repr(), "'λ'");
     assert_eq!(moxy::fmt!(&expression).unwrap(), "'λ'");
@@ -65,9 +63,8 @@ fn unicode_character_literals_complete_the_syntax_pipeline() {
 #[test]
 fn high_byte_escapes_complete_the_syntax_pipeline() {
     let expression: Expr = moxy::parse!(r#"b'\xFF'"#).unwrap();
-    debug_assert!(expression.is_primary(), "{expression:#?}");
-    debug_assert!(expression.as_primary().unwrap().is_lit(), "{expression:#?}");
-    let literal = &expression.as_primary().unwrap().as_lit().unwrap().lit;
+    debug_assert!(expression.is_lit(), "{expression:#?}");
+    let literal = &expression.as_lit().unwrap().lit;
     assert!(literal.is_byte());
     assert_eq!(literal.repr(), r#"b'\xFF'"#);
     assert_eq!(moxy::fmt!(&expression).unwrap(), r#"b'\xFF'"#);
@@ -77,7 +74,7 @@ fn high_byte_escapes_complete_the_syntax_pipeline() {
 fn boolean_literals_bridge_as_values_in_expressions() {
     for source in ["true", "false"] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        let literal = &expression.as_primary().unwrap().as_lit().unwrap().lit;
+        let literal = &expression.as_lit().unwrap().lit;
         assert!(literal.is_bool());
         assert_eq!(literal.repr(), source);
         assert_eq!(moxy::fmt!(&expression).unwrap(), source);
@@ -114,7 +111,7 @@ fn numeric_literal_suffixes_match_their_public_syntax_values() {
     ] {
         let source = expected.repr();
         let expression: Expr = moxy::parse!(source).unwrap();
-        let literal = &expression.as_primary().unwrap().as_lit().unwrap().lit;
+        let literal = &expression.as_lit().unwrap().lit;
         assert_eq!(literal.repr(), source);
         assert_eq!(expected.to_token_stream().to_string(), source);
         assert!(expected.to_token_tree().is_literal());
@@ -134,7 +131,7 @@ fn unsuffixed_numeric_literals_match_their_public_syntax_values() {
         ("1.5", Lit::f64_unsuffixed(1.5)),
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        let literal = &expression.as_primary().unwrap().as_lit().unwrap().lit;
+        let literal = &expression.as_lit().unwrap().lit;
         assert_eq!(literal, &expected);
         assert_eq!(literal.repr(), source);
         assert!(!expression.span().is_empty());
@@ -153,7 +150,7 @@ fn cooked_raw_string_character_and_byte_syntax_decode_to_real_values() {
         (r#"c"ffi""#, "ffi"),
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        let literal = &expression.as_primary().unwrap().as_lit().unwrap().lit;
+        let literal = &expression.as_lit().unwrap().lit;
 
         match literal {
             Lit::Str(value) => assert_eq!(value.value(), expected),
@@ -176,8 +173,8 @@ fn equivalent_integer_spellings_compare_and_hash_by_value() {
 
     let decimal: Expr = moxy::parse!("1").unwrap();
     let padded: Expr = moxy::parse!("01").unwrap();
-    let decimal = &decimal.as_primary().unwrap().as_lit().unwrap().lit;
-    let padded = &padded.as_primary().unwrap().as_lit().unwrap().lit;
+    let decimal = &decimal.as_lit().unwrap().lit;
+    let padded = &padded.as_lit().unwrap().lit;
     assert_eq!(decimal, padded);
     let mut decimal_hash = DefaultHasher::new();
     decimal.hash(&mut decimal_hash);
@@ -197,7 +194,7 @@ fn proc_macro_boolean_literals_complete_the_syntax_pipeline() {
         let proc_tokens = proc_macro2::TokenStream::from_str(source).unwrap();
         let owned = moxy::token::TokenStream::from(proc_tokens);
         let expression: Expr = moxy::parse!(owned).unwrap();
-        let literal = &expression.as_primary().unwrap().as_lit().unwrap().lit;
+        let literal = &expression.as_lit().unwrap().lit;
         assert!(literal.is_bool());
         assert_eq!(literal.repr(), source);
         assert_eq!(moxy::fmt!(&expression).unwrap(), source);

@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Lifetime, Punctuated};
+use crate::*;
 
 /// A predicate in a `where` clause.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,15 +12,29 @@ pub struct LifetimePredicate {
 }
 
 impl Parse for LifetimePredicate {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let lifetime = stream.parse::<Lifetime>()?;
-        let bounds = Lifetime::parse_bounds(stream)?;
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Lifetime>()
+    }
 
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            lifetime,
-            colon_punct: <Token![:]>::default(),
-            bounds,
+            lifetime: parser.parse()?,
+            colon_punct: parser.parse()?,
+            bounds: Punctuated::parse_separated_nonempty(parser)?,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Lifetime>()?;
+        cursor = cursor.skip::<Token![:]>()?;
+        cursor = cursor.skip::<Lifetime>()?;
+
+        while cursor.peek::<Token![+]>() {
+            cursor = cursor.skip::<Token![+]>()?;
+            cursor = cursor.skip::<Lifetime>()?;
+        }
+
+        Some(cursor)
     }
 }
 
@@ -36,10 +48,7 @@ impl Spanner for LifetimePredicate {
 impl ToTokens for LifetimePredicate {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.lifetime.to_tokens(t);
-
-        if !self.bounds.is_empty() {
-            self.colon_punct.to_tokens(t);
-            self.bounds.to_tokens(t);
-        }
+        self.colon_punct.to_tokens(t);
+        self.bounds.to_tokens(t);
     }
 }

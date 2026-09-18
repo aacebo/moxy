@@ -1,6 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream, TokenTree};
+
+use crate::*;
 
 /// An ABI string (`extern "C"`).
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -11,18 +11,33 @@ pub struct Abi {
 }
 
 impl Parse for Abi {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let extern_keyword = stream.parse::<Token![extern]>()?;
-        let name = match stream.curr() {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![extern]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let extern_keyword = parser.parse()?;
+        let name = match parser.curr() {
             Some(TokenTree::Literal(lit)) if lit.repr().starts_with('"') => {
                 let repr = lit.repr().to_string();
-                stream.advance();
+                parser.advance();
                 Some(repr.trim_matches('"').to_string())
             }
+
             _ => None,
         };
 
         Ok(Self { extern_keyword, name })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Token![extern]>()?;
+
+        if matches!(cursor.curr(), Some(TokenTree::Literal(lit)) if lit.repr().starts_with('"')) {
+            cursor = cursor.offset(1);
+        }
+
+        Some(cursor)
     }
 }
 

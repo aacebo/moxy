@@ -1,6 +1,3 @@
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
-
 mod trait_item_const;
 mod trait_item_fn;
 mod trait_item_macro;
@@ -10,6 +7,10 @@ pub use trait_item_const::*;
 pub use trait_item_fn::*;
 pub use trait_item_macro::*;
 pub use trait_item_type::*;
+
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
+use crate::*;
 
 /// An item inside a `trait` definition.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -85,20 +86,39 @@ impl From<TraitItemConst> for TraitItem {
 }
 
 impl Parse for TraitItem {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        if let Some(item) = stream.parse_if::<TraitItemConst>() {
-            return Ok(Self::Const(Box::new(item)));
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<TraitItemConst>()
+            || cursor.peek::<TraitItemType>()
+            || cursor.peek::<TraitItemFn>()
+            || cursor.peek::<TraitItemMacro>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if parser.peek::<TraitItemConst>() {
+            return Ok(Self::Const(Box::new(parser.parse()?)));
         }
 
-        if let Some(item) = stream.parse_if::<TraitItemType>() {
-            return Ok(Self::Type(item));
+        if parser.peek::<TraitItemType>() {
+            return Ok(Self::Type(parser.parse()?));
         }
 
-        if let Some(item) = stream.parse_if::<TraitItemFn>() {
-            return Ok(Self::Fn(item));
+        if parser.peek::<TraitItemFn>() {
+            return Ok(Self::Fn(parser.parse()?));
         }
 
-        Ok(Self::Macro(stream.parse()?))
+        Ok(Self::Macro(parser.parse()?))
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<TraitItemConst>() {
+            cursor.skip::<TraitItemConst>()
+        } else if cursor.peek::<TraitItemType>() {
+            cursor.skip::<TraitItemType>()
+        } else if cursor.peek::<TraitItemFn>() {
+            cursor.skip::<TraitItemFn>()
+        } else {
+            cursor.skip::<TraitItemMacro>()
+        }
     }
 }
 

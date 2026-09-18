@@ -1,9 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use super::WherePredicate;
-use crate::Punctuated;
+use crate::*;
 
 /// A `where` clause.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,23 +11,27 @@ pub struct WhereClause {
 }
 
 impl Parse for WhereClause {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let where_keyword = stream.parse::<Token![where]>()?;
-        let mut predicates = Punctuated::new();
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![where]>()
+    }
 
-        while !stream.is_empty() && !matches!(stream.curr(), Some(moxy_token::TokenTree::Group(_))) {
-            predicates.push_value(stream.parse::<WherePredicate>()?);
-            if stream.peek::<Token![,]>() {
-                predicates.push_punct(stream.parse::<Token![,]>()?);
-            } else {
-                break;
-            }
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            where_keyword: parser.parse()?,
+            predicates: Punctuated::parse_separated_nonempty(parser)?,
+        })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<Token![where]>()?;
+        cursor = cursor.skip::<WherePredicate>()?;
+
+        while cursor.peek::<Token![,]>() {
+            cursor = cursor.skip::<Token![,]>()?;
+            cursor = cursor.skip::<WherePredicate>()?;
         }
 
-        Ok(Self {
-            where_keyword,
-            predicates,
-        })
+        Some(cursor)
     }
 }
 

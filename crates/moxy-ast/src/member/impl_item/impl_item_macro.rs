@@ -1,8 +1,6 @@
-use moxy_token::Token;
-use moxy_token::parser::{ParseError, ParseStream};
-use moxy_token::{Parse, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, MacroCall};
+use crate::*;
 
 /// A macro invocation inside an `impl` block.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -14,10 +12,24 @@ pub struct ImplItemMacro {
 }
 
 impl Parse for ImplItemMacro {
-    fn parse(stream: &mut ParseStream) -> Result<Self, ParseError> {
-        let attrs = stream.parse::<Attributes>()?;
-        let (mac, semi) = crate::MacroCall::parse_semi(stream)?;
-        Ok(Self { attrs, mac, semi })
+    fn peek(cursor: Cursor<'_>) -> bool {
+        Attributes::skip(cursor)
+            .map(|cursor| cursor.peek::<MacroCall>())
+            .unwrap_or(false)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            attrs: parser.parse()?,
+            mac: parser.parse()?,
+            semi: parser.parse()?,
+        })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = cursor.skip::<MacroCall>()?;
+        cursor.skip::<Option<Token![;]>>()
     }
 }
 
@@ -33,11 +45,5 @@ impl ToTokens for ImplItemMacro {
         self.attrs.to_tokens(t);
         self.mac.to_tokens(t);
         self.semi.to_tokens(t);
-    }
-}
-
-impl ImplItemMacro {
-    pub fn into_impl_item(self) -> super::ImplItem {
-        super::ImplItem::from(self)
     }
 }

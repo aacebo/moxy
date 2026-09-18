@@ -14,7 +14,7 @@ fn macro_invocations_preserve_paths_delimiters_and_body_tokens() {
             assert_eq!(moxy::fmt!(&item).unwrap(), expected);
         } else {
             let expression: Expr = moxy::parse!(source).unwrap();
-            assert!(expression.as_primary().unwrap().is_macro());
+            assert!(expression.is_macro());
             assert!(!expression.span().is_empty());
             assert_eq!(moxy::fmt!(&expression).unwrap(), expected);
         }
