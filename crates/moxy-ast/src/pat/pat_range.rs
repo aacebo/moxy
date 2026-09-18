@@ -34,13 +34,13 @@ impl Parse for PatRange {
         let start = if parser.peek::<RangeLimits>() {
             None
         } else {
-            Some(expr::parse_unary(parser, Attributes::default())?)
+            Some(expr::parse::unary(parser, Attributes::default())?)
         };
         let limits = parser.parse()?;
         let end = if parser.is_empty() || parser.peek::<Token![,]>() || parser.peek::<Token![|]>() || parser.peek::<Token![:]>() {
             None
         } else {
-            Some(expr::parse_unary(parser, Attributes::default())?)
+            Some(expr::parse::unary(parser, Attributes::default())?)
         };
 
         if start.is_none() && end.is_none() && matches!(limits, RangeLimits::HalfOpen(_)) {
@@ -60,7 +60,7 @@ impl Parse for PatRange {
         let has_start = !cursor.peek::<RangeLimits>();
 
         if has_start {
-            cursor = expr::skip_pattern_bound(cursor)?;
+            cursor = expr::skip::pattern_bound(cursor)?;
         }
 
         let closed = cursor.peek::<Token![..=]>();
@@ -70,7 +70,7 @@ impl Parse for PatRange {
             return (has_start || closed).then_some(cursor);
         }
 
-        expr::skip_pattern_bound(cursor)
+        expr::skip::pattern_bound(cursor)
     }
 }
 
