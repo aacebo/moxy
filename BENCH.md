@@ -13,6 +13,8 @@ Continuous Criterion benchmarks comparing **moxy** with **syn**.
 
 > Criterion declares byte throughput for these fixtures, but Bencher's `rust_criterion` adapter records latency only.
 
+> Charts show a rolling four-week window relative to the time they are requested, using Bencher's default time range.
+
 | Benchmark                    |       moxy |      syn | Faster          |
 | ---------------------------- | ---------: | -------: | :-------------- |
 | `parse_expr/control_flow`    | 23.494 µs | 31.448 µs | **moxy 25.3%** |
