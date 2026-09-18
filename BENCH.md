@@ -13,13 +13,13 @@ Continuous Criterion benchmarks comparing **moxy** with **syn**.
 
 > Criterion declares byte throughput for these fixtures, but Bencher's `rust_criterion` adapter records latency only.
 
-| Benchmark                    |      moxy |       syn | syn faster |
-| ---------------------------- | --------: | --------: | ---------: |
-| `parse_expr/control_flow`    |  193.3 µs | 31.784 µs |  **83.6%** |
-| `parse_file/attributed_uses` | 156.43 µs | 54.355 µs |  **65.3%** |
-| `parse_file/mixed_items`     | 282.34 µs |  77.56 µs |  **72.5%** |
-| `parse_invalid/expression`   |  7.373 µs |  2.062 µs |  **72.0%** |
-| `parse_type/nested`          | 11.782 ms | 15.728 µs | **99.87%** |
+| Benchmark                    |       moxy |      syn | Faster          |
+| ---------------------------- | ---------: | -------: | :-------------- |
+| `parse_expr/control_flow`    |  23.929 µs | 31.667 µs | **moxy 24.4%** |
+| `parse_file/attributed_uses` |  69.760 µs | 60.922 µs | **syn 12.7%**  |
+| `parse_file/mixed_items`     |  68.852 µs | 75.069 µs | **moxy 8.3%**  |
+| `parse_invalid/expression`   |   1.204 µs |  2.034 µs | **moxy 40.8%** |
+| `parse_type/nested`          | 147.770 µs | 15.508 µs | **syn 89.5%**  |
 
 ## Parse File — Attributed Uses
 
