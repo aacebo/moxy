@@ -9,8 +9,8 @@
 <a href="https://github.com/aacebo/moxy/blob/master/LICENSE">
     <img src="https://img.shields.io/github/license/aacebo/moxy" />
 </a>
-<a href="https://github.com/aacebo/moxy/commits/master">
-    <img src="https://img.shields.io/github/checks-status/aacebo/moxy/master?label=master" />
+<a href="https://github.com/aacebo/moxy/actions/workflows/ci.yaml">
+  <img src="https://github.com/aacebo/moxy/actions/workflows/ci.yaml/badge.svg?branch=master" />
 </a>
 <a href="https://crates.io/crates/moxy">
     <img src="https://img.shields.io/crates/size/moxy" />
