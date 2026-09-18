@@ -14,6 +14,15 @@ impl From<proc_macro2::Span> for Span {
     }
 }
 
+impl From<Span> for proc_macro2::Span {
+    fn from(value: Span) -> Self {
+        match value {
+            Span::Compiler(v) => v.into(),
+            Span::Fallback(_) => proc_macro2::Span::call_site(),
+        }
+    }
+}
+
 // --- Delim ---
 
 impl From<proc_macro2::Delimiter> for Delim {
@@ -62,14 +71,14 @@ impl From<Spacing> for proc_macro2::Spacing {
 
 impl From<proc_macro2::Ident> for Ident {
     fn from(value: proc_macro2::Ident) -> Self {
-        let span: Span = value.span().into();
+        let span = value.span().into();
         Self::new(value.to_string()).with_span(span)
     }
 }
 
 impl From<Ident> for proc_macro2::Ident {
     fn from(value: Ident) -> Self {
-        let span = proc_macro2::Span::call_site();
+        let span = value.span().into();
 
         if value.is_raw() {
             Self::new_raw(value.text(), span)
@@ -83,7 +92,7 @@ impl From<Ident> for proc_macro2::Ident {
 
 impl From<proc_macro2::Literal> for Lit {
     fn from(value: proc_macro2::Literal) -> Self {
-        let span: Span = value.span().into();
+        let span = value.span().into();
         Self::from_repr(&value.to_string(), span)
     }
 }
@@ -130,7 +139,7 @@ impl ToTokens<TokenStream> for proc_macro2::TokenStream {
                     }
                     match other {
                         proc_macro2::TokenTree::Ident(v) => {
-                            let span: Span = v.span().into();
+                            let span = v.span().into();
                             let tt = match Keyword::from_str(&v.to_string(), span) {
                                 Some(kw) => TokenTree::Keyword(kw),
                                 None => TokenTree::Ident(v.into()),
