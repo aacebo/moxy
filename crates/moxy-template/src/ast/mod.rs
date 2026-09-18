@@ -4,7 +4,7 @@ mod tmpl_interp;
 mod tmpl_tokens;
 
 pub use keyword::TmplKeyword;
-use moxy_ast::{Parse, ParseError, Parser};
+use moxy_ast::{Cursor, Parse, ParseError, Parser};
 use moxy_token::{Delim, Group, Keyword, LexError, Punct, Span, ToTokens, TokenStream, TokenTree};
 pub use paste::Paste;
 pub use tmpl_interp::*;
@@ -28,9 +28,21 @@ impl Template {
 }
 
 impl Parse for Template {
+    fn peek(_: Cursor<'_>) -> bool {
+        true
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let nodes = parser.parse_until_empty()?;
         Ok(Self { nodes })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        while !cursor.is_empty() {
+            cursor = cursor.skip::<Node>()?;
+        }
+
+        Some(cursor)
     }
 }
 
@@ -53,11 +65,11 @@ pub enum Node {
 
 impl Node {
     pub fn is_interp_group(g: &Group) -> bool {
-        g.delim() == Delim::Brace && lone_brace_child(&g.stream()).is_some()
+        g.delim() == Delim::Brace && lone_brace_child(g.stream()).is_some()
     }
 
     pub fn group_has_interp(g: &Group) -> bool {
-        Self::is_interp_group(g) || is_template(&g.stream())
+        Self::is_interp_group(g) || is_template(g.stream())
     }
 }
 
@@ -69,11 +81,15 @@ pub fn lone_brace_child(parser: &TokenStream) -> Option<Group> {
 }
 
 impl Parse for Node {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        !cursor.is_empty()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         match parser.curr() {
-            Some(TokenTree::Punct(Punct::At(_))) => Ok(Self::Keyword(parser.parse::<TmplKeyword>()?)),
+            Some(TokenTree::Punct(Punct::At(_))) => Ok(Self::Keyword(parser.parse()?)),
             Some(TokenTree::Group(g)) if Self::is_interp_group(g) => {
-                let interp = parser.parse::<TmplInterp>()?;
+                let interp: TmplInterp = parser.parse()?;
                 let wrap = interp.wrap;
                 let mut node = Self::Interp(interp);
 
@@ -85,14 +101,32 @@ impl Parse for Node {
             }
             Some(TokenTree::Group(g)) if Self::group_has_interp(g) => {
                 let delim = g.delim();
-                let inner = g.stream();
-                parser.advance();
-                let parser = Parser::from_tokens(&inner);
-                Ok(Self::Group(delim, Box::new(parser.parse::<Template>()?)))
+                let parser = parser.parse_group(g.delim())?;
+                Ok(Self::Group(delim, Box::new(parser.parse()?)))
             }
-            Some(_) => collect_tokens(parser),
+            Some(_) => Ok(Self::Tokens(parser.parse()?)),
             None => Err(LexError::new(Span::default()).message("unexpected end of template").into()),
         }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<TmplKeyword>() {
+            return cursor.skip::<TmplKeyword>();
+        }
+
+        if cursor.peek::<TmplInterp>() {
+            return cursor.skip::<TmplInterp>();
+        }
+
+        if let Some(TokenTree::Group(group)) = cursor.curr()
+            && Self::group_has_interp(group)
+        {
+            let inner = cursor.descend(group.delim())?;
+            let inner = Template::skip(inner)?;
+            return inner.is_empty().then(|| cursor.offset(1));
+        }
+
+        cursor.skip::<TmplTokens>()
     }
 }
 
@@ -118,7 +152,7 @@ fn is_template(parser: &TokenStream) -> bool {
                 }
             }
         } else if let TokenTree::Group(g) = token
-            && (Node::is_interp_group(g) || is_template(&g.stream()))
+            && (Node::is_interp_group(g) || is_template(g.stream()))
         {
             return true;
         }
@@ -154,22 +188,4 @@ fn emit_group(delim: Delim, body: &Template, out: &mut TokenStream) {
     out.extend(TokenStream::from_str("__moxy_tmpl.extend_one").unwrap());
     out.extend_one(TokenTree::Group(Group::new(Delim::Paren, tree_args)));
     out.extend(TokenStream::from_str(";").unwrap());
-}
-
-fn collect_tokens(parser: &Parser) -> Result<Node, ParseError> {
-    let span = parser.span();
-    let mut tokens = TokenStream::new();
-
-    loop {
-        match parser.curr() {
-            None => break,
-            Some(TokenTree::Punct(Punct::At(_))) => break,
-            Some(TokenTree::Group(g)) if Node::is_interp_group(g) || Node::group_has_interp(g) => break,
-            _ => {
-                tokens.extend_one(parser.advance().unwrap().clone());
-            }
-        }
-    }
-
-    Ok(Node::Tokens(TmplTokens { span, parser: tokens }))
 }

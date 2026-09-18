@@ -1,8 +1,9 @@
 use std::str::FromStr;
 
 use moxy::Token;
-use moxy::ast::{Parse, ParseError, Parser, Peek};
+use moxy::ast::{Parse, ParseError, Parser};
 use moxy::token::{Delim, TokenStream, TokenTree};
+use moxy_ast::Cursor;
 
 #[test]
 fn peek_and_failed_optional_parses_do_not_advance() {
@@ -13,7 +14,7 @@ fn peek_and_failed_optional_parses_do_not_advance() {
     assert!(parser.peek::<Token![fn]>());
     assert_eq!(parser.remaining(), remaining);
 
-    assert!(parser.parse_if::<Token![struct]>().is_none());
+    assert!(parser.parse::<Token![struct]>().is_err());
     assert_eq!(parser.remaining(), remaining);
 
     let optional: Option<Token![struct]> = parser.parse().unwrap();
@@ -63,9 +64,8 @@ fn group_parsing_creates_an_independent_nested_parser() {
     let inner = parser.parse_group(Delim::Paren).unwrap();
     assert!(parser.is_empty());
 
-    let inner_parser = Parser::from_tokens(&inner);
-    let _: Token![fn] = inner_parser.parse().unwrap();
-    assert!(inner_parser.is_empty());
+    let _: Token![fn] = inner.parse().unwrap();
+    assert!(inner.is_empty());
 }
 
 #[test]
@@ -81,15 +81,17 @@ fn peek_suppresses_nested_trace_output() {
         struct NestedParse;
 
         impl Parse for NestedParse {
+            fn peek(cursor: Cursor<'_>) -> bool {
+                cursor.peek::<Token![fn]>()
+            }
+
             fn parse(parser: &Parser) -> Result<Self, ParseError> {
                 let _: Token![fn] = parser.parse()?;
                 Ok(Self)
             }
-        }
 
-        impl Peek for NestedParse {
-            fn peek(parser: &Parser) -> bool {
-                parser.parse::<Self>().is_ok()
+            fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+                cursor.skip::<Token![fn]>()
             }
         }
 

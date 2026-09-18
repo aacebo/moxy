@@ -1,6 +1,6 @@
 #![allow(unused)]
 
-use moxy_ast::{Delimited, Parse, ParseError, Parser, Token};
+use moxy_ast::{Cursor, Delimited, Parse, ParseError, Parser, Token};
 use moxy_token::{Delim, Group, LexError, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 use crate::Template;
@@ -15,10 +15,20 @@ pub struct TmplMatch {
     pub arms: Delimited<Vec<TmplMatchArm>>,
 }
 
-impl TmplMatch {
-    pub fn parse_after_keyword_match(parser: &Parser, at: Token![@], keyword: Token![match]) -> Result<Self, ParseError> {
+impl Parse for TmplMatch {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(cursor) = cursor.skip::<Token![@]>() else {
+            return false;
+        };
+
+        cursor.peek::<Token![match]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let at: Token![@] = parser.parse()?;
+        let keyword = parser.parse()?;
         let span = at.span();
-        let expr = parser.parse_group(Delim::Paren)?;
+        let expr = parser.parse_group(Delim::Paren)?.to_token_stream();
         let arms = Delimited::parse_brace(parser)?;
 
         Ok(Self {
@@ -28,6 +38,20 @@ impl TmplMatch {
             expr,
             arms,
         })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let cursor = cursor.skip::<Token![@]>()?;
+        let cursor = cursor.skip::<Token![match]>()?;
+        let inner = cursor.descend(Delim::Paren)?;
+        let cursor = inner.offset(inner.remaining()).is_empty().then(|| cursor.offset(1))?;
+        let mut inner = cursor.descend(Delim::Brace)?;
+
+        while !inner.is_empty() {
+            inner = inner.skip::<TmplMatchArm>()?;
+        }
+
+        Some(cursor.offset(1))
     }
 }
 
@@ -50,6 +74,10 @@ pub struct TmplMatchArm {
 }
 
 impl Parse for TmplMatchArm {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        Self::skip(cursor).is_some()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let span = parser.span();
         let mut pat = TokenStream::new();
@@ -67,9 +95,9 @@ impl Parse for TmplMatchArm {
             }
         }
 
-        let arrow = parser.parse::<Token![=>]>()?;
+        let arrow = parser.parse()?;
         let body = Delimited::parse_brace(parser)?;
-        let comma = parser.parse_if::<Token![,]>();
+        let comma = parser.parse()?;
 
         Ok(Self {
             span,
@@ -78,6 +106,24 @@ impl Parse for TmplMatchArm {
             body,
             comma,
         })
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        while !cursor.peek::<Token![=>]>() {
+            cursor.curr()?;
+            cursor = cursor.offset(1);
+        }
+
+        cursor = cursor.skip::<Token![=>]>()?;
+        let inner = cursor.descend(Delim::Brace)?;
+        let inner = Template::skip(inner)?;
+
+        if !inner.is_empty() {
+            return None;
+        }
+
+        cursor = cursor.offset(1);
+        cursor.skip::<Option<Token![,]>>()
     }
 }
 

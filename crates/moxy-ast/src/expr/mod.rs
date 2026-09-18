@@ -78,7 +78,7 @@ pub use expr_unsafe::*;
 pub use expr_while::*;
 pub use expr_yield::*;
 
-use moxy_token::{Delim, Span, Spanner, ToTokenStream, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -218,6 +218,326 @@ impl Expr {
             _ => None,
         }
     }
+
+    pub fn is_array(&self) -> bool {
+        matches!(self, Self::Array(_))
+    }
+
+    pub fn is_assign(&self) -> bool {
+        matches!(self, Self::Assign(_))
+    }
+
+    pub fn is_async(&self) -> bool {
+        matches!(self, Self::Async(_))
+    }
+
+    pub fn is_await(&self) -> bool {
+        matches!(self, Self::Await(_))
+    }
+
+    pub fn is_binary(&self) -> bool {
+        matches!(self, Self::Binary(_))
+    }
+
+    pub fn is_block(&self) -> bool {
+        matches!(self, Self::Block(_))
+    }
+
+    pub fn is_break(&self) -> bool {
+        matches!(self, Self::Break(_))
+    }
+
+    pub fn is_call(&self) -> bool {
+        matches!(self, Self::Call(_))
+    }
+
+    pub fn is_cast(&self) -> bool {
+        matches!(self, Self::Cast(_))
+    }
+
+    pub fn is_closure(&self) -> bool {
+        matches!(self, Self::Closure(_))
+    }
+
+    pub fn is_const(&self) -> bool {
+        matches!(self, Self::Const(_))
+    }
+
+    pub fn is_continue(&self) -> bool {
+        matches!(self, Self::Continue(_))
+    }
+
+    pub fn is_field(&self) -> bool {
+        matches!(self, Self::Field(_))
+    }
+
+    pub fn is_for_loop(&self) -> bool {
+        matches!(self, Self::ForLoop(_))
+    }
+
+    pub fn is_group(&self) -> bool {
+        matches!(self, Self::Group(_))
+    }
+
+    pub fn is_if(&self) -> bool {
+        matches!(self, Self::If(_))
+    }
+
+    pub fn is_index(&self) -> bool {
+        matches!(self, Self::Index(_))
+    }
+
+    pub fn is_infer(&self) -> bool {
+        matches!(self, Self::Infer(_))
+    }
+
+    pub fn is_let(&self) -> bool {
+        matches!(self, Self::Let(_))
+    }
+
+    pub fn is_lit(&self) -> bool {
+        matches!(self, Self::Lit(_))
+    }
+
+    pub fn is_loop(&self) -> bool {
+        matches!(self, Self::Loop(_))
+    }
+
+    pub fn is_macro(&self) -> bool {
+        matches!(self, Self::Macro(_))
+    }
+
+    pub fn is_match(&self) -> bool {
+        matches!(self, Self::Match(_))
+    }
+
+    pub fn is_method_call(&self) -> bool {
+        matches!(self, Self::MethodCall(_))
+    }
+
+    pub fn is_paren(&self) -> bool {
+        matches!(self, Self::Paren(_))
+    }
+
+    pub fn is_path(&self) -> bool {
+        matches!(self, Self::Path(_))
+    }
+
+    pub fn is_range(&self) -> bool {
+        matches!(self, Self::Range(_))
+    }
+
+    pub fn is_raw_addr(&self) -> bool {
+        matches!(self, Self::RawAddr(_))
+    }
+
+    pub fn is_reference(&self) -> bool {
+        matches!(self, Self::Reference(_))
+    }
+
+    pub fn is_repeat(&self) -> bool {
+        matches!(self, Self::Repeat(_))
+    }
+
+    pub fn is_return(&self) -> bool {
+        matches!(self, Self::Return(_))
+    }
+
+    pub fn is_struct(&self) -> bool {
+        matches!(self, Self::Struct(_))
+    }
+
+    pub fn is_try(&self) -> bool {
+        matches!(self, Self::Try(_))
+    }
+
+    pub fn is_try_block(&self) -> bool {
+        matches!(self, Self::TryBlock(_))
+    }
+
+    pub fn is_tuple(&self) -> bool {
+        matches!(self, Self::Tuple(_))
+    }
+
+    pub fn is_unary(&self) -> bool {
+        matches!(self, Self::Unary(_))
+    }
+
+    pub fn is_unsafe(&self) -> bool {
+        matches!(self, Self::Unsafe(_))
+    }
+
+    pub fn is_verbatim(&self) -> bool {
+        matches!(self, Self::Verbatim(_))
+    }
+
+    pub fn is_while(&self) -> bool {
+        matches!(self, Self::While(_))
+    }
+
+    pub fn is_yield(&self) -> bool {
+        matches!(self, Self::Yield(_))
+    }
+
+    pub fn as_array(&self) -> Option<&ExprArray> {
+        if let Self::Array(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_assign(&self) -> Option<&ExprAssign> {
+        if let Self::Assign(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_async(&self) -> Option<&ExprAsync> {
+        if let Self::Async(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_await(&self) -> Option<&ExprAwait> {
+        if let Self::Await(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_binary(&self) -> Option<&ExprBinary> {
+        if let Self::Binary(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_block(&self) -> Option<&ExprBlock> {
+        if let Self::Block(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_break(&self) -> Option<&ExprBreak> {
+        if let Self::Break(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_call(&self) -> Option<&ExprCall> {
+        if let Self::Call(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_cast(&self) -> Option<&ExprCast> {
+        if let Self::Cast(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_closure(&self) -> Option<&ExprClosure> {
+        if let Self::Closure(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_const(&self) -> Option<&ExprConst> {
+        if let Self::Const(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_continue(&self) -> Option<&ExprContinue> {
+        if let Self::Continue(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_field(&self) -> Option<&ExprField> {
+        if let Self::Field(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_for_loop(&self) -> Option<&ExprForLoop> {
+        if let Self::ForLoop(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_group(&self) -> Option<&ExprGroup> {
+        if let Self::Group(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_if(&self) -> Option<&ExprIf> {
+        if let Self::If(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_index(&self) -> Option<&ExprIndex> {
+        if let Self::Index(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_infer(&self) -> Option<&ExprInfer> {
+        if let Self::Infer(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_let(&self) -> Option<&ExprLet> {
+        if let Self::Let(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_lit(&self) -> Option<&ExprLit> {
+        if let Self::Lit(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_loop(&self) -> Option<&ExprLoop> {
+        if let Self::Loop(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_macro(&self) -> Option<&ExprMacro> {
+        if let Self::Macro(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_match(&self) -> Option<&ExprMatch> {
+        if let Self::Match(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_method_call(&self) -> Option<&ExprMethodCall> {
+        if let Self::MethodCall(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_paren(&self) -> Option<&ExprParen> {
+        if let Self::Paren(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_path(&self) -> Option<&ExprPath> {
+        if let Self::Path(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_range(&self) -> Option<&ExprRange> {
+        if let Self::Range(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_raw_addr(&self) -> Option<&ExprRawAddr> {
+        if let Self::RawAddr(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_reference(&self) -> Option<&ExprReference> {
+        if let Self::Reference(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_repeat(&self) -> Option<&ExprRepeat> {
+        if let Self::Repeat(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_return(&self) -> Option<&ExprReturn> {
+        if let Self::Return(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_struct(&self) -> Option<&ExprStruct> {
+        if let Self::Struct(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_try(&self) -> Option<&ExprTry> {
+        if let Self::Try(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_try_block(&self) -> Option<&ExprTryBlock> {
+        if let Self::TryBlock(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_tuple(&self) -> Option<&ExprTuple> {
+        if let Self::Tuple(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_unary(&self) -> Option<&ExprUnary> {
+        if let Self::Unary(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_unsafe(&self) -> Option<&ExprUnsafe> {
+        if let Self::Unsafe(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_verbatim(&self) -> Option<&TokenStream> {
+        if let Self::Verbatim(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_while(&self) -> Option<&ExprWhile> {
+        if let Self::While(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_yield(&self) -> Option<&ExprYield> {
+        if let Self::Yield(v) = self { Some(v) } else { None }
+    }
 }
 
 impl Spanner for Expr {
@@ -318,72 +638,7 @@ impl Parse for Expr {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
 
-        match cursor.curr() {
-            // literals
-            Some(TokenTree::Literal(_)) => true,
-
-            // paths, `_`, etc.
-            Some(TokenTree::Ident(_)) => true,
-
-            Some(TokenTree::Keyword(
-                moxy_token::Keyword::SelfType(_)
-                | moxy_token::Keyword::SelfValue(_)
-                | moxy_token::Keyword::Super(_)
-                | moxy_token::Keyword::Crate(_),
-            )) => true,
-
-            // grouped primary expressions
-            Some(TokenTree::Group(group))
-                if matches!(group.delim(), Delim::Paren | Delim::Bracket | Delim::Brace | Delim::None) =>
-            {
-                true
-            }
-
-            _ => {
-                // unary expressions
-                cursor.peek::<Token![&]>()
-                    || cursor.peek::<Token![*]>()
-                    || cursor.peek::<Token![!]>()
-                    || cursor.peek::<Token![-]>()
-
-                    // paths beginning with ::
-                    || cursor.peek::<Token![::]>()
-                    || cursor.peek::<Token![<]>()
-
-                    // closures
-                    || cursor.peek::<Token![|]>()
-                    || cursor.peek::<Token![||]>()
-                    || cursor.peek::<Token![move]>()
-                    || cursor.peek::<Token![static]>()
-
-                    // block expressions
-                    || cursor.peek::<Token![if]>()
-                    || cursor.peek::<Token![match]>()
-                    || cursor.peek::<Token![while]>()
-                    || cursor.peek::<Token![for]>()
-                    || cursor.peek::<Token![loop]>()
-                    || cursor.peek::<Token![async]>()
-                    || cursor.peek::<Token![unsafe]>()
-                    || cursor.peek::<Token![const]>()
-                    || cursor.peek::<Token![try]>()
-
-                    // jump expressions
-                    || cursor.peek::<Token![return]>()
-                    || cursor.peek::<Token![break]>()
-                    || cursor.peek::<Token![continue]>()
-                    || cursor.peek::<Token![yield]>()
-
-                    // let expression
-                    || cursor.peek::<Token![let]>()
-
-                    // range with no lhs, if supported
-                    || cursor.peek::<Token![..]>()
-                    || cursor.peek::<Token![..=]>()
-
-                    // labeled block or loop expression
-                    || cursor.peek::<Label>()
-            }
-        }
+        !cursor.is_empty()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -618,6 +873,11 @@ fn skip_expr_with(cursor: Cursor<'_>, pattern_bound: bool) -> Option<Cursor<'_>>
 
         let path_start = cursor;
         let qualified = cursor.peek::<Token![<]>();
+
+        if !qualified && !cursor.peek::<Path>() {
+            return Some(cursor.offset(cursor.remaining()));
+        }
+
         cursor = if qualified {
             cursor.skip::<ty::TypePath>()?
         } else {
@@ -675,14 +935,13 @@ fn skip_expr_with(cursor: Cursor<'_>, pattern_bound: bool) -> Option<Cursor<'_>>
                     let args = after_method.skip::<Option<AngleArguments>>()?;
 
                     if args.is_delimited(Delim::Paren) {
-                        cursor = args;
-                        let inner = skip_list(cursor.descend(Delim::Paren)?)?;
+                        let inner = skip_list(args.descend(Delim::Paren)?)?;
 
                         if !inner.is_empty() {
                             return None;
                         }
 
-                        cursor = cursor.offset(1);
+                        cursor = args.offset(1);
                         continue;
                     }
                 }
@@ -935,7 +1194,7 @@ pub(crate) fn parse_postfix(parser: &Parser, attrs: Attributes) -> Result<Expr, 
         }
 
         if parser.peek::<Token![.]>() {
-            if parser.offset(1).peek::<Token![await]>() {
+            if parser.cursor().offset(1).peek::<Token![await]>() {
                 expr = ExprAwait {
                     attrs: Default::default(),
                     base: Box::new(expr),
@@ -943,7 +1202,7 @@ pub(crate) fn parse_postfix(parser: &Parser, attrs: Attributes) -> Result<Expr, 
                     await_keyword: parser.parse()?,
                 }
                 .into();
-            } else if parser.offset(1).peek::<Ident>() {
+            } else if parser.cursor().offset(1).peek::<Ident>() {
                 let method = parser.cursor().offset(2);
                 let args = Option::<AngleArguments>::skip(method).unwrap_or(method);
 

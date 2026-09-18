@@ -17,17 +17,16 @@ impl Parse for PathSegment {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let ident = parser.parse_ident_any()?;
-        let args = if matches!(ident.text(), "Fn" | "FnMut" | "FnOnce") {
-            path::PathArguments::Parenthesized(parser.parse()?)
-        } else {
-            parser.parse()?
-        };
+        let args = parser
+            .parse::<Option<AngleArguments>>()?
+            .map_or(path::PathArguments::None, path::PathArguments::AngleBracketed);
 
         Ok(Self { ident, args })
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         let is_fn = matches!(cursor.curr().and_then(|token| token.text()), Some("Fn" | "FnMut" | "FnOnce"));
+
         cursor = if cursor.peek::<Ident>() {
             cursor.skip::<Ident>()?
         } else {
@@ -35,9 +34,9 @@ impl Parse for PathSegment {
         };
 
         if is_fn {
-            cursor.skip::<ParenArguments>()
+            cursor.skip::<PathSegment>()
         } else {
-            path::PathArguments::skip(cursor)
+            cursor.skip::<Option<AngleArguments>>()
         }
     }
 }

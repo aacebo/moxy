@@ -47,7 +47,7 @@ impl<'a> Cursor<'a> {
     }
 
     pub fn skip<T: Parse>(self) -> Option<Self> {
-        if T::peek(self) { T::skip(self) } else { None }
+        T::skip(self)
     }
 
     pub fn is_delimited(self, delim: Delim) -> bool {

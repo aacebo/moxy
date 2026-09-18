@@ -2,8 +2,8 @@ mod tmpl_for;
 mod tmpl_if;
 mod tmpl_match;
 
-use moxy_ast::{Parse, ParseError, Parser, Token};
-use moxy_token::{LexError, ToTokens, TokenStream};
+use moxy_ast::{Cursor, Parse, ParseError, Parser};
+use moxy_token::{ToTokens, TokenStream};
 pub use tmpl_for::*;
 pub use tmpl_if::*;
 pub use tmpl_match::*;
@@ -17,24 +17,40 @@ pub enum TmplKeyword {
 }
 
 impl Parse for TmplKeyword {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<TmplIf>() || cursor.peek::<TmplFor>() || cursor.peek::<TmplMatch>()
+    }
+
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let at_punct = parser.parse::<Token![@]>()?;
-
-        if let Some(if_kw) = parser.parse_if::<Token![if]>() {
-            return Ok(Self::If(TmplIf::parse_after_keyword_if(parser, at_punct, if_kw)?));
+        if parser.peek::<TmplIf>() {
+            return Ok(Self::If(parser.parse()?));
         }
 
-        if let Some(for_kw) = parser.parse_if::<Token![for]>() {
-            return Ok(Self::For(TmplFor::parse_after_keyword_for(parser, at_punct, for_kw)?));
+        if parser.peek::<TmplFor>() {
+            return Ok(Self::For(parser.parse()?));
         }
 
-        if let Some(match_kw) = parser.parse_if::<Token![match]>() {
-            return Ok(Self::Match(TmplMatch::parse_after_keyword_match(parser, at_punct, match_kw)?));
+        if parser.peek::<TmplMatch>() {
+            return Ok(Self::Match(parser.parse()?));
         }
 
-        Err(LexError::new(parser.span())
-            .message("expected `if`, `for`, or `match` after `@`")
-            .into())
+        parser.error("expected template directive").into()
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if cursor.peek::<TmplIf>() {
+            return cursor.skip::<TmplIf>();
+        }
+
+        if cursor.peek::<TmplFor>() {
+            return cursor.skip::<TmplFor>();
+        }
+
+        if cursor.peek::<TmplMatch>() {
+            return cursor.skip::<TmplMatch>();
+        }
+
+        None
     }
 }
 

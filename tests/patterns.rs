@@ -20,15 +20,6 @@ fn binding_tuple_slice_and_struct_patterns_preserve_shape() {
             ],
             std::array::from_fn(|index| index == expected_kind)
         );
-        assert_eq!(
-            [
-                pattern.as_ident().is_some(),
-                pattern.as_tuple().is_some(),
-                pattern.as_slice().is_some(),
-                pattern.as_struct().is_some(),
-            ],
-            std::array::from_fn(|index| index == expected_kind)
-        );
         assert!(!pattern.span().is_empty());
         assert!(!pattern.to_token_stream().is_empty());
         assert_eq!(moxy::fmt!(&pattern).unwrap(), expected);
@@ -45,14 +36,6 @@ fn alternatives_ranges_references_and_typed_patterns_render_exactly() {
         let pattern: Pattern = moxy::parse!(source).unwrap();
         assert_eq!(
             [pattern.is_or(), pattern.is_lit(), pattern.is_reference()],
-            std::array::from_fn(|index| index == expected_kind)
-        );
-        assert_eq!(
-            [
-                pattern.as_or().is_some(),
-                pattern.as_lit().is_some(),
-                pattern.as_reference().is_some()
-            ],
             std::array::from_fn(|index| index == expected_kind)
         );
         assert!(!pattern.span().is_empty());

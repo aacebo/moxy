@@ -1,6 +1,6 @@
 #![allow(unused)]
 
-use moxy_ast::{Parse, ParseError, Parser, Token};
+use moxy_ast::{Cursor, Parse, ParseError, Parser, Token};
 use moxy_token::{Delim, Group, Ident, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 use crate::Template;
@@ -17,40 +17,54 @@ pub struct TmplFor {
     pub body: Box<Template>,
 }
 
-impl TmplFor {
-    pub fn parse_after_keyword_for(parser: &Parser, at_punct: Token![@], for_kw: Token![for]) -> Result<Self, ParseError> {
+impl Parse for TmplFor {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(cursor) = cursor.skip::<Token![@]>() else {
+            return false;
+        };
+
+        cursor.peek::<Token![for]>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let at_punct: Token![@] = parser.parse()?;
+        let for_keyword = parser.parse()?;
         let span = at_punct.span();
-        let paren_inner = parser.parse_group(Delim::Paren)?;
-        let ps = Parser::from_tokens(&paren_inner);
-        let binding = ps.parse::<Ident>()?;
-        let in_keyword = ps.parse::<Token![in]>()?;
-        let mut iter = TokenStream::new();
-
-        while let Some(tt) = ps.advance() {
-            iter.extend_one(tt.clone());
-        }
-
-        let body_stream = parser.parse_group(Delim::Brace)?;
-        let body_ps = Parser::from_tokens(&body_stream);
-        let body = body_ps.parse::<Template>()?;
+        let clause = parser.parse_group(Delim::Paren)?;
+        let binding = clause.parse()?;
+        let in_keyword = clause.parse()?;
+        let iter = clause.to_token_stream();
+        let body = parser.parse_group(Delim::Brace)?.parse()?;
 
         Ok(Self {
             span,
             at_punct,
-            for_keyword: for_kw,
+            for_keyword,
             binding,
             in_keyword,
             iter,
             body: Box::new(body),
         })
     }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let cursor = cursor.skip::<Token![@]>()?;
+        let cursor = cursor.skip::<Token![for]>()?;
+        let inner = cursor.descend(Delim::Paren)?;
+        let inner = inner.skip::<Ident>()?;
+        let inner = inner.skip::<Token![in]>()?;
+        let cursor = inner.offset(inner.remaining()).is_empty().then(|| cursor.offset(1))?;
+        let inner = cursor.descend(Delim::Brace)?;
+        let inner = Template::skip(inner)?;
+        inner.is_empty().then(|| cursor.offset(1))
+    }
 }
 
 impl ToTokens for TmplFor {
     fn to_tokens(&self, out: &mut TokenStream) {
-        <Token![for]>::new(Span::call_site()).to_tokens(out);
+        self.for_keyword.to_tokens(out);
         self.binding.to_tokens(out);
-        <Token![in]>::new(Span::call_site()).to_tokens(out);
+        self.in_keyword.to_tokens(out);
         self.iter.to_tokens(out);
         out.extend_one(TokenTree::Group(Group::new(Delim::Brace, self.body.to_token_stream())));
     }
