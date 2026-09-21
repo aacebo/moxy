@@ -6,7 +6,7 @@ use crate::*;
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldsNamed {
-    pub fields: Delimited<Punctuated<fields::Field, Token![,]>>,
+    pub fields: Delimited<Punctuated<Field, Token![,]>>,
 }
 
 impl Parse for FieldsNamed {
@@ -23,7 +23,7 @@ impl Parse for FieldsNamed {
         let mut inner = cursor.descend(Delim::Brace)?;
 
         while !inner.is_empty() {
-            inner = inner.skip::<fields::Field>()?;
+            inner = inner.skip::<Field>()?;
 
             if inner.is_empty() {
                 break;

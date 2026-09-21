@@ -76,6 +76,7 @@ impl Spanner for Variant {
         } else {
             self.fields.span()
         };
+
         self.attrs.span().join(end)
     }
 }

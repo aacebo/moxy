@@ -8,7 +8,7 @@ pub use meta_value::*;
 
 use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Cursor, Delimited, Lit, Parse, ParseError, Parser, Path, Punctuated};
+use crate::*;
 
 /// A structured attribute meta item (`name`, `name(...)`, `name = expr`).
 #[derive(Debug, Clone, PartialEq, Eq)]

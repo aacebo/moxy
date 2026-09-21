@@ -53,7 +53,7 @@ impl MetaLayout {
     pub fn span(&self) -> Option<Span> {
         match self {
             Self::None => None,
-            Self::Alias { eq: _, value } => Some(value.span()),
+            Self::Alias { eq, value } => Some(eq.span().join(value.span())),
             Self::List { items } => Some(items.span()),
             Self::Value(value) => Some(value.span()),
         }
