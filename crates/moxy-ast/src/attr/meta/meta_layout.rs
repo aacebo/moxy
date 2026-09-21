@@ -129,6 +129,12 @@ impl Parse for MetaLayout {
     }
 }
 
+impl Spanner for MetaLayout {
+    fn span(&self) -> Span {
+        self.span().unwrap_or_default()
+    }
+}
+
 impl ToTokens for MetaLayout {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {

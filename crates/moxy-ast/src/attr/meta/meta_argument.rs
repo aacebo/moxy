@@ -63,6 +63,15 @@ impl Parse for MetaArgument {
     }
 }
 
+impl Spanner for MetaArgument {
+    fn span(&self) -> Span {
+        match self {
+            Self::Meta(v) => v.span(),
+            Self::Value(v) => v.span(),
+        }
+    }
+}
+
 impl ToTokens for MetaArgument {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
