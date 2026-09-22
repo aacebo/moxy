@@ -14,12 +14,12 @@ pub struct MacroCall {
 impl MacroCall {
     /// The delimiter of the macro body (`(`, `[`, or `{`).
     pub fn delim(&self) -> Delim {
-        self.body.delim()
+        self.body.delim
     }
 
     /// The token parser inside the macro body delimiters.
     pub fn tokens(&self) -> &TokenStream {
-        self.body.stream()
+        &self.body.tokens
     }
 }
 

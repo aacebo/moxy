@@ -190,7 +190,7 @@ impl ToTokens for Visibility {
                 in_keyword.to_tokens(&mut inner);
                 p.to_tokens(&mut inner);
                 let mut group = moxy_token::Group::new(Delim::Paren, inner);
-                group.set_span(path.span);
+                group.span = path.span;
                 t.extend_one(moxy_token::TokenTree::Group(group));
             }
         }

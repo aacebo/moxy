@@ -33,7 +33,7 @@ impl TokenTree {
 
     pub fn delim(&self) -> Option<Delim> {
         match self {
-            Self::Group(g) => Some(g.delim()),
+            Self::Group(g) => Some(g.delim),
             _ => None,
         }
     }

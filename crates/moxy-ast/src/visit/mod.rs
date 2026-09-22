@@ -10,7 +10,6 @@
 mod macros;
 
 use crate::args::*;
-use crate::attr::meta::*;
 use crate::attr::*;
 use crate::expr::*;
 use crate::fields::*;
@@ -1625,16 +1624,7 @@ define_visit! {
         walk: walk_meta, walk_mut: walk_meta_mut,
         fields {
             path => visit_path / visit_path_mut,
-            content => visit_meta_layout / visit_meta_layout_mut,
-        }
-    }
-
-    enum MetaArgument {
-        visit: visit_meta_argument, visit_mut: visit_meta_argument_mut,
-        walk: walk_meta_argument, walk_mut: walk_meta_argument_mut,
-        variants {
-            Meta(visit_meta / visit_meta_mut),
-            Value(visit_meta_value / visit_meta_value_mut),
+            layout => visit_meta_layout / visit_meta_layout_mut,
         }
     }
 
@@ -1642,24 +1632,12 @@ define_visit! {
         visit: visit_meta_layout, visit_mut: visit_meta_layout_mut,
         walk: walk_meta_layout, walk_mut: walk_meta_layout_mut,
         variants {
-            None,
-            Alias {
+            Unit,
+            List(skip),
+            Expr {
                 eq: skip,
-                value: (visit_meta_value / visit_meta_value_mut),
+                expr: (visit_expr / visit_expr_mut),
             },
-            List {
-                items: punct => (visit_meta_argument / visit_meta_argument_mut),
-            },
-            Value(visit_meta_value / visit_meta_value_mut),
-        }
-    }
-
-    enum MetaValue {
-        visit: visit_meta_value, visit_mut: visit_meta_value_mut,
-        walk: walk_meta_value, walk_mut: walk_meta_value_mut,
-        variants {
-            Literal(skip),
-            Verbatim(skip),
         }
     }
 

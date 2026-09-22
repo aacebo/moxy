@@ -243,7 +243,7 @@ impl Parse for Type {
     fn peek(cursor: Cursor<'_>) -> bool {
         match cursor.curr() {
             Some(TokenTree::Ident(_)) => true,
-            Some(TokenTree::Group(g)) => matches!(g.delim(), Delim::Paren | Delim::Bracket | Delim::None),
+            Some(TokenTree::Group(g)) => matches!(g.delim, Delim::Paren | Delim::Bracket | Delim::None),
             Some(TokenTree::Keyword(k)) => matches!(
                 k,
                 Keyword::Impl(_)

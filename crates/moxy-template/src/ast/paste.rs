@@ -54,16 +54,14 @@ impl Parse for PasteNode {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         match parser.curr() {
-            Some(TokenTree::Group(group))
-                if group.delim() == Delim::Brace && super::lone_brace_child(group.stream()).is_some() =>
-            {
-                let span = group.span().into();
+            Some(TokenTree::Group(group)) if group.delim == Delim::Brace && super::lone_brace_child(&group.tokens).is_some() => {
+                let span = group.span.into();
                 let outer = parser.parse_group(Delim::Brace)?;
                 let inner = outer.parse_group(Delim::Brace)?;
                 Ok(Self::Splice(span, inner.to_token_stream()))
             }
             Some(TokenTree::Group(group)) => {
-                let delim = group.delim();
+                let delim = group.delim;
                 let body = parser.parse_group(delim)?;
                 Ok(Self::Group(delim, body.parse()?))
             }

@@ -1,15 +1,12 @@
-/// Attribute metadata syntax.
-pub mod meta;
-/// Attribute metadata queries.
-pub mod query;
+mod meta;
 mod style;
 
-pub use meta::Meta;
+pub use meta::*;
 pub use style::*;
 
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Cursor, Delimited, Parse, ParseError, Parser};
+use crate::*;
 
 /// A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -41,7 +38,6 @@ impl Parse for Attribute {
         let cursor = cursor.skip::<AttrStyle>()?;
         let inner = cursor.descend(moxy_token::Delim::Bracket)?;
         let inner = inner.skip::<Meta>()?;
-
         if inner.is_empty() { Some(cursor.offset(1)) } else { None }
     }
 }
@@ -143,7 +139,7 @@ impl Parse for Attributes {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self(parser.parse_while::<Attribute>()))
+        Ok(Self(parser.parse_while()))
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {

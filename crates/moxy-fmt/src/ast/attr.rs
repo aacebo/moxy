@@ -1,11 +1,5 @@
-use moxy_ast::{
-    Attribute, Attributes, Meta,
-    attr::{
-        AttrStyle,
-        meta::{MetaArgument, MetaLayout, MetaValue},
-    },
-};
-use moxy_token::Delim;
+use moxy_ast::{Attribute, Attributes, Meta, MetaLayout, attr::AttrStyle};
+use moxy_token::{Delim, TokenStream};
 
 use crate::{FmtError, Format, Formatter};
 
@@ -41,60 +35,45 @@ impl Format for AttrStyle {
 impl Format for Meta {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.path.format(f)?;
-        self.content.format(f)
+        self.layout.format(f)
     }
 }
 
 impl Format for MetaLayout {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Value(v) => v.format(f),
-            Self::List { items } => {
-                match items.style {
+            Self::List(v) => {
+                match v.delim {
                     Delim::Paren => f.text("(")?,
                     Delim::Brace => f.text("{")?,
                     Delim::Bracket => f.text("[")?,
                     _ => (),
                 };
 
-                items.format(f)?;
+                v.tokens.format(f)?;
 
-                match items.style {
+                match v.delim {
                     Delim::Paren => f.text(")"),
                     Delim::Brace => f.text("}"),
                     Delim::Bracket => f.text("]"),
                     _ => Ok(()),
                 }
             }
-            Self::Alias { eq: _, value } => {
+            Self::Expr { eq: _, expr } => {
                 f.text(" = ")?;
-                value.format(f)
+                expr.format(f)
             }
             _ => Ok(()),
         }
     }
 }
 
-impl Format for MetaArgument {
+impl Format for TokenStream {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::Meta(v) => v.format(f),
-            Self::Value(v) => v.format(f),
+        for token in self.iter() {
+            f.text(token)?;
         }
-    }
-}
 
-impl Format for MetaValue {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::Literal(v) => v.format(f),
-            Self::Verbatim(v) => {
-                for token in v.iter() {
-                    f.text(token)?;
-                }
-
-                Ok(())
-            }
-        }
+        Ok(())
     }
 }

@@ -116,10 +116,7 @@ impl From<proc_macro2::Group> for Group {
 
 impl From<Group> for proc_macro2::Group {
     fn from(value: Group) -> Self {
-        let delim: proc_macro2::Delimiter = value.delim().into();
-        let mut stream = proc_macro2::TokenStream::new();
-        value.stream().to_tokens(&mut stream);
-        Self::new(delim, stream)
+        Self::new(value.delim.into(), value.tokens.into())
     }
 }
 

@@ -648,7 +648,7 @@ impl Format for ItemMacroRules {
         f.text("macro_rules! ")?;
         self.ident.format(f)?;
         f.text(" { ")?;
-        f.text(self.body.stream())?;
+        f.text(&self.body.tokens)?;
         f.text(" }")
     }
 }

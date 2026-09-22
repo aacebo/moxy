@@ -72,8 +72,8 @@ impl Parse for Fields {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         match parser.curr() {
-            Some(TokenTree::Group(g)) if g.delim() == Delim::Brace => Ok(Self::Named(parser.parse()?)),
-            Some(TokenTree::Group(g)) if g.delim() == Delim::Paren => Ok(Self::Unnamed(parser.parse()?)),
+            Some(TokenTree::Group(g)) if g.delim == Delim::Brace => Ok(Self::Named(parser.parse()?)),
+            Some(TokenTree::Group(g)) if g.delim == Delim::Paren => Ok(Self::Unnamed(parser.parse()?)),
             _ => Ok(Self::Unit),
         }
     }

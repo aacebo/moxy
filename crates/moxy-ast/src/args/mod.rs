@@ -51,7 +51,7 @@ impl Parse for GenericArgument {
 
         let is_const = match cursor.curr() {
             Some(TokenTree::Literal(_)) => true,
-            Some(TokenTree::Group(group)) => group.delim().is_brace(),
+            Some(TokenTree::Group(group)) => group.delim.is_brace(),
             Some(TokenTree::Punct(Punct::Minus(_) | Punct::Not(_))) => true,
             _ => false,
         };
@@ -76,7 +76,7 @@ impl Parse for GenericArgument {
 
         // Literal or block expression const argument.
         let is_const = token.is_literal()
-            || token.as_group().map(|g| g.delim().is_brace()).unwrap_or(false)
+            || token.as_group().map(|g| g.delim.is_brace()).unwrap_or(false)
             || token.is_punct_minus()
             || token.is_punct_not();
 
@@ -105,7 +105,7 @@ impl Parse for GenericArgument {
                 let eq_punct = parser.parse()?;
                 let is_const = match parser.cursor().curr() {
                     Some(TokenTree::Literal(_)) => true,
-                    Some(TokenTree::Group(g)) if g.delim().is_brace() => true,
+                    Some(TokenTree::Group(g)) if g.delim.is_brace() => true,
                     Some(TokenTree::Punct(Punct::Minus(_))) => true,
                     Some(TokenTree::Punct(Punct::Not(_))) => true,
                     _ => false,
@@ -161,7 +161,7 @@ impl Parse for GenericArgument {
 
         let is_const = match cursor.curr() {
             Some(TokenTree::Literal(_)) => true,
-            Some(TokenTree::Group(group)) => group.delim().is_brace(),
+            Some(TokenTree::Group(group)) => group.delim.is_brace(),
             Some(TokenTree::Punct(Punct::Minus(_) | Punct::Not(_))) => true,
             _ => false,
         };
@@ -191,7 +191,7 @@ impl Parse for GenericArgument {
 
                 let is_const = match cursor.curr() {
                     Some(TokenTree::Literal(_)) => true,
-                    Some(TokenTree::Group(group)) => group.delim().is_brace(),
+                    Some(TokenTree::Group(group)) => group.delim.is_brace(),
                     Some(TokenTree::Punct(Punct::Minus(_) | Punct::Not(_))) => true,
                     _ => false,
                 };
