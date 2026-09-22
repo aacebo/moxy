@@ -61,7 +61,7 @@ impl Spanner for MetaLayout {
     fn span(&self) -> Span {
         match self {
             Self::Unit => Default::default(),
-            Self::List(v) => v.span().into(),
+            Self::List(v) => v.span(),
             Self::Expr { eq, expr } => eq.span().join(expr.span()),
         }
     }
