@@ -7,57 +7,84 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Meta {
     pub path: Path,
-    pub layout: MetaLayout,
+    pub content: MetaContent,
+}
+
+impl Meta {
+    pub fn for_each<P>(&self, mut parse: P) -> Result<(), ParseError>
+    where
+        P: FnMut(&Self) -> Result<(), ParseError>,
+    {
+        let MetaContent::List(group) = &self.content else {
+            return ParseError::new(self.span(), "meta content must be a list to descend").into();
+        };
+
+        let parser = Parser::from_tokens(&group.tokens);
+
+        while parser.peek::<Path>() {
+            let meta = parser.parse()?;
+            parse(&meta)?;
+        }
+
+        Ok(())
+    }
+
+    pub fn parse<T>(&self) -> Result<T, ParseError>
+    where
+        T: Parse,
+    {
+        match &self.content {
+            MetaContent::Unit => ParseError::new(self.span(), "unit meta content cannot be parsed").into(),
+            MetaContent::List(v) => Parser::from_tokens(&v.tokens).parse(),
+            MetaContent::Expr { eq: _, expr } => Parser::from_tokens(&expr).parse(),
+        }
+    }
 }
 
 impl Spanner for Meta {
     fn span(&self) -> Span {
-        self.path.span().join(self.layout.span())
+        self.path.span().join(self.content.span())
     }
 }
 
 impl ToTokens for Meta {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.path.to_tokens(tokens);
-        self.layout.to_tokens(tokens);
+        self.content.to_tokens(tokens);
     }
 }
 
 impl Parse for Meta {
     fn peek(cursor: Cursor<'_>) -> bool {
-        let Some(cursor) = cursor.skip::<Path>() else {
-            return false;
-        };
-
-        cursor.peek::<MetaLayout>()
+        cursor.peek::<Path>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
             path: parser.parse()?,
-            layout: parser.parse()?,
+            content: parser.parse()?,
         })
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor.skip::<Path>()?;
-        cursor.skip::<MetaLayout>()
+        cursor.skip::<MetaContent>()
     }
 }
 
 /// The shape of a meta item after its path (`name`, `name = v`, `name(..)`, `name { .. }`).
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(untagged))]
-pub enum MetaLayout {
+pub enum MetaContent {
     /// `#[debug]`
     Unit,
     /// `#[debug(true, env = "test")]`
     List(Group),
     /// `#[debug = true]`
-    Expr { eq: Token![=], expr: Expr },
+    Expr { eq: Token![=], expr: TokenStream },
 }
 
-impl Spanner for MetaLayout {
+impl Spanner for MetaContent {
     fn span(&self) -> Span {
         match self {
             Self::Unit => Default::default(),
@@ -67,7 +94,7 @@ impl Spanner for MetaLayout {
     }
 }
 
-impl ToTokens for MetaLayout {
+impl ToTokens for MetaContent {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
             Self::Unit => {}
@@ -80,18 +107,30 @@ impl ToTokens for MetaLayout {
     }
 }
 
-impl Parse for MetaLayout {
+impl Parse for MetaContent {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.is_empty() || cursor.peek::<Token![=]>() || cursor.peek::<Group>()
+        if cursor.is_empty() {
+            return true;
+        }
+
+        if cursor.peek::<Token![=]>() && !cursor.peek::<Token![==]>() && !cursor.peek::<Token![=>]>() && cursor.offset(1).peek::<Expr>() {
+            return true;
+        }
+
+        cursor.peek::<Group>()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if parser.is_empty() {
             Ok(Self::Unit)
-        } else if parser.peek::<Token![=]>() {
+        } else if parser.peek::<Token![=]>() && !parser.peek::<Token![==]>() && !parser.peek::<Token![=>]>() {
+            let eq = parser.parse()?;
+            let start = parser.cursor();
+            let end = parser.skip::<Expr>().cursor();
+
             Ok(Self::Expr {
-                eq: parser.parse()?,
-                expr: parser.parse()?,
+                eq,
+                expr: end.range(start).into(),
             })
         } else {
             Ok(Self::List(parser.parse()?))
@@ -101,7 +140,7 @@ impl Parse for MetaLayout {
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         if cursor.is_empty() {
             Some(cursor)
-        } else if cursor.peek::<Token![=]>() {
+        } else if cursor.peek::<Token![=]>() && !cursor.peek::<Token![==]>() && !cursor.peek::<Token![=>]>() && cursor.offset(1).peek::<Expr>() {
             cursor.skip::<Token![=]>()?;
             cursor.skip::<Expr>()
         } else if cursor.peek::<Group>() {

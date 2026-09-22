@@ -15,7 +15,7 @@ impl Format for Lifetime {
 
 impl Format for Path {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        if let Some(colon) = self.leading_colon() {
+        if let Some(colon) = self.colon() {
             f.text(colon)?;
         }
 

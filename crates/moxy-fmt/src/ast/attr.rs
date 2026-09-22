@@ -1,4 +1,4 @@
-use moxy_ast::{Attribute, Attributes, Meta, MetaLayout, attr::AttrStyle};
+use moxy_ast::{Attribute, Attributes, Meta, MetaContent, attr::AttrStyle};
 use moxy_token::{Delim, TokenStream};
 
 use crate::{FmtError, Format, Formatter};
@@ -35,11 +35,11 @@ impl Format for AttrStyle {
 impl Format for Meta {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.path.format(f)?;
-        self.layout.format(f)
+        self.content.format(f)
     }
 }
 
-impl Format for MetaLayout {
+impl Format for MetaContent {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::List(v) => {

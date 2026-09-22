@@ -1618,25 +1618,23 @@ define_visit! {
             meta: delim => visit_meta / visit_meta_mut,
         }
     }
-
     struct Meta {
         visit: visit_meta, visit_mut: visit_meta_mut,
         walk: walk_meta, walk_mut: walk_meta_mut,
         fields {
             path => visit_path / visit_path_mut,
-            layout => visit_meta_layout / visit_meta_layout_mut,
+            content => visit_meta_content / visit_meta_content_mut,
         }
     }
-
-    enum MetaLayout {
-        visit: visit_meta_layout, visit_mut: visit_meta_layout_mut,
-        walk: walk_meta_layout, walk_mut: walk_meta_layout_mut,
+    enum MetaContent {
+        visit: visit_meta_content, visit_mut: visit_meta_content_mut,
+        walk: walk_meta_content, walk_mut: walk_meta_content_mut,
         variants {
             Unit,
             List(skip),
             Expr {
                 eq: skip,
-                expr: (visit_expr / visit_expr_mut),
+                expr: skip,
             },
         }
     }

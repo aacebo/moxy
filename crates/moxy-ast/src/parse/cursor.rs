@@ -79,6 +79,10 @@ impl<'a> Cursor<'a> {
         self
     }
 
+    pub fn range(self, start: Self) -> &'a [TokenTree] {
+        &self.tokens[start.index..self.index + 1]
+    }
+
     pub fn advance(mut self) -> (Self, Option<&'a TokenTree>) {
         let token = self.tokens.get(self.index);
 

@@ -30,3 +30,13 @@ Refactor ast for template crate to implement `Parse` for each sub node type.
 Most of the leaf node types found in [leaf.rs](./crates/moxy-ast/src/leaf.rs) are
 essentially `Option<Token![{..}]>` and can be replaced by that instead of having
 independent types.
+
+## 6. Add Non Exhaustive
+
+Add `#[non_exhaustive]` whereever needed.
+
+## 7. Make Result More Ergonomic
+
+Early returns from proc macro functions are very ergonomic since their return signature is `TokenStream`,
+need to find a way for early returns from `Result<TokenStream, ParseError>` to be less verbose, which currently
+requires `if let Ok(..)` statements.

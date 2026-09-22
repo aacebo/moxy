@@ -4,7 +4,7 @@ mod style;
 pub use meta::*;
 pub use style::*;
 
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Group, Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -22,6 +22,13 @@ impl Spanner for Attribute {
     }
 }
 
+impl ToTokens for Attribute {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.style.to_tokens(tokens);
+        self.meta.to_tokens(tokens);
+    }
+}
+
 impl Parse for Attribute {
     fn peek(cursor: Cursor<'_>) -> bool {
         cursor.peek::<AttrStyle>()
@@ -36,16 +43,17 @@ impl Parse for Attribute {
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         let cursor = cursor.skip::<AttrStyle>()?;
-        let inner = cursor.descend(moxy_token::Delim::Bracket)?;
+        let inner = cursor.descend(Delim::Bracket)?;
         let inner = inner.skip::<Meta>()?;
-        if inner.is_empty() { Some(cursor.offset(1)) } else { None }
+        if inner.is_empty() { cursor.skip::<Group>() } else { None }
     }
 }
 
-impl ToTokens for Attribute {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.style.to_tokens(tokens);
-        self.meta.to_tokens(tokens);
+impl std::ops::Deref for Attribute {
+    type Target = Meta;
+
+    fn deref(&self) -> &Self::Target {
+        &self.meta
     }
 }
 
@@ -60,6 +68,19 @@ impl ToTokens for Attribute {
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(transparent))]
 pub struct Attributes(Vec<Attribute>);
+
+impl Attributes {
+    pub fn for_each<P>(&self, mut parse: P) -> Result<(), ParseError>
+    where
+        P: FnMut(&Attribute) -> Result<(), ParseError>,
+    {
+        for attr in &self.0 {
+            parse(attr)?;
+        }
+
+        Ok(())
+    }
+}
 
 impl Spanner for Attributes {
     fn span(&self) -> Span {
