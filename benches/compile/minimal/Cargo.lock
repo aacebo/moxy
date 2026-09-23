@@ -15,6 +15,7 @@ name = "moxy"
 version = "0.3.0"
 dependencies = [
  "moxy-ast",
+ "moxy-template",
  "moxy-token",
 ]
 
@@ -28,6 +29,14 @@ dependencies = [
 [[package]]
 name = "moxy-build"
 version = "0.3.0"
+
+[[package]]
+name = "moxy-template"
+version = "0.3.0"
+dependencies = [
+ "moxy-ast",
+ "moxy-token",
+]
 
 [[package]]
 name = "moxy-token"
