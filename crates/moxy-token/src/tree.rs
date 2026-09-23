@@ -19,7 +19,7 @@ impl TokenTree {
             Self::Keyword(v) => v.span(),
             Self::Punct(v) => v.span(),
             Self::Literal(v) => v.span(),
-            Self::Group(v) => v.span().into(),
+            Self::Group(v) => v.span(),
         }
     }
 

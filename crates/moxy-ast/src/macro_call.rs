@@ -49,7 +49,7 @@ impl Parse for MacroCall {
 
 impl Spanner for MacroCall {
     fn span(&self) -> Span {
-        self.path.span().join(self.body.span().into())
+        self.path.span().join(self.body.span())
     }
 }
 

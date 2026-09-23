@@ -36,7 +36,7 @@ impl Meta {
         match &self.content {
             MetaContent::Unit => ParseError::new(self.span(), "unit meta content cannot be parsed").into(),
             MetaContent::List(v) => Parser::from_tokens(&v.tokens).parse(),
-            MetaContent::Expr { eq: _, expr } => Parser::from_tokens(&expr).parse(),
+            MetaContent::Expr { eq: _, expr } => Parser::from_tokens(expr).parse(),
         }
     }
 }
