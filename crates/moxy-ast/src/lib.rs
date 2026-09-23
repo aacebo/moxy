@@ -27,6 +27,7 @@ mod _crate;
 pub mod args;
 /// Attributes and attribute metadata.
 pub mod attr;
+mod core;
 mod declaration;
 mod delimited;
 /// Expression syntax.
@@ -45,7 +46,6 @@ mod macros;
 mod lifetime;
 /// Members of traits, implementations, and foreign modules.
 pub mod member;
-mod misc;
 /// Pattern syntax.
 pub mod pat;
 /// Path syntax and path arguments.
@@ -75,6 +75,8 @@ pub use args::{AngleArguments, GenericArgument, ParenArguments};
 #[doc(inline)]
 pub use attr::*;
 #[doc(inline)]
+pub use core::*;
+#[doc(inline)]
 pub use declaration::*;
 #[doc(inline)]
 pub use delimited::Delimited;
@@ -96,8 +98,6 @@ pub use lifetime::*;
 pub use macro_call::*;
 #[doc(inline)]
 pub use member::{ForeignItem, ImplItem, Member, TraitItem};
-#[doc(inline)]
-pub use misc::*;
 #[doc(inline)]
 pub use moxy_token::Ident;
 #[doc(inline)]

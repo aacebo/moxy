@@ -163,47 +163,6 @@ macro_rules! define_leaf {
 }
 
 define_leaf! {
-    /// A binary operator (`+`, `==`, `&&`, ...).
-/// A tagged AST representation of Rust bin op syntax.
-    pub enum BinOp {
-        ShlAssign => Token![<<=],
-        ShrAssign => Token![>>=],
-        AddAssign => Token![+=],
-        SubAssign => Token![-=],
-        MulAssign => Token![*=],
-        DivAssign => Token![/=],
-        RemAssign => Token![%=],
-        BitXorAssign => Token![^=],
-        BitAndAssign => Token![&=],
-        BitOrAssign => Token![|=],
-        And => Token![&&],
-        Or => Token![||],
-        Shl => Token![<<],
-        Shr => Token![>>],
-        Eq => Token![==],
-        Ne => Token![!=],
-        Le => Token![<=],
-        Ge => Token![>=],
-        Add => Token![+],
-        Sub => Token![-],
-        Mul => Token![*],
-        Div => Token![/],
-        Rem => Token![%],
-        BitXor => Token![^],
-        BitAnd => Token![&],
-        BitOr => Token![|],
-        Lt => Token![<],
-        Gt => Token![>],
-    }
-
-    /// A unary operator (`*`, `!`, `-`).
-/// A tagged AST representation of Rust un op syntax.
-    pub enum UnOp {
-        Deref => Token![*],
-        Not => Token![!],
-        Neg => Token![-],
-    }
-
     /// Whether a function is `async`.
 /// A tagged AST representation of Rust asyncness syntax.
     pub enum Asyncness {
