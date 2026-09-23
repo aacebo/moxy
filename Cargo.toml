@@ -62,7 +62,7 @@ autotests = false
 [[test]]
 name = "tests"
 path = "tests/mod.rs"
-required-features = ["fmt"]
+required-features = ["derives", "fmt"]
 
 [[bench]]
 name = "all"
