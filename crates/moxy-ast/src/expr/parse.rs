@@ -233,7 +233,7 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     closure_cursor = BoundLifetimes::skip(closure_cursor).unwrap_or(closure_cursor);
     closure_cursor = Constness::skip(closure_cursor).unwrap_or(closure_cursor);
     closure_cursor = Movability::skip(closure_cursor).unwrap_or(closure_cursor);
-    closure_cursor = Asyncness::skip(closure_cursor).unwrap_or(closure_cursor);
+    closure_cursor = closure_cursor.skip::<Option<Token![async]>>().unwrap_or(closure_cursor);
     closure_cursor = Option::<Token![move]>::skip(closure_cursor).unwrap_or(closure_cursor);
 
     if closure_cursor.peek::<Token![||]>() || closure_cursor.peek::<Token![|]>() {

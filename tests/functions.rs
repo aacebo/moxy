@@ -15,7 +15,7 @@ fn function_signatures_and_bodies_complete_the_syntax_pipeline() {
 fn async_generic_functions_preserve_bounds_references_and_return_types() {
     let item: Item = moxy::parse!("pub async fn fetch<T:Clone>(url:&str)->Option<T>{None}").unwrap();
     let function = item.as_fn().unwrap();
-    assert!(matches!(function.sig.asyncness, moxy::ast::Asyncness::Async(_)));
+    assert!(function.sig.asyncness.is_some());
     assert_eq!(function.sig.generics.params.len(), 1);
     assert_eq!(function.sig.params.inner.inputs.len(), 1);
     assert_eq!(

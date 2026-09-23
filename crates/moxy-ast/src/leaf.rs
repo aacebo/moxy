@@ -163,13 +163,6 @@ macro_rules! define_leaf {
 }
 
 define_leaf! {
-    /// Whether a function is `async`.
-/// A tagged AST representation of Rust asyncness syntax.
-    pub enum Asyncness {
-        Async => Token![async],
-        Sync,
-    }
-
     /// Whether an item is `const`.
 /// A tagged AST representation of Rust constness syntax.
     pub enum Constness {

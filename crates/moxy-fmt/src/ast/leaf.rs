@@ -1,6 +1,6 @@
 use moxy_ast::{
-    Abi, Asyncness, BinOp, BoundPolarity, Constness, Defaultness, Ident, Label, Movability, Mutability, PointerMutability,
-    RangeLimits, TraitBoundModifier, UnOp, Unsafety, Visibility,
+    Abi, BinOp, BoundPolarity, Constness, Defaultness, Ident, Label, Movability, Mutability, PointerMutability, RangeLimits,
+    TraitBoundModifier, UnOp, Unsafety, Visibility,
 };
 
 use crate::{FmtError, Format, Formatter};
@@ -57,15 +57,6 @@ impl Format for BinOp {
 impl Format for UnOp {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text(self)
-    }
-}
-
-impl Format for Asyncness {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::Async(_) => f.text("async"),
-            Self::Sync => Ok(()),
-        }
     }
 }
 

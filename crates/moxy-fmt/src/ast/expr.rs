@@ -203,7 +203,7 @@ impl Format for ExprClosure {
 
         self.asyncness.format(f)?;
 
-        if matches!(self.asyncness, moxy_ast::Asyncness::Async(_)) {
+        if self.asyncness.is_some() {
             f.text(" ")?;
         }
 

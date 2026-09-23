@@ -40,14 +40,14 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     closure = BoundLifetimes::skip(closure).unwrap_or(closure);
     closure = Constness::skip(closure)?;
     closure = Movability::skip(closure)?;
-    closure = Asyncness::skip(closure)?;
+    closure = closure.skip::<Option<Token![async]>>()?;
     closure = closure.skip::<Option<Token![move]>>()?;
 
     if closure.peek::<Token![||]>() || closure.peek::<Token![|]>() {
         cursor = BoundLifetimes::skip(cursor).unwrap_or(cursor);
         cursor = Constness::skip(cursor)?;
         cursor = Movability::skip(cursor)?;
-        cursor = Asyncness::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![async]>>()?;
         cursor = cursor.skip::<Option<Token![move]>>()?;
 
         if cursor.peek::<Token![||]>() {

@@ -9,7 +9,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Signature {
     pub constness: Constness,
-    pub asyncness: Asyncness,
+    pub asyncness: Option<Token![async]>,
     pub unsafety: Unsafety,
     pub abi: Option<Abi>,
     pub fn_keyword: Token![fn],
@@ -94,7 +94,7 @@ impl Parse for Signature {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Constness::skip(cursor)?;
-        cursor = Asyncness::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![async]>>()?;
         cursor = Unsafety::skip(cursor)?;
         cursor = cursor.skip::<Option<Abi>>()?;
         cursor = cursor.skip::<Token![fn]>()?;
@@ -131,8 +131,8 @@ impl Spanner for Signature {
     fn span(&self) -> Span {
         let start = if !matches!(self.constness, Constness::NoConst) {
             self.constness.span()
-        } else if !matches!(self.asyncness, Asyncness::Sync) {
-            self.asyncness.span()
+        } else if let Some(v) = &self.asyncness {
+            v.span()
         } else if !matches!(self.unsafety, Unsafety::Safe) {
             self.unsafety.span()
         } else if let Some(abi) = &self.abi {

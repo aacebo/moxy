@@ -11,7 +11,7 @@ pub struct ExprClosure {
     pub lifetimes: Option<BoundLifetimes>,
     pub constness: Constness,
     pub movability: Movability,
-    pub asyncness: Asyncness,
+    pub asyncness: Option<Token![async]>,
     pub capture: Option<Token![move]>,
     pub pipes: ClosurePipes,
     pub inputs: Punctuated<ClosureParam, Token![,]>,
