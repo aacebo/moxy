@@ -2,6 +2,25 @@ use moxy::ast::Expr;
 use moxy::token::{Spanner, ToTokenStream};
 
 #[test]
+fn binary_and_unary_operators_complete_the_expression_pipeline() {
+    for operator in [
+        "<<=", ">>=", "+=", "-=", "*=", "/=", "%=", "^=", "&=", "|=", "&&", "||", "<<", ">>", "==", "!=", "<=", ">=", "+", "-",
+        "*", "/", "%", "^", "&", "|", "<", ">",
+    ] {
+        let source = format!("(left) {operator} (right)");
+        let expression: Expr = moxy::parse!(source).unwrap();
+        assert!(expression.is_binary());
+        assert_eq!(moxy::fmt!(&expression).unwrap(), source);
+    }
+
+    for source in ["*value", "!value", "-value"] {
+        let expression: Expr = moxy::parse!(source).unwrap();
+        assert!(expression.is_unary());
+        assert_eq!(moxy::fmt!(&expression).unwrap(), source);
+    }
+}
+
+#[test]
 fn collection_and_struct_expressions_complete_the_pipeline() {
     for (source, expected, expected_kind) in [
         ("(first, second, third)", "(first, second, third)", 0),
