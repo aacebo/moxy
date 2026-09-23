@@ -2,6 +2,28 @@
 
 Continuous benchmarks comparing **moxy** with **syn**.
 
+## Index
+
+- [Parse](#parse)
+  - [File](#file)
+    - [Attributed Uses](#attributed-uses)
+    - [Mixed Items](#mixed-items)
+    - [Large Items](#large-items)
+    - [Attributes and Derives](#attributes-and-derives)
+    - [Macro Heavy](#macro-heavy)
+  - [Expression — Control Flow](#expression--control-flow)
+  - [Type](#type)
+    - [Generic Depth 8](#generic-depth-8)
+    - [Generic Depth 32](#generic-depth-32)
+    - [Generic Depth 128](#generic-depth-128)
+  - [Invalid](#invalid)
+    - [Expression](#expression)
+    - [Deep Generic](#deep-generic)
+    - [Macro](#macro)
+    - [Large File Tail](#large-file-tail)
+- [Compile](#compile)
+  - [Minimal](#minimal)
+
 - **Branch:** `master`
 - **Testbed:** `ubuntu-latest`
 - **Rust:** stable
@@ -17,23 +39,25 @@ Continuous benchmarks comparing **moxy** with **syn**.
 
 > Criterion declares byte throughput for these fixtures, but Bencher's `rust_criterion` adapter records latency only.
 
-### File — Attributed Uses
+### File
+
+#### Attributed Uses
 
 <a href="https://bencher.dev/perf/moxy?key=true&branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a05eff-1a44-7b53-9cc2-a25da1a023da%2C01a05eff-1a46-75f1-b4fc-8e481cd67358&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_value=true&upper_value=true&lower_boundary=false&upper_boundary=true&x_axis=date_time&tab=plots&title=Parse+File+%E2%80%94+Attributed+Uses+%E2%80%94+moxy+vs+syn&utm_medium=share&utm_source=bencher&utm_content=img&utm_campaign=perf%2Bimg&utm_term=moxy"><img src="https://api.bencher.dev/v0/projects/moxy/perf/img?branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a05eff-1a44-7b53-9cc2-a25da1a023da%2C01a05eff-1a46-75f1-b4fc-8e481cd67358&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_boundary=false&upper_boundary=true&title=Parse+File+%E2%80%94+Attributed+Uses+%E2%80%94+moxy+vs+syn" title="Parse File — Attributed Uses — moxy vs syn" alt="Parse File — Attributed Uses — moxy vs syn latency — Bencher" /></a>
 
-### File — Mixed Items
+#### Mixed Items
 
 <a href="https://bencher.dev/perf/moxy?key=true&branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a05eff-1a49-74d3-90b2-3b10e57621f2%2C01a05eff-1a47-79d0-8f29-409e303de446&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_value=true&upper_value=true&lower_boundary=false&upper_boundary=true&x_axis=date_time&tab=plots&title=Parse+File+%E2%80%94+Mixed+Items+%E2%80%94+moxy+vs+syn&utm_medium=share&utm_source=bencher&utm_content=img&utm_campaign=perf%2Bimg&utm_term=moxy"><img src="https://api.bencher.dev/v0/projects/moxy/perf/img?branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a05eff-1a49-74d3-90b2-3b10e57621f2%2C01a05eff-1a47-79d0-8f29-409e303de446&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_boundary=false&upper_boundary=true&title=Parse+File+%E2%80%94+Mixed+Items+%E2%80%94+moxy+vs+syn" title="Parse File — Mixed Items — moxy vs syn" alt="Parse File — Mixed Items — moxy vs syn latency — Bencher" /></a>
 
-### File — Large Items
+#### Large Items
 
 <a href="https://bencher.dev/perf/moxy?key=true&branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-0907-7a13-8348-64249ed4a835%2C01a0b56a-0901-7fd1-b971-61163bbd0a69&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_value=true&upper_value=true&lower_boundary=false&upper_boundary=true&x_axis=date_time&tab=plots&title=Parse+File+%E2%80%94+Large+Items+%E2%80%94+moxy+vs+syn&utm_medium=share&utm_source=bencher&utm_content=img&utm_campaign=perf%2Bimg&utm_term=moxy"><img src="https://api.bencher.dev/v0/projects/moxy/perf/img?branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-0907-7a13-8348-64249ed4a835%2C01a0b56a-0901-7fd1-b971-61163bbd0a69&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_boundary=false&upper_boundary=true&title=Parse+File+%E2%80%94+Large+Items+%E2%80%94+moxy+vs+syn" title="Parse File — Large Items — moxy vs syn" alt="Parse File — Large Items — moxy vs syn latency — Bencher" /></a>
 
-### File — Attributes and Derives
+#### Attributes and Derives
 
 <a href="https://bencher.dev/perf/moxy?key=true&branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-0901-7fd1-b971-60d63c296e78%2C01a0b56a-08f9-72d0-8801-a96870497b14&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_value=true&upper_value=true&lower_boundary=false&upper_boundary=true&x_axis=date_time&tab=plots&title=Parse+File+%E2%80%94+Attributes+and+Derives+%E2%80%94+moxy+vs+syn&utm_medium=share&utm_source=bencher&utm_content=img&utm_campaign=perf%2Bimg&utm_term=moxy"><img src="https://api.bencher.dev/v0/projects/moxy/perf/img?branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-0901-7fd1-b971-60d63c296e78%2C01a0b56a-08f9-72d0-8801-a96870497b14&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_boundary=false&upper_boundary=true&title=Parse+File+%E2%80%94+Attributes+and+Derives+%E2%80%94+moxy+vs+syn" title="Parse File — Attributes and Derives — moxy vs syn" alt="Parse File — Attributes and Derives — moxy vs syn latency — Bencher" /></a>
 
-### File — Macro Heavy
+#### Macro Heavy
 
 <a href="https://bencher.dev/perf/moxy?key=true&branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-0909-7fb2-8644-f5fda03425c5%2C01a0b56a-08ff-7691-88a4-04f7bbf261ee&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_value=true&upper_value=true&lower_boundary=false&upper_boundary=true&x_axis=date_time&tab=plots&title=Parse+File+%E2%80%94+Macro+Heavy+%E2%80%94+moxy+vs+syn&utm_medium=share&utm_source=bencher&utm_content=img&utm_campaign=perf%2Bimg&utm_term=moxy"><img src="https://api.bencher.dev/v0/projects/moxy/perf/img?branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-0909-7fb2-8644-f5fda03425c5%2C01a0b56a-08ff-7691-88a4-04f7bbf261ee&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_boundary=false&upper_boundary=true&title=Parse+File+%E2%80%94+Macro+Heavy+%E2%80%94+moxy+vs+syn" title="Parse File — Macro Heavy — moxy vs syn" alt="Parse File — Macro Heavy — moxy vs syn latency — Bencher" /></a>
 
@@ -41,31 +65,35 @@ Continuous benchmarks comparing **moxy** with **syn**.
 
 <a href="https://bencher.dev/perf/moxy?key=true&branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a05eff-1a47-79d0-8f29-40dfb0130118%2C01a05eff-1a45-7940-b237-7e59f2501d70&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_value=true&upper_value=true&lower_boundary=false&upper_boundary=true&x_axis=date_time&tab=plots&title=Parse+Expression+%E2%80%94+Control+Flow+%E2%80%94+moxy+vs+syn&utm_medium=share&utm_source=bencher&utm_content=img&utm_campaign=perf%2Bimg&utm_term=moxy"><img src="https://api.bencher.dev/v0/projects/moxy/perf/img?branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a05eff-1a47-79d0-8f29-40dfb0130118%2C01a05eff-1a45-7940-b237-7e59f2501d70&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_boundary=false&upper_boundary=true&title=Parse+Expression+%E2%80%94+Control+Flow+%E2%80%94+moxy+vs+syn" title="Parse Expression — Control Flow — moxy vs syn" alt="Parse Expression — Control Flow — moxy vs syn latency — Bencher" /></a>
 
-### Type — Generic Depth 8
+### Type
+
+#### Generic Depth 8
 
 <a href="https://bencher.dev/perf/moxy?key=true&branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-08fc-7331-956b-47b8649f5442%2C01a0b56a-08fe-7973-a9d0-200a917b3281&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_value=true&upper_value=true&lower_boundary=false&upper_boundary=true&x_axis=date_time&tab=plots&title=Parse+Type+%E2%80%94+Generic+Depth+8+%E2%80%94+moxy+vs+syn&utm_medium=share&utm_source=bencher&utm_content=img&utm_campaign=perf%2Bimg&utm_term=moxy"><img src="https://api.bencher.dev/v0/projects/moxy/perf/img?branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-08fc-7331-956b-47b8649f5442%2C01a0b56a-08fe-7973-a9d0-200a917b3281&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_boundary=false&upper_boundary=true&title=Parse+Type+%E2%80%94+Generic+Depth+8+%E2%80%94+moxy+vs+syn" title="Parse Type — Generic Depth 8 — moxy vs syn" alt="Parse Type — Generic Depth 8 — moxy vs syn latency — Bencher" /></a>
 
-### Type — Generic Depth 32
+#### Generic Depth 32
 
 <a href="https://bencher.dev/perf/moxy?key=true&branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-090a-79f2-b434-2ec1ce873988%2C01a0b56a-08fc-7331-956b-477e8dd0b078&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_value=true&upper_value=true&lower_boundary=false&upper_boundary=true&x_axis=date_time&tab=plots&title=Parse+Type+%E2%80%94+Generic+Depth+32+%E2%80%94+moxy+vs+syn&utm_medium=share&utm_source=bencher&utm_content=img&utm_campaign=perf%2Bimg&utm_term=moxy"><img src="https://api.bencher.dev/v0/projects/moxy/perf/img?branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-090a-79f2-b434-2ec1ce873988%2C01a0b56a-08fc-7331-956b-477e8dd0b078&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_boundary=false&upper_boundary=true&title=Parse+Type+%E2%80%94+Generic+Depth+32+%E2%80%94+moxy+vs+syn" title="Parse Type — Generic Depth 32 — moxy vs syn" alt="Parse Type — Generic Depth 32 — moxy vs syn latency — Bencher" /></a>
 
-### Type — Generic Depth 128
+#### Generic Depth 128
 
 <a href="https://bencher.dev/perf/moxy?key=true&branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-090b-7d41-b621-91e4980e2681%2C01a0b56a-08f2-7422-981f-1b18d4544791&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_value=true&upper_value=true&lower_boundary=false&upper_boundary=true&x_axis=date_time&tab=plots&title=Parse+Type+%E2%80%94+Generic+Depth+128+%E2%80%94+moxy+vs+syn&utm_medium=share&utm_source=bencher&utm_content=img&utm_campaign=perf%2Bimg&utm_term=moxy"><img src="https://api.bencher.dev/v0/projects/moxy/perf/img?branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-090b-7d41-b621-91e4980e2681%2C01a0b56a-08f2-7422-981f-1b18d4544791&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_boundary=false&upper_boundary=true&title=Parse+Type+%E2%80%94+Generic+Depth+128+%E2%80%94+moxy+vs+syn" title="Parse Type — Generic Depth 128 — moxy vs syn" alt="Parse Type — Generic Depth 128 — moxy vs syn latency — Bencher" /></a>
 
-### Invalid Expression
+### Invalid
+
+#### Expression
 
 <a href="https://bencher.dev/perf/moxy?key=true&branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a05eff-1a43-72c1-93f6-bc3078813953%2C01a05eff-1a49-74d3-90b2-3b5d9fed4236&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_value=true&upper_value=true&lower_boundary=false&upper_boundary=true&x_axis=date_time&tab=plots&title=Invalid+Expression+%E2%80%94+moxy+vs+syn&utm_medium=share&utm_source=bencher&utm_content=img&utm_campaign=perf%2Bimg&utm_term=moxy"><img src="https://api.bencher.dev/v0/projects/moxy/perf/img?branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a05eff-1a43-72c1-93f6-bc3078813953%2C01a05eff-1a49-74d3-90b2-3b5d9fed4236&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_boundary=false&upper_boundary=true&title=Invalid+Expression+%E2%80%94+moxy+vs+syn" title="Invalid Expression — moxy vs syn" alt="Invalid Expression — moxy vs syn latency — Bencher" /></a>
 
-### Invalid Deep Generic
+#### Deep Generic
 
 <a href="https://bencher.dev/perf/moxy?key=true&branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-08fd-75d0-a99c-c0c457a34152%2C01a0b56a-0902-78b1-b3ca-4917d6b2a029&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_value=true&upper_value=true&lower_boundary=false&upper_boundary=true&x_axis=date_time&tab=plots&title=Invalid+Deep+Generic+%E2%80%94+moxy+vs+syn&utm_medium=share&utm_source=bencher&utm_content=img&utm_campaign=perf%2Bimg&utm_term=moxy"><img src="https://api.bencher.dev/v0/projects/moxy/perf/img?branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-08fd-75d0-a99c-c0c457a34152%2C01a0b56a-0902-78b1-b3ca-4917d6b2a029&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_boundary=false&upper_boundary=true&title=Invalid+Deep+Generic+%E2%80%94+moxy+vs+syn" title="Invalid Deep Generic — moxy vs syn" alt="Invalid Deep Generic — moxy vs syn latency — Bencher" /></a>
 
-### Invalid Macro
+#### Macro
 
 <a href="https://bencher.dev/perf/moxy?key=true&branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-0904-7632-b3db-7c2c9f63daa5%2C01a0b56a-08fd-75d0-a99c-c108fc3b9a5d&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_value=true&upper_value=true&lower_boundary=false&upper_boundary=true&x_axis=date_time&tab=plots&title=Invalid+Macro+%E2%80%94+moxy+vs+syn&utm_medium=share&utm_source=bencher&utm_content=img&utm_campaign=perf%2Bimg&utm_term=moxy"><img src="https://api.bencher.dev/v0/projects/moxy/perf/img?branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-0904-7632-b3db-7c2c9f63daa5%2C01a0b56a-08fd-75d0-a99c-c108fc3b9a5d&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_boundary=false&upper_boundary=true&title=Invalid+Macro+%E2%80%94+moxy+vs+syn" title="Invalid Macro — moxy vs syn" alt="Invalid Macro — moxy vs syn latency — Bencher" /></a>
 
-### Invalid Large File Tail
+#### Large File Tail
 
 <a href="https://bencher.dev/perf/moxy?key=true&branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-090d-7940-81c6-59b772e17a32%2C01a0b56a-0907-7a13-8348-63e843fce92a&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_value=true&upper_value=true&lower_boundary=false&upper_boundary=true&x_axis=date_time&tab=plots&title=Invalid+Large+File+Tail+%E2%80%94+moxy+vs+syn&utm_medium=share&utm_source=bencher&utm_content=img&utm_campaign=perf%2Bimg&utm_term=moxy"><img src="https://api.bencher.dev/v0/projects/moxy/perf/img?branches=01a05ed7-a3fa-76c1-acb4-0c0e834d3572&heads=01a05ed7-a3fd-7502-ad0d-3eaa830b37de&testbeds=01a05edc-9191-79c0-9023-84ef5a50ed94&benchmarks=01a0b56a-090d-7940-81c6-59b772e17a32%2C01a0b56a-0907-7a13-8348-63e843fce92a&measures=01a05ede-9014-7cd3-8687-374fe7bc1830&lower_boundary=false&upper_boundary=true&title=Invalid+Large+File+Tail+%E2%80%94+moxy+vs+syn" title="Invalid Large File Tail — moxy vs syn" alt="Invalid Large File Tail — moxy vs syn latency — Bencher" /></a>
 

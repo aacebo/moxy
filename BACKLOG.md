@@ -1,5 +1,11 @@
 # Backlog
 
+## 0. Add `cfg_attr` To `moxy-ast` Derives
+
+Moxy's compile benchmarks have shown it is ~25% slower to compile then `syn` because
+`syn` puts its extra derive impls behind a feature flag `extra-traits`. We should do the same
+to avoid bloating compile times of downstream crates.
+
 ## 1. Feature Audit
 
 Audit crate tree features, especially features that enable other dependencies/features and sanitize
