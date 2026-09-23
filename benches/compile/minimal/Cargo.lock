@@ -12,7 +12,7 @@ dependencies = [
 
 [[package]]
 name = "moxy"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "moxy-ast",
  "moxy-token",
@@ -20,18 +20,18 @@ dependencies = [
 
 [[package]]
 name = "moxy-ast"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "moxy-token",
 ]
 
 [[package]]
 name = "moxy-build"
-version = "0.3.0"
+version = "0.3.1"
 
 [[package]]
 name = "moxy-token"
-version = "0.3.0"
+version = "0.3.1"
 dependencies = [
  "moxy-build",
  "unicode-ident",
