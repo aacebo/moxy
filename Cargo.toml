@@ -83,7 +83,7 @@ doctest = false
 workspace = true
 
 [features]
-default = ["ast", "token"]
+default = ["ast", "token", "derives"]
 derives = ["moxy-ast/derives", "moxy-template/derives"]
 full = ["ast", "token", "build", "fmt", "template", "derive", "diagnostic", "serde", "proc-macro2"]
 ast = ["dep:moxy-ast", "token"]
@@ -95,6 +95,7 @@ derive = ["dep:moxy-derive", "ast", "diagnostic", "fmt", "template"]
 diagnostic = ["dep:moxy-diagnostic", "token"]
 serde = ["ast", "fmt", "token", "moxy-ast/serde", "moxy-token/serde", "moxy-fmt/serde"]
 proc-macro2 = ["token", "moxy-token/proc-macro2"]
+visit = ["moxy-ast/visit"]
 
 [dependencies]
 moxy-ast = { workspace = true, optional = true }

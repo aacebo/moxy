@@ -22,6 +22,7 @@ workspace = true
 default = []
 derives = []
 serde = ["dep:serde", "moxy-token/serde"]
+visit = []
 
 [dependencies]
 moxy-token.workspace = true

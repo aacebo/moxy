@@ -62,6 +62,7 @@ pub mod use_tree;
 /// Visibility syntax.
 pub mod vis;
 /// Read-only and mutable AST traversal traits.
+#[cfg(feature = "visit")]
 pub mod visit;
 #[macro_use]
 mod parse;
@@ -123,5 +124,6 @@ pub use ty::{QSelf, Type, TypeMacro};
 pub use use_tree::UseTree;
 #[doc(inline)]
 pub use vis::*;
+#[cfg(feature = "visit")]
 #[doc(inline)]
 pub use visit::{Visit, VisitMut};
