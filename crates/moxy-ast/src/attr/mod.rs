@@ -4,7 +4,7 @@ mod style;
 pub use meta::*;
 pub use style::*;
 
-use moxy_token::{Delim, Group, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Group, Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -41,11 +41,9 @@ impl Parse for Attribute {
         })
     }
 
-    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let cursor = cursor.skip::<AttrStyle>()?;
-        let inner = cursor.descend(Delim::Bracket)?;
-        let inner = inner.skip::<Meta>()?;
-        if inner.is_empty() { cursor.skip::<Group>() } else { None }
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<AttrStyle>()?;
+        cursor.skip::<Group>()
     }
 }
 

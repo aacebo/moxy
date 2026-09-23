@@ -80,7 +80,7 @@ impl<'a> Cursor<'a> {
     }
 
     pub fn range(self, start: Self) -> &'a [TokenTree] {
-        &self.tokens[start.index..self.index + 1]
+        &self.tokens[start.index..self.index]
     }
 
     pub fn advance(mut self) -> (Self, Option<&'a TokenTree>) {

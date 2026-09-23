@@ -87,12 +87,14 @@ pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStr
     let mut debug_meta_list = vec![];
     let result = object.attrs().for_each(|attr| {
         attr.for_each(|meta| {
-            if meta.path == "moxy" {
+            if let Some(ident) = meta.path.as_ident() && ident == "moxy" {
                 meta.for_each(|meta| {
-                    if meta.path == "template" {
-                        tpl_meta_list.push(meta.clone());
-                    } else if meta.path == "debug" {
-                        debug_meta_list.push(meta.clone());
+                    if let Some(ident) = meta.path.as_ident() {
+                        if ident == "template" {
+                            tpl_meta_list.push(meta.clone());
+                        } else if ident == "debug" {
+                            debug_meta_list.push(meta.clone());
+                        }
                     }
 
                     Ok(())

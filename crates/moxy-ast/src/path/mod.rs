@@ -167,16 +167,6 @@ impl std::ops::DerefMut for Path {
     }
 }
 
-impl std::cmp::PartialEq<&str> for Path {
-    fn eq(&self, other: &&str) -> bool {
-        let Ok(other) = Path::try_from_str(other) else {
-            return false;
-        };
-
-        &other == self
-    }
-}
-
 impl IntoIterator for Path {
     type IntoIter = IntoIter<PathSegment>;
     type Item = PathSegment;
