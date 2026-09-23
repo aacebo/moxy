@@ -20,7 +20,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - uses: bencherdev/bencher@main
-      - name: Run benchmarks
+      - name: Run
         run: |
           bencher run \
           --project moxy \
@@ -32,3 +32,51 @@ jobs:
           --threshold-test t_test \
           --threshold-upper-boundary 0.95 \
           cargo bench -p moxy
+
+  compile:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        variant:
+          - minimal
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: bencherdev/bencher@main
+      - name: Install Hyperfine
+        run: cargo install hyperfine --version 1.20.0 --locked
+      - name: moxy[${{ matrix.variant }}]
+        run: |
+          bencher run \
+            --project moxy \
+            --key '${{ secrets.BENCHER_API_TOKEN }}' \
+            --branch master \
+            --testbed ubuntu-latest \
+            --adapter shell_hyperfine \
+            --file results.json \
+            --threshold-measure latency \
+            --threshold-test t_test \
+            --threshold-upper-boundary 0.95 \
+            "hyperfine \
+              --export-json results.json \
+              --warmup 1 \
+              --prepare 'cargo clean --manifest-path benches/compile/${{ matrix.variant }}/Cargo.toml' \
+              'cargo build --manifest-path benches/compile/${{ matrix.variant }}/Cargo.toml --features moxy --release'"
+      - name: syn[${{ matrix.variant }}]
+        run: |
+          bencher run \
+            --project moxy \
+            --key '${{ secrets.BENCHER_API_TOKEN }}' \
+            --branch master \
+            --testbed ubuntu-latest \
+            --adapter shell_hyperfine \
+            --file results.json \
+            --threshold-measure latency \
+            --threshold-test t_test \
+            --threshold-upper-boundary 0.95 \
+            "hyperfine \
+              --export-json results.json \
+              --warmup 1 \
+              --prepare 'cargo clean --manifest-path benches/compile/${{ matrix.variant }}/Cargo.toml' \
+              'cargo build --manifest-path benches/compile/${{ matrix.variant }}/Cargo.toml --features syn --release'"

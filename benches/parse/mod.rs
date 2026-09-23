@@ -2,7 +2,7 @@ use std::hint::black_box;
 
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
 
-const ATTRIBUTED_USES: &str = include_str!("../src/lib.rs");
+const ATTRIBUTED_USES: &str = include_str!("../../src/lib.rs");
 const MIXED_ITEMS: &str = include_str!("fixtures/mixed_items.rs");
 const LARGE_ITEMS: &str = include_str!("fixtures/large_items.rs");
 const ATTRIBUTES_DERIVES: &str = include_str!("fixtures/attributes_derives.rs");
