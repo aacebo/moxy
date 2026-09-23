@@ -1,6 +1,7 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::span::{DelimSpan, Spanner};
 use moxy_token::{Delim, Group, Span, ToTokens, TokenStream, TokenTree};
+
+use crate::{Parse, ParseError, Parser};
 
 /// An AST representation of Rust delimited syntax.
 #[derive(Clone)]

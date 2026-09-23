@@ -103,7 +103,7 @@ impl ToTokens for LifetimeName {
             self.text.clone()
         };
 
-        moxy_token::Ident::new(&name).with_span(self.span).to_tokens(tokens);
+        Ident::new(&name).with_span(self.span).to_tokens(tokens);
     }
 }
 
