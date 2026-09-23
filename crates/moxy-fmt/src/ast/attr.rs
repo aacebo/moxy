@@ -72,6 +72,10 @@ impl Format for TokenStream {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         for token in self.iter() {
             f.text(token)?;
+
+            if token.is_punct_comma() {
+                f.text(" ")?;
+            }
         }
 
         Ok(())
