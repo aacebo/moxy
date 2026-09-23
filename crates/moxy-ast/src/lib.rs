@@ -72,7 +72,7 @@ pub use _crate::Crate;
 #[doc(inline)]
 pub use args::{AngleArguments, GenericArgument, ParenArguments};
 #[doc(inline)]
-pub use attr::{Attribute, Attributes, Meta};
+pub use attr::*;
 #[doc(inline)]
 pub use declaration::*;
 #[doc(inline)]
@@ -80,7 +80,7 @@ pub use delimited::Delimited;
 #[doc(inline)]
 pub use expr::Expr;
 #[doc(inline)]
-pub use fields::{FieldValue, Fields, FieldsNamed};
+pub use fields::*;
 #[doc(inline)]
 pub use generics::{Generics, TraitRef, TypeBound, WhereClause, WherePredicate};
 #[doc(inline)]

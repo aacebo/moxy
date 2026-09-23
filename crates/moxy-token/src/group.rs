@@ -5,9 +5,9 @@ use crate::{Delim, Span, TokenStream, TokenTree};
 /// A delimited sequence of token trees.
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub struct Group {
-    pub(crate) delim: Delim,
-    pub(crate) span: DelimSpan,
-    pub(crate) tokens: TokenStream,
+    pub delim: Delim,
+    pub span: DelimSpan,
+    pub tokens: TokenStream,
 }
 
 impl Group {
@@ -18,26 +18,6 @@ impl Group {
             span: DelimSpan::new(Span::call_site(), Span::call_site()),
             tokens: stream,
         }
-    }
-
-    #[inline]
-    pub fn delim(&self) -> Delim {
-        self.delim
-    }
-
-    #[inline]
-    pub fn span(&self) -> DelimSpan {
-        self.span
-    }
-
-    #[inline]
-    pub fn stream(&self) -> &TokenStream {
-        &self.tokens
-    }
-
-    #[inline]
-    pub fn set_span(&mut self, span: DelimSpan) {
-        self.span = span;
     }
 
     #[inline]
@@ -85,7 +65,7 @@ impl Scan for Group {
 
         let c = c.advance_by(close_ch.len_utf8());
         let mut group = Self::new(delim, inner);
-        group.set_span(DelimSpan::new(cursor.span(), c.span()));
+        group.span = DelimSpan::new(cursor.span(), c.span());
 
         Ok((c, group))
     }

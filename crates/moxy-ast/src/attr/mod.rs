@@ -1,15 +1,12 @@
-/// Attribute metadata syntax.
-pub mod meta;
-/// Attribute metadata queries.
-pub mod query;
+mod meta;
 mod style;
 
-pub use meta::Meta;
+pub use meta::*;
 pub use style::*;
 
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Group, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Cursor, Delimited, Parse, ParseError, Parser};
+use crate::*;
 
 /// A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement.
 #[derive(Debug, Clone, PartialEq, Eq)]
@@ -25,6 +22,13 @@ impl Spanner for Attribute {
     }
 }
 
+impl ToTokens for Attribute {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.style.to_tokens(tokens);
+        self.meta.to_tokens(tokens);
+    }
+}
+
 impl Parse for Attribute {
     fn peek(cursor: Cursor<'_>) -> bool {
         cursor.peek::<AttrStyle>()
@@ -37,19 +41,17 @@ impl Parse for Attribute {
         })
     }
 
-    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let cursor = cursor.skip::<AttrStyle>()?;
-        let inner = cursor.descend(moxy_token::Delim::Bracket)?;
-        let inner = inner.skip::<Meta>()?;
-
-        if inner.is_empty() { Some(cursor.offset(1)) } else { None }
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = cursor.skip::<AttrStyle>()?;
+        cursor.skip::<Group>()
     }
 }
 
-impl ToTokens for Attribute {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.style.to_tokens(tokens);
-        self.meta.to_tokens(tokens);
+impl std::ops::Deref for Attribute {
+    type Target = Meta;
+
+    fn deref(&self) -> &Self::Target {
+        &self.meta
     }
 }
 
@@ -64,6 +66,19 @@ impl ToTokens for Attribute {
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(transparent))]
 pub struct Attributes(Vec<Attribute>);
+
+impl Attributes {
+    pub fn for_each<P>(&self, mut parse: P) -> Result<(), ParseError>
+    where
+        P: FnMut(&Attribute) -> Result<(), ParseError>,
+    {
+        for attr in &self.0 {
+            parse(attr)?;
+        }
+
+        Ok(())
+    }
+}
 
 impl Spanner for Attributes {
     fn span(&self) -> Span {
@@ -143,7 +158,7 @@ impl Parse for Attributes {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self(parser.parse_while::<Attribute>()))
+        Ok(Self(parser.parse_while()))
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {

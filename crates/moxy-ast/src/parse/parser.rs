@@ -212,9 +212,9 @@ impl Parser<'_> {
 impl<'a> Parser<'a> {
     pub fn parse_group(&self, delim: Delim) -> Result<Parser<'a>, ParseError> {
         match self.cursor().curr() {
-            Some(TokenTree::Group(group)) if group.delim() == delim => {
+            Some(TokenTree::Group(group)) if group.delim == delim => {
                 self.advance();
-                Ok(Self::from_config(group.stream(), self.config))
+                Ok(Self::from_config(&group.tokens, self.config))
             }
             _ => Err(self.error(format!("expected `{}` delimiter", delim.as_str()))),
         }
@@ -222,9 +222,9 @@ impl<'a> Parser<'a> {
 
     pub fn parse_group_spanned(&self, delim: Delim) -> Result<(DelimSpan, Parser<'a>), ParseError> {
         match self.cursor().curr() {
-            Some(TokenTree::Group(group)) if group.delim() == delim => {
+            Some(TokenTree::Group(group)) if group.delim == delim => {
                 self.advance();
-                Ok((group.span(), Self::from_config(group.stream(), self.config)))
+                Ok((group.span, Self::from_config(&group.tokens, self.config)))
             }
             _ => Err(self.error(format!("expected `{}` delimiter", delim.as_str()))),
         }

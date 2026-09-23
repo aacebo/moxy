@@ -19,7 +19,7 @@ impl TokenTree {
             Self::Keyword(v) => v.span(),
             Self::Punct(v) => v.span(),
             Self::Literal(v) => v.span(),
-            Self::Group(v) => v.span().into(),
+            Self::Group(v) => v.span(),
         }
     }
 
@@ -33,7 +33,7 @@ impl TokenTree {
 
     pub fn delim(&self) -> Option<Delim> {
         match self {
-            Self::Group(g) => Some(g.delim()),
+            Self::Group(g) => Some(g.delim),
             _ => None,
         }
     }

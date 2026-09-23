@@ -59,7 +59,7 @@ impl Parse for ItemMacroRules {
 
 impl Spanner for ItemMacroRules {
     fn span(&self) -> Span {
-        self.attrs.span().join(self.body.span().into())
+        self.attrs.span().join(self.body.span())
     }
 }
 

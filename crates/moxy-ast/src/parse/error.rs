@@ -44,7 +44,7 @@ impl ParseError {
         lit.set_span(span);
 
         let mut group = Group::new(Delim::Paren, lit.into_token_tree().into_token_stream());
-        group.set_span(DelimSpan::new(span, span));
+        group.span = DelimSpan::new(span, span);
 
         vec![
             ident.into_token_tree(),

@@ -146,7 +146,7 @@ impl From<proc_macro::Group> for Group {
     fn from(value: proc_macro::Group) -> Self {
         use crate::span::DelimSpan;
         let mut group = Self::new(value.delimiter().into(), value.stream().into());
-        group.set_span(DelimSpan::new(value.span_open().into(), value.span_close().into()));
+        group.span = DelimSpan::new(value.span_open().into(), value.span_close().into());
         group
     }
 }
@@ -154,7 +154,7 @@ impl From<proc_macro::Group> for Group {
 impl From<Group> for proc_macro::Group {
     #[inline]
     fn from(value: Group) -> Self {
-        let span = value.span().span().into();
+        let span = value.span.span().into();
         let mut group = Self::new(value.delim.into(), value.tokens.into());
         group.set_span(span);
         group

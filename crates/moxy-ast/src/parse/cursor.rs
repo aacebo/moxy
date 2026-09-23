@@ -52,7 +52,7 @@ impl<'a> Cursor<'a> {
 
     pub fn is_delimited(self, delim: Delim) -> bool {
         match self.curr() {
-            Some(TokenTree::Group(v)) => v.delim() == delim,
+            Some(TokenTree::Group(v)) => v.delim == delim,
             _ => false,
         }
     }
@@ -62,11 +62,11 @@ impl<'a> Cursor<'a> {
             return None;
         };
 
-        if group.delim() != delim {
+        if group.delim != delim {
             return None;
         }
 
-        Some(Cursor::from_tokens(group.stream()))
+        Some(Cursor::from_tokens(&group.tokens))
     }
 
     pub fn seek(mut self, i: usize) -> Self {
@@ -77,6 +77,10 @@ impl<'a> Cursor<'a> {
     pub fn offset(mut self, n: usize) -> Self {
         self.index += n;
         self
+    }
+
+    pub fn range(self, start: Self) -> &'a [TokenTree] {
+        &self.tokens[start.index..self.index]
     }
 
     pub fn advance(mut self) -> (Self, Option<&'a TokenTree>) {

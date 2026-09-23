@@ -65,17 +65,17 @@ pub enum Node {
 
 impl Node {
     pub fn is_interp_group(g: &Group) -> bool {
-        g.delim() == Delim::Brace && lone_brace_child(g.stream()).is_some()
+        g.delim == Delim::Brace && lone_brace_child(&g.tokens).is_some()
     }
 
     pub fn group_has_interp(g: &Group) -> bool {
-        Self::is_interp_group(g) || is_template(g.stream())
+        Self::is_interp_group(g) || is_template(&g.tokens)
     }
 }
 
 pub fn lone_brace_child(parser: &TokenStream) -> Option<Group> {
     match (parser.len(), parser.get(0)) {
-        (1, Some(TokenTree::Group(g))) if g.delim() == Delim::Brace => Some(g.clone()),
+        (1, Some(TokenTree::Group(g))) if g.delim == Delim::Brace => Some(g.clone()),
         _ => None,
     }
 }
@@ -100,8 +100,8 @@ impl Parse for Node {
                 Ok(node)
             }
             Some(TokenTree::Group(g)) if Self::group_has_interp(g) => {
-                let delim = g.delim();
-                let parser = parser.parse_group(g.delim())?;
+                let delim = g.delim;
+                let parser = parser.parse_group(g.delim)?;
                 Ok(Self::Group(delim, Box::new(parser.parse()?)))
             }
             Some(_) => Ok(Self::Tokens(parser.parse()?)),
@@ -121,7 +121,7 @@ impl Parse for Node {
         if let Some(TokenTree::Group(group)) = cursor.curr()
             && Self::group_has_interp(group)
         {
-            let inner = cursor.descend(group.delim())?;
+            let inner = cursor.descend(group.delim)?;
             let inner = Template::skip(inner)?;
             return inner.is_empty().then(|| cursor.offset(1));
         }
@@ -152,7 +152,7 @@ fn is_template(parser: &TokenStream) -> bool {
                 }
             }
         } else if let TokenTree::Group(g) = token
-            && (Node::is_interp_group(g) || is_template(g.stream()))
+            && (Node::is_interp_group(g) || is_template(&g.tokens))
         {
             return true;
         }

@@ -35,7 +35,7 @@ macro_rules! path {
 #[derive(Debug, Clone, PartialEq, Eq)]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Path {
-    leading_colon: Option<Token![::]>,
+    colon: Option<Token![::]>,
     segments: Punctuated<PathSegment, Token![::]>,
 }
 
@@ -44,12 +44,12 @@ impl Path {
         std::str::FromStr::from_str(value.as_ref())
     }
 
-    pub fn leading_colon(&self) -> Option<Token![::]> {
-        self.leading_colon
+    pub fn colon(&self) -> Option<Token![::]> {
+        self.colon
     }
 
-    pub fn as_ident(&self) -> Option<&crate::Ident> {
-        if self.leading_colon.is_none() && self.segments.len() == 1 {
+    pub fn as_ident(&self) -> Option<&Ident> {
+        if self.colon.is_none() && self.segments.len() == 1 {
             return self.segments.first().map(|s| &s.ident);
         }
 
@@ -65,10 +65,7 @@ impl Path {
             segments.push_value(parser.parse()?);
         }
 
-        Ok(Self {
-            leading_colon: None,
-            segments,
-        })
+        Ok(Self { colon: None, segments })
     }
 
     pub(crate) fn skip_rest(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
@@ -87,10 +84,10 @@ impl Parse for Path {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let leading_colon = parser.parse()?;
+        let colon = parser.parse()?;
         let first = parser.parse()?;
         let mut path = Self::parse_rest(parser, first)?;
-        path.leading_colon = leading_colon;
+        path.colon = colon;
         Ok(path)
     }
 
@@ -103,7 +100,7 @@ impl Parse for Path {
 
 impl Spanner for Path {
     fn span(&self) -> Span {
-        match (self.leading_colon, self.segments.last()) {
+        match (self.colon, self.segments.last()) {
             (Some(colon), Some(segment)) => colon.span().join(segment.span()),
             (Some(colon), None) => colon.span(),
             (None, Some(segment)) => segment.span(),
@@ -114,7 +111,7 @@ impl Spanner for Path {
 
 impl ToTokens for Path {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.leading_colon.to_tokens(tokens);
+        self.colon.to_tokens(tokens);
         self.segments.to_tokens(tokens);
     }
 }
@@ -128,8 +125,8 @@ impl std::str::FromStr for Path {
     }
 }
 
-impl From<crate::Ident> for Path {
-    fn from(ident: crate::Ident) -> Self {
+impl From<Ident> for Path {
+    fn from(ident: Ident) -> Self {
         let mut segments = Punctuated::new();
 
         segments.push_value(PathSegment {
@@ -137,17 +134,14 @@ impl From<crate::Ident> for Path {
             args: PathArguments::None,
         });
 
-        Self {
-            leading_colon: None,
-            segments,
-        }
+        Self { colon: None, segments }
     }
 }
 
 impl From<Vec<PathSegment>> for Path {
     fn from(value: Vec<PathSegment>) -> Self {
         Self {
-            leading_colon: None,
+            colon: None,
             segments: Punctuated::from_iter(value),
         }
     }
@@ -184,7 +178,7 @@ impl IntoIterator for Path {
 
 impl std::hash::Hash for Path {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
-        if let Some(colon) = &self.leading_colon {
+        if let Some(colon) = &self.colon {
             colon.hash(state);
         }
 

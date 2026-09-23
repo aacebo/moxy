@@ -5,7 +5,7 @@ use moxy::token::Spanner;
 fn absolute_generic_paths_preserve_segments_and_arguments() {
     let ty: Type = moxy::parse!("::std::collections::HashMap<String, Vec<u8>>").unwrap();
     let path = &ty.as_path().unwrap().path;
-    assert!(path.leading_colon().is_some());
+    assert!(path.colon().is_some());
     assert_eq!(path.len(), 3);
     assert_eq!(path.last().unwrap().ident.text(), "HashMap");
     assert!(!path.span().is_empty());

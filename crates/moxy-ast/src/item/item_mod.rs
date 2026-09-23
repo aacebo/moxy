@@ -32,7 +32,7 @@ impl Parse for ItemMod {
         let unsafety = parser.parse()?;
         let mod_keyword = parser.parse()?;
         let ident = parser.parse()?;
-        let (content, semi_punct) = if matches!(parser.curr(), Some(TokenTree::Group(g)) if g.delim() == Delim::Brace) {
+        let (content, semi_punct) = if matches!(parser.curr(), Some(TokenTree::Group(g)) if g.delim == Delim::Brace) {
             let brace = Delimited::<Vec<Item>>::parse_brace(parser)?;
             (Some(brace), None)
         } else {

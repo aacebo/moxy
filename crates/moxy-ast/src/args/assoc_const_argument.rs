@@ -39,7 +39,7 @@ impl Parse for AssocConstArgument {
 
         match cursor.curr() {
             Some(TokenTree::Literal(_)) => true,
-            Some(TokenTree::Group(group)) => group.delim().is_brace(),
+            Some(TokenTree::Group(group)) => group.delim.is_brace(),
             Some(TokenTree::Punct(Punct::Minus(_) | Punct::Not(_))) => true,
             _ => false,
         }

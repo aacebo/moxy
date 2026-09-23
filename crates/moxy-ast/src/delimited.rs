@@ -44,7 +44,7 @@ impl<T> Delimited<T> {
         T: ToTokens,
     {
         let mut group = Group::new(self.style, inner);
-        group.set_span(self.span);
+        group.span = self.span;
         tokens.extend_one(TokenTree::Group(group));
     }
 }

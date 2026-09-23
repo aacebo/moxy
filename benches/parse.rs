@@ -1,7 +1,6 @@
 use std::hint::black_box;
 
 use criterion::{Criterion, Throughput, criterion_group, criterion_main};
-use pprof::criterion::{Output, PProfProfiler};
 
 const ATTRIBUTED_USES: &str = include_str!("../src/lib.rs");
 const MIXED_ITEMS: &str = include_str!("fixtures/mixed_items.rs");
@@ -270,12 +269,7 @@ pub fn run(c: &mut Criterion) {
 
 criterion_group! {
     name = benchmark_group;
-    config = Criterion::default().with_profiler(
-        PProfProfiler::new(
-            100,
-            Output::Flamegraph(None),
-        ),
-    );
+    config = Criterion::default();
     targets = run
 }
 
