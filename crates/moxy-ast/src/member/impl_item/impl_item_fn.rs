@@ -9,7 +9,7 @@ use crate::*;
 pub struct ImplItemFn {
     pub attrs: Attributes,
     pub vis: Visibility,
-    pub defaultness: Defaultness,
+    pub defaultness: Option<Token![default]>,
     pub sig: Signature,
     pub body: StmtBlock,
 }
@@ -18,7 +18,7 @@ impl Parse for ImplItemFn {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        let cursor = Defaultness::skip(cursor).unwrap_or(cursor);
+        let cursor = cursor.skip::<Option<Token![default]>>().unwrap_or(cursor);
         cursor.peek::<Signature>()
     }
 
@@ -35,7 +35,7 @@ impl Parse for ImplItemFn {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = Defaultness::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![default]>>()?;
         cursor = cursor.skip::<Signature>()?;
         cursor.skip::<StmtBlock>()
     }

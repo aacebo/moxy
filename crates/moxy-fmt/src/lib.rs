@@ -81,6 +81,15 @@ pub trait Format {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError>;
 }
 
+impl<T: Format> Format for Option<T> {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        match self {
+            Some(v) => v.format(f),
+            None => Ok(()),
+        }
+    }
+}
+
 pub struct Formatter {
     config: FmtConfig,
     buffer: Vec<FmtNode>,

@@ -11,12 +11,12 @@ mod macros;
 
 use crate::args::*;
 use crate::attr::*;
+use crate::core::*;
 use crate::expr::*;
 use crate::fields::*;
 use crate::generics::*;
 use crate::item::*;
 use crate::member::*;
-use crate::misc::*;
 use crate::pat::*;
 use crate::path::PathArguments;
 use crate::sig::*;

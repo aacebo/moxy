@@ -2,7 +2,7 @@ use crate::Token;
 use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Generics, Ident, Punctuated, TypeBound, Unsafety, Visibility};
+use crate::{Attributes, Generics, Ident, Punctuated, TypeBound, Visibility};
 
 /// A trait alias item (`trait Alias<T> = Bound1 + Bound2;`).
 #[derive(Clone)]
@@ -23,7 +23,7 @@ impl Parse for ItemTraitAlias {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        let cursor = Unsafety::skip(cursor).unwrap_or(cursor);
+        let cursor = cursor.skip::<Option<Token![unsafe]>>().unwrap_or(cursor);
         let cursor = cursor.skip::<Option<Token![auto]>>().unwrap_or(cursor);
         let Some(cursor) = cursor.skip::<Token![trait]>() else {
             return false;
@@ -43,7 +43,7 @@ impl Parse for ItemTraitAlias {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
         let vis = parser.parse()?;
-        let _unsafety: Unsafety = parser.parse()?;
+        let _unsafety: Option<Token![unsafe]> = parser.parse()?;
 
         // skip optional `auto`
         if parser.peek::<Token![auto]>() {
@@ -72,7 +72,7 @@ impl Parse for ItemTraitAlias {
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = Unsafety::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![unsafe]>>()?;
         cursor = cursor.skip::<Option<Token![auto]>>()?;
         cursor = cursor.skip::<Token![trait]>()?;
         cursor = cursor.skip::<Ident>()?;

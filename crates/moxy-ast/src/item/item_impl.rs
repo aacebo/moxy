@@ -2,7 +2,7 @@ use crate::Token;
 use crate::{Parse, ParseError, Parser};
 use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, BoundPolarity, Defaultness, Delimited, Generics, ImplItem, TraitRef, Type, Unsafety};
+use crate::{Attributes, Delimited, Generics, ImplItem, TraitRef, Type};
 
 /// An `impl` block, optionally implementing a trait (`impl Trait for Type { ... }`).
 #[derive(Clone)]
@@ -10,8 +10,8 @@ use crate::{Attributes, BoundPolarity, Defaultness, Delimited, Generics, ImplIte
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemImpl {
     pub attrs: Attributes,
-    pub defaultness: Defaultness,
-    pub unsafety: Unsafety,
+    pub defaultness: Option<Token![default]>,
+    pub unsafety: Option<Token![unsafe]>,
     pub impl_keyword: Token![impl],
     pub generics: Generics,
     pub for_keyword: Option<Token![for]>,
@@ -21,7 +21,7 @@ pub struct ItemImpl {
 }
 
 impl ItemImpl {
-    fn type_to_trait_ref(ty: Type, polarity: BoundPolarity) -> Result<TraitRef, ParseError> {
+    fn type_to_trait_ref(ty: Type, polarity: Option<Token![!]>) -> Result<TraitRef, ParseError> {
         match ty {
             Type::Path(tp) => Ok(TraitRef { polarity, path: tp.path }),
             _ => Err(LexError::new(Span::default()).message("expected trait path").into()),
@@ -36,8 +36,8 @@ impl ItemImpl {
 impl Parse for ItemImpl {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        let cursor = Defaultness::skip(cursor).unwrap_or(cursor);
-        let cursor = Unsafety::skip(cursor).unwrap_or(cursor);
+        let cursor = cursor.skip::<Option<Token![default]>>().unwrap_or(cursor);
+        let cursor = cursor.skip::<Option<Token![unsafe]>>().unwrap_or(cursor);
         cursor.peek::<Token![impl]>()
     }
 
@@ -47,11 +47,7 @@ impl Parse for ItemImpl {
         let unsafety = parser.parse()?;
         let impl_keyword = parser.parse()?;
         let mut generics: Generics = parser.parse()?;
-        let polarity = if parser.peek::<Token![!]>() {
-            BoundPolarity::Negative(parser.parse()?)
-        } else {
-            BoundPolarity::Positive
-        };
+        let polarity = parser.parse()?;
 
         let first = parser.parse()?;
         let (for_keyword, trait_ref, self_ty) = if parser.peek::<Token![for]>() {
@@ -80,11 +76,11 @@ impl Parse for ItemImpl {
 
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = Defaultness::skip(cursor)?;
-        cursor = Unsafety::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![default]>>()?;
+        cursor = cursor.skip::<Option<Token![unsafe]>>()?;
         cursor = cursor.skip::<Token![impl]>()?;
         cursor = Generics::skip(cursor)?;
-        cursor = BoundPolarity::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![!]>>()?;
         cursor = cursor.skip::<Type>()?;
 
         if cursor.peek::<Token![for]>() {

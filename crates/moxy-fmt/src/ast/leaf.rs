@@ -1,7 +1,4 @@
-use moxy_ast::{
-    Abi, Asyncness, BinOp, BoundPolarity, Constness, Defaultness, Ident, Label, Movability, Mutability, PointerMutability,
-    RangeLimits, TraitBoundModifier, UnOp, Unsafety, Visibility,
-};
+use moxy_ast::{Abi, BinOp, Ident, Label, PointerMutability, RangeLimits, UnOp, Visibility};
 
 use crate::{FmtError, Format, Formatter};
 
@@ -60,83 +57,11 @@ impl Format for UnOp {
     }
 }
 
-impl Format for Asyncness {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::Async(_) => f.text("async"),
-            Self::Sync => Ok(()),
-        }
-    }
-}
-
-impl Format for Constness {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::Const(_) => f.text("const"),
-            Self::NoConst => Ok(()),
-        }
-    }
-}
-
-impl Format for Unsafety {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::Unsafe(_) => f.text("unsafe"),
-            Self::Safe => Ok(()),
-        }
-    }
-}
-
-impl Format for Defaultness {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::Default(_) => f.text("default"),
-            Self::Final => Ok(()),
-        }
-    }
-}
-
-impl Format for Mutability {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::Mutable(_) => f.text("mut"),
-            Self::Immutable => Ok(()),
-        }
-    }
-}
-
-impl Format for Movability {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::Static(_) => f.text("static"),
-            Self::Movable => Ok(()),
-        }
-    }
-}
-
 impl Format for RangeLimits {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Closed(_) => f.text("..="),
             Self::HalfOpen(_) => f.text(".."),
-        }
-    }
-}
-
-impl Format for TraitBoundModifier {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::Maybe(_) => f.text("?"),
-            Self::None => Ok(()),
-        }
-    }
-}
-
-impl Format for BoundPolarity {
-    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
-            Self::Negative(_) => f.text("!"),
-            Self::Positive => Ok(()),
         }
     }
 }

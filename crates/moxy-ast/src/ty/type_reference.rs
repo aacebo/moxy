@@ -2,7 +2,7 @@ use crate::{Cursor, Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use super::Type;
-use crate::{Lifetime, Mutability};
+use crate::Lifetime;
 
 /// A reference type (e.g. `&'a T`, `&mut T`).
 #[derive(Clone)]
@@ -11,7 +11,7 @@ use crate::{Lifetime, Mutability};
 pub struct TypeReference {
     pub and: Token![&],
     pub lifetime: Option<Lifetime>,
-    pub mutability: Mutability,
+    pub mutability: Option<Token![mut]>,
     pub elem: Box<Type>,
 }
 
@@ -38,7 +38,7 @@ impl Parse for TypeReference {
         cursor
             .skip::<Token![&]>()?
             .skip::<Option<Lifetime>>()?
-            .skip::<Mutability>()?
+            .skip::<Option<Token![mut]>>()?
             .skip::<Type>()
     }
 }

@@ -2,7 +2,7 @@ use crate::Token;
 use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Delimited, Generics, Ident, Punctuated, TraitItem, TypeBound, Unsafety, Visibility};
+use crate::{Attributes, Delimited, Generics, Ident, Punctuated, TraitItem, TypeBound, Visibility};
 
 /// A trait definition item (`trait Name: Super { ... }`).
 #[derive(Clone)]
@@ -11,7 +11,7 @@ use crate::{Attributes, Delimited, Generics, Ident, Punctuated, TraitItem, TypeB
 pub struct ItemTrait {
     pub attrs: Attributes,
     pub vis: Visibility,
-    pub unsafety: Unsafety,
+    pub unsafety: Option<Token![unsafe]>,
     pub auto_keyword: Option<Token![auto]>,
     pub trait_keyword: Token![trait],
     pub ident: Ident,
@@ -25,7 +25,7 @@ impl Parse for ItemTrait {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        let cursor = Unsafety::skip(cursor).unwrap_or(cursor);
+        let cursor = cursor.skip::<Option<Token![unsafe]>>().unwrap_or(cursor);
         let cursor = cursor.skip::<Option<Token![auto]>>().unwrap_or(cursor);
         cursor.peek::<Token![trait]>()
     }
@@ -71,7 +71,7 @@ impl Parse for ItemTrait {
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = Unsafety::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![unsafe]>>()?;
         cursor = cursor.skip::<Option<Token![auto]>>()?;
         cursor = cursor.skip::<Token![trait]>()?;
         cursor = cursor.skip::<Ident>()?;

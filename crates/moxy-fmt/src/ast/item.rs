@@ -14,19 +14,19 @@ impl Format for Signature {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.constness.format(f)?;
 
-        if matches!(self.constness, moxy_ast::Constness::Const(_)) {
+        if self.constness.is_some() {
             f.text(" ")?;
         }
 
         self.asyncness.format(f)?;
 
-        if matches!(self.asyncness, moxy_ast::Asyncness::Async(_)) {
+        if self.asyncness.is_some() {
             f.text(" ")?;
         }
 
         self.unsafety.format(f)?;
 
-        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
+        if self.unsafety.is_some() {
             f.text(" ")?;
         }
 
@@ -94,13 +94,13 @@ impl Format for Receiver {
 
             self.mutability.format(f)?;
 
-            if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
+            if self.mutability.is_some() {
                 f.text(" ")?;
             }
         } else {
             self.mutability.format(f)?;
 
-            if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
+            if self.mutability.is_some() {
                 f.text(" ")?;
             }
         }
@@ -310,7 +310,7 @@ impl Format for ItemMod {
 
         self.unsafety.format(f)?;
 
-        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
+        if self.unsafety.is_some() {
             f.text(" ")?;
         }
 
@@ -466,7 +466,7 @@ impl Format for ItemTrait {
 
         self.unsafety.format(f)?;
 
-        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
+        if self.unsafety.is_some() {
             f.text(" ")?;
         }
 
@@ -524,13 +524,13 @@ impl Format for ItemImpl {
         self.attrs.format(f)?;
         self.defaultness.format(f)?;
 
-        if matches!(self.defaultness, moxy_ast::Defaultness::Default(_)) {
+        if self.defaultness.is_some() {
             f.text(" ")?;
         }
 
         self.unsafety.format(f)?;
 
-        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
+        if self.unsafety.is_some() {
             f.text(" ")?;
         }
 
@@ -616,7 +616,7 @@ impl Format for ItemStatic {
         f.text("static ")?;
         self.mutability.format(f)?;
 
-        if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
+        if self.mutability.is_some() {
             f.text(" ")?;
         }
 
@@ -658,7 +658,7 @@ impl Format for ItemForeignMod {
         self.attrs.format(f)?;
         self.unsafety.format(f)?;
 
-        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
+        if self.unsafety.is_some() {
             f.text(" ")?;
         }
 
@@ -710,7 +710,7 @@ impl Format for ImplItemFn {
 
         self.defaultness.format(f)?;
 
-        if matches!(self.defaultness, moxy_ast::Defaultness::Default(_)) {
+        if self.defaultness.is_some() {
             f.text(" ")?;
         }
 
@@ -731,7 +731,7 @@ impl Format for ImplItemConst {
 
         self.defaultness.format(f)?;
 
-        if matches!(self.defaultness, moxy_ast::Defaultness::Default(_)) {
+        if self.defaultness.is_some() {
             f.text(" ")?;
         }
 
@@ -757,7 +757,7 @@ impl Format for ImplItemType {
 
         self.defaultness.format(f)?;
 
-        if matches!(self.defaultness, moxy_ast::Defaultness::Default(_)) {
+        if self.defaultness.is_some() {
             f.text(" ")?;
         }
 
@@ -899,7 +899,7 @@ impl Format for ForeignItemStatic {
         f.text("static ")?;
         self.mutability.format(f)?;
 
-        if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
+        if self.mutability.is_some() {
             f.text(" ")?;
         }
 

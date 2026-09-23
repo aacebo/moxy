@@ -9,7 +9,7 @@ use crate::*;
 pub struct ExprReference {
     pub attrs: Attributes,
     pub and: Token![&],
-    pub mutability: Mutability,
+    pub mutability: Option<Token![mut]>,
     pub expr: Box<Expr>,
 }
 

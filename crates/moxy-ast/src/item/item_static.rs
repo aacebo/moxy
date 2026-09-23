@@ -2,7 +2,7 @@ use crate::Token;
 use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Expr, Ident, Mutability, Type, Visibility};
+use crate::{Attributes, Expr, Ident, Type, Visibility};
 
 /// A static item (`static [mut] NAME: Type = expr;`).
 #[derive(Clone)]
@@ -12,7 +12,7 @@ pub struct ItemStatic {
     pub attrs: Attributes,
     pub vis: Visibility,
     pub static_keyword: Token![static],
-    pub mutability: Mutability,
+    pub mutability: Option<Token![mut]>,
     pub ident: Ident,
     pub colon_punct: Token![:],
     pub ty: Type,
@@ -58,7 +58,7 @@ impl Parse for ItemStatic {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
         cursor = cursor.skip::<Token![static]>()?;
-        cursor = Mutability::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![mut]>>()?;
         cursor = cursor.skip::<Ident>()?;
         cursor = cursor.skip::<Token![:]>()?;
         cursor = cursor.skip::<Type>()?;

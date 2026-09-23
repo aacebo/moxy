@@ -16,6 +16,6 @@ fn mutable_static_items_render_exactly() {
     let item: Item = moxy::parse!("pub static mut VALUE:u64=5;").unwrap();
     let static_item = item.as_static().unwrap();
     assert_eq!(static_item.ident.text(), "VALUE");
-    assert!(matches!(static_item.mutability, moxy::ast::Mutability::Mutable(_)));
+    assert!(static_item.mutability.is_some());
     assert_eq!(moxy::fmt!(&item).unwrap(), "pub static mut VALUE: u64 = 5;");
 }

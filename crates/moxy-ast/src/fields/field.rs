@@ -9,7 +9,7 @@ use crate::*;
 pub struct Field {
     pub attrs: Attributes,
     pub vis: Visibility,
-    pub mutability: Mutability,
+    pub mutability: Option<Token![mut]>,
     pub ident: Option<Ident>,
     pub colon: Option<Token![:]>,
     pub ty: Type,
@@ -19,7 +19,7 @@ impl Parse for Field {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        let cursor = Mutability::skip(cursor).unwrap_or(cursor);
+        let cursor = cursor.skip::<Option<Token![mut]>>().unwrap_or(cursor);
         cursor.peek::<Type>()
     }
 
@@ -48,7 +48,7 @@ impl Parse for Field {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = Mutability::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![mut]>>()?;
 
         if cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![:]>() {
             cursor = cursor.skip::<Ident>()?;

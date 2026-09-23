@@ -7,9 +7,9 @@ use crate::*;
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitBound {
-    pub polarity: BoundPolarity,
+    pub polarity: Option<Token![!]>,
     pub lifetimes: Option<BoundLifetimes>,
-    pub modifier: TraitBoundModifier,
+    pub modifier: Option<Token![?]>,
     pub path: Path,
 }
 
@@ -28,28 +28,22 @@ impl Parse for TraitBound {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = BoundPolarity::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![!]>>()?;
         cursor = cursor.skip::<Option<BoundLifetimes>>()?;
-        cursor = TraitBoundModifier::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![?]>>()?;
         cursor.skip::<Path>()
     }
 }
 
 impl Spanner for TraitBound {
     fn span(&self) -> Span {
-        let start = match &self.polarity {
-            BoundPolarity::Negative(t) => t.span(),
-            BoundPolarity::Positive => {
-                if let Some(l) = &self.lifetimes {
-                    l.span()
-                } else {
-                    match &self.modifier {
-                        TraitBoundModifier::Maybe(t) => t.span(),
-                        TraitBoundModifier::None => self.path.span(),
-                    }
-                }
-            }
-        };
+        let start = self
+            .polarity
+            .as_ref()
+            .map(Spanner::span)
+            .or_else(|| self.lifetimes.as_ref().map(Spanner::span))
+            .or_else(|| self.modifier.as_ref().map(Spanner::span))
+            .unwrap_or_else(|| self.path.span());
 
         start.join(self.path.span())
     }

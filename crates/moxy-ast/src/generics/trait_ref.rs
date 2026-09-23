@@ -7,7 +7,7 @@ use crate::*;
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitRef {
-    pub polarity: BoundPolarity,
+    pub polarity: Option<Token![!]>,
     pub path: Path,
 }
 
@@ -24,16 +24,13 @@ impl Parse for TraitRef {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        BoundPolarity::skip(cursor)?.skip::<Path>()
+        cursor.skip::<Option<Token![!]>>()?.skip::<Path>()
     }
 }
 
 impl Spanner for TraitRef {
     fn span(&self) -> Span {
-        let start = match &self.polarity {
-            BoundPolarity::Negative(t) => t.span(),
-            BoundPolarity::Positive => self.path.span(),
-        };
+        let start = self.polarity.as_ref().map_or_else(|| self.path.span(), Spanner::span);
 
         start.join(self.path.span())
     }

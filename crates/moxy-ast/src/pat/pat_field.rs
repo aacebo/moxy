@@ -47,7 +47,7 @@ impl Parse for PatField {
                 Pattern::Ident(PatIdent {
                     attrs: Attributes::default(),
                     by_ref: None,
-                    mutability: Mutability::Immutable,
+                    mutability: None,
                     ident: ident.clone(),
                     subpat: None,
                 }),
