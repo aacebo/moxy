@@ -11,7 +11,8 @@ use moxy_token::{Lit, Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// A struct/tuple field accessor — a named field (`.field`) or a tuple index (`.0`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Member {
     Named(Ident),

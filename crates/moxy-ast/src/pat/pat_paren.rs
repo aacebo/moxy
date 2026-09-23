@@ -3,7 +3,8 @@ use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// A parenthesized pattern, e.g. `(A | B)`.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatParen {
     pub attrs: Attributes,

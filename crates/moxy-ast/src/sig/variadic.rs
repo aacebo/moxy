@@ -3,7 +3,8 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// A C-style variadic marker (`...`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Variadic {
     pub attrs: Attributes,

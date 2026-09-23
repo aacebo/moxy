@@ -6,7 +6,8 @@ use moxy_token::{Delim, Group, Ident, Span, ToTokenStream, ToTokens, TokenStream
 use crate::Template;
 
 #[doc = "A template for-loop directive: `@for (binding in iter) { body }`."]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug))]
 pub struct TmplFor {
     pub span: Span,
     pub at_punct: Token![@],

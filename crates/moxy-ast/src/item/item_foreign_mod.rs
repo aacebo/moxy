@@ -4,7 +4,8 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::{Abi, Attributes, Delimited, ForeignItem, Unsafety};
 
 /// An `extern` block (`extern "C" { ... }`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemForeignMod {
     pub attrs: Attributes,

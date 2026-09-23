@@ -3,7 +3,8 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// A closure expression: `|x| x`, `move || 1`, `async |x: u32| -> u32 { x }`.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprClosure {
     pub attrs: Attributes,
@@ -53,7 +54,8 @@ impl ToTokens for ExprClosure {
 }
 
 /// The pipe delimiters around a closure's parameters: either an empty `||` or a pair of `|`.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum ClosurePipes {
     Empty(Token![||]),

@@ -4,7 +4,8 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::{Punctuated, TypeBound};
 
 /// An `impl Trait` type (e.g. `impl Iterator<Item = u8>`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeImplTrait {
     pub impl_keyword: Token![impl],

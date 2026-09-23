@@ -3,7 +3,8 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// A match expression: `match x { pat => expr, ... }`.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprMatch {
     pub attrs: Attributes,
@@ -34,7 +35,8 @@ impl ToTokens for ExprMatch {
 }
 
 /// A single arm of a `match` expression (`pat (if guard)? => body`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct MatchArm {
     pub attrs: Attributes,

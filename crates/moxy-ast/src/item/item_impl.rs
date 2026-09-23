@@ -5,7 +5,8 @@ use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
 use crate::{Attributes, BoundPolarity, Defaultness, Delimited, Generics, ImplItem, TraitRef, Type, Unsafety};
 
 /// An `impl` block, optionally implementing a trait (`impl Trait for Type { ... }`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemImpl {
     pub attrs: Attributes,

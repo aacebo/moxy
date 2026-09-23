@@ -3,7 +3,8 @@ use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// The visibility of an item (`pub`, `pub`, `pub(in path)`, or inherited).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Visibility {
     Inherited,

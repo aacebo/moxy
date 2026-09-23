@@ -4,7 +4,8 @@ use crate::ty::TypePath;
 use crate::*;
 
 /// A tuple-struct pattern, e.g. `Point(x, y)`.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatTupleStruct {
     pub attrs: Attributes,

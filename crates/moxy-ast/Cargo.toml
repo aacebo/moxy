@@ -20,6 +20,7 @@ workspace = true
 
 [features]
 default = []
+derives = []
 serde = ["dep:serde", "moxy-token/serde"]
 
 [dependencies]

@@ -9,7 +9,8 @@ pub use tmpl_if::*;
 pub use tmpl_match::*;
 
 #[doc = "A template `@`-directive: `@if`, `@for`, or `@match`."]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug))]
 pub enum TmplKeyword {
     If(TmplIf),
     For(TmplFor),

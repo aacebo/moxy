@@ -3,7 +3,8 @@ use moxy_token::{Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 use crate::*;
 
 /// A loop label (`'outer:`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Label {
     pub name: Lifetime,

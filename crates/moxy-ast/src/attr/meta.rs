@@ -3,7 +3,8 @@ use moxy_token::{Group, Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// A structured attribute meta item (`name`, `name(...)`, `name = expr`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Meta {
     pub path: Path,
@@ -73,7 +74,8 @@ impl Parse for Meta {
 }
 
 /// The shape of a meta item after its path (`name`, `name = v`, `name(..)`, `name { .. }`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(untagged))]
 pub enum MetaContent {
     /// `#[debug]`

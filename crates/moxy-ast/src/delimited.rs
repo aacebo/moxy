@@ -3,7 +3,8 @@ use moxy_token::span::{DelimSpan, Spanner};
 use moxy_token::{Delim, Group, Span, ToTokens, TokenStream, TokenTree};
 
 /// An AST representation of Rust delimited syntax.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug))]
 pub struct Delimited<T = TokenStream> {
     pub style: Delim,
     pub span: DelimSpan,

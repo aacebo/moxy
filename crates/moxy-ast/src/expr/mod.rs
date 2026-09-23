@@ -87,7 +87,8 @@ use moxy_token::{Delim, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 use crate::*;
 
 /// A Rust expression. The primary recursive node covering all expression forms.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Expr {
     Array(ExprArray),

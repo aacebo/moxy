@@ -4,7 +4,8 @@ use crate::ty::TypePath;
 use crate::*;
 
 /// A struct pattern, e.g. `Point { x, y }` or `Point { x, .. }`.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatStruct {
     pub attrs: Attributes,
@@ -81,7 +82,8 @@ impl ToTokens for PatStruct {
 }
 
 /// The AST node for a Rust struct body pattern.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatStructBody {
     pub fields: Punctuated<pat::PatField, Token![,]>,

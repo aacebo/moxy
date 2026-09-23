@@ -5,7 +5,8 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::{Attributes, Delimited, Generics, Ident, Punctuated, TraitItem, TypeBound, Unsafety, Visibility};
 
 /// A trait definition item (`trait Name: Super { ... }`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemTrait {
     pub attrs: Attributes,

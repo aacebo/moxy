@@ -6,7 +6,8 @@ use moxy_ast::{Cursor, Parse, ParseError, Parser};
 use moxy_token::{Punct, Span, ToTokens, TokenStream, TokenTree};
 
 #[doc = "Literal passthrough tokens in a template: any tokens not matched by interpolation or control flow."]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug))]
 pub struct TmplTokens {
     pub span: Span,
     pub tokens: TokenStream,

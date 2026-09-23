@@ -3,7 +3,8 @@ use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// A tuple pattern, e.g. `(a, b, c)`.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatTuple {
     pub attrs: Attributes,

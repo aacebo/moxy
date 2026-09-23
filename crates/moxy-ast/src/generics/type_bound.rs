@@ -4,7 +4,8 @@ use super::{TraitBound, UseBound};
 use crate::*;
 
 /// A bound on a type parameter (`Trait`, `'a`, `use<>`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum TypeBound {
     Trait(TraitBound),

@@ -11,7 +11,8 @@ macro_rules! define_leaf {
     )+) => {
         $(
             $(#[doc = $doc])*
-            #[derive(Debug, Clone)]
+            #[derive(Clone)]
+            #[cfg_attr(feature = "derives", derive(Debug))]
             pub enum $name {
                 $($variant $(( $token ))? ,)+
             }

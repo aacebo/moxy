@@ -6,7 +6,8 @@ use moxy_token::{Delim, Group, Span, ToTokenStream, ToTokens, TokenStream, Token
 use crate::Template;
 
 #[doc = "A template if/else-if/else directive: `@if (cond) { body } @else if (cond) { body } @else { body }`."]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug))]
 pub struct TmplIf {
     pub span: Span,
     pub at_punct: Token![@],
@@ -18,7 +19,8 @@ pub struct TmplIf {
 }
 
 #[doc = "A single branch of a `@if` or `@else if` directive."]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug))]
 pub struct TmplIfBranch {
     pub span: Span,
     pub at_punct: Option<Token![@]>,

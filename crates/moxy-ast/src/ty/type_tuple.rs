@@ -6,7 +6,8 @@ use super::Type;
 use crate::{Delimited, Punctuated};
 
 /// A tuple type (e.g. `()`, `(A, B)`, `(T,)`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeTuple {
     pub elems: Delimited<Punctuated<Type, Token![,]>>,

@@ -6,7 +6,8 @@ use moxy_token::{Delim, Group, LexError, Span, ToTokenStream, ToTokens, TokenStr
 use crate::Template;
 
 #[doc = "A template match directive: `@match (expr) { pat => { body }, … }`."]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug))]
 pub struct TmplMatch {
     pub span: Span,
     pub at: Token![@],
@@ -64,7 +65,8 @@ impl ToTokens for TmplMatch {
 }
 
 #[doc = "A single arm of a `@match` directive: `pat => { body }`."]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug))]
 pub struct TmplMatchArm {
     pub span: Span,
     pub pat: TokenStream,

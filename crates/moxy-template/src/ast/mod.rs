@@ -11,7 +11,8 @@ pub use tmpl_interp::*;
 pub use tmpl_tokens::*;
 
 /// A parsed template: a sequence of nodes (literal tokens, interpolations, and control flow).
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug))]
 pub struct Template {
     pub nodes: Vec<Node>,
 }
@@ -55,7 +56,8 @@ impl ToTokens for Template {
 }
 
 /// A single node in a template.
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug))]
 pub enum Node {
     Tokens(TmplTokens),
     Interp(TmplInterp),

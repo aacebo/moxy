@@ -4,7 +4,8 @@ use super::{Abi, FnParams, Variadic};
 use crate::*;
 
 /// A function signature.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Signature {
     pub constness: Constness,

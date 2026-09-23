@@ -19,6 +19,10 @@ doctest = false
 [lints]
 workspace = true
 
+[features]
+default = []
+derives = ["moxy-ast/derives"]
+
 [dependencies]
 moxy-ast.workspace = true
 moxy-token.workspace = true

@@ -4,7 +4,8 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::{Punctuated, TypeBound};
 
 /// A trait object type (e.g. `dyn Iterator<Item = u8>`, `dyn Fn() + 'a`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeTraitObject {
     pub dyn_token: Option<Token![dyn]>,

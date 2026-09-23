@@ -2,12 +2,14 @@ use moxy_ast::{Cursor, Parse, ParseError, Parser};
 use moxy_token::{Delim, Group, Ident, Span, ToTokenStream, TokenStream, TokenTree};
 
 #[doc = "A parsed `paste!` body: a token tree where each `{{ ... }}` marker is collapsed to one identifier."]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug))]
 pub struct Paste {
     nodes: Vec<PasteNode>,
 }
 
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug))]
 enum PasteNode {
     Verbatim(TokenTree),
     Group(Delim, Vec<Self>),

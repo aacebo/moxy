@@ -4,7 +4,8 @@ use super::{LifetimePredicate, TypePredicate};
 use crate::*;
 
 /// A `where` clause predicate (lifetime or type).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum WherePredicate {
     Lifetime(LifetimePredicate),

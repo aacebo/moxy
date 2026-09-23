@@ -3,7 +3,8 @@ use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// Tuple-struct fields (`(A, B)`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldsUnnamed {
     pub fields: Delimited<Punctuated<Field, Token![,]>>,

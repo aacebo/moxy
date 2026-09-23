@@ -3,7 +3,8 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// A bare function pointer type (e.g. `fn(u8) -> u8`, `extern "C" fn()`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeBareFn {
     pub lifetimes: Option<BoundLifetimes>,
@@ -131,7 +132,8 @@ impl ToTokens for TypeBareFn {
 }
 
 /// An AST representation of Rust bare fn params syntax.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct BareFnParams {
     pub inputs: Punctuated<BareFnArg, Token![,]>,

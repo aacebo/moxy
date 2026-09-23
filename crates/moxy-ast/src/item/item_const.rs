@@ -5,7 +5,8 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::{Attributes, Expr, Generics, Ident, Type, Visibility};
 
 /// A constant item (`const NAME: Type = expr;`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemConst {
     pub attrs: Attributes,

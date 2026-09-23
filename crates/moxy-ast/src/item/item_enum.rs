@@ -5,7 +5,8 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::{Attributes, Delimited, Expr, Fields, Generics, Ident, Punctuated, Visibility};
 
 /// An enum item (`enum Name<T> { Variant, ... }`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemEnum {
     pub attrs: Attributes,
@@ -93,7 +94,8 @@ impl ToTokens for ItemEnum {
 }
 
 /// An enum variant (`Name`, `Name(T)`, `Name { x: T }`, `Name = 1`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Variant {
     pub attrs: Attributes,

@@ -3,7 +3,8 @@ use moxy_token::{Keyword, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 use crate::*;
 
 /// A single segment of a path (an identifier optionally followed by generic arguments).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PathSegment {
     pub ident: Ident,

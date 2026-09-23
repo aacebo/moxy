@@ -4,7 +4,8 @@ use super::Type;
 use crate::*;
 
 /// A fixed-size array type (`[T; N]`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeArray {
     pub content: Delimited<ArrayInner>,
@@ -40,7 +41,8 @@ impl ToTokens for TypeArray {
 }
 
 /// An AST representation of Rust array inner syntax.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ArrayInner {
     pub elem: Box<Type>,

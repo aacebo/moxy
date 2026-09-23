@@ -4,7 +4,8 @@ use super::{Receiver, Variadic};
 use crate::*;
 
 /// An AST representation of Rust fn params syntax.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FnParams {
     pub inputs: Punctuated<FnParam, Token![,]>,
@@ -32,7 +33,8 @@ impl ToTokens for FnParams {
 }
 
 /// A function parameter (receiver or typed pattern).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum FnParam {
     Receiver(Box<Receiver>),

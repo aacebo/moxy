@@ -6,7 +6,8 @@ use super::Type;
 use crate::Delimited;
 
 /// A parenthesized type (e.g. `(T)`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeParen {
     pub content: Delimited<Box<Type>>,

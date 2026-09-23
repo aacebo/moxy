@@ -4,7 +4,8 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::{Attributes, Signature, StmtBlock, Visibility};
 
 /// A free function item (`fn name(...) -> T { ... }`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemFn {
     pub attrs: Attributes,

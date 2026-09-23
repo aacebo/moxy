@@ -6,7 +6,8 @@ use moxy_ast::{Cursor, Parse, ParseError, Parser};
 use moxy_token::{Delim, Group, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 #[doc = "A template interpolation: `{{ expr }}`."]
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug))]
 pub struct TmplInterp {
     pub span: Span,
     pub expr: TokenStream,

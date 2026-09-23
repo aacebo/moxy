@@ -3,7 +3,8 @@ use moxy_token::{Keyword, Quote, Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// A named lifetime (e.g. `'a`, `'static`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Lifetime {
     pub quote: Quote,
@@ -41,7 +42,8 @@ impl ToTokens for Lifetime {
 }
 
 /// The name part of a lifetime (e.g. the `a` in `'a`, or the `static` in `'static`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LifetimeName {
     pub span: Span,

@@ -9,7 +9,8 @@ use moxy_token::{Group, Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Attribute {
     pub style: AttrStyle,
@@ -63,7 +64,8 @@ impl std::ops::Deref for Attribute {
 /// #[a(b)]
 /// #[a { .. }]
 /// ```
-#[derive(Debug, Default, Clone, PartialEq, Eq)]
+#[derive(Clone, Default)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(transparent))]
 pub struct Attributes(Vec<Attribute>);
 

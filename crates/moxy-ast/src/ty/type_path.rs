@@ -5,7 +5,8 @@ use super::QSelf;
 use crate::{Path, PathSegment};
 
 /// A path type (e.g. `T`, `std::vec::Vec`, `<T as Trait>::Item`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypePath {
     pub qself: Option<QSelf>,

@@ -3,7 +3,8 @@ use moxy_token::{Span, Spanner, ToTokens};
 use crate::*;
 
 /// A tagged AST representation of Rust declaration syntax.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(tag = "type", rename_all = "snake_case"))]
 pub enum Declaration {
     Enum(item::ItemEnum),

@@ -6,7 +6,8 @@ use super::Item;
 use crate::{Attributes, Delimited, Ident, Unsafety, Visibility};
 
 /// A module item (`mod foo;` or `mod foo { ... }`).
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemMod {
     pub attrs: Attributes,

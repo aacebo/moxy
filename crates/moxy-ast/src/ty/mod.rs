@@ -31,7 +31,8 @@ use moxy_token::{Delim, Group, Keyword, Punct, Span, Spanner, ToTokens, TokenStr
 use crate::*;
 
 /// A Rust type expression. Covers all positions where a type can appear in source code.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Type {
     Never(Token![!]),

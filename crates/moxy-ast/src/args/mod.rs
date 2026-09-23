@@ -19,7 +19,8 @@ pub use constraint_argument::*;
 pub use paren_arguments::*;
 
 /// A single generic argument inside `<...>`.
-#[derive(Debug, Clone, PartialEq, Eq)]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum GenericArgument {
     Lifetime(Lifetime),
