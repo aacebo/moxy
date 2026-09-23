@@ -23,4 +23,9 @@ token_format_impl! {
     DotDot,
     Underscore,
     Async,
+    Default,
+    Not,
+    Question,
+    Static,
+    Unsafe,
 }

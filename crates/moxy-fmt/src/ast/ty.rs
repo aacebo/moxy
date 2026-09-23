@@ -112,7 +112,7 @@ impl Format for TypeReference {
             f.text(" ")?;
         }
 
-        if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
+        if self.mutability.is_some() {
             f.text("mut ")?;
         }
 
@@ -142,7 +142,7 @@ impl Format for TypeBareFn {
 
         self.unsafety.format(f)?;
 
-        if matches!(self.unsafety, moxy_ast::Unsafety::Unsafe(_)) {
+        if self.unsafety.is_some() {
             f.text(" ")?;
         }
 

@@ -38,7 +38,7 @@ impl Format for PatIdent {
 
         self.mutability.format(f)?;
 
-        if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
+        if self.mutability.is_some() {
             f.text(" ")?;
         }
 
@@ -145,7 +145,7 @@ impl Format for PatReference {
         f.text("&")?;
         self.mutability.format(f)?;
 
-        if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
+        if self.mutability.is_some() {
             f.text(" ")?;
         }
 

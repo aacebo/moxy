@@ -191,13 +191,13 @@ impl Format for ExprClosure {
 
         self.constness.format(f)?;
 
-        if matches!(self.constness, moxy_ast::Constness::Const(_)) {
+        if self.constness.is_some() {
             f.text(" ")?;
         }
 
         self.movability.format(f)?;
 
-        if matches!(self.movability, moxy_ast::Movability::Static(_)) {
+        if self.movability.is_some() {
             f.text(" ")?;
         }
 
@@ -301,7 +301,7 @@ impl Format for ExprReference {
         f.text("&")?;
         self.mutability.format(f)?;
 
-        if matches!(self.mutability, moxy_ast::Mutability::Mutable(_)) {
+        if self.mutability.is_some() {
             f.text(" ")?;
         }
 

@@ -9,7 +9,7 @@ use crate::*;
 pub struct PatReference {
     pub attrs: Attributes,
     pub and: Token![&],
-    pub mutability: Mutability,
+    pub mutability: Option<Token![mut]>,
     pub pat: Box<Pattern>,
 }
 
@@ -37,7 +37,7 @@ impl Parse for PatReference {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = cursor.skip::<Token![&]>()?;
-        cursor = cursor.skip::<Mutability>()?;
+        cursor = cursor.skip::<Option<Token![mut]>>()?;
         cursor.skip::<Pattern>()
     }
 }

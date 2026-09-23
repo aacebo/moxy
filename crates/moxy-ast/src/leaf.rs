@@ -163,60 +163,11 @@ macro_rules! define_leaf {
 }
 
 define_leaf! {
-    /// Whether an item is `const`.
-/// A tagged AST representation of Rust constness syntax.
-    pub enum Constness {
-        Const => Token![const],
-        NoConst,
-    }
-
-    /// Whether an item is `unsafe`.
-/// A tagged AST representation of Rust unsafety syntax.
-    pub enum Unsafety {
-        Unsafe => Token![unsafe],
-        Safe,
-    }
-
-    /// Whether an impl item is `default`.
-/// A tagged AST representation of Rust defaultness syntax.
-    pub enum Defaultness {
-        Default => Token![default],
-        Final,
-    }
-
-    /// Whether a binding, reference, or pointer is `mut`.
-/// A tagged AST representation of Rust mutability syntax.
-    pub enum Mutability {
-        Mutable => Token![mut],
-        Immutable,
-    }
-
-    /// Whether a closure is `static` (immovable).
-/// A tagged AST representation of Rust movability syntax.
-    pub enum Movability {
-        Static => Token![static],
-        Movable,
-    }
-
     /// The limits of a range expression (`..` or `..=`).
 /// A tagged AST representation of Rust range limits syntax.
     pub enum RangeLimits {
         Closed => Token![..=],
         HalfOpen => Token![..],
-    }
-
-    /// A trait bound modifier (`?Sized`).
-/// A tagged AST representation of Rust trait bound modifier syntax.
-    pub enum TraitBoundModifier {
-        Maybe => Token![?],
-        None,
-    }
-
-    /// The polarity of a trait bound (`Trait` or `!Trait`).
-/// A tagged AST representation of Rust bound polarity syntax.
-    pub enum BoundPolarity {
-        Negative => Token![!],
-        Positive,
     }
 
     /// Whether a raw pointer is `*const` or `*mut`.

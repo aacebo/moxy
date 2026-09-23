@@ -28,7 +28,7 @@ fn async_generic_functions_preserve_bounds_references_and_return_types() {
 fn unsafe_extern_variadic_functions_render_exactly() {
     let item: Item = moxy::parse!("pub unsafe extern \"C\" fn log(format:*const u8,...)->i32{0}").unwrap();
     let function = item.as_fn().unwrap();
-    assert!(matches!(function.sig.unsafety, moxy::ast::Unsafety::Unsafe(_)));
+    assert!(function.sig.unsafety.is_some());
     assert!(function.sig.abi.is_some());
     assert!(function.sig.params.inner.variadic.is_some());
     assert_eq!(

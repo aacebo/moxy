@@ -3,7 +3,7 @@ use crate::{Parse, ParseError, Parser};
 use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use super::Item;
-use crate::{Attributes, Delimited, Ident, Unsafety, Visibility};
+use crate::{Attributes, Delimited, Ident, Visibility};
 
 /// A module item (`mod foo;` or `mod foo { ... }`).
 #[derive(Clone)]
@@ -12,7 +12,7 @@ use crate::{Attributes, Delimited, Ident, Unsafety, Visibility};
 pub struct ItemMod {
     pub attrs: Attributes,
     pub vis: Visibility,
-    pub unsafety: Unsafety,
+    pub unsafety: Option<Token![unsafe]>,
     pub mod_keyword: Token![mod],
     pub ident: Ident,
     pub content: Option<Delimited<Vec<Item>>>,
@@ -23,7 +23,7 @@ impl Parse for ItemMod {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        let cursor = Unsafety::skip(cursor).unwrap_or(cursor);
+        let cursor = cursor.skip::<Option<Token![unsafe]>>().unwrap_or(cursor);
         cursor.peek::<Token![mod]>()
     }
 
@@ -55,7 +55,7 @@ impl Parse for ItemMod {
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = Unsafety::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![unsafe]>>()?;
         cursor = cursor.skip::<Token![mod]>()?;
         cursor = cursor.skip::<Ident>()?;
 

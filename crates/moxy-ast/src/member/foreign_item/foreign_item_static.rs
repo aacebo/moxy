@@ -10,7 +10,7 @@ pub struct ForeignItemStatic {
     pub attrs: Attributes,
     pub vis: Visibility,
     pub static_keyword: Token![static],
-    pub mutability: Mutability,
+    pub mutability: Option<Token![mut]>,
     pub ident: Ident,
     pub colon: Token![:],
     pub ty: Type,
@@ -41,7 +41,7 @@ impl Parse for ForeignItemStatic {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
         cursor = cursor.skip::<Token![static]>()?;
-        cursor = Mutability::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![mut]>>()?;
         cursor = cursor.skip::<Ident>()?;
         cursor = cursor.skip::<Token![:]>()?;
         cursor = cursor.skip::<Type>()?;

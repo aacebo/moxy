@@ -8,7 +8,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeBareFn {
     pub lifetimes: Option<BoundLifetimes>,
-    pub unsafety: Unsafety,
+    pub unsafety: Option<Token![unsafe]>,
     pub abi: Option<Abi>,
     pub fn_keyword: Token![fn],
     pub params: Delimited<BareFnParams>,
@@ -71,7 +71,7 @@ impl Parse for TypeBareFn {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = BoundLifetimes::skip(cursor).unwrap_or(cursor);
-        cursor = Unsafety::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![unsafe]>>()?;
         cursor = cursor.skip::<Option<Abi>>()?;
         cursor = cursor.skip::<Token![fn]>()?;
         let mut inner = cursor.descend(moxy_token::Delim::Paren)?;
@@ -103,8 +103,8 @@ impl Spanner for TypeBareFn {
     fn span(&self) -> Span {
         let start = if let Some(l) = &self.lifetimes {
             l.span()
-        } else if !matches!(self.unsafety, Unsafety::Safe) {
-            self.unsafety.span()
+        } else if let Some(v) = &self.unsafety {
+            v.span()
         } else if let Some(abi) = &self.abi {
             abi.span()
         } else {

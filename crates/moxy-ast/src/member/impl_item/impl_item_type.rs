@@ -9,7 +9,7 @@ use crate::*;
 pub struct ImplItemType {
     pub attrs: Attributes,
     pub vis: Visibility,
-    pub defaultness: Defaultness,
+    pub defaultness: Option<Token![default]>,
     pub type_keyword: Token![type],
     pub ident: Ident,
     pub generics: Generics,
@@ -22,7 +22,7 @@ impl Parse for ImplItemType {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        let cursor = Defaultness::skip(cursor).unwrap_or(cursor);
+        let cursor = cursor.skip::<Option<Token![default]>>().unwrap_or(cursor);
         cursor.peek::<Token![type]>() && cursor.offset(1).peek::<Ident>()
     }
 
@@ -43,7 +43,7 @@ impl Parse for ImplItemType {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = Defaultness::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![default]>>()?;
         cursor = cursor.skip::<Token![type]>()?;
         cursor = cursor.skip::<Ident>()?;
         cursor = Generics::skip(cursor)?;

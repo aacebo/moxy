@@ -38,15 +38,15 @@ fn list(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
 fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     let mut closure = cursor;
     closure = BoundLifetimes::skip(closure).unwrap_or(closure);
-    closure = Constness::skip(closure)?;
-    closure = Movability::skip(closure)?;
+    closure = closure.skip::<Option<Token![const]>>()?;
+    closure = closure.skip::<Option<Token![static]>>()?;
     closure = closure.skip::<Option<Token![async]>>()?;
     closure = closure.skip::<Option<Token![move]>>()?;
 
     if closure.peek::<Token![||]>() || closure.peek::<Token![|]>() {
         cursor = BoundLifetimes::skip(cursor).unwrap_or(cursor);
-        cursor = Constness::skip(cursor)?;
-        cursor = Movability::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![const]>>()?;
+        cursor = cursor.skip::<Option<Token![static]>>()?;
         cursor = cursor.skip::<Option<Token![async]>>()?;
         cursor = cursor.skip::<Option<Token![move]>>()?;
 
@@ -321,7 +321,7 @@ fn unary(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     if cursor.peek::<Token![&]>() {
         return cursor
             .skip::<Token![&]>()?
-            .skip::<Mutability>()
+            .skip::<Option<Token![mut]>>()
             .and_then(|cursor| unary(cursor, context));
     }
 

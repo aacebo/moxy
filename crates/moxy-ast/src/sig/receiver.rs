@@ -10,7 +10,7 @@ pub struct Receiver {
     pub attrs: Attributes,
     pub reference: Option<Token![&]>,
     pub lifetime: Option<Lifetime>,
-    pub mutability: Mutability,
+    pub mutability: Option<Token![mut]>,
     pub self_keyword: Token![self],
 }
 
@@ -45,7 +45,7 @@ impl Parse for Receiver {
             cursor = cursor.skip::<Option<Lifetime>>()?;
         }
 
-        cursor = Mutability::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![mut]>>()?;
         cursor.skip::<Token![self]>()
     }
 }

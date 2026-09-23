@@ -9,8 +9,8 @@ use crate::*;
 pub struct ExprClosure {
     pub attrs: Attributes,
     pub lifetimes: Option<BoundLifetimes>,
-    pub constness: Constness,
-    pub movability: Movability,
+    pub constness: Option<Token![const]>,
+    pub movability: Option<Token![static]>,
     pub asyncness: Option<Token![async]>,
     pub capture: Option<Token![move]>,
     pub pipes: ClosurePipes,

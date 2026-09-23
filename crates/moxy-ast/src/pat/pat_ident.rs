@@ -9,7 +9,7 @@ use crate::*;
 pub struct PatIdent {
     pub attrs: Attributes,
     pub by_ref: Option<Token![ref]>,
-    pub mutability: Mutability,
+    pub mutability: Option<Token![mut]>,
     pub ident: Ident,
     pub subpat: Option<(Token![@], Box<Pattern>)>,
 }
@@ -62,7 +62,7 @@ impl Parse for PatIdent {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = cursor.skip::<Option<Token![ref]>>()?;
-        cursor = cursor.skip::<Mutability>()?;
+        cursor = cursor.skip::<Option<Token![mut]>>()?;
         cursor = cursor.skip::<Ident>()?;
 
         if cursor.peek::<Token![@]>() {

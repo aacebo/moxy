@@ -231,8 +231,8 @@ fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
 fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
     let mut closure_cursor = parser.cursor();
     closure_cursor = BoundLifetimes::skip(closure_cursor).unwrap_or(closure_cursor);
-    closure_cursor = Constness::skip(closure_cursor).unwrap_or(closure_cursor);
-    closure_cursor = Movability::skip(closure_cursor).unwrap_or(closure_cursor);
+    closure_cursor = closure_cursor.skip::<Option<Token![const]>>().unwrap_or(closure_cursor);
+    closure_cursor = closure_cursor.skip::<Option<Token![static]>>().unwrap_or(closure_cursor);
     closure_cursor = closure_cursor.skip::<Option<Token![async]>>().unwrap_or(closure_cursor);
     closure_cursor = Option::<Token![move]>::skip(closure_cursor).unwrap_or(closure_cursor);
 

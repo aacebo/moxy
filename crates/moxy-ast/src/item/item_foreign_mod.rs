@@ -1,7 +1,7 @@
 use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Abi, Attributes, Delimited, ForeignItem, Unsafety};
+use crate::{Abi, Attributes, Delimited, ForeignItem, Token};
 
 /// An `extern` block (`extern "C" { ... }`).
 #[derive(Clone)]
@@ -9,7 +9,7 @@ use crate::{Abi, Attributes, Delimited, ForeignItem, Unsafety};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ItemForeignMod {
     pub attrs: Attributes,
-    pub unsafety: Unsafety,
+    pub unsafety: Option<Token![unsafe]>,
     pub abi: Abi,
     pub items: Delimited<Vec<ForeignItem>>,
 }
@@ -17,7 +17,7 @@ pub struct ItemForeignMod {
 impl Parse for ItemForeignMod {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        let cursor = Unsafety::skip(cursor).unwrap_or(cursor);
+        let cursor = cursor.skip::<Option<Token![unsafe]>>().unwrap_or(cursor);
         let Some(cursor) = cursor.skip::<Abi>() else {
             return false;
         };
@@ -41,7 +41,7 @@ impl Parse for ItemForeignMod {
 
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = Unsafety::skip(cursor)?;
+        cursor = cursor.skip::<Option<Token![unsafe]>>()?;
         cursor = cursor.skip::<Abi>()?;
         let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
 
