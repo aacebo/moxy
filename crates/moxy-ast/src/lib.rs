@@ -39,7 +39,6 @@ pub mod generics;
 /// Item-level Rust syntax.
 pub mod item;
 mod label;
-mod leaf;
 mod macro_call;
 #[macro_use]
 mod macros;
@@ -90,8 +89,6 @@ pub use generics::{Generics, TraitRef, TypeBound, WhereClause, WherePredicate};
 pub use item::{Item, Variant};
 #[doc(inline)]
 pub use label::*;
-#[doc(inline)]
-pub use leaf::*;
 #[doc(inline)]
 pub use lifetime::*;
 #[doc(inline)]
