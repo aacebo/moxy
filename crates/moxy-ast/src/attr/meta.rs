@@ -113,7 +113,11 @@ impl Parse for MetaContent {
             return true;
         }
 
-        if cursor.peek::<Token![=]>() && !cursor.peek::<Token![==]>() && !cursor.peek::<Token![=>]>() && cursor.offset(1).peek::<Expr>() {
+        if cursor.peek::<Token![=]>()
+            && !cursor.peek::<Token![==]>()
+            && !cursor.peek::<Token![=>]>()
+            && cursor.offset(1).peek::<Expr>()
+        {
             return true;
         }
 
@@ -140,7 +144,11 @@ impl Parse for MetaContent {
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         if cursor.is_empty() {
             Some(cursor)
-        } else if cursor.peek::<Token![=]>() && !cursor.peek::<Token![==]>() && !cursor.peek::<Token![=>]>() && cursor.offset(1).peek::<Expr>() {
+        } else if cursor.peek::<Token![=]>()
+            && !cursor.peek::<Token![==]>()
+            && !cursor.peek::<Token![=>]>()
+            && cursor.offset(1).peek::<Expr>()
+        {
             cursor.skip::<Token![=]>()?;
             cursor.skip::<Expr>()
         } else if cursor.peek::<Group>() {

@@ -86,23 +86,23 @@ pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStr
     let mut tpl_meta_list = vec![];
     let mut debug_meta_list = vec![];
     let result = object.attrs().for_each(|attr| {
-        attr.for_each(|meta| {
-            if let Some(ident) = meta.path.as_ident() && ident == "moxy" {
-                meta.for_each(|meta| {
-                    if let Some(ident) = meta.path.as_ident() {
-                        if ident == "template" {
-                            tpl_meta_list.push(meta.clone());
-                        } else if ident == "debug" {
-                            debug_meta_list.push(meta.clone());
-                        }
+        if let Some(ident) = attr.path.as_ident()
+            && ident == "moxy"
+        {
+            attr.for_each(|meta| {
+                if let Some(ident) = meta.path.as_ident() {
+                    if ident == "template" {
+                        tpl_meta_list.push(meta.clone());
+                    } else if ident == "debug" {
+                        debug_meta_list.push(meta.clone());
                     }
+                }
 
-                    Ok(())
-                })?;
-            }
+                Ok(())
+            })?;
+        }
 
-            Ok(())
-        })
+        Ok(())
     });
 
     if let Err(err) = result {
@@ -115,11 +115,14 @@ pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStr
 
     let content = match &tpl_meta.content {
         MetaContent::List(v) if v.delim.is_brace() => &v.tokens,
-        _ => return tpl_meta.content
-            .span()
-            .error("template attribute must contain a code block `{ ... }`")
-            .emit()
-            .into(),
+        _ => {
+            return tpl_meta
+                .content
+                .span()
+                .error("template attribute must contain a code block `{ ... }`")
+                .emit()
+                .into();
+        }
     };
 
     let output = template! {
