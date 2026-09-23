@@ -42,7 +42,7 @@ jobs:
       - uses: actions/checkout@v5
       - uses: dtolnay/rust-toolchain@stable
       - name: Install Hyperfine
-        run: cargo install hyperfine --version 1.19 --locked
+        run: cargo install hyperfine --version 1.20.0 --locked
       - name: moxy[${{ matrix.variant }}]
         run: |
           hyperfine \
@@ -57,7 +57,7 @@ jobs:
             --warmup 1 \
             --prepare 'cargo clean --manifest-path benches/compile/${{ matrix.variant }}/Cargo.toml' \
             'cargo build --manifest-path benches/compile/${{ matrix.variant }}/Cargo.toml --features syn --release'
-      - name: Upload Compile Results
+      - name: Upload Results
         uses: actions/upload-artifact@v7
         with:
           name: compile-results-${{ matrix.variant }}

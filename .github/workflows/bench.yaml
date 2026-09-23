@@ -45,7 +45,7 @@ jobs:
       - uses: dtolnay/rust-toolchain@stable
       - uses: bencherdev/bencher@main
       - name: Install Hyperfine
-        run: cargo install hyperfine --version 1.19 --locked
+        run: cargo install hyperfine --version 1.20.0 --locked
       - name: moxy[${{ matrix.variant }}]
         run: |
           bencher run \
