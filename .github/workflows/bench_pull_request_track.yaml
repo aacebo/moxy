@@ -15,10 +15,19 @@ jobs:
     if: github.event.workflow_run.conclusion == 'success'
     steps:
       - uses: bencherdev/bencher@main
-      - name: Download benchmark results
+      - name: Download Results
         uses: actions/download-artifact@v4
         with:
           name: bench_results
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          run-id: ${{ github.event.workflow_run.id }}
+
+      - name: Download Compile Results
+        uses: actions/download-artifact@v4
+        with:
+          pattern: compile-results-*
+          path: compile-results
+          merge-multiple: true
           github-token: ${{ secrets.GITHUB_TOKEN }}
           run-id: ${{ github.event.workflow_run.id }}
 
@@ -56,3 +65,26 @@ jobs:
           --github-actions '${{ secrets.GITHUB_TOKEN }}' \
           --err \
           --file output.txt
+
+      - name: Track Compile
+        run: |
+          status=0
+
+          for file in compile-results/*.json; do
+            bencher run \
+              --project moxy \
+              --key '${{ secrets.BENCHER_API_TOKEN }}' \
+              --branch '${{ steps.pr.outputs.head_ref }}' \
+              --start-point master \
+              --start-point-clone-thresholds \
+              --testbed ubuntu-latest \
+              --adapter shell_hyperfine \
+              --threshold-measure latency \
+              --threshold-test t_test \
+              --threshold-upper-boundary 0.95 \
+              --github-actions '${{ secrets.GITHUB_TOKEN }}' \
+              --err \
+              --file "$file" || status=1
+          done
+
+          exit "$status"
