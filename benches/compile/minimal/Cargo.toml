@@ -1,0 +1,11 @@
+[package]
+name = "minimal"
+version = "0.0.0"
+
+[features]
+moxy = ["dep:moxy"]
+syn = ["dep:syn"]
+
+[dependencies]
+moxy = { path = "../../..", optional = true }
+syn = { version = "2", features = ["full"], optional = true }
