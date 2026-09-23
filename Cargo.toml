@@ -84,7 +84,7 @@ workspace = true
 
 [features]
 default = ["ast", "token"]
-derives = ["moxy-ast/derives"]
+derives = ["moxy-ast/derives", "moxy-template/derives"]
 full = ["ast", "token", "build", "fmt", "template", "derive", "diagnostic", "serde", "proc-macro2"]
 ast = ["dep:moxy-ast", "token"]
 build = ["dep:moxy-build"]
