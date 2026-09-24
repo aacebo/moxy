@@ -117,15 +117,15 @@ fn macro_rules_items_render_exact_valid_syntax() {
 #[test]
 fn template_and_paste_compiler_contracts_are_stable() {
     let cases = trybuild::TestCases::new();
-    cases.pass("tests/template/pass/*.rs");
-    cases.compile_fail("tests/template/fail/invalid_paste.rs");
+    cases.pass("fixtures/trybuild/template/pass/*.rs");
+    cases.compile_fail("fixtures/trybuild/template/fail/invalid_paste.rs");
 
-    let items = moxy::parse_files!("tests/template/pass/*.rs" as Vec<moxy::ast::Item>);
+    let items = moxy::parse_files!("fixtures/trybuild/template/pass/*.rs" as Vec<moxy::ast::Item>);
     assert_eq!(items.len(), 5);
 }
 
 #[test]
 fn malformed_template_compiler_contract_is_rejected() {
     let cases = trybuild::TestCases::new();
-    cases.compile_fail("tests/template/fail/malformed_template.rs");
+    cases.compile_fail("fixtures/trybuild/template/fail/malformed_template.rs");
 }

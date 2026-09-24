@@ -1,19 +1,19 @@
 use moxy::ast::{Expr, Item, Type};
 
-const ATTRIBUTES_DERIVES: &str = include_str!("../benches/parse/fixtures/attributes_derives.rs");
-const MIXED_ITEMS: &str = include_str!("../benches/parse/fixtures/mixed_items.rs");
-const LARGE_ITEMS: &str = include_str!("../benches/parse/fixtures/large_items.rs");
-const MACRO_HEAVY: &str = include_str!("../benches/parse/fixtures/macro_heavy.rs");
+const ATTRIBUTES_DERIVES: &str = include_str!("../fixtures/parse/item/attributes_derives.rs");
+const MIXED_ITEMS: &str = include_str!("../fixtures/parse/item/mixed_items.rs");
+const LARGE_ITEMS: &str = include_str!("../fixtures/parse/item/large_items.rs");
+const MACRO_HEAVY: &str = include_str!("../fixtures/parse/item/macro_heavy.rs");
 
-const CONTROL_FLOW_EXPR: &str = include_str!("../benches/parse/fixtures/control_flow_expr.rs");
+const CONTROL_FLOW_EXPR: &str = include_str!("../fixtures/parse/expr/control_flow.rs");
 
-const GENERIC_DEPTH_8: &str = include_str!("../benches/parse/fixtures/generic_depth_8.rs");
-const GENERIC_DEPTH_32: &str = include_str!("../benches/parse/fixtures/generic_depth_32.rs");
-const GENERIC_DEPTH_128: &str = include_str!("../benches/parse/fixtures/generic_depth_128.rs");
+const GENERIC_DEPTH_8: &str = include_str!("../fixtures/parse/type/generic_depth_8.rs");
+const GENERIC_DEPTH_32: &str = include_str!("../fixtures/parse/type/generic_depth_32.rs");
+const GENERIC_DEPTH_128: &str = include_str!("../fixtures/parse/type/generic_depth_128.rs");
 
-const INVALID_DEEP_GENERIC: &str = include_str!("../benches/parse/fixtures/invalid_deep_generic.rs");
-const INVALID_MACRO: &str = include_str!("../benches/parse/fixtures/invalid_macro.rs");
-const INVALID_LARGE_FILE_TAIL: &str = include_str!("../benches/parse/fixtures/invalid_large_file_tail.rs");
+const INVALID_DEEP_GENERIC: &str = include_str!("../fixtures/parse/invalid/deep_generic.rs");
+const INVALID_MACRO: &str = include_str!("../fixtures/parse/invalid/macro.rs");
+const INVALID_LARGE_FILE_TAIL: &str = include_str!("../fixtures/parse/invalid/large_file_tail.rs");
 
 #[test]
 fn attributes_derives_fixture_parses_as_items() {

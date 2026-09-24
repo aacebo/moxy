@@ -29,9 +29,9 @@ fn derive_output_completes_a_constant_syntax_pipeline() {
 #[test]
 fn derive_compiler_contracts_are_stable() {
     let cases = trybuild::TestCases::new();
-    cases.pass("tests/derive/pass/*.rs");
-    cases.compile_fail("tests/derive/fail/*.rs");
+    cases.pass("fixtures/trybuild/derive/pass/*.rs");
+    cases.compile_fail("fixtures/trybuild/derive/fail/*.rs");
 
-    let items = moxy::parse_files!("tests/template/pass/*.rs" as Vec<moxy::ast::Item>);
+    let items = moxy::parse_files!("fixtures/trybuild/template/pass/*.rs" as Vec<moxy::ast::Item>);
     assert_eq!(items.len(), 5);
 }

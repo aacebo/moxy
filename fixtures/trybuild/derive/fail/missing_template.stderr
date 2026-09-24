@@ -1,5 +1,5 @@
 error: template required
- --> tests/derive/fail/missing_template.rs:3:10
+ --> fixtures/trybuild/derive/fail/missing_template.rs:3:10
   |
 3 | #[derive(ToTokens)]
   |          ^^^^^^^^
