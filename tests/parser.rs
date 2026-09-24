@@ -74,6 +74,19 @@ fn public_parse_rejects_trailing_tokens() {
 }
 
 #[test]
+fn trace_reports_successful_and_failed_parses() {
+    let tokens = TokenStream::from_str("fn").unwrap();
+    let parser = Parser::from_tokens(&tokens).traceable();
+
+    let _: Token![fn] = parser.parse().unwrap();
+    assert!(parser.is_empty());
+
+    let tokens = TokenStream::from_str("fn").unwrap();
+    let parser = Parser::from_tokens(&tokens).traceable();
+    assert!(parser.parse::<Token![struct]>().is_err());
+}
+
+#[test]
 fn peek_suppresses_nested_trace_output() {
     const CHILD_ENV: &str = "MOXY_PEEK_TRACE_CHILD";
 
