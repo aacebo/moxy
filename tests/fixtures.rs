@@ -1,4 +1,7 @@
-use moxy::ast::{Expr, Item, Type};
+use std::{collections::BTreeSet, fs, path::Path};
+
+use moxy::ast::{Crate, Expr, Item, Lit, Pattern, Stmt, Type};
+use syn::parse::{Parse as _, Parser as _};
 
 const ATTRIBUTES_DERIVES: &str = include_str!("../fixtures/parse/item/attributes_derives.rs");
 const MIXED_ITEMS: &str = include_str!("../fixtures/parse/item/mixed_items.rs");
@@ -126,4 +129,164 @@ fn malformed_declaration_fixture_is_rejected_as_items() {
 fn malformed_expression_fixture_is_rejected_as_expression() {
     let result: Result<Expr, _> = moxy::parse!("if ready");
     assert!(result.is_err());
+}
+
+#[derive(serde::Deserialize)]
+struct GrammarMatrix {
+    entries: Vec<GrammarEntry>,
+}
+
+#[derive(serde::Deserialize)]
+struct GrammarEntry {
+    id: String,
+    reference: GrammarReference,
+    baseline: GrammarBaseline,
+    upstream: GrammarUpstream,
+    parse_root: String,
+    support_expectation: String,
+    fixture_directory: String,
+}
+
+#[derive(serde::Deserialize)]
+struct GrammarReference {
+    production: String,
+    anchor: String,
+}
+
+#[derive(serde::Deserialize)]
+struct GrammarBaseline {
+    toolchain: String,
+    edition: String,
+}
+
+#[derive(serde::Deserialize)]
+struct GrammarUpstream {
+    repository: String,
+    commit: String,
+    paths: Vec<String>,
+}
+
+fn parse_syn(root: &str, source: &str) -> bool {
+    match root {
+        "crate" => syn::parse_file(source).is_ok(),
+        "item" => syn::parse_str::<syn::Item>(source).is_ok(),
+        "expr" => syn::parse_str::<syn::Expr>(source).is_ok(),
+        "type" => syn::parse_str::<syn::Type>(source).is_ok(),
+        "pattern" => syn::Pat::parse_multi.parse_str(source).is_ok(),
+        "statement" => syn::Stmt::parse.parse_str(source).is_ok(),
+        "literal" => syn::parse_str::<syn::Lit>(source).is_ok(),
+        other => panic!("unknown grammar parse root `{other}`"),
+    }
+}
+
+fn parse_moxy(root: &str, source: &str) -> bool {
+    match root {
+        "crate" => moxy::parse!(source as Crate).is_ok(),
+        "item" => moxy::parse!(source as Item).is_ok(),
+        "expr" => moxy::parse!(source as Expr).is_ok(),
+        "type" => moxy::parse!(source as Type).is_ok(),
+        "pattern" => moxy::parse!(source as Pattern).is_ok(),
+        "statement" => moxy::parse!(source as Stmt).is_ok(),
+        "literal" => moxy::parse!(source as Lit).is_ok(),
+        other => panic!("unknown grammar parse root `{other}`"),
+    }
+}
+
+fn grammar_fixture_directories(root: &Path) -> BTreeSet<String> {
+    let mut directories = BTreeSet::new();
+
+    for family in fs::read_dir(root).unwrap() {
+        let family = family.unwrap().path();
+
+        if !family.is_dir() {
+            continue;
+        }
+
+        for form in fs::read_dir(&family).unwrap() {
+            let form = form.unwrap().path();
+
+            if form.is_dir() {
+                directories.insert(form.strip_prefix(env!("CARGO_MANIFEST_DIR")).unwrap().display().to_string());
+            }
+        }
+    }
+
+    directories
+}
+
+#[test]
+fn stable_rust_grammar_matrix_is_complete_and_conformant() {
+    let workspace = Path::new(env!("CARGO_MANIFEST_DIR"));
+    let matrix_path = workspace.join("fixtures/grammar/matrix.json");
+    let matrix: GrammarMatrix = serde_json::from_str(&fs::read_to_string(matrix_path).unwrap()).unwrap();
+    let mut ids = BTreeSet::new();
+    let mut tracked = BTreeSet::new();
+    let mut unsupported = Vec::new();
+
+    for entry in &matrix.entries {
+        assert!(ids.insert(&entry.id), "duplicate grammar matrix ID: {}", entry.id);
+        assert!(
+            !entry.reference.production.is_empty() && !entry.reference.anchor.is_empty(),
+            "{} lacks Rust Reference provenance",
+            entry.id
+        );
+        assert_eq!(
+            entry.baseline.toolchain, "stable",
+            "{} has the wrong toolchain baseline",
+            entry.id
+        );
+        assert_eq!(entry.baseline.edition, "2024", "{} has the wrong edition baseline", entry.id);
+        assert_eq!(
+            entry.upstream.repository, "rust-lang/rust",
+            "{} has the wrong upstream repository",
+            entry.id
+        );
+        assert!(
+            !entry.upstream.commit.is_empty(),
+            "{} lacks pinned rust-lang/rust commit",
+            entry.id
+        );
+        assert!(
+            !entry.upstream.paths.is_empty(),
+            "{} lacks rust-lang/rust UI provenance",
+            entry.id
+        );
+        assert_eq!(
+            entry.support_expectation, "moxy_accepts",
+            "{} has an unknown support expectation",
+            entry.id
+        );
+
+        let directory = workspace.join(&entry.fixture_directory);
+        assert!(
+            tracked.insert(entry.fixture_directory.clone()),
+            "duplicate grammar fixture directory: {}",
+            entry.fixture_directory
+        );
+
+        let pass = fs::read_to_string(directory.join("pass.rs")).unwrap_or_else(|_| panic!("{} is missing pass.rs", entry.id));
+        let fail = fs::read_to_string(directory.join("fail.rs")).unwrap_or_else(|_| panic!("{} is missing fail.rs", entry.id));
+        let context = format!(
+            "{} ({}, rust-lang/rust@{}:{})",
+            entry.id,
+            entry.reference.production,
+            entry.upstream.commit,
+            entry.upstream.paths.join(", ")
+        );
+
+        assert!(parse_syn(&entry.parse_root, &pass), "syn rejected pass fixture: {context}");
+        assert!(!parse_syn(&entry.parse_root, &fail), "syn accepted fail fixture: {context}");
+
+        if !parse_moxy(&entry.parse_root, &pass) {
+            unsupported.push(context);
+        }
+    }
+
+    let discovered = grammar_fixture_directories(&workspace.join("fixtures/grammar"));
+    assert_eq!(tracked, discovered, "untracked or missing grammar fixture directory");
+    assert!(
+        unsupported.is_empty(),
+        "moxy does not yet support stable syntax:\n{}",
+        unsupported.join("\n")
+    );
 }

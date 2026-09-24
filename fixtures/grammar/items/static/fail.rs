@@ -1,0 +1,1 @@
+static VALUE: u32 =;

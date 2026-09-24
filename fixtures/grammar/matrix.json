@@ -1,0 +1,2337 @@
+{
+    "schema_version": 1,
+    "description": "Curated minimal stable-Rust grammar fixtures. Syntax validity is measured by syn at the declared root; UI paths are provenance only.",
+    "entries": [
+        {
+            "id": "lexer.boolean-literal",
+            "reference": {
+                "production": "Tokens > Literals",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "literal",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/lexer/boolean-literal"
+        },
+        {
+            "id": "lexer.integer-literal",
+            "reference": {
+                "production": "Tokens > Literals",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "literal",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/lexer/integer-literal"
+        },
+        {
+            "id": "lexer.float-literal",
+            "reference": {
+                "production": "Tokens > Literals",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "literal",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/lexer/float-literal"
+        },
+        {
+            "id": "lexer.char-literal",
+            "reference": {
+                "production": "Tokens > Literals",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/ascii-only-character-escape.rs"
+                ]
+            },
+            "parse_root": "literal",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/lexer/char-literal"
+        },
+        {
+            "id": "lexer.string-literal",
+            "reference": {
+                "production": "Tokens > Literals",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "literal",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/lexer/string-literal"
+        },
+        {
+            "id": "lexer.byte-literal",
+            "reference": {
+                "production": "Tokens > Literals",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "literal",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/lexer/byte-literal"
+        },
+        {
+            "id": "lexer.c-string-literal",
+            "reference": {
+                "production": "Tokens > Literals",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "literal",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/lexer/c-string-literal"
+        },
+        {
+            "id": "attributes.outer-attribute",
+            "reference": {
+                "production": "Attributes > Syntax",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/attribute/attr-bad-meta.rs"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/attributes/outer-attribute"
+        },
+        {
+            "id": "attributes.inner-attribute",
+            "reference": {
+                "production": "Attributes > Inner attributes",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/attributes/attr-bad-crate-attr.rs"
+                ]
+            },
+            "parse_root": "crate",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/attributes/inner-attribute"
+        },
+        {
+            "id": "visibility.public",
+            "reference": {
+                "production": "Visibility and privacy > Syntax",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/visibility/public"
+        },
+        {
+            "id": "visibility.restricted",
+            "reference": {
+                "production": "Visibility and privacy > pub(in path)",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/visibility/restricted"
+        },
+        {
+            "id": "items.use-group",
+            "reference": {
+                "production": "Items > Use declarations",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/use-group"
+        },
+        {
+            "id": "items.extern-crate",
+            "reference": {
+                "production": "Items > Extern crate declarations",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/extern-crate"
+        },
+        {
+            "id": "items.inline-module",
+            "reference": {
+                "production": "Items > Modules",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/inline-module"
+        },
+        {
+            "id": "items.foreign-module",
+            "reference": {
+                "production": "Items > External blocks",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/foreign-module"
+        },
+        {
+            "id": "items.function",
+            "reference": {
+                "production": "Items > Functions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/function"
+        },
+        {
+            "id": "items.named-struct",
+            "reference": {
+                "production": "Items > Structs",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/named-struct"
+        },
+        {
+            "id": "items.tuple-struct",
+            "reference": {
+                "production": "Items > Structs",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/tuple-struct"
+        },
+        {
+            "id": "items.unit-struct",
+            "reference": {
+                "production": "Items > Structs",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/unit-struct"
+        },
+        {
+            "id": "items.enum",
+            "reference": {
+                "production": "Items > Enumerations",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/enum"
+        },
+        {
+            "id": "items.union",
+            "reference": {
+                "production": "Items > Unions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/union"
+        },
+        {
+            "id": "items.const",
+            "reference": {
+                "production": "Items > Constant items",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/const"
+        },
+        {
+            "id": "items.static",
+            "reference": {
+                "production": "Items > Static items",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/static"
+        },
+        {
+            "id": "items.trait",
+            "reference": {
+                "production": "Items > Traits",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/trait"
+        },
+        {
+            "id": "items.implementation",
+            "reference": {
+                "production": "Items > Implementations",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/implementation"
+        },
+        {
+            "id": "items.type-alias",
+            "reference": {
+                "production": "Items > Type aliases",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/type-alias"
+        },
+        {
+            "id": "items.macro-rules",
+            "reference": {
+                "production": "Macros > Declarative macros",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/macro-rules"
+        },
+        {
+            "id": "items.macro-invocation",
+            "reference": {
+                "production": "Macros > Macros by example",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/macro-invocation"
+        },
+        {
+            "id": "generics.parameters",
+            "reference": {
+                "production": "Generic parameters > Syntax",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/accept-lifetime-list-empty-or-trailing-comma.rs"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/generics/parameters"
+        },
+        {
+            "id": "generics.where-clause",
+            "reference": {
+                "production": "Generic parameters > Where clauses",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/generics/where-clause"
+        },
+        {
+            "id": "generics.hrtb",
+            "reference": {
+                "production": "Trait and lifetime bounds > Higher-ranked trait bounds",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/assoc/associated-types-project-from-hrtb-explicit.rs"
+                ]
+            },
+            "parse_root": "type",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/generics/hrtb"
+        },
+        {
+            "id": "paths.qualified-path",
+            "reference": {
+                "production": "Paths > Qualified paths",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/associated-path-shl.rs"
+                ]
+            },
+            "parse_root": "type",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/paths/qualified-path"
+        },
+        {
+            "id": "paths.turbofish",
+            "reference": {
+                "production": "Paths > Paths in expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/paths/turbofish"
+        },
+        {
+            "id": "types.path",
+            "reference": {
+                "production": "Types > Path types",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "type",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/types/path"
+        },
+        {
+            "id": "types.reference",
+            "reference": {
+                "production": "Types > Pointer types",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "type",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/types/reference"
+        },
+        {
+            "id": "types.raw-pointer",
+            "reference": {
+                "production": "Types > Pointer types",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "type",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/types/raw-pointer"
+        },
+        {
+            "id": "types.array",
+            "reference": {
+                "production": "Types > Array types",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "type",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/types/array"
+        },
+        {
+            "id": "types.slice",
+            "reference": {
+                "production": "Types > Slice types",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "type",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/types/slice"
+        },
+        {
+            "id": "types.tuple",
+            "reference": {
+                "production": "Types > Tuple types",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "type",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/types/tuple"
+        },
+        {
+            "id": "types.bare-function",
+            "reference": {
+                "production": "Types > Function pointer types",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "type",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/types/bare-function"
+        },
+        {
+            "id": "types.trait-object",
+            "reference": {
+                "production": "Types > Trait objects",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "type",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/types/trait-object"
+        },
+        {
+            "id": "types.impl-trait",
+            "reference": {
+                "production": "Types > Impl trait",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "type",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/types/impl-trait"
+        },
+        {
+            "id": "types.never",
+            "reference": {
+                "production": "Types > Never type",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "type",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/types/never"
+        },
+        {
+            "id": "patterns.wildcard",
+            "reference": {
+                "production": "Patterns > Wildcard pattern",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/pattern/"
+                ]
+            },
+            "parse_root": "pattern",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/patterns/wildcard"
+        },
+        {
+            "id": "patterns.identifier",
+            "reference": {
+                "production": "Patterns > Identifier patterns",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/pattern/"
+                ]
+            },
+            "parse_root": "pattern",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/patterns/identifier"
+        },
+        {
+            "id": "patterns.tuple",
+            "reference": {
+                "production": "Patterns > Tuple patterns",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/pattern/"
+                ]
+            },
+            "parse_root": "pattern",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/patterns/tuple"
+        },
+        {
+            "id": "patterns.tuple-struct",
+            "reference": {
+                "production": "Patterns > Tuple struct patterns",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/pattern/"
+                ]
+            },
+            "parse_root": "pattern",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/patterns/tuple-struct"
+        },
+        {
+            "id": "patterns.struct",
+            "reference": {
+                "production": "Patterns > Struct patterns",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/pattern/at-in-struct-patterns.rs"
+                ]
+            },
+            "parse_root": "pattern",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/patterns/struct"
+        },
+        {
+            "id": "patterns.slice",
+            "reference": {
+                "production": "Patterns > Slice patterns",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/pattern/"
+                ]
+            },
+            "parse_root": "pattern",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/patterns/slice"
+        },
+        {
+            "id": "patterns.reference",
+            "reference": {
+                "production": "Patterns > Reference patterns",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/pattern/"
+                ]
+            },
+            "parse_root": "pattern",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/patterns/reference"
+        },
+        {
+            "id": "patterns.or",
+            "reference": {
+                "production": "Patterns > Or-patterns",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/pattern/"
+                ]
+            },
+            "parse_root": "pattern",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/patterns/or"
+        },
+        {
+            "id": "patterns.range",
+            "reference": {
+                "production": "Patterns > Range patterns",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/pattern/"
+                ]
+            },
+            "parse_root": "pattern",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/patterns/range"
+        },
+        {
+            "id": "patterns.literal",
+            "reference": {
+                "production": "Patterns > Literal patterns",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/pattern/"
+                ]
+            },
+            "parse_root": "pattern",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/patterns/literal"
+        },
+        {
+            "id": "expressions.block",
+            "reference": {
+                "production": "Expressions > Block expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/block"
+        },
+        {
+            "id": "expressions.if-let",
+            "reference": {
+                "production": "Expressions > If expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/if-let"
+        },
+        {
+            "id": "expressions.match",
+            "reference": {
+                "production": "Expressions > Match expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/match"
+        },
+        {
+            "id": "expressions.loop",
+            "reference": {
+                "production": "Expressions > Loop expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/loop"
+        },
+        {
+            "id": "expressions.while",
+            "reference": {
+                "production": "Expressions > While expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/while"
+        },
+        {
+            "id": "expressions.for",
+            "reference": {
+                "production": "Expressions > For expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/for"
+        },
+        {
+            "id": "expressions.closure",
+            "reference": {
+                "production": "Expressions > Closure expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/closure"
+        },
+        {
+            "id": "expressions.async",
+            "reference": {
+                "production": "Expressions > Async blocks",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/async-with-nonterminal-block.rs"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/async"
+        },
+        {
+            "id": "expressions.call",
+            "reference": {
+                "production": "Expressions > Call expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/call"
+        },
+        {
+            "id": "expressions.method-call",
+            "reference": {
+                "production": "Expressions > Method call expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/method-call"
+        },
+        {
+            "id": "expressions.index",
+            "reference": {
+                "production": "Expressions > Index expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/index"
+        },
+        {
+            "id": "expressions.field",
+            "reference": {
+                "production": "Expressions > Field expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/field"
+        },
+        {
+            "id": "expressions.operators",
+            "reference": {
+                "production": "Expressions > Operator expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/operators"
+        },
+        {
+            "id": "expressions.range",
+            "reference": {
+                "production": "Expressions > Range expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/range"
+        },
+        {
+            "id": "expressions.struct",
+            "reference": {
+                "production": "Expressions > Struct expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/struct"
+        },
+        {
+            "id": "expressions.array",
+            "reference": {
+                "production": "Expressions > Array expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/array"
+        },
+        {
+            "id": "expressions.repeat",
+            "reference": {
+                "production": "Expressions > Array expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/repeat"
+        },
+        {
+            "id": "expressions.cast",
+            "reference": {
+                "production": "Expressions > Type cast expressions",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/as-precedence.rs"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/cast"
+        },
+        {
+            "id": "statements.local",
+            "reference": {
+                "production": "Statements > Let statements",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "statement",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/statements/local"
+        },
+        {
+            "id": "statements.expression",
+            "reference": {
+                "production": "Statements > Expression statements",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "statement",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/statements/expression"
+        },
+        {
+            "id": "statements.item",
+            "reference": {
+                "production": "Statements > Item declarations",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "statement",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/statements/item"
+        },
+        {
+            "id": "macros.tt-delimiters",
+            "reference": {
+                "production": "Macros > Token trees",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/macros/tt-delimiters"
+        },
+        {
+            "id": "macros.metavariables",
+            "reference": {
+                "production": "Macros > Metavariables",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/macros/metavariables"
+        },
+        {
+            "id": "crate.inner-attrs-and-items",
+            "reference": {
+                "production": "Crates and source files > Crate",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/attributes/attr-mix-new.rs"
+                ]
+            },
+            "parse_root": "crate",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/crate/inner-attrs-and-items"
+        },
+        {
+            "id": "crate.shebang",
+            "reference": {
+                "production": "Crates and source files > Shebang removal",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/attributes/attr-shebang.rs"
+                ]
+            },
+            "parse_root": "crate",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/crate/shebang"
+        },
+        {
+            "id": "attributes.meta-name-value",
+            "reference": {
+                "production": "Rust Reference grammar: attributes/meta-name-value",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/attributes/meta-name-value"
+        },
+        {
+            "id": "attributes.meta-list",
+            "reference": {
+                "production": "Rust Reference grammar: attributes/meta-list",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/attributes/meta-list"
+        },
+        {
+            "id": "visibility.self",
+            "reference": {
+                "production": "Rust Reference grammar: visibility/self",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/visibility/self"
+        },
+        {
+            "id": "visibility.super",
+            "reference": {
+                "production": "Rust Reference grammar: visibility/super",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/visibility/super"
+        },
+        {
+            "id": "items.module-declaration",
+            "reference": {
+                "production": "Rust Reference grammar: items/module-declaration",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/module-declaration"
+        },
+        {
+            "id": "items.associated-const",
+            "reference": {
+                "production": "Rust Reference grammar: items/associated-const",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/associated-const"
+        },
+        {
+            "id": "items.associated-type",
+            "reference": {
+                "production": "Rust Reference grammar: items/associated-type",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/items/associated-type"
+        },
+        {
+            "id": "generics.type-default",
+            "reference": {
+                "production": "Rust Reference grammar: generics/type-default",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/generics/type-default"
+        },
+        {
+            "id": "generics.const-default",
+            "reference": {
+                "production": "Rust Reference grammar: generics/const-default",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/generics/const-default"
+        },
+        {
+            "id": "paths.absolute",
+            "reference": {
+                "production": "Rust Reference grammar: paths/absolute",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "type",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/paths/absolute"
+        },
+        {
+            "id": "types.parenthesized",
+            "reference": {
+                "production": "Rust Reference grammar: types/parenthesized",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "type",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/types/parenthesized"
+        },
+        {
+            "id": "types.macro",
+            "reference": {
+                "production": "Rust Reference grammar: types/macro",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "type",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/types/macro"
+        },
+        {
+            "id": "types.inferred",
+            "reference": {
+                "production": "Rust Reference grammar: types/inferred",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "type",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/types/inferred"
+        },
+        {
+            "id": "patterns.path",
+            "reference": {
+                "production": "Rust Reference grammar: patterns/path",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "pattern",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/patterns/path"
+        },
+        {
+            "id": "patterns.rest",
+            "reference": {
+                "production": "Rust Reference grammar: patterns/rest",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "pattern",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/patterns/rest"
+        },
+        {
+            "id": "patterns.type-ascription",
+            "reference": {
+                "production": "Rust Reference grammar: patterns/type-ascription",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "statement",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/patterns/type-ascription"
+        },
+        {
+            "id": "patterns.parenthesized",
+            "reference": {
+                "production": "Rust Reference grammar: patterns/parenthesized",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "pattern",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/patterns/parenthesized"
+        },
+        {
+            "id": "expressions.path",
+            "reference": {
+                "production": "Rust Reference grammar: expressions/path",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/path"
+        },
+        {
+            "id": "expressions.literal",
+            "reference": {
+                "production": "Rust Reference grammar: expressions/literal",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/literal"
+        },
+        {
+            "id": "expressions.return",
+            "reference": {
+                "production": "Rust Reference grammar: expressions/return",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/return"
+        },
+        {
+            "id": "expressions.break",
+            "reference": {
+                "production": "Rust Reference grammar: expressions/break",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/break"
+        },
+        {
+            "id": "expressions.continue",
+            "reference": {
+                "production": "Rust Reference grammar: expressions/continue",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/continue"
+        },
+        {
+            "id": "expressions.yield",
+            "reference": {
+                "production": "Rust Reference grammar: expressions/yield",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/yield"
+        },
+        {
+            "id": "expressions.unsafe",
+            "reference": {
+                "production": "Rust Reference grammar: expressions/unsafe",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/unsafe"
+        },
+        {
+            "id": "expressions.const-block",
+            "reference": {
+                "production": "Rust Reference grammar: expressions/const-block",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/const-block"
+        },
+        {
+            "id": "expressions.reference",
+            "reference": {
+                "production": "Rust Reference grammar: expressions/reference",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/reference"
+        },
+        {
+            "id": "expressions.deref",
+            "reference": {
+                "production": "Rust Reference grammar: expressions/deref",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/deref"
+        },
+        {
+            "id": "expressions.assignment",
+            "reference": {
+                "production": "Rust Reference grammar: expressions/assignment",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/assignment"
+        },
+        {
+            "id": "expressions.compound-assignment",
+            "reference": {
+                "production": "Rust Reference grammar: expressions/compound-assignment",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/compound-assignment"
+        },
+        {
+            "id": "expressions.try",
+            "reference": {
+                "production": "Rust Reference grammar: expressions/try",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/try"
+        },
+        {
+            "id": "expressions.let",
+            "reference": {
+                "production": "Rust Reference grammar: expressions/let",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/let"
+        },
+        {
+            "id": "statements.macro",
+            "reference": {
+                "production": "Rust Reference grammar: statements/macro",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "statement",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/statements/macro"
+        },
+        {
+            "id": "macros.repetition-separator",
+            "reference": {
+                "production": "Rust Reference grammar: macros/repetition-separator",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/parser/"
+                ]
+            },
+            "parse_root": "item",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/macros/repetition-separator"
+        }
+    ]
+}
