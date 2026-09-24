@@ -1,6 +1,4 @@
-use moxy_token::{
-    Lit, LitBool, LitByte, LitByteStr, LitCStr, LitChar, LitF32, LitF64, LitFloat, LitInt, LitStr, LitVerbatim, TokenTree,
-};
+use moxy_token::{Lit, LitFloat, TokenTree, lit};
 
 use crate::{Cursor, Parse, ParseError, Parser};
 
@@ -25,7 +23,7 @@ impl Parse for Lit {
     }
 }
 
-impl Parse for LitF32 {
+impl Parse for lit::LitF32 {
     fn peek(cursor: Cursor<'_>) -> bool {
         matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Float(LitFloat::F32(_)))))
     }
@@ -42,7 +40,7 @@ impl Parse for LitF32 {
     }
 }
 
-impl Parse for LitF64 {
+impl Parse for lit::LitF64 {
     fn peek(cursor: Cursor<'_>) -> bool {
         matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Float(LitFloat::F64(_)))))
     }
@@ -59,41 +57,155 @@ impl Parse for LitF64 {
     }
 }
 
-macro_rules! impl_lit_parse {
-    ($($ty:ty => $variant:ident, $name:literal),* $(,)?) => {
-        $(
-            impl Parse for $ty {
-                fn peek(cursor: Cursor<'_>) -> bool {
-                    let Some(next) = cursor.curr() else {
-                        return false;
-                    };
+impl Parse for lit::LitInt {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Int(_))))
+    }
 
-                    matches!(next, TokenTree::Literal(Lit::$variant(_)))
-                }
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Lit::Int(value) => Ok(value),
+            _ => Err(parser.error("expected integer literal")),
+        }
+    }
 
-                fn parse(parser: &Parser) -> Result<Self, ParseError> {
-                    match parser.parse()? {
-                        Lit::$variant(v) => Ok(v),
-                        _ => Err(parser.error(concat!("expected ", $name, " literal"))),
-                    }
-                }
-
-                fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-                    Self::peek(cursor).then(|| cursor.offset(1))
-                }
-            }
-        )*
-    };
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
 }
 
-impl_lit_parse! {
-    LitInt      => Int,      "integer",
-    LitFloat    => Float,    "float",
-    LitStr      => Str,      "string",
-    LitByteStr  => ByteStr,  "byte string",
-    LitCStr     => CStr,     "C string",
-    LitChar     => Char,     "character",
-    LitByte     => Byte,     "byte",
-    LitBool     => Bool,     "boolean",
-    LitVerbatim => Verbatim, "verbatim",
+impl Parse for lit::LitFloat {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Float(_))))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Lit::Float(value) => Ok(value),
+            _ => Err(parser.error("expected float literal")),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for lit::LitStr {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Str(_))))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Lit::Str(value) => Ok(value),
+            _ => Err(parser.error("expected string literal")),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for lit::LitByteStr {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        matches!(cursor.curr(), Some(TokenTree::Literal(Lit::ByteStr(_))))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Lit::ByteStr(value) => Ok(value),
+            _ => Err(parser.error("expected byte string literal")),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for lit::LitCStr {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        matches!(cursor.curr(), Some(TokenTree::Literal(Lit::CStr(_))))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Lit::CStr(value) => Ok(value),
+            _ => Err(parser.error("expected C string literal")),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for lit::LitChar {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Char(_))))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Lit::Char(value) => Ok(value),
+            _ => Err(parser.error("expected character literal")),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for lit::LitByte {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Byte(_))))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Lit::Byte(value) => Ok(value),
+            _ => Err(parser.error("expected byte literal")),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for lit::LitBool {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Bool(_))))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Lit::Bool(value) => Ok(value),
+            _ => Err(parser.error("expected boolean literal")),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for lit::LitVerbatim {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Verbatim(_))))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Lit::Verbatim(value) => Ok(value),
+            _ => Err(parser.error("expected verbatim literal")),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
 }

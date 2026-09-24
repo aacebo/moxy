@@ -39,7 +39,7 @@ mod ident;
 pub mod keyword;
 /// Lexing primitives and lexical errors.
 pub mod lex;
-mod lit;
+pub mod lit;
 /// Rust punctuation token types.
 pub mod punct;
 /// Source files, locations, and source maps used by spans.

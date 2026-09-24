@@ -23,58 +23,485 @@ impl Parse for Punct {
     }
 }
 
-macro_rules! impl_punct_parse {
-    ($($name:ident),* $(,)?) => {
-        $(
-            impl Parse for punct::$name {
-                fn peek(cursor: Cursor<'_>) -> bool {
-                    let Some(next) = cursor.curr() else {
-                        return false;
-                    };
+impl Parse for punct::And {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
 
-                    matches!(
-                        next,
-                        TokenTree::Punct(Punct::$name(_)),
-                    )
-                }
+        matches!(next, TokenTree::Punct(Punct::And(_)))
+    }
 
-                fn parse(parser: &Parser) -> Result<Self, ParseError> {
-                    match parser.parse()? {
-                        Punct::$name(v) => Ok(v),
-                        _ => parser.error(format!("expected `{}` punctuation", punct::$name::TEXT)).into(),
-                    }
-                }
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::And(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::And::TEXT))),
+        }
+    }
 
-                fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-                    Self::peek(cursor).then(|| cursor.offset(1))
-                }
-            }
-        )*
-    };
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
 }
 
-impl_punct_parse! {
-    And,
-    Or,
-    Not,
-    Tilde,
-    Plus,
-    Minus,
-    Star,
-    Slash,
-    Percent,
-    Caret,
-    Eq,
-    Lt,
-    Gt,
-    At,
-    Dot,
-    Comma,
-    Semi,
-    Colon,
-    Pound,
-    Dollar,
-    Question,
-    Quote,
-    Underscore,
+impl Parse for punct::Or {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Or(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Or(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Or::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Not {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Not(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Not(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Not::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Tilde {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Tilde(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Tilde(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Tilde::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Plus {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Plus(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Plus(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Plus::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Minus {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Minus(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Minus(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Minus::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Star {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Star(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Star(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Star::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Slash {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Slash(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Slash(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Slash::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Percent {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Percent(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Percent(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Percent::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Caret {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Caret(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Caret(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Caret::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Eq {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Eq(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Eq(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Eq::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Lt {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Lt(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Lt(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Lt::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Gt {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Gt(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Gt(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Gt::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::At {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::At(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::At(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::At::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Dot {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Dot(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Dot(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Dot::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Comma {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Comma(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Comma(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Comma::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Semi {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Semi(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Semi(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Semi::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Colon {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Colon(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Colon(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Colon::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Pound {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Pound(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Pound(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Pound::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Dollar {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Dollar(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Dollar(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Dollar::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Question {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Question(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Question(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Question::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Quote {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Quote(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Quote(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Quote::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
+impl Parse for punct::Underscore {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Punct(Punct::Underscore(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.parse()? {
+            Punct::Underscore(value) => Ok(value),
+            _ => Err(parser.error(format!("expected `{}` punctuation", punct::Underscore::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
 }
