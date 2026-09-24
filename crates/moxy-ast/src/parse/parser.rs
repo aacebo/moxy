@@ -147,40 +147,9 @@ impl<'a> Parser<'a> {
 impl Parser<'_> {
     pub fn parse<T: Parse>(&self) -> Result<T, ParseError> {
         let name = std::any::type_name::<T>();
-
-        if self.config.trace {
-            println!(
-                "{}{}-> {} @ ln {}, col {}{}",
-                " ".repeat(self.depth),
-                Ansi::Blue,
-                name,
-                self.span().start().line(),
-                self.span().start().column(),
-                Ansi::Reset,
-            );
-        }
-
         let fork = self.fork();
         let value = T::parse(&fork);
-
-        if self.config.trace {
-            let (color, span) = if value.is_ok() {
-                (Ansi::Green, fork.span())
-            } else {
-                (Ansi::Red, self.span())
-            };
-
-            println!(
-                "{}{}<- {} @ ln {}, col {}{}",
-                " ".repeat(self.depth),
-                color,
-                name,
-                span.end().line(),
-                span.end().column(),
-                Ansi::Reset,
-            );
-        }
-
+        self.trace_start(name, fork.span(), value.is_ok());
         let value = value?;
         self.seek(&fork);
         Ok(value)
@@ -243,5 +212,26 @@ impl<'a> Parser<'a> {
 impl<'a> ToTokens for Parser<'a> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.cursor.get().to_tokens(tokens);
+    }
+}
+
+impl Parser<'_> {
+    #[inline(never)]
+    fn trace_start(&self, name: &str, span: Span, ok: bool) {
+        let (color, span) = if ok {
+            (Ansi::Green, span)
+        } else {
+            (Ansi::Red, self.span())
+        };
+
+        println!(
+            "{}{}<- {} @ ln {}, col {}{}",
+            " ".repeat(self.depth),
+            color,
+            name,
+            span.end().line(),
+            span.end().column(),
+            Ansi::Reset,
+        );
     }
 }
