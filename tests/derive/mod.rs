@@ -32,6 +32,8 @@ fn derive_compiler_contracts_are_stable() {
     cases.pass("fixtures/trybuild/derive/pass/*.rs");
     cases.compile_fail("fixtures/trybuild/derive/fail/*.rs");
 
-    let items = moxy::parse_files!("fixtures/trybuild/template/pass/*.rs" as Vec<moxy::ast::Item>);
-    assert_eq!(items.len(), 5);
+    let files = moxy::parse_files!("fixtures/trybuild/template/pass/*.rs");
+    assert_eq!(files.len(), 2);
+    assert!(files.iter().all(|file| !file.items.is_empty()));
+    assert_eq!(files.iter().map(|file| file.items.len()).sum::<usize>(), 5);
 }

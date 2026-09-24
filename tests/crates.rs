@@ -1,4 +1,4 @@
-use moxy::ast::Crate;
+use moxy::ast::{Crate, File};
 use moxy::token::{Spanner, ToTokenStream};
 
 #[test]
@@ -65,4 +65,38 @@ fn visitors_traverse_real_crate_syntax_before_exact_rendering() {
         moxy::fmt!(&krate).unwrap(),
         "struct First {\n\tvalue: u8,\n}\n\nstruct Second<T> {\n\tvalue: T,\n}\n\nfn consume(value: Second<u8>) {\n\tlet _ = value;\n}"
     );
+}
+
+#[test]
+fn files_preserve_shebangs_and_inner_attributes() {
+    let source = "#!/usr/bin/env rustx\n#![allow(dead_code)]\nstruct Entry;";
+    let file: File = moxy::parse!(source).unwrap();
+
+    assert_eq!(file.shebang.as_ref().unwrap().ident.clone().unwrap().text(), "rustx");
+    assert_eq!(file.attrs.len(), 1);
+    assert_eq!(file.items.len(), 1);
+    assert!(!file.span().is_empty());
+    assert_eq!(
+        moxy::fmt!(&file).unwrap(),
+        "#!/usr/bin/env rustx\n#![allow(dead_code)]\nstruct Entry;"
+    );
+}
+
+#[test]
+fn files_accept_empty_and_inner_attribute_only_sources() {
+    let empty: File = moxy::parse!("").unwrap();
+    let attrs: File = moxy::parse!("#![allow(dead_code)]").unwrap();
+
+    assert!(empty.shebang.is_none() && empty.attrs.is_empty() && empty.items.is_empty());
+    assert!(attrs.shebang.is_none());
+    assert_eq!(attrs.attrs.len(), 1);
+}
+
+#[test]
+fn parse_files_returns_independent_files_and_errors() {
+    let files = moxy::parse_files!("fixtures/trybuild/template/pass/*.rs");
+    assert_eq!(files.len(), 2);
+    assert!(files.iter().all(|file| !file.items.is_empty()));
+    assert_eq!(files.iter().map(|file| file.items.len()).sum::<usize>(), 5);
+    assert!(moxy::parse_files!("fixtures/does-not-exist/*.rs").is_empty());
 }

@@ -11,6 +11,14 @@ pub struct File {
     pub items: Vec<Item>,
 }
 
+impl Spanner for File {
+    fn span(&self) -> Span {
+        let first = self.shebang.as_ref().map(|v| v.span()).unwrap_or(self.attrs.span());
+        let last = self.items.last().map(|v| v.span()).unwrap_or(self.attrs.span());
+        first.join(last)
+    }
+}
+
 impl ToTokens for File {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.shebang.to_tokens(tokens);
@@ -45,6 +53,54 @@ impl Parse for File {
         }
 
         Some(cursor)
+    }
+}
+
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct Shebang {
+    pub pound: Token![#],
+    pub bang: Token![!],
+    pub path: FilePath,
+    pub ident: Option<Ident>,
+}
+
+impl Spanner for Shebang {
+    fn span(&self) -> Span {
+        let last = self.ident.as_ref().map(|v| v.span()).unwrap_or(self.path.span());
+        self.pound.span().join(last)
+    }
+}
+
+impl ToTokens for Shebang {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        self.pound.to_tokens(tokens);
+        self.bang.to_tokens(tokens);
+        self.path.to_tokens(tokens);
+        self.ident.to_tokens(tokens);
+    }
+}
+
+impl Parse for Shebang {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        cursor.peek::<Token![#]>() && cursor.offset(1).peek::<Token![!]>() && cursor.offset(2).peek::<FilePath>()
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self {
+            pound: parser.parse()?,
+            bang: parser.parse()?,
+            path: parser.parse()?,
+            ident: parser.parse()?,
+        })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let cursor = cursor.skip::<Token![#]>()?;
+        let cursor = cursor.skip::<Token![!]>()?;
+        let cursor = cursor.skip::<FilePath>()?;
+        cursor.skip::<Option<Ident>>()
     }
 }
 
@@ -94,45 +150,10 @@ impl Parse for FilePath {
     }
 }
 
-#[derive(Clone)]
-#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
-#[cfg_attr(feature = "serde", derive(serde::Serialize))]
-pub struct Shebang {
-    pub bang: Token![!],
-    pub pound: Token![#],
-    pub path: FilePath,
-}
+impl std::ops::Deref for FilePath {
+    type Target = [(Token![/], Ident)];
 
-impl Spanner for Shebang {
-    fn span(&self) -> Span {
-        self.bang.span().join(self.path.span())
-    }
-}
-
-impl ToTokens for Shebang {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        self.bang.to_tokens(tokens);
-        self.pound.to_tokens(tokens);
-        self.path.to_tokens(tokens);
-    }
-}
-
-impl Parse for Shebang {
-    fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![#]>() && cursor.offset(1).peek::<Token![!]>() && cursor.offset(2).peek::<FilePath>()
-    }
-
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self {
-            bang: parser.parse()?,
-            pound: parser.parse()?,
-            path: parser.parse()?,
-        })
-    }
-
-    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let cursor = cursor.skip::<Token![!]>()?;
-        let cursor = cursor.skip::<Token![#]>()?;
-        cursor.skip::<FilePath>()
+    fn deref(&self) -> &Self::Target {
+        &self.0
     }
 }

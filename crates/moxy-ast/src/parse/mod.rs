@@ -46,6 +46,39 @@ macro_rules! parse {
     };
 }
 
+/// Parse a rust source file into `moxy::ast::File`.
+///
+/// # Example
+/// ```
+/// use moxy::ast::*;
+///
+/// let file: File = parse_file!("/path/to/file").unwrap();
+/// ```
+#[macro_export]
+macro_rules! parse_file {
+    ($path:tt $(, $key:ident = $value:expr)* $(,)?) => {{
+        let mut config = $crate::ParseConfig::default();
+
+        $(
+            $crate::parse_file!(@option config, $key = $value);
+        )*
+
+        let path = ::std::path::Path::new(&$path);
+
+        match ::std::fs::read_to_string(path) {
+            Ok(source) => $crate::__parse_owned(source, config),
+            Err(error) => Err($crate::ParseError::new(
+                $crate::__private::moxy_token::Span::call_site(),
+                format!("could not read source file `{}`: {}", path.display(), error),
+            )),
+        }
+    }};
+
+    (@option $config:ident, trace = $value:expr) => {
+        $config.trace = $value;
+    };
+}
+
 /// Parse source file(s) into a typed AST node, returning `Result<T, ParseError>`.
 ///
 /// The type can be given explicitly with `as T` or inferred from context.
@@ -54,28 +87,41 @@ macro_rules! parse {
 /// ```ignore
 /// use moxy::ast::*;
 ///
-/// let tokens = parse_files!("src/**/*.rs");
+/// let files = parse_files!("src/**/*.rs");
 /// ```
 #[macro_export]
 macro_rules! parse_files {
-    ($($pattern:literal),+ $(as $ty:ty)? $(, $key:ident = $value:expr)* $(,)?) => {{
-        let mut tokens = $crate::__private::TokenStream::new();
+    ($($pattern:literal),+ $(, $key:ident = $value:expr)* $(,)?) => {{
+        let mut paths = vec![];
+        let mut config = $crate::ParseConfig::default();
 
         $(
-            let paths = $crate::__private::glob(
-                std::env!("CARGO_MANIFEST_DIR"),
-                $pattern,
-            ).expect(&format!("glob pattern `{}` is not valid", $pattern));
-
-            for path in paths {
-                let src = ::std::fs::read_to_string(&path).expect(&format!("file `{}` not found", path.display()));
-                let parser: $crate::__private::TokenStream = src.parse().expect("invalid source file");
-                tokens.extend(parser);
-            }
+            $crate::parse_files!(@option config, $key = $value);
         )*
 
-        $crate::parse!(tokens $(as $ty)? $(, $key = $value)*).expect("could not parse tokens")
+        $(
+            paths.extend($crate::__private::glob(
+                std::env!("CARGO_MANIFEST_DIR"),
+                $pattern,
+            ).expect(&format!("glob pattern `{}` is not valid", $pattern)));
+        )*
+
+        let mut files = vec![];
+
+        for path in paths {
+            let source = ::std::fs::read_to_string(&path)
+                .expect(&format!("file `{}` not found", path.display()));
+            let file: $crate::File = $crate::__parse_owned(source, config)
+                .expect("expected valid rust file");
+            files.push(file);
+        }
+
+        files
     }};
+
+    (@option $config:ident, trace = $value:expr) => {
+        $config.trace = $value;
+    };
 }
 
 /// Parse an owned source string without copying it again for fallback span storage.

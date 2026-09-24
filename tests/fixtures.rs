@@ -1,6 +1,7 @@
 use std::{collections::BTreeSet, fs, path::Path};
 
-use moxy::ast::{Crate, Expr, Item, Lit, Pattern, Stmt, Type};
+use moxy::ast::{Expr, Item, Lit, Pattern, Stmt, Type};
+use moxy_ast::File;
 use syn::parse::{Parse as _, Parser as _};
 
 const ATTRIBUTES_DERIVES: &str = include_str!("../fixtures/parse/item/attributes_derives.rs");
@@ -181,7 +182,7 @@ fn parse_syn(root: &str, source: &str) -> bool {
 
 fn parse_moxy(root: &str, source: &str) -> bool {
     match root {
-        "crate" => moxy::parse!(source as Crate).is_ok(),
+        "crate" => moxy::parse!(source as File).is_ok(),
         "item" => moxy::parse!(source as Item).is_ok(),
         "expr" => moxy::parse!(source as Expr).is_ok(),
         "type" => moxy::parse!(source as Type).is_ok(),

@@ -28,4 +28,6 @@ token_format_impl! {
     Question,
     Static,
     Unsafe,
+    Pound,
+    Slash,
 }
