@@ -60,7 +60,6 @@ jobs:
             --threshold-upper-boundary 0.95 \
             "hyperfine \
               --export-json results.json \
-              --warmup 1 \
               --prepare 'cargo clean --manifest-path benches/compile/${{ matrix.variant }}/Cargo.toml' \
               'cargo build --manifest-path benches/compile/${{ matrix.variant }}/Cargo.toml --features moxy --release'"
       - name: syn[${{ matrix.variant }}]
@@ -77,6 +76,5 @@ jobs:
             --threshold-upper-boundary 0.95 \
             "hyperfine \
               --export-json results.json \
-              --warmup 1 \
               --prepare 'cargo clean --manifest-path benches/compile/${{ matrix.variant }}/Cargo.toml' \
               'cargo build --manifest-path benches/compile/${{ matrix.variant }}/Cargo.toml --features syn --release'"
