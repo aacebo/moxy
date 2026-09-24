@@ -219,11 +219,7 @@ impl Parser<'_> {
     #[inline(never)]
     fn trace_start(&self, name: &str, span: Span, ok: bool) {
         if self.config.trace {
-            let (color, span) = if ok {
-                (Ansi::Green, span)
-            } else {
-                (Ansi::Red, self.span())
-            };
+            let (color, span) = if ok { (Ansi::Green, span) } else { (Ansi::Red, self.span()) };
 
             println!(
                 "{}{}<- {} @ ln {}, col {}{}",
