@@ -218,20 +218,22 @@ impl<'a> ToTokens for Parser<'a> {
 impl Parser<'_> {
     #[inline(never)]
     fn trace_start(&self, name: &str, span: Span, ok: bool) {
-        let (color, span) = if ok {
-            (Ansi::Green, span)
-        } else {
-            (Ansi::Red, self.span())
-        };
+        if self.config.trace {
+            let (color, span) = if ok {
+                (Ansi::Green, span)
+            } else {
+                (Ansi::Red, self.span())
+            };
 
-        println!(
-            "{}{}<- {} @ ln {}, col {}{}",
-            " ".repeat(self.depth),
-            color,
-            name,
-            span.end().line(),
-            span.end().column(),
-            Ansi::Reset,
-        );
+            println!(
+                "{}{}<- {} @ ln {}, col {}{}",
+                " ".repeat(self.depth),
+                color,
+                name,
+                span.end().line(),
+                span.end().column(),
+                Ansi::Reset,
+            );
+        }
     }
 }
