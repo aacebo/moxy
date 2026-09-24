@@ -48,13 +48,13 @@ jobs:
           hyperfine \
             --export-json compile-moxy-${{ matrix.variant }}.json \
             --warmup 1 \
-            --prepare 'cargo build --manifest-path benches/compile/${{ matrix.variant }}/Cargo.toml --features moxy --release'
+            'cargo build --manifest-path benches/compile/${{ matrix.variant }}/Cargo.toml --features moxy --release'
       - name: syn[${{ matrix.variant }}]
         run: |
           hyperfine \
             --export-json compile-syn-${{ matrix.variant }}.json \
             --warmup 1 \
-            --prepare 'cargo build --manifest-path benches/compile/${{ matrix.variant }}/Cargo.toml --features syn --release'
+            'cargo build --manifest-path benches/compile/${{ matrix.variant }}/Cargo.toml --features syn --release'
       - name: Upload Results
         uses: actions/upload-artifact@v7
         with:
