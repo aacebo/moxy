@@ -68,17 +68,28 @@ impl Spanner for ForeignItem {
     }
 }
 
-macro_rules! impl_from {
-    ($($variant:ident => $ty:ty),+ $(,)?) => {
-        $(impl From<$ty> for ForeignItem { fn from(v: $ty) -> Self { ForeignItem::$variant(v) } })+
-    };
+impl From<ForeignItemFn> for ForeignItem {
+    fn from(value: ForeignItemFn) -> Self {
+        Self::Fn(value)
+    }
 }
 
-impl_from! {
-    Fn => ForeignItemFn,
-    Static => ForeignItemStatic,
-    Type => ForeignItemType,
-    Macro => ForeignItemMacro,
+impl From<ForeignItemStatic> for ForeignItem {
+    fn from(value: ForeignItemStatic) -> Self {
+        Self::Static(value)
+    }
+}
+
+impl From<ForeignItemType> for ForeignItem {
+    fn from(value: ForeignItemType) -> Self {
+        Self::Type(value)
+    }
+}
+
+impl From<ForeignItemMacro> for ForeignItem {
+    fn from(value: ForeignItemMacro) -> Self {
+        Self::Macro(value)
+    }
 }
 
 impl Parse for ForeignItem {

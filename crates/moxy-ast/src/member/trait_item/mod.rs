@@ -68,16 +68,22 @@ impl Spanner for TraitItem {
     }
 }
 
-macro_rules! impl_from {
-    ($($variant:ident => $ty:ty),+ $(,)?) => {
-        $(impl From<$ty> for TraitItem { fn from(v: $ty) -> Self { TraitItem::$variant(v) } })+
-    };
+impl From<TraitItemFn> for TraitItem {
+    fn from(value: TraitItemFn) -> Self {
+        Self::Fn(value)
+    }
 }
 
-impl_from! {
-    Fn => TraitItemFn,
-    Type => TraitItemType,
-    Macro => TraitItemMacro,
+impl From<TraitItemType> for TraitItem {
+    fn from(value: TraitItemType) -> Self {
+        Self::Type(value)
+    }
+}
+
+impl From<TraitItemMacro> for TraitItem {
+    fn from(value: TraitItemMacro) -> Self {
+        Self::Macro(value)
+    }
 }
 
 impl From<TraitItemConst> for TraitItem {
