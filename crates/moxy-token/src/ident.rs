@@ -78,7 +78,6 @@ pub struct Ident {
 }
 
 impl Ident {
-    #[inline]
     pub fn new(text: impl std::fmt::Display) -> Self {
         Self {
             text: text.to_string().into_boxed_str(),
@@ -86,7 +85,6 @@ impl Ident {
         }
     }
 
-    #[inline]
     pub fn lex(input: impl std::fmt::Display) -> Result<Self, LexError> {
         std::str::FromStr::from_str(&input.to_string())
     }
@@ -120,13 +118,11 @@ impl Ident {
         self.span = span;
     }
 
-    #[inline]
     pub fn to_lowercase(mut self) -> Self {
         self.text = self.text.to_lowercase().into_boxed_str();
         self
     }
 
-    #[inline]
     pub fn to_uppercase(mut self) -> Self {
         self.text = self.text.to_uppercase().into_boxed_str();
         self

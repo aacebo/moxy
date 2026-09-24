@@ -40,12 +40,10 @@ pub enum Lit {
 }
 
 impl Lit {
-    #[inline]
     pub fn string(value: &str) -> Self {
         Self::Str(LitStr::new(value, Span::default()))
     }
 
-    #[inline]
     pub fn char(value: char) -> Self {
         Self::Char(LitChar::new(value, Span::default()))
     }
@@ -53,7 +51,6 @@ impl Lit {
     /// Classify and decode an arbitrary literal repr into the matching variant. Used by
     /// the proc-macro bridges, which only have the source text. Falls back to
     /// [`LitVerbatim`] for anything that doesn't lex as a known literal.
-    #[inline]
     pub fn from_repr(repr: &str, span: Span) -> Self {
         use std::str::FromStr;
 
@@ -161,7 +158,6 @@ impl Lit {
         TokenTree::Literal(self)
     }
 
-    #[inline]
     pub fn repr(&self) -> &str {
         match self {
             Self::Int(v) => v.repr(),
@@ -176,7 +172,6 @@ impl Lit {
         }
     }
 
-    #[inline]
     pub fn span(&self) -> Span {
         match self {
             Self::Int(v) => v.span(),
@@ -191,7 +186,6 @@ impl Lit {
         }
     }
 
-    #[inline]
     pub fn set_span(&mut self, span: Span) {
         match self {
             Self::Int(v) => v.set_span(span),

@@ -22,7 +22,6 @@ pub enum Span {
 }
 
 impl Span {
-    #[inline]
     pub fn call_site() -> Self {
         if proc_macro::is_available() {
             Self::Compiler(proc_macro::Span::call_site())
@@ -31,7 +30,6 @@ impl Span {
         }
     }
 
-    #[inline]
     pub fn mixed_site() -> Self {
         if proc_macro::is_available() {
             Self::Compiler(proc_macro::Span::mixed_site())
@@ -40,7 +38,6 @@ impl Span {
         }
     }
 
-    #[inline]
     pub fn def_site() -> Self {
         #[cfg(nightly)]
         if proc_macro::is_available() {
@@ -145,7 +142,6 @@ impl Span {
         }
     }
 
-    #[inline]
     pub fn join(&self, other: Self) -> Self {
         #[cfg(nightly)]
         if let (Self::Compiler(a), Self::Compiler(b)) = (self, other) {
@@ -164,7 +160,6 @@ impl Span {
     /// Split a span at `head_len` characters from its start, returning
     /// `(head_span, rest_span)`. Only `Fallback` spans carry offsets we can split;
     /// for compiler spans we reuse the whole span for both halves.
-    #[inline]
     pub fn split(self, at: usize) -> (Span, Span) {
         match self {
             Self::Fallback(s) => {

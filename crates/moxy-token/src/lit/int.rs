@@ -303,7 +303,6 @@ pub enum Radix {
 }
 
 impl Radix {
-    #[inline]
     pub fn split(repr: &str) -> Result<(Self, &str), String> {
         const PREFIXES: [&str; 6] = ["0b", "0B", "0o", "0O", "0x", "0X"];
 
@@ -369,7 +368,6 @@ pub enum IntSuffix {
 }
 
 impl IntSuffix {
-    #[inline]
     pub fn split(repr: &str) -> Result<(&str, Self), String> {
         const SUFFIXES: [&str; 12] = [
             "u8", "u16", "u32", "u64", "u128", "usize", "i8", "i16", "i32", "i64", "i128", "isize",
@@ -384,7 +382,6 @@ impl IntSuffix {
         Ok((repr, Self::None))
     }
 
-    #[inline]
     pub fn as_str(self) -> &'static str {
         match self {
             Self::None => "",
