@@ -4,6 +4,7 @@ mod crates;
 mod enums;
 mod expressions;
 mod externs;
+mod fixtures;
 mod functions;
 mod generics;
 mod implementations;
