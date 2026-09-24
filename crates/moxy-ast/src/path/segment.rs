@@ -18,11 +18,18 @@ impl Parse for PathSegment {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let ident = parser.parse_ident_any()?;
-        let args = parser
-            .parse::<Option<AngleArguments>>()?
-            .map_or(path::PathArguments::None, path::PathArguments::AngleBracketed);
+        let is_fn = matches!(ident.text(), "Fn" | "FnMut" | "FnOnce");
 
-        Ok(Self { ident, args })
+        Ok(Self {
+            ident,
+            args: if is_fn && parser.peek::<ParenArguments>() {
+                parser.parse::<ParenArguments>()?.into()
+            } else if !is_fn && parser.peek::<AngleArguments>() {
+                parser.parse::<AngleArguments>()?.into()
+            } else {
+                path::PathArguments::None
+            },
+        })
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
@@ -34,8 +41,8 @@ impl Parse for PathSegment {
             cursor.skip::<Keyword>()?
         };
 
-        if is_fn {
-            cursor.skip::<PathSegment>()
+        if is_fn && cursor.peek::<ParenArguments>() {
+            cursor.skip::<ParenArguments>()
         } else {
             cursor.skip::<Option<AngleArguments>>()
         }

@@ -17,9 +17,22 @@ impl Parse for WhereClause {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let where_keyword = parser.parse()?;
+        let mut predicates = Punctuated::new();
+
+        while parser.peek::<WherePredicate>() {
+            predicates.push_value(parser.parse()?);
+
+            if !parser.peek::<Token![,]>() {
+                break;
+            }
+
+            predicates.push_punct(parser.parse()?);
+        }
+
         Ok(Self {
-            where_keyword: parser.parse()?,
-            predicates: Punctuated::parse_separated_nonempty(parser)?,
+            where_keyword,
+            predicates,
         })
     }
 

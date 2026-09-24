@@ -36,7 +36,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum Type {
     Never(Token![!]),
-    Infer(moxy_token::Ident),
+    Infer(Ident),
     Path(TypePath),
     Tuple(TypeTuple),
     Array(TypeArray),
@@ -112,7 +112,7 @@ impl Type {
         if let Self::Never(v) = self { Some(v) } else { None }
     }
 
-    pub fn as_infer(&self) -> Option<&moxy_token::Ident> {
+    pub fn as_infer(&self) -> Option<&Ident> {
         if let Self::Infer(v) = self { Some(v) } else { None }
     }
 

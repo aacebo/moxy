@@ -7,17 +7,22 @@ const MIXED_ITEMS: &str = include_str!("../../fixtures/parse/item/mixed_items.rs
 const LARGE_ITEMS: &str = include_str!("../../fixtures/parse/item/large_items.rs");
 const ATTRIBUTES_DERIVES: &str = include_str!("../../fixtures/parse/item/attributes_derives.rs");
 const MACRO_HEAVY: &str = include_str!("../../fixtures/parse/item/macro_heavy.rs");
+const DECLARATION_HEAVY: &str = include_str!("../../fixtures/parse/item/declaration_heavy.rs");
+const PATTERN_HEAVY: &str = include_str!("../../fixtures/parse/item/pattern_heavy.rs");
 
 const CONTROL_FLOW_EXPR: &str = include_str!("../../fixtures/parse/expr/control_flow.rs");
+const POSTFIX_ASYNC_EXPR: &str = include_str!("../../fixtures/parse/expr/postfix_async.rs");
 
 const GENERIC_DEPTH_8: &str = include_str!("../../fixtures/parse/type/generic_depth_8.rs");
 const GENERIC_DEPTH_32: &str = include_str!("../../fixtures/parse/type/generic_depth_32.rs");
 const GENERIC_DEPTH_128: &str = include_str!("../../fixtures/parse/type/generic_depth_128.rs");
+const COMPLEX_BOUNDS: &str = include_str!("../../fixtures/parse/type/complex_bounds.rs");
 
 const MALFORMED_EXPR: &str = "if ready";
 const INVALID_DEEP_GENERIC: &str = include_str!("../../fixtures/parse/invalid/deep_generic.rs");
 const INVALID_MACRO: &str = include_str!("../../fixtures/parse/invalid/macro.rs");
 const INVALID_LARGE_FILE_TAIL: &str = include_str!("../../fixtures/parse/invalid/large_file_tail.rs");
+const INVALID_MALFORMED_DECLARATION: &str = include_str!("../../fixtures/parse/invalid/malformed_declaration.rs");
 
 struct FileFixture {
     name: &'static str,
@@ -74,15 +79,15 @@ fn bench_file_pair(c: &mut Criterion, fixture: FileFixture) {
     group.finish();
 }
 
-fn bench_expression_pair(c: &mut Criterion) {
-    let _: moxy::ast::Expr = moxy::parse!(CONTROL_FLOW_EXPR).expect("moxy fixture must parse");
-    let _: syn::Expr = syn::parse_str(CONTROL_FLOW_EXPR).expect("syn fixture must parse");
-    let mut group = c.benchmark_group("parse_expr/control_flow");
+fn bench_expression_pair(c: &mut Criterion, name: &str, source: &str) {
+    let _: moxy::ast::Expr = moxy::parse!(source).expect("moxy fixture must parse");
+    let _: syn::Expr = syn::parse_str(source).expect("syn fixture must parse");
+    let mut group = c.benchmark_group(format!("parse_expr/{name}"));
 
-    group.throughput(Throughput::Bytes(CONTROL_FLOW_EXPR.len() as u64));
+    group.throughput(Throughput::Bytes(source.len() as u64));
     group.bench_function("moxy", |b| {
         b.iter(|| {
-            let source = black_box(CONTROL_FLOW_EXPR);
+            let source = black_box(source);
             let expr: moxy::ast::Expr = moxy::parse!(source).unwrap();
             black_box(expr)
         })
@@ -90,7 +95,7 @@ fn bench_expression_pair(c: &mut Criterion) {
 
     group.bench_function("syn", |b| {
         b.iter(|| {
-            let source = black_box(CONTROL_FLOW_EXPR);
+            let source = black_box(source);
             black_box(syn::parse_str::<syn::Expr>(source).unwrap())
         })
     });
@@ -221,12 +226,36 @@ pub fn run(c: &mut Criterion) {
             expected_items: 13,
         },
     );
-    bench_expression_pair(c);
+    bench_file_pair(
+        c,
+        FileFixture {
+            name: "declaration_heavy",
+            source: DECLARATION_HEAVY,
+            expected_items: 3,
+        },
+    );
+    bench_file_pair(
+        c,
+        FileFixture {
+            name: "pattern_heavy",
+            source: PATTERN_HEAVY,
+            expected_items: 1,
+        },
+    );
+    bench_expression_pair(c, "control_flow", CONTROL_FLOW_EXPR);
+    bench_expression_pair(c, "postfix_async", POSTFIX_ASYNC_EXPR);
     bench_type_pair(
         c,
         TypeFixture {
             name: "generic_depth_8",
             source: GENERIC_DEPTH_8,
+        },
+    );
+    bench_type_pair(
+        c,
+        TypeFixture {
+            name: "complex_bounds",
+            source: COMPLEX_BOUNDS,
         },
     );
     bench_type_pair(
@@ -263,6 +292,13 @@ pub fn run(c: &mut Criterion) {
         InvalidFileFixture {
             name: "large_file_tail",
             source: INVALID_LARGE_FILE_TAIL,
+        },
+    );
+    bench_invalid_file_pair(
+        c,
+        InvalidFileFixture {
+            name: "malformed_declaration",
+            source: INVALID_MALFORMED_DECLARATION,
         },
     );
 }

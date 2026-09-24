@@ -4,16 +4,21 @@ const ATTRIBUTES_DERIVES: &str = include_str!("../fixtures/parse/item/attributes
 const MIXED_ITEMS: &str = include_str!("../fixtures/parse/item/mixed_items.rs");
 const LARGE_ITEMS: &str = include_str!("../fixtures/parse/item/large_items.rs");
 const MACRO_HEAVY: &str = include_str!("../fixtures/parse/item/macro_heavy.rs");
+const DECLARATION_HEAVY: &str = include_str!("../fixtures/parse/item/declaration_heavy.rs");
+const PATTERN_HEAVY: &str = include_str!("../fixtures/parse/item/pattern_heavy.rs");
 
 const CONTROL_FLOW_EXPR: &str = include_str!("../fixtures/parse/expr/control_flow.rs");
+const POSTFIX_ASYNC_EXPR: &str = include_str!("../fixtures/parse/expr/postfix_async.rs");
 
 const GENERIC_DEPTH_8: &str = include_str!("../fixtures/parse/type/generic_depth_8.rs");
 const GENERIC_DEPTH_32: &str = include_str!("../fixtures/parse/type/generic_depth_32.rs");
 const GENERIC_DEPTH_128: &str = include_str!("../fixtures/parse/type/generic_depth_128.rs");
+const COMPLEX_BOUNDS: &str = include_str!("../fixtures/parse/type/complex_bounds.rs");
 
 const INVALID_DEEP_GENERIC: &str = include_str!("../fixtures/parse/invalid/deep_generic.rs");
 const INVALID_MACRO: &str = include_str!("../fixtures/parse/invalid/macro.rs");
 const INVALID_LARGE_FILE_TAIL: &str = include_str!("../fixtures/parse/invalid/large_file_tail.rs");
+const INVALID_MALFORMED_DECLARATION: &str = include_str!("../fixtures/parse/invalid/malformed_declaration.rs");
 
 #[test]
 fn attributes_derives_fixture_parses_as_items() {
@@ -40,8 +45,28 @@ fn macro_heavy_fixture_parses_as_items() {
 }
 
 #[test]
+fn declaration_heavy_fixture_parses_as_items() {
+    let _: syn::File = syn::parse_file(DECLARATION_HEAVY).unwrap();
+    let items: Vec<Item> = moxy::parse!(DECLARATION_HEAVY).unwrap();
+    assert_eq!(items.len(), 3);
+}
+
+#[test]
+fn pattern_heavy_fixture_parses_as_items() {
+    let _: syn::File = syn::parse_file(PATTERN_HEAVY).unwrap();
+    let items: Vec<Item> = moxy::parse!(PATTERN_HEAVY).unwrap();
+    assert_eq!(items.len(), 1);
+}
+
+#[test]
 fn control_flow_expression_fixture_parses_as_expression() {
     let _: Expr = moxy::parse!(CONTROL_FLOW_EXPR).unwrap();
+}
+
+#[test]
+fn postfix_async_expression_fixture_parses_as_expression() {
+    let _: syn::Expr = syn::parse_str(POSTFIX_ASYNC_EXPR).unwrap();
+    let _: Expr = moxy::parse!(POSTFIX_ASYNC_EXPR).unwrap();
 }
 
 #[test]
@@ -67,6 +92,12 @@ fn generic_depth_128_fixture_parses_as_type() {
 }
 
 #[test]
+fn complex_bounds_fixture_parses_as_type() {
+    let _: syn::Type = syn::parse_str(COMPLEX_BOUNDS).unwrap();
+    let _: Type = moxy::parse!(COMPLEX_BOUNDS).unwrap();
+}
+
+#[test]
 fn invalid_deep_generic_fixture_is_rejected_as_items() {
     let result: Result<Vec<Item>, _> = moxy::parse!(INVALID_DEEP_GENERIC);
     assert!(result.is_err());
@@ -81,6 +112,13 @@ fn invalid_macro_fixture_is_rejected_as_items() {
 #[test]
 fn invalid_large_file_tail_fixture_is_rejected_as_items() {
     let result: Result<Vec<Item>, _> = moxy::parse!(INVALID_LARGE_FILE_TAIL);
+    assert!(result.is_err());
+}
+
+#[test]
+fn malformed_declaration_fixture_is_rejected_as_items() {
+    assert!(syn::parse_file(INVALID_MALFORMED_DECLARATION).is_err());
+    let result: Result<Vec<Item>, _> = moxy::parse!(INVALID_MALFORMED_DECLARATION);
     assert!(result.is_err());
 }
 
