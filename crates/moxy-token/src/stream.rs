@@ -31,23 +31,17 @@ impl TokenStream {
     }
 
     #[inline]
-    pub fn first(&self) -> Span {
-        self.0.first().map(|v| v.span()).unwrap_or_default()
-    }
-
-    #[inline]
-    pub fn last(&self) -> Span {
-        self.0.last().map(|v| v.span()).unwrap_or_default()
-    }
-
-    #[inline]
     pub fn span(&self) -> Span {
-        self.first().join(self.last())
+        let first = self.0.first().map(|v| v.span()).unwrap_or_default();
+        let last = self.0.last().map(|v| v.span()).unwrap_or_default();
+        first.join(last)
     }
 
     #[inline]
     pub fn delim(&self) -> DelimSpan {
-        DelimSpan::new(self.first(), self.last())
+        let first = self.0.first().map(|v| v.span()).unwrap_or_default();
+        let last = self.0.last().map(|v| v.span()).unwrap_or_default();
+        DelimSpan::new(first, last)
     }
 
     #[inline]
@@ -137,7 +131,15 @@ where
 
 impl Spanner for TokenStream {
     fn span(&self) -> Span {
-        self.first().join(self.last())
+        let first = self.0.first().map(|v| v.span()).unwrap_or_default();
+        let last = self.0.last().map(|v| v.span()).unwrap_or_default();
+        first.join(last)
+    }
+}
+
+impl ToTokens for TokenStream {
+    fn to_tokens(&self, tokens: &mut Self) {
+        tokens.extend(self.clone());
     }
 }
 
@@ -251,12 +253,6 @@ impl std::fmt::Display for TokenStream {
         }
 
         Ok(())
-    }
-}
-
-impl ToTokens for TokenStream {
-    fn to_tokens(&self, tokens: &mut Self) {
-        tokens.extend(self.clone());
     }
 }
 
