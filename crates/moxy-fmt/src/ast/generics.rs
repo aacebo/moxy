@@ -1,5 +1,6 @@
 use moxy_ast::generics::{
     ConstParam, GenericParam, LifetimeParam, LifetimePredicate, TraitBound, TypeBound, TypeParam, TypePredicate, UseBound,
+    UseBoundParam,
 };
 use moxy_ast::{BoundLifetimes, Generics, TraitRef, WhereClause, WherePredicate};
 
@@ -168,7 +169,16 @@ impl Format for TraitRef {
 impl Format for UseBound {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("use<")?;
-        self.lifetimes.format(f)?;
+        self.params.format(f)?;
         f.text(">")
+    }
+}
+
+impl Format for UseBoundParam {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        match self {
+            Self::Ident(v) => v.format(f),
+            Self::Lifetime(v) => v.format(f),
+        }
     }
 }
