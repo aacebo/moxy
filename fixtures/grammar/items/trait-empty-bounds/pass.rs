@@ -1,0 +1,1 @@
+trait EmptyBounds { type Associated: ; }

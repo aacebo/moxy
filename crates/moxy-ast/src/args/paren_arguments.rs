@@ -7,22 +7,26 @@ use crate::{Cursor, Delimited, Parse, ParseError, Parser, Punctuated, ReturnType
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ParenArguments {
+    pub colon2: Option<Token![::]>,
     pub params: Delimited<Punctuated<Type, Token![,]>>,
     pub output: ReturnType,
 }
 
 impl Parse for ParenArguments {
     fn peek(cursor: Cursor<'_>) -> bool {
+        let cursor = cursor.skip::<Token![::]>().unwrap_or(cursor);
         cursor.is_delimited(Delim::Paren)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let colon2 = parser.parse()?;
         let params = Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?;
         let output = parser.parse()?;
-        Ok(Self { params, output })
+        Ok(Self { colon2, params, output })
     }
 
-    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let mut cursor = cursor.skip::<Token![::]>().unwrap_or(cursor);
         let mut inner = cursor.descend(Delim::Paren)?;
 
         while !inner.is_empty() {

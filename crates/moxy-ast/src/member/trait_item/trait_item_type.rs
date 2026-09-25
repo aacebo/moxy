@@ -30,7 +30,13 @@ impl Parse for TraitItemType {
         let ident = parser.parse()?;
         let generics = parser.parse()?;
         let (colon, bounds) = if parser.peek::<Token![:]>() {
-            (Some(parser.parse()?), Punctuated::parse_separated_nonempty(parser)?)
+            let colon = parser.parse()?;
+
+            if parser.peek::<TypeBound>() {
+                (Some(colon), Punctuated::parse_separated_nonempty(parser)?)
+            } else {
+                (Some(colon), Punctuated::new())
+            }
         } else {
             (None, Punctuated::new())
         };
@@ -64,11 +70,14 @@ impl Parse for TraitItemType {
 
         if cursor.peek::<Token![:]>() {
             cursor = cursor.skip::<Token![:]>()?;
-            cursor = cursor.skip::<TypeBound>()?;
 
-            while cursor.peek::<Token![+]>() {
-                cursor = cursor.skip::<Token![+]>()?;
+            if cursor.peek::<TypeBound>() {
                 cursor = cursor.skip::<TypeBound>()?;
+
+                while cursor.peek::<Token![+]>() {
+                    cursor = cursor.skip::<Token![+]>()?;
+                    cursor = cursor.skip::<TypeBound>()?;
+                }
             }
         }
 

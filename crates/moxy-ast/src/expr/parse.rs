@@ -112,7 +112,7 @@ pub(crate) fn unary(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseErr
 
 fn unary_with(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
     if parser.peek::<Token![&]>() {
-        if parser.cursor().offset(1).peek::<Token![raw]>() {
+        if parser.cursor().offset(1).peek::<Token![raw]>() && parser.cursor().offset(2).peek::<PointerMutability>() {
             return Ok(ExprRawAddr {
                 attrs: Default::default(),
                 and: parser.parse()?,

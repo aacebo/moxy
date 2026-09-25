@@ -40,12 +40,13 @@ impl TypeBound {
 
     pub fn parse_bounds(parser: &Parser) -> Result<crate::Punctuated<Self, Token![+]>, ParseError> {
         let mut bounds = crate::Punctuated::new();
+        bounds.push_value(parser.parse()?);
 
-        loop {
-            bounds.push_value(parser.parse()?);
+        while parser.peek::<Token![+]>() {
+            bounds.push_punct(parser.parse()?);
 
-            if parser.peek::<Token![+]>() {
-                bounds.push_punct(parser.parse()?);
+            if parser.peek::<TypeBound>() {
+                bounds.push_value(parser.parse()?);
             } else {
                 break;
             }

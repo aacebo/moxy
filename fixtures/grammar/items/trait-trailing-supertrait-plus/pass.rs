@@ -1,0 +1,1 @@
+trait TrailingPlus: Sized + where {}
