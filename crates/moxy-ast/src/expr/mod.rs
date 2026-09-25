@@ -687,18 +687,18 @@ impl ExprContext {
 
     fn is_end(self, cursor: Cursor<'_>) -> bool {
         cursor.is_empty()
-            || cursor.peek::<Token![,]>()
-            || cursor.peek::<Token![;]>()
-            || (self.const_generic_default && cursor.peek::<Token![>]>())
+            || <Token![,]>::peek(cursor)
+            || <Token![;]>::peek(cursor)
+            || (self.const_generic_default && <Token![>]>::peek(cursor))
     }
 
     fn is_end_before_infix(self, cursor: Cursor<'_>) -> bool {
         self.const_generic_default
-            && cursor.peek::<Token![>]>()
+            && <Token![>]>::peek(cursor)
             && (cursor.offset(1).is_empty()
-                || cursor.offset(1).peek::<Token![,]>()
-                || cursor.offset(1).peek::<Token![;]>()
-                || cursor.offset(1).peek::<Token![where]>()
+                || <Token![,]>::peek(cursor.offset(1))
+                || <Token![;]>::peek(cursor.offset(1))
+                || <Token![where]>::peek(cursor.offset(1))
                 || cursor.offset(1).is_delimited(Delim::Brace))
     }
 }

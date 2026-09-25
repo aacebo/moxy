@@ -25,16 +25,16 @@ impl Parse for ItemTrait {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        let cursor = cursor.skip::<Option<Token![unsafe]>>().unwrap_or(cursor);
-        let cursor = cursor.skip::<Option<Token![auto]>>().unwrap_or(cursor);
-        cursor.peek::<Token![trait]>()
+        let cursor = Option::<Token![unsafe]>::skip(cursor).unwrap_or(cursor);
+        let cursor = Option::<Token![auto]>::skip(cursor).unwrap_or(cursor);
+        <Token![trait]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
         let vis = parser.parse()?;
         let unsafety = parser.parse()?;
-        let auto_keyword = if parser.peek::<Token![auto]>() {
+        let auto_keyword = if <Token![auto]>::peek(parser.cursor()) {
             Some(parser.parse()?)
         } else {
             None
@@ -43,9 +43,9 @@ impl Parse for ItemTrait {
         let trait_keyword = parser.parse()?;
         let ident = parser.parse()?;
         let mut generics: Generics = parser.parse()?;
-        let (colon_punct, supertraits) = if parser.peek::<Token![:]>() {
+        let (colon_punct, supertraits) = if <Token![:]>::peek(parser.cursor()) {
             let colon_punct = parser.parse()?;
-            let supertraits = if !parser.peek::<Token![;]>() && parser.peek::<TypeBound>() {
+            let supertraits = if !<Token![;]>::peek(parser.cursor()) && TypeBound::peek(parser.cursor()) {
                 TypeBound::parse_bounds(parser)?
             } else {
                 Punctuated::new()
@@ -76,30 +76,30 @@ impl Parse for ItemTrait {
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = cursor.skip::<Option<Token![unsafe]>>()?;
-        cursor = cursor.skip::<Option<Token![auto]>>()?;
-        cursor = cursor.skip::<Token![trait]>()?;
-        cursor = cursor.skip::<Ident>()?;
+        cursor = Option::<Token![unsafe]>::skip(cursor)?;
+        cursor = Option::<Token![auto]>::skip(cursor)?;
+        cursor = <Token![trait]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
 
-        if cursor.peek::<Token![:]>() {
-            cursor = cursor.skip::<Token![:]>()?;
+        if <Token![:]>::peek(cursor) {
+            cursor = <Token![:]>::skip(cursor)?;
 
-            if cursor.peek::<TypeBound>() {
-                cursor = cursor.skip::<TypeBound>()?;
+            if TypeBound::peek(cursor) {
+                cursor = TypeBound::skip(cursor)?;
 
-                while cursor.peek::<Token![+]>() {
-                    cursor = cursor.skip::<Token![+]>()?;
-                    cursor = cursor.skip::<TypeBound>()?;
+                while <Token![+]>::peek(cursor) {
+                    cursor = <Token![+]>::skip(cursor)?;
+                    cursor = TypeBound::skip(cursor)?;
                 }
             }
         }
 
-        cursor = cursor.skip::<Option<crate::WhereClause>>()?;
+        cursor = Option::<crate::WhereClause>::skip(cursor)?;
         let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
 
         while !inner.is_empty() {
-            inner = inner.skip::<TraitItem>()?;
+            inner = TraitItem::skip(inner)?;
         }
 
         Some(cursor.offset(1))

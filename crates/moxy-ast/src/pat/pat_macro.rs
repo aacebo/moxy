@@ -20,7 +20,7 @@ impl Spanner for PatMacro {
 impl Parse for PatMacro {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<MacroCall>()
+        MacroCall::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -31,7 +31,7 @@ impl Parse for PatMacro {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        Attributes::skip(cursor)?.skip::<MacroCall>()
+        MacroCall::skip(Attributes::skip(cursor)?)
     }
 }
 

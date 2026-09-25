@@ -30,17 +30,17 @@ impl Parse for PatIdent {
     fn peek(mut cursor: Cursor<'_>) -> bool {
         cursor = Attributes::skip(cursor).unwrap_or(cursor);
 
-        if cursor.peek::<Token![ref]>() {
+        if <Token![ref]>::peek(cursor) {
             cursor = cursor.offset(1);
         }
 
-        if cursor.peek::<Token![mut]>() {
+        if <Token![mut]>::peek(cursor) {
             cursor = cursor.offset(1);
         }
 
-        cursor.peek::<Ident>()
-            && !cursor.offset(1).peek::<Token![::]>()
-            && !cursor.offset(1).peek::<Token![!]>()
+        Ident::peek(cursor)
+            && !<Token![::]>::peek(cursor.offset(1))
+            && !<Token![!]>::peek(cursor.offset(1))
             && !cursor.offset(1).is_delimited(moxy_token::Delim::Paren)
             && !cursor.offset(1).is_delimited(moxy_token::Delim::Brace)
     }
@@ -51,7 +51,7 @@ impl Parse for PatIdent {
             by_ref: parser.parse()?,
             mutability: parser.parse()?,
             ident: parser.parse()?,
-            subpat: if parser.peek::<Token![@]>() {
+            subpat: if <Token![@]>::peek(parser.cursor()) {
                 Some((parser.parse()?, parser.parse()?))
             } else {
                 None
@@ -61,13 +61,13 @@ impl Parse for PatIdent {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<Option<Token![ref]>>()?;
-        cursor = cursor.skip::<Option<Token![mut]>>()?;
-        cursor = cursor.skip::<Ident>()?;
+        cursor = Option::<Token![ref]>::skip(cursor)?;
+        cursor = Option::<Token![mut]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
 
-        if cursor.peek::<Token![@]>() {
-            cursor = cursor.skip::<Token![@]>()?;
-            cursor = cursor.skip::<Pattern>()?;
+        if <Token![@]>::peek(cursor) {
+            cursor = <Token![@]>::skip(cursor)?;
+            cursor = Pattern::skip(cursor)?;
         }
 
         Some(cursor)

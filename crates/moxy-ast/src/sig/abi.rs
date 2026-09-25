@@ -13,7 +13,7 @@ pub struct Abi {
 
 impl Parse for Abi {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![extern]>()
+        <Token![extern]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -32,7 +32,7 @@ impl Parse for Abi {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Token![extern]>()?;
+        cursor = <Token![extern]>::skip(cursor)?;
 
         if matches!(cursor.curr(), Some(TokenTree::Literal(lit)) if lit.repr().starts_with('"')) {
             cursor = cursor.offset(1);

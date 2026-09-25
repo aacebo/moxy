@@ -23,13 +23,13 @@ impl Parse for ItemTraitAlias {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        let cursor = cursor.skip::<Option<Token![unsafe]>>().unwrap_or(cursor);
-        let cursor = cursor.skip::<Option<Token![auto]>>().unwrap_or(cursor);
-        let Some(cursor) = cursor.skip::<Token![trait]>() else {
+        let cursor = Option::<Token![unsafe]>::skip(cursor).unwrap_or(cursor);
+        let cursor = Option::<Token![auto]>::skip(cursor).unwrap_or(cursor);
+        let Some(cursor) = <Token![trait]>::skip(cursor) else {
             return false;
         };
 
-        let Some(cursor) = cursor.skip::<Ident>() else {
+        let Some(cursor) = Ident::skip(cursor) else {
             return false;
         };
 
@@ -37,7 +37,7 @@ impl Parse for ItemTraitAlias {
             return false;
         };
 
-        cursor.peek::<Token![=]>()
+        <Token![=]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -46,7 +46,7 @@ impl Parse for ItemTraitAlias {
         let _unsafety: Option<Token![unsafe]> = parser.parse()?;
 
         // skip optional `auto`
-        if parser.peek::<Token![auto]>() {
+        if <Token![auto]>::peek(parser.cursor()) {
             let _: Token![auto] = parser.parse()?;
         }
 
@@ -72,20 +72,20 @@ impl Parse for ItemTraitAlias {
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = cursor.skip::<Option<Token![unsafe]>>()?;
-        cursor = cursor.skip::<Option<Token![auto]>>()?;
-        cursor = cursor.skip::<Token![trait]>()?;
-        cursor = cursor.skip::<Ident>()?;
+        cursor = Option::<Token![unsafe]>::skip(cursor)?;
+        cursor = Option::<Token![auto]>::skip(cursor)?;
+        cursor = <Token![trait]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
-        cursor = cursor.skip::<Token![=]>()?;
-        cursor = cursor.skip::<TypeBound>()?;
+        cursor = <Token![=]>::skip(cursor)?;
+        cursor = TypeBound::skip(cursor)?;
 
-        while cursor.peek::<Token![+]>() {
-            cursor = cursor.skip::<Token![+]>()?;
-            cursor = cursor.skip::<TypeBound>()?;
+        while <Token![+]>::peek(cursor) {
+            cursor = <Token![+]>::skip(cursor)?;
+            cursor = TypeBound::skip(cursor)?;
         }
 
-        cursor.skip::<Token![;]>()
+        <Token![;]>::skip(cursor)
     }
 }
 

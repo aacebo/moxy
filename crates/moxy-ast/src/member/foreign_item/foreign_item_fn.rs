@@ -17,7 +17,7 @@ impl Parse for ForeignItemFn {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Signature>()
+        Signature::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -32,8 +32,8 @@ impl Parse for ForeignItemFn {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = cursor.skip::<Signature>()?;
-        cursor.skip::<Option<Token![;]>>()
+        cursor = Signature::skip(cursor)?;
+        Option::<Token![;]>::skip(cursor)
     }
 }
 

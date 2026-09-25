@@ -38,9 +38,9 @@ impl QSelf {
     pub fn parse_with_trait(parser: &Parser) -> Result<(Self, Option<Path>), ParseError> {
         let lt = parser.parse()?;
         let ty = Box::new(parser.parse()?);
-        let (as_keyword, trait_path) = if parser.peek::<Token![as]>() {
+        let (as_keyword, trait_path) = if <Token![as]>::peek(parser.cursor()) {
             let as_keyword = parser.parse()?;
-            (Some(as_keyword), Some(parser.parse::<Path>()?))
+            (Some(as_keyword), Some(Path::parse(parser)?))
         } else {
             (None, None)
         };

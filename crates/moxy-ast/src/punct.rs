@@ -70,7 +70,7 @@ macro_rules! define_punct {
                         return Err(parser.error(format!("expected `{}` punctuation", Self::default())));
                     }
 
-                    Ok(Self($(parser.parse::<$punct>()?),*))
+                    Ok(Self($($punct::parse(parser)?),*))
                 }
 
                 fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {

@@ -131,7 +131,7 @@ macro_rules! parse_files {
 pub fn __parse_owned<T: Parse>(source: String, config: ParseConfig) -> Result<T, ParseError> {
     let tokens = TokenStream::from_string(source)?;
     let parser = Parser::from_config(&tokens, config);
-    let value = parser.parse()?;
+    let value = T::parse(&parser)?;
 
     if !parser.is_empty() {
         return Err(parser.error("unexpected trailing input"));
@@ -160,8 +160,8 @@ impl<T: Parse> Parse for Option<T> {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<T>() {
-            Ok(Some(parser.parse::<T>()?))
+        if T::peek(parser.cursor()) {
+            Ok(Some(T::parse(parser)?))
         } else {
             Ok(None)
         }
@@ -170,11 +170,7 @@ impl<T: Parse> Parse for Option<T> {
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         // Option<T> returns Some when peek == false since its an optional
         // node
-        if cursor.peek::<T>() {
-            cursor.skip::<T>()
-        } else {
-            Some(cursor)
-        }
+        if T::peek(cursor) { T::skip(cursor) } else { Some(cursor) }
     }
 }
 
@@ -202,10 +198,10 @@ impl<T: Parse> Parse for Box<T> {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self::new(parser.parse()?))
+        Ok(Self::new(T::parse(parser)?))
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.skip::<T>()
+        T::skip(cursor)
     }
 }

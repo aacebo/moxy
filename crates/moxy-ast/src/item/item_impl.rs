@@ -36,9 +36,9 @@ impl ItemImpl {
 impl Parse for ItemImpl {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        let cursor = cursor.skip::<Option<Token![default]>>().unwrap_or(cursor);
-        let cursor = cursor.skip::<Option<Token![unsafe]>>().unwrap_or(cursor);
-        cursor.peek::<Token![impl]>()
+        let cursor = Option::<Token![default]>::skip(cursor).unwrap_or(cursor);
+        let cursor = Option::<Token![unsafe]>::skip(cursor).unwrap_or(cursor);
+        <Token![impl]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -50,7 +50,7 @@ impl Parse for ItemImpl {
         let polarity = parser.parse()?;
 
         let first = parser.parse()?;
-        let (for_keyword, trait_ref, self_ty) = if parser.peek::<Token![for]>() {
+        let (for_keyword, trait_ref, self_ty) = if <Token![for]>::peek(parser.cursor()) {
             let for_keyword = parser.parse()?;
             let self_ty = parser.parse()?;
             (Some(for_keyword), Some(Self::type_to_trait_ref(first, polarity)?), self_ty)
@@ -76,23 +76,23 @@ impl Parse for ItemImpl {
 
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<Option<Token![default]>>()?;
-        cursor = cursor.skip::<Option<Token![unsafe]>>()?;
-        cursor = cursor.skip::<Token![impl]>()?;
+        cursor = Option::<Token![default]>::skip(cursor)?;
+        cursor = Option::<Token![unsafe]>::skip(cursor)?;
+        cursor = <Token![impl]>::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
-        cursor = cursor.skip::<Option<Token![!]>>()?;
-        cursor = cursor.skip::<Type>()?;
+        cursor = Option::<Token![!]>::skip(cursor)?;
+        cursor = Type::skip(cursor)?;
 
-        if cursor.peek::<Token![for]>() {
-            cursor = cursor.skip::<Token![for]>()?;
-            cursor = cursor.skip::<Type>()?;
+        if <Token![for]>::peek(cursor) {
+            cursor = <Token![for]>::skip(cursor)?;
+            cursor = Type::skip(cursor)?;
         }
 
-        cursor = cursor.skip::<Option<crate::WhereClause>>()?;
+        cursor = Option::<crate::WhereClause>::skip(cursor)?;
         let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
 
         while !inner.is_empty() {
-            inner = inner.skip::<ImplItem>()?;
+            inner = ImplItem::skip(inner)?;
         }
 
         Some(cursor.offset(1))

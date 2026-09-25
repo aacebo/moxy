@@ -42,10 +42,10 @@ impl TypeBound {
         let mut bounds = crate::Punctuated::new();
         bounds.push_value(parser.parse()?);
 
-        while parser.peek::<Token![+]>() {
+        while <Token![+]>::peek(parser.cursor()) {
             bounds.push_punct(parser.parse()?);
 
-            if parser.peek::<TypeBound>() {
+            if TypeBound::peek(parser.cursor()) {
                 bounds.push_value(parser.parse()?);
             } else {
                 break;
@@ -80,15 +80,15 @@ impl From<UseBound> for TypeBound {
 
 impl Parse for TypeBound {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Lifetime>() || cursor.peek::<UseBound>() || cursor.peek::<TraitBound>()
+        Lifetime::peek(cursor) || UseBound::peek(cursor) || TraitBound::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<Lifetime>() {
+        if Lifetime::peek(parser.cursor()) {
             return Ok(Self::Lifetime(parser.parse()?));
         }
 
-        if parser.peek::<UseBound>() {
+        if UseBound::peek(parser.cursor()) {
             return Ok(Self::Use(parser.parse()?));
         }
 
@@ -96,12 +96,12 @@ impl Parse for TypeBound {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<Lifetime>() {
-            cursor.skip::<Lifetime>()
-        } else if cursor.peek::<UseBound>() {
-            cursor.skip::<UseBound>()
+        if Lifetime::peek(cursor) {
+            Lifetime::skip(cursor)
+        } else if UseBound::peek(cursor) {
+            UseBound::skip(cursor)
         } else {
-            cursor.skip::<TraitBound>()
+            TraitBound::skip(cursor)
         }
     }
 }

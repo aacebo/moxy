@@ -37,13 +37,13 @@ impl Parse for PatSlice {
         let mut inner = cursor.descend(Delim::Bracket)?;
 
         while !inner.is_empty() {
-            inner = inner.skip::<Pattern>()?;
+            inner = Pattern::skip(inner)?;
 
             if inner.is_empty() {
                 break;
             }
 
-            inner = inner.skip::<Token![,]>()?;
+            inner = <Token![,]>::skip(inner)?;
         }
 
         Some(cursor.offset(1))

@@ -25,7 +25,7 @@ impl AssocTypeArgument {
 
 impl Parse for AssocTypeArgument {
     fn peek(cursor: Cursor<'_>) -> bool {
-        let Some(cursor) = cursor.skip::<Ident>() else {
+        let Some(cursor) = Ident::skip(cursor) else {
             return false;
         };
 
@@ -33,11 +33,11 @@ impl Parse for AssocTypeArgument {
             return false;
         };
 
-        let Some(cursor) = cursor.skip::<Token![=]>() else {
+        let Some(cursor) = <Token![=]>::skip(cursor) else {
             return false;
         };
 
-        cursor.peek::<Type>()
+        Type::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -50,10 +50,10 @@ impl Parse for AssocTypeArgument {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Ident>()?;
-        cursor = cursor.skip::<Option<AngleArguments>>()?;
-        cursor = cursor.skip::<Token![=]>()?;
-        cursor.skip::<Type>()
+        cursor = Ident::skip(cursor)?;
+        cursor = Option::<AngleArguments>::skip(cursor)?;
+        cursor = <Token![=]>::skip(cursor)?;
+        Type::skip(cursor)
     }
 }
 

@@ -23,7 +23,7 @@ impl Parse for TypeArray {
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         let inner = cursor.descend(Delim::Bracket)?;
-        let inner = inner.skip::<ArrayInner>()?;
+        let inner = ArrayInner::skip(inner)?;
         inner.is_empty().then(|| cursor.offset(1))
     }
 }
@@ -52,7 +52,7 @@ pub struct ArrayInner {
 
 impl Parse for ArrayInner {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Type>()
+        Type::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -63,7 +63,7 @@ impl Parse for ArrayInner {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.skip::<Type>()?.skip::<Token![;]>()?.skip::<Expr>()
+        Expr::skip(<Token![;]>::skip(Type::skip(cursor)?)?)
     }
 }
 

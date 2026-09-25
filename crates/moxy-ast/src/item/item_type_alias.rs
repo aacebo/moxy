@@ -23,7 +23,7 @@ impl Parse for ItemTypeAlias {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Token![type]>()
+        <Token![type]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -51,12 +51,12 @@ impl Parse for ItemTypeAlias {
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = cursor.skip::<Token![type]>()?;
-        cursor = cursor.skip::<Ident>()?;
+        cursor = <Token![type]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
-        cursor = cursor.skip::<Token![=]>()?;
-        cursor = cursor.skip::<Type>()?;
-        cursor.skip::<Token![;]>()
+        cursor = <Token![=]>::skip(cursor)?;
+        cursor = Type::skip(cursor)?;
+        <Token![;]>::skip(cursor)
     }
 }
 

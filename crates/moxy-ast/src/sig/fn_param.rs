@@ -52,11 +52,11 @@ impl Spanner for FnParam {
 
 impl Parse for FnParam {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Receiver>() || cursor.peek::<pat::PatType>()
+        Receiver::peek(cursor) || pat::PatType::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<Receiver>() {
+        if Receiver::peek(parser.cursor()) {
             return Ok(Self::Receiver(Box::new(parser.parse()?)));
         }
 
@@ -64,10 +64,10 @@ impl Parse for FnParam {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<Receiver>() {
-            cursor.skip::<Receiver>()
+        if Receiver::peek(cursor) {
+            Receiver::skip(cursor)
         } else {
-            cursor.skip::<pat::PatType>()
+            pat::PatType::skip(cursor)
         }
     }
 }

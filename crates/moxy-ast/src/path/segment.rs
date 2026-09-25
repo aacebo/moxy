@@ -13,7 +13,7 @@ pub struct PathSegment {
 
 impl Parse for PathSegment {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Keyword>() || cursor.peek::<Ident>()
+        Keyword::peek(cursor) || Ident::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -22,10 +22,10 @@ impl Parse for PathSegment {
 
         Ok(Self {
             ident,
-            args: if is_fn && parser.peek::<ParenArguments>() {
-                parser.parse::<ParenArguments>()?.into()
-            } else if !is_fn && parser.peek::<AngleArguments>() {
-                parser.parse::<AngleArguments>()?.into()
+            args: if is_fn && ParenArguments::peek(parser.cursor()) {
+                ParenArguments::parse(parser)?.into()
+            } else if !is_fn && AngleArguments::peek(parser.cursor()) {
+                AngleArguments::parse(parser)?.into()
             } else {
                 path::PathArguments::None
             },
@@ -35,16 +35,16 @@ impl Parse for PathSegment {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         let is_fn = matches!(cursor.curr().and_then(|token| token.text()), Some("Fn" | "FnMut" | "FnOnce"));
 
-        cursor = if cursor.peek::<Ident>() {
-            cursor.skip::<Ident>()?
+        cursor = if Ident::peek(cursor) {
+            Ident::skip(cursor)?
         } else {
-            cursor.skip::<Keyword>()?
+            Keyword::skip(cursor)?
         };
 
-        if is_fn && cursor.peek::<ParenArguments>() {
-            cursor.skip::<ParenArguments>()
+        if is_fn && ParenArguments::peek(cursor) {
+            ParenArguments::skip(cursor)
         } else {
-            cursor.skip::<Option<AngleArguments>>()
+            Option::<AngleArguments>::skip(cursor)
         }
     }
 }

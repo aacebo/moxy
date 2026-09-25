@@ -20,7 +20,7 @@ impl Spanner for PatRest {
 impl Parse for PatRest {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Token![..]>()
+        <Token![..]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -31,7 +31,7 @@ impl Parse for PatRest {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        Attributes::skip(cursor)?.skip::<Token![..]>()
+        <Token![..]>::skip(Attributes::skip(cursor)?)
     }
 }
 

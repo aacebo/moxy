@@ -46,7 +46,7 @@ impl Spanner for GenericArgument {
 
 impl Parse for GenericArgument {
     fn peek(cursor: Cursor<'_>) -> bool {
-        if cursor.peek::<Lifetime>() {
+        if Lifetime::peek(cursor) {
             return true;
         }
 
@@ -61,7 +61,7 @@ impl Parse for GenericArgument {
             return true;
         }
 
-        cursor.peek::<Type>()
+        Type::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -89,7 +89,7 @@ impl Parse for GenericArgument {
             let ident = parser.parse()?;
             let generics: Option<AngleArguments> = parser.parse()?;
 
-            if parser.peek::<Token![:]>() {
+            if <Token![:]>::peek(parser.cursor()) {
                 let colon_punct = parser.parse()?;
                 let bounds = Punctuated::parse_separated_nonempty(parser)?;
 
@@ -102,7 +102,7 @@ impl Parse for GenericArgument {
                 .into_generic_argument());
             }
 
-            if parser.peek::<Token![=]>() {
+            if <Token![=]>::peek(parser.cursor()) {
                 let eq_punct = parser.parse()?;
                 let is_const = match parser.cursor().curr() {
                     Some(TokenTree::Literal(_)) => true,
@@ -137,7 +137,7 @@ impl Parse for GenericArgument {
 
             let args = generics.map_or(PathArguments::None, PathArguments::AngleBracketed);
             let path = Path::parse_rest(parser, PathSegment { ident, args })?;
-            let ty = if parser.peek::<Token![!]>() {
+            let ty = if <Token![!]>::peek(parser.cursor()) {
                 Type::Macro(TypeMacro {
                     mac: MacroCall {
                         path,
@@ -156,8 +156,8 @@ impl Parse for GenericArgument {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<Lifetime>() {
-            return cursor.skip::<Lifetime>();
+        if Lifetime::peek(cursor) {
+            return Lifetime::skip(cursor);
         }
 
         let is_const = match cursor.curr() {
@@ -168,27 +168,27 @@ impl Parse for GenericArgument {
         };
 
         if is_const {
-            return cursor.skip::<Expr>();
+            return Expr::skip(cursor);
         }
 
-        if cursor.peek::<Ident>() {
-            cursor = cursor.skip::<Ident>()?;
-            cursor = cursor.skip::<Option<AngleArguments>>()?;
+        if Ident::peek(cursor) {
+            cursor = Ident::skip(cursor)?;
+            cursor = Option::<AngleArguments>::skip(cursor)?;
 
-            if cursor.peek::<Token![:]>() {
-                cursor = cursor.skip::<Token![:]>()?;
-                cursor = cursor.skip::<TypeBound>()?;
+            if <Token![:]>::peek(cursor) {
+                cursor = <Token![:]>::skip(cursor)?;
+                cursor = TypeBound::skip(cursor)?;
 
-                while cursor.peek::<Token![+]>() {
-                    cursor = cursor.skip::<Token![+]>()?;
-                    cursor = cursor.skip::<TypeBound>()?;
+                while <Token![+]>::peek(cursor) {
+                    cursor = <Token![+]>::skip(cursor)?;
+                    cursor = TypeBound::skip(cursor)?;
                 }
 
                 return Some(cursor);
             }
 
-            if cursor.peek::<Token![=]>() {
-                cursor = cursor.skip::<Token![=]>()?;
+            if <Token![=]>::peek(cursor) {
+                cursor = <Token![=]>::skip(cursor)?;
 
                 let is_const = match cursor.curr() {
                     Some(TokenTree::Literal(_)) => true,
@@ -197,24 +197,20 @@ impl Parse for GenericArgument {
                     _ => false,
                 };
 
-                return if is_const {
-                    cursor.skip::<Expr>()
-                } else {
-                    cursor.skip::<Type>()
-                };
+                return if is_const { Expr::skip(cursor) } else { Type::skip(cursor) };
             }
 
             cursor = Path::skip_rest(cursor)?;
 
-            if cursor.peek::<Token![!]>() {
-                cursor = cursor.skip::<Token![!]>()?;
-                cursor = cursor.skip::<Group>()?;
+            if <Token![!]>::peek(cursor) {
+                cursor = <Token![!]>::skip(cursor)?;
+                cursor = Group::skip(cursor)?;
             }
 
             return Some(cursor);
         }
 
-        cursor.skip::<Type>()
+        Type::skip(cursor)
     }
 }
 

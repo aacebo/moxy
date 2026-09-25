@@ -40,7 +40,7 @@ impl Parse for Template {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         while !cursor.is_empty() {
-            cursor = cursor.skip::<Node>()?;
+            cursor = Node::skip(cursor)?;
         }
 
         Some(cursor)
@@ -112,12 +112,12 @@ impl Parse for Node {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<TmplKeyword>() {
-            return cursor.skip::<TmplKeyword>();
+        if TmplKeyword::peek(cursor) {
+            return TmplKeyword::skip(cursor);
         }
 
-        if cursor.peek::<TmplInterp>() {
-            return cursor.skip::<TmplInterp>();
+        if TmplInterp::peek(cursor) {
+            return TmplInterp::skip(cursor);
         }
 
         if let Some(TokenTree::Group(group)) = cursor.curr()
@@ -128,7 +128,7 @@ impl Parse for Node {
             return inner.is_empty().then(|| cursor.offset(1));
         }
 
-        cursor.skip::<TmplTokens>()
+        TmplTokens::skip(cursor)
     }
 }
 

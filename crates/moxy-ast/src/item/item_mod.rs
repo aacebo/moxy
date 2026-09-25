@@ -23,8 +23,8 @@ impl Parse for ItemMod {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        let cursor = cursor.skip::<Option<Token![unsafe]>>().unwrap_or(cursor);
-        cursor.peek::<Token![mod]>()
+        let cursor = Option::<Token![unsafe]>::skip(cursor).unwrap_or(cursor);
+        <Token![mod]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -55,20 +55,20 @@ impl Parse for ItemMod {
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = cursor.skip::<Option<Token![unsafe]>>()?;
-        cursor = cursor.skip::<Token![mod]>()?;
-        cursor = cursor.skip::<Ident>()?;
+        cursor = Option::<Token![unsafe]>::skip(cursor)?;
+        cursor = <Token![mod]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
 
         if cursor.is_delimited(Delim::Brace) {
             let mut inner = cursor.descend(Delim::Brace)?;
 
             while !inner.is_empty() {
-                inner = inner.skip::<Item>()?;
+                inner = Item::skip(inner)?;
             }
 
             Some(cursor.offset(1))
         } else {
-            cursor.skip::<Token![;]>()
+            <Token![;]>::skip(cursor)
         }
     }
 }

@@ -32,13 +32,17 @@ impl Parse for PatRange {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
-        let start = if parser.peek::<RangeLimits>() {
+        let start = if RangeLimits::peek(parser.cursor()) {
             None
         } else {
             Some(expr::parse::unary(parser, Attributes::default())?)
         };
         let limits = parser.parse()?;
-        let end = if parser.is_empty() || parser.peek::<Token![,]>() || parser.peek::<Token![|]>() || parser.peek::<Token![:]>() {
+        let end = if parser.is_empty()
+            || <Token![,]>::peek(parser.cursor())
+            || <Token![|]>::peek(parser.cursor())
+            || <Token![:]>::peek(parser.cursor())
+        {
             None
         } else {
             Some(expr::parse::unary(parser, Attributes::default())?)
@@ -58,16 +62,16 @@ impl Parse for PatRange {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        let has_start = !cursor.peek::<RangeLimits>();
+        let has_start = !RangeLimits::peek(cursor);
 
         if has_start {
             cursor = expr::skip::pattern_bound(cursor)?;
         }
 
-        let closed = cursor.peek::<Token![..=]>();
-        cursor = cursor.skip::<RangeLimits>()?;
+        let closed = <Token![..=]>::peek(cursor);
+        cursor = RangeLimits::skip(cursor)?;
 
-        if cursor.is_empty() || cursor.peek::<Token![,]>() || cursor.peek::<Token![|]>() || cursor.peek::<Token![:]>() {
+        if cursor.is_empty() || <Token![,]>::peek(cursor) || <Token![|]>::peek(cursor) || <Token![:]>::peek(cursor) {
             return (has_start || closed).then_some(cursor);
         }
 

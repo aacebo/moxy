@@ -68,7 +68,7 @@ impl Spanner for Fields {
 
 impl Parse for Fields {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<FieldsNamed>() || cursor.peek::<FieldsUnnamed>()
+        FieldsNamed::peek(cursor) || FieldsUnnamed::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -80,10 +80,10 @@ impl Parse for Fields {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<FieldsNamed>() {
-            cursor.skip::<FieldsNamed>()
-        } else if cursor.peek::<FieldsUnnamed>() {
-            cursor.skip::<FieldsUnnamed>()
+        if FieldsNamed::peek(cursor) {
+            FieldsNamed::skip(cursor)
+        } else if FieldsUnnamed::peek(cursor) {
+            FieldsUnnamed::skip(cursor)
         } else {
             Some(cursor)
         }

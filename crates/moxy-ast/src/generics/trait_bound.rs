@@ -15,7 +15,7 @@ pub struct TraitBound {
 
 impl Parse for TraitBound {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![!]>() || cursor.peek::<Token![for]>() || cursor.peek::<Token![?]>() || cursor.peek::<Path>()
+        <Token![!]>::peek(cursor) || <Token![for]>::peek(cursor) || <Token![?]>::peek(cursor) || Path::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -28,10 +28,10 @@ impl Parse for TraitBound {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Option<Token![!]>>()?;
-        cursor = cursor.skip::<Option<BoundLifetimes>>()?;
-        cursor = cursor.skip::<Option<Token![?]>>()?;
-        cursor.skip::<Path>()
+        cursor = Option::<Token![!]>::skip(cursor)?;
+        cursor = Option::<BoundLifetimes>::skip(cursor)?;
+        cursor = Option::<Token![?]>::skip(cursor)?;
+        Path::skip(cursor)
     }
 }
 

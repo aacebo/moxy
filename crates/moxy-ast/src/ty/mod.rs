@@ -267,22 +267,22 @@ impl Parse for Type {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if !parser.peek::<Self>() {
+        if !Self::peek(parser.cursor()) {
             return parser.error("expected type").into();
         }
 
         // `&` reference.
-        if parser.peek::<Token![&]>() {
+        if <Token![&]>::peek(parser.cursor()) {
             return Ok(Self::Reference(parser.parse()?));
         }
 
         // `*` raw pointer.
-        if parser.peek::<Token![*]>() {
+        if <Token![*]>::peek(parser.cursor()) {
             return Ok(Self::Pointer(parser.parse()?));
         }
 
         // Never `!`.
-        if parser.peek::<Token![!]>() {
+        if <Token![!]>::peek(parser.cursor()) {
             return Ok(Self::Never(parser.parse()?));
         }
 
@@ -301,7 +301,7 @@ impl Parse for Type {
             let (bracket_span, inner) = parser.parse_group_spanned(Delim::Bracket)?;
             let elem = Box::new(inner.parse()?);
 
-            if inner.peek::<Token![;]>() {
+            if <Token![;]>::peek(inner.cursor()) {
                 let semi = inner.parse()?;
                 let len = inner.parse()?;
 
@@ -323,20 +323,20 @@ impl Parse for Type {
         }
 
         // `impl Trait`.
-        if parser.peek::<Token![impl]>() {
+        if <Token![impl]>::peek(parser.cursor()) {
             return Ok(Self::ImplTrait(parser.parse()?));
         }
 
         // `dyn Trait`.
-        if parser.peek::<Token![dyn]>() {
+        if <Token![dyn]>::peek(parser.cursor()) {
             return Ok(Self::TraitObject(parser.parse()?));
         }
 
         // Bare fn pointer: `fn(...)`, `extern "C" fn(...)`, `unsafe fn(...)`.
-        if parser.peek::<Token![fn]>()
-            || parser.peek::<Token![extern]>()
-            || parser.peek::<Token![unsafe]>()
-            || parser.peek::<BoundLifetimes>()
+        if <Token![fn]>::peek(parser.cursor())
+            || <Token![extern]>::peek(parser.cursor())
+            || <Token![unsafe]>::peek(parser.cursor())
+            || BoundLifetimes::peek(parser.cursor())
         {
             return Ok(Self::BareFn(parser.parse()?));
         }
@@ -367,13 +367,13 @@ impl Parse for Type {
 
         // Otherwise a path type: `T`, `std::vec::Vec`, or a qualified
         // `<T as Trait>::Item` (which begins with `<`).
-        if parser.peek::<Token![<]>() {
+        if <Token![<]>::peek(parser.cursor()) {
             return Ok(Self::Path(parser.parse()?));
         }
 
         let path = parser.parse()?;
 
-        if parser.peek::<Token![!]>() {
+        if <Token![!]>::peek(parser.cursor()) {
             return Ok(Self::Macro(TypeMacro {
                 mac: MacroCall {
                     path,
@@ -387,16 +387,16 @@ impl Parse for Type {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<Token![&]>() {
-            return cursor.skip::<TypeReference>();
+        if <Token![&]>::peek(cursor) {
+            return TypeReference::skip(cursor);
         }
 
-        if cursor.peek::<Token![*]>() {
-            return cursor.skip::<TypePointer>();
+        if <Token![*]>::peek(cursor) {
+            return TypePointer::skip(cursor);
         }
 
-        if cursor.peek::<Token![!]>() {
-            return cursor.skip::<Token![!]>();
+        if <Token![!]>::peek(cursor) {
+            return <Token![!]>::skip(cursor);
         }
 
         if matches!(cursor.curr(), Some(tt) if tt.text() == Some("_")) {
@@ -405,53 +405,53 @@ impl Parse for Type {
 
         if cursor.is_delimited(Delim::Bracket) {
             let mut inner = cursor.descend(Delim::Bracket)?;
-            inner = inner.skip::<Type>()?;
+            inner = Type::skip(inner)?;
 
-            if inner.peek::<Token![;]>() {
-                inner = inner.skip::<Token![;]>()?;
-                inner = inner.skip::<Expr>()?;
+            if <Token![;]>::peek(inner) {
+                inner = <Token![;]>::skip(inner)?;
+                inner = Expr::skip(inner)?;
             }
 
             return inner.is_empty().then(|| cursor.offset(1));
         }
 
-        if cursor.peek::<Token![impl]>() {
-            return cursor.skip::<TypeImplTrait>();
+        if <Token![impl]>::peek(cursor) {
+            return TypeImplTrait::skip(cursor);
         }
 
-        if cursor.peek::<Token![dyn]>() {
-            return cursor.skip::<TypeTraitObject>();
+        if <Token![dyn]>::peek(cursor) {
+            return TypeTraitObject::skip(cursor);
         }
 
-        if cursor.peek::<Token![fn]>()
-            || cursor.peek::<Token![extern]>()
-            || cursor.peek::<Token![unsafe]>()
-            || cursor.peek::<BoundLifetimes>()
+        if <Token![fn]>::peek(cursor)
+            || <Token![extern]>::peek(cursor)
+            || <Token![unsafe]>::peek(cursor)
+            || BoundLifetimes::peek(cursor)
         {
-            return cursor.skip::<TypeBareFn>();
+            return TypeBareFn::skip(cursor);
         }
 
         if cursor.is_delimited(Delim::Paren) {
-            if cursor.peek::<TypeParen>() {
-                return cursor.skip::<TypeParen>();
+            if TypeParen::peek(cursor) {
+                return TypeParen::skip(cursor);
             }
 
-            return cursor.skip::<TypeTuple>();
+            return TypeTuple::skip(cursor);
         }
 
         if cursor.is_delimited(Delim::None) {
-            return cursor.skip::<TypeGroup>();
+            return TypeGroup::skip(cursor);
         }
 
-        if cursor.peek::<Token![<]>() {
-            return cursor.skip::<TypePath>();
+        if <Token![<]>::peek(cursor) {
+            return TypePath::skip(cursor);
         }
 
-        let mut cursor = cursor.skip::<Path>()?;
+        let mut cursor = Path::skip(cursor)?;
 
-        if cursor.peek::<Token![!]>() {
-            cursor = cursor.skip::<Token![!]>()?;
-            cursor = cursor.skip::<Group>()?;
+        if <Token![!]>::peek(cursor) {
+            cursor = <Token![!]>::skip(cursor)?;
+            cursor = Group::skip(cursor)?;
         }
 
         Some(cursor)

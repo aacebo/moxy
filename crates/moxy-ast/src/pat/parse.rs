@@ -1,67 +1,67 @@
 use super::*;
 
 pub(crate) fn single(parser: &Parser) -> Result<Pattern, ParseError> {
-    if parser.peek::<PatWild>() {
+    if PatWild::peek(parser.cursor()) {
         return Ok(Pattern::Wild(parser.parse()?));
     }
 
-    if parser.peek::<PatRange>() {
+    if PatRange::peek(parser.cursor()) {
         return Ok(Pattern::Range(parser.parse()?));
     }
 
-    if parser.peek::<PatRest>() {
+    if PatRest::peek(parser.cursor()) {
         return Ok(Pattern::Rest(parser.parse()?));
     }
 
-    if parser.peek::<PatBox>() {
+    if PatBox::peek(parser.cursor()) {
         return Ok(Pattern::Box(parser.parse()?));
     }
 
-    if parser.peek::<PatConst>() {
+    if PatConst::peek(parser.cursor()) {
         return Ok(Pattern::Const(parser.parse()?));
     }
 
-    if parser.peek::<PatReference>() {
+    if PatReference::peek(parser.cursor()) {
         return Ok(Pattern::Reference(parser.parse()?));
     }
 
-    if parser.peek::<PatGroup>() {
+    if PatGroup::peek(parser.cursor()) {
         return Ok(Pattern::Group(parser.parse()?));
     }
 
-    if parser.peek::<PatSlice>() {
+    if PatSlice::peek(parser.cursor()) {
         return Ok(Pattern::Slice(parser.parse()?));
     }
 
-    if parser.peek::<PatTuple>() {
+    if PatTuple::peek(parser.cursor()) {
         return Ok(Pattern::Tuple(parser.parse()?));
     }
 
-    if parser.peek::<PatParen>() {
+    if PatParen::peek(parser.cursor()) {
         return Ok(Pattern::Paren(parser.parse()?));
     }
 
-    if parser.peek::<PatMacro>() {
+    if PatMacro::peek(parser.cursor()) {
         return Ok(Pattern::Macro(parser.parse()?));
     }
 
-    if parser.peek::<PatTupleStruct>() {
+    if PatTupleStruct::peek(parser.cursor()) {
         return Ok(Pattern::TupleStruct(parser.parse()?));
     }
 
-    if parser.peek::<PatStruct>() {
+    if PatStruct::peek(parser.cursor()) {
         return Ok(Pattern::Struct(parser.parse()?));
     }
 
-    if parser.peek::<PatIdent>() {
+    if PatIdent::peek(parser.cursor()) {
         return Ok(Pattern::Ident(parser.parse()?));
     }
 
-    if parser.peek::<PatPath>() {
+    if PatPath::peek(parser.cursor()) {
         return Ok(Pattern::Path(parser.parse()?));
     }
 
-    if parser.peek::<PatLit>() {
+    if PatLit::peek(parser.cursor()) {
         return Ok(Pattern::Lit(parser.parse()?));
     }
 

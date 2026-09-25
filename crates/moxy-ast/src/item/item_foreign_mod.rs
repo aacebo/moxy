@@ -17,8 +17,8 @@ pub struct ItemForeignMod {
 impl Parse for ItemForeignMod {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        let cursor = cursor.skip::<Option<Token![unsafe]>>().unwrap_or(cursor);
-        let Some(cursor) = cursor.skip::<Abi>() else {
+        let cursor = Option::<Token![unsafe]>::skip(cursor).unwrap_or(cursor);
+        let Some(cursor) = Abi::skip(cursor) else {
             return false;
         };
 
@@ -41,12 +41,12 @@ impl Parse for ItemForeignMod {
 
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<Option<Token![unsafe]>>()?;
-        cursor = cursor.skip::<Abi>()?;
+        cursor = Option::<Token![unsafe]>::skip(cursor)?;
+        cursor = Abi::skip(cursor)?;
         let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
 
         while !inner.is_empty() {
-            inner = inner.skip::<ForeignItem>()?;
+            inner = ForeignItem::skip(inner)?;
         }
 
         Some(cursor.offset(1))

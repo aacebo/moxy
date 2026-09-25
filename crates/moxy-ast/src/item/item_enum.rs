@@ -21,7 +21,7 @@ impl Parse for ItemEnum {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Token![enum]>()
+        <Token![enum]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -45,19 +45,19 @@ impl Parse for ItemEnum {
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = cursor.skip::<Token![enum]>()?;
-        cursor = cursor.skip::<Ident>()?;
+        cursor = <Token![enum]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
         let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
 
         while !inner.is_empty() {
-            inner = inner.skip::<Variant>()?;
+            inner = Variant::skip(inner)?;
 
             if inner.is_empty() {
                 break;
             }
 
-            inner = inner.skip::<Token![,]>()?;
+            inner = <Token![,]>::skip(inner)?;
         }
 
         Some(cursor.offset(1))
@@ -107,14 +107,14 @@ pub struct Variant {
 
 impl Parse for Variant {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
-        Attributes::skip(cursor).map(|cursor| cursor.peek::<Ident>()).unwrap_or(false)
+        Attributes::skip(cursor).map(|cursor| Ident::peek(cursor)).unwrap_or(false)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
         let ident = parser.parse()?;
         let fields = parser.parse()?;
-        let (eq_punct, discriminant) = if parser.peek::<Token![=]>() {
+        let (eq_punct, discriminant) = if <Token![=]>::peek(parser.cursor()) {
             let eq_punct = parser.parse()?;
             let discriminant = parser.parse()?;
             (Some(eq_punct), Some(discriminant))
@@ -133,12 +133,12 @@ impl Parse for Variant {
 
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<Ident>()?;
+        cursor = Ident::skip(cursor)?;
         cursor = Fields::skip(cursor)?;
 
-        if cursor.peek::<Token![=]>() {
-            cursor = cursor.skip::<Token![=]>()?;
-            cursor = cursor.skip::<Expr>()?;
+        if <Token![=]>::peek(cursor) {
+            cursor = <Token![=]>::skip(cursor)?;
+            cursor = Expr::skip(cursor)?;
         }
 
         Some(cursor)

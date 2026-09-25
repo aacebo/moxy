@@ -77,27 +77,23 @@ impl Spanner for Stmt {
 
 impl Parse for Stmt {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<StmtLocal>()
-            || cursor.peek::<StmtMacro>()
-            || cursor.peek::<StmtBlock>()
-            || cursor.peek::<Item>()
-            || cursor.peek::<Expr>()
+        StmtLocal::peek(cursor) || StmtMacro::peek(cursor) || StmtBlock::peek(cursor) || Item::peek(cursor) || Expr::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<StmtLocal>() {
+        if StmtLocal::peek(parser.cursor()) {
             return Ok(Self::Local(Box::new(parser.parse()?)));
         }
 
-        if parser.peek::<StmtMacro>() {
+        if StmtMacro::peek(parser.cursor()) {
             return Ok(Self::Macro(parser.parse()?));
         }
 
-        if parser.peek::<StmtBlock>() {
+        if StmtBlock::peek(parser.cursor()) {
             return Ok(Self::Block(parser.parse()?));
         }
 
-        if parser.peek::<Item>() {
+        if Item::peek(parser.cursor()) {
             return Ok(Self::Item(parser.parse()?));
         }
 
@@ -107,16 +103,16 @@ impl Parse for Stmt {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<StmtLocal>() {
-            cursor.skip::<StmtLocal>()
-        } else if cursor.peek::<StmtMacro>() {
-            cursor.skip::<StmtMacro>()
-        } else if cursor.peek::<StmtBlock>() {
-            cursor.skip::<StmtBlock>()
-        } else if cursor.peek::<Item>() {
-            cursor.skip::<Item>()
+        if StmtLocal::peek(cursor) {
+            StmtLocal::skip(cursor)
+        } else if StmtMacro::peek(cursor) {
+            StmtMacro::skip(cursor)
+        } else if StmtBlock::peek(cursor) {
+            StmtBlock::skip(cursor)
+        } else if Item::peek(cursor) {
+            Item::skip(cursor)
         } else {
-            cursor.skip::<Expr>()?.skip::<Option<Token![;]>>()
+            Option::<Token![;]>::skip(Expr::skip(cursor)?)
         }
     }
 }

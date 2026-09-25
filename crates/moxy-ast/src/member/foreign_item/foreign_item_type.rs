@@ -19,7 +19,7 @@ impl Parse for ForeignItemType {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Token![type]>()
+        <Token![type]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -36,10 +36,10 @@ impl Parse for ForeignItemType {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = cursor.skip::<Token![type]>()?;
-        cursor = cursor.skip::<Ident>()?;
+        cursor = <Token![type]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
-        cursor.skip::<Option<Token![;]>>()
+        Option::<Token![;]>::skip(cursor)
     }
 }
 

@@ -15,7 +15,7 @@ pub struct AngleArguments {
 
 impl Parse for AngleArguments {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![<]>() || cursor.skip::<Token![::]>().is_some_and(|cursor| cursor.peek::<Token![<]>())
+        <Token![<]>::peek(cursor) || <Token![::]>::skip(cursor).is_some_and(|cursor| <Token![<]>::peek(cursor))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -28,16 +28,16 @@ impl Parse for AngleArguments {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Option<Token![::]>>()?;
-        cursor = cursor.skip::<Token![<]>()?;
-        cursor = cursor.skip::<GenericArgument>()?;
+        cursor = Option::<Token![::]>::skip(cursor)?;
+        cursor = <Token![<]>::skip(cursor)?;
+        cursor = GenericArgument::skip(cursor)?;
 
-        while cursor.peek::<Token![,]>() {
-            cursor = cursor.skip::<Token![,]>()?;
-            cursor = cursor.skip::<GenericArgument>()?;
+        while <Token![,]>::peek(cursor) {
+            cursor = <Token![,]>::skip(cursor)?;
+            cursor = GenericArgument::skip(cursor)?;
         }
 
-        cursor.skip::<Token![>]>()
+        <Token![>]>::skip(cursor)
     }
 }
 

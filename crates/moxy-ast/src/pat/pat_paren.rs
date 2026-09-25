@@ -24,7 +24,7 @@ impl Parse for PatParen {
             return false;
         };
 
-        let Some(inner) = inner.skip::<Pattern>() else {
+        let Some(inner) = Pattern::skip(inner) else {
             return false;
         };
 

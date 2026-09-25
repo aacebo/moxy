@@ -26,12 +26,12 @@ impl Parse for PatOr {
     fn peek(cursor: Cursor<'_>) -> bool {
         let mut cursor = Attributes::skip(cursor).unwrap_or(cursor);
 
-        if cursor.peek::<Token![|]>() {
+        if <Token![|]>::peek(cursor) {
             return true;
         }
 
         while !cursor.is_empty() {
-            if cursor.peek::<Token![|]>() {
+            if <Token![|]>::peek(cursor) {
                 return true;
             }
 

@@ -15,7 +15,7 @@ pub struct TypePredicate {
 
 impl Parse for TypePredicate {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<BoundLifetimes>() || cursor.peek::<Type>()
+        BoundLifetimes::peek(cursor) || Type::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -28,14 +28,14 @@ impl Parse for TypePredicate {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Option<BoundLifetimes>>()?;
-        cursor = cursor.skip::<Type>()?;
-        cursor = cursor.skip::<Token![:]>()?;
-        cursor = cursor.skip::<TypeBound>()?;
+        cursor = Option::<BoundLifetimes>::skip(cursor)?;
+        cursor = Type::skip(cursor)?;
+        cursor = <Token![:]>::skip(cursor)?;
+        cursor = TypeBound::skip(cursor)?;
 
-        while cursor.peek::<Token![+]>() {
-            cursor = cursor.skip::<Token![+]>()?;
-            cursor = cursor.skip::<TypeBound>()?;
+        while <Token![+]>::peek(cursor) {
+            cursor = <Token![+]>::skip(cursor)?;
+            cursor = TypeBound::skip(cursor)?;
         }
 
         Some(cursor)

@@ -31,11 +31,11 @@ impl ToTokens for RangeLimits {
 
 impl Parse for RangeLimits {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![..=]>() || cursor.peek::<Token![..]>()
+        <Token![..=]>::peek(cursor) || <Token![..]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<Token![..=]>() {
+        if <Token![..=]>::peek(parser.cursor()) {
             Ok(Self::Closed(parser.parse()?))
         } else {
             Ok(Self::HalfOpen(parser.parse()?))
@@ -43,10 +43,10 @@ impl Parse for RangeLimits {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<Token![..=]>() {
-            cursor.skip::<Token![..=]>()
+        if <Token![..=]>::peek(cursor) {
+            <Token![..=]>::skip(cursor)
         } else {
-            cursor.skip::<Token![..]>()
+            <Token![..]>::skip(cursor)
         }
     }
 }

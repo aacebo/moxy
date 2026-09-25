@@ -38,15 +38,15 @@ impl Parse for Receiver {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        let reference = cursor.peek::<Token![&]>();
-        cursor = cursor.skip::<Option<Token![&]>>()?;
+        let reference = <Token![&]>::peek(cursor);
+        cursor = Option::<Token![&]>::skip(cursor)?;
 
         if reference {
-            cursor = cursor.skip::<Option<Lifetime>>()?;
+            cursor = Option::<Lifetime>::skip(cursor)?;
         }
 
-        cursor = cursor.skip::<Option<Token![mut]>>()?;
-        cursor.skip::<Token![self]>()
+        cursor = Option::<Token![mut]>::skip(cursor)?;
+        <Token![self]>::skip(cursor)
     }
 }
 

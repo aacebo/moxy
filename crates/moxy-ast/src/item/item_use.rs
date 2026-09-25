@@ -20,7 +20,7 @@ impl Parse for ItemUse {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Token![use]>()
+        <Token![use]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -42,9 +42,9 @@ impl Parse for ItemUse {
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = cursor.skip::<Token![use]>()?;
-        cursor = cursor.skip::<UseTree>()?;
-        cursor.skip::<Token![;]>()
+        cursor = <Token![use]>::skip(cursor)?;
+        cursor = UseTree::skip(cursor)?;
+        <Token![;]>::skip(cursor)
     }
 }
 

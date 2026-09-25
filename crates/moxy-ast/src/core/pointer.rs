@@ -31,11 +31,11 @@ impl ToTokens for PointerMutability {
 
 impl Parse for PointerMutability {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![const]>() || cursor.peek::<Token![mut]>()
+        <Token![const]>::peek(cursor) || <Token![mut]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<Token![const]>() {
+        if <Token![const]>::peek(parser.cursor()) {
             Ok(Self::Const(parser.parse()?))
         } else {
             Ok(Self::Mut(parser.parse()?))
@@ -43,10 +43,10 @@ impl Parse for PointerMutability {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<Token![const]>() {
-            cursor.skip::<Token![const]>()
+        if <Token![const]>::peek(cursor) {
+            <Token![const]>::skip(cursor)
         } else {
-            cursor.skip::<Token![mut]>()
+            <Token![mut]>::skip(cursor)
         }
     }
 }

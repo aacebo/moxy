@@ -22,28 +22,28 @@ impl Spanner for PatPath {
 impl Parse for PatPath {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        let cursor = if cursor.peek::<Token![<]>() {
-            let Some(cursor) = cursor.skip::<TypePath>() else {
+        let cursor = if <Token![<]>::peek(cursor) {
+            let Some(cursor) = TypePath::skip(cursor) else {
                 return false;
             };
 
             cursor
         } else {
-            let Some(cursor) = cursor.skip::<Path>() else {
+            let Some(cursor) = Path::skip(cursor) else {
                 return false;
             };
 
             cursor
         };
 
-        !cursor.peek::<Token![!]>()
+        !<Token![!]>::peek(cursor)
             && !cursor.is_delimited(moxy_token::Delim::Paren)
             && !cursor.is_delimited(moxy_token::Delim::Brace)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
-        let (qself, path) = if parser.peek::<Token![<]>() {
+        let (qself, path) = if <Token![<]>::peek(parser.cursor()) {
             let (qself, path) = QSelf::parse_qualified(parser)?;
             (Some(qself), path)
         } else {
@@ -56,10 +56,10 @@ impl Parse for PatPath {
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         let cursor = Attributes::skip(cursor)?;
 
-        if cursor.peek::<Token![<]>() {
-            cursor.skip::<TypePath>()
+        if <Token![<]>::peek(cursor) {
+            TypePath::skip(cursor)
         } else {
-            cursor.skip::<Path>()
+            Path::skip(cursor)
         }
     }
 }

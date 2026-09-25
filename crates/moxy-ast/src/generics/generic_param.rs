@@ -68,15 +68,15 @@ impl Spanner for GenericParam {
 
 impl Parse for GenericParam {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<generics::LifetimeParam>() || cursor.peek::<generics::ConstParam>() || cursor.peek::<generics::TypeParam>()
+        generics::LifetimeParam::peek(cursor) || generics::ConstParam::peek(cursor) || generics::TypeParam::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<generics::LifetimeParam>() {
+        if generics::LifetimeParam::peek(parser.cursor()) {
             return Ok(Self::Lifetime(parser.parse()?));
         }
 
-        if parser.peek::<generics::ConstParam>() {
+        if generics::ConstParam::peek(parser.cursor()) {
             return Ok(Self::Const(Box::new(parser.parse()?)));
         }
 
@@ -84,12 +84,12 @@ impl Parse for GenericParam {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<generics::LifetimeParam>() {
-            cursor.skip::<generics::LifetimeParam>()
-        } else if cursor.peek::<generics::ConstParam>() {
-            cursor.skip::<generics::ConstParam>()
+        if generics::LifetimeParam::peek(cursor) {
+            generics::LifetimeParam::skip(cursor)
+        } else if generics::ConstParam::peek(cursor) {
+            generics::ConstParam::skip(cursor)
         } else {
-            cursor.skip::<generics::TypeParam>()
+            generics::TypeParam::skip(cursor)
         }
     }
 }

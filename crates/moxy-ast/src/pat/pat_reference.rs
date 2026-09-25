@@ -22,7 +22,7 @@ impl Spanner for PatReference {
 impl Parse for PatReference {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Token![&]>()
+        <Token![&]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -36,9 +36,9 @@ impl Parse for PatReference {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<Token![&]>()?;
-        cursor = cursor.skip::<Option<Token![mut]>>()?;
-        cursor.skip::<Pattern>()
+        cursor = <Token![&]>::skip(cursor)?;
+        cursor = Option::<Token![mut]>::skip(cursor)?;
+        Pattern::skip(cursor)
     }
 }
 

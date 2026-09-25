@@ -17,13 +17,13 @@ pub struct TypeParam {
 
 impl Parse for TypeParam {
     fn peek(cursor: Cursor<'_>) -> bool {
-        Attributes::skip(cursor).map(|cursor| cursor.peek::<Ident>()).unwrap_or(false)
+        Attributes::skip(cursor).map(|cursor| Ident::peek(cursor)).unwrap_or(false)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
         let ident = parser.parse()?;
-        let (colon_punct, bounds) = if parser.peek::<Token![:]>() {
+        let (colon_punct, bounds) = if <Token![:]>::peek(parser.cursor()) {
             let colon_punct = parser.parse()?;
             let bounds = TypeBound::parse_bounds(parser)?;
             (Some(colon_punct), bounds)
@@ -31,7 +31,7 @@ impl Parse for TypeParam {
             (None, Punctuated::new())
         };
 
-        let (eq_punct, default) = if parser.peek::<Token![=]>() {
+        let (eq_punct, default) = if <Token![=]>::peek(parser.cursor()) {
             let eq_punct = parser.parse()?;
             let default = parser.parse()?;
             (Some(eq_punct), Some(default))
@@ -51,21 +51,21 @@ impl Parse for TypeParam {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<Ident>()?;
+        cursor = Ident::skip(cursor)?;
 
-        if cursor.peek::<Token![:]>() {
-            cursor = cursor.skip::<Token![:]>()?;
-            cursor = cursor.skip::<TypeBound>()?;
+        if <Token![:]>::peek(cursor) {
+            cursor = <Token![:]>::skip(cursor)?;
+            cursor = TypeBound::skip(cursor)?;
 
-            while cursor.peek::<Token![+]>() {
-                cursor = cursor.skip::<Token![+]>()?;
-                cursor = cursor.skip::<TypeBound>()?;
+            while <Token![+]>::peek(cursor) {
+                cursor = <Token![+]>::skip(cursor)?;
+                cursor = TypeBound::skip(cursor)?;
             }
         }
 
-        if cursor.peek::<Token![=]>() {
-            cursor = cursor.skip::<Token![=]>()?;
-            cursor = cursor.skip::<Type>()?;
+        if <Token![=]>::peek(cursor) {
+            cursor = <Token![=]>::skip(cursor)?;
+            cursor = Type::skip(cursor)?;
         }
 
         Some(cursor)

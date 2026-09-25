@@ -19,19 +19,19 @@ pub enum TmplKeyword {
 
 impl Parse for TmplKeyword {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<TmplIf>() || cursor.peek::<TmplFor>() || cursor.peek::<TmplMatch>()
+        TmplIf::peek(cursor) || TmplFor::peek(cursor) || TmplMatch::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<TmplIf>() {
+        if TmplIf::peek(parser.cursor()) {
             return Ok(Self::If(parser.parse()?));
         }
 
-        if parser.peek::<TmplFor>() {
+        if TmplFor::peek(parser.cursor()) {
             return Ok(Self::For(parser.parse()?));
         }
 
-        if parser.peek::<TmplMatch>() {
+        if TmplMatch::peek(parser.cursor()) {
             return Ok(Self::Match(parser.parse()?));
         }
 
@@ -39,16 +39,16 @@ impl Parse for TmplKeyword {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<TmplIf>() {
-            return cursor.skip::<TmplIf>();
+        if TmplIf::peek(cursor) {
+            return TmplIf::skip(cursor);
         }
 
-        if cursor.peek::<TmplFor>() {
-            return cursor.skip::<TmplFor>();
+        if TmplFor::peek(cursor) {
+            return TmplFor::skip(cursor);
         }
 
-        if cursor.peek::<TmplMatch>() {
-            return cursor.skip::<TmplMatch>();
+        if TmplMatch::peek(cursor) {
+            return TmplMatch::skip(cursor);
         }
 
         None

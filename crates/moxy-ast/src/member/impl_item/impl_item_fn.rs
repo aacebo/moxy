@@ -18,8 +18,8 @@ impl Parse for ImplItemFn {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        let cursor = cursor.skip::<Option<Token![default]>>().unwrap_or(cursor);
-        cursor.peek::<Signature>()
+        let cursor = Option::<Token![default]>::skip(cursor).unwrap_or(cursor);
+        Signature::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -35,9 +35,9 @@ impl Parse for ImplItemFn {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = cursor.skip::<Option<Token![default]>>()?;
-        cursor = cursor.skip::<Signature>()?;
-        cursor.skip::<StmtBlock>()
+        cursor = Option::<Token![default]>::skip(cursor)?;
+        cursor = Signature::skip(cursor)?;
+        StmtBlock::skip(cursor)
     }
 }
 

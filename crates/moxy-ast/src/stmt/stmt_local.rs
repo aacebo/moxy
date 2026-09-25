@@ -18,7 +18,7 @@ pub struct StmtLocal {
 impl Parse for StmtLocal {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor)
-            .map(|cursor| cursor.peek::<Token![let]>() && cursor.offset(1).peek::<Pattern>())
+            .map(|cursor| <Token![let]>::peek(cursor) && Pattern::peek(cursor.offset(1)))
             .unwrap_or(false)
     }
 
@@ -26,7 +26,7 @@ impl Parse for StmtLocal {
         let attrs = parser.parse()?;
         let let_keyword = parser.parse()?;
         let pat = parser.parse()?;
-        let ty = if parser.peek::<Token![:]>() {
+        let ty = if <Token![:]>::peek(parser.cursor()) {
             let colon = parser.parse()?;
             Some((colon, parser.parse()?))
         } else {
@@ -48,16 +48,16 @@ impl Parse for StmtLocal {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<Token![let]>()?;
-        cursor = cursor.skip::<Pattern>()?;
+        cursor = <Token![let]>::skip(cursor)?;
+        cursor = Pattern::skip(cursor)?;
 
-        if cursor.peek::<Token![:]>() {
-            cursor = cursor.skip::<Token![:]>()?;
-            cursor = cursor.skip::<Type>()?;
+        if <Token![:]>::peek(cursor) {
+            cursor = <Token![:]>::skip(cursor)?;
+            cursor = Type::skip(cursor)?;
         }
 
-        cursor = cursor.skip::<Option<StmtLocalInit>>()?;
-        cursor.skip::<Option<Token![;]>>()
+        cursor = Option::<StmtLocalInit>::skip(cursor)?;
+        Option::<Token![;]>::skip(cursor)
     }
 }
 
@@ -109,14 +109,14 @@ impl Spanner for StmtLocalInit {
 
 impl Parse for StmtLocalInit {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![=]>() && cursor.offset(1).peek::<Expr>()
+        <Token![=]>::peek(cursor) && Expr::peek(cursor.offset(1))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
             eq: parser.parse()?,
             expr: parser.parse()?,
-            diverge: if parser.peek::<Token![else]>() {
+            diverge: if <Token![else]>::peek(parser.cursor()) {
                 Some((parser.parse()?, Box::new(parser.parse()?)))
             } else {
                 None
@@ -125,12 +125,12 @@ impl Parse for StmtLocalInit {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Token![=]>()?;
-        cursor = cursor.skip::<Expr>()?;
+        cursor = <Token![=]>::skip(cursor)?;
+        cursor = Expr::skip(cursor)?;
 
-        if cursor.peek::<Token![else]>() {
-            cursor = cursor.skip::<Token![else]>()?;
-            cursor = cursor.skip::<Expr>()?;
+        if <Token![else]>::peek(cursor) {
+            cursor = <Token![else]>::skip(cursor)?;
+            cursor = Expr::skip(cursor)?;
         }
 
         Some(cursor)

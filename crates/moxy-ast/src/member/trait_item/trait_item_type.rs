@@ -20,7 +20,7 @@ pub struct TraitItemType {
 impl Parse for TraitItemType {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor)
-            .map(|cursor| cursor.peek::<Token![type]>() && cursor.offset(1).peek::<Ident>())
+            .map(|cursor| <Token![type]>::peek(cursor) && Ident::peek(cursor.offset(1)))
             .unwrap_or(false)
     }
 
@@ -29,10 +29,10 @@ impl Parse for TraitItemType {
         let type_keyword = parser.parse()?;
         let ident = parser.parse()?;
         let generics = parser.parse()?;
-        let (colon, bounds) = if parser.peek::<Token![:]>() {
+        let (colon, bounds) = if <Token![:]>::peek(parser.cursor()) {
             let colon = parser.parse()?;
 
-            if parser.peek::<TypeBound>() {
+            if TypeBound::peek(parser.cursor()) {
                 (Some(colon), Punctuated::parse_separated_nonempty(parser)?)
             } else {
                 (Some(colon), Punctuated::new())
@@ -41,7 +41,7 @@ impl Parse for TraitItemType {
             (None, Punctuated::new())
         };
 
-        let default = if parser.peek::<Token![=]>() {
+        let default = if <Token![=]>::peek(parser.cursor()) {
             let eq = parser.parse()?;
             Some((eq, parser.parse()?))
         } else {
@@ -64,29 +64,29 @@ impl Parse for TraitItemType {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<Token![type]>()?;
-        cursor = cursor.skip::<Ident>()?;
+        cursor = <Token![type]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
 
-        if cursor.peek::<Token![:]>() {
-            cursor = cursor.skip::<Token![:]>()?;
+        if <Token![:]>::peek(cursor) {
+            cursor = <Token![:]>::skip(cursor)?;
 
-            if cursor.peek::<TypeBound>() {
-                cursor = cursor.skip::<TypeBound>()?;
+            if TypeBound::peek(cursor) {
+                cursor = TypeBound::skip(cursor)?;
 
-                while cursor.peek::<Token![+]>() {
-                    cursor = cursor.skip::<Token![+]>()?;
-                    cursor = cursor.skip::<TypeBound>()?;
+                while <Token![+]>::peek(cursor) {
+                    cursor = <Token![+]>::skip(cursor)?;
+                    cursor = TypeBound::skip(cursor)?;
                 }
             }
         }
 
-        if cursor.peek::<Token![=]>() {
-            cursor = cursor.skip::<Token![=]>()?;
-            cursor = cursor.skip::<Type>()?;
+        if <Token![=]>::peek(cursor) {
+            cursor = <Token![=]>::skip(cursor)?;
+            cursor = Type::skip(cursor)?;
         }
 
-        cursor.skip::<Token![;]>()
+        <Token![;]>::skip(cursor)
     }
 }
 

@@ -32,7 +32,7 @@ pub struct TmplIfBranch {
 
 impl Parse for TmplIfBranch {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![if]>()
+        <Token![if]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -52,7 +52,7 @@ impl Parse for TmplIfBranch {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let cursor = cursor.skip::<Token![if]>()?;
+        let cursor = <Token![if]>::skip(cursor)?;
         let inner = cursor.descend(Delim::Paren)?;
         let cursor = inner.offset(inner.remaining()).is_empty().then(|| cursor.offset(1))?;
         let inner = cursor.descend(Delim::Brace)?;
@@ -63,11 +63,11 @@ impl Parse for TmplIfBranch {
 
 impl Parse for TmplIf {
     fn peek(cursor: Cursor<'_>) -> bool {
-        let Some(cursor) = cursor.skip::<Token![@]>() else {
+        let Some(cursor) = <Token![@]>::skip(cursor) else {
             return false;
         };
 
-        cursor.peek::<Token![if]>()
+        <Token![if]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -79,13 +79,13 @@ impl Parse for TmplIf {
         let mut else_keyword = None;
         let mut else_body = None;
 
-        while let Some(cursor) = parser.cursor().skip::<Token![@]>()
-            && cursor.peek::<Token![else]>()
+        while let Some(cursor) = <Token![@]>::skip(parser.cursor())
+            && <Token![else]>::peek(cursor)
         {
             let at_punct = parser.parse()?;
             let keyword = parser.parse()?;
 
-            if parser.peek::<Token![if]>() {
+            if <Token![if]>::peek(parser.cursor()) {
                 let mut branch: TmplIfBranch = parser.parse()?;
                 branch.at_punct = Some(at_punct);
                 branch.else_keyword = Some(keyword);
@@ -110,16 +110,16 @@ impl Parse for TmplIf {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Token![@]>()?;
-        cursor = cursor.skip::<TmplIfBranch>()?;
+        cursor = <Token![@]>::skip(cursor)?;
+        cursor = TmplIfBranch::skip(cursor)?;
 
-        while let Some(next) = cursor.skip::<Token![@]>()
-            && next.peek::<Token![else]>()
+        while let Some(next) = <Token![@]>::skip(cursor)
+            && <Token![else]>::peek(next)
         {
-            cursor = next.skip::<Token![else]>()?;
+            cursor = <Token![else]>::skip(next)?;
 
-            if cursor.peek::<Token![if]>() {
-                cursor = cursor.skip::<TmplIfBranch>()?;
+            if <Token![if]>::peek(cursor) {
+                cursor = TmplIfBranch::skip(cursor)?;
             } else {
                 let inner = cursor.descend(Delim::Brace)?;
                 let inner = Template::skip(inner)?;

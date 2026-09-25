@@ -14,7 +14,7 @@ pub struct LifetimePredicate {
 
 impl Parse for LifetimePredicate {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Lifetime>()
+        Lifetime::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -26,13 +26,13 @@ impl Parse for LifetimePredicate {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Lifetime>()?;
-        cursor = cursor.skip::<Token![:]>()?;
-        cursor = cursor.skip::<Lifetime>()?;
+        cursor = Lifetime::skip(cursor)?;
+        cursor = <Token![:]>::skip(cursor)?;
+        cursor = Lifetime::skip(cursor)?;
 
-        while cursor.peek::<Token![+]>() {
-            cursor = cursor.skip::<Token![+]>()?;
-            cursor = cursor.skip::<Lifetime>()?;
+        while <Token![+]>::peek(cursor) {
+            cursor = <Token![+]>::skip(cursor)?;
+            cursor = Lifetime::skip(cursor)?;
         }
 
         Some(cursor)

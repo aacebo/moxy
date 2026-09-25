@@ -13,7 +13,7 @@ pub struct TypeMacro {
 
 impl Parse for TypeMacro {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<MacroCall>()
+        MacroCall::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -21,7 +21,7 @@ impl Parse for TypeMacro {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.skip::<MacroCall>()
+        MacroCall::skip(cursor)
     }
 }
 

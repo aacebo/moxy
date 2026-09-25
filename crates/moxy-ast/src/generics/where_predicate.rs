@@ -23,11 +23,11 @@ impl Spanner for WherePredicate {
 
 impl Parse for WherePredicate {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<LifetimePredicate>() || cursor.peek::<TypePredicate>()
+        LifetimePredicate::peek(cursor) || TypePredicate::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<LifetimePredicate>() {
+        if LifetimePredicate::peek(parser.cursor()) {
             return Ok(Self::Lifetime(parser.parse()?));
         }
 
@@ -35,10 +35,10 @@ impl Parse for WherePredicate {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<LifetimePredicate>() {
-            cursor.skip::<LifetimePredicate>()
+        if LifetimePredicate::peek(cursor) {
+            LifetimePredicate::skip(cursor)
         } else {
-            cursor.skip::<TypePredicate>()
+            TypePredicate::skip(cursor)
         }
     }
 }

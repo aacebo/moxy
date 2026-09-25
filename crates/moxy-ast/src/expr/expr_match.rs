@@ -50,13 +50,13 @@ pub struct MatchArm {
 
 impl Parse for MatchArm {
     fn peek(cursor: Cursor<'_>) -> bool {
-        Attributes::skip(cursor).unwrap_or(cursor).peek::<Pattern>()
+        Pattern::peek(Attributes::skip(cursor).unwrap_or(cursor))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
         let pat = parser.parse()?;
-        let (if_keyword, guard) = if parser.peek::<Token![if]>() {
+        let (if_keyword, guard) = if <Token![if]>::peek(parser.cursor()) {
             (Some(parser.parse()?), Some(parser.parse()?))
         } else {
             (None, None)
@@ -79,16 +79,16 @@ impl Parse for MatchArm {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<Pattern>()?;
+        cursor = Pattern::skip(cursor)?;
 
-        if cursor.peek::<Token![if]>() {
-            cursor = cursor.skip::<Token![if]>()?;
-            cursor = cursor.skip::<Expr>()?;
+        if <Token![if]>::peek(cursor) {
+            cursor = <Token![if]>::skip(cursor)?;
+            cursor = Expr::skip(cursor)?;
         }
 
-        cursor = cursor.skip::<Token![=>]>()?;
-        cursor = cursor.skip::<Expr>()?;
-        cursor.skip::<Option<Token![,]>>()
+        cursor = <Token![=>]>::skip(cursor)?;
+        cursor = Expr::skip(cursor)?;
+        Option::<Token![,]>::skip(cursor)
     }
 }
 

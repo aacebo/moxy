@@ -23,19 +23,19 @@ impl Parse for Signature {
     fn peek(cursor: Cursor<'_>) -> bool {
         let mut cursor = cursor;
 
-        if cursor.peek::<Token![const]>() {
+        if <Token![const]>::peek(cursor) {
             cursor = cursor.offset(1);
         }
 
-        if cursor.peek::<Token![async]>() {
+        if <Token![async]>::peek(cursor) {
             cursor = cursor.offset(1);
         }
 
-        if cursor.peek::<Token![unsafe]>() {
+        if <Token![unsafe]>::peek(cursor) {
             cursor = cursor.offset(1);
         }
 
-        if cursor.peek::<Token![extern]>() {
+        if <Token![extern]>::peek(cursor) {
             cursor = cursor.offset(1);
 
             if matches!(cursor.curr(), Some(moxy_token::TokenTree::Literal(lit)) if lit.repr().starts_with('"')) {
@@ -43,7 +43,7 @@ impl Parse for Signature {
             }
         }
 
-        cursor.peek::<Token![fn]>()
+        <Token![fn]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -59,14 +59,14 @@ impl Parse for Signature {
             let mut variadic = None;
 
             while !parser.is_empty() {
-                if parser.peek::<Variadic>() {
+                if Variadic::peek(parser.cursor()) {
                     variadic = Some(parser.parse()?);
                     break;
                 }
 
                 inputs.push_value(parser.parse()?);
 
-                if parser.peek::<Token![,]>() {
+                if <Token![,]>::peek(parser.cursor()) {
                     inputs.push_punct(parser.parse()?);
                 } else {
                     break;
@@ -93,28 +93,28 @@ impl Parse for Signature {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Option<Token![const]>>()?;
-        cursor = cursor.skip::<Option<Token![async]>>()?;
-        cursor = cursor.skip::<Option<Token![unsafe]>>()?;
-        cursor = cursor.skip::<Option<Abi>>()?;
-        cursor = cursor.skip::<Token![fn]>()?;
-        cursor = cursor.skip::<Ident>()?;
+        cursor = Option::<Token![const]>::skip(cursor)?;
+        cursor = Option::<Token![async]>::skip(cursor)?;
+        cursor = Option::<Token![unsafe]>::skip(cursor)?;
+        cursor = Option::<Abi>::skip(cursor)?;
+        cursor = <Token![fn]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
         let mut inner = cursor.descend(moxy_token::Delim::Paren)?;
 
         while !inner.is_empty() {
-            if inner.peek::<Variadic>() {
-                inner = inner.skip::<Variadic>()?;
+            if Variadic::peek(inner) {
+                inner = Variadic::skip(inner)?;
                 break;
             }
 
-            inner = inner.skip::<super::FnParam>()?;
+            inner = super::FnParam::skip(inner)?;
 
             if inner.is_empty() {
                 break;
             }
 
-            inner = inner.skip::<Token![,]>()?;
+            inner = <Token![,]>::skip(inner)?;
         }
 
         if !inner.is_empty() {
@@ -123,7 +123,7 @@ impl Parse for Signature {
 
         cursor = cursor.offset(1);
         cursor = ReturnType::skip(cursor)?;
-        cursor.skip::<Option<WhereClause>>()
+        Option::<WhereClause>::skip(cursor)
     }
 }
 

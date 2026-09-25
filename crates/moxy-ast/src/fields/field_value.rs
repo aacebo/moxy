@@ -21,14 +21,14 @@ impl FieldValue {
 
 impl Parse for FieldValue {
     fn peek(cursor: Cursor<'_>) -> bool {
-        Attributes::skip(cursor).unwrap_or(cursor).peek::<Member>()
+        Member::peek(Attributes::skip(cursor).unwrap_or(cursor))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
         let member = parser.parse()?;
 
-        if parser.peek::<Token![:]>() {
+        if <Token![:]>::peek(parser.cursor()) {
             Ok(Self {
                 attrs,
                 member,
@@ -59,11 +59,11 @@ impl Parse for FieldValue {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        let shorthand = cursor.peek::<Ident>();
-        cursor = cursor.skip::<Member>()?;
+        let shorthand = Ident::peek(cursor);
+        cursor = Member::skip(cursor)?;
 
-        if cursor.peek::<Token![:]>() {
-            cursor.skip::<Token![:]>()?.skip::<Expr>()
+        if <Token![:]>::peek(cursor) {
+            Expr::skip(<Token![:]>::skip(cursor)?)
         } else if shorthand {
             Some(cursor)
         } else {

@@ -22,7 +22,7 @@ impl Meta {
 
         let parser = Parser::from_tokens(&group.tokens);
 
-        while parser.peek::<Path>() {
+        while Path::peek(parser.cursor()) {
             let meta = parser.parse()?;
             parse(&meta)?;
         }
@@ -57,7 +57,7 @@ impl ToTokens for Meta {
 
 impl Parse for Meta {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Path>()
+        Path::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -68,8 +68,8 @@ impl Parse for Meta {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.skip::<Path>()?;
-        cursor.skip::<MetaContent>()
+        Path::skip(cursor)?;
+        MetaContent::skip(cursor)
     }
 }
 
@@ -115,24 +115,24 @@ impl Parse for MetaContent {
             return true;
         }
 
-        if cursor.peek::<Token![=]>()
-            && !cursor.peek::<Token![==]>()
-            && !cursor.peek::<Token![=>]>()
-            && cursor.offset(1).peek::<Expr>()
+        if <Token![=]>::peek(cursor) && !<Token![==]>::peek(cursor) && !<Token![=>]>::peek(cursor) && Expr::peek(cursor.offset(1))
         {
             return true;
         }
 
-        cursor.peek::<Group>()
+        Group::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if parser.is_empty() {
             Ok(Self::Unit)
-        } else if parser.peek::<Token![=]>() && !parser.peek::<Token![==]>() && !parser.peek::<Token![=>]>() {
+        } else if <Token![=]>::peek(parser.cursor())
+            && !<Token![==]>::peek(parser.cursor())
+            && !<Token![=>]>::peek(parser.cursor())
+        {
             let eq = parser.parse()?;
             let start = parser.cursor();
-            let end = parser.skip::<Expr>().cursor();
+            let end = Expr::skip(parser.cursor()).unwrap_or(parser.cursor());
 
             Ok(Self::Expr {
                 eq,
@@ -146,15 +146,15 @@ impl Parse for MetaContent {
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         if cursor.is_empty() {
             Some(cursor)
-        } else if cursor.peek::<Token![=]>()
-            && !cursor.peek::<Token![==]>()
-            && !cursor.peek::<Token![=>]>()
-            && cursor.offset(1).peek::<Expr>()
+        } else if <Token![=]>::peek(cursor)
+            && !<Token![==]>::peek(cursor)
+            && !<Token![=>]>::peek(cursor)
+            && Expr::peek(cursor.offset(1))
         {
-            cursor.skip::<Token![=]>()?;
-            cursor.skip::<Expr>()
-        } else if cursor.peek::<Group>() {
-            cursor.skip::<Group>()
+            <Token![=]>::skip(cursor)?;
+            Expr::skip(cursor)
+        } else if Group::peek(cursor) {
+            Group::skip(cursor)
         } else {
             None
         }

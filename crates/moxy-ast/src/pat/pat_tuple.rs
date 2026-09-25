@@ -28,12 +28,12 @@ impl Parse for PatTuple {
             return true;
         }
 
-        let Some(next) = inner.skip::<Pattern>() else {
+        let Some(next) = Pattern::skip(inner) else {
             return false;
         };
 
         inner = next;
-        !inner.is_empty() && inner.peek::<Token![,]>()
+        !inner.is_empty() && <Token![,]>::peek(inner)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -51,13 +51,13 @@ impl Parse for PatTuple {
         let mut inner = cursor.descend(Delim::Paren)?;
 
         while !inner.is_empty() {
-            inner = inner.skip::<Pattern>()?;
+            inner = Pattern::skip(inner)?;
 
             if inner.is_empty() {
                 break;
             }
 
-            inner = inner.skip::<Token![,]>()?;
+            inner = <Token![,]>::skip(inner)?;
         }
 
         Some(cursor.offset(1))

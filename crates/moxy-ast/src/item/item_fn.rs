@@ -18,7 +18,7 @@ impl Parse for ItemFn {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Signature>()
+        Signature::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -32,8 +32,8 @@ impl Parse for ItemFn {
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = cursor.skip::<Signature>()?;
-        cursor.skip::<StmtBlock>()
+        cursor = Signature::skip(cursor)?;
+        StmtBlock::skip(cursor)
     }
 }
 

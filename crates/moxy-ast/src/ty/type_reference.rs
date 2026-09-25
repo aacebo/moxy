@@ -17,7 +17,7 @@ pub struct TypeReference {
 
 impl Parse for TypeReference {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![&]>()
+        <Token![&]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -35,11 +35,9 @@ impl Parse for TypeReference {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor
-            .skip::<Token![&]>()?
-            .skip::<Option<Lifetime>>()?
-            .skip::<Option<Token![mut]>>()?
-            .skip::<Type>()
+        Type::skip(Option::<Token![mut]>::skip(Option::<Lifetime>::skip(<Token![&]>::skip(
+            cursor,
+        )?)?)?)
     }
 }
 

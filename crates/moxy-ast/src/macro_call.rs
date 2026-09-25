@@ -26,11 +26,11 @@ impl MacroCall {
 
 impl Parse for MacroCall {
     fn peek(cursor: Cursor<'_>) -> bool {
-        let Some(cursor) = cursor.skip::<Path>() else {
+        let Some(cursor) = Path::skip(cursor) else {
             return false;
         };
 
-        cursor.peek::<Token![!]>()
+        <Token![!]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -42,9 +42,9 @@ impl Parse for MacroCall {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Path>()?;
-        cursor = cursor.skip::<Token![!]>()?;
-        cursor.skip::<Group>()
+        cursor = Path::skip(cursor)?;
+        cursor = <Token![!]>::skip(cursor)?;
+        Group::skip(cursor)
     }
 }
 

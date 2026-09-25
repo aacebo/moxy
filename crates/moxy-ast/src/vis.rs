@@ -57,11 +57,11 @@ impl Visibility {
 
 impl Parse for Visibility {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![pub]>()
+        <Token![pub]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if !parser.peek::<Token![pub]>() {
+        if !<Token![pub]>::peek(parser.cursor()) {
             return Ok(Self::Inherited);
         }
 
@@ -71,7 +71,7 @@ impl Parse for Visibility {
         if parser.is_delimited(Delim::Paren) {
             let (span, parser) = parser.parse_group_spanned(Delim::Paren)?;
 
-            if parser.peek::<Token![crate]>() {
+            if <Token![crate]>::peek(parser.cursor()) {
                 let crate_keyword = parser.parse()?;
 
                 return Ok(Self::Crate {
@@ -80,7 +80,7 @@ impl Parse for Visibility {
                 });
             }
 
-            if parser.peek::<Token![self]>() {
+            if <Token![self]>::peek(parser.cursor()) {
                 let self_keyword = parser.parse()?;
 
                 return Ok(Self::SelfValue {
@@ -89,7 +89,7 @@ impl Parse for Visibility {
                 });
             }
 
-            if parser.peek::<Token![super]>() {
+            if <Token![super]>::peek(parser.cursor()) {
                 let super_keyword = parser.parse()?;
 
                 return Ok(Self::Super {
@@ -111,25 +111,25 @@ impl Parse for Visibility {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if !cursor.peek::<Token![pub]>() {
+        if !<Token![pub]>::peek(cursor) {
             return Some(cursor);
         }
 
-        cursor = cursor.skip::<Token![pub]>()?;
+        cursor = <Token![pub]>::skip(cursor)?;
 
         if !cursor.is_delimited(Delim::Paren) {
             return Some(cursor);
         }
 
         let inner = cursor.descend(Delim::Paren)?;
-        let inner = if inner.peek::<Token![crate]>() {
-            inner.skip::<Token![crate]>()?
-        } else if inner.peek::<Token![self]>() {
-            inner.skip::<Token![self]>()?
-        } else if inner.peek::<Token![super]>() {
-            inner.skip::<Token![super]>()?
+        let inner = if <Token![crate]>::peek(inner) {
+            <Token![crate]>::skip(inner)?
+        } else if <Token![self]>::peek(inner) {
+            <Token![self]>::skip(inner)?
+        } else if <Token![super]>::peek(inner) {
+            <Token![super]>::skip(inner)?
         } else {
-            inner.skip::<Token![in]>()?.skip::<Path>()?
+            Path::skip(<Token![in]>::skip(inner)?)?
         };
 
         if inner.is_empty() { Some(cursor.offset(1)) } else { None }

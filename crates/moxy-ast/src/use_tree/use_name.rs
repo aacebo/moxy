@@ -12,7 +12,7 @@ pub struct UseName {
 
 impl Parse for UseName {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Ident>()
+        Ident::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -20,7 +20,7 @@ impl Parse for UseName {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.skip::<Ident>()
+        Ident::skip(cursor)
     }
 }
 

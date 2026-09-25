@@ -14,7 +14,7 @@ pub struct UseRename {
 
 impl Parse for UseRename {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![as]>() && cursor.offset(2).peek::<Ident>()
+        Ident::peek(cursor) && <Token![as]>::peek(cursor.offset(1)) && Ident::peek(cursor.offset(2))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -26,7 +26,7 @@ impl Parse for UseRename {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.skip::<Ident>()?.skip::<Token![as]>()?.skip::<Ident>()
+        Ident::skip(<Token![as]>::skip(Ident::skip(cursor)?)?)
     }
 }
 

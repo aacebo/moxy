@@ -21,7 +21,7 @@ impl Spanner for PatConst {
 impl Parse for PatConst {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Token![const]>()
+        <Token![const]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -33,7 +33,7 @@ impl Parse for PatConst {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        Attributes::skip(cursor)?.skip::<Token![const]>()?.skip::<StmtBlock>()
+        StmtBlock::skip(<Token![const]>::skip(Attributes::skip(cursor)?)?)
     }
 }
 

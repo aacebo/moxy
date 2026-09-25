@@ -14,7 +14,7 @@ pub struct ParenArguments {
 
 impl Parse for ParenArguments {
     fn peek(cursor: Cursor<'_>) -> bool {
-        let cursor = cursor.skip::<Token![::]>().unwrap_or(cursor);
+        let cursor = <Token![::]>::skip(cursor).unwrap_or(cursor);
         cursor.is_delimited(Delim::Paren)
     }
 
@@ -26,17 +26,17 @@ impl Parse for ParenArguments {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let mut cursor = cursor.skip::<Token![::]>().unwrap_or(cursor);
+        let mut cursor = <Token![::]>::skip(cursor).unwrap_or(cursor);
         let mut inner = cursor.descend(Delim::Paren)?;
 
         while !inner.is_empty() {
-            inner = inner.skip::<Type>()?;
+            inner = Type::skip(inner)?;
 
             if inner.is_empty() {
                 break;
             }
 
-            inner = inner.skip::<Token![,]>()?;
+            inner = <Token![,]>::skip(inner)?;
         }
 
         cursor = cursor.offset(1);

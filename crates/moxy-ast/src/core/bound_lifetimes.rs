@@ -15,7 +15,7 @@ pub struct BoundLifetimes {
 
 impl Parse for BoundLifetimes {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![for]>()
+        <Token![for]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -33,16 +33,16 @@ impl Parse for BoundLifetimes {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let mut cursor = cursor.skip::<Token![for]>()?;
-        cursor = cursor.skip::<Token![<]>()?;
-        cursor = cursor.skip::<Lifetime>()?;
+        let mut cursor = <Token![for]>::skip(cursor)?;
+        cursor = <Token![<]>::skip(cursor)?;
+        cursor = Lifetime::skip(cursor)?;
 
-        while cursor.peek::<Token![,]>() {
-            cursor = cursor.skip::<Token![,]>()?;
-            cursor = cursor.skip::<Lifetime>()?;
+        while <Token![,]>::peek(cursor) {
+            cursor = <Token![,]>::skip(cursor)?;
+            cursor = Lifetime::skip(cursor)?;
         }
 
-        cursor.skip::<Token![>]>()
+        <Token![>]>::skip(cursor)
     }
 }
 

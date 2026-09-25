@@ -30,9 +30,9 @@ impl Parse for PathArguments {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<AngleArguments>() {
+        if AngleArguments::peek(parser.cursor()) {
             Ok(Self::AngleBracketed(parser.parse()?))
-        } else if parser.peek::<ParenArguments>() {
+        } else if ParenArguments::peek(parser.cursor()) {
             Ok(Self::Parenthesized(parser.parse()?))
         } else {
             Ok(Self::None)
@@ -40,10 +40,10 @@ impl Parse for PathArguments {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<AngleArguments>() {
-            cursor.skip::<AngleArguments>()
-        } else if cursor.peek::<ParenArguments>() {
-            cursor.skip::<ParenArguments>()
+        if AngleArguments::peek(cursor) {
+            AngleArguments::skip(cursor)
+        } else if ParenArguments::peek(cursor) {
+            ParenArguments::skip(cursor)
         } else {
             Some(cursor)
         }

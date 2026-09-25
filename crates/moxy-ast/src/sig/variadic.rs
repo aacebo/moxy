@@ -15,7 +15,7 @@ pub struct Variadic {
 impl Parse for Variadic {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Token![...]>() || (cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![...]>())
+        <Token![...]>::peek(cursor) || (Ident::peek(cursor) && <Token![...]>::peek(cursor.offset(1)))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -28,8 +28,8 @@ impl Parse for Variadic {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<Option<Ident>>()?;
-        cursor.skip::<Token![...]>()
+        cursor = Option::<Ident>::skip(cursor)?;
+        <Token![...]>::skip(cursor)
     }
 }
 

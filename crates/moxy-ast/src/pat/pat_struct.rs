@@ -23,14 +23,14 @@ impl Spanner for PatStruct {
 impl Parse for PatStruct {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        let cursor = if cursor.peek::<Token![<]>() {
-            let Some(cursor) = cursor.skip::<TypePath>() else {
+        let cursor = if <Token![<]>::peek(cursor) {
+            let Some(cursor) = TypePath::skip(cursor) else {
                 return false;
             };
 
             cursor
         } else {
-            let Some(cursor) = cursor.skip::<Path>() else {
+            let Some(cursor) = Path::skip(cursor) else {
                 return false;
             };
 
@@ -42,7 +42,7 @@ impl Parse for PatStruct {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
-        let (qself, path) = if parser.peek::<Token![<]>() {
+        let (qself, path) = if <Token![<]>::peek(parser.cursor()) {
             let (qself, path) = QSelf::parse_qualified(parser)?;
             (Some(qself), path)
         } else {
@@ -60,10 +60,10 @@ impl Parse for PatStruct {
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         let mut cursor = Attributes::skip(cursor)?;
-        cursor = if cursor.peek::<Token![<]>() {
-            cursor.skip::<TypePath>()?
+        cursor = if <Token![<]>::peek(cursor) {
+            TypePath::skip(cursor)?
         } else {
-            cursor.skip::<Path>()?
+            Path::skip(cursor)?
         };
 
         let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
@@ -102,7 +102,7 @@ impl Spanner for PatStructBody {
 
 impl Parse for PatStructBody {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.is_empty() || cursor.peek::<pat::PatField>() || cursor.peek::<Token![..]>()
+        cursor.is_empty() || pat::PatField::peek(cursor) || <Token![..]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -110,14 +110,14 @@ impl Parse for PatStructBody {
         let mut dotdot = None;
 
         while !parser.is_empty() {
-            if parser.peek::<Token![..]>() {
+            if <Token![..]>::peek(parser.cursor()) {
                 dotdot = Some(parser.parse()?);
                 break;
             }
 
             fields.push_value(parser.parse()?);
 
-            if parser.peek::<Token![,]>() {
+            if <Token![,]>::peek(parser.cursor()) {
                 fields.push_punct(parser.parse()?);
             } else {
                 break;
@@ -129,14 +129,14 @@ impl Parse for PatStructBody {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         while !cursor.is_empty() {
-            if cursor.peek::<Token![..]>() {
-                return cursor.skip::<Token![..]>();
+            if <Token![..]>::peek(cursor) {
+                return <Token![..]>::skip(cursor);
             }
 
-            cursor = cursor.skip::<pat::PatField>()?;
+            cursor = pat::PatField::skip(cursor)?;
 
-            if cursor.peek::<Token![,]>() {
-                cursor = cursor.skip::<Token![,]>()?;
+            if <Token![,]>::peek(cursor) {
+                cursor = <Token![,]>::skip(cursor)?;
             } else {
                 break;
             }

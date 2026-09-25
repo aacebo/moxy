@@ -158,8 +158,8 @@ impl Parser<'_> {
     pub fn parse_while<T: Parse>(&self) -> Vec<T> {
         let mut items = Vec::new();
 
-        while self.peek::<T>()
-            && let Ok(item) = self.parse::<T>()
+        while T::peek(self.cursor())
+            && let Ok(item) = T::parse(self)
         {
             items.push(item);
         }
@@ -171,7 +171,7 @@ impl Parser<'_> {
         let mut items = Vec::new();
 
         while !self.is_empty() {
-            items.push(self.parse()?);
+            items.push(T::parse(self)?);
         }
 
         Ok(items)

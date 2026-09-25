@@ -19,15 +19,15 @@ impl Parse for TypeBareFn {
     fn peek(mut cursor: Cursor<'_>) -> bool {
         cursor = BoundLifetimes::skip(cursor).unwrap_or(cursor);
 
-        if cursor.peek::<Token![unsafe]>() {
+        if <Token![unsafe]>::peek(cursor) {
             cursor = cursor.offset(1);
         }
 
-        if cursor.peek::<Token![extern]>() {
+        if <Token![extern]>::peek(cursor) {
             cursor = Abi::skip(cursor).unwrap_or(cursor);
         }
 
-        cursor.peek::<Token![fn]>()
+        <Token![fn]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -40,14 +40,14 @@ impl Parse for TypeBareFn {
             let mut variadic = None;
 
             while !inner.is_empty() {
-                if inner.peek::<Variadic>() {
+                if Variadic::peek(inner.cursor()) {
                     variadic = Some(inner.parse()?);
                     break;
                 }
 
                 inputs.push_value(inner.parse()?);
 
-                if inner.peek::<Token![,]>() {
+                if <Token![,]>::peek(inner.cursor()) {
                     inputs.push_punct(inner.parse()?);
                 } else {
                     break;
@@ -71,21 +71,21 @@ impl Parse for TypeBareFn {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = BoundLifetimes::skip(cursor).unwrap_or(cursor);
-        cursor = cursor.skip::<Option<Token![unsafe]>>()?;
-        cursor = cursor.skip::<Option<Abi>>()?;
-        cursor = cursor.skip::<Token![fn]>()?;
+        cursor = Option::<Token![unsafe]>::skip(cursor)?;
+        cursor = Option::<Abi>::skip(cursor)?;
+        cursor = <Token![fn]>::skip(cursor)?;
         let mut inner = cursor.descend(moxy_token::Delim::Paren)?;
 
         while !inner.is_empty() {
-            if inner.peek::<Variadic>() {
-                inner = inner.skip::<Variadic>()?;
+            if Variadic::peek(inner) {
+                inner = Variadic::skip(inner)?;
                 break;
             }
 
-            inner = inner.skip::<BareFnArg>()?;
+            inner = BareFnArg::skip(inner)?;
 
-            if inner.peek::<Token![,]>() {
-                inner = inner.skip::<Token![,]>()?;
+            if <Token![,]>::peek(inner) {
+                inner = <Token![,]>::skip(inner)?;
             } else {
                 break;
             }
@@ -95,7 +95,7 @@ impl Parse for TypeBareFn {
             return None;
         }
 
-        cursor.offset(1).skip::<ReturnType>()
+        ReturnType::skip(cursor.offset(1))
     }
 }
 

@@ -19,7 +19,7 @@ pub struct ConstParam {
 impl Parse for ConstParam {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor)
-            .map(|cursor| cursor.peek::<Token![const]>())
+            .map(|cursor| <Token![const]>::peek(cursor))
             .unwrap_or(false)
     }
 
@@ -29,7 +29,7 @@ impl Parse for ConstParam {
         let ident = parser.parse()?;
         let colon_punct = parser.parse()?;
         let ty = parser.parse()?;
-        let (default_eq_punct, default) = if parser.peek::<Token![=]>() {
+        let (default_eq_punct, default) = if <Token![=]>::peek(parser.cursor()) {
             let eq_punct = parser.parse()?;
             let expr = expr::parse::const_generic_default(parser)?;
             (Some(eq_punct), Some(expr))
@@ -50,13 +50,13 @@ impl Parse for ConstParam {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<Token![const]>()?;
-        cursor = cursor.skip::<Ident>()?;
-        cursor = cursor.skip::<Token![:]>()?;
-        cursor = cursor.skip::<Type>()?;
+        cursor = <Token![const]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
+        cursor = <Token![:]>::skip(cursor)?;
+        cursor = Type::skip(cursor)?;
 
-        if cursor.peek::<Token![=]>() {
-            cursor = cursor.skip::<Token![=]>()?;
+        if <Token![=]>::peek(cursor) {
+            cursor = <Token![=]>::skip(cursor)?;
             cursor = expr::skip::const_generic_default(cursor)?;
         }
 

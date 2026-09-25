@@ -109,146 +109,146 @@ impl ToTokens for BinOp {
 
 impl Parse for BinOp {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![<<=]>()
-            || cursor.peek::<Token![>>=]>()
-            || cursor.peek::<Token![+=]>()
-            || cursor.peek::<Token![-=]>()
-            || cursor.peek::<Token![*=]>()
-            || cursor.peek::<Token![/=]>()
-            || cursor.peek::<Token![%=]>()
-            || cursor.peek::<Token![^=]>()
-            || cursor.peek::<Token![&=]>()
-            || cursor.peek::<Token![|=]>()
-            || cursor.peek::<Token![&&]>()
-            || cursor.peek::<Token![||]>()
-            || cursor.peek::<Token![<<]>()
-            || cursor.peek::<Token![>>]>()
-            || cursor.peek::<Token![==]>()
-            || cursor.peek::<Token![!=]>()
-            || cursor.peek::<Token![<=]>()
-            || cursor.peek::<Token![>=]>()
-            || cursor.peek::<Token![+]>()
-            || cursor.peek::<Token![-]>()
-            || cursor.peek::<Token![*]>()
-            || cursor.peek::<Token![/]>()
-            || cursor.peek::<Token![%]>()
-            || cursor.peek::<Token![^]>()
-            || cursor.peek::<Token![&]>()
-            || cursor.peek::<Token![|]>()
-            || cursor.peek::<Token![<]>()
-            || cursor.peek::<Token![>]>()
+        <Token![<<=]>::peek(cursor)
+            || <Token![>>=]>::peek(cursor)
+            || <Token![+=]>::peek(cursor)
+            || <Token![-=]>::peek(cursor)
+            || <Token![*=]>::peek(cursor)
+            || <Token![/=]>::peek(cursor)
+            || <Token![%=]>::peek(cursor)
+            || <Token![^=]>::peek(cursor)
+            || <Token![&=]>::peek(cursor)
+            || <Token![|=]>::peek(cursor)
+            || <Token![&&]>::peek(cursor)
+            || <Token![||]>::peek(cursor)
+            || <Token![<<]>::peek(cursor)
+            || <Token![>>]>::peek(cursor)
+            || <Token![==]>::peek(cursor)
+            || <Token![!=]>::peek(cursor)
+            || <Token![<=]>::peek(cursor)
+            || <Token![>=]>::peek(cursor)
+            || <Token![+]>::peek(cursor)
+            || <Token![-]>::peek(cursor)
+            || <Token![*]>::peek(cursor)
+            || <Token![/]>::peek(cursor)
+            || <Token![%]>::peek(cursor)
+            || <Token![^]>::peek(cursor)
+            || <Token![&]>::peek(cursor)
+            || <Token![|]>::peek(cursor)
+            || <Token![<]>::peek(cursor)
+            || <Token![>]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<Token![<<=]>() {
+        if <Token![<<=]>::peek(parser.cursor()) {
             return Ok(Self::ShlAssign(parser.parse()?));
         }
 
-        if parser.peek::<Token![>>=]>() {
+        if <Token![>>=]>::peek(parser.cursor()) {
             return Ok(Self::ShrAssign(parser.parse()?));
         }
 
-        if parser.peek::<Token![+=]>() {
+        if <Token![+=]>::peek(parser.cursor()) {
             return Ok(Self::AddAssign(parser.parse()?));
         }
 
-        if parser.peek::<Token![-=]>() {
+        if <Token![-=]>::peek(parser.cursor()) {
             return Ok(Self::SubAssign(parser.parse()?));
         }
 
-        if parser.peek::<Token![*=]>() {
+        if <Token![*=]>::peek(parser.cursor()) {
             return Ok(Self::MulAssign(parser.parse()?));
         }
 
-        if parser.peek::<Token![/=]>() {
+        if <Token![/=]>::peek(parser.cursor()) {
             return Ok(Self::DivAssign(parser.parse()?));
         }
 
-        if parser.peek::<Token![%=]>() {
+        if <Token![%=]>::peek(parser.cursor()) {
             return Ok(Self::RemAssign(parser.parse()?));
         }
 
-        if parser.peek::<Token![^=]>() {
+        if <Token![^=]>::peek(parser.cursor()) {
             return Ok(Self::BitXorAssign(parser.parse()?));
         }
 
-        if parser.peek::<Token![&=]>() {
+        if <Token![&=]>::peek(parser.cursor()) {
             return Ok(Self::BitAndAssign(parser.parse()?));
         }
 
-        if parser.peek::<Token![|=]>() {
+        if <Token![|=]>::peek(parser.cursor()) {
             return Ok(Self::BitOrAssign(parser.parse()?));
         }
 
-        if parser.peek::<Token![&&]>() {
+        if <Token![&&]>::peek(parser.cursor()) {
             return Ok(Self::And(parser.parse()?));
         }
 
-        if parser.peek::<Token![||]>() {
+        if <Token![||]>::peek(parser.cursor()) {
             return Ok(Self::Or(parser.parse()?));
         }
 
-        if parser.peek::<Token![<<]>() {
+        if <Token![<<]>::peek(parser.cursor()) {
             return Ok(Self::Shl(parser.parse()?));
         }
 
-        if parser.peek::<Token![>>]>() {
+        if <Token![>>]>::peek(parser.cursor()) {
             return Ok(Self::Shr(parser.parse()?));
         }
 
-        if parser.peek::<Token![==]>() {
+        if <Token![==]>::peek(parser.cursor()) {
             return Ok(Self::Eq(parser.parse()?));
         }
 
-        if parser.peek::<Token![!=]>() {
+        if <Token![!=]>::peek(parser.cursor()) {
             return Ok(Self::Ne(parser.parse()?));
         }
 
-        if parser.peek::<Token![<=]>() {
+        if <Token![<=]>::peek(parser.cursor()) {
             return Ok(Self::Le(parser.parse()?));
         }
 
-        if parser.peek::<Token![>=]>() {
+        if <Token![>=]>::peek(parser.cursor()) {
             return Ok(Self::Ge(parser.parse()?));
         }
 
-        if parser.peek::<Token![+]>() {
+        if <Token![+]>::peek(parser.cursor()) {
             return Ok(Self::Add(parser.parse()?));
         }
 
-        if parser.peek::<Token![-]>() {
+        if <Token![-]>::peek(parser.cursor()) {
             return Ok(Self::Sub(parser.parse()?));
         }
 
-        if parser.peek::<Token![*]>() {
+        if <Token![*]>::peek(parser.cursor()) {
             return Ok(Self::Mul(parser.parse()?));
         }
 
-        if parser.peek::<Token![/]>() {
+        if <Token![/]>::peek(parser.cursor()) {
             return Ok(Self::Div(parser.parse()?));
         }
 
-        if parser.peek::<Token![%]>() {
+        if <Token![%]>::peek(parser.cursor()) {
             return Ok(Self::Rem(parser.parse()?));
         }
 
-        if parser.peek::<Token![^]>() {
+        if <Token![^]>::peek(parser.cursor()) {
             return Ok(Self::BitXor(parser.parse()?));
         }
 
-        if parser.peek::<Token![&]>() {
+        if <Token![&]>::peek(parser.cursor()) {
             return Ok(Self::BitAnd(parser.parse()?));
         }
 
-        if parser.peek::<Token![|]>() {
+        if <Token![|]>::peek(parser.cursor()) {
             return Ok(Self::BitOr(parser.parse()?));
         }
 
-        if parser.peek::<Token![<]>() {
+        if <Token![<]>::peek(parser.cursor()) {
             return Ok(Self::Lt(parser.parse()?));
         }
 
-        if parser.peek::<Token![>]>() {
+        if <Token![>]>::peek(parser.cursor()) {
             return Ok(Self::Gt(parser.parse()?));
         }
 
@@ -256,116 +256,116 @@ impl Parse for BinOp {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<Token![<<=]>() {
-            return cursor.skip::<Token![<<=]>();
+        if <Token![<<=]>::peek(cursor) {
+            return <Token![<<=]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![>>=]>() {
-            return cursor.skip::<Token![>>=]>();
+        if <Token![>>=]>::peek(cursor) {
+            return <Token![>>=]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![+=]>() {
-            return cursor.skip::<Token![+=]>();
+        if <Token![+=]>::peek(cursor) {
+            return <Token![+=]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![-=]>() {
-            return cursor.skip::<Token![-=]>();
+        if <Token![-=]>::peek(cursor) {
+            return <Token![-=]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![*=]>() {
-            return cursor.skip::<Token![*=]>();
+        if <Token![*=]>::peek(cursor) {
+            return <Token![*=]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![/=]>() {
-            return cursor.skip::<Token![/=]>();
+        if <Token![/=]>::peek(cursor) {
+            return <Token![/=]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![%=]>() {
-            return cursor.skip::<Token![%=]>();
+        if <Token![%=]>::peek(cursor) {
+            return <Token![%=]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![^=]>() {
-            return cursor.skip::<Token![^=]>();
+        if <Token![^=]>::peek(cursor) {
+            return <Token![^=]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![&=]>() {
-            return cursor.skip::<Token![&=]>();
+        if <Token![&=]>::peek(cursor) {
+            return <Token![&=]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![|=]>() {
-            return cursor.skip::<Token![|=]>();
+        if <Token![|=]>::peek(cursor) {
+            return <Token![|=]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![&&]>() {
-            return cursor.skip::<Token![&&]>();
+        if <Token![&&]>::peek(cursor) {
+            return <Token![&&]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![||]>() {
-            return cursor.skip::<Token![||]>();
+        if <Token![||]>::peek(cursor) {
+            return <Token![||]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![<<]>() {
-            return cursor.skip::<Token![<<]>();
+        if <Token![<<]>::peek(cursor) {
+            return <Token![<<]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![>>]>() {
-            return cursor.skip::<Token![>>]>();
+        if <Token![>>]>::peek(cursor) {
+            return <Token![>>]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![==]>() {
-            return cursor.skip::<Token![==]>();
+        if <Token![==]>::peek(cursor) {
+            return <Token![==]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![!=]>() {
-            return cursor.skip::<Token![!=]>();
+        if <Token![!=]>::peek(cursor) {
+            return <Token![!=]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![<=]>() {
-            return cursor.skip::<Token![<=]>();
+        if <Token![<=]>::peek(cursor) {
+            return <Token![<=]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![>=]>() {
-            return cursor.skip::<Token![>=]>();
+        if <Token![>=]>::peek(cursor) {
+            return <Token![>=]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![+]>() {
-            return cursor.skip::<Token![+]>();
+        if <Token![+]>::peek(cursor) {
+            return <Token![+]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![-]>() {
-            return cursor.skip::<Token![-]>();
+        if <Token![-]>::peek(cursor) {
+            return <Token![-]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![*]>() {
-            return cursor.skip::<Token![*]>();
+        if <Token![*]>::peek(cursor) {
+            return <Token![*]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![/]>() {
-            return cursor.skip::<Token![/]>();
+        if <Token![/]>::peek(cursor) {
+            return <Token![/]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![%]>() {
-            return cursor.skip::<Token![%]>();
+        if <Token![%]>::peek(cursor) {
+            return <Token![%]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![^]>() {
-            return cursor.skip::<Token![^]>();
+        if <Token![^]>::peek(cursor) {
+            return <Token![^]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![&]>() {
-            return cursor.skip::<Token![&]>();
+        if <Token![&]>::peek(cursor) {
+            return <Token![&]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![|]>() {
-            return cursor.skip::<Token![|]>();
+        if <Token![|]>::peek(cursor) {
+            return <Token![|]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![<]>() {
-            return cursor.skip::<Token![<]>();
+        if <Token![<]>::peek(cursor) {
+            return <Token![<]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![>]>() {
-            return cursor.skip::<Token![>]>();
+        if <Token![>]>::peek(cursor) {
+            return <Token![>]>::skip(cursor);
         }
 
         None
@@ -439,19 +439,19 @@ impl ToTokens for UnOp {
 
 impl Parse for UnOp {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![*]>() || cursor.peek::<Token![!]>() || cursor.peek::<Token![-]>()
+        <Token![*]>::peek(cursor) || <Token![!]>::peek(cursor) || <Token![-]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<Token![*]>() {
+        if <Token![*]>::peek(parser.cursor()) {
             return Ok(Self::Deref(parser.parse()?));
         }
 
-        if parser.peek::<Token![!]>() {
+        if <Token![!]>::peek(parser.cursor()) {
             return Ok(Self::Not(parser.parse()?));
         }
 
-        if parser.peek::<Token![-]>() {
+        if <Token![-]>::peek(parser.cursor()) {
             return Ok(Self::Neg(parser.parse()?));
         }
 
@@ -459,16 +459,16 @@ impl Parse for UnOp {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<Token![*]>() {
-            return cursor.skip::<Token![*]>();
+        if <Token![*]>::peek(cursor) {
+            return <Token![*]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![!]>() {
-            return cursor.skip::<Token![!]>();
+        if <Token![!]>::peek(cursor) {
+            return <Token![!]>::skip(cursor);
         }
 
-        if cursor.peek::<Token![-]>() {
-            return cursor.skip::<Token![-]>();
+        if <Token![-]>::peek(cursor) {
+            return <Token![-]>::skip(cursor);
         }
 
         None

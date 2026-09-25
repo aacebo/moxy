@@ -119,15 +119,15 @@ impl ToTokens for Declaration {
 
 impl Parse for Declaration {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<item::ItemEnum>() || cursor.peek::<item::ItemStruct>() || cursor.peek::<item::ItemUnion>()
+        item::ItemEnum::peek(cursor) || item::ItemStruct::peek(cursor) || item::ItemUnion::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<item::ItemEnum>() {
+        if item::ItemEnum::peek(parser.cursor()) {
             Ok(Self::Enum(parser.parse()?))
-        } else if parser.peek::<item::ItemStruct>() {
+        } else if item::ItemStruct::peek(parser.cursor()) {
             Ok(Self::Struct(parser.parse()?))
-        } else if parser.peek::<item::ItemUnion>() {
+        } else if item::ItemUnion::peek(parser.cursor()) {
             Ok(Self::Union(parser.parse()?))
         } else {
             parser.error("expected a user defined type declaration").into()
@@ -135,12 +135,12 @@ impl Parse for Declaration {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<item::ItemEnum>() {
-            cursor.skip::<item::ItemEnum>()
-        } else if cursor.peek::<item::ItemStruct>() {
-            cursor.skip::<item::ItemStruct>()
+        if item::ItemEnum::peek(cursor) {
+            item::ItemEnum::skip(cursor)
+        } else if item::ItemStruct::peek(cursor) {
+            item::ItemStruct::skip(cursor)
         } else {
-            cursor.skip::<item::ItemUnion>()
+            item::ItemUnion::skip(cursor)
         }
     }
 }

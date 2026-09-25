@@ -21,7 +21,7 @@
 mod ast;
 
 use ast::{Paste, Template};
-use moxy_ast::Parser;
+use moxy_ast::{Parse, Parser};
 use moxy_token::{ToTokens, TokenStream};
 
 /// Build a `moxy::token::TokenStream` at runtime from a template, in the style
@@ -54,7 +54,8 @@ pub fn template(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut ts = TokenStream::new();
     input.to_tokens(&mut ts);
 
-    let expanded = match Parser::from_tokens(&ts).parse::<Template>() {
+    let parser = Parser::from_tokens(&ts);
+    let expanded = match Template::parse(&parser) {
         Ok(tmpl) => tmpl.expand(),
         Err(e) => e.to_compile_error(),
     };
@@ -87,7 +88,8 @@ pub fn paste(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let mut ts = TokenStream::new();
     input.to_tokens(&mut ts);
 
-    let expanded = match Parser::from_tokens(&ts).parse::<Paste>() {
+    let parser = Parser::from_tokens(&ts);
+    let expanded = match Paste::parse(&parser) {
         Ok(p) => p.expand(),
         Err(e) => e.to_compile_error(),
     };

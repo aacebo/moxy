@@ -20,7 +20,7 @@ impl Spanner for PatWild {
 impl Parse for PatWild {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Token![_]>()
+        <Token![_]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -31,7 +31,7 @@ impl Parse for PatWild {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        Attributes::skip(cursor)?.skip::<Token![_]>()
+        <Token![_]>::skip(Attributes::skip(cursor)?)
     }
 }
 

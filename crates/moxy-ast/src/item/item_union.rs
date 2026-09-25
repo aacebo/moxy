@@ -21,7 +21,7 @@ impl Parse for ItemUnion {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Token![union]>()
+        <Token![union]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -45,10 +45,10 @@ impl Parse for ItemUnion {
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = cursor.skip::<Token![union]>()?;
-        cursor = cursor.skip::<Ident>()?;
+        cursor = <Token![union]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
-        cursor.skip::<FieldsNamed>()
+        FieldsNamed::skip(cursor)
     }
 }
 

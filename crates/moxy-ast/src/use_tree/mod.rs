@@ -82,27 +82,27 @@ impl Spanner for UseTree {
 
 impl Parse for UseTree {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<UseGlob>()
-            || cursor.peek::<UseGroup>()
-            || cursor.peek::<UsePath>()
-            || cursor.peek::<UseRename>()
-            || cursor.peek::<UseName>()
+        UseGlob::peek(cursor)
+            || UseGroup::peek(cursor)
+            || UsePath::peek(cursor)
+            || UseRename::peek(cursor)
+            || UseName::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<UseGlob>() {
+        if UseGlob::peek(parser.cursor()) {
             return Ok(Self::Glob(parser.parse()?));
         }
 
-        if parser.peek::<UseGroup>() {
+        if UseGroup::peek(parser.cursor()) {
             return Ok(Self::Group(parser.parse()?));
         }
 
-        if parser.peek::<UsePath>() {
+        if UsePath::peek(parser.cursor()) {
             return Ok(Self::Path(parser.parse()?));
         }
 
-        if parser.peek::<UseRename>() {
+        if UseRename::peek(parser.cursor()) {
             return Ok(Self::Rename(parser.parse()?));
         }
 
@@ -110,16 +110,16 @@ impl Parse for UseTree {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<UseGlob>() {
-            cursor.skip::<UseGlob>()
-        } else if cursor.peek::<UseGroup>() {
-            cursor.skip::<UseGroup>()
-        } else if cursor.peek::<UsePath>() {
-            cursor.skip::<UsePath>()
-        } else if cursor.peek::<UseRename>() {
-            cursor.skip::<UseRename>()
+        if UseGlob::peek(cursor) {
+            UseGlob::skip(cursor)
+        } else if UseGroup::peek(cursor) {
+            UseGroup::skip(cursor)
+        } else if UsePath::peek(cursor) {
+            UsePath::skip(cursor)
+        } else if UseRename::peek(cursor) {
+            UseRename::skip(cursor)
         } else {
-            cursor.skip::<UseName>()
+            UseName::skip(cursor)
         }
     }
 }

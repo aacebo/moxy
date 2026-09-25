@@ -29,13 +29,13 @@ impl Spanner for PatField {
 impl Parse for PatField {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Member>()
+        Member::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
         let member = parser.parse()?;
-        let (colon, pat) = if parser.peek::<Token![:]>() {
+        let (colon, pat) = if <Token![:]>::peek(parser.cursor()) {
             (Some(parser.parse()?), parser.parse()?)
         } else {
             let Member::Named(ident) = &member else {
@@ -64,12 +64,12 @@ impl Parse for PatField {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        let shorthand = cursor.peek::<Ident>();
-        cursor = cursor.skip::<Member>()?;
+        let shorthand = Ident::peek(cursor);
+        cursor = Member::skip(cursor)?;
 
-        if cursor.peek::<Token![:]>() {
-            cursor = cursor.skip::<Token![:]>()?;
-            cursor = cursor.skip::<Pattern>()?;
+        if <Token![:]>::peek(cursor) {
+            cursor = <Token![:]>::skip(cursor)?;
+            cursor = Pattern::skip(cursor)?;
         } else if !shorthand {
             return None;
         }

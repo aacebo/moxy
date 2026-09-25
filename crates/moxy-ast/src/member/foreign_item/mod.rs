@@ -94,22 +94,22 @@ impl From<ForeignItemMacro> for ForeignItem {
 
 impl Parse for ForeignItem {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<ForeignItemStatic>()
-            || cursor.peek::<ForeignItemType>()
-            || cursor.peek::<ForeignItemFn>()
-            || cursor.peek::<ForeignItemMacro>()
+        ForeignItemStatic::peek(cursor)
+            || ForeignItemType::peek(cursor)
+            || ForeignItemFn::peek(cursor)
+            || ForeignItemMacro::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<ForeignItemStatic>() {
+        if ForeignItemStatic::peek(parser.cursor()) {
             return Ok(Self::Static(parser.parse()?));
         }
 
-        if parser.peek::<ForeignItemType>() {
+        if ForeignItemType::peek(parser.cursor()) {
             return Ok(Self::Type(parser.parse()?));
         }
 
-        if parser.peek::<ForeignItemFn>() {
+        if ForeignItemFn::peek(parser.cursor()) {
             return Ok(Self::Fn(parser.parse()?));
         }
 
@@ -117,14 +117,14 @@ impl Parse for ForeignItem {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<ForeignItemStatic>() {
-            cursor.skip::<ForeignItemStatic>()
-        } else if cursor.peek::<ForeignItemType>() {
-            cursor.skip::<ForeignItemType>()
-        } else if cursor.peek::<ForeignItemFn>() {
-            cursor.skip::<ForeignItemFn>()
+        if ForeignItemStatic::peek(cursor) {
+            ForeignItemStatic::skip(cursor)
+        } else if ForeignItemType::peek(cursor) {
+            ForeignItemType::skip(cursor)
+        } else if ForeignItemFn::peek(cursor) {
+            ForeignItemFn::skip(cursor)
         } else {
-            cursor.skip::<ForeignItemMacro>()
+            ForeignItemMacro::skip(cursor)
         }
     }
 }

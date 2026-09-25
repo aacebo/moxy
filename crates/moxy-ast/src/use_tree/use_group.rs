@@ -12,7 +12,7 @@ pub struct UseGroup {
 
 impl Parse for UseGroup {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.descend(Delim::Brace).map(|c| c.peek::<UseTree>()).unwrap_or_default()
+        cursor.descend(Delim::Brace).map(|c| UseTree::peek(c)).unwrap_or_default()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -25,11 +25,11 @@ impl Parse for UseGroup {
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         let mut inner = cursor.descend(Delim::Brace)?;
-        inner = inner.skip::<UseTree>()?;
+        inner = UseTree::skip(inner)?;
 
-        while inner.peek::<Token![,]>() {
-            inner = inner.skip::<Token![,]>()?;
-            inner = inner.skip::<UseTree>()?;
+        while <Token![,]>::peek(inner) {
+            inner = <Token![,]>::skip(inner)?;
+            inner = UseTree::skip(inner)?;
         }
 
         if inner.is_empty() { Some(cursor.offset(1)) } else { None }

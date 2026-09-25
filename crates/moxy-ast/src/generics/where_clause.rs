@@ -13,17 +13,17 @@ pub struct WhereClause {
 
 impl Parse for WhereClause {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![where]>()
+        <Token![where]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let where_keyword = parser.parse()?;
         let mut predicates = Punctuated::new();
 
-        while parser.peek::<WherePredicate>() {
+        while WherePredicate::peek(parser.cursor()) {
             predicates.push_value(parser.parse()?);
 
-            if !parser.peek::<Token![,]>() {
+            if !<Token![,]>::peek(parser.cursor()) {
                 break;
             }
 
@@ -37,12 +37,12 @@ impl Parse for WhereClause {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Token![where]>()?;
-        cursor = cursor.skip::<WherePredicate>()?;
+        cursor = <Token![where]>::skip(cursor)?;
+        cursor = WherePredicate::skip(cursor)?;
 
-        while cursor.peek::<Token![,]>() {
-            cursor = cursor.skip::<Token![,]>()?;
-            cursor = cursor.skip::<WherePredicate>()?;
+        while <Token![,]>::peek(cursor) {
+            cursor = <Token![,]>::skip(cursor)?;
+            cursor = WherePredicate::skip(cursor)?;
         }
 
         Some(cursor)

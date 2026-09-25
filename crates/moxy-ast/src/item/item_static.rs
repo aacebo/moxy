@@ -25,7 +25,7 @@ impl Parse for ItemStatic {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Token![static]>()
+        <Token![static]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -57,14 +57,14 @@ impl Parse for ItemStatic {
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = cursor.skip::<Token![static]>()?;
-        cursor = cursor.skip::<Option<Token![mut]>>()?;
-        cursor = cursor.skip::<Ident>()?;
-        cursor = cursor.skip::<Token![:]>()?;
-        cursor = cursor.skip::<Type>()?;
-        cursor = cursor.skip::<Token![=]>()?;
-        cursor = cursor.skip::<Expr>()?;
-        cursor.skip::<Token![;]>()
+        cursor = <Token![static]>::skip(cursor)?;
+        cursor = Option::<Token![mut]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
+        cursor = <Token![:]>::skip(cursor)?;
+        cursor = Type::skip(cursor)?;
+        cursor = <Token![=]>::skip(cursor)?;
+        cursor = Expr::skip(cursor)?;
+        <Token![;]>::skip(cursor)
     }
 }
 

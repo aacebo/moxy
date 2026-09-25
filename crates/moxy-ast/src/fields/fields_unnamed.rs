@@ -24,13 +24,13 @@ impl Parse for FieldsUnnamed {
         let mut inner = cursor.descend(Delim::Paren)?;
 
         while !inner.is_empty() {
-            inner = inner.skip::<Field>()?;
+            inner = Field::skip(inner)?;
 
             if inner.is_empty() {
                 break;
             }
 
-            inner = inner.skip::<Token![,]>()?;
+            inner = <Token![,]>::skip(inner)?;
         }
 
         Some(cursor.offset(1))

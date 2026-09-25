@@ -13,7 +13,7 @@ pub struct TraitRef {
 
 impl Parse for TraitRef {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![!]>() || cursor.peek::<Path>()
+        <Token![!]>::peek(cursor) || Path::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -24,7 +24,7 @@ impl Parse for TraitRef {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.skip::<Option<Token![!]>>()?.skip::<Path>()
+        Path::skip(Option::<Token![!]>::skip(cursor)?)
     }
 }
 

@@ -18,11 +18,11 @@ pub struct TmplMatch {
 
 impl Parse for TmplMatch {
     fn peek(cursor: Cursor<'_>) -> bool {
-        let Some(cursor) = cursor.skip::<Token![@]>() else {
+        let Some(cursor) = <Token![@]>::skip(cursor) else {
             return false;
         };
 
-        cursor.peek::<Token![match]>()
+        <Token![match]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -42,14 +42,14 @@ impl Parse for TmplMatch {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let cursor = cursor.skip::<Token![@]>()?;
-        let cursor = cursor.skip::<Token![match]>()?;
+        let cursor = <Token![@]>::skip(cursor)?;
+        let cursor = <Token![match]>::skip(cursor)?;
         let inner = cursor.descend(Delim::Paren)?;
         let cursor = inner.offset(inner.remaining()).is_empty().then(|| cursor.offset(1))?;
         let mut inner = cursor.descend(Delim::Brace)?;
 
         while !inner.is_empty() {
-            inner = inner.skip::<TmplMatchArm>()?;
+            inner = TmplMatchArm::skip(inner)?;
         }
 
         Some(cursor.offset(1))
@@ -85,7 +85,7 @@ impl Parse for TmplMatchArm {
         let mut pat = TokenStream::new();
 
         loop {
-            if parser.peek::<Token![=>]>() {
+            if <Token![=>]>::peek(parser.cursor()) {
                 break;
             }
 
@@ -111,12 +111,12 @@ impl Parse for TmplMatchArm {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        while !cursor.peek::<Token![=>]>() {
+        while !<Token![=>]>::peek(cursor) {
             cursor.curr()?;
             cursor = cursor.offset(1);
         }
 
-        cursor = cursor.skip::<Token![=>]>()?;
+        cursor = <Token![=>]>::skip(cursor)?;
         let inner = cursor.descend(Delim::Brace)?;
         let inner = Template::skip(inner)?;
 
@@ -125,7 +125,7 @@ impl Parse for TmplMatchArm {
         }
 
         cursor = cursor.offset(1);
-        cursor.skip::<Option<Token![,]>>()
+        Option::<Token![,]>::skip(cursor)
     }
 }
 

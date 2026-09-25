@@ -32,7 +32,7 @@ impl ToTokens for File {
 
 impl Parse for File {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Shebang>() || cursor.peek::<Item>()
+        Shebang::peek(cursor) || Item::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -44,11 +44,11 @@ impl Parse for File {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<Shebang>() {
-            cursor = cursor.skip::<Shebang>()?;
+        if Shebang::peek(cursor) {
+            cursor = Shebang::skip(cursor)?;
         }
 
-        while let Some(next) = cursor.skip::<Item>() {
+        while let Some(next) = Item::skip(cursor) {
             cursor = next;
         }
 
@@ -84,7 +84,7 @@ impl ToTokens for Shebang {
 
 impl Parse for Shebang {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![#]>() && cursor.offset(1).peek::<Token![!]>() && cursor.offset(2).peek::<FilePath>()
+        <Token![#]>::peek(cursor) && <Token![!]>::peek(cursor.offset(1)) && FilePath::peek(cursor.offset(2))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -97,10 +97,10 @@ impl Parse for Shebang {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let cursor = cursor.skip::<Token![#]>()?;
-        let cursor = cursor.skip::<Token![!]>()?;
-        let cursor = cursor.skip::<FilePath>()?;
-        cursor.skip::<Option<Ident>>()
+        let cursor = <Token![#]>::skip(cursor)?;
+        let cursor = <Token![!]>::skip(cursor)?;
+        let cursor = FilePath::skip(cursor)?;
+        Option::<Ident>::skip(cursor)
     }
 }
 
@@ -128,13 +128,13 @@ impl ToTokens for FilePath {
 
 impl Parse for FilePath {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![/]>()
+        <Token![/]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let mut segments = vec![];
 
-        while parser.peek::<Token![/]>() {
+        while <Token![/]>::peek(parser.cursor()) {
             segments.push((parser.parse()?, parser.parse()?));
         }
 
@@ -142,8 +142,8 @@ impl Parse for FilePath {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        while let Some(next) = cursor.skip::<Token![/]>() {
-            cursor = next.skip::<Ident>()?;
+        while let Some(next) = <Token![/]>::skip(cursor) {
+            cursor = Ident::skip(next)?;
         }
 
         Some(cursor)

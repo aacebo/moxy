@@ -19,7 +19,7 @@ pub struct ItemMacroRules {
 impl Parse for ItemMacroRules {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         Attributes::skip(cursor)
-            .map(|cursor| cursor.peek::<Token![macro_rules]>())
+            .map(|cursor| <Token![macro_rules]>::peek(cursor))
             .unwrap_or(false)
     }
 
@@ -51,10 +51,10 @@ impl Parse for ItemMacroRules {
 
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<Token![macro_rules]>()?;
-        cursor = cursor.skip::<Token![!]>()?;
-        cursor = cursor.skip::<Ident>()?;
-        cursor.skip::<Group>()
+        cursor = <Token![macro_rules]>::skip(cursor)?;
+        cursor = <Token![!]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
+        Group::skip(cursor)
     }
 }
 

@@ -25,7 +25,7 @@ impl ConstraintArgument {
 
 impl Parse for ConstraintArgument {
     fn peek(cursor: Cursor<'_>) -> bool {
-        let Some(cursor) = cursor.skip::<Ident>() else {
+        let Some(cursor) = Ident::skip(cursor) else {
             return false;
         };
 
@@ -33,11 +33,11 @@ impl Parse for ConstraintArgument {
             return false;
         };
 
-        let Some(cursor) = cursor.skip::<Token![:]>() else {
+        let Some(cursor) = <Token![:]>::skip(cursor) else {
             return false;
         };
 
-        cursor.peek::<TypeBound>()
+        TypeBound::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -50,14 +50,14 @@ impl Parse for ConstraintArgument {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Ident>()?;
-        cursor = cursor.skip::<Option<AngleArguments>>()?;
-        cursor = cursor.skip::<Token![:]>()?;
-        cursor = cursor.skip::<TypeBound>()?;
+        cursor = Ident::skip(cursor)?;
+        cursor = Option::<AngleArguments>::skip(cursor)?;
+        cursor = <Token![:]>::skip(cursor)?;
+        cursor = TypeBound::skip(cursor)?;
 
-        while cursor.peek::<Token![+]>() {
-            cursor = cursor.skip::<Token![+]>()?;
-            cursor = cursor.skip::<TypeBound>()?;
+        while <Token![+]>::peek(cursor) {
+            cursor = <Token![+]>::skip(cursor)?;
+            cursor = TypeBound::skip(cursor)?;
         }
 
         Some(cursor)

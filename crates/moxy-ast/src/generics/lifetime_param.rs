@@ -15,15 +15,13 @@ pub struct LifetimeParam {
 
 impl Parse for LifetimeParam {
     fn peek(cursor: Cursor<'_>) -> bool {
-        Attributes::skip(cursor)
-            .map(|cursor| cursor.peek::<Lifetime>())
-            .unwrap_or(false)
+        Attributes::skip(cursor).map(|cursor| Lifetime::peek(cursor)).unwrap_or(false)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
         let lifetime = parser.parse()?;
-        let (colon_punct, bounds) = if parser.peek::<Token![:]>() {
+        let (colon_punct, bounds) = if <Token![:]>::peek(parser.cursor()) {
             let colon_punct = Some(parser.parse()?);
             let bounds = Punctuated::parse_separated_nonempty(parser)?;
             (colon_punct, bounds)
@@ -41,15 +39,15 @@ impl Parse for LifetimeParam {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<Lifetime>()?;
+        cursor = Lifetime::skip(cursor)?;
 
-        if cursor.peek::<Token![:]>() {
-            cursor = cursor.skip::<Token![:]>()?;
-            cursor = cursor.skip::<Lifetime>()?;
+        if <Token![:]>::peek(cursor) {
+            cursor = <Token![:]>::skip(cursor)?;
+            cursor = Lifetime::skip(cursor)?;
 
-            while cursor.peek::<Token![+]>() {
-                cursor = cursor.skip::<Token![+]>()?;
-                cursor = cursor.skip::<Lifetime>()?;
+            while <Token![+]>::peek(cursor) {
+                cursor = <Token![+]>::skip(cursor)?;
+                cursor = Lifetime::skip(cursor)?;
             }
         }
 

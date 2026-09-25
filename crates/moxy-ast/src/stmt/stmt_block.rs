@@ -26,7 +26,7 @@ impl Parse for StmtBlock {
         let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
 
         while !inner.is_empty() {
-            inner = inner.skip::<Stmt>()?;
+            inner = Stmt::skip(inner)?;
         }
 
         Some(cursor.offset(1))

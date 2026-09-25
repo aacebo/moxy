@@ -27,7 +27,7 @@ impl Parse for Paste {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         while !cursor.is_empty() {
-            cursor = cursor.skip::<PasteNode>()?;
+            cursor = PasteNode::skip(cursor)?;
         }
 
         Some(cursor)

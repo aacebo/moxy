@@ -1,65 +1,65 @@
 use super::*;
 
 pub(crate) fn single(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-    if cursor.peek::<PatWild>() {
-        return cursor.skip::<PatWild>();
+    if PatWild::peek(cursor) {
+        return PatWild::skip(cursor);
     }
 
-    if cursor.peek::<PatRange>() {
-        return cursor.skip::<PatRange>();
+    if PatRange::peek(cursor) {
+        return PatRange::skip(cursor);
     }
 
-    if cursor.peek::<PatRest>() {
-        return cursor.skip::<PatRest>();
+    if PatRest::peek(cursor) {
+        return PatRest::skip(cursor);
     }
 
-    if cursor.peek::<PatBox>() {
-        return cursor.skip::<PatBox>();
+    if PatBox::peek(cursor) {
+        return PatBox::skip(cursor);
     }
 
-    if cursor.peek::<PatConst>() {
-        return cursor.skip::<PatConst>();
+    if PatConst::peek(cursor) {
+        return PatConst::skip(cursor);
     }
 
-    if cursor.peek::<PatReference>() {
-        return cursor.skip::<PatReference>();
+    if PatReference::peek(cursor) {
+        return PatReference::skip(cursor);
     }
 
     if cursor.is_delimited(moxy_token::Delim::None) {
-        return cursor.skip::<PatGroup>();
+        return PatGroup::skip(cursor);
     }
 
     if cursor.is_delimited(moxy_token::Delim::Bracket) {
-        return cursor.skip::<PatSlice>();
+        return PatSlice::skip(cursor);
     }
 
     if cursor.is_delimited(moxy_token::Delim::Paren) {
-        if cursor.peek::<PatTuple>() {
-            return cursor.skip::<PatTuple>();
+        if PatTuple::peek(cursor) {
+            return PatTuple::skip(cursor);
         }
 
-        return cursor.skip::<PatParen>();
+        return PatParen::skip(cursor);
     }
 
-    if cursor.peek::<MacroCall>() {
-        return cursor.skip::<MacroCall>();
+    if MacroCall::peek(cursor) {
+        return MacroCall::skip(cursor);
     }
 
-    if cursor.peek::<PatTupleStruct>() {
-        return cursor.skip::<PatTupleStruct>();
+    if PatTupleStruct::peek(cursor) {
+        return PatTupleStruct::skip(cursor);
     }
 
-    if cursor.peek::<PatStruct>() {
-        return cursor.skip::<PatStruct>();
+    if PatStruct::peek(cursor) {
+        return PatStruct::skip(cursor);
     }
 
-    if cursor.peek::<PatIdent>() {
-        return cursor.skip::<PatIdent>();
+    if PatIdent::peek(cursor) {
+        return PatIdent::skip(cursor);
     }
 
-    if cursor.peek::<PatPath>() {
-        return cursor.skip::<PatPath>();
+    if PatPath::peek(cursor) {
+        return PatPath::skip(cursor);
     }
 
-    cursor.skip::<PatLit>()
+    PatLit::skip(cursor)
 }

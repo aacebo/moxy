@@ -185,13 +185,13 @@ impl<T: Parse, P: Parse> Punctuated<T, P> {
                 break;
             }
 
-            punctuated.push_value(parser.parse::<T>()?);
+            punctuated.push_value(T::parse(parser)?);
 
             if parser.is_empty() {
                 break;
             }
 
-            punctuated.push_punct(parser.parse::<P>()?);
+            punctuated.push_punct(P::parse(parser)?);
         }
 
         Ok(punctuated)
@@ -203,7 +203,7 @@ impl<T: Parse, P: Parse> Punctuated<T, P> {
         loop {
             punctuated.push_value(parser.parse()?);
 
-            if !parser.peek::<P>() {
+            if !P::peek(parser.cursor()) {
                 break;
             }
 

@@ -20,11 +20,11 @@ pub struct TmplFor {
 
 impl Parse for TmplFor {
     fn peek(cursor: Cursor<'_>) -> bool {
-        let Some(cursor) = cursor.skip::<Token![@]>() else {
+        let Some(cursor) = <Token![@]>::skip(cursor) else {
             return false;
         };
 
-        cursor.peek::<Token![for]>()
+        <Token![for]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -49,11 +49,11 @@ impl Parse for TmplFor {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let cursor = cursor.skip::<Token![@]>()?;
-        let cursor = cursor.skip::<Token![for]>()?;
+        let cursor = <Token![@]>::skip(cursor)?;
+        let cursor = <Token![for]>::skip(cursor)?;
         let inner = cursor.descend(Delim::Paren)?;
-        let inner = inner.skip::<Ident>()?;
-        let inner = inner.skip::<Token![in]>()?;
+        let inner = Ident::skip(inner)?;
+        let inner = <Token![in]>::skip(inner)?;
         let cursor = inner.offset(inner.remaining()).is_empty().then(|| cursor.offset(1))?;
         let inner = cursor.descend(Delim::Brace)?;
         let inner = Template::skip(inner)?;

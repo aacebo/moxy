@@ -25,7 +25,7 @@ impl Parse for ItemConst {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Token![const]>() && cursor.offset(1).peek::<Ident>()
+        <Token![const]>::peek(cursor) && Ident::peek(cursor.offset(1))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -57,14 +57,14 @@ impl Parse for ItemConst {
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = cursor.skip::<Token![const]>()?;
-        cursor = cursor.skip::<Ident>()?;
+        cursor = <Token![const]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
-        cursor = cursor.skip::<Token![:]>()?;
-        cursor = cursor.skip::<Type>()?;
-        cursor = cursor.skip::<Token![=]>()?;
-        cursor = cursor.skip::<Expr>()?;
-        cursor.skip::<Token![;]>()
+        cursor = <Token![:]>::skip(cursor)?;
+        cursor = Type::skip(cursor)?;
+        cursor = <Token![=]>::skip(cursor)?;
+        cursor = Expr::skip(cursor)?;
+        <Token![;]>::skip(cursor)
     }
 }
 

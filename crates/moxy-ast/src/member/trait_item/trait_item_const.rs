@@ -20,7 +20,7 @@ pub struct TraitItemConst {
 impl Parse for TraitItemConst {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor)
-            .map(|cursor| cursor.peek::<Token![const]>() && cursor.offset(1).peek::<Ident>())
+            .map(|cursor| <Token![const]>::peek(cursor) && Ident::peek(cursor.offset(1)))
             .unwrap_or(false)
     }
 
@@ -31,7 +31,7 @@ impl Parse for TraitItemConst {
         let generics = parser.parse()?;
         let colon = parser.parse()?;
         let ty = parser.parse()?;
-        let default = if parser.peek::<Token![=]>() {
+        let default = if <Token![=]>::peek(parser.cursor()) {
             let eq = parser.parse()?;
             Some((eq, parser.parse()?))
         } else {
@@ -54,18 +54,18 @@ impl Parse for TraitItemConst {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<Token![const]>()?;
-        cursor = cursor.skip::<Ident>()?;
+        cursor = <Token![const]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
-        cursor = cursor.skip::<Token![:]>()?;
-        cursor = cursor.skip::<Type>()?;
+        cursor = <Token![:]>::skip(cursor)?;
+        cursor = Type::skip(cursor)?;
 
-        if cursor.peek::<Token![=]>() {
-            cursor = cursor.skip::<Token![=]>()?;
-            cursor = cursor.skip::<Expr>()?;
+        if <Token![=]>::peek(cursor) {
+            cursor = <Token![=]>::skip(cursor)?;
+            cursor = Expr::skip(cursor)?;
         }
 
-        cursor.skip::<Token![;]>()
+        <Token![;]>::skip(cursor)
     }
 }
 

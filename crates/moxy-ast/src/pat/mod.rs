@@ -281,27 +281,27 @@ impl Parse for Pattern {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
 
-        cursor.peek::<PatOr>()
-            || cursor.peek::<PatWild>()
-            || cursor.peek::<PatRange>()
-            || cursor.peek::<PatRest>()
-            || cursor.peek::<PatBox>()
-            || cursor.peek::<PatConst>()
-            || cursor.peek::<PatReference>()
-            || cursor.peek::<PatGroup>()
-            || cursor.peek::<PatSlice>()
+        PatOr::peek(cursor)
+            || PatWild::peek(cursor)
+            || PatRange::peek(cursor)
+            || PatRest::peek(cursor)
+            || PatBox::peek(cursor)
+            || PatConst::peek(cursor)
+            || PatReference::peek(cursor)
+            || PatGroup::peek(cursor)
+            || PatSlice::peek(cursor)
             || cursor.is_delimited(moxy_token::Delim::Paren)
-            || cursor.peek::<MacroCall>()
-            || cursor.peek::<PatTupleStruct>()
-            || cursor.peek::<PatStruct>()
-            || cursor.peek::<PatIdent>()
-            || cursor.peek::<PatPath>()
-            || cursor.peek::<PatLit>()
+            || MacroCall::peek(cursor)
+            || PatTupleStruct::peek(cursor)
+            || PatStruct::peek(cursor)
+            || PatIdent::peek(cursor)
+            || PatPath::peek(cursor)
+            || PatLit::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let bare = Attributes::skip(parser.cursor()).unwrap_or(parser.cursor());
-        let leading = bare.peek::<Token![|]>();
+        let leading = <Token![|]>::peek(bare);
         let attrs = if leading { parser.parse()? } else { Attributes::default() };
 
         if leading {
@@ -310,14 +310,14 @@ impl Parse for Pattern {
 
         let first = parse::single(parser)?;
 
-        if !leading && !parser.peek::<Token![|]>() {
+        if !leading && !<Token![|]>::peek(parser.cursor()) {
             return Ok(first);
         }
 
         let mut cases = Punctuated::new();
         cases.push_value(first);
 
-        while parser.peek::<Token![|]>() {
+        while <Token![|]>::peek(parser.cursor()) {
             cases.push_punct(parser.parse()?);
             cases.push_value(parse::single(parser)?);
         }
@@ -328,15 +328,15 @@ impl Parse for Pattern {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         let bare = Attributes::skip(cursor)?;
 
-        if bare.peek::<Token![|]>() {
+        if <Token![|]>::peek(bare) {
             cursor = bare;
-            cursor = cursor.skip::<Token![|]>()?;
+            cursor = <Token![|]>::skip(cursor)?;
         }
 
         cursor = skip::single(cursor)?;
 
-        while cursor.peek::<Token![|]>() {
-            cursor = cursor.skip::<Token![|]>()?;
+        while <Token![|]>::peek(cursor) {
+            cursor = <Token![|]>::skip(cursor)?;
             cursor = skip::single(cursor)?;
         }
 

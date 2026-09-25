@@ -22,7 +22,7 @@ impl Parse for ItemStruct {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Token![struct]>()
+        <Token![struct]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -48,11 +48,11 @@ impl Parse for ItemStruct {
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = cursor.skip::<Token![struct]>()?;
-        cursor = cursor.skip::<Ident>()?;
+        cursor = <Token![struct]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
         cursor = Fields::skip(cursor)?;
-        cursor.skip::<Option<Token![;]>>()
+        Option::<Token![;]>::skip(cursor)
     }
 }
 

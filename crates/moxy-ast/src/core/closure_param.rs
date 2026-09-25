@@ -35,7 +35,7 @@ impl Parse for ClosureParam {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let pat = Box::new(pat::parse::single(parser)?);
 
-        if parser.peek::<Token![:]>() {
+        if <Token![:]>::peek(parser.cursor()) {
             Ok(Self::Typed {
                 pat,
                 colon: parser.parse()?,
@@ -49,9 +49,9 @@ impl Parse for ClosureParam {
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         let mut cursor = pat::skip::single(cursor)?;
 
-        if cursor.peek::<Token![:]>() {
-            cursor = cursor.skip::<Token![:]>()?;
-            cursor = cursor.skip::<Type>()?;
+        if <Token![:]>::peek(cursor) {
+            cursor = <Token![:]>::skip(cursor)?;
+            cursor = Type::skip(cursor)?;
         }
 
         Some(cursor)

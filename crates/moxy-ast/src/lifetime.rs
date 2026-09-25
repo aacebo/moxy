@@ -13,7 +13,7 @@ pub struct Lifetime {
 
 impl Parse for Lifetime {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Quote>() && cursor.offset(1).peek::<LifetimeName>()
+        Quote::peek(cursor) && LifetimeName::peek(cursor.offset(1))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -24,7 +24,7 @@ impl Parse for Lifetime {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.skip::<Quote>()?.skip::<LifetimeName>()
+        LifetimeName::skip(Quote::skip(cursor)?)
     }
 }
 
@@ -53,12 +53,12 @@ pub struct LifetimeName {
 
 impl Parse for LifetimeName {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Ident>() || cursor.peek::<Keyword>()
+        Ident::peek(cursor) || Keyword::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<Ident>() {
-            let token = parser.parse::<Ident>()?;
+        if Ident::peek(parser.cursor()) {
+            let token = Ident::parse(parser)?;
 
             return Ok(Self {
                 span: token.span(),
@@ -67,8 +67,8 @@ impl Parse for LifetimeName {
             });
         }
 
-        if parser.peek::<Keyword>() {
-            let token = parser.parse::<Keyword>()?;
+        if Keyword::peek(parser.cursor()) {
+            let token = Keyword::parse(parser)?;
 
             return Ok(Self {
                 span: token.span(),
@@ -81,10 +81,10 @@ impl Parse for LifetimeName {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<Ident>() {
-            cursor.skip::<Ident>()
+        if Ident::peek(cursor) {
+            Ident::skip(cursor)
         } else {
-            cursor.skip::<Keyword>()
+            Keyword::skip(cursor)
         }
     }
 }

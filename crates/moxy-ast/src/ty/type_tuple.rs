@@ -23,7 +23,7 @@ impl Parse for TypeTuple {
             return true;
         }
 
-        let Some(next) = inner.skip::<Type>() else {
+        let Some(next) = Type::skip(inner) else {
             return false;
         };
 
@@ -34,7 +34,7 @@ impl Parse for TypeTuple {
         }
 
         while !inner.is_empty() {
-            let Some(next) = inner.skip::<Token![,]>() else {
+            let Some(next) = <Token![,]>::skip(inner) else {
                 return false;
             };
 
@@ -44,7 +44,7 @@ impl Parse for TypeTuple {
                 return true;
             }
 
-            let Some(next) = inner.skip::<Type>() else {
+            let Some(next) = Type::skip(inner) else {
                 return false;
             };
 

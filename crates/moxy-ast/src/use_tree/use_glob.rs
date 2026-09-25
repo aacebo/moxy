@@ -12,7 +12,7 @@ pub struct UseGlob {
 
 impl Parse for UseGlob {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![*]>()
+        <Token![*]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -20,7 +20,7 @@ impl Parse for UseGlob {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.skip::<Token![*]>()
+        <Token![*]>::skip(cursor)
     }
 }
 

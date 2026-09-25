@@ -15,12 +15,12 @@ pub struct BareFnArg {
 impl Parse for BareFnArg {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        (cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![:]>()) || cursor.peek::<Type>()
+        (Ident::peek(cursor) && <Token![:]>::peek(cursor.offset(1))) || Type::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
-        let name = if parser.peek::<Ident>() && parser.cursor().offset(1).peek::<Token![:]>() {
+        let name = if Ident::peek(parser.cursor()) && <Token![:]>::peek(parser.cursor().offset(1)) {
             Some((parser.parse()?, parser.parse()?))
         } else {
             None
@@ -34,12 +34,12 @@ impl Parse for BareFnArg {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
 
-        if cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![:]>() {
-            cursor = cursor.skip::<Ident>()?;
-            cursor = cursor.skip::<Token![:]>()?;
+        if Ident::peek(cursor) && <Token![:]>::peek(cursor.offset(1)) {
+            cursor = Ident::skip(cursor)?;
+            cursor = <Token![:]>::skip(cursor)?;
         }
 
-        cursor.skip::<Type>()
+        Type::skip(cursor)
     }
 }
 

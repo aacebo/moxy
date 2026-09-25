@@ -15,7 +15,7 @@ pub struct UseBound {
 
 impl Parse for UseBound {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![use]>()
+        <Token![use]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -28,16 +28,16 @@ impl Parse for UseBound {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Token![use]>()?;
-        cursor = cursor.skip::<Token![<]>()?;
-        cursor = cursor.skip::<UseBoundParam>()?;
+        cursor = <Token![use]>::skip(cursor)?;
+        cursor = <Token![<]>::skip(cursor)?;
+        cursor = UseBoundParam::skip(cursor)?;
 
-        while cursor.peek::<Token![,]>() {
-            cursor = cursor.skip::<Token![,]>()?;
-            cursor = cursor.skip::<UseBoundParam>()?;
+        while <Token![,]>::peek(cursor) {
+            cursor = <Token![,]>::skip(cursor)?;
+            cursor = UseBoundParam::skip(cursor)?;
         }
 
-        cursor.skip::<Token![>]>()
+        <Token![>]>::skip(cursor)
     }
 }
 
@@ -84,11 +84,11 @@ impl ToTokens for UseBoundParam {
 
 impl Parse for UseBoundParam {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Lifetime>() || cursor.peek::<Ident>()
+        Lifetime::peek(cursor) || Ident::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<Lifetime>() {
+        if Lifetime::peek(parser.cursor()) {
             Ok(Self::Lifetime(parser.parse()?))
         } else {
             Ok(Self::Ident(parser.parse()?))
@@ -96,10 +96,10 @@ impl Parse for UseBoundParam {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<Lifetime>() {
-            cursor.skip::<Lifetime>()
+        if Lifetime::peek(cursor) {
+            Lifetime::skip(cursor)
         } else {
-            cursor.skip::<Ident>()
+            Ident::skip(cursor)
         }
     }
 }

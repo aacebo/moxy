@@ -41,7 +41,7 @@ pub struct Generics {
 
 impl Parse for Generics {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![<]>() || cursor.peek::<WhereClause>()
+        <Token![<]>::peek(cursor) || WhereClause::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -65,19 +65,19 @@ impl Parse for Generics {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<Token![<]>() {
-            cursor = cursor.skip::<Token![<]>()?;
-            cursor = cursor.skip::<GenericParam>()?;
+        if <Token![<]>::peek(cursor) {
+            cursor = <Token![<]>::skip(cursor)?;
+            cursor = GenericParam::skip(cursor)?;
 
-            while cursor.peek::<Token![,]>() {
-                cursor = cursor.skip::<Token![,]>()?;
-                cursor = cursor.skip::<GenericParam>()?;
+            while <Token![,]>::peek(cursor) {
+                cursor = <Token![,]>::skip(cursor)?;
+                cursor = GenericParam::skip(cursor)?;
             }
 
-            cursor = cursor.skip::<Token![>]>()?;
+            cursor = <Token![>]>::skip(cursor)?;
         }
 
-        cursor.skip::<Option<WhereClause>>()
+        Option::<WhereClause>::skip(cursor)
     }
 }
 

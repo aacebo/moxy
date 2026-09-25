@@ -35,9 +35,9 @@ impl Parse for PatType {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<Pattern>()?;
-        cursor = cursor.skip::<Token![:]>()?;
-        cursor.skip::<Type>()
+        cursor = Pattern::skip(cursor)?;
+        cursor = <Token![:]>::skip(cursor)?;
+        Type::skip(cursor)
     }
 }
 

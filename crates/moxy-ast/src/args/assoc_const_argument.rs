@@ -26,7 +26,7 @@ impl AssocConstArgument {
 
 impl Parse for AssocConstArgument {
     fn peek(cursor: Cursor<'_>) -> bool {
-        let Some(cursor) = cursor.skip::<Ident>() else {
+        let Some(cursor) = Ident::skip(cursor) else {
             return false;
         };
 
@@ -34,7 +34,7 @@ impl Parse for AssocConstArgument {
             return false;
         };
 
-        let Some(cursor) = cursor.skip::<Token![=]>() else {
+        let Some(cursor) = <Token![=]>::skip(cursor) else {
             return false;
         };
 
@@ -56,10 +56,10 @@ impl Parse for AssocConstArgument {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Ident>()?;
-        cursor = cursor.skip::<Option<AngleArguments>>()?;
-        cursor = cursor.skip::<Token![=]>()?;
-        cursor.skip::<Expr>()
+        cursor = Ident::skip(cursor)?;
+        cursor = Option::<AngleArguments>::skip(cursor)?;
+        cursor = <Token![=]>::skip(cursor)?;
+        Expr::skip(cursor)
     }
 }
 

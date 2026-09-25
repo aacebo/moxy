@@ -17,7 +17,7 @@ pub struct ItemMacro {
 impl Parse for ItemMacro {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         Attributes::skip(cursor)
-            .map(|cursor| cursor.peek::<MacroCall>())
+            .map(|cursor| MacroCall::peek(cursor))
             .unwrap_or(false)
     }
 
@@ -30,8 +30,8 @@ impl Parse for ItemMacro {
 
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<MacroCall>()?;
-        cursor.skip::<Option<Token![;]>>()
+        cursor = MacroCall::skip(cursor)?;
+        Option::<Token![;]>::skip(cursor)
     }
 }
 

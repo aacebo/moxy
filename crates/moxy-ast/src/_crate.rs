@@ -49,8 +49,8 @@ impl Parse for Crate {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
 
-        while cursor.peek::<Item>() {
-            cursor = cursor.skip::<Item>()?;
+        while Item::peek(cursor) {
+            cursor = Item::skip(cursor)?;
         }
 
         Some(cursor)

@@ -32,7 +32,7 @@ impl ToTokens for Attribute {
 
 impl Parse for Attribute {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<AttrStyle>()
+        AttrStyle::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -43,8 +43,8 @@ impl Parse for Attribute {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<AttrStyle>()?;
-        cursor.skip::<Group>()
+        cursor = AttrStyle::skip(cursor)?;
+        Group::skip(cursor)
     }
 }
 
@@ -156,7 +156,7 @@ impl ToTokens for Attributes {
 
 impl Parse for Attributes {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Attribute>()
+        Attribute::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -164,7 +164,7 @@ impl Parse for Attributes {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        while let Some(next) = cursor.skip::<Attribute>() {
+        while let Some(next) = Attribute::skip(cursor) {
             cursor = next;
         }
 

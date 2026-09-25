@@ -49,13 +49,13 @@ impl ToTokens for AttrStyle {
 
 impl Parse for AttrStyle {
     fn peek(mut cursor: Cursor<'_>) -> bool {
-        if !cursor.peek::<Token![#]>() {
+        if !<Token![#]>::peek(cursor) {
             return false;
         }
 
         cursor = cursor.offset(1);
 
-        if cursor.peek::<Token![!]>() {
+        if <Token![!]>::peek(cursor) {
             cursor = cursor.offset(1);
         }
 
@@ -65,7 +65,7 @@ impl Parse for AttrStyle {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let pound = parser.parse()?;
 
-        if parser.peek::<Token![!]>() {
+        if <Token![!]>::peek(parser.cursor()) {
             Ok(Self::Inner(pound, parser.parse()?))
         } else {
             Ok(Self::Outer(pound))
@@ -73,10 +73,10 @@ impl Parse for AttrStyle {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Token![#]>()?;
+        cursor = <Token![#]>::skip(cursor)?;
 
-        if cursor.peek::<Token![!]>() {
-            cursor.skip::<Token![!]>()
+        if <Token![!]>::peek(cursor) {
+            <Token![!]>::skip(cursor)
         } else {
             Some(cursor)
         }

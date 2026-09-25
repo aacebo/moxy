@@ -27,13 +27,13 @@ pub(crate) fn const_generic_default(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
 
 fn list(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     while !cursor.is_empty() {
-        cursor = cursor.skip::<Expr>()?;
+        cursor = Expr::skip(cursor)?;
 
         if cursor.is_empty() {
             break;
         }
 
-        cursor = cursor.skip::<Token![,]>()?;
+        cursor = <Token![,]>::skip(cursor)?;
     }
 
     Some(cursor)
@@ -42,46 +42,46 @@ fn list(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
 fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     let mut closure = cursor;
     closure = BoundLifetimes::skip(closure).unwrap_or(closure);
-    closure = closure.skip::<Option<Token![const]>>()?;
-    closure = closure.skip::<Option<Token![static]>>()?;
-    closure = closure.skip::<Option<Token![async]>>()?;
-    closure = closure.skip::<Option<Token![move]>>()?;
+    closure = Option::<Token![const]>::skip(closure)?;
+    closure = Option::<Token![static]>::skip(closure)?;
+    closure = Option::<Token![async]>::skip(closure)?;
+    closure = Option::<Token![move]>::skip(closure)?;
 
-    if closure.peek::<Token![||]>() || closure.peek::<Token![|]>() {
+    if <Token![||]>::peek(closure) || <Token![|]>::peek(closure) {
         cursor = BoundLifetimes::skip(cursor).unwrap_or(cursor);
-        cursor = cursor.skip::<Option<Token![const]>>()?;
-        cursor = cursor.skip::<Option<Token![static]>>()?;
-        cursor = cursor.skip::<Option<Token![async]>>()?;
-        cursor = cursor.skip::<Option<Token![move]>>()?;
+        cursor = Option::<Token![const]>::skip(cursor)?;
+        cursor = Option::<Token![static]>::skip(cursor)?;
+        cursor = Option::<Token![async]>::skip(cursor)?;
+        cursor = Option::<Token![move]>::skip(cursor)?;
 
-        if cursor.peek::<Token![||]>() {
-            cursor = cursor.skip::<Token![||]>()?;
+        if <Token![||]>::peek(cursor) {
+            cursor = <Token![||]>::skip(cursor)?;
         } else {
-            cursor = cursor.skip::<Token![|]>()?;
+            cursor = <Token![|]>::skip(cursor)?;
 
-            while !cursor.peek::<Token![|]>() {
-                cursor = cursor.skip::<ClosureParam>()?;
+            while !<Token![|]>::peek(cursor) {
+                cursor = ClosureParam::skip(cursor)?;
 
-                if cursor.peek::<Token![,]>() {
-                    cursor = cursor.skip::<Token![,]>()?;
+                if <Token![,]>::peek(cursor) {
+                    cursor = <Token![,]>::skip(cursor)?;
                 } else {
                     break;
                 }
             }
 
-            cursor = cursor.skip::<Token![|]>()?;
+            cursor = <Token![|]>::skip(cursor)?;
         }
 
         cursor = ReturnType::skip(cursor)?;
         return expr(cursor, context);
     }
 
-    if cursor.peek::<Lit>() {
-        return cursor.skip::<Lit>();
+    if Lit::peek(cursor) {
+        return Lit::skip(cursor);
     }
 
-    if cursor.peek::<Token![_]>() {
-        return cursor.skip::<Token![_]>();
+    if <Token![_]>::peek(cursor) {
+        return <Token![_]>::skip(cursor);
     }
 
     if cursor.is_delimited(Delim::Paren) {
@@ -97,17 +97,17 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
             return Some(cursor.offset(1));
         }
 
-        inner = inner.skip::<Expr>()?;
+        inner = Expr::skip(inner)?;
 
-        if inner.peek::<Token![;]>() {
-            inner = inner.skip::<Token![;]>()?;
-            inner = inner.skip::<Expr>()?;
+        if <Token![;]>::peek(inner) {
+            inner = <Token![;]>::skip(inner)?;
+            inner = Expr::skip(inner)?;
         } else {
             while !inner.is_empty() {
-                inner = inner.skip::<Token![,]>()?;
+                inner = <Token![,]>::skip(inner)?;
 
                 if !inner.is_empty() {
-                    inner = inner.skip::<Expr>()?;
+                    inner = Expr::skip(inner)?;
                 }
             }
         }
@@ -116,29 +116,29 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     }
 
     if cursor.is_delimited(Delim::Brace) {
-        return cursor.skip::<StmtBlock>();
+        return StmtBlock::skip(cursor);
     }
 
     if cursor.is_delimited(Delim::None) {
-        let inner = cursor.descend(Delim::None)?.skip::<Expr>()?;
+        let inner = Expr::skip(cursor.descend(Delim::None)?)?;
         return inner.is_empty().then(|| cursor.offset(1));
     }
 
-    if cursor.peek::<Token![let]>() {
-        cursor = cursor.skip::<Token![let]>()?;
-        cursor = cursor.skip::<Pattern>()?;
-        cursor = cursor.skip::<Token![=]>()?;
+    if <Token![let]>::peek(cursor) {
+        cursor = <Token![let]>::skip(cursor)?;
+        cursor = Pattern::skip(cursor)?;
+        cursor = <Token![=]>::skip(cursor)?;
         return expr(cursor, context);
     }
 
-    if cursor.peek::<Token![if]>() {
-        cursor = cursor.skip::<Token![if]>()?;
+    if <Token![if]>::peek(cursor) {
+        cursor = <Token![if]>::skip(cursor)?;
         cursor = expr(cursor, ExprContext::EARLY)?;
-        cursor = cursor.skip::<StmtBlock>()?;
+        cursor = StmtBlock::skip(cursor)?;
 
-        if cursor.peek::<Token![else]>() {
-            cursor = cursor.skip::<Token![else]>()?;
-            cursor = cursor.skip::<Expr>()?;
+        if <Token![else]>::peek(cursor) {
+            cursor = <Token![else]>::skip(cursor)?;
+            cursor = Expr::skip(cursor)?;
         }
 
         return Some(cursor);
@@ -146,102 +146,102 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
 
     let label = Label::skip(cursor);
 
-    if cursor.peek::<Token![while]>() || label.is_some_and(|cursor| cursor.peek::<Token![while]>()) {
-        cursor = cursor.skip::<Option<Label>>()?;
-        cursor = cursor.skip::<Token![while]>()?;
+    if <Token![while]>::peek(cursor) || label.is_some_and(|cursor| <Token![while]>::peek(cursor)) {
+        cursor = Option::<Label>::skip(cursor)?;
+        cursor = <Token![while]>::skip(cursor)?;
         cursor = expr(cursor, ExprContext::EARLY)?;
-        return cursor.skip::<StmtBlock>();
+        return StmtBlock::skip(cursor);
     }
 
-    if cursor.peek::<Token![for]>() || label.is_some_and(|cursor| cursor.peek::<Token![for]>()) {
-        cursor = cursor.skip::<Option<Label>>()?;
-        cursor = cursor.skip::<Token![for]>()?;
-        cursor = cursor.skip::<Pattern>()?;
-        cursor = cursor.skip::<Token![in]>()?;
+    if <Token![for]>::peek(cursor) || label.is_some_and(|cursor| <Token![for]>::peek(cursor)) {
+        cursor = Option::<Label>::skip(cursor)?;
+        cursor = <Token![for]>::skip(cursor)?;
+        cursor = Pattern::skip(cursor)?;
+        cursor = <Token![in]>::skip(cursor)?;
         cursor = expr(cursor, ExprContext::EARLY)?;
-        return cursor.skip::<StmtBlock>();
+        return StmtBlock::skip(cursor);
     }
 
-    if cursor.peek::<Token![loop]>() || label.is_some_and(|cursor| cursor.peek::<Token![loop]>()) {
-        cursor = cursor.skip::<Option<Label>>()?;
-        cursor = cursor.skip::<Token![loop]>()?;
-        return cursor.skip::<StmtBlock>();
+    if <Token![loop]>::peek(cursor) || label.is_some_and(|cursor| <Token![loop]>::peek(cursor)) {
+        cursor = Option::<Label>::skip(cursor)?;
+        cursor = <Token![loop]>::skip(cursor)?;
+        return StmtBlock::skip(cursor);
     }
 
     if label.is_some_and(|cursor| cursor.is_delimited(Delim::Brace)) {
-        cursor = cursor.skip::<Label>()?;
-        return cursor.skip::<StmtBlock>();
+        cursor = Label::skip(cursor)?;
+        return StmtBlock::skip(cursor);
     }
 
-    if cursor.peek::<Token![match]>() {
-        cursor = cursor.skip::<Token![match]>()?;
+    if <Token![match]>::peek(cursor) {
+        cursor = <Token![match]>::skip(cursor)?;
         cursor = expr(cursor, ExprContext::EARLY)?;
         let mut inner = cursor.descend(Delim::Brace)?;
 
         while !inner.is_empty() {
-            inner = inner.skip::<MatchArm>()?;
+            inner = MatchArm::skip(inner)?;
         }
 
         return Some(cursor.offset(1));
     }
 
-    if cursor.peek::<Token![unsafe]>() {
-        return cursor.skip::<Token![unsafe]>()?.skip::<StmtBlock>();
+    if <Token![unsafe]>::peek(cursor) {
+        return StmtBlock::skip(<Token![unsafe]>::skip(cursor)?);
     }
 
-    if cursor.peek::<Token![const]>() {
-        return cursor.skip::<Token![const]>()?.skip::<StmtBlock>();
+    if <Token![const]>::peek(cursor) {
+        return StmtBlock::skip(<Token![const]>::skip(cursor)?);
     }
 
-    if cursor.peek::<Token![async]>() {
-        cursor = cursor.skip::<Token![async]>()?;
-        cursor = cursor.skip::<Option<Token![move]>>()?;
-        return cursor.skip::<StmtBlock>();
+    if <Token![async]>::peek(cursor) {
+        cursor = <Token![async]>::skip(cursor)?;
+        cursor = Option::<Token![move]>::skip(cursor)?;
+        return StmtBlock::skip(cursor);
     }
 
-    if cursor.peek::<Token![try]>() {
-        return cursor.skip::<Token![try]>()?.skip::<StmtBlock>();
+    if <Token![try]>::peek(cursor) {
+        return StmtBlock::skip(<Token![try]>::skip(cursor)?);
     }
 
-    if cursor.peek::<Token![return]>() {
-        cursor = cursor.skip::<Token![return]>()?;
+    if <Token![return]>::peek(cursor) {
+        cursor = <Token![return]>::skip(cursor)?;
         return optional_expr(cursor, context);
     }
 
-    if cursor.peek::<Token![break]>() {
-        cursor = cursor.skip::<Token![break]>()?;
-        cursor = cursor.skip::<Option<Label>>()?;
+    if <Token![break]>::peek(cursor) {
+        cursor = <Token![break]>::skip(cursor)?;
+        cursor = Option::<Label>::skip(cursor)?;
         return optional_expr(cursor, context);
     }
 
-    if cursor.peek::<Token![continue]>() {
-        return cursor.skip::<Token![continue]>()?.skip::<Option<Label>>();
+    if <Token![continue]>::peek(cursor) {
+        return Option::<Label>::skip(<Token![continue]>::skip(cursor)?);
     }
 
-    if cursor.peek::<Token![yield]>() {
-        cursor = cursor.skip::<Token![yield]>()?;
+    if <Token![yield]>::peek(cursor) {
+        cursor = <Token![yield]>::skip(cursor)?;
         return optional_expr(cursor, context);
     }
 
     let path_start = cursor;
-    let qualified = cursor.peek::<Token![<]>();
+    let qualified = <Token![<]>::peek(cursor);
 
-    if !qualified && !cursor.peek::<Path>() {
+    if !qualified && !Path::peek(cursor) {
         return Some(cursor.offset(cursor.remaining()));
     }
 
     cursor = if qualified {
-        cursor.skip::<ty::TypePath>()?
+        ty::TypePath::skip(cursor)?
     } else {
-        cursor.skip::<Path>()?
+        Path::skip(cursor)?
     };
 
-    if !qualified && cursor.peek::<Token![!]>() && !cursor.peek::<Token![!=]>() {
+    if !qualified && <Token![!]>::peek(cursor) && !<Token![!=]>::peek(cursor) {
         return MacroCall::skip(path_start);
     }
 
     if context.allow_struct && cursor.is_delimited(Delim::Brace) {
-        let inner = cursor.descend(Delim::Brace)?.skip::<StructBody>()?;
+        let inner = StructBody::skip(cursor.descend(Delim::Brace)?)?;
         return inner.is_empty().then(|| cursor.offset(1));
     }
 
@@ -264,7 +264,7 @@ fn postfix(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
         }
 
         if cursor.is_delimited(Delim::Bracket) {
-            let inner = cursor.descend(Delim::Bracket)?.skip::<Expr>()?;
+            let inner = Expr::skip(cursor.descend(Delim::Bracket)?)?;
 
             if !inner.is_empty() {
                 return None;
@@ -274,17 +274,17 @@ fn postfix(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
             continue;
         }
 
-        if cursor.peek::<Token![.]>() && !cursor.peek::<Token![..]>() && !cursor.peek::<Token![..=]>() {
-            cursor = cursor.skip::<Token![.]>()?;
+        if <Token![.]>::peek(cursor) && !<Token![..]>::peek(cursor) && !<Token![..=]>::peek(cursor) {
+            cursor = <Token![.]>::skip(cursor)?;
 
-            if cursor.peek::<Token![await]>() {
-                cursor = cursor.skip::<Token![await]>()?;
+            if <Token![await]>::peek(cursor) {
+                cursor = <Token![await]>::skip(cursor)?;
                 continue;
             }
 
-            if cursor.peek::<Ident>() {
-                let after_method = cursor.skip::<Ident>()?;
-                let args = after_method.skip::<Option<AngleArguments>>()?;
+            if Ident::peek(cursor) {
+                let after_method = Ident::skip(cursor)?;
+                let args = Option::<AngleArguments>::skip(after_method)?;
 
                 if args.is_delimited(Delim::Paren) {
                     let inner = list(args.descend(Delim::Paren)?)?;
@@ -298,12 +298,12 @@ fn postfix(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
                 }
             }
 
-            cursor = cursor.skip::<Member>()?;
+            cursor = Member::skip(cursor)?;
             continue;
         }
 
-        if cursor.peek::<Token![?]>() {
-            cursor = cursor.skip::<Token![?]>()?;
+        if <Token![?]>::peek(cursor) {
+            cursor = <Token![?]>::skip(cursor)?;
             continue;
         }
 
@@ -314,23 +314,17 @@ fn postfix(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
 }
 
 fn unary(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
-    if cursor.peek::<Token![&]>() && cursor.offset(1).peek::<Token![raw]>() && cursor.offset(2).peek::<PointerMutability>() {
-        return cursor
-            .skip::<Token![&]>()?
-            .skip::<Token![raw]>()?
-            .skip::<PointerMutability>()
+    if <Token![&]>::peek(cursor) && <Token![raw]>::peek(cursor.offset(1)) && PointerMutability::peek(cursor.offset(2)) {
+        return PointerMutability::skip(<Token![raw]>::skip(<Token![&]>::skip(cursor)?)?)
             .and_then(|cursor| unary(cursor, context));
     }
 
-    if cursor.peek::<Token![&]>() {
-        return cursor
-            .skip::<Token![&]>()?
-            .skip::<Option<Token![mut]>>()
-            .and_then(|cursor| unary(cursor, context));
+    if <Token![&]>::peek(cursor) {
+        return Option::<Token![mut]>::skip(<Token![&]>::skip(cursor)?).and_then(|cursor| unary(cursor, context));
     }
 
-    if cursor.peek::<UnOp>() {
-        return cursor.skip::<UnOp>().and_then(|cursor| unary(cursor, context));
+    if UnOp::peek(cursor) {
+        return UnOp::skip(cursor).and_then(|cursor| unary(cursor, context));
     }
 
     postfix(cursor, context)
@@ -339,9 +333,9 @@ fn unary(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
 fn cast(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     cursor = unary(cursor, context)?;
 
-    while cursor.peek::<Token![as]>() {
-        cursor = cursor.skip::<Token![as]>()?;
-        cursor = cursor.skip::<Type>()?;
+    while <Token![as]>::peek(cursor) {
+        cursor = <Token![as]>::skip(cursor)?;
+        cursor = Type::skip(cursor)?;
     }
 
     Some(cursor)
@@ -350,8 +344,8 @@ fn cast(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
 fn binary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     cursor = cast(cursor, context)?;
 
-    while cursor.peek::<BinOp>() && !context.is_end_before_infix(cursor) {
-        cursor = cursor.skip::<BinOp>()?;
+    while BinOp::peek(cursor) && !context.is_end_before_infix(cursor) {
+        cursor = BinOp::skip(cursor)?;
         cursor = cast(cursor, context)?;
     }
 
@@ -359,8 +353,8 @@ fn binary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
 }
 
 fn range(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
-    if cursor.peek::<RangeLimits>() {
-        cursor = cursor.skip::<RangeLimits>()?;
+    if RangeLimits::peek(cursor) {
+        cursor = RangeLimits::skip(cursor)?;
 
         if !context.is_end(cursor) && peek::expr(cursor, context) {
             cursor = binary(cursor, context)?;
@@ -371,8 +365,8 @@ fn range(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
 
     cursor = binary(cursor, context)?;
 
-    if cursor.peek::<RangeLimits>() {
-        cursor = cursor.skip::<RangeLimits>()?;
+    if RangeLimits::peek(cursor) {
+        cursor = RangeLimits::skip(cursor)?;
 
         if !context.is_end(cursor) && peek::expr(cursor, context) {
             cursor = binary(cursor, context)?;
@@ -385,8 +379,8 @@ fn range(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
 fn assignment(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     cursor = range(cursor, context)?;
 
-    if cursor.peek::<Token![=]>() {
-        cursor = cursor.skip::<Token![=]>()?;
+    if <Token![=]>::peek(cursor) {
+        cursor = <Token![=]>::skip(cursor)?;
         cursor = assignment(cursor, context)?;
     }
 

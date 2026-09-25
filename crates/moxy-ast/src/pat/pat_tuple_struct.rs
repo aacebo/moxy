@@ -23,14 +23,14 @@ impl Spanner for PatTupleStruct {
 impl Parse for PatTupleStruct {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        let cursor = if cursor.peek::<Token![<]>() {
-            let Some(cursor) = cursor.skip::<TypePath>() else {
+        let cursor = if <Token![<]>::peek(cursor) {
+            let Some(cursor) = TypePath::skip(cursor) else {
                 return false;
             };
 
             cursor
         } else {
-            let Some(cursor) = cursor.skip::<Path>() else {
+            let Some(cursor) = Path::skip(cursor) else {
                 return false;
             };
 
@@ -42,7 +42,7 @@ impl Parse for PatTupleStruct {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
-        let (qself, path) = if parser.peek::<Token![<]>() {
+        let (qself, path) = if <Token![<]>::peek(parser.cursor()) {
             let (qself, path) = QSelf::parse_qualified(parser)?;
             (Some(qself), path)
         } else {
@@ -61,22 +61,22 @@ impl Parse for PatTupleStruct {
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         let mut cursor = Attributes::skip(cursor)?;
-        cursor = if cursor.peek::<Token![<]>() {
-            cursor.skip::<TypePath>()?
+        cursor = if <Token![<]>::peek(cursor) {
+            TypePath::skip(cursor)?
         } else {
-            cursor.skip::<Path>()?
+            Path::skip(cursor)?
         };
 
         let mut inner = cursor.descend(Delim::Paren)?;
 
         while !inner.is_empty() {
-            inner = inner.skip::<Pattern>()?;
+            inner = Pattern::skip(inner)?;
 
             if inner.is_empty() {
                 break;
             }
 
-            inner = inner.skip::<Token![,]>()?;
+            inner = <Token![,]>::skip(inner)?;
         }
 
         Some(cursor.offset(1))

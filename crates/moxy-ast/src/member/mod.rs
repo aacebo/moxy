@@ -60,7 +60,7 @@ impl Spanner for Member {
 
 impl Parse for Member {
     fn peek(cursor: Cursor<'_>) -> bool {
-        if cursor.peek::<Ident>() {
+        if Ident::peek(cursor) {
             return true;
         }
 
@@ -72,7 +72,7 @@ impl Parse for Member {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<Lit>() {
+        if Lit::peek(parser.cursor()) {
             let lit: Lit = parser.parse()?;
 
             if let Some(i) = lit.as_int() {
@@ -96,10 +96,10 @@ impl Parse for Member {
             return None;
         }
 
-        if cursor.peek::<Lit>() {
-            cursor.skip::<Lit>()
+        if Lit::peek(cursor) {
+            Lit::skip(cursor)
         } else {
-            cursor.skip::<Ident>()
+            Ident::skip(cursor)
         }
     }
 }

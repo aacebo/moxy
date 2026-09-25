@@ -23,7 +23,7 @@ impl Parse for ItemExternCrate {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        cursor.peek::<Token![extern]>() && cursor.offset(1).peek::<Token![crate]>()
+        <Token![extern]>::peek(cursor) && <Token![crate]>::peek(cursor.offset(1))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -32,7 +32,7 @@ impl Parse for ItemExternCrate {
         let extern_keyword = parser.parse()?;
         let crate_keyword = parser.parse()?;
         let ident = parser.parse()?;
-        let (as_keyword, rename) = if parser.peek::<Token![as]>() {
+        let (as_keyword, rename) = if <Token![as]>::peek(parser.cursor()) {
             let as_keyword = parser.parse()?;
             let rename = parser.parse()?;
             (Some(as_keyword), Some(rename))
@@ -57,16 +57,16 @@ impl Parse for ItemExternCrate {
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = cursor.skip::<Token![extern]>()?;
-        cursor = cursor.skip::<Token![crate]>()?;
-        cursor = cursor.skip::<Ident>()?;
+        cursor = <Token![extern]>::skip(cursor)?;
+        cursor = <Token![crate]>::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
 
-        if cursor.peek::<Token![as]>() {
-            cursor = cursor.skip::<Token![as]>()?;
-            cursor = cursor.skip::<Ident>()?;
+        if <Token![as]>::peek(cursor) {
+            cursor = <Token![as]>::skip(cursor)?;
+            cursor = Ident::skip(cursor)?;
         }
 
-        cursor.skip::<Token![;]>()
+        <Token![;]>::skip(cursor)
     }
 }
 

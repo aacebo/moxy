@@ -94,22 +94,19 @@ impl From<ImplItemConst> for ImplItem {
 
 impl Parse for ImplItem {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<ImplItemConst>()
-            || cursor.peek::<ImplItemType>()
-            || cursor.peek::<ImplItemFn>()
-            || cursor.peek::<ImplItemMacro>()
+        ImplItemConst::peek(cursor) || ImplItemType::peek(cursor) || ImplItemFn::peek(cursor) || ImplItemMacro::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<ImplItemConst>() {
+        if ImplItemConst::peek(parser.cursor()) {
             return Ok(Self::Const(Box::new(parser.parse()?)));
         }
 
-        if parser.peek::<ImplItemType>() {
+        if ImplItemType::peek(parser.cursor()) {
             return Ok(Self::Type(parser.parse()?));
         }
 
-        if parser.peek::<ImplItemFn>() {
+        if ImplItemFn::peek(parser.cursor()) {
             return Ok(Self::Fn(parser.parse()?));
         }
 
@@ -117,14 +114,14 @@ impl Parse for ImplItem {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<ImplItemConst>() {
-            cursor.skip::<ImplItemConst>()
-        } else if cursor.peek::<ImplItemType>() {
-            cursor.skip::<ImplItemType>()
-        } else if cursor.peek::<ImplItemFn>() {
-            cursor.skip::<ImplItemFn>()
+        if ImplItemConst::peek(cursor) {
+            ImplItemConst::skip(cursor)
+        } else if ImplItemType::peek(cursor) {
+            ImplItemType::skip(cursor)
+        } else if ImplItemFn::peek(cursor) {
+            ImplItemFn::skip(cursor)
         } else {
-            cursor.skip::<ImplItemMacro>()
+            ImplItemMacro::skip(cursor)
         }
     }
 }

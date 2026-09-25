@@ -44,7 +44,7 @@ pub struct StructBody {
 
 impl Parse for StructBody {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.is_empty() || cursor.peek::<FieldValue>() || cursor.peek::<Token![..]>()
+        cursor.is_empty() || FieldValue::peek(cursor) || <Token![..]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -52,14 +52,14 @@ impl Parse for StructBody {
         let mut rest = None;
 
         while !parser.is_empty() {
-            if parser.peek::<Token![..]>() {
+            if <Token![..]>::peek(parser.cursor()) {
                 rest = Some((parser.parse()?, parser.parse()?));
                 break;
             }
 
             fields.push_value(parser.parse()?);
 
-            if parser.peek::<Token![,]>() {
+            if <Token![,]>::peek(parser.cursor()) {
                 fields.push_punct(parser.parse()?);
             } else {
                 break;
@@ -71,15 +71,15 @@ impl Parse for StructBody {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         while !cursor.is_empty() {
-            if cursor.peek::<Token![..]>() {
-                cursor = cursor.skip::<Token![..]>()?;
-                return cursor.skip::<Expr>();
+            if <Token![..]>::peek(cursor) {
+                cursor = <Token![..]>::skip(cursor)?;
+                return Expr::skip(cursor);
             }
 
-            cursor = cursor.skip::<FieldValue>()?;
+            cursor = FieldValue::skip(cursor)?;
 
-            if cursor.peek::<Token![,]>() {
-                cursor = cursor.skip::<Token![,]>()?;
+            if <Token![,]>::peek(cursor) {
+                cursor = <Token![,]>::skip(cursor)?;
             } else {
                 break;
             }

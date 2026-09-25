@@ -19,15 +19,15 @@ impl Parse for Field {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        let cursor = cursor.skip::<Option<Token![mut]>>().unwrap_or(cursor);
-        cursor.peek::<Type>()
+        let cursor = Option::<Token![mut]>::skip(cursor).unwrap_or(cursor);
+        Type::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = parser.parse()?;
         let vis = parser.parse()?;
         let mutability = parser.parse()?;
-        let (ident, colon) = if parser.peek::<Ident>() && parser.cursor().offset(1).peek::<Token![:]>() {
+        let (ident, colon) = if Ident::peek(parser.cursor()) && <Token![:]>::peek(parser.cursor().offset(1)) {
             (Some(parser.parse()?), Some(parser.parse()?))
         } else {
             (None, None)
@@ -48,14 +48,14 @@ impl Parse for Field {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = cursor.skip::<Option<Token![mut]>>()?;
+        cursor = Option::<Token![mut]>::skip(cursor)?;
 
-        if cursor.peek::<Ident>() && cursor.offset(1).peek::<Token![:]>() {
-            cursor = cursor.skip::<Ident>()?;
-            cursor = cursor.skip::<Token![:]>()?;
+        if Ident::peek(cursor) && <Token![:]>::peek(cursor.offset(1)) {
+            cursor = Ident::skip(cursor)?;
+            cursor = <Token![:]>::skip(cursor)?;
         }
 
-        cursor.skip::<Type>()
+        Type::skip(cursor)
     }
 }
 

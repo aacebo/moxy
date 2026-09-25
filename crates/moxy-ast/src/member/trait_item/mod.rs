@@ -94,22 +94,19 @@ impl From<TraitItemConst> for TraitItem {
 
 impl Parse for TraitItem {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<TraitItemConst>()
-            || cursor.peek::<TraitItemType>()
-            || cursor.peek::<TraitItemFn>()
-            || cursor.peek::<TraitItemMacro>()
+        TraitItemConst::peek(cursor) || TraitItemType::peek(cursor) || TraitItemFn::peek(cursor) || TraitItemMacro::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<TraitItemConst>() {
+        if TraitItemConst::peek(parser.cursor()) {
             return Ok(Self::Const(Box::new(parser.parse()?)));
         }
 
-        if parser.peek::<TraitItemType>() {
+        if TraitItemType::peek(parser.cursor()) {
             return Ok(Self::Type(parser.parse()?));
         }
 
-        if parser.peek::<TraitItemFn>() {
+        if TraitItemFn::peek(parser.cursor()) {
             return Ok(Self::Fn(parser.parse()?));
         }
 
@@ -117,14 +114,14 @@ impl Parse for TraitItem {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<TraitItemConst>() {
-            cursor.skip::<TraitItemConst>()
-        } else if cursor.peek::<TraitItemType>() {
-            cursor.skip::<TraitItemType>()
-        } else if cursor.peek::<TraitItemFn>() {
-            cursor.skip::<TraitItemFn>()
+        if TraitItemConst::peek(cursor) {
+            TraitItemConst::skip(cursor)
+        } else if TraitItemType::peek(cursor) {
+            TraitItemType::skip(cursor)
+        } else if TraitItemFn::peek(cursor) {
+            TraitItemFn::skip(cursor)
         } else {
-            cursor.skip::<TraitItemMacro>()
+            TraitItemMacro::skip(cursor)
         }
     }
 }

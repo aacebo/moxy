@@ -61,7 +61,7 @@ impl Path {
         let mut segments = Punctuated::new();
         segments.push_value(first);
 
-        while parser.peek::<Token![::]>() {
+        while <Token![::]>::peek(parser.cursor()) {
             segments.push_punct(parser.parse()?);
             segments.push_value(parser.parse()?);
         }
@@ -70,9 +70,9 @@ impl Path {
     }
 
     pub(crate) fn skip_rest(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        while cursor.skip::<Token![::]>().is_some_and(|cursor| cursor.peek::<PathSegment>()) {
-            cursor = cursor.skip::<Token![::]>()?;
-            cursor = cursor.skip::<PathSegment>()?;
+        while <Token![::]>::skip(cursor).is_some_and(|cursor| PathSegment::peek(cursor)) {
+            cursor = <Token![::]>::skip(cursor)?;
+            cursor = PathSegment::skip(cursor)?;
         }
 
         Some(cursor)
@@ -81,7 +81,7 @@ impl Path {
 
 impl Parse for Path {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![::]>() || cursor.peek::<PathSegment>()
+        <Token![::]>::peek(cursor) || PathSegment::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -93,8 +93,8 @@ impl Parse for Path {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = cursor.skip::<Option<Token![::]>>()?;
-        cursor = cursor.skip::<PathSegment>()?;
+        cursor = Option::<Token![::]>::skip(cursor)?;
+        cursor = PathSegment::skip(cursor)?;
         Self::skip_rest(cursor)
     }
 }

@@ -15,11 +15,11 @@ pub struct TypePath {
 
 impl Parse for TypePath {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![<]>() || cursor.peek::<Path>()
+        <Token![<]>::peek(cursor) || Path::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<Token![<]>() {
+        if <Token![<]>::peek(parser.cursor()) {
             let (qself, path) = super::QSelf::parse_qualified(parser)?;
 
             return Ok(Self {
@@ -35,20 +35,20 @@ impl Parse for TypePath {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if !cursor.peek::<Token![<]>() {
-            return cursor.skip::<Path>();
+        if !<Token![<]>::peek(cursor) {
+            return Path::skip(cursor);
         }
 
-        let mut cursor = cursor.skip::<Token![<]>()?;
-        cursor = cursor.skip::<Type>()?;
+        let mut cursor = <Token![<]>::skip(cursor)?;
+        cursor = Type::skip(cursor)?;
 
-        if cursor.peek::<Token![as]>() {
-            cursor = cursor.skip::<Token![as]>()?;
-            cursor = cursor.skip::<Path>()?;
+        if <Token![as]>::peek(cursor) {
+            cursor = <Token![as]>::skip(cursor)?;
+            cursor = Path::skip(cursor)?;
         }
 
-        cursor = cursor.skip::<Token![>]>()?;
-        cursor.skip::<Path>()
+        cursor = <Token![>]>::skip(cursor)?;
+        Path::skip(cursor)
     }
 }
 

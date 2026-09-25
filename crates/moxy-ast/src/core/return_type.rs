@@ -31,7 +31,7 @@ impl Parse for ReturnType {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.peek::<Token![->]>() {
+        if <Token![->]>::peek(parser.cursor()) {
             let arrow = parser.parse()?;
             Ok(Self::Type(arrow, parser.parse()?))
         } else {
@@ -40,8 +40,8 @@ impl Parse for ReturnType {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.peek::<Token![->]>() {
-            cursor.skip::<Token![->]>()?.skip::<Type>()
+        if <Token![->]>::peek(cursor) {
+            Type::skip(<Token![->]>::skip(cursor)?)
         } else {
             Some(cursor)
         }

@@ -17,7 +17,7 @@ impl Parse for TypeGroup {
             return false;
         };
 
-        let Some(inner) = inner.skip::<Type>() else {
+        let Some(inner) = Type::skip(inner) else {
             return false;
         };
 

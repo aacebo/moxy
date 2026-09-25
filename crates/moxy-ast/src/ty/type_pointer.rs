@@ -14,7 +14,7 @@ pub struct TypePointer {
 
 impl Parse for TypePointer {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![*]>() && cursor.offset(1).peek::<PointerMutability>()
+        <Token![*]>::peek(cursor) && PointerMutability::peek(cursor.offset(1))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -26,7 +26,7 @@ impl Parse for TypePointer {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor.skip::<Token![*]>()?.skip::<PointerMutability>()?.skip::<Type>()
+        Type::skip(PointerMutability::skip(<Token![*]>::skip(cursor)?)?)
     }
 }
 

@@ -14,7 +14,7 @@ pub struct TypeTraitObject {
 
 impl Parse for TypeTraitObject {
     fn peek(cursor: Cursor<'_>) -> bool {
-        cursor.peek::<Token![dyn]>()
+        <Token![dyn]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -24,12 +24,12 @@ impl Parse for TypeTraitObject {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let mut cursor = cursor.skip::<Option<Token![dyn]>>()?;
-        cursor = cursor.skip::<TypeBound>()?;
+        let mut cursor = Option::<Token![dyn]>::skip(cursor)?;
+        cursor = TypeBound::skip(cursor)?;
 
-        while cursor.peek::<Token![+]>() {
-            cursor = cursor.skip::<Token![+]>()?;
-            cursor = cursor.skip::<TypeBound>()?;
+        while <Token![+]>::peek(cursor) {
+            cursor = <Token![+]>::skip(cursor)?;
+            cursor = TypeBound::skip(cursor)?;
         }
 
         Some(cursor)

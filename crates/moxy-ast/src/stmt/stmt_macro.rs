@@ -15,7 +15,7 @@ pub struct StmtMacro {
 impl Parse for StmtMacro {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor)
-            .map(|cursor| cursor.peek::<MacroCall>())
+            .map(|cursor| MacroCall::peek(cursor))
             .unwrap_or(false)
     }
 
@@ -29,8 +29,8 @@ impl Parse for StmtMacro {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = cursor.skip::<MacroCall>()?;
-        cursor.skip::<Option<Token![;]>>()
+        cursor = MacroCall::skip(cursor)?;
+        Option::<Token![;]>::skip(cursor)
     }
 }
 
