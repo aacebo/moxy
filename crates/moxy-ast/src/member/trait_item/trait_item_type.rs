@@ -70,11 +70,14 @@ impl Parse for TraitItemType {
 
         if cursor.peek::<Token![:]>() {
             cursor = cursor.skip::<Token![:]>()?;
-            cursor = cursor.skip::<TypeBound>()?;
 
-            while cursor.peek::<Token![+]>() {
-                cursor = cursor.skip::<Token![+]>()?;
+            if cursor.peek::<TypeBound>() {
                 cursor = cursor.skip::<TypeBound>()?;
+
+                while cursor.peek::<Token![+]>() {
+                    cursor = cursor.skip::<Token![+]>()?;
+                    cursor = cursor.skip::<TypeBound>()?;
+                }
             }
         }
 

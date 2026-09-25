@@ -85,7 +85,7 @@ impl Parse for ItemTrait {
         if cursor.peek::<Token![:]>() {
             cursor = cursor.skip::<Token![:]>()?;
 
-            if !cursor.peek::<Token![;]>() {
+            if cursor.peek::<TypeBound>() {
                 cursor = cursor.skip::<TypeBound>()?;
 
                 while cursor.peek::<Token![+]>() {
