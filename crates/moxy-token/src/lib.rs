@@ -59,6 +59,8 @@ pub use lit::*;
 #[doc(inline)]
 pub use punct::*;
 #[doc(inline)]
+pub use source::Location;
+#[doc(inline)]
 pub use spacing::*;
 #[doc(inline)]
 pub use span::{DelimSpan, RangeSpan, Span, Spanner};

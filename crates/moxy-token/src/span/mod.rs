@@ -7,7 +7,7 @@ pub use delim::*;
 #[doc(inline)]
 pub use range::*;
 
-use crate::source::Location;
+use crate::Location;
 
 /// Provides the source span occupied by a value.
 pub trait Spanner {
