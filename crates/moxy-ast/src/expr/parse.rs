@@ -6,6 +6,10 @@ pub(super) fn expr(parser: &Parser, context: ExprContext) -> Result<Expr, ParseE
     assignment(parser, attrs, context)
 }
 
+pub(crate) fn const_generic_default(parser: &Parser) -> Result<Expr, ParseError> {
+    expr(parser, ExprContext::CONST_GENERIC_DEFAULT)
+}
+
 fn optional_expr(parser: &Parser, context: ExprContext) -> Result<Option<Box<Expr>>, ParseError> {
     if peek::expr(parser.cursor(), context) {
         Ok(Some(Box::new(expr(parser, context)?)))
@@ -35,7 +39,7 @@ fn range(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Exp
         let limits = parser.parse()?;
         let mut end = None;
 
-        if !parser.is_empty() && !parser.peek::<Token![,]>() && !parser.peek::<Token![;]>() && parser.peek::<Expr>() {
+        if !context.is_end(parser.cursor()) && parser.peek::<Expr>() {
             end = Some(Box::new(binary(parser, attrs.clone(), context)?));
         }
 
@@ -54,7 +58,7 @@ fn range(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Exp
         let limits = parser.parse()?;
         let mut end = None;
 
-        if !parser.is_empty() && !parser.peek::<Token![,]>() && !parser.peek::<Token![;]>() && parser.peek::<Expr>() {
+        if !context.is_end(parser.cursor()) && parser.peek::<Expr>() {
             end = Some(Box::new(binary(parser, attrs.clone(), context)?));
         }
 
@@ -73,7 +77,7 @@ fn range(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Exp
 fn binary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
     let mut left = cast(parser, attrs.clone(), context)?;
 
-    while parser.peek::<BinOp>() {
+    while parser.peek::<BinOp>() && !context.is_end_before_infix(parser.cursor()) {
         left = ExprBinary {
             attrs: attrs.clone(),
             left: Box::new(left),

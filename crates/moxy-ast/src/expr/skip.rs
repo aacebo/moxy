@@ -21,6 +21,10 @@ pub(crate) fn pattern_bound(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     expr(cursor, ExprContext::PATTERN_BOUND)
 }
 
+pub(crate) fn const_generic_default(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+    expr(cursor, ExprContext::CONST_GENERIC_DEFAULT)
+}
+
 fn list(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     while !cursor.is_empty() {
         cursor = cursor.skip::<Expr>()?;
@@ -346,7 +350,7 @@ fn cast(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
 fn binary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     cursor = cast(cursor, context)?;
 
-    while cursor.peek::<BinOp>() {
+    while cursor.peek::<BinOp>() && !context.is_end_before_infix(cursor) {
         cursor = cursor.skip::<BinOp>()?;
         cursor = cast(cursor, context)?;
     }
@@ -358,7 +362,7 @@ fn range(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     if cursor.peek::<RangeLimits>() {
         cursor = cursor.skip::<RangeLimits>()?;
 
-        if !cursor.is_empty() && !cursor.peek::<Token![,]>() && !cursor.peek::<Token![;]>() && peek::expr(cursor, context) {
+        if !context.is_end(cursor) && peek::expr(cursor, context) {
             cursor = binary(cursor, context)?;
         }
 
@@ -370,7 +374,7 @@ fn range(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     if cursor.peek::<RangeLimits>() {
         cursor = cursor.skip::<RangeLimits>()?;
 
-        if !cursor.is_empty() && !cursor.peek::<Token![,]>() && !cursor.peek::<Token![;]>() && peek::expr(cursor, context) {
+        if !context.is_end(cursor) && peek::expr(cursor, context) {
             cursor = binary(cursor, context)?;
         }
     }

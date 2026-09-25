@@ -657,21 +657,48 @@ impl Parse for Expr {
 struct ExprContext {
     allow_struct: bool,
     pattern_bound: bool,
+    const_generic_default: bool,
 }
 
 impl ExprContext {
     const NORMAL: Self = Self {
         allow_struct: true,
         pattern_bound: false,
+        const_generic_default: false,
     };
 
     const EARLY: Self = Self {
         allow_struct: false,
         pattern_bound: false,
+        const_generic_default: false,
     };
 
     const PATTERN_BOUND: Self = Self {
         allow_struct: true,
         pattern_bound: true,
+        const_generic_default: false,
     };
+
+    const CONST_GENERIC_DEFAULT: Self = Self {
+        allow_struct: true,
+        pattern_bound: false,
+        const_generic_default: true,
+    };
+
+    fn is_end(self, cursor: Cursor<'_>) -> bool {
+        cursor.is_empty()
+            || cursor.peek::<Token![,]>()
+            || cursor.peek::<Token![;]>()
+            || (self.const_generic_default && cursor.peek::<Token![>]>())
+    }
+
+    fn is_end_before_infix(self, cursor: Cursor<'_>) -> bool {
+        self.const_generic_default
+            && cursor.peek::<Token![>]>()
+            && (cursor.offset(1).is_empty()
+                || cursor.offset(1).peek::<Token![,]>()
+                || cursor.offset(1).peek::<Token![;]>()
+                || cursor.offset(1).peek::<Token![where]>()
+                || cursor.offset(1).is_delimited(Delim::Brace))
+    }
 }
