@@ -1,6 +1,6 @@
+mod ast;
 mod attributes;
 mod constants;
-mod coverage;
 mod crates;
 mod enums;
 mod expressions;
