@@ -28,7 +28,7 @@ impl Parse for TypeGroup {
         let (span, inner) = parser.parse_group_spanned(moxy_token::Delim::None)?;
         Ok(Self {
             span: span.span(),
-            elem: Box::new(inner.parse()?),
+            elem: Box::new(<_ as Parse>::parse(&inner)?),
         })
     }
 

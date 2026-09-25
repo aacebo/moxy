@@ -42,10 +42,10 @@ impl Parse for AssocTypeArgument {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            ident: parser.parse()?,
-            generics: parser.parse()?,
-            eq_punct: parser.parse()?,
-            ty: parser.parse()?,
+            ident: <_ as Parse>::parse(parser)?,
+            generics: <_ as Parse>::parse(parser)?,
+            eq_punct: <_ as Parse>::parse(parser)?,
+            ty: <_ as Parse>::parse(parser)?,
         })
     }
 

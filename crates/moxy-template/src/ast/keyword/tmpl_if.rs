@@ -36,10 +36,10 @@ impl Parse for TmplIfBranch {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let if_keyword: Token![if] = parser.parse()?;
+        let if_keyword: Token![if] = <_ as Parse>::parse(parser)?;
         let span = if_keyword.span();
         let cond = parser.parse_group(Delim::Paren)?.to_token_stream();
-        let body = parser.parse_group(Delim::Brace)?.parse()?;
+        let body = Template::parse(&parser.parse_group(Delim::Brace)?)?;
 
         Ok(Self {
             span,
@@ -71,9 +71,9 @@ impl Parse for TmplIf {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let at_punct: Token![@] = parser.parse()?;
+        let at_punct: Token![@] = <_ as Parse>::parse(parser)?;
         let span = at_punct.span();
-        let first: TmplIfBranch = parser.parse()?;
+        let first: TmplIfBranch = <_ as Parse>::parse(parser)?;
         let mut branches = vec![first];
         let mut else_at_punct = None;
         let mut else_keyword = None;
@@ -82,18 +82,18 @@ impl Parse for TmplIf {
         while let Some(cursor) = <Token![@]>::skip(parser.cursor())
             && <Token![else]>::peek(cursor)
         {
-            let at_punct = parser.parse()?;
-            let keyword = parser.parse()?;
+            let at_punct = <_ as Parse>::parse(parser)?;
+            let keyword = <_ as Parse>::parse(parser)?;
 
             if <Token![if]>::peek(parser.cursor()) {
-                let mut branch: TmplIfBranch = parser.parse()?;
+                let mut branch: TmplIfBranch = <_ as Parse>::parse(parser)?;
                 branch.at_punct = Some(at_punct);
                 branch.else_keyword = Some(keyword);
                 branches.push(branch);
             } else {
                 else_at_punct = Some(at_punct);
                 else_keyword = Some(keyword);
-                else_body = Some(Box::new(parser.parse_group(Delim::Brace)?.parse()?));
+                else_body = Some(Box::new(Template::parse(&parser.parse_group(Delim::Brace)?)?));
                 break;
             }
         }

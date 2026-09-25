@@ -23,7 +23,7 @@ impl Parse for PatSlice {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
         let (span, parser) = parser.parse_group_spanned(Delim::Bracket)?;
 
         Ok(Self {

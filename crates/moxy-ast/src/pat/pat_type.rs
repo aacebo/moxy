@@ -26,10 +26,10 @@ impl Parse for PatType {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs: parser.parse()?,
-            pat: Box::new(parser.parse()?),
-            colon: parser.parse()?,
-            ty: parser.parse()?,
+            attrs: <_ as Parse>::parse(parser)?,
+            pat: Box::new(<_ as Parse>::parse(parser)?),
+            colon: <_ as Parse>::parse(parser)?,
+            ty: <_ as Parse>::parse(parser)?,
         })
     }
 

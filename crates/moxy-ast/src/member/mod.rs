@@ -73,7 +73,7 @@ impl Parse for Member {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if Lit::peek(parser.cursor()) {
-            let lit: Lit = parser.parse()?;
+            let lit: Lit = <_ as Parse>::parse(parser)?;
 
             if let Some(i) = lit.as_int() {
                 if !i.repr().chars().all(char::is_numeric) {
@@ -87,7 +87,7 @@ impl Parse for Member {
                 parser.error("expected tuple index").into()
             }
         } else {
-            Ok(Self::Named(parser.parse()?))
+            Ok(Self::Named(<_ as Parse>::parse(parser)?))
         }
     }
 

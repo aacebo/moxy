@@ -56,9 +56,9 @@ impl Parse for ArrayInner {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let elem = parser.parse()?;
-        let semi = parser.parse()?;
-        let len = parser.parse()?;
+        let elem = <_ as Parse>::parse(parser)?;
+        let semi = <_ as Parse>::parse(parser)?;
+        let len = <_ as Parse>::parse(parser)?;
         Ok(Self { elem, semi, len })
     }
 

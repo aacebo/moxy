@@ -17,7 +17,7 @@ impl Parse for Abi {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let extern_keyword = parser.parse()?;
+        let extern_keyword = <_ as Parse>::parse(parser)?;
         let name = match parser.curr() {
             Some(TokenTree::Literal(lit)) if lit.repr().starts_with('"') => {
                 let repr = lit.repr().to_string();

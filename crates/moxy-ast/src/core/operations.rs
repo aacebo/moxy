@@ -141,115 +141,115 @@ impl Parse for BinOp {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if <Token![<<=]>::peek(parser.cursor()) {
-            return Ok(Self::ShlAssign(parser.parse()?));
+            return Ok(Self::ShlAssign(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![>>=]>::peek(parser.cursor()) {
-            return Ok(Self::ShrAssign(parser.parse()?));
+            return Ok(Self::ShrAssign(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![+=]>::peek(parser.cursor()) {
-            return Ok(Self::AddAssign(parser.parse()?));
+            return Ok(Self::AddAssign(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![-=]>::peek(parser.cursor()) {
-            return Ok(Self::SubAssign(parser.parse()?));
+            return Ok(Self::SubAssign(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![*=]>::peek(parser.cursor()) {
-            return Ok(Self::MulAssign(parser.parse()?));
+            return Ok(Self::MulAssign(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![/=]>::peek(parser.cursor()) {
-            return Ok(Self::DivAssign(parser.parse()?));
+            return Ok(Self::DivAssign(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![%=]>::peek(parser.cursor()) {
-            return Ok(Self::RemAssign(parser.parse()?));
+            return Ok(Self::RemAssign(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![^=]>::peek(parser.cursor()) {
-            return Ok(Self::BitXorAssign(parser.parse()?));
+            return Ok(Self::BitXorAssign(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![&=]>::peek(parser.cursor()) {
-            return Ok(Self::BitAndAssign(parser.parse()?));
+            return Ok(Self::BitAndAssign(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![|=]>::peek(parser.cursor()) {
-            return Ok(Self::BitOrAssign(parser.parse()?));
+            return Ok(Self::BitOrAssign(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![&&]>::peek(parser.cursor()) {
-            return Ok(Self::And(parser.parse()?));
+            return Ok(Self::And(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![||]>::peek(parser.cursor()) {
-            return Ok(Self::Or(parser.parse()?));
+            return Ok(Self::Or(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![<<]>::peek(parser.cursor()) {
-            return Ok(Self::Shl(parser.parse()?));
+            return Ok(Self::Shl(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![>>]>::peek(parser.cursor()) {
-            return Ok(Self::Shr(parser.parse()?));
+            return Ok(Self::Shr(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![==]>::peek(parser.cursor()) {
-            return Ok(Self::Eq(parser.parse()?));
+            return Ok(Self::Eq(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![!=]>::peek(parser.cursor()) {
-            return Ok(Self::Ne(parser.parse()?));
+            return Ok(Self::Ne(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![<=]>::peek(parser.cursor()) {
-            return Ok(Self::Le(parser.parse()?));
+            return Ok(Self::Le(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![>=]>::peek(parser.cursor()) {
-            return Ok(Self::Ge(parser.parse()?));
+            return Ok(Self::Ge(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![+]>::peek(parser.cursor()) {
-            return Ok(Self::Add(parser.parse()?));
+            return Ok(Self::Add(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![-]>::peek(parser.cursor()) {
-            return Ok(Self::Sub(parser.parse()?));
+            return Ok(Self::Sub(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![*]>::peek(parser.cursor()) {
-            return Ok(Self::Mul(parser.parse()?));
+            return Ok(Self::Mul(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![/]>::peek(parser.cursor()) {
-            return Ok(Self::Div(parser.parse()?));
+            return Ok(Self::Div(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![%]>::peek(parser.cursor()) {
-            return Ok(Self::Rem(parser.parse()?));
+            return Ok(Self::Rem(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![^]>::peek(parser.cursor()) {
-            return Ok(Self::BitXor(parser.parse()?));
+            return Ok(Self::BitXor(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![&]>::peek(parser.cursor()) {
-            return Ok(Self::BitAnd(parser.parse()?));
+            return Ok(Self::BitAnd(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![|]>::peek(parser.cursor()) {
-            return Ok(Self::BitOr(parser.parse()?));
+            return Ok(Self::BitOr(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![<]>::peek(parser.cursor()) {
-            return Ok(Self::Lt(parser.parse()?));
+            return Ok(Self::Lt(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![>]>::peek(parser.cursor()) {
-            return Ok(Self::Gt(parser.parse()?));
+            return Ok(Self::Gt(<_ as Parse>::parse(parser)?));
         }
 
         Err(parser.error("expected binary operation"))
@@ -444,15 +444,15 @@ impl Parse for UnOp {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if <Token![*]>::peek(parser.cursor()) {
-            return Ok(Self::Deref(parser.parse()?));
+            return Ok(Self::Deref(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![!]>::peek(parser.cursor()) {
-            return Ok(Self::Not(parser.parse()?));
+            return Ok(Self::Not(<_ as Parse>::parse(parser)?));
         }
 
         if <Token![-]>::peek(parser.cursor()) {
-            return Ok(Self::Neg(parser.parse()?));
+            return Ok(Self::Neg(<_ as Parse>::parse(parser)?));
         }
 
         Err(parser.error("expected `UnOp`"))

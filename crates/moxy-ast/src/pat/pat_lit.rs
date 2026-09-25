@@ -25,8 +25,8 @@ impl Parse for PatLit {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs: parser.parse()?,
-            lit: parser.parse()?,
+            attrs: <_ as Parse>::parse(parser)?,
+            lit: <_ as Parse>::parse(parser)?,
         })
     }
 

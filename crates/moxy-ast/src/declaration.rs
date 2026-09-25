@@ -124,11 +124,11 @@ impl Parse for Declaration {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if item::ItemEnum::peek(parser.cursor()) {
-            Ok(Self::Enum(parser.parse()?))
+            Ok(Self::Enum(<_ as Parse>::parse(parser)?))
         } else if item::ItemStruct::peek(parser.cursor()) {
-            Ok(Self::Struct(parser.parse()?))
+            Ok(Self::Struct(<_ as Parse>::parse(parser)?))
         } else if item::ItemUnion::peek(parser.cursor()) {
-            Ok(Self::Union(parser.parse()?))
+            Ok(Self::Union(<_ as Parse>::parse(parser)?))
         } else {
             parser.error("expected a user defined type declaration").into()
         }

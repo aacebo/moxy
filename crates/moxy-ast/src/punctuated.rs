@@ -201,13 +201,13 @@ impl<T: Parse, P: Parse> Punctuated<T, P> {
         let mut punctuated = Self::new();
 
         loop {
-            punctuated.push_value(parser.parse()?);
+            punctuated.push_value(<_ as Parse>::parse(parser)?);
 
             if !P::peek(parser.cursor()) {
                 break;
             }
 
-            punctuated.push_punct(parser.parse()?);
+            punctuated.push_punct(<_ as Parse>::parse(parser)?);
         }
 
         Ok(punctuated)

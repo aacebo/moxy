@@ -19,10 +19,10 @@ impl Parse for LifetimeParam {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let lifetime = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let lifetime = <_ as Parse>::parse(parser)?;
         let (colon_punct, bounds) = if <Token![:]>::peek(parser.cursor()) {
-            let colon_punct = Some(parser.parse()?);
+            let colon_punct = Some(<_ as Parse>::parse(parser)?);
             let bounds = Punctuated::parse_separated_nonempty(parser)?;
             (colon_punct, bounds)
         } else {

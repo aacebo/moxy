@@ -19,8 +19,8 @@ impl Parse for LifetimePredicate {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            lifetime: parser.parse()?,
-            colon_punct: parser.parse()?,
+            lifetime: <_ as Parse>::parse(parser)?,
+            colon_punct: <_ as Parse>::parse(parser)?,
             bounds: Punctuated::parse_separated_nonempty(parser)?,
         })
     }

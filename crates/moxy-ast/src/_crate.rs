@@ -41,8 +41,8 @@ impl Parse for Crate {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs: parser.parse()?,
-            items: parser.parse()?,
+            attrs: <_ as Parse>::parse(parser)?,
+            items: <_ as Parse>::parse(parser)?,
         })
     }
 

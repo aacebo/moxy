@@ -20,10 +20,10 @@ impl Parse for UseBound {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            use_keyword: parser.parse()?,
-            lt_punct: parser.parse()?,
+            use_keyword: <_ as Parse>::parse(parser)?,
+            lt_punct: <_ as Parse>::parse(parser)?,
             params: Punctuated::parse_separated_nonempty(parser)?,
-            gt_punct: parser.parse()?,
+            gt_punct: <_ as Parse>::parse(parser)?,
         })
     }
 
@@ -89,9 +89,9 @@ impl Parse for UseBoundParam {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if Lifetime::peek(parser.cursor()) {
-            Ok(Self::Lifetime(parser.parse()?))
+            Ok(Self::Lifetime(<_ as Parse>::parse(parser)?))
         } else {
-            Ok(Self::Ident(parser.parse()?))
+            Ok(Self::Ident(<_ as Parse>::parse(parser)?))
         }
     }
 

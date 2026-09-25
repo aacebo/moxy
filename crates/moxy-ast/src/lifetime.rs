@@ -18,8 +18,8 @@ impl Parse for Lifetime {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            quote: parser.parse()?,
-            ident: parser.parse()?,
+            quote: <_ as Parse>::parse(parser)?,
+            ident: <_ as Parse>::parse(parser)?,
         })
     }
 

@@ -26,13 +26,13 @@ impl Parse for ItemStruct {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let vis = parser.parse()?;
-        let struct_keyword = parser.parse()?;
-        let ident = parser.parse()?;
-        let generics = parser.parse()?;
-        let fields = parser.parse()?;
-        let semi = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let struct_keyword = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
+        let generics = <_ as Parse>::parse(parser)?;
+        let fields = <_ as Parse>::parse(parser)?;
+        let semi = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             attrs,

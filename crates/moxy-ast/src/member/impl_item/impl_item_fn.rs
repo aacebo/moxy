@@ -24,11 +24,11 @@ impl Parse for ImplItemFn {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs: parser.parse()?,
-            vis: parser.parse()?,
-            defaultness: parser.parse()?,
-            sig: parser.parse()?,
-            body: parser.parse()?,
+            attrs: <_ as Parse>::parse(parser)?,
+            vis: <_ as Parse>::parse(parser)?,
+            defaultness: <_ as Parse>::parse(parser)?,
+            sig: <_ as Parse>::parse(parser)?,
+            body: <_ as Parse>::parse(parser)?,
         })
     }
 

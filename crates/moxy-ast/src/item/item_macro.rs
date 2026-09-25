@@ -22,9 +22,9 @@ impl Parse for ItemMacro {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let call = parser.parse()?;
-        let semi_punct = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let call = <_ as Parse>::parse(parser)?;
+        let semi_punct = <_ as Parse>::parse(parser)?;
         Ok(Self { attrs, call, semi_punct })
     }
 

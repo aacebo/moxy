@@ -17,7 +17,9 @@ impl Parse for TypeMacro {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self { mac: parser.parse()? })
+        Ok(Self {
+            mac: <_ as Parse>::parse(parser)?,
+        })
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {

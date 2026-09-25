@@ -167,18 +167,6 @@ let tokens = moxy::error!(
 assert!(tokens.to_string().contains("compile_error"));
 ```
 
-### Tracing
-
-Enable parser trace output to `stdout` by passing `trace = true` to `parse!`.
-
-```rust
-use moxy::ast::Item;
-
-let _: Item = moxy::parse!("struct Widget;", trace = true).unwrap();
-```
-
-![Tracing](https://github.com/aacebo/moxy/blob/master/assets/tracing.png?raw=true)
-
 ### Build
 
 Enable `build` as a build dependency for typed Cargo directives and rustc

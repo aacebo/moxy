@@ -27,7 +27,7 @@ impl Parse for TypeParen {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let content = Delimited::parse_paren_with(parser, |parser| Ok(Box::new(parser.parse()?)))?;
+        let content = Delimited::parse_paren_with(parser, |parser| Ok(Box::new(<_ as Parse>::parse(parser)?)))?;
         Ok(Self { content })
     }
 

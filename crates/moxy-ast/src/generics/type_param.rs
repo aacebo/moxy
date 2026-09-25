@@ -21,10 +21,10 @@ impl Parse for TypeParam {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let ident = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
         let (colon_punct, bounds) = if <Token![:]>::peek(parser.cursor()) {
-            let colon_punct = parser.parse()?;
+            let colon_punct = <_ as Parse>::parse(parser)?;
             let bounds = TypeBound::parse_bounds(parser)?;
             (Some(colon_punct), bounds)
         } else {
@@ -32,8 +32,8 @@ impl Parse for TypeParam {
         };
 
         let (eq_punct, default) = if <Token![=]>::peek(parser.cursor()) {
-            let eq_punct = parser.parse()?;
-            let default = parser.parse()?;
+            let eq_punct = <_ as Parse>::parse(parser)?;
+            let default = <_ as Parse>::parse(parser)?;
             (Some(eq_punct), Some(default))
         } else {
             (None, None)

@@ -25,20 +25,20 @@ impl Parse for TraitItemConst {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let const_keyword = parser.parse()?;
-        let ident = parser.parse()?;
-        let generics = parser.parse()?;
-        let colon = parser.parse()?;
-        let ty = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let const_keyword = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
+        let generics = <_ as Parse>::parse(parser)?;
+        let colon = <_ as Parse>::parse(parser)?;
+        let ty = <_ as Parse>::parse(parser)?;
         let default = if <Token![=]>::peek(parser.cursor()) {
-            let eq = parser.parse()?;
-            Some((eq, parser.parse()?))
+            let eq = <_ as Parse>::parse(parser)?;
+            Some((eq, <_ as Parse>::parse(parser)?))
         } else {
             None
         };
 
-        let semi = parser.parse()?;
+        let semi = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             attrs,

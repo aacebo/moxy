@@ -22,10 +22,10 @@ impl Parse for ItemFn {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let vis = parser.parse()?;
-        let sig = parser.parse()?;
-        let body = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let sig = <_ as Parse>::parse(parser)?;
+        let body = <_ as Parse>::parse(parser)?;
         Ok(Self { attrs, vis, sig, body })
     }
 

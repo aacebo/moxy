@@ -37,7 +37,7 @@ impl Parse for Attribute {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            style: parser.parse()?,
+            style: <_ as Parse>::parse(parser)?,
             meta: Delimited::parse_bracket(parser)?,
         })
     }

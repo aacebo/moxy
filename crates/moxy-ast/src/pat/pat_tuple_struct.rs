@@ -41,12 +41,12 @@ impl Parse for PatTupleStruct {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
         let (qself, path) = if <Token![<]>::peek(parser.cursor()) {
             let (qself, path) = QSelf::parse_qualified(parser)?;
             (Some(qself), path)
         } else {
-            (None, parser.parse()?)
+            (None, <_ as Parse>::parse(parser)?)
         };
 
         let (span, parser) = parser.parse_group_spanned(Delim::Paren)?;

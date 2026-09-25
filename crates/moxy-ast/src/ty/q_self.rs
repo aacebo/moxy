@@ -22,7 +22,7 @@ impl QSelf {
     /// by `TypePath` and expression-path parsing.
     pub fn parse_qualified(parser: &Parser) -> Result<(Self, Path), ParseError> {
         let (qself, trait_path) = Self::parse_with_trait(parser)?;
-        let rest = parser.parse()?;
+        let rest = <_ as Parse>::parse(parser)?;
         let path = if let Some(mut p) = trait_path {
             p.extend(rest);
             p
@@ -36,16 +36,16 @@ impl QSelf {
     /// Parse `< Type ( as Path )? >`, returning the qself plus the trait path
     /// segments (if any) that the enclosing `TypePath` must prepend to its path.
     pub fn parse_with_trait(parser: &Parser) -> Result<(Self, Option<Path>), ParseError> {
-        let lt = parser.parse()?;
-        let ty = Box::new(parser.parse()?);
+        let lt = <_ as Parse>::parse(parser)?;
+        let ty = Box::new(<_ as Parse>::parse(parser)?);
         let (as_keyword, trait_path) = if <Token![as]>::peek(parser.cursor()) {
-            let as_keyword = parser.parse()?;
+            let as_keyword = <_ as Parse>::parse(parser)?;
             (Some(as_keyword), Some(Path::parse(parser)?))
         } else {
             (None, None)
         };
 
-        let gt = parser.parse()?;
+        let gt = <_ as Parse>::parse(parser)?;
         let position = trait_path.as_ref().map(|p| p.len()).unwrap_or(0);
 
         Ok((

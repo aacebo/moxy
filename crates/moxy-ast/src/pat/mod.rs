@@ -303,10 +303,14 @@ impl Parse for Pattern {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let bare = Attributes::skip(parser.cursor()).unwrap_or(parser.cursor());
         let leading = <Token![|]>::peek(bare);
-        let attrs = if leading { parser.parse()? } else { Attributes::default() };
+        let attrs = if leading {
+            <_ as Parse>::parse(parser)?
+        } else {
+            Attributes::default()
+        };
 
         if leading {
-            let _: Token![|] = parser.parse()?;
+            let _: Token![|] = <_ as Parse>::parse(parser)?;
         }
 
         let first = parse::single(parser)?;
@@ -319,7 +323,7 @@ impl Parse for Pattern {
         cases.push_value(first);
 
         while <Token![|]>::peek(parser.cursor()) {
-            cases.push_punct(parser.parse()?);
+            cases.push_punct(<_ as Parse>::parse(parser)?);
             cases.push_value(parse::single(parser)?);
         }
 

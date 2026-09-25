@@ -21,8 +21,8 @@ impl Parse for Label {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let name = parser.parse()?;
-        let colon = parser.parse()?;
+        let name = <_ as Parse>::parse(parser)?;
+        let colon = <_ as Parse>::parse(parser)?;
         Ok(Self { name, colon })
     }
 

@@ -41,21 +41,21 @@ impl Parse for ItemTraitAlias {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let vis = parser.parse()?;
-        let _unsafety: Option<Token![unsafe]> = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let _unsafety: Option<Token![unsafe]> = <_ as Parse>::parse(parser)?;
 
         // skip optional `auto`
         if <Token![auto]>::peek(parser.cursor()) {
-            let _: Token![auto] = parser.parse()?;
+            let _: Token![auto] = <_ as Parse>::parse(parser)?;
         }
 
-        let trait_keyword = parser.parse()?;
-        let ident = parser.parse()?;
-        let generics = parser.parse()?;
-        let eq_punct = parser.parse()?;
+        let trait_keyword = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
+        let generics = <_ as Parse>::parse(parser)?;
+        let eq_punct = <_ as Parse>::parse(parser)?;
         let bounds = crate::TypeBound::parse_bounds(parser)?;
-        let semi_punct = parser.parse()?;
+        let semi_punct = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             attrs,

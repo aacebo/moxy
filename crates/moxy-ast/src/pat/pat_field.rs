@@ -33,10 +33,10 @@ impl Parse for PatField {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let member = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let member = <_ as Parse>::parse(parser)?;
         let (colon, pat) = if <Token![:]>::peek(parser.cursor()) {
-            (Some(parser.parse()?), parser.parse()?)
+            (Some(<_ as Parse>::parse(parser)?), <_ as Parse>::parse(parser)?)
         } else {
             let Member::Named(ident) = &member else {
                 return parser.error("tuple index needs a pattern").into();

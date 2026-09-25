@@ -42,23 +42,23 @@ impl Parse for ItemImpl {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let defaultness = parser.parse()?;
-        let unsafety = parser.parse()?;
-        let impl_keyword = parser.parse()?;
-        let mut generics: Generics = parser.parse()?;
-        let polarity = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let defaultness = <_ as Parse>::parse(parser)?;
+        let unsafety = <_ as Parse>::parse(parser)?;
+        let impl_keyword = <_ as Parse>::parse(parser)?;
+        let mut generics: Generics = <_ as Parse>::parse(parser)?;
+        let polarity = <_ as Parse>::parse(parser)?;
 
-        let first = parser.parse()?;
+        let first = <_ as Parse>::parse(parser)?;
         let (for_keyword, trait_ref, self_ty) = if <Token![for]>::peek(parser.cursor()) {
-            let for_keyword = parser.parse()?;
-            let self_ty = parser.parse()?;
+            let for_keyword = <_ as Parse>::parse(parser)?;
+            let self_ty = <_ as Parse>::parse(parser)?;
             (Some(for_keyword), Some(Self::type_to_trait_ref(first, polarity)?), self_ty)
         } else {
             (None, None, first)
         };
 
-        generics.where_clause = parser.parse()?;
+        generics.where_clause = <_ as Parse>::parse(parser)?;
         let items = Delimited::<Vec<ImplItem>>::parse_brace(parser)?;
 
         Ok(Self {

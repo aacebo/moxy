@@ -35,9 +35,9 @@ impl Parse for MacroCall {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            path: parser.parse()?,
-            bang: parser.parse()?,
-            body: parser.parse()?,
+            path: <_ as Parse>::parse(parser)?,
+            bang: <_ as Parse>::parse(parser)?,
+            body: <_ as Parse>::parse(parser)?,
         })
     }
 

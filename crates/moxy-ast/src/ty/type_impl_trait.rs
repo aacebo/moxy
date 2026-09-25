@@ -18,7 +18,7 @@ impl Parse for TypeImplTrait {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let impl_keyword = parser.parse()?;
+        let impl_keyword = <_ as Parse>::parse(parser)?;
         let bounds = TypeBound::parse_bounds(parser)?;
         Ok(Self { impl_keyword, bounds })
     }

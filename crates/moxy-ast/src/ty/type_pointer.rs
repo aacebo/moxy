@@ -19,9 +19,9 @@ impl Parse for TypePointer {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            star: parser.parse()?,
-            mutability: parser.parse()?,
-            elem: Box::new(parser.parse()?),
+            star: <_ as Parse>::parse(parser)?,
+            mutability: <_ as Parse>::parse(parser)?,
+            elem: Box::new(<_ as Parse>::parse(parser)?),
         })
     }
 

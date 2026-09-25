@@ -36,9 +36,9 @@ impl Parse for RangeLimits {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if <Token![..=]>::peek(parser.cursor()) {
-            Ok(Self::Closed(parser.parse()?))
+            Ok(Self::Closed(<_ as Parse>::parse(parser)?))
         } else {
-            Ok(Self::HalfOpen(parser.parse()?))
+            Ok(Self::HalfOpen(<_ as Parse>::parse(parser)?))
         }
     }
 

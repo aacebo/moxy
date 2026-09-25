@@ -26,9 +26,9 @@ impl Parse for PatBox {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs: parser.parse()?,
-            keyword: parser.parse()?,
-            pattern: parser.parse()?,
+            attrs: <_ as Parse>::parse(parser)?,
+            keyword: <_ as Parse>::parse(parser)?,
+            pattern: <_ as Parse>::parse(parser)?,
         })
     }
 

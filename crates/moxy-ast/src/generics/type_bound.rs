@@ -40,13 +40,13 @@ impl TypeBound {
 
     pub fn parse_bounds(parser: &Parser) -> Result<crate::Punctuated<Self, Token![+]>, ParseError> {
         let mut bounds = crate::Punctuated::new();
-        bounds.push_value(parser.parse()?);
+        bounds.push_value(<_ as Parse>::parse(parser)?);
 
         while <Token![+]>::peek(parser.cursor()) {
-            bounds.push_punct(parser.parse()?);
+            bounds.push_punct(<_ as Parse>::parse(parser)?);
 
             if TypeBound::peek(parser.cursor()) {
-                bounds.push_value(parser.parse()?);
+                bounds.push_value(<_ as Parse>::parse(parser)?);
             } else {
                 break;
             }
@@ -85,14 +85,14 @@ impl Parse for TypeBound {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if Lifetime::peek(parser.cursor()) {
-            return Ok(Self::Lifetime(parser.parse()?));
+            return Ok(Self::Lifetime(<_ as Parse>::parse(parser)?));
         }
 
         if UseBound::peek(parser.cursor()) {
-            return Ok(Self::Use(parser.parse()?));
+            return Ok(Self::Use(<_ as Parse>::parse(parser)?));
         }
 
-        Ok(Self::Trait(parser.parse()?))
+        Ok(Self::Trait(<_ as Parse>::parse(parser)?))
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {

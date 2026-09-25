@@ -16,7 +16,9 @@ impl Parse for UseGlob {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self { star: parser.parse()? })
+        Ok(Self {
+            star: <_ as Parse>::parse(parser)?,
+        })
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {

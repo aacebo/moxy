@@ -3,48 +3,29 @@ use std::cell::Cell;
 use moxy_token::span::DelimSpan;
 use moxy_token::{Delim, Ident, Span, ToTokens, TokenStream, TokenTree};
 
-use crate::parse::{Ansi, Cursor, Parse, ParseConfig, ParseError};
+use crate::parse::{Cursor, Parse, ParseError};
 
 /// An AST representation of Rust parser syntax.
 #[derive(Clone)]
 pub struct Parser<'a> {
     cursor: Cell<Cursor<'a>>,
-    config: ParseConfig,
-    depth: usize,
 }
 
 impl<'a> Parser<'a> {
     pub fn from_tokens(tokens: &'a TokenStream) -> Self {
-        Self::from_config(tokens, ParseConfig::default())
-    }
-
-    pub fn from_config(tokens: &'a TokenStream, config: ParseConfig) -> Self {
         Self {
             cursor: Cell::new(Cursor::from_tokens(tokens)),
-            config,
-            depth: 0,
         }
     }
 
     pub fn from_cursor(cursor: Cursor<'a>) -> Self {
         Self {
             cursor: Cell::new(cursor),
-            config: Default::default(),
-            depth: 0,
         }
-    }
-
-    pub fn traceable(mut self) -> Self {
-        self.config.trace = true;
-        self
     }
 
     pub fn cursor(&self) -> Cursor<'a> {
         self.cursor.get()
-    }
-
-    pub fn config(&self) -> &ParseConfig {
-        &self.config
     }
 
     pub fn is_empty(&self) -> bool {
@@ -66,26 +47,11 @@ impl<'a> Parser<'a> {
     pub fn fork(&self) -> Self {
         Self {
             cursor: self.cursor.clone(),
-            config: self.config,
-            depth: self.depth + 1,
         }
     }
 
     pub fn seek(&self, other: &Self) {
         self.cursor.set(other.cursor.get());
-    }
-
-    pub fn peek<T: Parse>(&self) -> bool {
-        self.cursor.get().peek::<T>()
-    }
-
-    pub fn skip<T: Parse>(&self) -> &Self {
-        let Some(next) = self.cursor.get().skip::<T>() else {
-            return self;
-        };
-
-        self.cursor.set(next);
-        self
     }
 
     pub fn curr(&self) -> Option<&'a TokenTree> {
@@ -145,23 +111,19 @@ impl<'a> Parser<'a> {
 }
 
 impl Parser<'_> {
-    pub fn parse<T: Parse>(&self) -> Result<T, ParseError> {
-        let name = std::any::type_name::<T>();
-        let fork = self.fork();
-        let value = T::parse(&fork);
-        self.trace_start(name, fork.span(), value.is_ok());
-        let value = value?;
-        self.seek(&fork);
-        Ok(value)
-    }
-
     pub fn parse_while<T: Parse>(&self) -> Vec<T> {
         let mut items = Vec::new();
 
-        while T::peek(self.cursor())
-            && let Ok(item) = T::parse(self)
-        {
-            items.push(item);
+        while T::peek(self.cursor()) {
+            let fork = self.fork();
+
+            match T::parse(&fork) {
+                Ok(item) => {
+                    self.seek(&fork);
+                    items.push(item);
+                }
+                Err(_) => break,
+            }
         }
 
         items
@@ -183,7 +145,7 @@ impl<'a> Parser<'a> {
         match self.cursor().curr() {
             Some(TokenTree::Group(group)) if group.delim == delim => {
                 self.advance();
-                Ok(Self::from_config(&group.tokens, self.config))
+                Ok(Self::from_tokens(&group.tokens))
             }
             _ => Err(self.error(format!("expected `{}` delimiter", delim.as_str()))),
         }
@@ -193,7 +155,7 @@ impl<'a> Parser<'a> {
         match self.cursor().curr() {
             Some(TokenTree::Group(group)) if group.delim == delim => {
                 self.advance();
-                Ok((group.span, Self::from_config(&group.tokens, self.config)))
+                Ok((group.span, Self::from_tokens(&group.tokens)))
             }
             _ => Err(self.error(format!("expected `{}` delimiter", delim.as_str()))),
         }
@@ -212,24 +174,5 @@ impl<'a> Parser<'a> {
 impl<'a> ToTokens for Parser<'a> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.cursor.get().to_tokens(tokens);
-    }
-}
-
-impl Parser<'_> {
-    #[inline(never)]
-    fn trace_start(&self, name: &str, span: Span, ok: bool) {
-        if self.config.trace {
-            let (color, span) = if ok { (Ansi::Green, span) } else { (Ansi::Red, self.span()) };
-
-            println!(
-                "{}{}<- {} @ ln {}, col {}{}",
-                " ".repeat(self.depth),
-                color,
-                name,
-                span.end().line(),
-                span.end().column(),
-                Ansi::Reset,
-            );
-        }
     }
 }

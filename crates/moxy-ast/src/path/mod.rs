@@ -62,8 +62,8 @@ impl Path {
         segments.push_value(first);
 
         while <Token![::]>::peek(parser.cursor()) {
-            segments.push_punct(parser.parse()?);
-            segments.push_value(parser.parse()?);
+            segments.push_punct(<_ as Parse>::parse(parser)?);
+            segments.push_value(<_ as Parse>::parse(parser)?);
         }
 
         Ok(Self { colon: None, segments })
@@ -85,8 +85,8 @@ impl Parse for Path {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let colon = parser.parse()?;
-        let first = parser.parse()?;
+        let colon = <_ as Parse>::parse(parser)?;
+        let first = <_ as Parse>::parse(parser)?;
         let mut path = Self::parse_rest(parser, first)?;
         path.colon = colon;
         Ok(path)
@@ -122,7 +122,7 @@ impl std::str::FromStr for Path {
 
     fn from_str(s: &str) -> Result<Self, Self::Err> {
         let parser = TokenStream::from_str(s)?;
-        Parser::from_tokens(&parser).parse()
+        Self::parse(&Parser::from_tokens(&parser))
     }
 }
 

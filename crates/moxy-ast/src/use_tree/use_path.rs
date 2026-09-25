@@ -22,10 +22,10 @@ impl Parse for UsePath {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            prefix: parser.parse()?,
-            ident: parser.parse()?,
-            path_sep: parser.parse()?,
-            tree: Box::new(parser.parse()?),
+            prefix: <_ as Parse>::parse(parser)?,
+            ident: <_ as Parse>::parse(parser)?,
+            path_sep: <_ as Parse>::parse(parser)?,
+            tree: Box::new(<_ as Parse>::parse(parser)?),
         })
     }
 

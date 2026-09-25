@@ -20,9 +20,9 @@ impl Parse for TypePredicate {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            lifetimes: parser.parse()?,
-            bounded_ty: parser.parse()?,
-            colon_punct: parser.parse()?,
+            lifetimes: <_ as Parse>::parse(parser)?,
+            bounded_ty: <_ as Parse>::parse(parser)?,
+            colon_punct: <_ as Parse>::parse(parser)?,
             bounds: TypeBound::parse_bounds(parser)?,
         })
     }

@@ -1,4 +1,3 @@
-mod config;
 mod cursor;
 mod error;
 mod parser;
@@ -12,9 +11,6 @@ pub use cursor::*;
 
 #[doc(inline)]
 pub use parser::*;
-
-#[doc(inline)]
-pub use config::*;
 
 use moxy_token::TokenStream;
 
@@ -31,19 +27,9 @@ use moxy_token::TokenStream;
 /// ```
 #[macro_export]
 macro_rules! parse {
-    ($src:tt $(as $ty:ty)? $(, $key:ident = $value:expr)* $(,)?) => {{
-        let mut config = $crate::ParseConfig::default();
-
-        $(
-            $crate::parse!(@option config, $key = $value);
-        )*
-
-        $crate::__parse_owned $(::<$ty>)* ($src.to_string(), config)
+    ($src:tt $(as $ty:ty)? $(,)?) => {{
+        $crate::__parse_owned $(::<$ty>)* ($src.to_string())
     }};
-
-    (@option $config:ident, trace = $value:expr) => {
-        $config.trace = $value;
-    };
 }
 
 /// Parse a rust source file into `moxy::ast::File`.
@@ -56,27 +42,17 @@ macro_rules! parse {
 /// ```
 #[macro_export]
 macro_rules! parse_file {
-    ($path:tt $(, $key:ident = $value:expr)* $(,)?) => {{
-        let mut config = $crate::ParseConfig::default();
-
-        $(
-            $crate::parse_file!(@option config, $key = $value);
-        )*
-
+    ($path:tt $(,)?) => {{
         let path = ::std::path::Path::new(&$path);
 
         match ::std::fs::read_to_string(path) {
-            Ok(source) => $crate::__parse_owned(source, config),
+            Ok(source) => $crate::__parse_owned(source),
             Err(error) => Err($crate::ParseError::new(
                 $crate::__private::moxy_token::Span::call_site(),
                 format!("could not read source file `{}`: {}", path.display(), error),
             )),
         }
     }};
-
-    (@option $config:ident, trace = $value:expr) => {
-        $config.trace = $value;
-    };
 }
 
 /// Parse source file(s) into a typed AST node, returning `Result<T, ParseError>`.
@@ -91,13 +67,8 @@ macro_rules! parse_file {
 /// ```
 #[macro_export]
 macro_rules! parse_files {
-    ($($pattern:literal),+ $(, $key:ident = $value:expr)* $(,)?) => {{
+    ($($pattern:literal),+ $(,)?) => {{
         let mut paths = vec![];
-        let mut config = $crate::ParseConfig::default();
-
-        $(
-            $crate::parse_files!(@option config, $key = $value);
-        )*
 
         $(
             paths.extend($crate::__private::glob(
@@ -111,7 +82,7 @@ macro_rules! parse_files {
         for path in paths {
             let source = ::std::fs::read_to_string(&path)
                 .expect(&format!("file `{}` not found", path.display()));
-            let file: $crate::File = $crate::__parse_owned(source, config)
+            let file: $crate::File = $crate::__parse_owned(source)
                 .expect("expected valid rust file");
             files.push(file);
         }
@@ -119,18 +90,15 @@ macro_rules! parse_files {
         files
     }};
 
-    (@option $config:ident, trace = $value:expr) => {
-        $config.trace = $value;
-    };
 }
 
 /// Parse an owned source string without copying it again for fallback span storage.
 ///
 /// This is public only so [`parse!`](crate::parse) can call it from downstream crates.
 #[doc(hidden)]
-pub fn __parse_owned<T: Parse>(source: String, config: ParseConfig) -> Result<T, ParseError> {
+pub fn __parse_owned<T: Parse>(source: String) -> Result<T, ParseError> {
     let tokens = TokenStream::from_string(source)?;
-    let parser = Parser::from_config(&tokens, config);
+    let parser = Parser::from_tokens(&tokens);
     let value = T::parse(&parser)?;
 
     if !parser.is_empty() {

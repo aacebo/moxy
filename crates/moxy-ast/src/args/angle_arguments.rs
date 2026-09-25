@@ -20,10 +20,10 @@ impl Parse for AngleArguments {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            colon2: parser.parse()?,
-            lt_punct: parser.parse()?,
+            colon2: <_ as Parse>::parse(parser)?,
+            lt_punct: <_ as Parse>::parse(parser)?,
             args: Punctuated::parse_separated_nonempty(parser)?,
-            gt_punct: parser.parse()?,
+            gt_punct: <_ as Parse>::parse(parser)?,
         })
     }
 

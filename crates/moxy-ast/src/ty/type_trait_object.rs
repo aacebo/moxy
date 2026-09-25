@@ -18,7 +18,7 @@ impl Parse for TypeTraitObject {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let dyn_token = parser.parse()?;
+        let dyn_token = <_ as Parse>::parse(parser)?;
         let bounds = crate::TypeBound::parse_bounds(parser)?;
         Ok(Self { dyn_token, bounds })
     }

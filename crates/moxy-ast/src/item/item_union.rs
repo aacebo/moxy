@@ -25,12 +25,12 @@ impl Parse for ItemUnion {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let vis = parser.parse()?;
-        let union_keyword = parser.parse()?;
-        let ident = parser.parse()?;
-        let generics = parser.parse()?;
-        let fields = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let union_keyword = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
+        let generics = <_ as Parse>::parse(parser)?;
+        let fields = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             attrs,

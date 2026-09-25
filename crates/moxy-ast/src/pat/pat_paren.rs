@@ -32,8 +32,8 @@ impl Parse for PatParen {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let content = Delimited::parse_paren_with(parser, |inner| Ok(Box::new(inner.parse()?)))?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let content = Delimited::parse_paren_with(parser, |inner| Ok(Box::new(<_ as Parse>::parse(inner)?)))?;
         Ok(Self { attrs, content })
     }
 

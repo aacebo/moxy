@@ -26,14 +26,14 @@ impl Parse for ForeignItemStatic {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs: parser.parse()?,
-            vis: parser.parse()?,
-            static_keyword: parser.parse()?,
-            mutability: parser.parse()?,
-            ident: parser.parse()?,
-            colon: parser.parse()?,
-            ty: parser.parse()?,
-            semi: parser.parse()?,
+            attrs: <_ as Parse>::parse(parser)?,
+            vis: <_ as Parse>::parse(parser)?,
+            static_keyword: <_ as Parse>::parse(parser)?,
+            mutability: <_ as Parse>::parse(parser)?,
+            ident: <_ as Parse>::parse(parser)?,
+            colon: <_ as Parse>::parse(parser)?,
+            ty: <_ as Parse>::parse(parser)?,
+            semi: <_ as Parse>::parse(parser)?,
         })
     }
 

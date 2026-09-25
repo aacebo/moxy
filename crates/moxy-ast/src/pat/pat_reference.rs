@@ -27,10 +27,10 @@ impl Parse for PatReference {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs: parser.parse()?,
-            and: parser.parse()?,
-            mutability: parser.parse()?,
-            pat: parser.parse()?,
+            attrs: <_ as Parse>::parse(parser)?,
+            and: <_ as Parse>::parse(parser)?,
+            mutability: <_ as Parse>::parse(parser)?,
+            pat: <_ as Parse>::parse(parser)?,
         })
     }
 

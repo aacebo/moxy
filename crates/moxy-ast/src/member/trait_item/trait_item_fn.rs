@@ -21,12 +21,12 @@ impl Parse for TraitItemFn {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let sig = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let sig = <_ as Parse>::parse(parser)?;
         let (body, semi) = if parser.is_delimited(Delim::Brace) {
-            (Some(parser.parse()?), None)
+            (Some(<_ as Parse>::parse(parser)?), None)
         } else {
-            (None, Some(parser.parse()?))
+            (None, Some(<_ as Parse>::parse(parser)?))
         };
 
         Ok(Self { attrs, sig, body, semi })

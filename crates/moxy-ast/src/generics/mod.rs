@@ -45,16 +45,20 @@ impl Parse for Generics {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let lt: Option<Token![<]> = parser.parse()?;
+        let lt: Option<Token![<]> = <_ as Parse>::parse(parser)?;
         let params = if lt.is_some() {
             Punctuated::parse_separated_nonempty(parser)?
         } else {
             Punctuated::new()
         };
 
-        let gt = if lt.is_some() { Some(parser.parse()?) } else { None };
+        let gt = if lt.is_some() {
+            Some(<_ as Parse>::parse(parser)?)
+        } else {
+            None
+        };
 
-        let where_clause = parser.parse()?;
+        let where_clause = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             lt,

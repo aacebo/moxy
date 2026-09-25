@@ -31,24 +31,24 @@ impl Parse for TypeBareFn {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let lifetimes = parser.parse()?;
-        let unsafety = parser.parse()?;
-        let abi = parser.parse()?;
-        let fn_keyword = parser.parse()?;
+        let lifetimes = <_ as Parse>::parse(parser)?;
+        let unsafety = <_ as Parse>::parse(parser)?;
+        let abi = <_ as Parse>::parse(parser)?;
+        let fn_keyword = <_ as Parse>::parse(parser)?;
         let params = Delimited::parse_paren_with(parser, |inner| {
             let mut inputs = Punctuated::new();
             let mut variadic = None;
 
             while !inner.is_empty() {
                 if Variadic::peek(inner.cursor()) {
-                    variadic = Some(inner.parse()?);
+                    variadic = Some(<_ as Parse>::parse(inner)?);
                     break;
                 }
 
-                inputs.push_value(inner.parse()?);
+                inputs.push_value(<_ as Parse>::parse(inner)?);
 
                 if <Token![,]>::peek(inner.cursor()) {
-                    inputs.push_punct(inner.parse()?);
+                    inputs.push_punct(<_ as Parse>::parse(inner)?);
                 } else {
                     break;
                 }
@@ -57,7 +57,7 @@ impl Parse for TypeBareFn {
             Ok(BareFnParams { inputs, variadic })
         })?;
 
-        let output = parser.parse()?;
+        let output = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             lifetimes,

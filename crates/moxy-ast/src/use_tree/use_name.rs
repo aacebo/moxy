@@ -16,7 +16,9 @@ impl Parse for UseName {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self { ident: parser.parse()? })
+        Ok(Self {
+            ident: <_ as Parse>::parse(parser)?,
+        })
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {

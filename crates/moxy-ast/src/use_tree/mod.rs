@@ -91,22 +91,22 @@ impl Parse for UseTree {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if UseGlob::peek(parser.cursor()) {
-            return Ok(Self::Glob(parser.parse()?));
+            return Ok(Self::Glob(<_ as Parse>::parse(parser)?));
         }
 
         if UseGroup::peek(parser.cursor()) {
-            return Ok(Self::Group(parser.parse()?));
+            return Ok(Self::Group(<_ as Parse>::parse(parser)?));
         }
 
         if UsePath::peek(parser.cursor()) {
-            return Ok(Self::Path(parser.parse()?));
+            return Ok(Self::Path(<_ as Parse>::parse(parser)?));
         }
 
         if UseRename::peek(parser.cursor()) {
-            return Ok(Self::Rename(parser.parse()?));
+            return Ok(Self::Rename(<_ as Parse>::parse(parser)?));
         }
 
-        Ok(Self::Name(parser.parse()?))
+        Ok(Self::Name(<_ as Parse>::parse(parser)?))
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {

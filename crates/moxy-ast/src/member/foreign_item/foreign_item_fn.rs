@@ -22,10 +22,10 @@ impl Parse for ForeignItemFn {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs: parser.parse()?,
-            vis: parser.parse()?,
-            sig: parser.parse()?,
-            semi: parser.parse()?,
+            attrs: <_ as Parse>::parse(parser)?,
+            vis: <_ as Parse>::parse(parser)?,
+            sig: <_ as Parse>::parse(parser)?,
+            semi: <_ as Parse>::parse(parser)?,
         })
     }
 

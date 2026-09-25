@@ -32,8 +32,8 @@ impl Parse for ReturnType {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if <Token![->]>::peek(parser.cursor()) {
-            let arrow = parser.parse()?;
-            Ok(Self::Type(arrow, parser.parse()?))
+            let arrow = <_ as Parse>::parse(parser)?;
+            Ok(Self::Type(arrow, <_ as Parse>::parse(parser)?))
         } else {
             Ok(Self::Default)
         }

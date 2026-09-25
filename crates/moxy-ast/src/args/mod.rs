@@ -72,7 +72,7 @@ impl Parse for GenericArgument {
 
         // Lifetime: starts with `'`.
         if token.is_punct_quote() {
-            return Ok(Self::Lifetime(parser.parse()?));
+            return Ok(Self::Lifetime(<_ as Parse>::parse(parser)?));
         }
 
         // Literal or block expression const argument.
@@ -82,15 +82,15 @@ impl Parse for GenericArgument {
             || token.is_punct_not();
 
         if is_const {
-            return Ok(Self::Const(parser.parse()?));
+            return Ok(Self::Const(<_ as Parse>::parse(parser)?));
         }
 
         if token.is_ident() {
-            let ident = parser.parse()?;
-            let generics: Option<AngleArguments> = parser.parse()?;
+            let ident = <_ as Parse>::parse(parser)?;
+            let generics: Option<AngleArguments> = <_ as Parse>::parse(parser)?;
 
             if <Token![:]>::peek(parser.cursor()) {
-                let colon_punct = parser.parse()?;
+                let colon_punct = <_ as Parse>::parse(parser)?;
                 let bounds = Punctuated::parse_separated_nonempty(parser)?;
 
                 return Ok(ConstraintArgument {
@@ -103,7 +103,7 @@ impl Parse for GenericArgument {
             }
 
             if <Token![=]>::peek(parser.cursor()) {
-                let eq_punct = parser.parse()?;
+                let eq_punct = <_ as Parse>::parse(parser)?;
                 let is_const = match parser.cursor().curr() {
                     Some(TokenTree::Literal(_)) => true,
                     Some(TokenTree::Group(g)) if g.delim.is_brace() => true,
@@ -113,7 +113,7 @@ impl Parse for GenericArgument {
                 };
 
                 if is_const {
-                    let expr = parser.parse()?;
+                    let expr = <_ as Parse>::parse(parser)?;
 
                     return Ok(AssocConstArgument {
                         ident,
@@ -124,7 +124,7 @@ impl Parse for GenericArgument {
                     .into_generic_argument());
                 }
 
-                let ty = parser.parse()?;
+                let ty = <_ as Parse>::parse(parser)?;
 
                 return Ok(AssocTypeArgument {
                     ident,
@@ -141,8 +141,8 @@ impl Parse for GenericArgument {
                 Type::Macro(TypeMacro {
                     mac: MacroCall {
                         path,
-                        bang: parser.parse()?,
-                        body: parser.parse()?,
+                        bang: <_ as Parse>::parse(parser)?,
+                        body: <_ as Parse>::parse(parser)?,
                     },
                 })
             } else {
@@ -152,7 +152,7 @@ impl Parse for GenericArgument {
             return Ok(Self::Type(ty));
         }
 
-        Ok(Self::Type(parser.parse()?))
+        Ok(Self::Type(<_ as Parse>::parse(parser)?))
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {

@@ -23,7 +23,7 @@ impl Meta {
         let parser = Parser::from_tokens(&group.tokens);
 
         while Path::peek(parser.cursor()) {
-            let meta = parser.parse()?;
+            let meta = <_ as Parse>::parse(&parser)?;
             parse(&meta)?;
         }
 
@@ -36,8 +36,8 @@ impl Meta {
     {
         match &self.content {
             MetaContent::Unit => ParseError::new(self.span(), "unit meta content cannot be parsed").into(),
-            MetaContent::List(v) => Parser::from_tokens(&v.tokens).parse(),
-            MetaContent::Expr { eq: _, expr } => Parser::from_tokens(expr).parse(),
+            MetaContent::List(v) => T::parse(&Parser::from_tokens(&v.tokens)),
+            MetaContent::Expr { eq: _, expr } => T::parse(&Parser::from_tokens(expr)),
         }
     }
 }
@@ -62,8 +62,8 @@ impl Parse for Meta {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            path: parser.parse()?,
-            content: parser.parse()?,
+            path: <_ as Parse>::parse(parser)?,
+            content: <_ as Parse>::parse(parser)?,
         })
     }
 
@@ -130,7 +130,7 @@ impl Parse for MetaContent {
             && !<Token![==]>::peek(parser.cursor())
             && !<Token![=>]>::peek(parser.cursor())
         {
-            let eq = parser.parse()?;
+            let eq = <_ as Parse>::parse(parser)?;
             let start = parser.cursor();
             let end = Expr::skip(parser.cursor()).unwrap_or(parser.cursor());
 
@@ -139,7 +139,7 @@ impl Parse for MetaContent {
                 expr: end.range(start).into(),
             })
         } else {
-            Ok(Self::List(parser.parse()?))
+            Ok(Self::List(<_ as Parse>::parse(parser)?))
         }
     }
 

@@ -25,8 +25,8 @@ impl Parse for PatRest {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs: parser.parse()?,
-            token: parser.parse()?,
+            attrs: <_ as Parse>::parse(parser)?,
+            token: <_ as Parse>::parse(parser)?,
         })
     }
 

@@ -65,14 +65,14 @@ impl Parse for Visibility {
             return Ok(Self::Inherited);
         }
 
-        let pub_keyword = parser.parse()?;
+        let pub_keyword = <_ as Parse>::parse(parser)?;
 
         // `pub(...)` restricted forms.
         if parser.is_delimited(Delim::Paren) {
             let (span, parser) = parser.parse_group_spanned(Delim::Paren)?;
 
             if <Token![crate]>::peek(parser.cursor()) {
-                let crate_keyword = parser.parse()?;
+                let crate_keyword = <_ as Parse>::parse(&parser)?;
 
                 return Ok(Self::Crate {
                     pub_keyword,
@@ -81,7 +81,7 @@ impl Parse for Visibility {
             }
 
             if <Token![self]>::peek(parser.cursor()) {
-                let self_keyword = parser.parse()?;
+                let self_keyword = <_ as Parse>::parse(&parser)?;
 
                 return Ok(Self::SelfValue {
                     pub_keyword,
@@ -90,7 +90,7 @@ impl Parse for Visibility {
             }
 
             if <Token![super]>::peek(parser.cursor()) {
-                let super_keyword = parser.parse()?;
+                let super_keyword = <_ as Parse>::parse(&parser)?;
 
                 return Ok(Self::Super {
                     pub_keyword,
@@ -98,8 +98,8 @@ impl Parse for Visibility {
                 });
             }
 
-            let in_keyword = parser.parse()?;
-            let path = parser.parse()?;
+            let in_keyword = <_ as Parse>::parse(&parser)?;
+            let path = <_ as Parse>::parse(&parser)?;
 
             return Ok(Self::Restricted {
                 pub_keyword,

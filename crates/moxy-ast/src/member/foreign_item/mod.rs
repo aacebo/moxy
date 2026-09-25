@@ -103,18 +103,18 @@ impl Parse for ForeignItem {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if ForeignItemStatic::peek(parser.cursor()) {
-            return Ok(Self::Static(parser.parse()?));
+            return Ok(Self::Static(<_ as Parse>::parse(parser)?));
         }
 
         if ForeignItemType::peek(parser.cursor()) {
-            return Ok(Self::Type(parser.parse()?));
+            return Ok(Self::Type(<_ as Parse>::parse(parser)?));
         }
 
         if ForeignItemFn::peek(parser.cursor()) {
-            return Ok(Self::Fn(parser.parse()?));
+            return Ok(Self::Fn(<_ as Parse>::parse(parser)?));
         }
 
-        Ok(Self::Macro(parser.parse()?))
+        Ok(Self::Macro(<_ as Parse>::parse(parser)?))
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {

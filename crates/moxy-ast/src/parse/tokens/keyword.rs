@@ -33,7 +33,7 @@ impl Parse for keyword::As {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::As(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::As::TEXT))),
         }
@@ -54,7 +54,7 @@ impl Parse for keyword::Async {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Async(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Async::TEXT))),
         }
@@ -75,7 +75,7 @@ impl Parse for keyword::Auto {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Auto(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Auto::TEXT))),
         }
@@ -96,7 +96,7 @@ impl Parse for keyword::Await {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Await(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Await::TEXT))),
         }
@@ -117,7 +117,7 @@ impl Parse for keyword::Become {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Become(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Become::TEXT))),
         }
@@ -138,7 +138,7 @@ impl Parse for keyword::Box {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Box(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Box::TEXT))),
         }
@@ -159,7 +159,7 @@ impl Parse for keyword::Break {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Break(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Break::TEXT))),
         }
@@ -180,7 +180,7 @@ impl Parse for keyword::Const {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Const(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Const::TEXT))),
         }
@@ -201,7 +201,7 @@ impl Parse for keyword::Continue {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Continue(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Continue::TEXT))),
         }
@@ -222,7 +222,7 @@ impl Parse for keyword::Crate {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Crate(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Crate::TEXT))),
         }
@@ -243,7 +243,7 @@ impl Parse for keyword::Default {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Default(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Default::TEXT))),
         }
@@ -264,7 +264,7 @@ impl Parse for keyword::Do {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Do(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Do::TEXT))),
         }
@@ -285,7 +285,7 @@ impl Parse for keyword::Dyn {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Dyn(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Dyn::TEXT))),
         }
@@ -306,7 +306,7 @@ impl Parse for keyword::Else {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Else(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Else::TEXT))),
         }
@@ -327,7 +327,7 @@ impl Parse for keyword::Enum {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Enum(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Enum::TEXT))),
         }
@@ -348,7 +348,7 @@ impl Parse for keyword::Extern {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Extern(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Extern::TEXT))),
         }
@@ -369,7 +369,7 @@ impl Parse for keyword::Final {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Final(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Final::TEXT))),
         }
@@ -390,7 +390,7 @@ impl Parse for keyword::Fn {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Fn(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Fn::TEXT))),
         }
@@ -411,7 +411,7 @@ impl Parse for keyword::For {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::For(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::For::TEXT))),
         }
@@ -432,7 +432,7 @@ impl Parse for keyword::If {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::If(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::If::TEXT))),
         }
@@ -453,7 +453,7 @@ impl Parse for keyword::Impl {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Impl(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Impl::TEXT))),
         }
@@ -474,7 +474,7 @@ impl Parse for keyword::In {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::In(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::In::TEXT))),
         }
@@ -495,7 +495,7 @@ impl Parse for keyword::Let {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Let(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Let::TEXT))),
         }
@@ -516,7 +516,7 @@ impl Parse for keyword::Loop {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Loop(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Loop::TEXT))),
         }
@@ -537,7 +537,7 @@ impl Parse for keyword::Macro {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Macro(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Macro::TEXT))),
         }
@@ -558,7 +558,7 @@ impl Parse for keyword::MacroRules {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::MacroRules(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::MacroRules::TEXT))),
         }
@@ -579,7 +579,7 @@ impl Parse for keyword::Match {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Match(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Match::TEXT))),
         }
@@ -600,7 +600,7 @@ impl Parse for keyword::Mod {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Mod(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Mod::TEXT))),
         }
@@ -621,7 +621,7 @@ impl Parse for keyword::Move {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Move(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Move::TEXT))),
         }
@@ -642,7 +642,7 @@ impl Parse for keyword::Mut {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Mut(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Mut::TEXT))),
         }
@@ -663,7 +663,7 @@ impl Parse for keyword::Override {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Override(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Override::TEXT))),
         }
@@ -684,7 +684,7 @@ impl Parse for keyword::Priv {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Priv(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Priv::TEXT))),
         }
@@ -705,7 +705,7 @@ impl Parse for keyword::Pub {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Pub(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Pub::TEXT))),
         }
@@ -726,7 +726,7 @@ impl Parse for keyword::Raw {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Raw(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Raw::TEXT))),
         }
@@ -747,7 +747,7 @@ impl Parse for keyword::Ref {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Ref(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Ref::TEXT))),
         }
@@ -768,7 +768,7 @@ impl Parse for keyword::Return {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Return(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Return::TEXT))),
         }
@@ -789,7 +789,7 @@ impl Parse for keyword::SelfType {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::SelfType(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::SelfType::TEXT))),
         }
@@ -810,7 +810,7 @@ impl Parse for keyword::SelfValue {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::SelfValue(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::SelfValue::TEXT))),
         }
@@ -831,7 +831,7 @@ impl Parse for keyword::Static {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Static(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Static::TEXT))),
         }
@@ -852,7 +852,7 @@ impl Parse for keyword::Struct {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Struct(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Struct::TEXT))),
         }
@@ -873,7 +873,7 @@ impl Parse for keyword::Super {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Super(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Super::TEXT))),
         }
@@ -894,7 +894,7 @@ impl Parse for keyword::Trait {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Trait(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Trait::TEXT))),
         }
@@ -915,7 +915,7 @@ impl Parse for keyword::Try {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Try(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Try::TEXT))),
         }
@@ -936,7 +936,7 @@ impl Parse for keyword::Type {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Type(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Type::TEXT))),
         }
@@ -957,7 +957,7 @@ impl Parse for keyword::Typeof {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Typeof(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Typeof::TEXT))),
         }
@@ -978,7 +978,7 @@ impl Parse for keyword::Union {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Union(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Union::TEXT))),
         }
@@ -999,7 +999,7 @@ impl Parse for keyword::Unsafe {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Unsafe(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Unsafe::TEXT))),
         }
@@ -1020,7 +1020,7 @@ impl Parse for keyword::Unsized {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Unsized(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Unsized::TEXT))),
         }
@@ -1041,7 +1041,7 @@ impl Parse for keyword::Use {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Use(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Use::TEXT))),
         }
@@ -1062,7 +1062,7 @@ impl Parse for keyword::Virtual {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Virtual(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Virtual::TEXT))),
         }
@@ -1083,7 +1083,7 @@ impl Parse for keyword::Where {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Where(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Where::TEXT))),
         }
@@ -1104,7 +1104,7 @@ impl Parse for keyword::While {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::While(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::While::TEXT))),
         }
@@ -1125,7 +1125,7 @@ impl Parse for keyword::Yield {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Keyword::Yield(v) => Ok(v),
             _ => Err(parser.error(format!("expected `{}` keyword", keyword::Yield::TEXT))),
         }

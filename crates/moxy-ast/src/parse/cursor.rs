@@ -1,7 +1,5 @@
 use moxy_token::{Delim, Span, ToTokens, TokenStream, TokenTree};
 
-use crate::Parse;
-
 /// Copyable transactional position within a token parser.
 #[derive(Copy, Clone)]
 pub struct Cursor<'a> {
@@ -40,14 +38,6 @@ impl<'a> Cursor<'a> {
 
     pub fn prev(self) -> Option<&'a TokenTree> {
         self.tokens.get(self.index.checked_sub(1)?)
-    }
-
-    pub fn peek<T: Parse>(self) -> bool {
-        T::peek(self)
-    }
-
-    pub fn skip<T: Parse>(self) -> Option<Self> {
-        T::skip(self)
     }
 
     pub fn is_delimited(self, delim: Delim) -> bool {

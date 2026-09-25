@@ -47,27 +47,27 @@ impl Parse for Signature {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let constness = parser.parse()?;
-        let asyncness = parser.parse()?;
-        let unsafety = parser.parse()?;
-        let abi = parser.parse()?;
-        let fn_keyword = parser.parse()?;
-        let ident = parser.parse()?;
-        let mut generics: Generics = parser.parse()?;
+        let constness = <_ as Parse>::parse(parser)?;
+        let asyncness = <_ as Parse>::parse(parser)?;
+        let unsafety = <_ as Parse>::parse(parser)?;
+        let abi = <_ as Parse>::parse(parser)?;
+        let fn_keyword = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
+        let mut generics: Generics = <_ as Parse>::parse(parser)?;
         let params = Delimited::parse_paren_with(parser, |parser| {
             let mut inputs = Punctuated::new();
             let mut variadic = None;
 
             while !parser.is_empty() {
                 if Variadic::peek(parser.cursor()) {
-                    variadic = Some(parser.parse()?);
+                    variadic = Some(<_ as Parse>::parse(parser)?);
                     break;
                 }
 
-                inputs.push_value(parser.parse()?);
+                inputs.push_value(<_ as Parse>::parse(parser)?);
 
                 if <Token![,]>::peek(parser.cursor()) {
-                    inputs.push_punct(parser.parse()?);
+                    inputs.push_punct(<_ as Parse>::parse(parser)?);
                 } else {
                     break;
                 }
@@ -76,8 +76,8 @@ impl Parse for Signature {
             Ok(FnParams { inputs, variadic })
         })?;
 
-        let output = parser.parse()?;
-        generics.where_clause = parser.parse()?;
+        let output = <_ as Parse>::parse(parser)?;
+        generics.where_clause = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             constness,

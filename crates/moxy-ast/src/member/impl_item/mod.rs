@@ -100,18 +100,18 @@ impl Parse for ImplItem {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if ImplItemConst::peek(parser.cursor()) {
-            return Ok(Self::Const(Box::new(parser.parse()?)));
+            return Ok(Self::Const(Box::new(<_ as Parse>::parse(parser)?)));
         }
 
         if ImplItemType::peek(parser.cursor()) {
-            return Ok(Self::Type(parser.parse()?));
+            return Ok(Self::Type(<_ as Parse>::parse(parser)?));
         }
 
         if ImplItemFn::peek(parser.cursor()) {
-            return Ok(Self::Fn(parser.parse()?));
+            return Ok(Self::Fn(<_ as Parse>::parse(parser)?));
         }
 
-        Ok(Self::Macro(parser.parse()?))
+        Ok(Self::Macro(<_ as Parse>::parse(parser)?))
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {

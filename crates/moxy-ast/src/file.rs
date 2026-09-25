@@ -37,9 +37,9 @@ impl Parse for File {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            shebang: parser.parse()?,
-            attrs: parser.parse()?,
-            items: parser.parse()?,
+            shebang: <_ as Parse>::parse(parser)?,
+            attrs: <_ as Parse>::parse(parser)?,
+            items: <_ as Parse>::parse(parser)?,
         })
     }
 
@@ -89,10 +89,10 @@ impl Parse for Shebang {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            pound: parser.parse()?,
-            bang: parser.parse()?,
-            path: parser.parse()?,
-            ident: parser.parse()?,
+            pound: <_ as Parse>::parse(parser)?,
+            bang: <_ as Parse>::parse(parser)?,
+            path: <_ as Parse>::parse(parser)?,
+            ident: <_ as Parse>::parse(parser)?,
         })
     }
 
@@ -135,7 +135,7 @@ impl Parse for FilePath {
         let mut segments = vec![];
 
         while <Token![/]>::peek(parser.cursor()) {
-            segments.push((parser.parse()?, parser.parse()?));
+            segments.push((<_ as Parse>::parse(parser)?, <_ as Parse>::parse(parser)?));
         }
 
         Ok(Self(segments))

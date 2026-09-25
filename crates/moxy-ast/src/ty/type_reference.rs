@@ -21,10 +21,10 @@ impl Parse for TypeReference {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let and = parser.parse()?;
-        let lifetime = parser.parse()?;
-        let mutability = parser.parse()?;
-        let elem = Box::new(parser.parse()?);
+        let and = <_ as Parse>::parse(parser)?;
+        let lifetime = <_ as Parse>::parse(parser)?;
+        let mutability = <_ as Parse>::parse(parser)?;
+        let elem = Box::new(<_ as Parse>::parse(parser)?);
 
         Ok(Self {
             and,

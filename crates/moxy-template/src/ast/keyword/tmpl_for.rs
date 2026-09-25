@@ -28,14 +28,14 @@ impl Parse for TmplFor {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let at_punct: Token![@] = parser.parse()?;
-        let for_keyword = parser.parse()?;
+        let at_punct: Token![@] = <_ as Parse>::parse(parser)?;
+        let for_keyword = <_ as Parse>::parse(parser)?;
         let span = at_punct.span();
         let clause = parser.parse_group(Delim::Paren)?;
-        let binding = clause.parse()?;
-        let in_keyword = clause.parse()?;
+        let binding = <_ as Parse>::parse(&clause)?;
+        let in_keyword = <_ as Parse>::parse(&clause)?;
         let iter = clause.to_token_stream();
-        let body = parser.parse_group(Delim::Brace)?.parse()?;
+        let body = Template::parse(&parser.parse_group(Delim::Brace)?)?;
 
         Ok(Self {
             span,

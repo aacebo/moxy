@@ -2,7 +2,7 @@ use super::peek;
 use super::*;
 
 pub(super) fn expr(parser: &Parser, context: ExprContext) -> Result<Expr, ParseError> {
-    let attrs = parser.parse()?;
+    let attrs = <_ as Parse>::parse(parser)?;
     assignment(parser, attrs, context)
 }
 
@@ -25,7 +25,7 @@ fn assignment(parser: &Parser, attrs: Attributes, context: ExprContext) -> Resul
         return Ok(ExprAssign {
             attrs: attrs.clone(),
             left: Box::new(left),
-            eq: parser.parse()?,
+            eq: <_ as Parse>::parse(parser)?,
             right: Box::new(assignment(parser, attrs, context)?),
         }
         .into());
@@ -36,7 +36,7 @@ fn assignment(parser: &Parser, attrs: Attributes, context: ExprContext) -> Resul
 
 fn range(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
     if RangeLimits::peek(parser.cursor()) {
-        let limits = parser.parse()?;
+        let limits = <_ as Parse>::parse(parser)?;
         let mut end = None;
 
         if !context.is_end(parser.cursor()) && Expr::peek(parser.cursor()) {
@@ -55,7 +55,7 @@ fn range(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Exp
     let left = binary(parser, attrs.clone(), context)?;
 
     if RangeLimits::peek(parser.cursor()) {
-        let limits = parser.parse()?;
+        let limits = <_ as Parse>::parse(parser)?;
         let mut end = None;
 
         if !context.is_end(parser.cursor()) && Expr::peek(parser.cursor()) {
@@ -81,7 +81,7 @@ fn binary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Ex
         left = ExprBinary {
             attrs: attrs.clone(),
             left: Box::new(left),
-            op: parser.parse()?,
+            op: <_ as Parse>::parse(parser)?,
             right: Box::new(cast(parser, attrs.clone(), context)?),
         }
         .into();
@@ -97,8 +97,8 @@ fn cast(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr
         expr = ExprCast {
             attrs: Default::default(),
             expr: Box::new(expr),
-            as_keyword: parser.parse()?,
-            ty: parser.parse()?,
+            as_keyword: <_ as Parse>::parse(parser)?,
+            ty: <_ as Parse>::parse(parser)?,
         }
         .into();
     }
@@ -115,9 +115,9 @@ fn unary_with(parser: &Parser, attrs: Attributes, context: ExprContext) -> Resul
         if <Token![raw]>::peek(parser.cursor().offset(1)) && PointerMutability::peek(parser.cursor().offset(2)) {
             return Ok(ExprRawAddr {
                 attrs: Default::default(),
-                and: parser.parse()?,
-                raw: parser.parse()?,
-                mutability: parser.parse()?,
+                and: <_ as Parse>::parse(parser)?,
+                raw: <_ as Parse>::parse(parser)?,
+                mutability: <_ as Parse>::parse(parser)?,
                 expr: Box::new(unary_with(parser, attrs, context)?),
             }
             .into());
@@ -125,8 +125,8 @@ fn unary_with(parser: &Parser, attrs: Attributes, context: ExprContext) -> Resul
 
         return Ok(ExprReference {
             attrs: Default::default(),
-            and: parser.parse()?,
-            mutability: parser.parse()?,
+            and: <_ as Parse>::parse(parser)?,
+            mutability: <_ as Parse>::parse(parser)?,
             expr: Box::new(unary_with(parser, attrs, context)?),
         }
         .into());
@@ -135,7 +135,7 @@ fn unary_with(parser: &Parser, attrs: Attributes, context: ExprContext) -> Resul
     if UnOp::peek(parser.cursor()) {
         return Ok(ExprUnary {
             attrs: Default::default(),
-            op: parser.parse()?,
+            op: <_ as Parse>::parse(parser)?,
             expr: Box::new(unary_with(parser, attrs, context)?),
         }
         .into());
@@ -163,7 +163,7 @@ fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
             expr = ExprIndex {
                 attrs: Default::default(),
                 base: Box::new(expr),
-                index: Delimited::parse_bracket_with(parser, |inner| Ok(Box::new(inner.parse()?)))?,
+                index: Delimited::parse_bracket_with(parser, |inner| Ok(Box::new(<_ as Parse>::parse(inner)?)))?,
             }
             .into();
 
@@ -175,8 +175,8 @@ fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
                 expr = ExprAwait {
                     attrs: Default::default(),
                     base: Box::new(expr),
-                    dot: parser.parse()?,
-                    await_keyword: parser.parse()?,
+                    dot: <_ as Parse>::parse(parser)?,
+                    await_keyword: <_ as Parse>::parse(parser)?,
                 }
                 .into();
             } else if Ident::peek(parser.cursor().offset(1)) {
@@ -187,17 +187,17 @@ fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
                     expr = ExprField {
                         attrs: Default::default(),
                         base: Box::new(expr),
-                        dot: parser.parse()?,
-                        member: parser.parse()?,
+                        dot: <_ as Parse>::parse(parser)?,
+                        member: <_ as Parse>::parse(parser)?,
                     }
                     .into();
                 } else {
                     expr = ExprMethodCall {
                         attrs: Default::default(),
                         receiver: Box::new(expr),
-                        dot: parser.parse()?,
-                        method: parser.parse()?,
-                        turbofish: parser.parse()?,
+                        dot: <_ as Parse>::parse(parser)?,
+                        method: <_ as Parse>::parse(parser)?,
+                        turbofish: <_ as Parse>::parse(parser)?,
                         args: Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?,
                     }
                     .into();
@@ -206,8 +206,8 @@ fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
                 expr = ExprField {
                     attrs: Default::default(),
                     base: Box::new(expr),
-                    dot: parser.parse()?,
-                    member: parser.parse()?,
+                    dot: <_ as Parse>::parse(parser)?,
+                    member: <_ as Parse>::parse(parser)?,
                 }
                 .into();
             }
@@ -219,7 +219,7 @@ fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
             expr = ExprTry {
                 attrs: Default::default(),
                 expr: Box::new(expr),
-                question_punct: parser.parse()?,
+                question_punct: <_ as Parse>::parse(parser)?,
             }
             .into();
 
@@ -247,7 +247,7 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     if Lit::peek(parser.cursor()) {
         return Ok(ExprLit {
             attrs,
-            lit: parser.parse()?,
+            lit: <_ as Parse>::parse(parser)?,
         }
         .into());
     }
@@ -255,7 +255,7 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     if <Token![_]>::peek(parser.cursor()) {
         return Ok(ExprInfer {
             attrs,
-            underscore: parser.parse()?,
+            underscore: <_ as Parse>::parse(parser)?,
         }
         .into());
     }
@@ -272,7 +272,7 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
         return Ok(ExprBlock {
             attrs,
             label: None,
-            block: parser.parse()?,
+            block: <_ as Parse>::parse(parser)?,
         }
         .into());
     }
@@ -281,7 +281,7 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
         let inner = parser.parse_group(Delim::None)?;
         return Ok(ExprGroup {
             attrs,
-            expr: Box::new(inner.parse()?),
+            expr: Box::new(<_ as Parse>::parse(&inner)?),
         }
         .into());
     }
@@ -289,20 +289,20 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     if <Token![let]>::peek(parser.cursor()) {
         return Ok(ExprLet {
             attrs,
-            let_keyword: parser.parse()?,
-            pat: parser.parse()?,
-            eq: parser.parse()?,
+            let_keyword: <_ as Parse>::parse(parser)?,
+            pat: <_ as Parse>::parse(parser)?,
+            eq: <_ as Parse>::parse(parser)?,
             expr: Box::new(expr(parser, context)?),
         }
         .into());
     }
 
     if <Token![if]>::peek(parser.cursor()) {
-        let if_keyword = parser.parse()?;
+        let if_keyword = <_ as Parse>::parse(parser)?;
         let cond = Box::new(expr(parser, ExprContext::EARLY)?);
-        let then_branch = parser.parse()?;
+        let then_branch = <_ as Parse>::parse(parser)?;
         let (else_keyword, else_branch) = if <Token![else]>::peek(parser.cursor()) {
-            (Some(parser.parse()?), Some(parser.parse()?))
+            (Some(<_ as Parse>::parse(parser)?), Some(<_ as Parse>::parse(parser)?))
         } else {
             (None, None)
         };
@@ -323,10 +323,10 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     if <Token![while]>::peek(parser.cursor()) || label_cursor.is_some_and(|cursor| <Token![while]>::peek(cursor)) {
         return Ok(ExprWhile {
             attrs,
-            label: parser.parse()?,
-            while_keyword: parser.parse()?,
+            label: <_ as Parse>::parse(parser)?,
+            while_keyword: <_ as Parse>::parse(parser)?,
             cond: Box::new(expr(parser, ExprContext::EARLY)?),
-            body: parser.parse()?,
+            body: <_ as Parse>::parse(parser)?,
         }
         .into());
     }
@@ -334,12 +334,12 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     if <Token![for]>::peek(parser.cursor()) || label_cursor.is_some_and(|cursor| <Token![for]>::peek(cursor)) {
         return Ok(ExprForLoop {
             attrs,
-            label: parser.parse()?,
-            for_keyword: parser.parse()?,
-            pat: parser.parse()?,
-            in_keyword: parser.parse()?,
+            label: <_ as Parse>::parse(parser)?,
+            for_keyword: <_ as Parse>::parse(parser)?,
+            pat: <_ as Parse>::parse(parser)?,
+            in_keyword: <_ as Parse>::parse(parser)?,
             expr: Box::new(expr(parser, ExprContext::EARLY)?),
-            body: parser.parse()?,
+            body: <_ as Parse>::parse(parser)?,
         }
         .into());
     }
@@ -347,9 +347,9 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     if <Token![loop]>::peek(parser.cursor()) || label_cursor.is_some_and(|cursor| <Token![loop]>::peek(cursor)) {
         return Ok(ExprLoop {
             attrs,
-            label: parser.parse()?,
-            loop_keyword: parser.parse()?,
-            body: parser.parse()?,
+            label: <_ as Parse>::parse(parser)?,
+            loop_keyword: <_ as Parse>::parse(parser)?,
+            body: <_ as Parse>::parse(parser)?,
         }
         .into());
     }
@@ -359,14 +359,14 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     {
         return Ok(ExprBlock {
             attrs,
-            label: parser.parse()?,
-            block: parser.parse()?,
+            label: <_ as Parse>::parse(parser)?,
+            block: <_ as Parse>::parse(parser)?,
         }
         .into());
     }
 
     if <Token![match]>::peek(parser.cursor()) {
-        let match_keyword = parser.parse()?;
+        let match_keyword = <_ as Parse>::parse(parser)?;
         let expr = Box::new(expr(parser, ExprContext::EARLY)?);
         let (span, arms) = parser.parse_group_spanned(Delim::Brace)?;
 
@@ -382,8 +382,8 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     if <Token![unsafe]>::peek(parser.cursor()) {
         return Ok(ExprUnsafe {
             attrs,
-            unsafe_keyword: parser.parse()?,
-            block: parser.parse()?,
+            unsafe_keyword: <_ as Parse>::parse(parser)?,
+            block: <_ as Parse>::parse(parser)?,
         }
         .into());
     }
@@ -391,8 +391,8 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     if <Token![const]>::peek(parser.cursor()) {
         return Ok(ExprConst {
             attrs,
-            const_keyword: parser.parse()?,
-            block: parser.parse()?,
+            const_keyword: <_ as Parse>::parse(parser)?,
+            block: <_ as Parse>::parse(parser)?,
         }
         .into());
     }
@@ -400,9 +400,9 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     if <Token![async]>::peek(parser.cursor()) {
         return Ok(ExprAsync {
             attrs,
-            async_keyword: parser.parse()?,
-            move_keyword: parser.parse()?,
-            block: parser.parse()?,
+            async_keyword: <_ as Parse>::parse(parser)?,
+            move_keyword: <_ as Parse>::parse(parser)?,
+            block: <_ as Parse>::parse(parser)?,
         }
         .into());
     }
@@ -410,8 +410,8 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     if <Token![try]>::peek(parser.cursor()) {
         return Ok(ExprTryBlock {
             attrs,
-            try_keyword: parser.parse()?,
-            block: parser.parse()?,
+            try_keyword: <_ as Parse>::parse(parser)?,
+            block: <_ as Parse>::parse(parser)?,
         }
         .into());
     }
@@ -419,7 +419,7 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     if <Token![return]>::peek(parser.cursor()) {
         return Ok(ExprReturn {
             attrs,
-            return_keyword: parser.parse()?,
+            return_keyword: <_ as Parse>::parse(parser)?,
             expr: optional_expr(parser, context)?,
         }
         .into());
@@ -428,8 +428,8 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     if <Token![break]>::peek(parser.cursor()) {
         return Ok(ExprBreak {
             attrs,
-            break_keyword: parser.parse()?,
-            label: parser.parse()?,
+            break_keyword: <_ as Parse>::parse(parser)?,
+            label: <_ as Parse>::parse(parser)?,
             expr: optional_expr(parser, context)?,
         }
         .into());
@@ -438,8 +438,8 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     if <Token![continue]>::peek(parser.cursor()) {
         return Ok(ExprContinue {
             attrs,
-            continue_keyword: parser.parse()?,
-            label: parser.parse()?,
+            continue_keyword: <_ as Parse>::parse(parser)?,
+            label: <_ as Parse>::parse(parser)?,
         }
         .into());
     }
@@ -447,7 +447,7 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     if <Token![yield]>::peek(parser.cursor()) {
         return Ok(ExprYield {
             attrs,
-            yield_keyword: parser.parse()?,
+            yield_keyword: <_ as Parse>::parse(parser)?,
             expr: optional_expr(parser, context)?,
         }
         .into());
@@ -458,14 +458,14 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
             let (qself, path) = QSelf::parse_qualified(parser)?;
             (Some(qself), path)
         } else {
-            (None, parser.parse()?)
+            (None, <_ as Parse>::parse(parser)?)
         };
 
         if qself.is_none() && <Token![!]>::peek(parser.cursor()) && !<Token![!=]>::peek(parser.cursor()) {
             let mac = MacroCall {
                 path,
-                bang: parser.parse()?,
-                body: parser.parse()?,
+                bang: <_ as Parse>::parse(parser)?,
+                body: <_ as Parse>::parse(parser)?,
             };
 
             return Ok(ExprMacro { attrs, mac }.into());
@@ -501,17 +501,17 @@ pub(crate) fn paren_or_tuple(parser: &Parser, attrs: Attributes) -> Result<Expr,
         .into());
     }
 
-    let first = parser.parse()?;
+    let first = <_ as Parse>::parse(&parser)?;
 
     if <Token![,]>::peek(parser.cursor()) {
         let mut elems = Punctuated::new();
         elems.push_value(first);
 
         while <Token![,]>::peek(parser.cursor()) {
-            elems.push_punct(parser.parse()?);
+            elems.push_punct(<_ as Parse>::parse(&parser)?);
 
             if !parser.is_empty() {
-                elems.push_value(parser.parse()?);
+                elems.push_value(<_ as Parse>::parse(&parser)?);
             }
         }
 
@@ -540,7 +540,7 @@ pub(crate) fn array_or_repeat(parser: &Parser, attrs: Attributes) -> Result<Expr
         .into());
     }
 
-    let first = parser.parse()?;
+    let first = <_ as Parse>::parse(&parser)?;
 
     if <Token![;]>::peek(parser.cursor()) {
         return Ok(ExprRepeat {
@@ -549,8 +549,8 @@ pub(crate) fn array_or_repeat(parser: &Parser, attrs: Attributes) -> Result<Expr
                 span,
                 RepeatInner {
                     elem: Box::new(first),
-                    semi: parser.parse()?,
-                    len: Box::new(parser.parse()?),
+                    semi: <_ as Parse>::parse(&parser)?,
+                    len: Box::new(<_ as Parse>::parse(&parser)?),
                 },
             ),
         }
@@ -561,10 +561,10 @@ pub(crate) fn array_or_repeat(parser: &Parser, attrs: Attributes) -> Result<Expr
     elems.push_value(first);
 
     while <Token![,]>::peek(parser.cursor()) {
-        elems.push_punct(parser.parse()?);
+        elems.push_punct(<_ as Parse>::parse(&parser)?);
 
         if !parser.is_empty() {
-            elems.push_value(parser.parse()?);
+            elems.push_value(<_ as Parse>::parse(&parser)?);
         }
     }
 
@@ -576,33 +576,33 @@ pub(crate) fn array_or_repeat(parser: &Parser, attrs: Attributes) -> Result<Expr
 }
 
 fn closure(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
-    let lifetimes = parser.parse()?;
-    let constness = parser.parse()?;
-    let movability = parser.parse()?;
-    let asyncness = parser.parse()?;
-    let capture = parser.parse()?;
+    let lifetimes = <_ as Parse>::parse(parser)?;
+    let constness = <_ as Parse>::parse(parser)?;
+    let movability = <_ as Parse>::parse(parser)?;
+    let asyncness = <_ as Parse>::parse(parser)?;
+    let capture = <_ as Parse>::parse(parser)?;
     let (pipes, inputs) = if <Token![||]>::peek(parser.cursor()) {
-        let oror = parser.parse()?;
+        let oror = <_ as Parse>::parse(parser)?;
         (ClosurePipes::Empty(oror), Punctuated::new())
     } else {
-        let open = parser.parse()?;
+        let open = <_ as Parse>::parse(parser)?;
         let mut params = Punctuated::new();
 
         while !<Token![|]>::peek(parser.cursor()) && !parser.is_empty() {
-            params.push_value(parser.parse()?);
+            params.push_value(<_ as Parse>::parse(parser)?);
 
             if <Token![,]>::peek(parser.cursor()) {
-                params.push_punct(parser.parse()?);
+                params.push_punct(<_ as Parse>::parse(parser)?);
             } else {
                 break;
             }
         }
 
-        let close = parser.parse()?;
+        let close = <_ as Parse>::parse(parser)?;
         (ClosurePipes::Params(open, close), params)
     };
 
-    let output = parser.parse()?;
+    let output = <_ as Parse>::parse(parser)?;
     let body = Box::new(expr(parser, context)?);
 
     Ok(ExprClosure {

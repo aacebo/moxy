@@ -28,10 +28,10 @@ impl Parse for WherePredicate {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if LifetimePredicate::peek(parser.cursor()) {
-            return Ok(Self::Lifetime(parser.parse()?));
+            return Ok(Self::Lifetime(<_ as Parse>::parse(parser)?));
         }
 
-        Ok(Self::Type(Box::new(parser.parse()?)))
+        Ok(Self::Type(Box::new(<_ as Parse>::parse(parser)?)))
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {

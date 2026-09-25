@@ -48,10 +48,10 @@ impl Parse for AssocConstArgument {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            ident: parser.parse()?,
-            generics: parser.parse()?,
-            eq_punct: parser.parse()?,
-            expr: parser.parse()?,
+            ident: <_ as Parse>::parse(parser)?,
+            generics: <_ as Parse>::parse(parser)?,
+            eq_punct: <_ as Parse>::parse(parser)?,
+            expr: <_ as Parse>::parse(parser)?,
         })
     }
 

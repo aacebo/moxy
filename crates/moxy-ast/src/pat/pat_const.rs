@@ -26,9 +26,9 @@ impl Parse for PatConst {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs: parser.parse()?,
-            keyword: parser.parse()?,
-            block: parser.parse()?,
+            attrs: <_ as Parse>::parse(parser)?,
+            keyword: <_ as Parse>::parse(parser)?,
+            block: <_ as Parse>::parse(parser)?,
         })
     }
 

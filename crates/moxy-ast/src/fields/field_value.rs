@@ -25,15 +25,15 @@ impl Parse for FieldValue {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let member = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let member = <_ as Parse>::parse(parser)?;
 
         if <Token![:]>::peek(parser.cursor()) {
             Ok(Self {
                 attrs,
                 member,
-                colon_punct: parser.parse()?,
-                expr: parser.parse()?,
+                colon_punct: <_ as Parse>::parse(parser)?,
+                expr: <_ as Parse>::parse(parser)?,
             })
         } else {
             let expr = match &member {

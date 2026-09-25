@@ -83,23 +83,23 @@ impl Parse for Stmt {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if StmtLocal::peek(parser.cursor()) {
-            return Ok(Self::Local(Box::new(parser.parse()?)));
+            return Ok(Self::Local(Box::new(<_ as Parse>::parse(parser)?)));
         }
 
         if StmtMacro::peek(parser.cursor()) {
-            return Ok(Self::Macro(parser.parse()?));
+            return Ok(Self::Macro(<_ as Parse>::parse(parser)?));
         }
 
         if StmtBlock::peek(parser.cursor()) {
-            return Ok(Self::Block(parser.parse()?));
+            return Ok(Self::Block(<_ as Parse>::parse(parser)?));
         }
 
         if Item::peek(parser.cursor()) {
-            return Ok(Self::Item(parser.parse()?));
+            return Ok(Self::Item(<_ as Parse>::parse(parser)?));
         }
 
-        let expr = parser.parse()?;
-        let semi = parser.parse()?;
+        let expr = <_ as Parse>::parse(parser)?;
+        let semi = <_ as Parse>::parse(parser)?;
         Ok(Self::Expr(Box::new(expr), semi))
     }
 

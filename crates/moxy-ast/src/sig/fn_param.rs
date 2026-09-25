@@ -57,10 +57,10 @@ impl Parse for FnParam {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if Receiver::peek(parser.cursor()) {
-            return Ok(Self::Receiver(Box::new(parser.parse()?)));
+            return Ok(Self::Receiver(Box::new(<_ as Parse>::parse(parser)?)));
         }
 
-        Ok(Self::Typed(Box::new(parser.parse()?)))
+        Ok(Self::Typed(Box::new(<_ as Parse>::parse(parser)?)))
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {

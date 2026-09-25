@@ -19,9 +19,9 @@ impl Parse for UseRename {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            ident: parser.parse()?,
-            as_keyword: parser.parse()?,
-            rename: parser.parse()?,
+            ident: <_ as Parse>::parse(parser)?,
+            as_keyword: <_ as Parse>::parse(parser)?,
+            rename: <_ as Parse>::parse(parser)?,
         })
     }
 

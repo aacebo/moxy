@@ -19,14 +19,14 @@ impl Parse for BareFnArg {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
         let name = if Ident::peek(parser.cursor()) && <Token![:]>::peek(parser.cursor().offset(1)) {
-            Some((parser.parse()?, parser.parse()?))
+            Some((<_ as Parse>::parse(parser)?, <_ as Parse>::parse(parser)?))
         } else {
             None
         };
 
-        let ty = parser.parse()?;
+        let ty = <_ as Parse>::parse(parser)?;
 
         Ok(Self { attrs, name, ty })
     }

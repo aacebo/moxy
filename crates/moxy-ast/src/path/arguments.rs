@@ -31,9 +31,9 @@ impl Parse for PathArguments {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if AngleArguments::peek(parser.cursor()) {
-            Ok(Self::AngleBracketed(parser.parse()?))
+            Ok(Self::AngleBracketed(<_ as Parse>::parse(parser)?))
         } else if ParenArguments::peek(parser.cursor()) {
-            Ok(Self::Parenthesized(parser.parse()?))
+            Ok(Self::Parenthesized(<_ as Parse>::parse(parser)?))
         } else {
             Ok(Self::None)
         }

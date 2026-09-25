@@ -19,8 +19,7 @@
 //! ## Traversal and integrations
 //!
 //! Use [`Visit`] or [`VisitMut`] to traverse syntax trees. Enable `serde` to
-//! serialize supported nodes. The `parse!` macro also accepts `trace = true` to
-//! print parser activity while debugging a grammar.
+//! serialize supported nodes.
 
 mod _crate;
 /// Generic argument syntax.

@@ -20,12 +20,16 @@ impl Parse for Receiver {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let reference: Option<Token![&]> = parser.parse()?;
-        let lifetime = if reference.is_some() { parser.parse()? } else { None };
+        let attrs = <_ as Parse>::parse(parser)?;
+        let reference: Option<Token![&]> = <_ as Parse>::parse(parser)?;
+        let lifetime = if reference.is_some() {
+            <_ as Parse>::parse(parser)?
+        } else {
+            None
+        };
 
-        let mutability = parser.parse()?;
-        let self_keyword = parser.parse()?;
+        let mutability = <_ as Parse>::parse(parser)?;
+        let self_keyword = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             attrs,

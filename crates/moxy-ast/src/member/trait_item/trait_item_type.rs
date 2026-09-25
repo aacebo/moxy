@@ -25,12 +25,12 @@ impl Parse for TraitItemType {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let type_keyword = parser.parse()?;
-        let ident = parser.parse()?;
-        let generics = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let type_keyword = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
+        let generics = <_ as Parse>::parse(parser)?;
         let (colon, bounds) = if <Token![:]>::peek(parser.cursor()) {
-            let colon = parser.parse()?;
+            let colon = <_ as Parse>::parse(parser)?;
 
             if TypeBound::peek(parser.cursor()) {
                 (Some(colon), Punctuated::parse_separated_nonempty(parser)?)
@@ -42,13 +42,13 @@ impl Parse for TraitItemType {
         };
 
         let default = if <Token![=]>::peek(parser.cursor()) {
-            let eq = parser.parse()?;
-            Some((eq, parser.parse()?))
+            let eq = <_ as Parse>::parse(parser)?;
+            Some((eq, <_ as Parse>::parse(parser)?))
         } else {
             None
         };
 
-        let semi = parser.parse()?;
+        let semi = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             attrs,

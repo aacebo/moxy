@@ -21,9 +21,9 @@ impl Parse for ImplItemMacro {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs: parser.parse()?,
-            mac: parser.parse()?,
-            semi: parser.parse()?,
+            attrs: <_ as Parse>::parse(parser)?,
+            mac: <_ as Parse>::parse(parser)?,
+            semi: <_ as Parse>::parse(parser)?,
         })
     }
 

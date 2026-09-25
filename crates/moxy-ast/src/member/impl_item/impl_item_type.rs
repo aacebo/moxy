@@ -28,15 +28,15 @@ impl Parse for ImplItemType {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs: parser.parse()?,
-            vis: parser.parse()?,
-            defaultness: parser.parse()?,
-            type_keyword: parser.parse()?,
-            ident: parser.parse()?,
-            generics: parser.parse()?,
-            eq: parser.parse()?,
-            ty: parser.parse()?,
-            semi: parser.parse()?,
+            attrs: <_ as Parse>::parse(parser)?,
+            vis: <_ as Parse>::parse(parser)?,
+            defaultness: <_ as Parse>::parse(parser)?,
+            type_keyword: <_ as Parse>::parse(parser)?,
+            ident: <_ as Parse>::parse(parser)?,
+            generics: <_ as Parse>::parse(parser)?,
+            eq: <_ as Parse>::parse(parser)?,
+            ty: <_ as Parse>::parse(parser)?,
+            semi: <_ as Parse>::parse(parser)?,
         })
     }
 

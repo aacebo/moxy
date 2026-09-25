@@ -33,7 +33,7 @@ impl Parse for punct::And {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::And(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::And::TEXT))),
         }
@@ -54,7 +54,7 @@ impl Parse for punct::Or {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Or(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Or::TEXT))),
         }
@@ -75,7 +75,7 @@ impl Parse for punct::Not {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Not(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Not::TEXT))),
         }
@@ -96,7 +96,7 @@ impl Parse for punct::Tilde {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Tilde(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Tilde::TEXT))),
         }
@@ -117,7 +117,7 @@ impl Parse for punct::Plus {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Plus(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Plus::TEXT))),
         }
@@ -138,7 +138,7 @@ impl Parse for punct::Minus {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Minus(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Minus::TEXT))),
         }
@@ -159,7 +159,7 @@ impl Parse for punct::Star {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Star(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Star::TEXT))),
         }
@@ -180,7 +180,7 @@ impl Parse for punct::Slash {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Slash(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Slash::TEXT))),
         }
@@ -201,7 +201,7 @@ impl Parse for punct::Percent {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Percent(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Percent::TEXT))),
         }
@@ -222,7 +222,7 @@ impl Parse for punct::Caret {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Caret(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Caret::TEXT))),
         }
@@ -243,7 +243,7 @@ impl Parse for punct::Eq {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Eq(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Eq::TEXT))),
         }
@@ -264,7 +264,7 @@ impl Parse for punct::Lt {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Lt(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Lt::TEXT))),
         }
@@ -285,7 +285,7 @@ impl Parse for punct::Gt {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Gt(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Gt::TEXT))),
         }
@@ -306,7 +306,7 @@ impl Parse for punct::At {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::At(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::At::TEXT))),
         }
@@ -327,7 +327,7 @@ impl Parse for punct::Dot {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Dot(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Dot::TEXT))),
         }
@@ -348,7 +348,7 @@ impl Parse for punct::Comma {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Comma(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Comma::TEXT))),
         }
@@ -369,7 +369,7 @@ impl Parse for punct::Semi {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Semi(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Semi::TEXT))),
         }
@@ -390,7 +390,7 @@ impl Parse for punct::Colon {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Colon(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Colon::TEXT))),
         }
@@ -411,7 +411,7 @@ impl Parse for punct::Pound {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Pound(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Pound::TEXT))),
         }
@@ -432,7 +432,7 @@ impl Parse for punct::Dollar {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Dollar(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Dollar::TEXT))),
         }
@@ -453,7 +453,7 @@ impl Parse for punct::Question {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Question(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Question::TEXT))),
         }
@@ -474,7 +474,7 @@ impl Parse for punct::Quote {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Quote(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Quote::TEXT))),
         }
@@ -495,7 +495,7 @@ impl Parse for punct::Underscore {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Punct::Underscore(value) => Ok(value),
             _ => Err(parser.error(format!("expected `{}` punctuation", punct::Underscore::TEXT))),
         }

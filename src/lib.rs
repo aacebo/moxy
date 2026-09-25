@@ -72,9 +72,6 @@
 //! assert!(expr.is_try());
 //! ```
 //!
-//! Pass `trace = true` to `parse!` to print parser activity while developing a
-//! grammar or debugging an input.
-//!
 //! ## Templates
 //!
 //! The `template` feature creates token streams from Rust-shaped templates.

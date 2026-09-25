@@ -31,20 +31,20 @@ impl Parse for ItemTrait {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let vis = parser.parse()?;
-        let unsafety = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let unsafety = <_ as Parse>::parse(parser)?;
         let auto_keyword = if <Token![auto]>::peek(parser.cursor()) {
-            Some(parser.parse()?)
+            Some(<_ as Parse>::parse(parser)?)
         } else {
             None
         };
 
-        let trait_keyword = parser.parse()?;
-        let ident = parser.parse()?;
-        let mut generics: Generics = parser.parse()?;
+        let trait_keyword = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
+        let mut generics: Generics = <_ as Parse>::parse(parser)?;
         let (colon_punct, supertraits) = if <Token![:]>::peek(parser.cursor()) {
-            let colon_punct = parser.parse()?;
+            let colon_punct = <_ as Parse>::parse(parser)?;
             let supertraits = if !<Token![;]>::peek(parser.cursor()) && TypeBound::peek(parser.cursor()) {
                 TypeBound::parse_bounds(parser)?
             } else {
@@ -56,7 +56,7 @@ impl Parse for ItemTrait {
             (None, Punctuated::new())
         };
 
-        generics.where_clause = parser.parse()?;
+        generics.where_clause = <_ as Parse>::parse(parser)?;
         let items = Delimited::parse_brace_with(parser, |parser| parser.parse_until_empty::<TraitItem>())?;
 
         Ok(Self {

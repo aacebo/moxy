@@ -47,12 +47,12 @@ impl Parse for PatIdent {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs: parser.parse()?,
-            by_ref: parser.parse()?,
-            mutability: parser.parse()?,
-            ident: parser.parse()?,
+            attrs: <_ as Parse>::parse(parser)?,
+            by_ref: <_ as Parse>::parse(parser)?,
+            mutability: <_ as Parse>::parse(parser)?,
+            ident: <_ as Parse>::parse(parser)?,
             subpat: if <Token![@]>::peek(parser.cursor()) {
-                Some((parser.parse()?, parser.parse()?))
+                Some((<_ as Parse>::parse(parser)?, <_ as Parse>::parse(parser)?))
             } else {
                 None
             },

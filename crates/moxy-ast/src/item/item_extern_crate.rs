@@ -27,20 +27,20 @@ impl Parse for ItemExternCrate {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let vis = parser.parse()?;
-        let extern_keyword = parser.parse()?;
-        let crate_keyword = parser.parse()?;
-        let ident = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let extern_keyword = <_ as Parse>::parse(parser)?;
+        let crate_keyword = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
         let (as_keyword, rename) = if <Token![as]>::peek(parser.cursor()) {
-            let as_keyword = parser.parse()?;
-            let rename = parser.parse()?;
+            let as_keyword = <_ as Parse>::parse(parser)?;
+            let rename = <_ as Parse>::parse(parser)?;
             (Some(as_keyword), Some(rename))
         } else {
             (None, None)
         };
 
-        let semi_punct = parser.parse()?;
+        let semi_punct = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             attrs,

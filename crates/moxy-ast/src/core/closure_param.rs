@@ -38,8 +38,8 @@ impl Parse for ClosureParam {
         if <Token![:]>::peek(parser.cursor()) {
             Ok(Self::Typed {
                 pat,
-                colon: parser.parse()?,
-                ty: parser.parse()?,
+                colon: <_ as Parse>::parse(parser)?,
+                ty: <_ as Parse>::parse(parser)?,
             })
         } else {
             Ok(Self::Inferred { pat })

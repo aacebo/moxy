@@ -24,15 +24,15 @@ impl Parse for TmplKeyword {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if TmplIf::peek(parser.cursor()) {
-            return Ok(Self::If(parser.parse()?));
+            return Ok(Self::If(<_ as Parse>::parse(parser)?));
         }
 
         if TmplFor::peek(parser.cursor()) {
-            return Ok(Self::For(parser.parse()?));
+            return Ok(Self::For(<_ as Parse>::parse(parser)?));
         }
 
         if TmplMatch::peek(parser.cursor()) {
-            return Ok(Self::Match(parser.parse()?));
+            return Ok(Self::Match(<_ as Parse>::parse(parser)?));
         }
 
         parser.error("expected template directive").into()

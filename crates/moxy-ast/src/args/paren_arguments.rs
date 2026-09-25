@@ -19,9 +19,9 @@ impl Parse for ParenArguments {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let colon2 = parser.parse()?;
+        let colon2 = <_ as Parse>::parse(parser)?;
         let params = Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?;
-        let output = parser.parse()?;
+        let output = <_ as Parse>::parse(parser)?;
         Ok(Self { colon2, params, output })
     }
 

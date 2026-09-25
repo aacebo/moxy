@@ -27,7 +27,7 @@ impl Parse for TypeSlice {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let elem = Delimited::parse_bracket_with(parser, |parser| Ok(Box::new(parser.parse()?)))?;
+        let elem = Delimited::parse_bracket_with(parser, |parser| Ok(Box::new(<_ as Parse>::parse(parser)?)))?;
         Ok(Self { elem })
     }
 

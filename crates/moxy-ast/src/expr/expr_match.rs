@@ -54,17 +54,17 @@ impl Parse for MatchArm {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let pat = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let pat = <_ as Parse>::parse(parser)?;
         let (if_keyword, guard) = if <Token![if]>::peek(parser.cursor()) {
-            (Some(parser.parse()?), Some(parser.parse()?))
+            (Some(<_ as Parse>::parse(parser)?), Some(<_ as Parse>::parse(parser)?))
         } else {
             (None, None)
         };
 
-        let fat_arrow = parser.parse()?;
-        let body = parser.parse()?;
-        let comma = parser.parse()?;
+        let fat_arrow = <_ as Parse>::parse(parser)?;
+        let body = <_ as Parse>::parse(parser)?;
+        let comma = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             attrs,

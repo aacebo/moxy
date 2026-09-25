@@ -1,28 +1,29 @@
 use std::str::FromStr;
 
 use moxy::Token;
-use moxy::ast::{Parse, ParseError, Parser};
+use moxy::ast::{Parse, Parser};
 use moxy::token::{Delim, TokenStream, TokenTree};
-use moxy_ast::Cursor;
 
 #[test]
-fn peek_and_failed_optional_parses_do_not_advance() {
+fn peek_and_optional_parses_do_not_advance() {
     let tokens = TokenStream::from_str("fn value").unwrap();
     let parser = Parser::from_tokens(&tokens);
     let remaining = parser.remaining();
 
-    assert!(parser.peek::<Token![fn]>());
+    assert!(<Token![fn]>::peek(parser.cursor()));
     assert_eq!(parser.remaining(), remaining);
 
-    assert!(parser.parse::<Token![struct]>().is_err());
-    assert_eq!(parser.remaining(), remaining);
-
-    let optional: Option<Token![struct]> = parser.parse().unwrap();
+    let optional = Option::<Token![struct]>::parse(&parser).unwrap();
     assert!(optional.is_none());
     assert_eq!(parser.remaining(), remaining);
 
-    let _: Token![fn] = parser.parse().unwrap();
+    <Token![fn]>::parse(&parser).unwrap();
     assert_eq!(parser.remaining(), remaining - 1);
+
+    let tokens = TokenStream::from_str("fn").unwrap();
+    let parser = Parser::from_tokens(&tokens);
+    assert!(<Token![struct]>::parse(&parser).is_err());
+    assert!(parser.is_empty());
 }
 
 #[test]
@@ -32,9 +33,9 @@ fn terminating_repetition_leaves_the_first_nonmatching_token() {
     let parsed = parser.parse_while::<Token![fn]>();
 
     assert_eq!(parsed.len(), 2);
-    assert!(parser.peek::<Token![struct]>());
+    assert!(<Token![struct]>::peek(parser.cursor()));
 
-    let _: Token![struct] = parser.parse().unwrap();
+    <Token![struct]>::parse(&parser).unwrap();
     assert!(parser.is_empty());
 }
 
@@ -64,70 +65,11 @@ fn group_parsing_creates_an_independent_nested_parser() {
     let inner = parser.parse_group(Delim::Paren).unwrap();
     assert!(parser.is_empty());
 
-    let _: Token![fn] = inner.parse().unwrap();
+    <Token![fn]>::parse(&inner).unwrap();
     assert!(inner.is_empty());
 }
 
 #[test]
 fn public_parse_rejects_trailing_tokens() {
     assert!(moxy::parse!("fn value" as Token![fn]).is_err());
-}
-
-#[test]
-fn trace_reports_successful_and_failed_parses() {
-    let tokens = TokenStream::from_str("fn").unwrap();
-    let parser = Parser::from_tokens(&tokens).traceable();
-
-    let _: Token![fn] = parser.parse().unwrap();
-    assert!(parser.is_empty());
-
-    let tokens = TokenStream::from_str("fn").unwrap();
-    let parser = Parser::from_tokens(&tokens).traceable();
-    assert!(parser.parse::<Token![struct]>().is_err());
-}
-
-#[test]
-fn peek_suppresses_nested_trace_output() {
-    const CHILD_ENV: &str = "MOXY_PEEK_TRACE_CHILD";
-
-    if std::env::var_os(CHILD_ENV).is_some() {
-        struct NestedParse;
-
-        impl Parse for NestedParse {
-            fn peek(cursor: Cursor<'_>) -> bool {
-                cursor.peek::<Token![fn]>()
-            }
-
-            fn parse(parser: &Parser) -> Result<Self, ParseError> {
-                let _: Token![fn] = parser.parse()?;
-                Ok(Self)
-            }
-
-            fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-                cursor.skip::<Token![fn]>()
-            }
-        }
-
-        let tokens = TokenStream::from_str("fn").unwrap();
-        let parser = Parser::from_tokens(&tokens).traceable();
-        assert!(parser.peek::<NestedParse>());
-        assert!(parser.peek::<Token![fn]>());
-        return;
-    }
-
-    let output = std::process::Command::new(std::env::current_exe().unwrap())
-        .args(["--exact", "peek_suppresses_nested_trace_output", "--nocapture"])
-        .env(CHILD_ENV, "1")
-        .output()
-        .unwrap();
-
-    assert!(
-        output.status.success(),
-        "child test failed: {}",
-        String::from_utf8_lossy(&output.stderr)
-    );
-
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    assert!(!stdout.contains("-> "), "peek leaked a trace entry:\n{stdout}");
-    assert!(!stdout.contains("<- "), "peek leaked a trace result:\n{stdout}");
 }

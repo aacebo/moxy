@@ -26,9 +26,9 @@ impl Parse for ItemForeignMod {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let unsafety = parser.parse()?;
-        let abi = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let unsafety = <_ as Parse>::parse(parser)?;
+        let abi = <_ as Parse>::parse(parser)?;
         let items = Delimited::<Vec<ForeignItem>>::parse_brace(parser)?;
 
         Ok(Self {

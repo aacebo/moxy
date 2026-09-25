@@ -7,7 +7,7 @@ use moxy::token::{Ident, Span, TokenStream, keyword, lit};
 fn parse_token<T: Parse>(source: &str) -> Result<T, moxy::ast::ParseError> {
     let tokens = TokenStream::from_str(source).unwrap();
     let parser = Parser::from_tokens(&tokens);
-    let value = parser.parse()?;
+    let value = T::parse(&parser)?;
     assert!(parser.is_empty(), "unparsed tokens remain in `{source}`");
     Ok(value)
 }

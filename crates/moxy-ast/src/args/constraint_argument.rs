@@ -42,9 +42,9 @@ impl Parse for ConstraintArgument {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            ident: parser.parse()?,
-            generics: parser.parse()?,
-            colon_punct: parser.parse()?,
+            ident: <_ as Parse>::parse(parser)?,
+            generics: <_ as Parse>::parse(parser)?,
+            colon_punct: <_ as Parse>::parse(parser)?,
             bounds: Punctuated::parse_separated_nonempty(parser)?,
         })
     }

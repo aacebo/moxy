@@ -29,16 +29,16 @@ impl Parse for ItemConst {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let vis = parser.parse()?;
-        let const_keyword = parser.parse()?;
-        let ident = parser.parse()?;
-        let generics = parser.parse()?;
-        let colon_punct = parser.parse()?;
-        let ty = parser.parse()?;
-        let eq_punct = parser.parse()?;
-        let expr = parser.parse()?;
-        let semi_punct = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let const_keyword = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
+        let generics = <_ as Parse>::parse(parser)?;
+        let colon_punct = <_ as Parse>::parse(parser)?;
+        let ty = <_ as Parse>::parse(parser)?;
+        let eq_punct = <_ as Parse>::parse(parser)?;
+        let expr = <_ as Parse>::parse(parser)?;
+        let semi_punct = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             attrs,

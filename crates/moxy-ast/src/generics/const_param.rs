@@ -24,13 +24,13 @@ impl Parse for ConstParam {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let const_keyword = parser.parse()?;
-        let ident = parser.parse()?;
-        let colon_punct = parser.parse()?;
-        let ty = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let const_keyword = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
+        let colon_punct = <_ as Parse>::parse(parser)?;
+        let ty = <_ as Parse>::parse(parser)?;
         let (default_eq_punct, default) = if <Token![=]>::peek(parser.cursor()) {
-            let eq_punct = parser.parse()?;
+            let eq_punct = <_ as Parse>::parse(parser)?;
             let expr = expr::parse::const_generic_default(parser)?;
             (Some(eq_punct), Some(expr))
         } else {

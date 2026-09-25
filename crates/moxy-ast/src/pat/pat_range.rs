@@ -31,13 +31,13 @@ impl Parse for PatRange {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
         let start = if RangeLimits::peek(parser.cursor()) {
             None
         } else {
             Some(expr::parse::unary(parser, Attributes::default())?)
         };
-        let limits = parser.parse()?;
+        let limits = <_ as Parse>::parse(parser)?;
         let end = if parser.is_empty()
             || <Token![,]>::peek(parser.cursor())
             || <Token![|]>::peek(parser.cursor())

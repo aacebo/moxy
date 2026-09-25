@@ -42,7 +42,7 @@ impl Parse for PatOr {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Pattern::Or(value) => Ok(value),
             _ => parser.error("expected or-pattern").into(),
         }

@@ -18,8 +18,8 @@ impl Parse for TraitRef {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            polarity: parser.parse()?,
-            path: parser.parse()?,
+            polarity: <_ as Parse>::parse(parser)?,
+            path: <_ as Parse>::parse(parser)?,
         })
     }
 

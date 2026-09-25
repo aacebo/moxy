@@ -25,8 +25,8 @@ impl Parse for PatMacro {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs: parser.parse()?,
-            call: parser.parse()?,
+            attrs: <_ as Parse>::parse(parser)?,
+            call: <_ as Parse>::parse(parser)?,
         })
     }
 

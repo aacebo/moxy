@@ -41,12 +41,12 @@ impl Parse for PatStruct {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
         let (qself, path) = if <Token![<]>::peek(parser.cursor()) {
             let (qself, path) = QSelf::parse_qualified(parser)?;
             (Some(qself), path)
         } else {
-            (None, parser.parse()?)
+            (None, <_ as Parse>::parse(parser)?)
         };
 
         let body = Delimited::parse_brace(parser)?;
@@ -111,14 +111,14 @@ impl Parse for PatStructBody {
 
         while !parser.is_empty() {
             if <Token![..]>::peek(parser.cursor()) {
-                dotdot = Some(parser.parse()?);
+                dotdot = Some(<_ as Parse>::parse(parser)?);
                 break;
             }
 
-            fields.push_value(parser.parse()?);
+            fields.push_value(<_ as Parse>::parse(parser)?);
 
             if <Token![,]>::peek(parser.cursor()) {
-                fields.push_punct(parser.parse()?);
+                fields.push_punct(<_ as Parse>::parse(parser)?);
             } else {
                 break;
             }

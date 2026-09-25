@@ -24,10 +24,10 @@ impl Parse for ItemMacroRules {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let macro_rules_keyword = parser.parse()?;
-        let not_punct = parser.parse()?;
-        let ident = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let macro_rules_keyword = <_ as Parse>::parse(parser)?;
+        let not_punct = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
         let body = match parser.curr() {
             Some(TokenTree::Group(g)) => {
                 let g = g.clone();

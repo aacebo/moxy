@@ -26,8 +26,8 @@ impl Parse for TmplMatch {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let at: Token![@] = parser.parse()?;
-        let keyword = parser.parse()?;
+        let at: Token![@] = <_ as Parse>::parse(parser)?;
+        let keyword = <_ as Parse>::parse(parser)?;
         let span = at.span();
         let expr = parser.parse_group(Delim::Paren)?.to_token_stream();
         let arms = Delimited::parse_brace(parser)?;
@@ -97,9 +97,9 @@ impl Parse for TmplMatchArm {
             }
         }
 
-        let arrow = parser.parse()?;
+        let arrow = <_ as Parse>::parse(parser)?;
         let body = Delimited::parse_brace(parser)?;
-        let comma = parser.parse()?;
+        let comma = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             span,

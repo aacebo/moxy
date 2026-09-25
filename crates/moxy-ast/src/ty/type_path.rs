@@ -30,7 +30,7 @@ impl Parse for TypePath {
 
         Ok(Self {
             qself: None,
-            path: parser.parse()?,
+            path: <_ as Parse>::parse(parser)?,
         })
     }
 

@@ -36,9 +36,9 @@ impl Parse for PointerMutability {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if <Token![const]>::peek(parser.cursor()) {
-            Ok(Self::Const(parser.parse()?))
+            Ok(Self::Const(<_ as Parse>::parse(parser)?))
         } else {
-            Ok(Self::Mut(parser.parse()?))
+            Ok(Self::Mut(<_ as Parse>::parse(parser)?))
         }
     }
 

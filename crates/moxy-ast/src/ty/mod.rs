@@ -274,17 +274,17 @@ impl Parse for Type {
 
         // `&` reference.
         if <Token![&]>::peek(parser.cursor()) {
-            return Ok(Self::Reference(parser.parse()?));
+            return Ok(Self::Reference(<_ as Parse>::parse(parser)?));
         }
 
         // `*` raw pointer.
         if <Token![*]>::peek(parser.cursor()) {
-            return Ok(Self::Pointer(parser.parse()?));
+            return Ok(Self::Pointer(<_ as Parse>::parse(parser)?));
         }
 
         // Never `!`.
         if <Token![!]>::peek(parser.cursor()) {
-            return Ok(Self::Never(parser.parse()?));
+            return Ok(Self::Never(<_ as Parse>::parse(parser)?));
         }
 
         // Infer `_`.
@@ -300,11 +300,11 @@ impl Parse for Type {
         // `TypeSlice::parse` individually (which would each consume the group).
         if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
             let (bracket_span, inner) = parser.parse_group_spanned(Delim::Bracket)?;
-            let elem = Box::new(inner.parse()?);
+            let elem = Box::new(<_ as Parse>::parse(&inner)?);
 
             if <Token![;]>::peek(inner.cursor()) {
-                let semi = inner.parse()?;
-                let len = inner.parse()?;
+                let semi = <_ as Parse>::parse(&inner)?;
+                let len = <_ as Parse>::parse(&inner)?;
 
                 if !inner.is_empty() {
                     return inner.error("unexpected trailing input").into();
@@ -325,12 +325,12 @@ impl Parse for Type {
 
         // `impl Trait`.
         if <Token![impl]>::peek(parser.cursor()) {
-            return Ok(Self::ImplTrait(parser.parse()?));
+            return Ok(Self::ImplTrait(<_ as Parse>::parse(parser)?));
         }
 
         // `dyn Trait`.
         if <Token![dyn]>::peek(parser.cursor()) {
-            return Ok(Self::TraitObject(parser.parse()?));
+            return Ok(Self::TraitObject(<_ as Parse>::parse(parser)?));
         }
 
         // Bare fn pointer: `fn(...)`, `extern "C" fn(...)`, `unsafe fn(...)`.
@@ -339,7 +339,7 @@ impl Parse for Type {
             || <Token![unsafe]>::peek(parser.cursor())
             || BoundLifetimes::peek(parser.cursor())
         {
-            return Ok(Self::BareFn(parser.parse()?));
+            return Ok(Self::BareFn(<_ as Parse>::parse(parser)?));
         }
 
         // `(...)` — one element with no trailing comma is a parenthesized type;
@@ -362,24 +362,24 @@ impl Parse for Type {
             let (span, inner) = parser.parse_group_spanned(Delim::None)?;
             return Ok(Self::Group(TypeGroup {
                 span: span.span(),
-                elem: Box::new(inner.parse()?),
+                elem: Box::new(<_ as Parse>::parse(&inner)?),
             }));
         }
 
         // Otherwise a path type: `T`, `std::vec::Vec`, or a qualified
         // `<T as Trait>::Item` (which begins with `<`).
         if <Token![<]>::peek(parser.cursor()) {
-            return Ok(Self::Path(parser.parse()?));
+            return Ok(Self::Path(<_ as Parse>::parse(parser)?));
         }
 
-        let path = parser.parse()?;
+        let path = <_ as Parse>::parse(parser)?;
 
         if <Token![!]>::peek(parser.cursor()) {
             return Ok(Self::Macro(TypeMacro {
                 mac: MacroCall {
                     path,
-                    bang: parser.parse()?,
-                    body: parser.parse()?,
+                    bang: <_ as Parse>::parse(parser)?,
+                    body: <_ as Parse>::parse(parser)?,
                 },
             }));
         }

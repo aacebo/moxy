@@ -89,9 +89,9 @@ impl Parse for Node {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         match parser.curr() {
-            Some(TokenTree::Punct(Punct::At(_))) => Ok(Self::Keyword(parser.parse()?)),
+            Some(TokenTree::Punct(Punct::At(_))) => Ok(Self::Keyword(<_ as Parse>::parse(parser)?)),
             Some(TokenTree::Group(g)) if Self::is_interp_group(g) => {
-                let interp: TmplInterp = parser.parse()?;
+                let interp: TmplInterp = <_ as Parse>::parse(parser)?;
                 let wrap = interp.wrap;
                 let mut node = Self::Interp(interp);
 
@@ -104,9 +104,9 @@ impl Parse for Node {
             Some(TokenTree::Group(g)) if Self::group_has_interp(g) => {
                 let delim = g.delim;
                 let parser = parser.parse_group(g.delim)?;
-                Ok(Self::Group(delim, Box::new(parser.parse()?)))
+                Ok(Self::Group(delim, Box::new(<_ as Parse>::parse(&parser)?)))
             }
-            Some(_) => Ok(Self::Tokens(parser.parse()?)),
+            Some(_) => Ok(Self::Tokens(<_ as Parse>::parse(parser)?)),
             None => Err(LexError::new(Span::default()).message("unexpected end of template").into()),
         }
     }

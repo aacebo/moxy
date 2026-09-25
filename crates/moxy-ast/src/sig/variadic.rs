@@ -20,9 +20,9 @@ impl Parse for Variadic {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            attrs: parser.parse()?,
-            name: parser.parse()?,
-            dots: parser.parse()?,
+            attrs: <_ as Parse>::parse(parser)?,
+            name: <_ as Parse>::parse(parser)?,
+            dots: <_ as Parse>::parse(parser)?,
         })
     }
 

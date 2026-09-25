@@ -32,11 +32,11 @@ impl Parse for PatGroup {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
         let inner = parser.parse_group(moxy_token::Delim::None)?;
         Ok(Self {
             attrs,
-            pat: inner.parse()?,
+            pat: <_ as Parse>::parse(&inner)?,
         })
     }
 

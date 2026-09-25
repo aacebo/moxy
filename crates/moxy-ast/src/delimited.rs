@@ -85,7 +85,7 @@ impl<T> Delimited<T> {
 
 impl<T: Parse> Delimited<T> {
     pub fn parse_with(style: Delim, parser: &Parser) -> Result<Self, ParseError> {
-        Self::parse_with_fn(style, parser, |inner| inner.parse())
+        Self::parse_with_fn(style, parser, |inner| <_ as Parse>::parse(inner))
     }
 
     pub fn parse_paren(parser: &Parser) -> Result<Self, ParseError> {

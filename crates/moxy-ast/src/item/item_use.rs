@@ -24,11 +24,11 @@ impl Parse for ItemUse {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let vis = parser.parse()?;
-        let use_keyword = parser.parse()?;
-        let tree = parser.parse()?;
-        let semi_punct = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let use_keyword = <_ as Parse>::parse(parser)?;
+        let tree = <_ as Parse>::parse(parser)?;
+        let semi_punct = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             attrs,

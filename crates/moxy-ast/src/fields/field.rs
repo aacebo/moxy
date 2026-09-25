@@ -24,16 +24,16 @@ impl Parse for Field {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let vis = parser.parse()?;
-        let mutability = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let mutability = <_ as Parse>::parse(parser)?;
         let (ident, colon) = if Ident::peek(parser.cursor()) && <Token![:]>::peek(parser.cursor().offset(1)) {
-            (Some(parser.parse()?), Some(parser.parse()?))
+            (Some(<_ as Parse>::parse(parser)?), Some(<_ as Parse>::parse(parser)?))
         } else {
             (None, None)
         };
 
-        let ty = parser.parse()?;
+        let ty = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             attrs,

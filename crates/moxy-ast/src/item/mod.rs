@@ -330,67 +330,67 @@ impl Parse for Item {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if ItemMacroRules::peek(parser.cursor()) {
-            return Ok(Self::Macro2(parser.parse()?));
+            return Ok(Self::Macro2(<_ as Parse>::parse(parser)?));
         }
 
         if ItemUse::peek(parser.cursor()) {
-            return Ok(Self::Use(parser.parse()?));
+            return Ok(Self::Use(<_ as Parse>::parse(parser)?));
         }
 
         if ItemExternCrate::peek(parser.cursor()) {
-            return Ok(Self::ExternCrate(parser.parse()?));
+            return Ok(Self::ExternCrate(<_ as Parse>::parse(parser)?));
         }
 
         if ItemForeignMod::peek(parser.cursor()) {
-            return Ok(Self::ForeignMod(parser.parse()?));
+            return Ok(Self::ForeignMod(<_ as Parse>::parse(parser)?));
         }
 
         if ItemMod::peek(parser.cursor()) {
-            return Ok(Self::Mod(parser.parse()?));
+            return Ok(Self::Mod(<_ as Parse>::parse(parser)?));
         }
 
         if ItemStruct::peek(parser.cursor()) {
-            return Ok(Self::Struct(parser.parse()?));
+            return Ok(Self::Struct(<_ as Parse>::parse(parser)?));
         }
 
         if ItemEnum::peek(parser.cursor()) {
-            return Ok(Self::Enum(parser.parse()?));
+            return Ok(Self::Enum(<_ as Parse>::parse(parser)?));
         }
 
         if ItemUnion::peek(parser.cursor()) {
-            return Ok(Self::Union(parser.parse()?));
+            return Ok(Self::Union(<_ as Parse>::parse(parser)?));
         }
 
         if ItemTraitAlias::peek(parser.cursor()) {
-            return Ok(Self::TraitAlias(parser.parse()?));
+            return Ok(Self::TraitAlias(<_ as Parse>::parse(parser)?));
         }
 
         if ItemTrait::peek(parser.cursor()) {
-            return Ok(Self::Trait(parser.parse()?));
+            return Ok(Self::Trait(<_ as Parse>::parse(parser)?));
         }
 
         if ItemImpl::peek(parser.cursor()) {
-            return Ok(Self::Impl(parser.parse()?));
+            return Ok(Self::Impl(<_ as Parse>::parse(parser)?));
         }
 
         if ItemTypeAlias::peek(parser.cursor()) {
-            return Ok(Self::TypeAlias(parser.parse()?));
+            return Ok(Self::TypeAlias(<_ as Parse>::parse(parser)?));
         }
 
         if ItemConst::peek(parser.cursor()) {
-            return Ok(Self::Const(parser.parse()?));
+            return Ok(Self::Const(<_ as Parse>::parse(parser)?));
         }
 
         if ItemStatic::peek(parser.cursor()) {
-            return Ok(Self::Static(parser.parse()?));
+            return Ok(Self::Static(<_ as Parse>::parse(parser)?));
         }
 
         if ItemFn::peek(parser.cursor()) {
-            return Ok(Self::Fn(parser.parse()?));
+            return Ok(Self::Fn(<_ as Parse>::parse(parser)?));
         }
 
         if ItemMacro::peek(parser.cursor()) {
-            return Ok(Self::Macro(parser.parse()?));
+            return Ok(Self::Macro(<_ as Parse>::parse(parser)?));
         }
 
         parser.error("expected item").into()

@@ -23,18 +23,18 @@ impl Parse for StmtLocal {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let let_keyword = parser.parse()?;
-        let pat = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let let_keyword = <_ as Parse>::parse(parser)?;
+        let pat = <_ as Parse>::parse(parser)?;
         let ty = if <Token![:]>::peek(parser.cursor()) {
-            let colon = parser.parse()?;
-            Some((colon, parser.parse()?))
+            let colon = <_ as Parse>::parse(parser)?;
+            Some((colon, <_ as Parse>::parse(parser)?))
         } else {
             None
         };
 
-        let init = parser.parse()?;
-        let semi = parser.parse()?;
+        let init = <_ as Parse>::parse(parser)?;
+        let semi = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             attrs,
@@ -114,10 +114,10 @@ impl Parse for StmtLocalInit {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            eq: parser.parse()?,
-            expr: parser.parse()?,
+            eq: <_ as Parse>::parse(parser)?,
+            expr: <_ as Parse>::parse(parser)?,
             diverge: if <Token![else]>::peek(parser.cursor()) {
-                Some((parser.parse()?, Box::new(parser.parse()?)))
+                Some((<_ as Parse>::parse(parser)?, Box::new(<_ as Parse>::parse(parser)?)))
             } else {
                 None
             },

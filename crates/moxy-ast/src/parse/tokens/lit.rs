@@ -29,7 +29,7 @@ impl Parse for lit::LitF32 {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Lit::Float(LitFloat::F32(value)) => Ok(value),
             _ => Err(parser.error("expected `f32` literal")),
         }
@@ -46,7 +46,7 @@ impl Parse for lit::LitF64 {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Lit::Float(LitFloat::F64(value)) => Ok(value),
             _ => Err(parser.error("expected `f64` literal")),
         }
@@ -63,7 +63,7 @@ impl Parse for lit::LitInt {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Lit::Int(value) => Ok(value),
             _ => Err(parser.error("expected integer literal")),
         }
@@ -80,7 +80,7 @@ impl Parse for lit::LitFloat {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Lit::Float(value) => Ok(value),
             _ => Err(parser.error("expected float literal")),
         }
@@ -97,7 +97,7 @@ impl Parse for lit::LitStr {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Lit::Str(value) => Ok(value),
             _ => Err(parser.error("expected string literal")),
         }
@@ -114,7 +114,7 @@ impl Parse for lit::LitByteStr {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Lit::ByteStr(value) => Ok(value),
             _ => Err(parser.error("expected byte string literal")),
         }
@@ -131,7 +131,7 @@ impl Parse for lit::LitCStr {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Lit::CStr(value) => Ok(value),
             _ => Err(parser.error("expected C string literal")),
         }
@@ -148,7 +148,7 @@ impl Parse for lit::LitChar {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Lit::Char(value) => Ok(value),
             _ => Err(parser.error("expected character literal")),
         }
@@ -165,7 +165,7 @@ impl Parse for lit::LitByte {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Lit::Byte(value) => Ok(value),
             _ => Err(parser.error("expected byte literal")),
         }
@@ -182,7 +182,7 @@ impl Parse for lit::LitBool {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Lit::Bool(value) => Ok(value),
             _ => Err(parser.error("expected boolean literal")),
         }
@@ -199,7 +199,7 @@ impl Parse for lit::LitVerbatim {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.parse()? {
+        match <_ as Parse>::parse(parser)? {
             Lit::Verbatim(value) => Ok(value),
             _ => Err(parser.error("expected verbatim literal")),
         }

@@ -25,11 +25,11 @@ impl Parse for ItemEnum {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let vis = parser.parse()?;
-        let enum_keyword = parser.parse()?;
-        let ident = parser.parse()?;
-        let generics = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let enum_keyword = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
+        let generics = <_ as Parse>::parse(parser)?;
         let variants = Delimited::parse_brace_with(parser, Punctuated::parse_terminated)?;
 
         Ok(Self {
@@ -111,12 +111,12 @@ impl Parse for Variant {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let ident = parser.parse()?;
-        let fields = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
+        let fields = <_ as Parse>::parse(parser)?;
         let (eq_punct, discriminant) = if <Token![=]>::peek(parser.cursor()) {
-            let eq_punct = parser.parse()?;
-            let discriminant = parser.parse()?;
+            let eq_punct = <_ as Parse>::parse(parser)?;
+            let discriminant = <_ as Parse>::parse(parser)?;
             (Some(eq_punct), Some(discriminant))
         } else {
             (None, None)

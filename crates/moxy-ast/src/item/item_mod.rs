@@ -28,16 +28,16 @@ impl Parse for ItemMod {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = parser.parse()?;
-        let vis = parser.parse()?;
-        let unsafety = parser.parse()?;
-        let mod_keyword = parser.parse()?;
-        let ident = parser.parse()?;
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let unsafety = <_ as Parse>::parse(parser)?;
+        let mod_keyword = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
         let (content, semi_punct) = if matches!(parser.curr(), Some(TokenTree::Group(g)) if g.delim == Delim::Brace) {
             let brace = Delimited::<Vec<Item>>::parse_brace(parser)?;
             (Some(brace), None)
         } else {
-            let semi_punct = parser.parse()?;
+            let semi_punct = <_ as Parse>::parse(parser)?;
             (None, Some(semi_punct))
         };
 

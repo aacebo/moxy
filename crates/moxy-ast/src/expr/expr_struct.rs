@@ -53,14 +53,14 @@ impl Parse for StructBody {
 
         while !parser.is_empty() {
             if <Token![..]>::peek(parser.cursor()) {
-                rest = Some((parser.parse()?, parser.parse()?));
+                rest = Some((<_ as Parse>::parse(parser)?, <_ as Parse>::parse(parser)?));
                 break;
             }
 
-            fields.push_value(parser.parse()?);
+            fields.push_value(<_ as Parse>::parse(parser)?);
 
             if <Token![,]>::peek(parser.cursor()) {
-                fields.push_punct(parser.parse()?);
+                fields.push_punct(<_ as Parse>::parse(parser)?);
             } else {
                 break;
             }

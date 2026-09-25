@@ -22,7 +22,9 @@ impl Parse for Paste {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self { nodes: parser.parse()? })
+        Ok(Self {
+            nodes: <_ as Parse>::parse(parser)?,
+        })
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
@@ -65,7 +67,7 @@ impl Parse for PasteNode {
             Some(TokenTree::Group(group)) => {
                 let delim = group.delim;
                 let body = parser.parse_group(delim)?;
-                Ok(Self::Group(delim, body.parse()?))
+                Ok(Self::Group(delim, <_ as Parse>::parse(&body)?))
             }
             Some(_) => {
                 let token = parser.advance().ok_or_else(|| parser.error("expected paste node"))?.clone();

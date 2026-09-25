@@ -73,14 +73,14 @@ impl Parse for GenericParam {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if generics::LifetimeParam::peek(parser.cursor()) {
-            return Ok(Self::Lifetime(parser.parse()?));
+            return Ok(Self::Lifetime(<_ as Parse>::parse(parser)?));
         }
 
         if generics::ConstParam::peek(parser.cursor()) {
-            return Ok(Self::Const(Box::new(parser.parse()?)));
+            return Ok(Self::Const(Box::new(<_ as Parse>::parse(parser)?)));
         }
 
-        Ok(Self::Type(Box::new(parser.parse()?)))
+        Ok(Self::Type(Box::new(<_ as Parse>::parse(parser)?)))
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
