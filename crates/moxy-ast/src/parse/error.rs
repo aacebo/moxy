@@ -61,6 +61,12 @@ impl From<LexError> for ParseError {
     }
 }
 
+impl From<ParseError> for TokenStream {
+    fn from(value: ParseError) -> Self {
+        value.into_token_stream()
+    }
+}
+
 impl std::fmt::Display for ParseError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.message)?;

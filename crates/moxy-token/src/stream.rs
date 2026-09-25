@@ -3,7 +3,7 @@ use std::str::FromStr;
 use super::ToTokens;
 use crate::lex::{Cursor, LexError, Scan};
 use crate::span::DelimSpan;
-use crate::{Span, Spanner, Token, TokenTree};
+use crate::{Span, Spanner, ToTokenStream, Token, TokenTree};
 
 /// An ordered, owned sequence of Rust token trees.
 #[derive(Debug, Default, Clone, PartialEq, Eq)]
@@ -119,6 +119,19 @@ impl From<TokenStream> for Vec<TokenTree> {
     #[inline]
     fn from(value: TokenStream) -> Self {
         value.0
+    }
+}
+
+impl<T, E> From<Result<T, E>> for TokenStream
+where
+    T: ToTokens,
+    E: ToTokens,
+{
+    fn from(result: Result<T, E>) -> Self {
+        match result {
+            Err(err) => err.into_token_stream(),
+            Ok(v) => v.into_token_stream(),
+        }
     }
 }
 
