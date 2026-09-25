@@ -3,7 +3,15 @@ name: Benchmark
 on:
   schedule:
     # Run once per hour at the beginning of the hour (UTC)
-    - cron: "0 * * * *"
+    - cron: "1 * * * *"
+  push:
+    branches: [master]
+    paths:
+      - ".github/workflows/bench.yaml"
+  pull_request:
+    branches: [master]
+    paths:
+      - ".github/workflows/bench.yaml"
   workflow_dispatch:
   workflow_call: {}
 
