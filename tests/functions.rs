@@ -7,7 +7,7 @@ fn function_signatures_and_bodies_complete_the_syntax_pipeline() {
     assert_eq!(function.sig.ident.text(), "add");
     assert_eq!(function.sig.params.inner.inputs.len(), 2);
     assert!(function.sig.output.is_type());
-    assert_eq!(function.body.stmts.len(), 1);
+    assert_eq!(function.body.as_ref().unwrap().stmts.len(), 1);
     assert_eq!(moxy::fmt!(&item).unwrap(), "pub fn add(a: u32, b: u32) -> u32 {\n\ta + b\n}");
 }
 
@@ -28,7 +28,7 @@ fn async_generic_functions_preserve_bounds_references_and_return_types() {
 fn unsafe_extern_variadic_functions_render_exactly() {
     let item: Item = moxy::parse!("pub unsafe extern \"C\" fn log(format:*const u8,...)->i32{0}").unwrap();
     let function = item.as_fn().unwrap();
-    assert!(function.sig.unsafety.is_some());
+    assert!(function.sig.safety.is_some());
     assert!(function.sig.abi.is_some());
     assert!(function.sig.params.inner.variadic.is_some());
     assert_eq!(

@@ -1010,6 +1010,23 @@ impl Parse for keyword::Unsafe {
     }
 }
 
+impl Parse for keyword::Safe {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        matches!(cursor.curr(), Some(TokenTree::Keyword(Keyword::Safe(_))))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match <_ as Parse>::parse(parser)? {
+            Keyword::Safe(v) => Ok(v),
+            _ => Err(parser.error(format!("expected `{}` keyword", keyword::Safe::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
 impl Parse for keyword::Unsized {
     fn peek(cursor: Cursor<'_>) -> bool {
         let Some(next) = cursor.curr() else {

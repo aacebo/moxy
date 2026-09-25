@@ -24,9 +24,9 @@ impl Format for Signature {
             f.text(" ")?;
         }
 
-        self.unsafety.format(f)?;
+        self.safety.format(f)?;
 
-        if self.unsafety.is_some() {
+        if self.safety.is_some() {
             f.text(" ")?;
         }
 
@@ -76,6 +76,7 @@ impl Format for FnParam {
         match self {
             Self::Receiver(v) => v.format(f),
             Self::Typed(v) => v.format(f),
+            Self::Type(v) => v.format(f),
         }
     }
 }
@@ -354,7 +355,12 @@ impl Format for ItemFn {
 
         self.sig.format(f)?;
         f.text(" ")?;
-        self.body.format(f)
+
+        if let Some(body) = &self.body {
+            body.format(f)
+        } else {
+            f.text(";")
+        }
     }
 }
 
@@ -428,6 +434,12 @@ impl Format for ItemEnum {
 impl Format for Variant {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
+        self.vis.format(f)?;
+
+        if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
+            f.text(" ")?;
+        }
+
         self.ident.format(f)?;
         self.fields.format(f)?;
 
@@ -579,8 +591,19 @@ impl Format for ItemTypeAlias {
         f.text("type ")?;
         self.ident.format(f)?;
         self.generics.format(f)?;
-        f.text(" = ")?;
-        self.ty.format(f)?;
+
+        if !self.bounds.is_empty() {
+            f.text(": ")?;
+            self.bounds.format(f)?;
+        }
+
+        self.where_clause.format(f)?;
+
+        if let Some(ty) = &self.ty {
+            f.text(" = ")?;
+            ty.format(f)?;
+        }
+
         f.text(";")
     }
 }
@@ -599,8 +622,12 @@ impl Format for ItemConst {
         self.generics.format(f)?;
         f.text(": ")?;
         self.ty.format(f)?;
-        f.text(" = ")?;
-        self.expr.format(f)?;
+
+        if let Some(expr) = &self.expr {
+            f.text(" = ")?;
+            expr.format(f)?;
+        }
+
         f.text(";")
     }
 }
@@ -614,6 +641,12 @@ impl Format for ItemStatic {
             f.text(" ")?;
         }
 
+        self.safety.format(f)?;
+
+        if self.safety.is_some() {
+            f.text(" ")?;
+        }
+
         f.text("static ")?;
         self.mutability.format(f)?;
 
@@ -624,8 +657,12 @@ impl Format for ItemStatic {
         self.ident.format(f)?;
         f.text(": ")?;
         self.ty.format(f)?;
-        f.text(" = ")?;
-        self.expr.format(f)?;
+
+        if let Some(expr) = &self.expr {
+            f.text(" = ")?;
+            expr.format(f)?;
+        }
+
         f.text(";")
     }
 }

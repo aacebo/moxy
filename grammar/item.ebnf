@@ -5,12 +5,12 @@ ExternCrateItem = "extern", "crate", ( Identifier | "self" ), [ "as", ( Identifi
 ModuleItem = [ "unsafe" ], "mod", Identifier, ( ";" | "{", Module, "}" ) ;
 ForeignModule = [ "unsafe" ], "extern", [ Abi ], "{", InnerAttributes, { ForeignItem }, "}" ;
 ForeignItem = Attributes, ( MacroInvocationSemi | [ Visibility ], ( "static", [ "mut" ], Identifier, ":", Type, ";" | ForeignFunction ) ) ;
-ForeignFunction = [ ItemSafety ], "fn", FunctionDeclaration, ";" ;
-StaticItem = [ ItemSafety ], "static", [ "mut" ], Identifier, ":", Type, "=", Expression, ";" ;
+ForeignFunction = [ Safety ], "fn", FunctionDeclaration, ";" ;
+StaticItem = [ Safety ], "static", [ "mut" ], Identifier, ":", Type, "=", Expression, ";" ;
 ConstItem = "const", ( Identifier | "_" ), ":", Type, "=", Expression, ";" ;
 FunctionItem = FunctionQualifiers, "fn", FunctionDeclaration, BlockExpression ;
-FunctionQualifiers = [ "const" ], [ "async" ], [ ItemSafety ], [ "extern", [ Abi ] ] ;
-ItemSafety = "safe" | "unsafe" ;
+FunctionQualifiers = [ "const" ], [ "async" ], [ Safety ], [ "extern", [ Abi ] ] ;
+Safety = "safe" | "unsafe" ;
 FunctionDeclaration = Identifier, [ Generics ], "(", [ FunctionParam, { ",", FunctionParam }, [ "," ] ], ")", [ "->", Type ], [ WhereClause ] ;
 FunctionParam = Attributes, ( "self" | "mut", "self" | "&", [ Lifetime ], [ "mut" ], "self" | Pattern, ":", Type ) ;
 TypeAlias = "type", Identifier, [ Generics ], [ WhereClause ], "=", Type, ";" ;

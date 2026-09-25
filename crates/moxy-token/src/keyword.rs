@@ -239,6 +239,7 @@ define_keyword! {
     Raw[is_keyword_raw, as_keyword_raw]                         => "raw",
     Ref[is_keyword_ref, as_keyword_ref]                         => "ref",
     Return[is_keyword_return, as_keyword_return]                => "return",
+    Safe[is_keyword_safe, as_keyword_safe]                      => "safe",
     SelfType[is_keyword_self_type, as_keyword_self_type]        => "Self",
     SelfValue[is_keyword_self_value, as_keyword_self_value]     => "self",
     Static[is_keyword_static, as_keyword_static]                => "static",

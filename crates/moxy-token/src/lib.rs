@@ -199,6 +199,7 @@ macro_rules! Token {
     [raw]         => { $crate::Raw };
     [ref]         => { $crate::Ref };
     [return]      => { $crate::Return };
+    [safe]        => { $crate::Safe };
     [Self]        => { $crate::SelfType };
     [self]        => { $crate::SelfValue };
     [static]      => { $crate::Static };

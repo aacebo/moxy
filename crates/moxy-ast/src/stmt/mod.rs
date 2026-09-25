@@ -16,6 +16,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[non_exhaustive]
 pub enum Stmt {
+    Empty(Token![;]),
     Local(Box<StmtLocal>),
     Block(StmtBlock),
     Item(Box<Item>),
@@ -26,6 +27,10 @@ pub enum Stmt {
 impl Stmt {
     pub fn is_local(&self) -> bool {
         matches!(self, Self::Local(_))
+    }
+
+    pub fn is_empty(&self) -> bool {
+        matches!(self, Self::Empty(_))
     }
 
     pub fn is_block(&self) -> bool {
@@ -64,6 +69,7 @@ impl Stmt {
 impl Spanner for Stmt {
     fn span(&self) -> Span {
         match self {
+            Self::Empty(v) => v.span(),
             Self::Local(v) => v.span(),
             Self::Block(v) => v.span(),
             Self::Item(v) => v.span(),
@@ -78,10 +84,19 @@ impl Spanner for Stmt {
 
 impl Parse for Stmt {
     fn peek(cursor: Cursor<'_>) -> bool {
-        StmtLocal::peek(cursor) || StmtMacro::peek(cursor) || StmtBlock::peek(cursor) || Item::peek(cursor) || Expr::peek(cursor)
+        <Token![;]>::peek(cursor)
+            || StmtLocal::peek(cursor)
+            || StmtMacro::peek(cursor)
+            || StmtBlock::peek(cursor)
+            || Item::peek(cursor)
+            || Expr::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        if <Token![;]>::peek(parser.cursor()) {
+            return Ok(Self::Empty(<_ as Parse>::parse(parser)?));
+        }
+
         if StmtLocal::peek(parser.cursor()) {
             return Ok(Self::Local(Box::new(<_ as Parse>::parse(parser)?)));
         }
@@ -104,7 +119,9 @@ impl Parse for Stmt {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if StmtLocal::peek(cursor) {
+        if <Token![;]>::peek(cursor) {
+            <Token![;]>::skip(cursor)
+        } else if StmtLocal::peek(cursor) {
             StmtLocal::skip(cursor)
         } else if StmtMacro::peek(cursor) {
             StmtMacro::skip(cursor)
@@ -121,6 +138,7 @@ impl Parse for Stmt {
 impl ToTokens for Stmt {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
+            Self::Empty(v) => v.to_tokens(t),
             Self::Local(v) => v.to_tokens(t),
             Self::Block(v) => v.to_tokens(t),
             Self::Item(v) => v.to_tokens(t),

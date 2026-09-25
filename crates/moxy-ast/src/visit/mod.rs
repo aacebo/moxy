@@ -944,7 +944,8 @@ define_visit! {
             attrs => visit_attributes / visit_attributes_mut,
             vis => visit_visibility / visit_visibility_mut,
             sig => visit_signature / visit_signature_mut,
-            body => visit_stmt_block / visit_stmt_block_mut,
+            body: opt => visit_stmt_block / visit_stmt_block_mut,
+            semi_punct: skip,
         }
     }
     struct ItemStruct {
@@ -977,6 +978,7 @@ define_visit! {
         walk: walk_variant, walk_mut: walk_variant_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
+            vis => visit_visibility / visit_visibility_mut,
             ident: skip,
             fields => visit_fields / visit_fields_mut,
             eq_punct: skip,
@@ -1001,7 +1003,7 @@ define_visit! {
         fields {
             attrs => visit_attributes / visit_attributes_mut,
             vis => visit_visibility / visit_visibility_mut,
-            unsafety: leaf,
+            safety: leaf,
             auto_keyword: skip,
             trait_keyword: skip,
             ident: skip,
@@ -1049,8 +1051,10 @@ define_visit! {
             type_keyword: skip,
             ident: skip,
             generics => visit_generics / visit_generics_mut,
+            bounds: punct => visit_type_bound / visit_type_bound_mut,
+            where_clause: opt => visit_where_clause / visit_where_clause_mut,
             eq_punct: skip,
-            ty => visit_type / visit_type_mut,
+            ty: opt => visit_type / visit_type_mut,
             semi_punct: skip,
         }
     }
@@ -1066,7 +1070,7 @@ define_visit! {
             colon_punct: skip,
             ty => visit_type / visit_type_mut,
             eq_punct: skip,
-            expr => visit_expr / visit_expr_mut,
+            expr: opt => visit_expr / visit_expr_mut,
             semi_punct: skip,
         }
     }
@@ -1076,13 +1080,14 @@ define_visit! {
         fields {
             attrs => visit_attributes / visit_attributes_mut,
             vis => visit_visibility / visit_visibility_mut,
+            safety: leaf,
             static_keyword: skip,
             mutability: leaf,
             ident: skip,
             colon_punct: skip,
             ty => visit_type / visit_type_mut,
             eq_punct: skip,
-            expr => visit_expr / visit_expr_mut,
+            expr: opt => visit_expr / visit_expr_mut,
             semi_punct: skip,
         }
     }
@@ -1112,7 +1117,7 @@ define_visit! {
         walk: walk_item_foreign_mod, walk_mut: walk_item_foreign_mod_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
-            unsafety: leaf,
+            safety: leaf,
             abi: skip,
             items: seq => visit_foreign_item / visit_foreign_item_mut,
         }
@@ -1375,6 +1380,7 @@ define_visit! {
         variants {
             Receiver(visit_receiver / visit_receiver_mut),
             Typed(visit_pat_type / visit_pat_type_mut),
+            Type(visit_type / visit_type_mut),
         }
     }
     struct Receiver {
@@ -1792,6 +1798,7 @@ pub fn walk_path_mut<V: VisitMut>(v: &mut V, node: &mut Path) {
 /// `Stmt` has tuple/box variants the enum spec can't express.
 pub fn walk_stmt<'ast, V: Visit<'ast>>(v: &mut V, node: &'ast Stmt) {
     match node {
+        Stmt::Empty(_) => {}
         Stmt::Local(s) => v.visit_stmt_local(s),
         Stmt::Block(b) => v.visit_stmt_block(b),
         Stmt::Item(i) => v.visit_item(i),
@@ -1801,6 +1808,7 @@ pub fn walk_stmt<'ast, V: Visit<'ast>>(v: &mut V, node: &'ast Stmt) {
 }
 pub fn walk_stmt_mut<V: VisitMut>(v: &mut V, node: &mut Stmt) {
     match node {
+        Stmt::Empty(_) => {}
         Stmt::Local(s) => v.visit_stmt_local_mut(s),
         Stmt::Block(b) => v.visit_stmt_block_mut(b),
         Stmt::Item(i) => v.visit_item_mut(i),

@@ -39,6 +39,7 @@ impl ToTokens for FnParams {
 pub enum FnParam {
     Receiver(Box<Receiver>),
     Typed(Box<pat::PatType>),
+    Type(Box<Type>),
 }
 
 impl Spanner for FnParam {
@@ -46,13 +47,14 @@ impl Spanner for FnParam {
         match self {
             Self::Receiver(v) => v.span(),
             Self::Typed(v) => v.span(),
+            Self::Type(v) => v.span(),
         }
     }
 }
 
 impl Parse for FnParam {
     fn peek(cursor: Cursor<'_>) -> bool {
-        Receiver::peek(cursor) || pat::PatType::peek(cursor)
+        Receiver::peek(cursor) || pat::PatType::peek(cursor) || Type::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -60,14 +62,18 @@ impl Parse for FnParam {
             return Ok(Self::Receiver(Box::new(<_ as Parse>::parse(parser)?)));
         }
 
-        Ok(Self::Typed(Box::new(<_ as Parse>::parse(parser)?)))
+        if pat::PatType::peek(parser.cursor()) {
+            Ok(Self::Typed(Box::new(<_ as Parse>::parse(parser)?)))
+        } else {
+            Ok(Self::Type(Box::new(<_ as Parse>::parse(parser)?)))
+        }
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         if Receiver::peek(cursor) {
             Receiver::skip(cursor)
         } else {
-            pat::PatType::skip(cursor)
+            pat::PatType::skip(cursor).or_else(|| Type::skip(cursor))
         }
     }
 }
@@ -77,6 +83,7 @@ impl ToTokens for FnParam {
         match self {
             Self::Receiver(v) => v.to_tokens(t),
             Self::Typed(v) => v.to_tokens(t),
+            Self::Type(v) => v.to_tokens(t),
         }
     }
 }

@@ -328,8 +328,8 @@ impl Parse for Type {
             return Ok(Self::ImplTrait(<_ as Parse>::parse(parser)?));
         }
 
-        // `dyn Trait`.
-        if <Token![dyn]>::peek(parser.cursor()) {
+        // `dyn Trait` and the legacy bare multi-bound trait-object form.
+        if TypeTraitObject::peek(parser.cursor()) {
             return Ok(Self::TraitObject(<_ as Parse>::parse(parser)?));
         }
 
@@ -420,7 +420,7 @@ impl Parse for Type {
             return TypeImplTrait::skip(cursor);
         }
 
-        if <Token![dyn]>::peek(cursor) {
+        if TypeTraitObject::peek(cursor) {
             return TypeTraitObject::skip(cursor);
         }
 

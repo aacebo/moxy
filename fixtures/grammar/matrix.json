@@ -1,6 +1,6 @@
 {
-    "schema_version": 1,
-    "description": "Curated minimal stable-Rust grammar fixtures. Syntax validity is measured by syn at the declared root; UI paths are provenance only.",
+    "schema_version": 2,
+    "description": "Reference-derived Rust grammar fixtures. Moxy status is measured at the declared root; provenance identifies the pinned stable grammar baseline.",
     "entries": [
         {
             "id": "lexer.boolean-literal",
@@ -2103,7 +2103,7 @@
             "fixture_directory": "fixtures/grammar/expressions/continue"
         },
         {
-            "id": "expressions.yield",
+            "id": "extensions.yield",
             "reference": {
                 "production": "Rust Reference grammar: expressions/yield",
                 "anchor": "https://doc.rust-lang.org/reference/grammar.html"
@@ -2120,7 +2120,7 @@
                 ]
             },
             "parse_root": "expr",
-            "support_expectation": "moxy_accepts",
+            "support_expectation": "extension",
             "fixture_directory": "fixtures/grammar/expressions/yield"
         },
         {

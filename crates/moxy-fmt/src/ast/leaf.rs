@@ -66,6 +66,25 @@ impl Format for RangeLimits {
     }
 }
 
+impl Format for moxy_ast::Safety {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        match self {
+            Self::Safe(_) => f.text("safe"),
+            Self::Unsafe(_) => f.text("unsafe"),
+        }
+    }
+}
+
+impl Format for moxy_ast::pat::PatRangeLimits {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        match self {
+            Self::Closed(_) => f.text("..="),
+            Self::HalfOpen(_) => f.text(".."),
+            Self::Obsolete(_) => f.text("..."),
+        }
+    }
+}
+
 impl Format for PointerMutability {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {

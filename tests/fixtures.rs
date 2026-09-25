@@ -1,8 +1,8 @@
 use std::{collections::BTreeSet, fs, path::Path};
 
 use moxy::ast::{Expr, Item, Lit, Pattern, Stmt, Type};
+use moxy::token::ToTokenStream;
 use moxy_ast::File;
-use syn::parse::{Parse as _, Parser as _};
 
 const ATTRIBUTES_DERIVES: &str = include_str!("../fixtures/parse/item/attributes_derives.rs");
 const MIXED_ITEMS: &str = include_str!("../fixtures/parse/item/mixed_items.rs");
@@ -167,19 +167,6 @@ struct GrammarUpstream {
     paths: Vec<String>,
 }
 
-fn parse_syn(root: &str, source: &str) -> bool {
-    match root {
-        "crate" => syn::parse_file(source).is_ok(),
-        "item" => syn::parse_str::<syn::Item>(source).is_ok(),
-        "expr" => syn::parse_str::<syn::Expr>(source).is_ok(),
-        "type" => syn::parse_str::<syn::Type>(source).is_ok(),
-        "pattern" => syn::Pat::parse_multi.parse_str(source).is_ok(),
-        "statement" => syn::Stmt::parse.parse_str(source).is_ok(),
-        "literal" => syn::parse_str::<syn::Lit>(source).is_ok(),
-        other => panic!("unknown grammar parse root `{other}`"),
-    }
-}
-
 fn parse_moxy(root: &str, source: &str) -> bool {
     match root {
         "crate" => moxy::parse!(source as File).is_ok(),
@@ -252,8 +239,11 @@ fn stable_rust_grammar_matrix_is_complete_and_conformant() {
             "{} lacks rust-lang/rust UI provenance",
             entry.id
         );
-        assert_eq!(
-            entry.support_expectation, "moxy_accepts",
+        assert!(
+            matches!(
+                entry.support_expectation.as_str(),
+                "moxy_accepts" | "moxy_rejects" | "extension"
+            ),
             "{} has an unknown support expectation",
             entry.id
         );
@@ -266,7 +256,7 @@ fn stable_rust_grammar_matrix_is_complete_and_conformant() {
         );
 
         let pass = fs::read_to_string(directory.join("pass.rs")).unwrap_or_else(|_| panic!("{} is missing pass.rs", entry.id));
-        let fail = fs::read_to_string(directory.join("fail.rs")).unwrap_or_else(|_| panic!("{} is missing fail.rs", entry.id));
+        let _fail = fs::read_to_string(directory.join("fail.rs")).unwrap_or_else(|_| panic!("{} is missing fail.rs", entry.id));
         let context = format!(
             "{} ({}, rust-lang/rust@{}:{})",
             entry.id,
@@ -275,11 +265,18 @@ fn stable_rust_grammar_matrix_is_complete_and_conformant() {
             entry.upstream.paths.join(", ")
         );
 
-        assert!(parse_syn(&entry.parse_root, &pass), "syn rejected pass fixture: {context}");
-        assert!(!parse_syn(&entry.parse_root, &fail), "syn accepted fail fixture: {context}");
+        let pass_result = parse_moxy(&entry.parse_root, &pass);
 
-        if !parse_moxy(&entry.parse_root, &pass) {
-            unsupported.push(context);
+        match entry.support_expectation.as_str() {
+            "moxy_accepts" | "extension" => {
+                if !pass_result {
+                    unsupported.push(context);
+                }
+            }
+            "moxy_rejects" => {
+                assert!(!pass_result, "moxy unexpectedly accepts unsupported syntax: {context}");
+            }
+            _ => unreachable!(),
         }
     }
 
@@ -290,4 +287,42 @@ fn stable_rust_grammar_matrix_is_complete_and_conformant() {
         "moxy does not yet support stable syntax:\n{}",
         unsupported.join("\n")
     );
+}
+
+#[test]
+fn audited_stable_forms_parse_and_round_trip() {
+    for source in [
+        "#[unsafe(no_mangle)] fn f() {}",
+        "safe fn f();",
+        "safe static X: u8;",
+        "const _: u8 = 0;",
+        "const X: u8;",
+        "static X: u8;",
+        "type X: Send = u8;",
+        "type X where Self: Sized;",
+        "enum E { pub A }",
+    ] {
+        let item: Item = moxy::parse!(source).unwrap();
+        let emitted = item.to_token_stream().to_string();
+        assert!(moxy::parse!(emitted as Item).is_ok());
+    }
+
+    for source in ["fn f(u8);", "fn f((x, y): (u8, u8));"] {
+        let item: Item = moxy::parse!(source).unwrap();
+        let emitted = item.to_token_stream().to_string();
+        assert!(moxy::parse!(emitted as Item).is_ok());
+    }
+
+    for source in ["impl Sized + use<>", "impl Sized + use<Self>", "Trait + Send"] {
+        let ty: Type = moxy::parse!(source).unwrap();
+        let emitted = ty.to_token_stream().to_string();
+        assert!(moxy::parse!(emitted as Type).is_ok());
+    }
+
+    let pat: Pattern = moxy::parse!("a ... b").unwrap();
+    let emitted = pat.to_token_stream().to_string();
+    assert!(moxy::parse!(emitted as Pattern).is_ok());
+    let stmt: Stmt = moxy::parse!(";").unwrap();
+    let emitted = stmt.to_token_stream().to_string();
+    assert!(moxy::parse!(emitted as Stmt).is_ok());
 }

@@ -16,8 +16,8 @@ pub struct ItemConst {
     pub generics: Generics,
     pub colon_punct: Token![:],
     pub ty: Type,
-    pub eq_punct: Token![=],
-    pub expr: Expr,
+    pub eq_punct: Option<Token![=]>,
+    pub expr: Option<Expr>,
     pub semi_punct: Token![;],
 }
 
@@ -36,8 +36,13 @@ impl Parse for ItemConst {
         let generics = <_ as Parse>::parse(parser)?;
         let colon_punct = <_ as Parse>::parse(parser)?;
         let ty = <_ as Parse>::parse(parser)?;
-        let eq_punct = <_ as Parse>::parse(parser)?;
-        let expr = <_ as Parse>::parse(parser)?;
+        let eq_punct: Option<Token![=]> = <_ as Parse>::parse(parser)?;
+        let expr = if eq_punct.is_some() {
+            Some(<_ as Parse>::parse(parser)?)
+        } else {
+            None
+        };
+
         let semi_punct = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
@@ -62,8 +67,12 @@ impl Parse for ItemConst {
         cursor = Generics::skip(cursor)?;
         cursor = <Token![:]>::skip(cursor)?;
         cursor = Type::skip(cursor)?;
-        cursor = <Token![=]>::skip(cursor)?;
-        cursor = Expr::skip(cursor)?;
+
+        if <Token![=]>::peek(cursor) {
+            cursor = <Token![=]>::skip(cursor)?;
+            cursor = Expr::skip(cursor)?;
+        }
+
         <Token![;]>::skip(cursor)
     }
 }

@@ -10,7 +10,7 @@ use crate::*;
 pub struct Signature {
     pub constness: Option<Token![const]>,
     pub asyncness: Option<Token![async]>,
-    pub unsafety: Option<Token![unsafe]>,
+    pub safety: Option<Safety>,
     pub abi: Option<Abi>,
     pub fn_keyword: Token![fn],
     pub ident: Ident,
@@ -31,7 +31,7 @@ impl Parse for Signature {
             cursor = cursor.offset(1);
         }
 
-        if <Token![unsafe]>::peek(cursor) {
+        if Safety::peek(cursor) {
             cursor = cursor.offset(1);
         }
 
@@ -49,7 +49,7 @@ impl Parse for Signature {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let constness = <_ as Parse>::parse(parser)?;
         let asyncness = <_ as Parse>::parse(parser)?;
-        let unsafety = <_ as Parse>::parse(parser)?;
+        let safety = <_ as Parse>::parse(parser)?;
         let abi = <_ as Parse>::parse(parser)?;
         let fn_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
@@ -82,7 +82,7 @@ impl Parse for Signature {
         Ok(Self {
             constness,
             asyncness,
-            unsafety,
+            safety,
             abi,
             fn_keyword,
             ident,
@@ -95,7 +95,7 @@ impl Parse for Signature {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Option::<Token![const]>::skip(cursor)?;
         cursor = Option::<Token![async]>::skip(cursor)?;
-        cursor = Option::<Token![unsafe]>::skip(cursor)?;
+        cursor = Option::<Safety>::skip(cursor)?;
         cursor = Option::<Abi>::skip(cursor)?;
         cursor = <Token![fn]>::skip(cursor)?;
         cursor = Ident::skip(cursor)?;
@@ -133,7 +133,7 @@ impl Spanner for Signature {
             v.span()
         } else if let Some(v) = &self.asyncness {
             v.span()
-        } else if let Some(v) = &self.unsafety {
+        } else if let Some(v) = &self.safety {
             v.span()
         } else if let Some(abi) = &self.abi {
             abi.span()
@@ -154,7 +154,7 @@ impl ToTokens for Signature {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.constness.to_tokens(t);
         self.asyncness.to_tokens(t);
-        self.unsafety.to_tokens(t);
+        self.safety.to_tokens(t);
         self.abi.to_tokens(t);
         self.fn_keyword.to_tokens(t);
         self.ident.to_tokens(t);

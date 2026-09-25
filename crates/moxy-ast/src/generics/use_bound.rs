@@ -22,7 +22,11 @@ impl Parse for UseBound {
         Ok(Self {
             use_keyword: <_ as Parse>::parse(parser)?,
             lt_punct: <_ as Parse>::parse(parser)?,
-            params: Punctuated::parse_separated_nonempty(parser)?,
+            params: if <Token![>]>::peek(parser.cursor()) {
+                Punctuated::new()
+            } else {
+                Punctuated::parse_separated_nonempty(parser)?
+            },
             gt_punct: <_ as Parse>::parse(parser)?,
         })
     }
@@ -30,11 +34,18 @@ impl Parse for UseBound {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = <Token![use]>::skip(cursor)?;
         cursor = <Token![<]>::skip(cursor)?;
-        cursor = UseBoundParam::skip(cursor)?;
 
-        while <Token![,]>::peek(cursor) {
-            cursor = <Token![,]>::skip(cursor)?;
+        if !<Token![>]>::peek(cursor) {
             cursor = UseBoundParam::skip(cursor)?;
+
+            while <Token![,]>::peek(cursor) {
+                cursor = <Token![,]>::skip(cursor)?;
+
+                if <Token![>]>::peek(cursor) {
+                    break;
+                }
+                cursor = UseBoundParam::skip(cursor)?;
+            }
         }
 
         <Token![>]>::skip(cursor)
@@ -84,12 +95,14 @@ impl ToTokens for UseBoundParam {
 
 impl Parse for UseBoundParam {
     fn peek(cursor: Cursor<'_>) -> bool {
-        Lifetime::peek(cursor) || Ident::peek(cursor)
+        Lifetime::peek(cursor) || Ident::peek(cursor) || <Token![Self]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if Lifetime::peek(parser.cursor()) {
             Ok(Self::Lifetime(<_ as Parse>::parse(parser)?))
+        } else if <Token![Self]>::peek(parser.cursor()) {
+            Ok(Self::Ident(parser.parse_ident_any()?))
         } else {
             Ok(Self::Ident(<_ as Parse>::parse(parser)?))
         }
@@ -98,6 +111,8 @@ impl Parse for UseBoundParam {
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         if Lifetime::peek(cursor) {
             Lifetime::skip(cursor)
+        } else if <Token![Self]>::peek(cursor) {
+            <Token![Self]>::skip(cursor)
         } else {
             Ident::skip(cursor)
         }

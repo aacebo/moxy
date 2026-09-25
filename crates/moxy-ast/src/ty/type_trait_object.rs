@@ -14,7 +14,11 @@ pub struct TypeTraitObject {
 
 impl Parse for TypeTraitObject {
     fn peek(cursor: Cursor<'_>) -> bool {
-        <Token![dyn]>::peek(cursor)
+        if <Token![dyn]>::peek(cursor) {
+            return true;
+        }
+
+        TypeBound::skip(cursor).is_some_and(|cursor| <Token![+]>::peek(cursor))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {

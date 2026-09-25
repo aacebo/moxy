@@ -99,6 +99,7 @@ impl ToTokens for ItemEnum {
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Variant {
     pub attrs: Attributes,
+    pub vis: Visibility,
     pub ident: Ident,
     pub fields: Fields,
     pub eq_punct: Option<Token![=]>,
@@ -107,11 +108,15 @@ pub struct Variant {
 
 impl Parse for Variant {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
-        Attributes::skip(cursor).map(|cursor| Ident::peek(cursor)).unwrap_or(false)
+        Attributes::skip(cursor)
+            .map(|cursor| Visibility::skip(cursor).unwrap_or(cursor))
+            .map(Ident::peek)
+            .unwrap_or(false)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
         let fields = <_ as Parse>::parse(parser)?;
         let (eq_punct, discriminant) = if <Token![=]>::peek(parser.cursor()) {
@@ -124,6 +129,7 @@ impl Parse for Variant {
 
         Ok(Self {
             attrs,
+            vis,
             ident,
             fields,
             eq_punct,
@@ -133,6 +139,7 @@ impl Parse for Variant {
 
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
         cursor = Ident::skip(cursor)?;
         cursor = Fields::skip(cursor)?;
 
@@ -148,6 +155,7 @@ impl Parse for Variant {
 impl ToTokens for Variant {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
+        self.vis.to_tokens(t);
         self.ident.to_tokens(t);
         self.fields.to_tokens(t);
 
