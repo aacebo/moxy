@@ -2,6 +2,9 @@
 jobs = -1
 warnings = "deny"
 
+[doc]
+rustdocflags = ["-D", "warnings"]
+
 [env]
 RUST_BACKTRACE = "1"
 LLVM_PROFILE_FILE = { value = "target/coverage/%p-%m.profraw", relative = true }
