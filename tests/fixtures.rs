@@ -1,7 +1,7 @@
 use std::{collections::BTreeSet, fs, path::Path};
 
-use moxy::ast::{Expr, Item, Lit, Pattern, Stmt, Type};
-use moxy::token::ToTokenStream;
+use moxy::ast::{Expr, Item, Pattern, Stmt, Type};
+use moxy::token::{Lit, ToTokenStream};
 use moxy_ast::File;
 
 const ATTRIBUTES_DERIVES: &str = include_str!("../fixtures/parse/item/attributes_derives.rs");

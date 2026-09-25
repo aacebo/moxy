@@ -1,7 +1,7 @@
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 use moxy_token::{Punct, TokenTree};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{AngleArguments, Cursor, Expr, GenericArgument, Ident, Parse, ParseError, Parser, Token};
+use crate::{AngleArguments, Cursor, Expr, GenericArgument, Parse, ParseError, Parser, Token};
 
 /// An associated const binding (`N = 8`).
 #[derive(Clone)]

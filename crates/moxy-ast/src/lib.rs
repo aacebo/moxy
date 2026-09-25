@@ -15,11 +15,6 @@
 //! let item: Item = moxy::parse!("pub struct User;").unwrap();
 //! assert!(item.is_struct());
 //! ```
-//!
-//! ## Traversal and integrations
-//!
-//! Use [`Visit`] or [`VisitMut`] to traverse syntax trees. Enable `serde` to
-//! serialize supported nodes.
 
 mod _crate;
 /// Generic argument syntax.
@@ -49,19 +44,16 @@ pub mod pat;
 /// Path syntax and path arguments.
 pub mod path;
 mod punctuated;
-/// Function signatures and parameters.
-pub mod sig;
+mod sig;
 /// Statement syntax.
 pub mod stmt;
 /// Type syntax.
 pub mod ty;
 /// `use`-tree syntax.
 pub mod use_tree;
-/// Visibility syntax.
-pub mod vis;
-/// Read-only and mutable AST traversal traits.
+mod vis;
 #[cfg(feature = "visit")]
-pub mod visit;
+mod visit;
 #[macro_use]
 mod parse;
 mod file;
@@ -98,12 +90,6 @@ pub use macro_call::*;
 #[doc(inline)]
 pub use member::{ForeignItem, ImplItem, Member, TraitItem};
 #[doc(inline)]
-pub use moxy_token::Ident;
-#[doc(inline)]
-pub use moxy_token::{
-    Lit, LitBool, LitByte, LitByteStr, LitCStr, LitChar, LitF32, LitF64, LitFloat, LitInt, LitStr, LitVerbatim,
-};
-#[doc(inline)]
 pub use parse::*;
 #[doc(inline)]
 pub use pat::Pattern;
@@ -114,7 +100,7 @@ pub use punct::*;
 #[doc(inline)]
 pub use punctuated::*;
 #[doc(inline)]
-pub use sig::{Abi, BareFnArg, Signature, Variadic};
+pub use sig::*;
 #[doc(inline)]
 pub use stmt::{Stmt, StmtBlock};
 #[doc(inline)]
@@ -125,4 +111,4 @@ pub use use_tree::UseTree;
 pub use vis::*;
 #[cfg(feature = "visit")]
 #[doc(inline)]
-pub use visit::{Visit, VisitMut};
+pub use visit::*;

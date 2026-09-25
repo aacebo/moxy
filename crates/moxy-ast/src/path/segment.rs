@@ -1,4 +1,4 @@
-use moxy_token::{Keyword, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
+use moxy_token::{Ident, Keyword, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 

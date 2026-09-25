@@ -1,6 +1,5 @@
-use moxy_ast::sig::BareFnArg;
 use moxy_ast::ty::*;
-use moxy_ast::{PointerMutability, Type};
+use moxy_ast::{BareFnArg, PointerMutability, Type};
 
 use crate::{FmtError, Format, Formatter};
 

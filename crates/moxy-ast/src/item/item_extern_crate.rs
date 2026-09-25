@@ -1,8 +1,8 @@
 use crate::Token;
 use crate::{Parse, ParseError, Parser};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Ident, Visibility};
+use crate::{Attributes, Visibility};
 
 /// An `extern crate` item (`extern crate foo;` or `extern crate foo as bar;`).
 #[derive(Clone)]

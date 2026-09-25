@@ -2,8 +2,8 @@ use moxy_ast::fields::{Field, Fields, FieldsNamed, FieldsUnnamed};
 use moxy_ast::item::*;
 use moxy_ast::member::*;
 use moxy_ast::member::{ForeignItem, ImplItem, TraitItem};
-use moxy_ast::sig::{FnParam, Receiver, Signature, Variadic};
 use moxy_ast::use_tree::*;
+use moxy_ast::{FnParam, Receiver, Signature, Variadic};
 use moxy_ast::{Item, UseTree, Variant};
 
 use crate::{FmtError, Format, Formatter};

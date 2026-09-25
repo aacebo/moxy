@@ -1,9 +1,9 @@
-use moxy_token::{Group, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Group, Ident, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::path::PathArguments;
 use crate::ty::{TypeMacro, TypePath};
 use crate::{
-    Cursor, Expr, Ident, Lifetime, MacroCall, Parse, ParseError, Parser, Path, PathSegment, Punctuated, Token, Type, TypeBound,
+    Cursor, Expr, Lifetime, MacroCall, Parse, ParseError, Parser, Path, PathSegment, Punctuated, Token, Type, TypeBound,
 };
 
 mod angle_arguments;

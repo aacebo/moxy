@@ -1,8 +1,8 @@
 use crate::Token;
 use crate::{Parse, ParseError, Parser};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Delimited, Generics, Ident, Punctuated, TraitItem, TypeBound, Visibility};
+use crate::{Attributes, Delimited, Generics, Punctuated, TraitItem, TypeBound, Visibility};
 
 /// A trait definition item (`trait Name: Super { ... }`).
 #[derive(Clone)]

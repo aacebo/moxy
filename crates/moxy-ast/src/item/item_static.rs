@@ -1,8 +1,8 @@
 use crate::Token;
 use crate::{Parse, ParseError, Parser};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Expr, Ident, Safety, Type, Visibility};
+use crate::{Attributes, Expr, Safety, Type, Visibility};
 
 /// A static item (`static [mut] NAME: Type = expr;`).
 #[derive(Clone)]

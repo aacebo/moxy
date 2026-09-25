@@ -77,7 +77,7 @@ jobs:
         uses: Swatinem/rust-cache@v2
 
       - name: Rustdoc
-        run: RUSTDOCFLAGS='-D warnings' cargo doc --workspace --all-features --no-deps --locked
+        run: cargo doc --workspace --all-features --no-deps --locked
 
   coverage:
     name: Coverage

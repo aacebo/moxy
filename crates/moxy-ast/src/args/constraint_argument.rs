@@ -1,6 +1,6 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{AngleArguments, Cursor, GenericArgument, Ident, Parse, ParseError, Parser, Punctuated, Token, TypeBound};
+use crate::{AngleArguments, Cursor, GenericArgument, Parse, ParseError, Parser, Punctuated, Token, TypeBound};
 
 /// An associated type bound constraint (`Item: Bound`).
 #[derive(Clone)]

@@ -1,8 +1,8 @@
 use crate::Token;
 use crate::{Parse, ParseError, Parser};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, FieldsNamed, Generics, Ident, Visibility};
+use crate::{Attributes, FieldsNamed, Generics, Visibility};
 
 /// A union item (`union Name<T> { field: Type, ... }`).
 #[derive(Clone)]

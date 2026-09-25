@@ -1,8 +1,8 @@
 use crate::Token;
 use crate::{Parse, ParseError, Parser};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Expr, Generics, Ident, Type, Visibility};
+use crate::{Attributes, Expr, Generics, Type, Visibility};
 
 /// A constant item (`const NAME: Type = expr;`).
 #[derive(Clone)]

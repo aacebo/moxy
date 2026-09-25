@@ -1,9 +1,9 @@
 use crate::Token;
 use crate::{Parse, ParseError, Parser};
-use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Ident, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use super::Item;
-use crate::{Attributes, Delimited, Ident, Visibility};
+use crate::{Attributes, Delimited, Visibility};
 
 /// A module item (`mod foo;` or `mod foo { ... }`).
 #[derive(Clone)]

@@ -6,7 +6,7 @@ pub use foreign_item::*;
 pub use impl_item::*;
 pub use trait_item::*;
 
-use moxy_token::{Lit, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Lit, Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 

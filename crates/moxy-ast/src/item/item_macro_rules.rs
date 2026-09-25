@@ -1,8 +1,8 @@
 use crate::Token;
 use crate::{Parse, ParseError, Parser};
-use moxy_token::{Group, LexError, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Group, Ident, LexError, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use crate::{Attributes, Ident};
+use crate::Attributes;
 
 /// A `macro_rules!` definition item.
 #[derive(Clone)]

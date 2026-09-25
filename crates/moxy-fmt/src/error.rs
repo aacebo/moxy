@@ -1,6 +1,4 @@
-use moxy_ast::Ident;
-use moxy_token::Token;
-use moxy_token::{Delim, Group, Lit, Punct, Span, ToTokenStream, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, Ident, Lit, Punct, Span, ToTokenStream, ToTokens, Token, TokenStream, TokenTree};
 
 #[derive(Debug)]
 pub enum FmtError {

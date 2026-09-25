@@ -1,6 +1,6 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{AngleArguments, Cursor, GenericArgument, Ident, Parse, ParseError, Parser, Token, Type};
+use crate::{AngleArguments, Cursor, GenericArgument, Parse, ParseError, Parser, Token, Type};
 
 /// An associated type binding (`Item = T`).
 #[derive(Clone)]

@@ -4,7 +4,7 @@ mod segment;
 pub use arguments::*;
 pub use segment::*;
 
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 

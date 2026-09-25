@@ -1,8 +1,8 @@
 use crate::Token;
 use crate::{Parse, ParseError, Parser};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Generics, Ident, Punctuated, TypeBound, Visibility};
+use crate::{Attributes, Generics, Punctuated, TypeBound, Visibility};
 
 /// A trait alias item (`trait Alias<T> = Bound1 + Bound2;`).
 #[derive(Clone)]

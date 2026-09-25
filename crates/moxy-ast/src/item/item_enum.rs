@@ -1,8 +1,8 @@
 use crate::Token;
 use crate::{Parse, ParseError, Parser};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Delimited, Expr, Fields, Generics, Ident, Punctuated, Visibility};
+use crate::{Attributes, Delimited, Expr, Fields, Generics, Punctuated, Visibility};
 
 /// An enum item (`enum Name<T> { Variant, ... }`).
 #[derive(Clone)]

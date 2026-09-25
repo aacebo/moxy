@@ -1,8 +1,8 @@
 use crate::Token;
 use crate::{Parse, ParseError, Parser};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Generics, Ident, Punctuated, Type, TypeBound, Visibility, WhereClause};
+use crate::{Attributes, Generics, Punctuated, Type, TypeBound, Visibility, WhereClause};
 
 /// A type alias item (`type Name<T> = Type;`).
 #[derive(Clone)]

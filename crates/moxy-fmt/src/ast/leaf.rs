@@ -1,4 +1,5 @@
-use moxy_ast::{Abi, BinOp, Ident, Label, PointerMutability, RangeLimits, UnOp, Visibility};
+use moxy_ast::{Abi, BinOp, Label, PointerMutability, RangeLimits, UnOp, Visibility};
+use moxy_token::Ident;
 
 use crate::{FmtError, Format, Formatter};
 

@@ -1,5 +1,6 @@
 [build]
 jobs = -1
+warnings = "deny"
 
 [env]
 RUST_BACKTRACE = "1"

@@ -26,7 +26,7 @@ pub use type_slice::*;
 pub use type_trait_object::*;
 pub use type_tuple::*;
 
-use moxy_token::{Delim, Group, Keyword, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, Ident, Keyword, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::*;
 

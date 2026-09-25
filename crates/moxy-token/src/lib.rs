@@ -25,8 +25,7 @@
 //! ## Integrations
 //!
 //! Enable `serde` to serialize supported token types. Enable `proc-macro2` for
-//! conversions with `proc_macro2`; compiler `proc_macro` conversions are
-//! available through [`bridge`].
+//! conversions with `proc_macro2`;
 
 extern crate proc_macro;
 
