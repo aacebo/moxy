@@ -65,6 +65,7 @@ pub mod vis;
 pub mod visit;
 #[macro_use]
 mod parse;
+mod file;
 mod punct;
 
 #[doc(inline)]
@@ -83,6 +84,8 @@ pub use delimited::Delimited;
 pub use expr::Expr;
 #[doc(inline)]
 pub use fields::*;
+#[doc(inline)]
+pub use file::*;
 #[doc(inline)]
 pub use generics::{Generics, TraitRef, TypeBound, WhereClause, WherePredicate};
 #[doc(inline)]

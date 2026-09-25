@@ -1,0 +1,2 @@
+#[doc = "x"]
+struct S;

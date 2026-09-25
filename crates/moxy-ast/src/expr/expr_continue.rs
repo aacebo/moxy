@@ -9,7 +9,7 @@ use crate::*;
 pub struct ExprContinue {
     pub attrs: Attributes,
     pub continue_keyword: Token![continue],
-    pub label: Option<Label>,
+    pub label: Option<Lifetime>,
 }
 
 impl From<ExprContinue> for Expr {

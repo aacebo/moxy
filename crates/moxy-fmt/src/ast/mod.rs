@@ -1,6 +1,7 @@
 mod attr;
 mod crate_;
 mod expr;
+mod file;
 mod generics;
 mod item;
 mod leaf;

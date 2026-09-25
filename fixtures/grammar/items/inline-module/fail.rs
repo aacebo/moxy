@@ -1,0 +1,1 @@
+mod nested { fn f() {}

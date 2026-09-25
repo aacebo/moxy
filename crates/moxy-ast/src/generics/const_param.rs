@@ -31,7 +31,7 @@ impl Parse for ConstParam {
         let ty = parser.parse()?;
         let (default_eq_punct, default) = if parser.peek::<Token![=]>() {
             let eq_punct = parser.parse()?;
-            let expr = parser.parse()?;
+            let expr = expr::parse::const_generic_default(parser)?;
             (Some(eq_punct), Some(expr))
         } else {
             (None, None)
@@ -57,7 +57,7 @@ impl Parse for ConstParam {
 
         if cursor.peek::<Token![=]>() {
             cursor = cursor.skip::<Token![=]>()?;
-            cursor = cursor.skip::<Expr>()?;
+            cursor = expr::skip::const_generic_default(cursor)?;
         }
 
         Some(cursor)
