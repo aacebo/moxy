@@ -45,7 +45,12 @@ impl Parse for ItemTrait {
         let mut generics: Generics = parser.parse()?;
         let (colon_punct, supertraits) = if parser.peek::<Token![:]>() {
             let colon_punct = parser.parse()?;
-            let supertraits = crate::TypeBound::parse_bounds(parser)?;
+            let supertraits = if !parser.peek::<Token![;]>() && parser.peek::<TypeBound>() {
+                TypeBound::parse_bounds(parser)?
+            } else {
+                Punctuated::new()
+            };
+
             (Some(colon_punct), supertraits)
         } else {
             (None, Punctuated::new())
@@ -79,11 +84,14 @@ impl Parse for ItemTrait {
 
         if cursor.peek::<Token![:]>() {
             cursor = cursor.skip::<Token![:]>()?;
-            cursor = cursor.skip::<TypeBound>()?;
 
-            while cursor.peek::<Token![+]>() {
-                cursor = cursor.skip::<Token![+]>()?;
+            if !cursor.peek::<Token![;]>() {
                 cursor = cursor.skip::<TypeBound>()?;
+
+                while cursor.peek::<Token![+]>() {
+                    cursor = cursor.skip::<Token![+]>()?;
+                    cursor = cursor.skip::<TypeBound>()?;
+                }
             }
         }
 
