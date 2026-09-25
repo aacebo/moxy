@@ -1,5 +1,4 @@
-use moxy_ast::stmt::{StmtLocal, StmtMacro};
-use moxy_ast::{Stmt, StmtBlock};
+use moxy_ast::*;
 
 use crate::{FmtError, Format, Formatter};
 

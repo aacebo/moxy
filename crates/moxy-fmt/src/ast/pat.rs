@@ -1,5 +1,4 @@
-use moxy_ast::Pattern;
-use moxy_ast::pat::*;
+use moxy_ast::*;
 
 use crate::{FmtError, Format, Formatter};
 

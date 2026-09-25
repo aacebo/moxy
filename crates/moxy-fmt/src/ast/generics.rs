@@ -1,8 +1,4 @@
-use moxy_ast::generics::{
-    ConstParam, GenericParam, LifetimeParam, LifetimePredicate, TraitBound, TypeBound, TypeParam, TypePredicate, UseBound,
-    UseBoundParam,
-};
-use moxy_ast::{BoundLifetimes, Generics, TraitRef, WhereClause, WherePredicate};
+use moxy_ast::*;
 
 use crate::{FmtError, Format, Formatter};
 

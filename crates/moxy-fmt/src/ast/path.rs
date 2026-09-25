@@ -1,8 +1,4 @@
-use moxy_ast::args::{
-    AngleArguments, AssocConstArgument, AssocTypeArgument, ConstraintArgument, GenericArgument, ParenArguments,
-};
-use moxy_ast::path::PathArguments;
-use moxy_ast::{Lifetime, Path, PathSegment, ReturnType};
+use moxy_ast::*;
 
 use crate::{FmtError, Format, Formatter};
 

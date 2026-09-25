@@ -24,33 +24,23 @@ pub mod attr;
 mod core;
 mod declaration;
 mod delimited;
-/// Expression syntax.
-pub mod expr;
-/// Struct, enum, and union field syntax.
-pub mod fields;
-/// Generic parameters, bounds, and where clauses.
-pub mod generics;
-/// Item-level Rust syntax.
-pub mod item;
+mod expr;
+mod fields;
+mod generics;
+mod item;
 mod label;
 mod macro_call;
 #[macro_use]
 mod macros;
 mod lifetime;
-/// Members of traits, implementations, and foreign modules.
-pub mod member;
-/// Pattern syntax.
-pub mod pat;
-/// Path syntax and path arguments.
-pub mod path;
+mod member;
+mod pat;
+mod path;
 mod punctuated;
 mod sig;
-/// Statement syntax.
-pub mod stmt;
-/// Type syntax.
-pub mod ty;
-/// `use`-tree syntax.
-pub mod use_tree;
+mod stmt;
+mod ty;
+mod use_tree;
 mod vis;
 #[cfg(feature = "visit")]
 mod visit;
@@ -60,9 +50,9 @@ mod file;
 mod punct;
 
 #[doc(inline)]
-pub use _crate::Crate;
+pub use _crate::*;
 #[doc(inline)]
-pub use args::{AngleArguments, GenericArgument, ParenArguments};
+pub use args::*;
 #[doc(inline)]
 pub use attr::*;
 #[doc(inline)]
@@ -70,17 +60,17 @@ pub use core::*;
 #[doc(inline)]
 pub use declaration::*;
 #[doc(inline)]
-pub use delimited::Delimited;
+pub use delimited::*;
 #[doc(inline)]
-pub use expr::Expr;
+pub use expr::*;
 #[doc(inline)]
 pub use fields::*;
 #[doc(inline)]
 pub use file::*;
 #[doc(inline)]
-pub use generics::{Generics, TraitRef, TypeBound, WhereClause, WherePredicate};
+pub use generics::*;
 #[doc(inline)]
-pub use item::{Item, Variant};
+pub use item::*;
 #[doc(inline)]
 pub use label::*;
 #[doc(inline)]
@@ -88,13 +78,13 @@ pub use lifetime::*;
 #[doc(inline)]
 pub use macro_call::*;
 #[doc(inline)]
-pub use member::{ForeignItem, ImplItem, Member, TraitItem};
+pub use member::*;
 #[doc(inline)]
 pub use parse::*;
 #[doc(inline)]
-pub use pat::Pattern;
+pub use pat::*;
 #[doc(inline)]
-pub use path::{Path, PathSegment};
+pub use path::*;
 #[doc(inline)]
 pub use punct::*;
 #[doc(inline)]
@@ -102,11 +92,11 @@ pub use punctuated::*;
 #[doc(inline)]
 pub use sig::*;
 #[doc(inline)]
-pub use stmt::{Stmt, StmtBlock};
+pub use stmt::*;
 #[doc(inline)]
-pub use ty::{QSelf, Type, TypeMacro};
+pub use ty::*;
 #[doc(inline)]
-pub use use_tree::UseTree;
+pub use use_tree::*;
 #[doc(inline)]
 pub use vis::*;
 #[cfg(feature = "visit")]

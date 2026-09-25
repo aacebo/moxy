@@ -1,4 +1,4 @@
-use moxy::ast::{Crate, File};
+use moxy::ast::{Crate, File, ItemStruct, Visit, walk_item_struct};
 use moxy::token::{Spanner, ToTokenStream};
 
 #[test]
@@ -35,9 +35,6 @@ fn crate_rendering_obeys_indentation_and_newline_configuration() {
 
 #[test]
 fn visitors_traverse_real_crate_syntax_before_exact_rendering() {
-    use moxy::ast::item::ItemStruct;
-    use moxy::ast::{Visit, walk_item_struct};
-
     struct StructVisitor {
         names: Vec<String>,
     }

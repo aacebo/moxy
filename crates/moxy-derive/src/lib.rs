@@ -34,8 +34,7 @@ mod token {
     pub use moxy_token::*;
 }
 
-use moxy_ast::item::ItemImpl;
-use moxy_ast::{Declaration, MetaContent, Parse, Parser};
+use moxy_ast::{Declaration, ItemImpl, MetaContent, Parse, Parser};
 use moxy_diagnostic::SpanExt;
 use moxy_fmt::fmt;
 use moxy_template::template;

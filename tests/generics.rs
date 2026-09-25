@@ -1,5 +1,4 @@
-use moxy::ast::generics::GenericParam;
-use moxy::ast::{Item, WherePredicate};
+use moxy::ast::{GenericParam, Item, WherePredicate};
 use moxy::token::Spanner;
 
 #[test]

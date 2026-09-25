@@ -1,4 +1,4 @@
-use moxy_ast::{Abi, BinOp, Label, PointerMutability, RangeLimits, UnOp, Visibility};
+use moxy_ast::*;
 use moxy_token::Ident;
 
 use crate::{FmtError, Format, Formatter};
@@ -76,7 +76,7 @@ impl Format for moxy_ast::Safety {
     }
 }
 
-impl Format for moxy_ast::pat::PatRangeLimits {
+impl Format for moxy_ast::PatRangeLimits {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Closed(_) => f.text("..="),

@@ -1,6 +1,5 @@
-use moxy::ast::Pattern;
+use moxy::ast::{PatType, Pattern};
 use moxy::token::{Spanner, ToTokenStream};
-use moxy_ast::pat::PatType;
 
 #[test]
 fn binding_tuple_slice_and_struct_patterns_preserve_shape() {
