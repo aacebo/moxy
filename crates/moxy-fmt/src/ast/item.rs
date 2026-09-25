@@ -259,6 +259,7 @@ impl Format for Item {
             Self::Macro(v) => v.format(f),
             Self::Macro2(v) => v.format(f),
             Self::ForeignMod(v) => v.format(f),
+            _ => Err(FmtError::unsupported("unsupported item variant")),
         }
     }
 }
@@ -695,6 +696,7 @@ impl Format for ImplItem {
             Self::Const(v) => v.format(f),
             Self::Type(v) => v.format(f),
             Self::Macro(v) => v.format(f),
+            _ => Err(FmtError::unsupported("unsupported impl item variant")),
         }
     }
 }
@@ -792,6 +794,7 @@ impl Format for TraitItem {
             Self::Const(v) => v.format(f),
             Self::Type(v) => v.format(f),
             Self::Macro(v) => v.format(f),
+            _ => Err(FmtError::unsupported("unsupported trait item variant")),
         }
     }
 }
@@ -869,6 +872,7 @@ impl Format for ForeignItem {
             Self::Static(v) => v.format(f),
             Self::Type(v) => v.format(f),
             Self::Macro(v) => v.format(f),
+            _ => Err(FmtError::unsupported("unsupported foreign item variant")),
         }
     }
 }

@@ -34,6 +34,7 @@ use crate::*;
 #[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[non_exhaustive]
 pub enum Type {
     Never(Token![!]),
     Infer(Ident),

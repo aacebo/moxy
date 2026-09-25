@@ -21,6 +21,7 @@ impl Format for Type {
             Self::Paren(v) => v.format(f),
             Self::Group(v) => v.elem.format(f),
             Self::Macro(v) => v.format(f),
+            _ => Err(FmtError::unsupported("unsupported type variant")),
         }
     }
 }

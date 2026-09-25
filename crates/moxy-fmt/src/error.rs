@@ -4,7 +4,14 @@ use moxy_token::{Delim, Group, Lit, Punct, Span, ToTokenStream, ToTokens, TokenS
 
 #[derive(Debug)]
 pub enum FmtError {
+    Unsupported(String),
     Std(std::fmt::Error),
+}
+
+impl FmtError {
+    pub fn unsupported(message: impl std::fmt::Display) -> Self {
+        Self::Unsupported(message.to_string())
+    }
 }
 
 impl FmtError {
@@ -33,6 +40,7 @@ impl From<std::fmt::Error> for FmtError {
 impl std::fmt::Display for FmtError {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         match self {
+            Self::Unsupported(v) => write!(f, "{v}"),
             Self::Std(err) => write!(f, "{err}"),
         }
     }
@@ -42,6 +50,7 @@ impl std::error::Error for FmtError {
     fn source(&self) -> Option<&(dyn std::error::Error + 'static)> {
         match self {
             Self::Std(err) => Some(err),
+            _ => None,
         }
     }
 }
