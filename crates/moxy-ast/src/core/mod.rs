@@ -1,15 +1,23 @@
 mod bound_lifetimes;
 mod closure_param;
+mod label;
+mod lifetime;
 mod operations;
 mod pointer;
+mod punct;
 mod range;
 mod return_type;
 mod safety;
+mod visibility;
 
 pub use bound_lifetimes::*;
 pub use closure_param::*;
+pub use label::*;
+pub use lifetime::*;
 pub use operations::*;
 pub use pointer::*;
+pub use punct::*;
 pub use range::*;
 pub use return_type::*;
 pub use safety::*;
+pub use visibility::*;

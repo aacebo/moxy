@@ -28,11 +28,9 @@ mod expr;
 mod fields;
 mod generics;
 mod item;
-mod label;
 mod macro_call;
 #[macro_use]
 mod macros;
-mod lifetime;
 mod member;
 mod pat;
 mod path;
@@ -41,13 +39,11 @@ mod sig;
 mod stmt;
 mod ty;
 mod use_tree;
-mod vis;
 #[cfg(feature = "visit")]
 mod visit;
 #[macro_use]
 mod parse;
 mod file;
-mod punct;
 
 #[doc(inline)]
 pub use _crate::*;
@@ -72,10 +68,6 @@ pub use generics::*;
 #[doc(inline)]
 pub use item::*;
 #[doc(inline)]
-pub use label::*;
-#[doc(inline)]
-pub use lifetime::*;
-#[doc(inline)]
 pub use macro_call::*;
 #[doc(inline)]
 pub use member::*;
@@ -86,8 +78,6 @@ pub use pat::*;
 #[doc(inline)]
 pub use path::*;
 #[doc(inline)]
-pub use punct::*;
-#[doc(inline)]
 pub use punctuated::*;
 #[doc(inline)]
 pub use sig::*;
@@ -97,8 +87,6 @@ pub use stmt::*;
 pub use ty::*;
 #[doc(inline)]
 pub use use_tree::*;
-#[doc(inline)]
-pub use vis::*;
 #[cfg(feature = "visit")]
 #[doc(inline)]
 pub use visit::*;

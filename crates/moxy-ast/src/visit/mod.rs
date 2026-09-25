@@ -9,22 +9,7 @@
 #[macro_use]
 mod macros;
 
-use crate::args::*;
-use crate::attr::*;
-use crate::core::*;
-use crate::expr::*;
-use crate::fields::*;
-use crate::generics::*;
-use crate::item::*;
-use crate::member::*;
-use crate::pat::*;
-use crate::path::PathArguments;
-use crate::sig::*;
-use crate::stmt::*;
-use crate::ty::*;
-use crate::use_tree::*;
-use crate::vis::*;
-use crate::{Delimited, MacroCall, Path, PathSegment, ReturnType, Variant};
+use crate::*;
 
 /// `ItemMod::content` is `Option<Delimited<Vec<Item>>>`; the inner delimited
 /// item list gets its own visitor so the macro field can reference it by name.
