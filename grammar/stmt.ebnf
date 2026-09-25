@@ -1,0 +1,3 @@
+Statement = Item | LetStatement | ExpressionStatement | ";" ;
+LetStatement = Attributes, "let", Pattern, [ ":", Type ], [ "=", Expression, [ "else", BlockExpression ] ], ";" ;
+ExpressionStatement = ExpressionWithBlock | ExpressionWithoutBlock, [ ";" ] ;

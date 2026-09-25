@@ -1,0 +1,9 @@
+OuterAttribute = "#", "[", Attribute, "]" ;
+InnerAttribute = "#", "!", "[", Attribute, "]" ;
+Attribute = SimplePath, [ AttributeInput ] | "unsafe", "(", SimplePath, [ AttributeInput ], ")" ;
+AttributeInput = DelimitedTokenTree | "=", Expression ;
+MetaItem = SimplePath, [ "=", Expression | "(", [ MetaSequence ], ")" ] ;
+MetaSequence = MetaItemInner, { ",", MetaItemInner }, [ "," ] ;
+MetaItemInner = MetaItem | Expression ;
+Attributes = { OuterAttribute } ;
+InnerAttributes = { InnerAttribute } ;

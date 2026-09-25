@@ -1,0 +1,2 @@
+Visibility = "pub", [ "(", VisibilityScope, ")" ] ;
+VisibilityScope = "crate" | "self" | "super" | "in", SimplePath ;

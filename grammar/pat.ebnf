@@ -1,0 +1,15 @@
+Pattern = PatternNoTopAlt, { "|", PatternNoTopAlt } ;
+PatternNoTopAlt = "_" | ReferencePattern | IdentifierPattern | LiteralPattern | RangePattern | PathPattern | TupleStructPattern | StructPattern | TuplePattern | SlicePattern | RestPattern | ParenthesizedPattern | MacroInvocation ;
+IdentifierPattern = [ "ref" ], [ "mut" ], Identifier, [ "@", Pattern ] ;
+ReferencePattern = "&", [ "mut" ], Pattern ;
+LiteralPattern = [ "-" ], Literal ;
+RangePattern = RangePatternBound, ( "..=" | ".." ), RangePatternBound ;
+RangePatternBound = LiteralPattern | PathInExpression ;
+PathPattern = PathInExpression ;
+TupleStructPattern = PathInExpression, "(", [ Pattern, { ",", Pattern }, [ "," ] ], ")" ;
+StructPattern = PathInExpression, "{", [ StructPatternField, { ",", StructPatternField }, [ "," ] ], "}" ;
+StructPatternField = [ "ref" ], [ "mut" ], ( Identifier | IntegerLiteral ), [ ":", Pattern ] | ".." ;
+TuplePattern = "(", [ Pattern, { ",", Pattern }, [ "," ] ], ")" ;
+SlicePattern = "[", [ Pattern, { ",", Pattern }, [ "," ] ], "]" ;
+RestPattern = ".." ;
+ParenthesizedPattern = "(", Pattern, ")" ;

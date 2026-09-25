@@ -1,0 +1,13 @@
+MacroInvocation = SimplePath, "!", DelimitedTokenTree ;
+MacroInvocationSemi = SimplePath, "!", ( "(", { TokenTree }, ")", ";" | "[", { TokenTree }, "]", ";" | "{", { TokenTree }, "}" ) ;
+MacroRulesDefinition = "macro_rules", "!", Identifier, MacroRulesDefinitionBody ;
+MacroRulesDefinitionBody = "(", MacroRules, ")", [ ";" ] | "[", MacroRules, "]", [ ";" ] | "{", MacroRules, "}" ;
+MacroRules = [ MacroRule, { ";", MacroRule }, [ ";" ] ] ;
+MacroRule = MacroMatcher, "=>", MacroTranscriber ;
+MacroMatcher = "(", { MacroMatch }, ")" | "[", { MacroMatch }, "]" | "{", { MacroMatch }, "}" ;
+MacroTranscriber = DelimitedTokenTree ;
+MacroMatch = TokenTree | MacroMatchMetavariable | MacroMatchRepetition ;
+MacroMatchMetavariable = "$", Identifier, ":", FragmentSpecifier ;
+MacroMatchRepetition = "$", "(", { MacroMatch }, ")", [ MacroRepSeparator ], ( "*" | "+" | "?" ) ;
+MacroRepSeparator = ? any token except delimiters and repetition operators ? ;
+FragmentSpecifier = "block" | "expr" | "expr_2021" | "ident" | "item" | "lifetime" | "literal" | "meta" | "pat" | "pat_param" | "path" | "stmt" | "tt" | "ty" | "vis" ;

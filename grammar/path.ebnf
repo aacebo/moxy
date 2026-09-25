@@ -1,0 +1,10 @@
+SimplePath = [ "::" ], SimplePathSegment, { "::", SimplePathSegment } ;
+SimplePathSegment = Identifier | "self" | "super" | "crate" | "Self" ;
+Path = [ "::" ], PathSegment, { "::", PathSegment } ;
+PathSegment = PathIdentSegment, [ "::" ], [ GenericArguments ] ;
+PathIdentSegment = Identifier | "self" | "super" | "crate" | "Self" ;
+QualifiedPath = "<", Type, [ "as", Path ], ">", "::", PathSegment, { "::", PathSegment } ;
+PathInExpression = Path | QualifiedPath ;
+PathInType = Path | QualifiedPath ;
+UseTree = [ UseTreePrefix ], ( "*" | "{", [ UseTree, { ",", UseTree } ], [ "," ], "}" | SimplePath, [ "as", ( Identifier | "_" ) ] ) ;
+UseTreePrefix = SimplePath, "::" | "::" ;

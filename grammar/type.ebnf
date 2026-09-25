@@ -1,0 +1,13 @@
+Type = TypeNoBounds | ImplTraitType | TraitObjectType ;
+TypeNoBounds = ParenthesizedType | TupleType | NeverType | RawPointerType | ReferenceType | ArrayType | SliceType | PathInType | BareFunctionType | MacroInvocation | "_" ;
+ParenthesizedType = "(", Type, ")" ;
+TupleType = "(", [ Type, { ",", Type }, [ "," ] ], ")" ;
+NeverType = "!" ;
+RawPointerType = "*", ( "const" | "mut" ), Type ;
+ReferenceType = "&", [ Lifetime ], [ "mut" ], Type ;
+ArrayType = "[", Type, ";", Expression, "]" ;
+SliceType = "[", Type, "]" ;
+BareFunctionType = [ ForLifetimes ], [ ItemSafety ], [ "extern", [ Abi ] ], "fn", "(", [ BareFunctionParam, { ",", BareFunctionParam }, [ "," ] ], ")", [ "->", Type ] ;
+BareFunctionParam = [ Identifier, ":" ], Type | "..." ;
+ImplTraitType = "impl", TypeParamBounds ;
+TraitObjectType = "dyn", TypeParamBounds, [ "+", Lifetime ] ;

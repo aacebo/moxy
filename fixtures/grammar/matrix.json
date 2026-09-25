@@ -2292,6 +2292,48 @@
             "fixture_directory": "fixtures/grammar/expressions/let"
         },
         {
+            "id": "expressions.async-closure",
+            "reference": {
+                "production": "Rust Reference grammar: expressions/closure",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/async-await/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/async-closure"
+        },
+        {
+            "id": "expressions.let-chain",
+            "reference": {
+                "production": "Rust Reference grammar: expressions/if-let",
+                "anchor": "https://doc.rust-lang.org/reference/grammar.html"
+            },
+            "baseline": {
+                "toolchain": "stable",
+                "edition": "2024"
+            },
+            "upstream": {
+                "repository": "rust-lang/rust",
+                "commit": "2350b22a89d30fe814a299a73c9ab83c72cafaf3",
+                "paths": [
+                    "tests/ui/let-chains/"
+                ]
+            },
+            "parse_root": "expr",
+            "support_expectation": "moxy_accepts",
+            "fixture_directory": "fixtures/grammar/expressions/let-chain"
+        },
+        {
             "id": "statements.macro",
             "reference": {
                 "production": "Rust Reference grammar: statements/macro",
