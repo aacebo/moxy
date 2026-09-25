@@ -39,6 +39,7 @@ pub use item_use::*;
 #[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
+#[non_exhaustive]
 pub enum Item {
     Use(ItemUse),
     ExternCrate(ItemExternCrate),

@@ -39,6 +39,7 @@ impl Format for Stmt {
                 Ok(())
             }
             Self::Macro(v) => v.format(f),
+            _ => Err(FmtError::unsupported("unsupported statement variant")),
         }
     }
 }

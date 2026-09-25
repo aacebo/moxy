@@ -24,6 +24,7 @@ impl Format for Pattern {
             Self::Paren(v) => v.format(f),
             Self::Box(v) => v.format(f),
             Self::Const(v) => v.format(f),
+            _ => Err(FmtError::unsupported("unsupported pattern variant")),
         }
     }
 }

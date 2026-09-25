@@ -1,5 +1,4 @@
-use moxy_ast::expr::*;
-use moxy_ast::fields::FieldValue;
+use expr::*;
 use moxy_ast::*;
 
 use crate::{FmtError, Format, Formatter};
@@ -47,6 +46,7 @@ impl Format for Expr {
             Self::Macro(v) => v.format(f),
             Self::RawAddr(v) => v.format(f),
             Self::Verbatim(v) => f.text(v),
+            _ => Err(FmtError::unsupported("unsupported expression variant")),
         }
     }
 }
@@ -94,10 +94,10 @@ impl Format for ExprPath {
                     }
 
                     match pair {
-                        moxy_ast::Pair::Punctuated(seg, _) => {
+                        Pair::Punctuated(seg, _) => {
                             seg.format(f)?;
                         }
-                        moxy_ast::Pair::End(seg) => {
+                        Pair::End(seg) => {
                             seg.format(f)?;
                         }
                     }
@@ -112,10 +112,10 @@ impl Format for ExprPath {
                 }
 
                 match pair {
-                    moxy_ast::Pair::Punctuated(seg, _) => {
+                    Pair::Punctuated(seg, _) => {
                         seg.format(f)?;
                     }
-                    moxy_ast::Pair::End(seg) => {
+                    Pair::End(seg) => {
                         seg.format(f)?;
                     }
                 }
@@ -138,11 +138,11 @@ impl Format for ExprStruct {
                 f.hard_break()?;
 
                 match pair {
-                    moxy_ast::Pair::Punctuated(fv, _) => {
+                    Pair::Punctuated(fv, _) => {
                         fv.format(f)?;
                         f.text(",")?;
                     }
-                    moxy_ast::Pair::End(fv) => {
+                    Pair::End(fv) => {
                         fv.format(f)?;
                         f.text(",")?;
                     }
