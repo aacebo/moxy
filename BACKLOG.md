@@ -28,7 +28,15 @@ independent types.
 
 ## 6. Add Non Exhaustive
 
-Add `#[non_exhaustive]` whereever needed.
+Add `#[non_exhaustive]` to:
+
+- Expr
+- Pattern
+- Item
+- Type
+- ForeignItem
+- TraitItem
+- ImplItem
 
 ## 7. Make Result More Ergonomic
 
