@@ -1,4 +1,4 @@
-use moxy_token::{Lit, LitFloat, TokenTree, lit};
+use moxy_token::*;
 
 use crate::{Cursor, Parse, ParseError, Parser};
 
@@ -23,7 +23,7 @@ impl Parse for Lit {
     }
 }
 
-impl Parse for lit::LitF32 {
+impl Parse for LitF32 {
     fn peek(cursor: Cursor<'_>) -> bool {
         matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Float(LitFloat::F32(_)))))
     }
@@ -40,7 +40,7 @@ impl Parse for lit::LitF32 {
     }
 }
 
-impl Parse for lit::LitF64 {
+impl Parse for LitF64 {
     fn peek(cursor: Cursor<'_>) -> bool {
         matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Float(LitFloat::F64(_)))))
     }
@@ -57,7 +57,7 @@ impl Parse for lit::LitF64 {
     }
 }
 
-impl Parse for lit::LitInt {
+impl Parse for LitInt {
     fn peek(cursor: Cursor<'_>) -> bool {
         matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Int(_))))
     }
@@ -74,7 +74,7 @@ impl Parse for lit::LitInt {
     }
 }
 
-impl Parse for lit::LitFloat {
+impl Parse for LitFloat {
     fn peek(cursor: Cursor<'_>) -> bool {
         matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Float(_))))
     }
@@ -91,7 +91,7 @@ impl Parse for lit::LitFloat {
     }
 }
 
-impl Parse for lit::LitStr {
+impl Parse for LitStr {
     fn peek(cursor: Cursor<'_>) -> bool {
         matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Str(_))))
     }
@@ -108,7 +108,7 @@ impl Parse for lit::LitStr {
     }
 }
 
-impl Parse for lit::LitByteStr {
+impl Parse for LitByteStr {
     fn peek(cursor: Cursor<'_>) -> bool {
         matches!(cursor.curr(), Some(TokenTree::Literal(Lit::ByteStr(_))))
     }
@@ -125,7 +125,7 @@ impl Parse for lit::LitByteStr {
     }
 }
 
-impl Parse for lit::LitCStr {
+impl Parse for LitCStr {
     fn peek(cursor: Cursor<'_>) -> bool {
         matches!(cursor.curr(), Some(TokenTree::Literal(Lit::CStr(_))))
     }
@@ -142,7 +142,7 @@ impl Parse for lit::LitCStr {
     }
 }
 
-impl Parse for lit::LitChar {
+impl Parse for LitChar {
     fn peek(cursor: Cursor<'_>) -> bool {
         matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Char(_))))
     }
@@ -159,7 +159,7 @@ impl Parse for lit::LitChar {
     }
 }
 
-impl Parse for lit::LitByte {
+impl Parse for LitByte {
     fn peek(cursor: Cursor<'_>) -> bool {
         matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Byte(_))))
     }
@@ -176,7 +176,7 @@ impl Parse for lit::LitByte {
     }
 }
 
-impl Parse for lit::LitBool {
+impl Parse for LitBool {
     fn peek(cursor: Cursor<'_>) -> bool {
         matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Bool(_))))
     }
@@ -193,7 +193,7 @@ impl Parse for lit::LitBool {
     }
 }
 
-impl Parse for lit::LitVerbatim {
+impl Parse for LitVerbatim {
     fn peek(cursor: Cursor<'_>) -> bool {
         matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Verbatim(_))))
     }

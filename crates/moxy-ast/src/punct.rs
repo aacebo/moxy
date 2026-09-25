@@ -1,4 +1,3 @@
-use moxy_token::punct::*;
 use moxy_token::{Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Cursor, Parse, ParseError, Parser};
@@ -8,11 +7,11 @@ macro_rules! define_punct {
         $(
             #[doc = concat!("A compound Rust punctuation AST token represented by `", stringify!($name), "`.")]
             #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
-            pub struct $name($(pub $punct),*);
+            pub struct $name($(pub moxy_token::$punct),*);
 
             impl $name {
                 pub fn new(span: Span) -> Self {
-                    Self($($punct::new(span)),*)
+                    Self($(moxy_token::$punct::new(span)),*)
                 }
 
                 pub fn span(&self) -> Span {
@@ -70,7 +69,7 @@ macro_rules! define_punct {
                         return Err(parser.error(format!("expected `{}` punctuation", Self::default())));
                     }
 
-                    Ok(Self($($punct::parse(parser)?),*))
+                    Ok(Self($(moxy_token::$punct::parse(parser)?),*))
                 }
 
                 fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {

@@ -1,16 +1,13 @@
 use crate::lex::{Cursor, LexError, Scan};
 use crate::{Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-/// Floating-point literal parsing and representation.
-pub mod float;
-/// Integer literal parsing, radix, and suffix representation.
-pub mod int;
-
 mod r#bool;
 mod byte;
 mod byte_str;
 mod c_str;
 mod char;
+mod float;
+mod int;
 mod str;
 mod verbatim;
 

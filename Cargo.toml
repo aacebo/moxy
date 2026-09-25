@@ -60,7 +60,7 @@ include.workspace = true
 autotests = false
 
 [[test]]
-name = "tests"
+name = "all"
 path = "tests/mod.rs"
 required-features = ["derives", "fmt"]
 

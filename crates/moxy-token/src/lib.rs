@@ -30,23 +30,18 @@
 
 extern crate proc_macro;
 
-/// Conversions to and from compiler token-stream representations.
-pub mod bridge;
+mod bridge;
 mod delim;
 mod group;
 mod ident;
-/// Rust keyword token types.
-pub mod keyword;
-/// Lexing primitives and lexical errors.
-pub mod lex;
-pub mod lit;
-/// Rust punctuation token types.
-pub mod punct;
+mod keyword;
+mod lex;
+mod lit;
+mod punct;
 /// Source files, locations, and source maps used by spans.
 pub mod source;
 mod spacing;
-/// Source-span types and the [`Spanner`] trait.
-pub mod span;
+mod span;
 mod stream;
 mod tree;
 
@@ -59,7 +54,7 @@ pub use ident::*;
 #[doc(inline)]
 pub use keyword::*;
 #[doc(inline)]
-pub use lex::{LexError, Scan};
+pub use lex::*;
 #[doc(inline)]
 pub use lit::*;
 #[doc(inline)]
@@ -67,7 +62,7 @@ pub use punct::*;
 #[doc(inline)]
 pub use spacing::*;
 #[doc(inline)]
-pub use span::{Span, Spanner};
+pub use span::{DelimSpan, RangeSpan, Span, Spanner};
 #[doc(inline)]
 pub use stream::*;
 #[doc(inline)]

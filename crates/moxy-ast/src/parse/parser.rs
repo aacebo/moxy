@@ -1,9 +1,8 @@
 use std::cell::Cell;
 
-use moxy_token::span::DelimSpan;
-use moxy_token::{Delim, Ident, Span, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, DelimSpan, Ident, Span, ToTokens, TokenStream, TokenTree};
 
-use crate::parse::{Cursor, Parse, ParseError};
+use crate::{Cursor, Parse, ParseError};
 
 /// An AST representation of Rust parser syntax.
 #[derive(Clone)]

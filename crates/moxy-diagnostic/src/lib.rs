@@ -29,12 +29,11 @@ mod span;
 #[doc(inline)]
 pub use level::*;
 
-use moxy_token::span::DelimSpan;
 #[doc(inline)]
 pub use span::*;
 
 use moxy_ast::ParseError;
-use moxy_token::{Delim, Group, Ident, Lit, Punct, Span, ToTokenStream, ToTokens, TokenStream};
+use moxy_token::{Delim, DelimSpan, Group, Ident, Lit, Punct, Span, ToTokenStream, ToTokens, TokenStream};
 
 /// Build a note-level [`Diagnostic`].
 ///

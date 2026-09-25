@@ -1,9 +1,6 @@
-use crate::{Cursor, Parse, ParseError, Parser};
-use moxy_token::span::Spanner;
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use super::Type;
-use crate::Delimited;
+use crate::{Cursor, Delimited, Parse, ParseError, Parser, Type};
 
 /// A slice type (e.g. `[T]`).
 #[derive(Clone)]

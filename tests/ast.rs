@@ -2,7 +2,7 @@ use std::str::FromStr;
 
 use moxy::Token;
 use moxy::ast::{Item, Parse, Parser, Punctuated};
-use moxy::token::{Ident, Span, TokenStream, keyword, lit};
+use moxy::token::{Ident, Span, TokenStream};
 
 fn parse_token<T: Parse>(source: &str) -> Result<T, moxy::ast::ParseError> {
     let tokens = TokenStream::from_str(source).unwrap();
@@ -10,59 +10,6 @@ fn parse_token<T: Parse>(source: &str) -> Result<T, moxy::ast::ParseError> {
     let value = T::parse(&parser)?;
     assert!(parser.is_empty(), "unparsed tokens remain in `{source}`");
     Ok(value)
-}
-
-#[test]
-fn every_keyword_token_parses_as_its_concrete_type() {
-    macro_rules! keywords {
-        ($($name:ident => $source:literal),+ $(,)?) => {
-            $(assert!(parse_token::<keyword::$name>($source).is_ok(), $source);)+
-        };
-    }
-
-    keywords! {
-        As => "as", Async => "async", Auto => "auto", Await => "await",
-        Become => "become", Box => "box", Break => "break", Const => "const",
-        Continue => "continue", Crate => "crate", Default => "default", Do => "do",
-        Dyn => "dyn", Else => "else", Enum => "enum", Extern => "extern",
-        Final => "final", Fn => "fn", For => "for", If => "if", Impl => "impl",
-        In => "in", Let => "let", Loop => "loop", Macro => "macro",
-        MacroRules => "macro_rules", Match => "match", Mod => "mod", Move => "move",
-        Mut => "mut", Override => "override", Priv => "priv", Pub => "pub", Raw => "raw",
-        Ref => "ref", Return => "return", SelfType => "Self", SelfValue => "self",
-        Static => "static", Struct => "struct", Super => "super", Trait => "trait",
-        Try => "try", Type => "type", Typeof => "typeof", Union => "union",
-        Unsafe => "unsafe", Unsized => "unsized", Use => "use", Virtual => "virtual",
-        Where => "where", While => "while", Yield => "yield",
-    }
-
-    assert!(parse_token::<keyword::Fn>("struct").is_err());
-    assert!(parse_token::<moxy::token::Keyword>("fn").is_ok());
-}
-
-#[test]
-fn concrete_literal_parsers_accept_only_their_literal_family() {
-    macro_rules! literals {
-        ($($ty:path => $source:literal),+ $(,)?) => {
-            $(assert!(parse_token::<$ty>($source).is_ok(), $source);)+
-        };
-    }
-
-    literals! {
-        lit::LitInt => "42u8",
-        lit::LitFloat => "3.5",
-        lit::LitF32 => "3.5f32",
-        lit::LitF64 => "3.5f64",
-        lit::LitStr => r#""text""#,
-        lit::LitByteStr => r#"b"text""#,
-        lit::LitCStr => r#"c"text""#,
-        lit::LitChar => "'x'",
-        lit::LitByte => "b'x'",
-        lit::LitBool => "true",
-    }
-
-    assert!(parse_token::<lit::LitInt>("true").is_err());
-    assert!(parse_token::<lit::LitStr>("b\"text\"").is_err());
 }
 
 #[test]

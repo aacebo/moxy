@@ -1,5 +1,4 @@
-use moxy_token::span::DelimSpan;
-use moxy_token::{Delim, Group, Ident, LexError, Lit, Punct, Span, ToTokenStream, ToTokens, TokenStream};
+use moxy_token::{Delim, DelimSpan, Group, Ident, LexError, Lit, Punct, Span, ToTokenStream, ToTokens, TokenStream};
 
 /// An AST representation of Rust parse error syntax.
 #[derive(Debug, Clone)]

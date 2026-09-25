@@ -11,12 +11,17 @@ repository.workspace = true
 keywords.workspace = true
 categories.workspace = true
 include.workspace = true
+autotests = false
 
 [lib]
 doctest = true
 
 [lints]
 workspace = true
+
+[[test]]
+name = "all"
+path = "tests/mod.rs"
 
 [features]
 default = []

@@ -1,9 +1,6 @@
-use crate::{Cursor, Parse, ParseError, Parser};
-use moxy_token::span::Spanner;
-use moxy_token::{Span, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
-use super::Type;
-use crate::{Delimited, Punctuated};
+use crate::{Cursor, Delimited, Parse, ParseError, Parser, Punctuated, Type};
 
 /// A tuple type (e.g. `()`, `(A, B)`, `(T,)`).
 #[derive(Clone)]
@@ -15,7 +12,7 @@ pub struct TypeTuple {
 
 impl Parse for TypeTuple {
     fn peek(cursor: Cursor<'_>) -> bool {
-        let Some(mut inner) = cursor.descend(moxy_token::Delim::Paren) else {
+        let Some(mut inner) = cursor.descend(Delim::Paren) else {
             return false;
         };
 
