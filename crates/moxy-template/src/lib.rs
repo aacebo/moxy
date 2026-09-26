@@ -22,7 +22,6 @@ mod ast;
 
 use ast::{Paste, Template};
 use moxy_ast::{Parse, Parser};
-use moxy_token::{ToTokens, TokenStream};
 
 /// Build a `moxy::token::TokenStream` at runtime from a template, in the style
 /// of `quote!`.
@@ -50,19 +49,15 @@ use moxy_token::{ToTokens, TokenStream};
 ///
 /// A malformed template produces a span-targeted compile error.
 #[proc_macro]
-pub fn template(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let mut ts = TokenStream::new();
-    input.to_tokens(&mut ts);
-
-    let parser = Parser::from_tokens(&ts);
+pub fn template(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let tokens = tokens.into();
+    let parser = Parser::from_tokens(&tokens);
     let expanded = match Template::parse(&parser) {
         Ok(tmpl) => tmpl.expand(),
         Err(e) => e.to_compile_error(),
     };
 
-    let mut out = proc_macro::TokenStream::new();
-    expanded.to_tokens(&mut out);
-    out
+    expanded.into()
 }
 
 /// Concatenates the tokens inside each `{{ ... }}` marker into a single
@@ -84,17 +79,13 @@ pub fn template(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
 /// A `{{ ... }}` that does not concatenate to a valid identifier produces a
 /// span-targeted compile error.
 #[proc_macro]
-pub fn paste(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let mut ts = TokenStream::new();
-    input.to_tokens(&mut ts);
-
-    let parser = Parser::from_tokens(&ts);
+pub fn paste(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let tokens = tokens.into();
+    let parser = Parser::from_tokens(&tokens);
     let expanded = match Paste::parse(&parser) {
         Ok(p) => p.expand(),
         Err(e) => e.to_compile_error(),
     };
 
-    let mut out = proc_macro::TokenStream::new();
-    expanded.to_tokens(&mut out);
-    out
+    expanded.into()
 }
