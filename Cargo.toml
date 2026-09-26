@@ -4,7 +4,7 @@ members = [".", "crates/*"]
 default-members = [".", "crates/*"]
 
 [workspace.package]
-version = "0.4.0"
+version = "0.4.1"
 edition = "2024"
 license = "MIT"
 documentation = "https://docs.rs/moxy"
@@ -29,14 +29,14 @@ type_complexity = "allow"
 large_enum_variant = "allow"
 
 [workspace.dependencies]
-moxy = { path = ".", version = "0.4.0" }
-moxy-ast = { path = "crates/moxy-ast", version = "0.4.0" }
-moxy-build = { path = "crates/moxy-build", version = "0.4.0" }
-moxy-derive = { path = "crates/moxy-derive", version = "0.4.0" }
-moxy-diagnostic = { path = "crates/moxy-diagnostic", version = "0.4.0" }
-moxy-fmt = { path = "crates/moxy-fmt", version = "0.4.0" }
-moxy-token = { path = "crates/moxy-token", version = "0.4.0" }
-moxy-template = { path = "crates/moxy-template", version = "0.4.0" }
+moxy = { path = ".", version = "0.4.1" }
+moxy-ast = { path = "crates/moxy-ast", version = "0.4.1" }
+moxy-build = { path = "crates/moxy-build", version = "0.4.1" }
+moxy-derive = { path = "crates/moxy-derive", version = "0.4.1" }
+moxy-diagnostic = { path = "crates/moxy-diagnostic", version = "0.4.1" }
+moxy-fmt = { path = "crates/moxy-fmt", version = "0.4.1" }
+moxy-token = { path = "crates/moxy-token", version = "0.4.1" }
+moxy-template = { path = "crates/moxy-template", version = "0.4.1" }
 
 syn = { version = "3", features = ["full"] }
 serde = { version = "1", features = ["derive"] }
