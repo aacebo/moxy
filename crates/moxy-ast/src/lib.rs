@@ -17,10 +17,8 @@
 //! ```
 
 mod _crate;
-/// Generic argument syntax.
-pub mod args;
-/// Attributes and attribute metadata.
-pub mod attr;
+mod args;
+mod attr;
 mod core;
 mod declaration;
 mod delimited;

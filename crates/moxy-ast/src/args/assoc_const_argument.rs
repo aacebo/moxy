@@ -1,5 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
-use moxy_token::{Punct, TokenTree};
+use moxy_token::{Ident, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{AngleArguments, Cursor, Expr, GenericArgument, Parse, ParseError, Parser, Token};
 

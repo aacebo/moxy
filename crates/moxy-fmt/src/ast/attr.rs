@@ -1,4 +1,4 @@
-use moxy_ast::{Attribute, Attributes, Meta, MetaContent, attr::AttrStyle};
+use moxy_ast::{AttrStyle, Attribute, Attributes, Meta, MetaContent};
 use moxy_token::{Delim, TokenStream};
 
 use crate::{FmtError, Format, Formatter};
