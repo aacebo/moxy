@@ -133,7 +133,9 @@
 //! rustc.min_version("1.85.0").rerun_if_changed("build.rs").emit();
 //! ```
 //!
-//! ## Deriving token emission
+//! ## Derive
+//!
+//! ### ToTokens
 //!
 //! With `derive`, `#[derive(moxy::ToTokens)]` implements
 //! `moxy::token::ToTokens` from an inline template:
@@ -144,9 +146,54 @@
 //! struct Generated { value: String }
 //! ```
 //!
-//! Add `#[moxy(debug)]` to emit compiler notes containing the parsed input
-//! declaration and the generated `ToTokens` implementation. This is intended
-//! for inspecting a derive expansion during development.
+//! On nightly Rust, add `#[moxy(debug)]` to emit compiler notes containing the
+//! parsed input declaration and generated `ToTokens` implementation. This is
+//! intended for inspecting a derive expansion during development; on stable
+//! Rust, the debug notes are not emitted.
+//!
+//! ### Function
+//!
+//! `#[moxy::function]` turns a public function from one token stream to another
+//! into a function-like procedural macro. The function returns
+//! `Result<TokenStream, ParseError>`:
+//!
+//! ```ignore
+//! use moxy::ast::ParseError;
+//! use moxy::token::TokenStream;
+//!
+//! #[moxy::function(name = "answer")]
+//! pub fn expand(_tokens: TokenStream) -> Result<TokenStream, ParseError> {
+//!     Ok(moxy::template! { 42 })
+//! }
+//!
+//! answer!();
+//! ```
+//!
+//! On nightly Rust, add `debug` (for example, `#[moxy::function(debug)]`) to
+//! emit the generated wrapper as a compiler note. Stable Rust does not emit
+//! this debug note.
+//!
+//! ### Attribute
+//!
+//! `#[moxy::attribute]` turns a public function taking the attribute arguments
+//! and annotated item into an attribute procedural macro:
+//!
+//! ```ignore
+//! use moxy::ast::ParseError;
+//! use moxy::token::TokenStream;
+//!
+//! #[moxy::attribute(name = "passthrough")]
+//! pub fn expand(_meta: TokenStream, item: TokenStream) -> Result<TokenStream, ParseError> {
+//!     Ok(item)
+//! }
+//!
+//! #[passthrough]
+//! fn generated() {}
+//! ```
+//!
+//! On nightly Rust, add `debug` (for example, `#[moxy::attribute(debug)]`) to
+//! emit the generated wrapper as a compiler note. Stable Rust does not emit
+//! this debug note.
 //!
 //! ## Integrations
 //!

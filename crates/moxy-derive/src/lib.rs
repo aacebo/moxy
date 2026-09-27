@@ -16,10 +16,11 @@
 //!
 //! ## Debugging expansions
 //!
-//! Add `#[moxy(debug)]` alongside the template attribute to emit compiler notes
-//! with the parsed input declaration and the generated `ToTokens`
-//! implementation. The option is intended for inspecting derive output during
-//! development and does not change the generated implementation.
+//! On nightly Rust, add `#[moxy(debug)]` alongside the template attribute to
+//! emit compiler notes with the parsed input declaration and generated
+//! `ToTokens` implementation. The option is intended for inspecting derive
+//! output during development and does not change the generated implementation.
+//! Stable Rust does not emit these debug notes.
 //!
 //! ```ignore
 //! #[derive(moxy::ToTokens)]
@@ -74,9 +75,10 @@ use moxy_template::template;
 ///
 /// - `#[moxy(template { ... })]` is required exactly once. Its value must be a
 ///   braced Rust token block accepted by `moxy::template!`.
-/// - `#[moxy(debug)]` is optional. It emits compiler notes containing the parsed
-///   input declaration and the generated `ToTokens` implementation, which is
-///   useful when inspecting an expansion during development.
+/// - `#[moxy(debug)]` is optional. On nightly Rust, it emits compiler notes
+///   containing the parsed input declaration and generated `ToTokens`
+///   implementation, which is useful when inspecting an expansion during
+///   development. Stable Rust does not emit these notes.
 ///
 /// A missing, repeated, or malformed template attribute produces a
 /// span-targeted compiler error.
@@ -90,6 +92,12 @@ pub fn derive_to_tokens(tokens: proc_macro::TokenStream) -> proc_macro::TokenStr
 /// The annotated function must accept one [`moxy_token::TokenStream`] argument and return
 /// `Result<TokenStream, ParseError>`. By default, the generated macro has the
 /// same name as the function. Set `name` to export it under another identifier.
+///
+/// # Options
+///
+/// - `name = "…"` or `name = identifier` sets the exported macro name.
+/// - `debug` emits the generated wrapper as a compiler note on nightly Rust.
+///   Stable Rust does not emit this note.
 ///
 /// # Example
 ///
@@ -120,7 +128,8 @@ pub fn function(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) ->
 /// # Options
 ///
 /// - `name = "…"` or `name = identifier` sets the exported attribute name.
-/// - `debug` emits the generated wrapper as a compiler note.
+/// - `debug` emits the generated wrapper as a compiler note on nightly Rust.
+///   Stable Rust does not emit this note.
 ///
 /// # Example
 ///

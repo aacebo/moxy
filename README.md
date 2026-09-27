@@ -169,6 +169,8 @@ assert!(tokens.to_string().contains("compile_error"));
 
 ### Derive
 
+#### ToTokens
+
 Enable `derive` to implement `ToTokens` from an inline template.
 
 ```console
@@ -188,10 +190,11 @@ let tokens = Generated { value: "seven".into() }.to_token_stream();
 assert!(tokens.to_string().contains("VALUE"));
 ```
 
-Add `#[moxy(debug)]` beside `#[moxy(template { ... })]` to print the parsed
-declaration and generated implementation as compiler notes.
+On nightly Rust, add `#[moxy(debug)]` beside `#[moxy(template { ... })]` to
+print the parsed declaration and generated implementation as compiler notes.
+Stable Rust does not emit these debug notes.
 
-### Function Macros
+#### Function
 
 Enable `derive` to turn a public token-to-token function into a function-like
 procedural macro with `#[moxy::function]`. The function accepts one
@@ -212,6 +215,31 @@ world_hello!();
 ```
 
 Omit `name = "…"` to export a macro with the annotated function's name.
+On nightly Rust, add `debug` (for example, `#[moxy::function(debug)]`) to emit
+the generated wrapper as a compiler note. Stable Rust does not emit this note.
+
+#### Attribute
+
+Enable `derive` to turn a public function taking the attribute arguments and
+annotated item into an attribute procedural macro with `#[moxy::attribute]`.
+
+```rust
+use moxy::ast::ParseError;
+use moxy::token::TokenStream;
+
+#[moxy::attribute(name = "passthrough")]
+pub fn expand(_meta: TokenStream, item: TokenStream) -> Result<TokenStream, ParseError> {
+    Ok(item)
+}
+
+#[passthrough]
+fn generated() {}
+```
+
+The function receives the attribute arguments first and the annotated item
+second. Omit `name = "…"` to export an attribute with the function's name.
+On nightly Rust, add `debug` (for example, `#[moxy::attribute(debug)]`) to emit
+the generated wrapper as a compiler note. Stable Rust does not emit this note.
 
 ### Integrations
 
