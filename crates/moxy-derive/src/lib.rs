@@ -30,15 +30,19 @@
 
 extern crate self as moxy;
 
+mod ast {
+    pub use moxy_ast::*;
+}
+
 mod token {
     pub use moxy_token::*;
 }
 
-use moxy_ast::{Declaration, ItemImpl, MetaContent, Parse, Parser};
+use moxy_ast::{Declaration, ItemImpl, MetaContent, Parse, Parser, parse};
 use moxy_diagnostic::SpanExt;
 use moxy_fmt::fmt;
 use moxy_template::template;
-use moxy_token::{Spanner, TokenStream};
+use moxy_token::{Spanner, ToTokenStream, TokenStream};
 
 /// Derives [`moxy::token::ToTokens`] from a token template.
 ///
@@ -153,4 +157,113 @@ pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStr
     }
 
     output.into()
+}
+
+/// # Example
+///
+/// ```ignore
+/// use moxy::ast::ParseError;
+/// use moxy::token::TokenStream;
+///
+/// #[moxy::function]
+/// pub fn run(attr: TokenStream, item: TokenStream) -> Result<TokenStream, ParseError> {
+///     ...
+/// }
+/// ```
+#[proc_macro_attribute]
+pub fn function(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let attr: TokenStream = attr.into();
+    let attr = if attr.is_empty() {
+        None
+    } else {
+        match parse!(attr as moxy::ast::Meta) {
+            Err(err) => return err.into_token_stream().into(),
+            Ok(v) => Some(v),
+        }
+    };
+
+    let item: TokenStream = item.into();
+    let mut item = match parse!(item as moxy::ast::ItemFn) {
+        Err(err) => return err.into_token_stream().into(),
+        Ok(v) => v,
+    };
+
+    let mut name = item.sig.ident.clone();
+    if let Some(meta) = attr {
+        if let Some(ident) = meta.path.as_ident()
+            && ident == "name"
+            && let MetaContent::Expr { eq: _, expr } = &meta.content
+        {
+            let expr = match parse!(expr as moxy::ast::Expr) {
+                Err(err) => return err.into_token_stream().into(),
+                Ok(v) => v,
+            };
+
+            name = if let moxy::ast::Expr::Lit(expr) = &expr
+                && let moxy::token::Lit::Str(lit) = &expr.lit
+            {
+                moxy::token::Ident::new(lit.value()).with_span(lit.span())
+            } else if let moxy::ast::Expr::Path(expr) = &expr
+                && let Some(ident) = expr.path.as_ident()
+            {
+                ident.clone()
+            } else {
+                return moxy::ast::ParseError::new(expr.span(), "name can be a string literal or identifier")
+                    .into_token_stream()
+                    .into();
+            };
+        }
+    }
+
+    if !item.vis.is_public() {
+        return item.vis.span().error("proc macros must be pub").emit().into();
+    }
+
+    let Some(_) = item.sig.params.inputs.first() else {
+        return item
+            .sig
+            .params
+            .span()
+            .error("proc macro function signature invalid")
+            .emit()
+            .into();
+    };
+
+    let moxy::ast::ReturnType::Type(_, _) = &item.sig.output else {
+        return item
+            .sig
+            .output
+            .span()
+            .error("proc macro function signature invalid")
+            .emit()
+            .into();
+    };
+
+    if item.sig.params.inputs.len() > 1 {
+        return item
+            .sig
+            .params
+            .span()
+            .error("proc macro function signature invalid")
+            .emit()
+            .into();
+    }
+
+    item.sig.ident = match parse!("__call__") {
+        Err(err) => return err.to_compile_error().into(),
+        Ok(v) => v,
+    };
+
+    template! {
+        #[proc_macro]
+        pub fn {{ &name }}(tokens: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
+            {{ &item }}
+
+            match __call__(tokens.into()) {
+                Err(err) => err.to_compile_error().into(),
+                Ok(v) => v.into(),
+            }
+        }
+    }
+    .into()
 }

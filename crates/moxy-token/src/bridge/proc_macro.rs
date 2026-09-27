@@ -1,5 +1,5 @@
 use crate::span::fallback;
-use crate::{Delim, Group, Ident, Keyword, Lit, Spacing, Span, ToTokens, TokenStream, TokenTree};
+use crate::{Delim, Group, Ident, Keyword, LexError, Lit, Spacing, Span, ToTokens, TokenStream, TokenTree, TryIntoTokenStream};
 
 // --- Span (fallback) ---
 
@@ -167,9 +167,15 @@ impl ToTokens<TokenStream> for proc_macro::TokenTree {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         match self {
             Self::Ident(v) => {
-                let tt = match Keyword::from_str(&v.to_string(), v.span().into()) {
-                    Some(kw) => TokenTree::Keyword(kw),
-                    None => TokenTree::Ident(v.clone().into()),
+                let span = v.span().into();
+                let text = v.to_string();
+                let tt = match text.as_str() {
+                    "true" => TokenTree::Literal(Lit::Bool(crate::LitBool::new(true, span))),
+                    "false" => TokenTree::Literal(Lit::Bool(crate::LitBool::new(false, span))),
+                    _ => match Keyword::from_str(&text, span) {
+                        Some(kw) => TokenTree::Keyword(kw),
+                        None => TokenTree::Ident(v.clone().into()),
+                    },
                 };
                 tokens.extend_one(tt)
             }
@@ -258,9 +264,23 @@ impl From<proc_macro::TokenStream> for TokenStream {
 impl From<TokenStream> for proc_macro::TokenStream {
     fn from(value: TokenStream) -> Self {
         let mut out = Self::new();
+
         for t in value.iter() {
             t.to_tokens(&mut out);
         }
+
         out
+    }
+}
+
+impl TryIntoTokenStream for proc_macro::TokenStream {
+    fn try_into_token_stream(self) -> Result<TokenStream, LexError> {
+        Ok(self.into())
+    }
+}
+
+impl TryIntoTokenStream for &proc_macro::TokenStream {
+    fn try_into_token_stream(self) -> Result<TokenStream, LexError> {
+        Ok(self.clone().into())
     }
 }

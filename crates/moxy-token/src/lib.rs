@@ -92,7 +92,63 @@ pub trait ToTokenStream: ToTokens<TokenStream> {
     }
 }
 
+/// Fallibly converts a parsing input into a [`TokenStream`].
+///
+/// Unlike [`ToTokenStream`], this trait is intended for input that may need
+/// lexing, such as Rust source text.
+pub trait TryIntoTokenStream: ToTokenStream {
+    fn try_into_token_stream(self) -> Result<TokenStream, LexError>;
+}
+
 impl<X: ToTokens<TokenStream> + ?Sized> ToTokenStream for X {}
+
+impl TryIntoTokenStream for TokenStream {
+    fn try_into_token_stream(self) -> Result<TokenStream, LexError> {
+        Ok(self)
+    }
+}
+
+impl TryIntoTokenStream for &TokenStream {
+    fn try_into_token_stream(self) -> Result<TokenStream, LexError> {
+        Ok(self.clone())
+    }
+}
+
+impl TryIntoTokenStream for &&TokenStream {
+    fn try_into_token_stream(self) -> Result<TokenStream, LexError> {
+        Ok((*self).clone())
+    }
+}
+
+impl TryIntoTokenStream for &str {
+    fn try_into_token_stream(self) -> Result<TokenStream, LexError> {
+        TokenStream::from_string(self.to_string())
+    }
+}
+
+impl TryIntoTokenStream for &&str {
+    fn try_into_token_stream(self) -> Result<TokenStream, LexError> {
+        TokenStream::from_string((*self).to_string())
+    }
+}
+
+impl TryIntoTokenStream for String {
+    fn try_into_token_stream(self) -> Result<TokenStream, LexError> {
+        TokenStream::from_string(self)
+    }
+}
+
+impl TryIntoTokenStream for &String {
+    fn try_into_token_stream(self) -> Result<TokenStream, LexError> {
+        TokenStream::from_string(self.clone())
+    }
+}
+
+impl TryIntoTokenStream for &&String {
+    fn try_into_token_stream(self) -> Result<TokenStream, LexError> {
+        TokenStream::from_string((*self).clone())
+    }
+}
 
 impl<T: ToTokens> ToTokens for ::std::boxed::Box<T> {
     fn to_tokens(&self, tokens: &mut TokenStream) {

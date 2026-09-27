@@ -1,4 +1,4 @@
-use crate::{Delim, Group, Ident, Keyword, Lit, Spacing, Span, ToTokens, TokenStream, TokenTree};
+use crate::{Delim, Group, Ident, Keyword, LexError, Lit, Spacing, Span, ToTokens, TokenStream, TokenTree, TryIntoTokenStream};
 
 // --- Span ---
 
@@ -137,9 +137,14 @@ impl ToTokens<TokenStream> for proc_macro2::TokenStream {
                     match other {
                         proc_macro2::TokenTree::Ident(v) => {
                             let span = v.span().into();
-                            let tt = match Keyword::from_str(&v.to_string(), span) {
-                                Some(kw) => TokenTree::Keyword(kw),
-                                None => TokenTree::Ident(v.into()),
+                            let text = v.to_string();
+                            let tt = match text.as_str() {
+                                "true" => TokenTree::Literal(Lit::Bool(crate::LitBool::new(true, span))),
+                                "false" => TokenTree::Literal(Lit::Bool(crate::LitBool::new(false, span))),
+                                _ => match Keyword::from_str(&text, span) {
+                                    Some(kw) => TokenTree::Keyword(kw),
+                                    None => TokenTree::Ident(v.into()),
+                                },
                             };
                             tokens.extend_one(tt)
                         }
@@ -210,5 +215,17 @@ impl From<TokenStream> for proc_macro2::TokenStream {
         let mut out = Self::new();
         stream.to_tokens(&mut out);
         out
+    }
+}
+
+impl TryIntoTokenStream for proc_macro2::TokenStream {
+    fn try_into_token_stream(self) -> Result<TokenStream, LexError> {
+        Ok(self.into())
+    }
+}
+
+impl TryIntoTokenStream for &proc_macro2::TokenStream {
+    fn try_into_token_stream(self) -> Result<TokenStream, LexError> {
+        Ok(self.clone().into())
     }
 }

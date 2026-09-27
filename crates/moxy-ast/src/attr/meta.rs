@@ -134,6 +134,8 @@ impl Parse for MetaContent {
             let start = parser.cursor();
             let end = Expr::skip(parser.cursor()).unwrap_or(parser.cursor());
 
+            parser.seek(&Parser::from_cursor(end));
+
             Ok(Self::Expr {
                 eq,
                 expr: end.range(start).into(),
