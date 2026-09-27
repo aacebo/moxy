@@ -12,3 +12,10 @@ sign-tag = false
 publish = true
 verify = true
 pre-release-commit-message = "release: v{{version}}"
+pre-release-hook = [
+    "cargo",
+    "build",
+    "--workspace",
+    "--release",
+    "--all-features",
+]
