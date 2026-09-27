@@ -219,6 +219,28 @@ assert!(tokens.to_string().contains("VALUE"));
 Add `#[moxy(debug)]` beside `#[moxy(template { ... })]` to print the parsed
 declaration and generated implementation as compiler notes.
 
+### Function macros
+
+Enable `derive` to turn a public token-to-token function into a function-like
+procedural macro with `#[moxy::function]`. The function accepts one
+`TokenStream` argument and returns `Result<TokenStream, ParseError>`.
+
+```rust
+use moxy::ast::ParseError;
+use moxy::token::TokenStream;
+
+#[moxy::function(name = "world_hello")]
+pub fn render(_tokens: TokenStream) -> Result<TokenStream, ParseError> {
+    Ok(moxy::template! {
+        println!("world, hello")
+    })
+}
+
+world_hello!();
+```
+
+Omit `name = "…"` to export a macro with the annotated function's name.
+
 ### Integrations
 
 `serde` adds serialization for supported token, AST, and formatter types.
