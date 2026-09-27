@@ -87,11 +87,11 @@ pub fn derive_to_tokens(tokens: proc_macro::TokenStream) -> proc_macro::TokenStr
 
 /// Turns a public token-to-token function into a function-like procedural macro.
 ///
-/// The annotated function must accept one [`TokenStream`] argument and return
+/// The annotated function must accept one [`moxy_token::TokenStream`] argument and return
 /// `Result<TokenStream, ParseError>`. By default, the generated macro has the
 /// same name as the function. Set `name` to export it under another identifier.
 ///
-/// # Examples
+/// # Example
 ///
 /// ```ignore
 /// use moxy::ast::ParseError;
@@ -109,7 +109,20 @@ pub fn function(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) ->
     function::expand(attr.into(), item.into()).into()
 }
 
-/// # Examples
+/// Turns a public token-to-token function into an attribute procedural macro.
+///
+/// The annotated function must accept two [`moxy_token::TokenStream`] arguments:
+/// the attribute arguments first and the annotated item second. It must return
+/// `Result<TokenStream, ParseError>`. By default, the generated attribute has
+/// the same name as the function. Set `name` to export it under another
+/// identifier.
+///
+/// # Options
+///
+/// - `name = "…"` or `name = identifier` sets the exported attribute name.
+/// - `debug` emits the generated wrapper as a compiler note.
+///
+/// # Example
 ///
 /// ```ignore
 /// use moxy::ast::ParseError;
@@ -119,6 +132,9 @@ pub fn function(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) ->
 /// pub fn expand(meta: TokenStream, tokens: TokenStream) -> Result<TokenStream, ParseError> {
 ///     Ok(moxy::template! { println!("hello"); })
 /// }
+///
+/// #[hello]
+/// fn main() {}
 /// ```
 #[proc_macro_attribute]
 pub fn attribute(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
