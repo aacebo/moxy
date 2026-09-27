@@ -174,7 +174,7 @@ checksum = "252afb9ae5eaa683babdc6a068b3f5726eb19e05070c731f9b2a23a7c3e8ed34"
 
 [[package]]
 name = "enumerate"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "moxy",
 ]
@@ -299,7 +299,7 @@ checksum = "f8ca58f447f06ed17d5fc4043ce1b10dd205e060fb3ce5b979b8ed8e59ff3f79"
 
 [[package]]
 name = "moxy"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "criterion",
  "moxy-ast",
@@ -319,7 +319,7 @@ dependencies = [
 
 [[package]]
 name = "moxy-ast"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "moxy-token",
  "serde",
@@ -327,11 +327,11 @@ dependencies = [
 
 [[package]]
 name = "moxy-build"
-version = "0.4.3"
+version = "0.4.4"
 
 [[package]]
 name = "moxy-derive"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "moxy-ast",
  "moxy-diagnostic",
@@ -342,7 +342,7 @@ dependencies = [
 
 [[package]]
 name = "moxy-diagnostic"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "moxy-ast",
  "moxy-build",
@@ -351,7 +351,7 @@ dependencies = [
 
 [[package]]
 name = "moxy-fmt"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "moxy-ast",
  "moxy-token",
@@ -360,7 +360,7 @@ dependencies = [
 
 [[package]]
 name = "moxy-template"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "moxy-ast",
  "moxy-token",
@@ -368,7 +368,7 @@ dependencies = [
 
 [[package]]
 name = "moxy-token"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "moxy-build",
  "proc-macro2",
@@ -659,7 +659,7 @@ checksum = "7d56353a2a665ad0f41a421187180aab746c8c325620617ad883a99a1cbe66d2"
 
 [[package]]
 name = "trace"
-version = "0.4.3"
+version = "0.4.4"
 dependencies = [
  "moxy",
 ]
