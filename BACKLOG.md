@@ -18,3 +18,39 @@ Refactor ast for template crate to implement `Parse` for each sub node type.
 Early returns from proc macro functions are very ergonomic since their return signature is `TokenStream`,
 need to find a way for early returns from `Result<TokenStream, ParseError>` to be less verbose, which currently
 requires `if let Ok(..)` statements.
+
+## 5. `fmt!` should recurse through nested `template!`
+
+```rust
+pub fn apply(tokens: TokenStream) -> Result<TokenStream, ParseError> {
+    let item = moxy::parse!(tokens as moxy::ast::ItemEnum)?;
+
+    Ok(moxy::template! {
+        {{ item }}
+
+        impl {{ &item.ident }} {
+            pub fn as_str(&self) -> &'static str {
+                match self {
+                    @for (variant in item.variants.iter()) {
+                        Self::{{ variant.ident }} => stringify!({{ variant.ident }}),
+                    }
+                }
+            }
+        }
+    })
+}
+```
+
+```rust
+#[proc_macro]
+pub fn apply(tokens: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
+	pub fn __call__(tokens: TokenStream) -> Result<TokenStream, ParseError> {
+		let item = moxy::parse!(tokens as moxy :: ast :: ItemEnum)?;
+		Ok(moxy::template!{{{item}} impl {{& item . ident}} {pub fn as_str (& self) -> & 'static str {match self {@ for (variant in item . variants . iter ()) {Self :: {{variant . ident}} => stringify ! ({{variant . ident}}) ,}}}}})
+	}
+	match __call__(tokens.into()) {
+		Err(err) => err.to_compile_error().into(),
+		Ok(v) => v.into(),
+	}
+}
+```

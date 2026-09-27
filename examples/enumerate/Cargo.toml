@@ -1,5 +1,6 @@
 [package]
-name = "hello_world"
+name = "enumerate"
+publish = false
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -18,4 +19,4 @@ doctest = false
 workspace = true
 
 [dependencies]
-moxy = { workspace = true, features = ["derive", "template"] }
+moxy = { workspace = true, features = ["derive", "template", "diagnostic"] }

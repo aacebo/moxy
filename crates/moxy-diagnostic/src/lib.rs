@@ -375,6 +375,19 @@ impl From<&ParseError> for Diagnostic {
     }
 }
 
+impl From<Diagnostic> for ParseError {
+    fn from(value: Diagnostic) -> Self {
+        let span = value.spans.first().copied().unwrap_or_default();
+        Self::new(span, value.to_string())
+    }
+}
+
+impl From<Diagnostic> for Result<TokenStream, ParseError> {
+    fn from(value: Diagnostic) -> Self {
+        Err(value.into())
+    }
+}
+
 impl From<ParseError> for Diagnostic {
     fn from(err: ParseError) -> Self {
         Self::from(&err)

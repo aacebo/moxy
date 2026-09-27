@@ -197,7 +197,16 @@ pub fn function(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) ->
     };
 
     let mut name = item.sig.ident.clone();
+    let mut debug = false;
+
     if let Some(meta) = attr {
+        if let Some(ident) = meta.path.as_ident()
+            && ident == "debug"
+            && let MetaContent::Unit = &meta.content
+        {
+            debug = true;
+        }
+
         if let Some(ident) = meta.path.as_ident()
             && ident == "name"
             && let MetaContent::Expr { eq: _, expr } = &meta.content
@@ -262,7 +271,7 @@ pub fn function(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) ->
         Ok(v) => v,
     };
 
-    template! {
+    let out = template! {
         #[proc_macro]
         pub fn {{ &name }}(tokens: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
             {{ &item }}
@@ -272,6 +281,21 @@ pub fn function(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) ->
                 Ok(v) => v.into(),
             }
         }
+    };
+
+    if debug {
+        let parsed = match parse!(out as moxy::ast::ItemFn) {
+            Err(err) => return err.to_compile_error().into(),
+            Ok(v) => v,
+        };
+
+        let message = match moxy::fmt!(&parsed) {
+            Err(err) => return err.to_compile_error().into(),
+            Ok(v) => v,
+        };
+
+        item.sig.ident.span().note(message).emit();
     }
-    .into()
+
+    out.into()
 }

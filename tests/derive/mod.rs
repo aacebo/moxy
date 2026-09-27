@@ -12,11 +12,6 @@ struct Model {
     value: String,
 }
 
-// #[derive(ToTokens)]
-// #[debug]
-// #[template = "not a code block"]
-// struct Malformed;
-
 #[test]
 fn derive_output_completes_a_constant_syntax_pipeline() {
     let tokens = Model { value: "ready".into() }.to_token_stream();

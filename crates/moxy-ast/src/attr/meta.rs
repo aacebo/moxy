@@ -91,7 +91,7 @@ impl Spanner for MetaContent {
         match self {
             Self::Unit => Default::default(),
             Self::List(v) => v.span(),
-            Self::Expr { eq, expr } => eq.span().join(expr.span()),
+            Self::Expr { eq: _, expr } => expr.span(),
         }
     }
 }

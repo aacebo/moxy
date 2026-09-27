@@ -294,7 +294,8 @@ impl serde::Serialize for Span {
     }
 }
 
-pub fn line_column_offset(src: &str, ln: usize, col: usize) -> usize {
+#[allow(unused)]
+pub(crate) fn line_column_offset(src: &str, ln: usize, col: usize) -> usize {
     let mut curr = 0;
 
     for (i, line) in src.lines().enumerate() {
