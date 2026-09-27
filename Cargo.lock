@@ -174,7 +174,7 @@ checksum = "252afb9ae5eaa683babdc6a068b3f5726eb19e05070c731f9b2a23a7c3e8ed34"
 
 [[package]]
 name = "enumerate"
-version = "0.4.4"
+version = "0.0.0"
 dependencies = [
  "moxy",
 ]
@@ -659,7 +659,7 @@ checksum = "7d56353a2a665ad0f41a421187180aab746c8c325620617ad883a99a1cbe66d2"
 
 [[package]]
 name = "trace"
-version = "0.4.4"
+version = "0.0.0"
 dependencies = [
  "moxy",
 ]
