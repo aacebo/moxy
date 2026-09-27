@@ -38,11 +38,13 @@ mod token {
     pub use moxy_token::*;
 }
 
-use moxy_ast::{Declaration, ItemImpl, MetaContent, Parse, Parser, parse};
-use moxy_diagnostic::SpanExt;
+mod attribute;
+mod function;
+mod to_tokens;
+
+use moxy_ast::parse;
 use moxy_fmt::fmt;
 use moxy_template::template;
-use moxy_token::{Spanner, ToTokenStream, TokenStream};
 
 /// Derives [`moxy::token::ToTokens`] from a token template.
 ///
@@ -79,93 +81,17 @@ use moxy_token::{Spanner, ToTokenStream, TokenStream};
 /// A missing, repeated, or malformed template attribute produces a
 /// span-targeted compiler error.
 #[proc_macro_derive(ToTokens, attributes(moxy))]
-pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let target = TokenStream::from(target);
-    let object: Declaration = match Declaration::parse(&Parser::from_tokens(&target)) {
-        Err(err) => return err.to_compile_error().into(),
-        Ok(v) => v,
-    };
-
-    let mut tpl_meta_list = vec![];
-    let mut debug_meta_list = vec![];
-    let result = object.attrs().for_each(|attr| {
-        if let Some(ident) = attr.path.as_ident()
-            && ident == "moxy"
-        {
-            attr.for_each(|meta| {
-                if let Some(ident) = meta.path.as_ident() {
-                    if ident == "template" {
-                        tpl_meta_list.push(meta.clone());
-                    } else if ident == "debug" {
-                        debug_meta_list.push(meta.clone());
-                    }
-                }
-
-                Ok(())
-            })?;
-        }
-
-        Ok(())
-    });
-
-    if let Err(err) = result {
-        return err.to_compile_error().into();
-    }
-
-    let Some(tpl_meta) = tpl_meta_list.first() else {
-        return object.attrs().span().error("template required").emit().into();
-    };
-
-    let content = match &tpl_meta.content {
-        MetaContent::List(v) if v.delim.is_brace() => &v.tokens,
-        _ => {
-            return tpl_meta
-                .content
-                .span()
-                .error("template attribute must contain a code block `{ ... }`")
-                .emit()
-                .into();
-        }
-    };
-
-    let output = template! {
-        impl ::moxy::token::ToTokens for {{ object.ident() }} {
-            fn to_tokens(&self, tokens: &mut ::moxy::token::TokenStream) {
-                ::moxy::template::template!({{ content }}).to_tokens(tokens);
-            }
-        }
-    };
-
-    if let Some(debug) = debug_meta_list.first() {
-        let impl_item = match ItemImpl::parse(&Parser::from_tokens(&output)) {
-            Err(err) => return err.to_compile_error().into(),
-            Ok(v) => v,
-        };
-
-        let object_formatted = match fmt!(&object) {
-            Err(err) => return err.to_compile_error().into(),
-            Ok(v) => v,
-        };
-
-        let impl_formatted = match fmt!(&impl_item) {
-            Err(err) => return err.to_compile_error().into(),
-            Ok(v) => v,
-        };
-
-        object.span().note(object_formatted).emit();
-        debug.span().note(impl_formatted).emit();
-    }
-
-    output.into()
+pub fn derive_to_tokens(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    to_tokens::expand(tokens.into()).into()
 }
 
 /// Turns a public token-to-token function into a function-like procedural macro.
 ///
-/// The annotated function must accept one [`TokenStream`] argument and return
+/// The annotated function must accept one [`moxy_token::TokenStream`] argument and return
 /// `Result<TokenStream, ParseError>`. By default, the generated macro has the
 /// same name as the function. Set `name` to export it under another identifier.
 ///
-/// # Examples
+/// # Example
 ///
 /// ```ignore
 /// use moxy::ast::ParseError;
@@ -180,122 +106,37 @@ pub fn derive_to_tokens(target: proc_macro::TokenStream) -> proc_macro::TokenStr
 /// ```
 #[proc_macro_attribute]
 pub fn function(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let attr: TokenStream = attr.into();
-    let attr = if attr.is_empty() {
-        None
-    } else {
-        match parse!(attr as moxy::ast::Meta) {
-            Err(err) => return err.into_token_stream().into(),
-            Ok(v) => Some(v),
-        }
-    };
+    function::expand(attr.into(), item.into()).into()
+}
 
-    let item: TokenStream = item.into();
-    let mut item = match parse!(item as moxy::ast::ItemFn) {
-        Err(err) => return err.into_token_stream().into(),
-        Ok(v) => v,
-    };
-
-    let mut name = item.sig.ident.clone();
-    let mut debug = false;
-
-    if let Some(meta) = attr {
-        if let Some(ident) = meta.path.as_ident()
-            && ident == "debug"
-            && let MetaContent::Unit = &meta.content
-        {
-            debug = true;
-        }
-
-        if let Some(ident) = meta.path.as_ident()
-            && ident == "name"
-            && let MetaContent::Expr { eq: _, expr } = &meta.content
-        {
-            let expr = match parse!(expr as moxy::ast::Expr) {
-                Err(err) => return err.into_token_stream().into(),
-                Ok(v) => v,
-            };
-
-            name = if let moxy::ast::Expr::Lit(expr) = &expr
-                && let moxy::token::Lit::Str(lit) = &expr.lit
-            {
-                moxy::token::Ident::new(lit.value()).with_span(lit.span())
-            } else if let moxy::ast::Expr::Path(expr) = &expr
-                && let Some(ident) = expr.path.as_ident()
-            {
-                ident.clone()
-            } else {
-                return moxy::ast::ParseError::new(expr.span(), "name can be a string literal or identifier")
-                    .into_token_stream()
-                    .into();
-            };
-        }
-    }
-
-    if !item.vis.is_public() {
-        return item.vis.span().error("proc macros must be pub").emit().into();
-    }
-
-    let Some(_) = item.sig.params.inputs.first() else {
-        return item
-            .sig
-            .params
-            .span()
-            .error("proc macro function signature invalid")
-            .emit()
-            .into();
-    };
-
-    let moxy::ast::ReturnType::Type(_, _) = &item.sig.output else {
-        return item
-            .sig
-            .output
-            .span()
-            .error("proc macro function signature invalid")
-            .emit()
-            .into();
-    };
-
-    if item.sig.params.inputs.len() > 1 {
-        return item
-            .sig
-            .params
-            .span()
-            .error("proc macro function signature invalid")
-            .emit()
-            .into();
-    }
-
-    item.sig.ident = match parse!("__call__") {
-        Err(err) => return err.to_compile_error().into(),
-        Ok(v) => v,
-    };
-
-    let out = template! {
-        #[proc_macro]
-        pub fn {{ &name }}(tokens: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
-            {{ &item }}
-
-            match __call__(tokens.into()) {
-                Err(err) => err.to_compile_error().into(),
-                Ok(v) => v.into(),
-            }
-        }
-    };
-
-    if debug {
-        let parsed = match parse!(out as moxy::ast::ItemFn) {
-            Err(err) => return err.to_compile_error().into(),
-            Ok(v) => v,
-        };
-
-        let message = match moxy::fmt!(&parsed) {
-            Err(err) => return err.to_compile_error().into(),
-            Ok(v) => v,
-        };
-
-        item.sig.ident.span().note(message).emit();
-    }
-
-    out.into()
+/// Turns a public token-to-token function into an attribute procedural macro.
+///
+/// The annotated function must accept two [`moxy_token::TokenStream`] arguments:
+/// the attribute arguments first and the annotated item second. It must return
+/// `Result<TokenStream, ParseError>`. By default, the generated attribute has
+/// the same name as the function. Set `name` to export it under another
+/// identifier.
+///
+/// # Options
+///
+/// - `name = "…"` or `name = identifier` sets the exported attribute name.
+/// - `debug` emits the generated wrapper as a compiler note.
+///
+/// # Example
+///
+/// ```ignore
+/// use moxy::ast::ParseError;
+/// use moxy::token::TokenStream;
+///
+/// #[moxy::attribute(name = "hello")]
+/// pub fn expand(meta: TokenStream, tokens: TokenStream) -> Result<TokenStream, ParseError> {
+///     Ok(moxy::template! { println!("hello"); })
+/// }
+///
+/// #[hello]
+/// fn main() {}
+/// ```
+#[proc_macro_attribute]
+pub fn attribute(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    attribute::expand(attr.into(), item.into()).into()
 }
