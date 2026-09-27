@@ -167,34 +167,6 @@ let tokens = moxy::error!(
 assert!(tokens.to_string().contains("compile_error"));
 ```
 
-### Build
-
-Enable `build` as a build dependency for typed Cargo directives and rustc
-version checks.
-
-```console
-cargo add moxy --build --no-default-features --features build
-```
-
-```rust
-// build.rs
-fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let mut config = moxy::build::rustc::Config::read()?;
-
-    config
-        .min_version("1.85.0")
-        .check_cfg("cfg(nightly)")
-        .rerun_if_changed("build.rs");
-
-    if config.version().channel.is_nightly() {
-        config.cfg("nightly");
-    }
-
-    config.emit();
-    Ok(())
-}
-```
-
 ### Derive
 
 Enable `derive` to implement `ToTokens` from an inline template.
@@ -219,7 +191,7 @@ assert!(tokens.to_string().contains("VALUE"));
 Add `#[moxy(debug)]` beside `#[moxy(template { ... })]` to print the parsed
 declaration and generated implementation as compiler notes.
 
-### Function macros
+### Function Macros
 
 Enable `derive` to turn a public token-to-token function into a function-like
 procedural macro with `#[moxy::function]`. The function accepts one
