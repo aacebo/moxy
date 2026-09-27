@@ -13,9 +13,16 @@ pub struct Group {
 impl Group {
     #[inline]
     pub fn new(delim: Delim, stream: TokenStream) -> Self {
+        let content_span = stream.span();
+        let span = if content_span.is_empty() {
+            DelimSpan::new(Span::call_site(), Span::call_site())
+        } else {
+            DelimSpan::new(content_span, content_span)
+        };
+
         Self {
             delim,
-            span: DelimSpan::new(Span::call_site(), Span::call_site()),
+            span,
             tokens: stream,
         }
     }

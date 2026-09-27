@@ -12,7 +12,7 @@ pub use cursor::*;
 #[doc(inline)]
 pub use parser::*;
 
-use moxy_token::TokenStream;
+use moxy_token::TryIntoTokenStream;
 
 /// Parse a source string into a typed AST node, returning `Result<T, ParseError>`.
 ///
@@ -28,7 +28,7 @@ use moxy_token::TokenStream;
 #[macro_export]
 macro_rules! parse {
     ($src:tt $(as $ty:ty)? $(,)?) => {{
-        $crate::__parse_owned $(::<$ty>)* ($src.to_string())
+        $crate::__parse_owned $(::<$ty>)* (&$src)
     }};
 }
 
@@ -96,8 +96,8 @@ macro_rules! parse_files {
 ///
 /// This is public only so [`parse!`](crate::parse) can call it from downstream crates.
 #[doc(hidden)]
-pub fn __parse_owned<T: Parse>(source: String) -> Result<T, ParseError> {
-    let tokens = TokenStream::from_string(source)?;
+pub fn __parse_owned<T: Parse>(source: impl TryIntoTokenStream) -> Result<T, ParseError> {
+    let tokens = source.try_into_token_stream()?;
     let parser = Parser::from_tokens(&tokens);
     let value = T::parse(&parser)?;
 

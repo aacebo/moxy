@@ -1,3 +1,5 @@
+extern crate proc_macro;
+
 use moxy::ToTokens;
 use moxy::ast::Item;
 use moxy::token::{Spanner, ToTokenStream};
