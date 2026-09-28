@@ -2,13 +2,10 @@ use moxy_diagnostic::SpanExt;
 use moxy_token::{Spanner, TokenStream};
 
 pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
-    let attr = if attr.is_empty() {
-        None
-    } else {
-        match moxy::parse!(attr as moxy::ast::Meta) {
-            Err(err) => return err.to_compile_error(),
-            Ok(v) => Some(v),
-        }
+    let parser = moxy::ast::Parser::from_tokens(&attr);
+    let attr = match moxy::ast::Punctuated::<moxy::ast::Meta, moxy::token::Token!(,)>::parse_separated_nonempty(&parser) {
+        Err(err) => return err.to_compile_error(),
+        Ok(v) => v,
     };
 
     let mut item = match moxy::parse!(item as moxy::ast::ItemFn) {
@@ -19,15 +16,13 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
     let mut name = None;
     let mut debug = false;
 
-    if let Some(meta) = attr {
+    for meta in attr {
         if let Some(ident) = meta.path.as_ident()
             && ident == "debug"
             && let moxy::ast::MetaContent::Unit = &meta.content
         {
             debug = true;
-        }
-
-        if let Some(ident) = meta.path.as_ident()
+        } else if let Some(ident) = meta.path.as_ident()
             && let moxy::ast::MetaContent::Unit = &meta.content
         {
             name = Some(ident.clone());
@@ -53,7 +48,7 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let out = moxy::template! {
         #[proc_macro_derive({{ &name }})]
-        pub fn {{ &item.sig.ident }}(tokens: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
+        pub fn {{ name.map(|v| v.to_snake_case()) }}(tokens: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
             {{ &item }}
 
             let value = match ::moxy::parse!(tokens) {
