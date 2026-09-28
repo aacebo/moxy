@@ -1,0 +1,22 @@
+[package]
+name = "builder"
+publish = false
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+documentation.workspace = true
+homepage.workspace = true
+repository.workspace = true
+keywords.workspace = true
+categories.workspace = true
+include.workspace = true
+
+[lib]
+proc-macro = true
+doctest = false
+
+[lints]
+workspace = true
+
+[dependencies]
+moxy = { workspace = true, features = ["derive", "template", "diagnostic"] }
