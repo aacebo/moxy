@@ -2,7 +2,12 @@ use moxy::ast::ParseError;
 use moxy::diagnostic::SpanExt;
 use moxy::token::{Spanner, TokenStream};
 
-#[moxy::derive(Builder)]
+#[derive(moxy::Meta)]
+struct FieldArgs {
+    skip: bool,
+}
+
+#[moxy::derive(Builder, attributes(build))]
 pub fn builder(declaration: moxy::ast::Declaration) -> Result<TokenStream, ParseError> {
     let moxy::ast::Declaration::Struct(item) = &declaration else {
         return declaration.span().error("invalid host type, expected struct").into();

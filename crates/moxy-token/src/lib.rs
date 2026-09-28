@@ -187,6 +187,24 @@ impl<T: ToTokens, E: ToTokens> ToTokens for Result<T, E> {
     }
 }
 
+impl<T: Spanner> Spanner for Option<T> {
+    fn span(&self) -> Span {
+        match self {
+            Self::None => Span::call_site(),
+            Self::Some(v) => v.span(),
+        }
+    }
+}
+
+impl<T: Spanner, E: Spanner> Spanner for Result<T, E> {
+    fn span(&self) -> Span {
+        match self {
+            Self::Err(v) => v.span(),
+            Self::Ok(v) => v.span(),
+        }
+    }
+}
+
 /// Map a Rust punctuation or keyword symbol to its [`crate`] token type.
 #[macro_export]
 macro_rules! Token {

@@ -44,7 +44,8 @@ mod token {
 mod attribute;
 mod derive;
 mod function;
-mod to_tokens;
+mod meta;
+mod tokens;
 
 use moxy_ast::parse;
 use moxy_fmt::fmt;
@@ -86,8 +87,13 @@ use moxy_template::template;
 /// A missing, repeated, or malformed template attribute produces a
 /// span-targeted compiler error.
 #[proc_macro_derive(ToTokens, attributes(moxy))]
-pub fn derive_to_tokens(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    to_tokens::expand(tokens.into()).into()
+pub fn derive_tokens(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    tokens::expand(tokens.into()).into()
+}
+
+#[proc_macro_derive(Meta, attributes(meta))]
+pub fn derive_meta(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    meta::expand(tokens.into()).into()
 }
 
 /// Turns a public token-to-token function into a function-like procedural macro.

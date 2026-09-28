@@ -1,6 +1,6 @@
 use crate::lex::Cursor;
 use crate::lit::Lit;
-use crate::{Ident, LexError, Scan, Span, Spanner};
+use crate::{Ident, LexError, Scan, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 /// A parsed Rust bool literal token.
 #[derive(Debug, Clone)]
@@ -60,6 +60,12 @@ impl std::fmt::Display for LitBool {
 impl Spanner for LitBool {
     fn span(&self) -> Span {
         self.span
+    }
+}
+
+impl ToTokens for LitBool {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(TokenTree::Literal(self.clone().into()));
     }
 }
 
