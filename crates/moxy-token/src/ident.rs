@@ -128,6 +128,44 @@ impl Ident {
         self
     }
 
+    pub fn to_pascal_case(&self) -> Self {
+        let text: String = self
+            .text
+            .split(|c: char| !c.is_alphanumeric())
+            .filter(|s| !s.is_empty())
+            .map(|word| {
+                let mut chars = word.chars();
+
+                match chars.next() {
+                    Some(first) => first.to_uppercase().collect::<String>() + chars.as_str(),
+                    None => String::new(),
+                }
+            })
+            .collect();
+
+        Self::new(text).with_span(self.span)
+    }
+
+    pub fn to_snake_case(&self) -> Self {
+        let mut output = String::with_capacity(self.text().len());
+
+        for (i, c) in self.text().chars().enumerate() {
+            if c.is_ascii_uppercase() {
+                if i > 0 && !output.ends_with('_') {
+                    output.push('_');
+                }
+
+                output.push(c.to_ascii_lowercase());
+            } else if c.is_alphanumeric() {
+                output.push(c);
+            } else if !output.ends_with('_') {
+                output.push('_');
+            }
+        }
+
+        Self::new(output.trim_matches('_')).with_span(self.span)
+    }
+
     #[inline]
     pub fn to_token_tree(&self) -> TokenTree {
         TokenTree::Ident(self.clone())

@@ -194,6 +194,56 @@ On nightly Rust, add `#[moxy(debug)]` beside `#[moxy(template { ... })]` to
 print the parsed declaration and generated implementation as compiler notes.
 Stable Rust does not emit these debug notes.
 
+#### Custom derive macros
+
+Use `#[moxy::derive(Name)]` to turn a public function that accepts one
+parseable moxy AST type into a custom derive macro. The derive name is the
+identifier in the attribute; the function name remains an implementation
+detail.
+
+```rust
+use moxy::ast::{ItemStruct, ParseError};
+use moxy::token::TokenStream;
+
+#[moxy::derive(Builder)]
+pub fn builder(item: ItemStruct) -> Result<TokenStream, ParseError> {
+    Ok(moxy::template! {
+        impl {{ item.ident }} {
+            pub fn builder() -> Self { todo!() }
+        }
+    })
+}
+```
+
+Downstream users invoke the generated derive normally:
+
+```rust
+#[derive(Builder)]
+struct Config;
+```
+
+The annotated function must be public, take exactly one parameter, and return
+`Result<TokenStream, ParseError>`. Its parameter may be any moxy type that
+implements `Parse`: `ItemStruct` limits the derive to structs, `ItemEnum`
+limits it to enums, and other syntax types work the same way. Use
+`moxy::ast::Declaration` when the derive accepts any declaration and chooses
+the supported variants itself.
+
+```rust
+#[moxy::derive(EnumName)]
+pub fn enum_name(item: moxy::ast::ItemEnum) -> Result<moxy::token::TokenStream, moxy::ast::ParseError> {
+    Ok(moxy::template! {
+        impl {{ item.ident }} {
+            pub const NAME: &'static str = stringify!({{ item.ident }});
+        }
+    })
+}
+```
+
+See the complete [`examples/builder`](examples/builder) implementation and its
+consumer test for a builder derive that accepts `Declaration` and explicitly
+checks for a struct.
+
 #### Function
 
 Enable `derive` to turn a public token-to-token function into a function-like

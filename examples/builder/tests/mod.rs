@@ -1,8 +1,8 @@
-use builder::builder;
+use builder::Builder;
 
 #[test]
 fn success() {
-    #[builder]
+    #[derive(Builder)]
     pub struct Config {
         host: String,
         port: u16,

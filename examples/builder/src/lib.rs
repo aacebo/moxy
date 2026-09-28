@@ -1,9 +1,12 @@
-use moxy::ast::{ItemStruct, ParseError};
-use moxy::token::TokenStream;
+use moxy::ast::ParseError;
+use moxy::diagnostic::SpanExt;
+use moxy::token::{Spanner, TokenStream};
 
-#[moxy::attribute]
-pub fn builder(_meta: TokenStream, tokens: TokenStream) -> Result<TokenStream, ParseError> {
-    let item = moxy::parse!(tokens as ItemStruct)?;
+#[moxy::derive(Builder)]
+pub fn builder(declaration: moxy::ast::Declaration) -> Result<TokenStream, ParseError> {
+    let moxy::ast::Declaration::Struct(item) = &declaration else {
+        return declaration.span().error("invalid host type, expected struct").into();
+    };
 
     let Some(named) = item.fields.as_named() else {
         return Ok(moxy::error!(
@@ -16,11 +19,8 @@ pub fn builder(_meta: TokenStream, tokens: TokenStream) -> Result<TokenStream, P
 
     let fields = &named.fields.inner;
     let builder_name = moxy::token::ident!(format!("{}Builder", item.ident.text()));
-    let empty = fields.is_empty();
 
     Ok(moxy::template! {
-        {{ item }}
-
         pub struct {{ builder_name }} {
             @for (field in fields) {
                 {{ field.ident }}: Option<{{ field.ty }}>,
@@ -45,7 +45,7 @@ pub fn builder(_meta: TokenStream, tokens: TokenStream) -> Result<TokenStream, P
                 }
             }
 
-            @if (empty) {
+            @if (fields.is_empty()) {
                 pub fn build(self) -> {{ &item.ident }} {
                     {{ item.ident }} {}
                 }

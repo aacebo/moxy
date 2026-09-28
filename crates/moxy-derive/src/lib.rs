@@ -1,6 +1,8 @@
 //! # Moxy derive
 //!
 //! Derive support for `moxy::token::ToTokens`.
+//! It also provides `#[moxy::derive(Name)]` for authoring custom derive macros
+//! from a typed moxy AST input.
 //!
 //! ## Syntax
 //!
@@ -40,6 +42,7 @@ mod token {
 }
 
 mod attribute;
+mod derive;
 mod function;
 mod to_tokens;
 
@@ -148,4 +151,39 @@ pub fn function(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) ->
 #[proc_macro_attribute]
 pub fn attribute(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     attribute::expand(attr.into(), item.into()).into()
+}
+
+/// Turns a public parseable-AST-to-token function into a custom derive macro.
+///
+/// The attribute argument is the derive name exposed to downstream crates.
+/// The annotated function accepts one moxy-parsed value and returns
+/// `Result<TokenStream, ParseError>`. Its parameter can be any moxy type that
+/// implements `Parse`, which determines the syntax accepted by the derive.
+/// For example, `ItemStruct` accepts structs, `ItemEnum` accepts enums, and
+/// `Declaration` accepts a general annotated declaration.
+///
+/// # Example
+///
+/// ```ignore
+/// use moxy::ast::{ItemStruct, ParseError};
+/// use moxy::token::TokenStream;
+///
+/// #[moxy::derive(Builder)]
+/// pub fn builder(item: ItemStruct) -> Result<TokenStream, ParseError> {
+///     Ok(moxy::template! {
+///         impl {{ item.ident }} {
+///             pub fn builder() -> Self { todo!() }
+///         }
+///     })
+/// }
+///
+/// #[derive(Builder)]
+/// struct Config;
+/// ```
+///
+/// The annotated function must be public, take exactly one parameter, and
+/// return a `Result` whose error can produce a compile error.
+#[proc_macro_attribute]
+pub fn derive(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    derive::expand(attr.into(), item.into()).into()
 }
