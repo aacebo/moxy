@@ -1,9 +1,10 @@
+use moxy_ast::Punctuated;
 use moxy_diagnostic::SpanExt;
 use moxy_token::{Spanner, TokenStream};
 
 pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
     let parser = moxy::ast::Parser::from_tokens(&attr);
-    let attr = match moxy::ast::Punctuated::<moxy::ast::Meta, moxy::token::Token!(,)>::parse_separated_nonempty(&parser) {
+    let list = match Punctuated::<moxy::ast::Meta, moxy::ast::Token![,]>::parse_separated_nonempty(&parser) {
         Err(err) => return err.to_compile_error(),
         Ok(v) => v,
     };
@@ -15,17 +16,19 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
 
     let mut name = None;
     let mut debug = false;
+    let mut attributes = None;
 
-    for meta in attr {
-        if let Some(ident) = meta.path.as_ident()
-            && ident == "debug"
-            && let moxy::ast::MetaContent::Unit = &meta.content
-        {
-            debug = true;
-        } else if let Some(ident) = meta.path.as_ident()
-            && let moxy::ast::MetaContent::Unit = &meta.content
-        {
-            name = Some(ident.clone());
+    for meta in list {
+        if let Some(ident) = meta.path.as_ident() {
+            if ident == "debug"
+                && let moxy::ast::MetaContent::Unit = &meta.content
+            {
+                debug = true;
+            } else if ident == "attributes" {
+                attributes = Some(meta.clone());
+            } else if let moxy::ast::MetaContent::Unit = &meta.content {
+                name = Some(ident.clone());
+            }
         }
     }
 
@@ -47,7 +50,13 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
     };
 
     let out = moxy::template! {
-        #[proc_macro_derive({{ &name }})]
+        #[proc_macro_derive(
+            {{ &name }}
+
+            @if (attributes.is_some()) {
+                , {{ &attributes }}
+            }
+        )]
         pub fn {{ name.map(|v| v.to_snake_case()) }}(tokens: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
             {{ &item }}
 
@@ -58,7 +67,7 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
 
             match __call__(value) {
                 Err(err) => err.to_compile_error().into(),
-                Ok(v) => v.into(),
+                Ok(v) => ::moxy::token::ToTokenStream::into_token_stream(v).into(),
             }
         }
     };

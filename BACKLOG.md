@@ -54,3 +54,17 @@ pub fn apply(tokens: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
 	}
 }
 ```
+
+## 6. Make Punctuated and Delimited More Ergonomic
+
+Make parsing/generating punctuated/delimited syntax easier.
+
+## 7. Support Deconstruct Syntax In Control Flow
+
+Template control flow syntax should support things like
+
+```rust
+@for ((name, ty) in fields) {
+    ...
+}
+```

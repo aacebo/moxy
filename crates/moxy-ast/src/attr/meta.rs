@@ -111,7 +111,7 @@ impl ToTokens for MetaContent {
 
 impl Parse for MetaContent {
     fn peek(cursor: Cursor<'_>) -> bool {
-        if cursor.is_empty() {
+        if cursor.is_empty() || <Token![,]>::peek(cursor) {
             return true;
         }
 
@@ -124,7 +124,7 @@ impl Parse for MetaContent {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if parser.is_empty() {
+        if parser.is_empty() || <Token![,]>::peek(parser.cursor()) {
             Ok(Self::Unit)
         } else if <Token![=]>::peek(parser.cursor())
             && !<Token![==]>::peek(parser.cursor())
@@ -146,7 +146,7 @@ impl Parse for MetaContent {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if cursor.is_empty() {
+        if cursor.is_empty() || <Token![,]>::peek(cursor) {
             Some(cursor)
         } else if <Token![=]>::peek(cursor)
             && !<Token![==]>::peek(cursor)

@@ -17,12 +17,12 @@ pub fn builder(declaration: moxy::ast::Declaration) -> Result<TokenStream, Parse
         .emit());
     };
 
-    let fields = &named.fields.inner;
     let builder_name = moxy::token::ident!(format!("{}Builder", item.ident.text()));
+    let fields = &named.fields;
 
     Ok(moxy::template! {
         pub struct {{ builder_name }} {
-            @for (field in fields) {
+            @for (field in fields.iter()) {
                 {{ field.ident }}: Option<{{ field.ty }}>,
             }
         }
@@ -30,7 +30,7 @@ pub fn builder(declaration: moxy::ast::Declaration) -> Result<TokenStream, Parse
         impl {{ &item.ident }} {
             pub fn builder() -> {{ &builder_name }} {
                 {{ builder_name }} {
-                    @for (field in fields) {
+                    @for (field in fields.iter()) {
                         {{ field.ident }}: None,
                     }
                 }
@@ -38,7 +38,7 @@ pub fn builder(declaration: moxy::ast::Declaration) -> Result<TokenStream, Parse
         }
 
         impl {{ &builder_name }} {
-            @for (field in fields) {
+            @for (field in fields.iter()) {
                 pub fn {{ field.ident }}(mut self, value: {{ field.ty }}) -> Self {
                     self.{{ field.ident }} = Some(value);
                     self
@@ -52,7 +52,7 @@ pub fn builder(declaration: moxy::ast::Declaration) -> Result<TokenStream, Parse
             } @else {
                 pub fn build(self) -> {{ &item.ident }} {
                     {{ item.ident }} {
-                        @for (field in fields) {
+                        @for (field in fields.iter()) {
                             {{ field.ident }}: self.{{ field.ident }}.expect(
                                 concat!("missing required field: ", stringify!({{ field.ident }})),
                             ),
