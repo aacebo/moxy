@@ -6,6 +6,7 @@ pub struct Field {
     pub key: LitStr,
     pub ty: moxy::ast::Type,
     pub default: Option<TokenStream>,
+    pub message: Option<LitStr>,
 }
 
 impl Field {
@@ -16,6 +17,7 @@ impl Field {
 
         let mut key = LitStr::new(member.text(), member.span());
         let mut default = None;
+        let mut message = None;
 
         for attr in &field.attrs {
             let Some(ident) = attr.path.as_ident() else {
@@ -49,12 +51,16 @@ impl Field {
                                 "duplicate `default` rule",
                             ));
                         }
+
                         default = Some(match value {
                             Some(value) => value.to_token_stream(),
                             None => moxy::template! {
                                 <{{ &field.ty }} as ::std::default::Default>::default()
                             },
                         });
+                    }
+                    MetaRule::Message(value) => {
+                        message = Some(value);
                     }
                 }
             }
@@ -66,6 +72,7 @@ impl Field {
             ty: field.ty.clone(),
             default,
             binding: Ident::new(format!("__moxy_field_{index}")).with_span(field.span()),
+            message,
         })
     }
 }

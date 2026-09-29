@@ -8,6 +8,7 @@ pub fn expand(target: &moxy::ast::ItemEnum) -> TokenStream {
             Ok(variant) => variants.push(variant),
             Err(err) => {
                 let diagnostic = err.to_compile_error();
+
                 return moxy::template! {
                     {{ diagnostic }}
                     unreachable!()

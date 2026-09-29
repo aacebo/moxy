@@ -10,6 +10,7 @@ pub struct Variant {
     pub ident: Ident,
     pub key: LitStr,
     pub kind: Kind,
+    pub message: Option<LitStr>,
 }
 
 impl Variant {
@@ -24,6 +25,7 @@ impl Variant {
         let snake = variant.ident.to_snake_case();
         let mut key = LitStr::new(snake.text(), variant.ident.span());
         let mut renamed = false;
+        let mut message = None;
 
         for attr in &variant.attrs {
             let Some(ident) = attr.path.as_ident() else {
@@ -56,6 +58,9 @@ impl Variant {
                             value.as_ref().map(Spanner::span).unwrap_or(attr.span()),
                             "`default` is not supported on enum variants",
                         ));
+                    }
+                    MetaRule::Message(value) => {
+                        message = Some(value);
                     }
                 }
             }
@@ -90,6 +95,7 @@ impl Variant {
             ident: variant.ident.clone(),
             key,
             kind,
+            message,
         })
     }
 }

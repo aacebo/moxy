@@ -61,13 +61,15 @@ pub fn expand(tokens: TokenStream) -> TokenStream {
 enum MetaRule {
     Default(Option<moxy::ast::Expr>),
     Rename(LitStr),
+    Message(LitStr),
 }
 
 impl Spanner for MetaRule {
     fn span(&self) -> moxy::token::Span {
         match self {
-            Self::Default(value) => value.span(),
-            Self::Rename(value) => value.span(),
+            Self::Default(v) => v.span(),
+            Self::Rename(v) => v.span(),
+            Self::Message(v) => v.span(),
         }
     }
 }
@@ -92,6 +94,10 @@ impl moxy::ast::Parse for MetaRule {
             "rename" => match &meta.content {
                 moxy::ast::MetaContent::Expr { expr, .. } => Ok(Self::Rename(moxy::parse!(expr)?)),
                 _ => parser.error("`rename` must use a string literal value").into(),
+            },
+            "message" => match &meta.content {
+                moxy::ast::MetaContent::Expr { expr, .. } => Ok(Self::Message(moxy::parse!(expr)?)),
+                _ => parser.error("`message` must use a string literal value").into(),
             },
             _ => parser.error(format!("unknown meta rule `{ident}`")).into(),
         }
