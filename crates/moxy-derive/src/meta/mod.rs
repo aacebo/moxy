@@ -13,12 +13,32 @@ pub fn expand(tokens: TokenStream) -> TokenStream {
         Ok(v) => v,
     };
 
-    let moxy::ast::Declaration::Struct(target) = target else {
-        return target.span().error("`Meta` can only be derived for structs").emit();
-    };
+    let (ident, body, skip) = match &target {
+        moxy::ast::Declaration::Struct(target) => (
+            &target.ident,
+            structs::expand(target),
+            moxy::template! {
+                cursor = <::moxy::ast::Meta as ::moxy::ast::Parse>::skip(cursor)?;
 
-    let body = structs::expand(&target);
-    let ident = &target.ident;
+                while <::moxy::ast::Token![,]>::peek(cursor) {
+                    cursor = <::moxy::ast::Token![,]>::skip(cursor)?;
+                    cursor = <::moxy::ast::Meta as ::moxy::ast::Parse>::skip(cursor)?;
+                }
+
+                Some(cursor)
+            },
+        ),
+        moxy::ast::Declaration::Enum(target) => (
+            &target.ident,
+            enums::expand(target),
+            moxy::template! {
+                <::moxy::ast::Meta as ::moxy::ast::Parse>::skip(cursor)
+            },
+        ),
+        moxy::ast::Declaration::Union(target) => {
+            return target.span().error("`Meta` cannot be derived for unions").emit();
+        }
+    };
 
     moxy::template! {
         impl ::moxy::ast::Parse for {{ ident }} {
@@ -31,14 +51,7 @@ pub fn expand(tokens: TokenStream) -> TokenStream {
             }
 
             fn skip(mut cursor: ::moxy::ast::Cursor<'_>) -> Option<::moxy::ast::Cursor<'_>> {
-                cursor = <::moxy::ast::Meta as ::moxy::ast::Parse>::skip(cursor)?;
-
-                while <::moxy::ast::Token![,]>::peek(cursor) {
-                    cursor = <::moxy::ast::Token![,]>::skip(cursor)?;
-                    cursor = <::moxy::ast::Meta as ::moxy::ast::Parse>::skip(cursor)?;
-                }
-
-                Some(cursor)
+                {{ skip }}
             }
         }
     }

@@ -1,0 +1,5 @@
+error: `Meta` enum variants cannot have discriminants
+ --> fixtures/trybuild/derive/fail/meta_discriminant.rs:3:13
+  |
+3 |     Value = 1,
+  |             ^

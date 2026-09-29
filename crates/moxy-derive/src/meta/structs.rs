@@ -91,7 +91,7 @@ pub fn expand(target: &moxy::ast::ItemStruct) -> TokenStream {
                             }
                         },
                     }
-                }}
+                }},
             }
         })
     }
