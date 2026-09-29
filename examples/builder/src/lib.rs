@@ -2,8 +2,9 @@ use moxy::ast::ParseError;
 use moxy::diagnostic::SpanExt;
 use moxy::token::{Spanner, TokenStream};
 
+#[allow(unused)]
 #[derive(moxy::Meta)]
-struct FieldArgs {
+struct Args {
     skip: bool,
 }
 
