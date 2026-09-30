@@ -2,7 +2,7 @@ use moxy_token::{Ident, Span, Spanner, ToTokens};
 
 use crate::*;
 
-/// A tagged AST representation of Rust declaration syntax.
+/// A tagged AST representation of Rust user defined type syntax.
 #[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize), serde(tag = "type", rename_all = "snake_case"))]
