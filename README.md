@@ -62,7 +62,7 @@ Default features are `token` and `ast`.
 | `fmt` | no | AST formatting with `fmt!`; implies `ast` |
 | `diagnostic` | no | Span-aware error, warning, note, and help diagnostics |
 | `build` | no | Cargo build-script and rustc-version helpers |
-| `derive` | no | `#[derive(ToTokens)]`, `#[derive(FromMeta)]`, and supporting macro tooling |
+| `macros` | no | `#[derive(ToTokens)]`, `#[derive(FromMeta)]`, and macro-authoring attributes |
 | `derives` | no | Standard trait derives for supported AST and template types |
 | `serde` | no | Serialization for supported token, AST, and formatting types |
 | `proc-macro2` | no | Conversions between moxy and `proc_macro2` tokens |
@@ -198,10 +198,10 @@ assert!(tokens.to_string().contains("compile_error"));
 
 #### ToTokens
 
-Enable `derive` to implement `ToTokens` from an inline template.
+Enable `macros` to implement `ToTokens` from an inline template.
 
 ```console
-cargo add moxy --features derive
+cargo add moxy --features macros
 ```
 
 ```rust
@@ -305,7 +305,7 @@ checks for a struct.
 
 #### Function
 
-Enable `derive` to turn a public token-to-token function into a function-like
+Enable `macros` to turn a public token-to-token function into a function-like
 procedural macro with `#[moxy::function]`. The function accepts one
 `TokenStream` argument and returns `Result<TokenStream, ParseError>`.
 
@@ -329,7 +329,7 @@ the generated wrapper as a compiler note. Stable Rust does not emit this note.
 
 #### Attribute
 
-Enable `derive` to turn a public function taking the attribute arguments and
+Enable `macros` to turn a public function taking the attribute arguments and
 annotated item into an attribute procedural macro with `#[moxy::attribute]`.
 
 ```rust

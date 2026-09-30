@@ -1,8 +1,7 @@
-//! # Moxy derive
+//! # Moxy macros
 //!
-//! Derive support for `moxy::token::ToTokens` and `moxy::ast::FromMeta`.
-//! It also provides `#[moxy::derive(Name)]` for authoring custom derive macros
-//! from a typed moxy AST input.
+//! Procedural macros for `moxy`, including `ToTokens` and `FromMeta` derives,
+//! plus attributes for authoring function-like, attribute, and derive macros.
 //!
 //! ## Syntax
 //!

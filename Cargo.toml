@@ -33,7 +33,7 @@ suspicious_else_formatting = "allow"
 moxy = { path = ".", version = "0.4.4" }
 moxy-ast = { path = "crates/moxy-ast", version = "0.4.4" }
 moxy-build = { path = "crates/moxy-build", version = "0.4.4" }
-moxy-derive = { path = "crates/moxy-derive", version = "0.4.4" }
+moxy-macros = { path = "crates/moxy-macros", version = "0.4.4" }
 moxy-diagnostic = { path = "crates/moxy-diagnostic", version = "0.4.4" }
 moxy-fmt = { path = "crates/moxy-fmt", version = "0.4.4" }
 moxy-token = { path = "crates/moxy-token", version = "0.4.4" }
@@ -86,13 +86,13 @@ workspace = true
 [features]
 default = ["ast", "token"]
 derives = ["moxy-ast?/derives", "moxy-template?/derives"]
-full = ["ast", "token", "build", "fmt", "template", "derive", "derives", "diagnostic", "serde", "proc-macro2", "visit"]
+full = ["ast", "token", "build", "fmt", "template", "macros", "derives", "diagnostic", "serde", "proc-macro2", "visit"]
 ast = ["dep:moxy-ast"]
 build = ["dep:moxy-build"]
 fmt = ["dep:moxy-fmt"]
 token = ["dep:moxy-token"]
 template = ["dep:moxy-template"]
-derive = ["dep:moxy-derive"]
+macros = ["dep:moxy-macros"]
 diagnostic = ["dep:moxy-diagnostic"]
 serde = ["moxy-ast?/serde", "moxy-token?/serde", "moxy-fmt?/serde"]
 proc-macro2 = ["moxy-token?/proc-macro2"]
@@ -101,7 +101,7 @@ visit = ["moxy-ast?/visit"]
 [dependencies]
 moxy-ast = { workspace = true, optional = true }
 moxy-build = { workspace = true, optional = true }
-moxy-derive = { workspace = true, optional = true }
+moxy-macros = { workspace = true, optional = true }
 moxy-diagnostic = { workspace = true, optional = true }
 moxy-fmt = { workspace = true, optional = true }
 moxy-token = { workspace = true, optional = true }

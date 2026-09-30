@@ -311,9 +311,9 @@ dependencies = [
  "criterion",
  "moxy-ast",
  "moxy-build",
- "moxy-derive",
  "moxy-diagnostic",
  "moxy-fmt",
+ "moxy-macros",
  "moxy-template",
  "moxy-token",
  "proc-macro2",
@@ -337,17 +337,6 @@ name = "moxy-build"
 version = "0.4.4"
 
 [[package]]
-name = "moxy-derive"
-version = "0.4.4"
-dependencies = [
- "moxy-ast",
- "moxy-diagnostic",
- "moxy-fmt",
- "moxy-template",
- "moxy-token",
-]
-
-[[package]]
 name = "moxy-diagnostic"
 version = "0.4.4"
 dependencies = [
@@ -363,6 +352,17 @@ dependencies = [
  "moxy-ast",
  "moxy-token",
  "serde",
+]
+
+[[package]]
+name = "moxy-macros"
+version = "0.4.4"
+dependencies = [
+ "moxy-ast",
+ "moxy-diagnostic",
+ "moxy-fmt",
+ "moxy-template",
+ "moxy-token",
 ]
 
 [[package]]

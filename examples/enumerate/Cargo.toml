@@ -19,4 +19,4 @@ doctest = false
 workspace = true
 
 [dependencies]
-moxy = { workspace = true, features = ["derive", "template", "diagnostic"] }
+moxy = { workspace = true, features = ["macros", "template", "diagnostic"] }

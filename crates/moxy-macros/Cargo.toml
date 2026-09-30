@@ -1,6 +1,6 @@
 [package]
-name = "moxy-derive"
-description = "Moxy derive macros"
+name = "moxy-macros"
+description = "Moxy procedural macros"
 readme = "README.md"
 version.workspace = true
 edition.workspace = true

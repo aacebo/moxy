@@ -20,7 +20,7 @@
 //!
 //! Nodes that carry Rust attributes implement [`Attributed`]. It exposes their
 //! attributes in source order and can parse a named attribute through
-//! [`Attributed::parse_meta`]. With the `moxy` crate's `derive` feature, use
+//! [`Attributed::parse_meta`]. With the `moxy` crate's `macros` feature, use
 //! `#[derive(moxy::FromMeta)]` to convert structured attributes into named
 //! structs or enums.
 //!

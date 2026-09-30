@@ -35,7 +35,7 @@
 //! | `fmt` | no | Formatting through `fmt!`; implies `ast` |
 //! | `diagnostic` | no | Span-aware diagnostics and `compile_error!` fallback |
 //! | `build` | no | Cargo build-script directives and rustc version helpers |
-//! | `derive` | no | `#[derive(ToTokens)]`, `#[derive(FromMeta)]`, and macro-authoring attributes |
+//! | `macros` | no | `#[derive(ToTokens)]`, `#[derive(FromMeta)]`, and macro-authoring attributes |
 //! | `derives` | no | Standard trait derives for supported AST and template types |
 //! | `serde` | no | Serialization for supported AST, token, and formatter types |
 //! | `proc-macro2` | no | Conversion between Moxy and `proc_macro2` tokens |
@@ -149,7 +149,7 @@
 //!
 //! ### ToTokens
 //!
-//! With `derive`, `#[derive(moxy::ToTokens)]` implements
+//! With `macros`, `#[derive(moxy::ToTokens)]` implements
 //! `moxy::token::ToTokens` from an inline template:
 //!
 //! ```ignore
@@ -270,10 +270,10 @@ pub use moxy_ast as ast;
 #[doc(inline)]
 pub use moxy_build as build;
 
-/// Derive macros; enabled by the `derive` feature.
-#[cfg(feature = "derive")]
+/// Procedural macros; enabled by the `macros` feature.
+#[cfg(feature = "macros")]
 #[doc(inline)]
-pub use moxy_derive::*;
+pub use moxy_macros::*;
 
 /// Span-aware diagnostics; enabled by the `diagnostic` feature.
 #[cfg(feature = "diagnostic")]

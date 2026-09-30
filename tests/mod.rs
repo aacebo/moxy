@@ -22,8 +22,8 @@ mod types;
 mod unions;
 mod use_items;
 
-#[cfg(feature = "derive")]
-mod derive;
+#[cfg(feature = "macros")]
+mod macros;
 
 #[cfg(feature = "template")]
 mod template;
