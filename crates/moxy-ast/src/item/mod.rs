@@ -1,6 +1,3 @@
-use crate::{Parse, ParseError, Parser};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
-
 mod item_const;
 mod item_enum;
 mod item_extern_crate;
@@ -35,6 +32,9 @@ pub use item_type_alias::*;
 pub use item_union::*;
 pub use item_use::*;
 
+use crate::*;
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+
 /// A top-level item (fn, struct, enum, trait, impl, use, ...).
 #[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
@@ -57,6 +57,29 @@ pub enum Item {
     Macro(ItemMacro),
     Macro2(ItemMacroRules),
     ForeignMod(ItemForeignMod),
+}
+
+impl Attributed for Item {
+    fn attrs(&self) -> &[Attribute] {
+        match self {
+            Self::Use(value) => &value.attrs,
+            Self::ExternCrate(value) => &value.attrs,
+            Self::Mod(value) => &value.attrs,
+            Self::Fn(value) => &value.attrs,
+            Self::Struct(value) => &value.attrs,
+            Self::Enum(value) => &value.attrs,
+            Self::Union(value) => &value.attrs,
+            Self::Trait(value) => &value.attrs,
+            Self::TraitAlias(value) => &value.attrs,
+            Self::Impl(value) => &value.attrs,
+            Self::TypeAlias(value) => &value.attrs,
+            Self::Const(value) => &value.attrs,
+            Self::Static(value) => &value.attrs,
+            Self::Macro(value) => &value.attrs,
+            Self::Macro2(value) => &value.attrs,
+            Self::ForeignMod(value) => &value.attrs,
+        }
+    }
 }
 
 impl Item {

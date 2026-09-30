@@ -12,6 +12,12 @@ pub struct ForeignItemMacro {
     pub semi: Option<Token![;]>,
 }
 
+impl Attributed for ForeignItemMacro {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for ForeignItemMacro {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor)

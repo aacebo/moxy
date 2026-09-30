@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Delimited, Generics, Punctuated, TraitItem, TypeBound, Visibility};
+use crate::*;
 
 /// A trait definition item (`trait Name: Super { ... }`).
 #[derive(Clone)]
@@ -19,6 +17,12 @@ pub struct ItemTrait {
     pub colon_punct: Option<Token![:]>,
     pub supertraits: Punctuated<TypeBound, Token![+]>,
     pub items: Delimited<Vec<TraitItem>>,
+}
+
+impl Attributed for ItemTrait {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
 }
 
 impl Parse for ItemTrait {

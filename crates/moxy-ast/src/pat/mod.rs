@@ -71,6 +71,31 @@ pub enum Pattern {
     Const(PatConst),
 }
 
+impl Attributed for Pattern {
+    fn attrs(&self) -> &[Attribute] {
+        match self {
+            Self::Wild(value) => &value.attrs,
+            Self::Rest(value) => &value.attrs,
+            Self::Ident(value) => &value.attrs,
+            Self::Path(value) => &value.attrs,
+            Self::Tuple(value) => &value.attrs,
+            Self::TupleStruct(value) => &value.attrs,
+            Self::Struct(value) => &value.attrs,
+            Self::Slice(value) => &value.attrs,
+            Self::Reference(value) => &value.attrs,
+            Self::Or(value) => &value.attrs,
+            Self::Lit(value) => &value.attrs,
+            Self::Range(value) => &value.attrs,
+            Self::Macro(value) => &value.attrs,
+            Self::Type(value) => &value.attrs,
+            Self::Group(value) => &value.attrs,
+            Self::Paren(value) => &value.attrs,
+            Self::Box(value) => &value.attrs,
+            Self::Const(value) => &value.attrs,
+        }
+    }
+}
+
 impl Pattern {
     pub fn is_wild(&self) -> bool {
         matches!(self, Self::Wild(_))

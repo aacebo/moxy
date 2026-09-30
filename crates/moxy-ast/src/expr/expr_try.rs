@@ -12,6 +12,12 @@ pub struct ExprTry {
     pub question_punct: Token![?],
 }
 
+impl Attributed for ExprTry {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprTry> for Expr {
     fn from(value: ExprTry) -> Self {
         Self::Try(value)

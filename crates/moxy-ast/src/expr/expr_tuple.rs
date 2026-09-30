@@ -11,6 +11,12 @@ pub struct ExprTuple {
     pub elems: Delimited<Punctuated<Expr, Token![,]>>,
 }
 
+impl Attributed for ExprTuple {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprTuple> for Expr {
     fn from(value: ExprTuple) -> Self {
         Self::Tuple(value)

@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Expr, Safety, Type, Visibility};
+use crate::*;
 
 /// A static item (`static [mut] NAME: Type = expr;`).
 #[derive(Clone)]
@@ -20,6 +18,12 @@ pub struct ItemStatic {
     pub eq_punct: Option<Token![=]>,
     pub expr: Option<Expr>,
     pub semi_punct: Token![;],
+}
+
+impl Attributed for ItemStatic {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
 }
 
 impl Parse for ItemStatic {

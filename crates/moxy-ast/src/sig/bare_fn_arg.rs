@@ -12,6 +12,12 @@ pub struct BareFnArg {
     pub ty: Type,
 }
 
+impl Attributed for BareFnArg {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for BareFnArg {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);

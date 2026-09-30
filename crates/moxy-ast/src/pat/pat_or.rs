@@ -11,6 +11,12 @@ pub struct PatOr {
     pub cases: Punctuated<Pattern, Token![|]>,
 }
 
+impl Attributed for PatOr {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatOr {
     fn span(&self) -> Span {
         let cases = match (self.cases.first(), self.cases.last()) {

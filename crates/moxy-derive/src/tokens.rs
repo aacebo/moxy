@@ -9,25 +9,27 @@ pub fn expand(tokens: TokenStream) -> TokenStream {
 
     let mut tpl_meta_list = vec![];
     let mut debug_meta_list = vec![];
-    let result = object.attrs().for_each(|attr| {
-        if let Some(ident) = attr.path.as_ident()
-            && ident == "moxy"
-        {
-            attr.for_each(|meta| {
-                if let Some(ident) = meta.path.as_ident() {
-                    if ident == "template" {
-                        tpl_meta_list.push(meta.clone());
-                    } else if ident == "debug" {
-                        debug_meta_list.push(meta.clone());
+    let result = <moxy::ast::Declaration as moxy::ast::Attributed>::attrs(&object)
+        .iter()
+        .try_for_each(|attr| {
+            if let Some(ident) = attr.path.as_ident()
+                && ident == "moxy"
+            {
+                attr.for_each(|meta| {
+                    if let Some(ident) = meta.path.as_ident() {
+                        if ident == "template" {
+                            tpl_meta_list.push(meta.clone());
+                        } else if ident == "debug" {
+                            debug_meta_list.push(meta.clone());
+                        }
                     }
-                }
 
-                Ok(())
-            })?;
-        }
+                    Ok(())
+                })?;
+            }
 
-        Ok(())
-    });
+            Ok::<(), moxy::ast::ParseError>(())
+        });
 
     if let Err(err) = result {
         return err.to_compile_error();
@@ -57,7 +59,7 @@ pub fn expand(tokens: TokenStream) -> TokenStream {
     };
 
     if let Some(debug) = debug_meta_list.first() {
-        let impl_item = match moxy::parse!(output as moxy::ast::ImplItem) {
+        let impl_item = match moxy::parse!(output as moxy::ast::ItemImpl) {
             Err(err) => return err.to_compile_error(),
             Ok(v) => v,
         };

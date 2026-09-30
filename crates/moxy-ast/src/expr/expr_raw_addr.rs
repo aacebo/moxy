@@ -14,6 +14,12 @@ pub struct ExprRawAddr {
     pub expr: Box<Expr>,
 }
 
+impl Attributed for ExprRawAddr {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprRawAddr> for Expr {
     fn from(value: ExprRawAddr) -> Self {
         Self::RawAddr(value)

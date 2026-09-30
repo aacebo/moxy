@@ -193,6 +193,20 @@ impl Parse for LitBool {
     }
 }
 
+impl Parse for bool {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        LitBool::peek(cursor)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(<LitBool as Parse>::parse(parser)?.value())
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        LitBool::skip(cursor)
+    }
+}
+
 impl Parse for LitVerbatim {
     fn peek(cursor: Cursor<'_>) -> bool {
         matches!(cursor.curr(), Some(TokenTree::Literal(Lit::Verbatim(_))))

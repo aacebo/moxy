@@ -27,6 +27,7 @@ get_first = "allow"
 explicit_counter_loop = "allow"
 type_complexity = "allow"
 large_enum_variant = "allow"
+suspicious_else_formatting = "allow"
 
 [workspace.dependencies]
 moxy = { path = ".", version = "0.4.4" }

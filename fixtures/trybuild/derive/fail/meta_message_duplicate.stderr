@@ -1,0 +1,5 @@
+error: duplicate `message` rule
+ --> fixtures/trybuild/derive/fail/meta_message_duplicate.rs:3:41
+  |
+3 |     #[meta(message = "first", message = "second")]
+  |                                         ^^^^^^^^

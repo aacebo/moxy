@@ -13,6 +13,12 @@ pub struct ExprBreak {
     pub expr: Option<Box<Expr>>,
 }
 
+impl Attributed for ExprBreak {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprBreak> for Expr {
     fn from(value: ExprBreak) -> Self {
         Self::Break(value)

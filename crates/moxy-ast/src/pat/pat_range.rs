@@ -13,6 +13,12 @@ pub struct PatRange {
     pub end: Option<Expr>,
 }
 
+impl Attributed for PatRange {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatRange {
     fn span(&self) -> Span {
         let end = if let Some(e) = &self.end {

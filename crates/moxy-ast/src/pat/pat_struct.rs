@@ -14,6 +14,12 @@ pub struct PatStruct {
     pub body: Delimited<PatStructBody>,
 }
 
+impl Attributed for PatStruct {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatStruct {
     fn span(&self) -> Span {
         self.attrs.span().join(self.body.span())

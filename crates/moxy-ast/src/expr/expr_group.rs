@@ -11,6 +11,12 @@ pub struct ExprGroup {
     pub expr: Box<Expr>,
 }
 
+impl Attributed for ExprGroup {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprGroup> for Expr {
     fn from(value: ExprGroup) -> Self {
         Self::Group(value)

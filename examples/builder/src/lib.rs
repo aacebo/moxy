@@ -1,8 +1,17 @@
-use moxy::ast::ParseError;
+use moxy::ast::{Attributed, ParseError};
 use moxy::diagnostic::SpanExt;
 use moxy::token::{Spanner, TokenStream};
 
-#[moxy::derive(Builder)]
+#[derive(moxy::FromMeta)]
+struct Args {
+    #[meta(default)]
+    rename: Option<String>,
+
+    #[meta(rename = "default", default)]
+    is_default: bool,
+}
+
+#[moxy::derive(Builder, attributes(build))]
 pub fn builder(declaration: moxy::ast::Declaration) -> Result<TokenStream, ParseError> {
     let moxy::ast::Declaration::Struct(item) = &declaration else {
         return declaration.span().error("invalid host type, expected struct").into();
@@ -18,7 +27,41 @@ pub fn builder(declaration: moxy::ast::Declaration) -> Result<TokenStream, Parse
     };
 
     let builder_name = moxy::token::ident!(format!("{}Builder", item.ident.text()));
-    let fields = &named.fields;
+    let mut fields = Vec::new();
+    let mut initializers: Vec<TokenStream> = Vec::new();
+    let mut setters: Vec<TokenStream> = Vec::new();
+
+    for field in named.fields.iter() {
+        let args = field.parse_meta::<Args>("build")?;
+        let field_ident = field.ident.as_ref().expect("named fields have identifiers");
+        let setter_ident = args
+            .as_ref()
+            .and_then(|args| args.rename.as_deref())
+            .map(|rename| moxy::token::Ident::new(rename).with_span(field_ident.span()))
+            .unwrap_or_else(|| field_ident.clone());
+        let tokens = if let Some(args) = &args
+            && args.is_default
+        {
+            moxy::template! {
+                {{ field.ident }}: self.{{ field.ident }}.unwrap_or_else(|| ::core::default::Default::default())
+            }
+        } else {
+            moxy::template! {
+                {{ field.ident }}: self.{{ field.ident }}.expect(
+                    concat!("missing required field: ", stringify!({{ field.ident }})),
+                )
+            }
+        };
+
+        fields.push(field);
+        initializers.push(tokens);
+        setters.push(moxy::template! {
+            pub fn {{ setter_ident }}(mut self, value: {{ field.ty }}) -> Self {
+                self.{{ field_ident }} = Some(value);
+                self
+            }
+        });
+    }
 
     Ok(moxy::template! {
         pub struct {{ builder_name }} {
@@ -38,25 +81,14 @@ pub fn builder(declaration: moxy::ast::Declaration) -> Result<TokenStream, Parse
         }
 
         impl {{ &builder_name }} {
-            @for (field in fields.iter()) {
-                pub fn {{ field.ident }}(mut self, value: {{ field.ty }}) -> Self {
-                    self.{{ field.ident }} = Some(value);
-                    self
-                }
+            @for (setter in setters.iter()) {
+                {{ setter }}
             }
 
-            @if (fields.is_empty()) {
-                pub fn build(self) -> {{ &item.ident }} {
-                    {{ item.ident }} {}
-                }
-            } @else {
-                pub fn build(self) -> {{ &item.ident }} {
-                    {{ item.ident }} {
-                        @for (field in fields.iter()) {
-                            {{ field.ident }}: self.{{ field.ident }}.expect(
-                                concat!("missing required field: ", stringify!({{ field.ident }})),
-                            ),
-                        }
+            pub fn build(self) -> {{ &item.ident }} {
+                {{ item.ident }} {
+                    @for (initializer in initializers.iter()) {
+                        {{ initializer }},
                     }
                 }
             }

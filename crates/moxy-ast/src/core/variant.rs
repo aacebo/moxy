@@ -1,0 +1,94 @@
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
+
+use crate::*;
+
+/// An enum variant (`Name`, `Name(T)`, `Name { x: T }`, `Name = 1`).
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
+#[cfg_attr(feature = "serde", derive(serde::Serialize))]
+pub struct Variant {
+    pub attrs: Attributes,
+    pub vis: Visibility,
+    pub ident: Ident,
+    pub fields: Fields,
+    pub eq_punct: Option<Token![=]>,
+    pub discriminant: Option<Expr>,
+}
+
+impl Attributed for Variant {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
+impl Parse for Variant {
+    fn peek(cursor: crate::Cursor<'_>) -> bool {
+        Attributes::skip(cursor)
+            .map(|cursor| Visibility::skip(cursor).unwrap_or(cursor))
+            .map(Ident::peek)
+            .unwrap_or(false)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
+        let fields = <_ as Parse>::parse(parser)?;
+        let (eq_punct, discriminant) = if <Token![=]>::peek(parser.cursor()) {
+            let eq_punct = <_ as Parse>::parse(parser)?;
+            let discriminant = <_ as Parse>::parse(parser)?;
+            (Some(eq_punct), Some(discriminant))
+        } else {
+            (None, None)
+        };
+
+        Ok(Self {
+            attrs,
+            vis,
+            ident,
+            fields,
+            eq_punct,
+            discriminant,
+        })
+    }
+
+    fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
+        cursor = Ident::skip(cursor)?;
+        cursor = Fields::skip(cursor)?;
+
+        if <Token![=]>::peek(cursor) {
+            cursor = <Token![=]>::skip(cursor)?;
+            cursor = Expr::skip(cursor)?;
+        }
+
+        Some(cursor)
+    }
+}
+
+impl Spanner for Variant {
+    fn span(&self) -> Span {
+        let end = self
+            .discriminant
+            .as_ref()
+            .map(|v| v.span())
+            .or(self.eq_punct.map(|v| v.span()))
+            .unwrap_or(self.fields.span());
+        self.attrs.span().join(end)
+    }
+}
+
+impl ToTokens for Variant {
+    fn to_tokens(&self, t: &mut TokenStream) {
+        self.attrs.to_tokens(t);
+        self.vis.to_tokens(t);
+        self.ident.to_tokens(t);
+        self.fields.to_tokens(t);
+
+        if let (Some(eq_punct), Some(d)) = (&self.eq_punct, &self.discriminant) {
+            eq_punct.to_tokens(t);
+            d.to_tokens(t);
+        }
+    }
+}

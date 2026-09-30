@@ -15,6 +15,12 @@ pub struct TypeParam {
     pub default: Option<Type>,
 }
 
+impl Attributed for TypeParam {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for TypeParam {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor).map(|cursor| Ident::peek(cursor)).unwrap_or(false)

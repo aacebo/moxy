@@ -12,6 +12,12 @@ pub struct ExprBlock {
     pub block: StmtBlock,
 }
 
+impl Attributed for ExprBlock {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprBlock> for Expr {
     fn from(value: ExprBlock) -> Self {
         Self::Block(value)

@@ -11,6 +11,12 @@ pub struct PatMacro {
     pub call: MacroCall,
 }
 
+impl Attributed for PatMacro {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatMacro {
     fn span(&self) -> Span {
         self.attrs.span().join(self.call.span())

@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, UseTree, Visibility};
+use crate::*;
 
 /// A `use` item (`use path::to::Name;`).
 #[derive(Clone)]
@@ -14,6 +12,12 @@ pub struct ItemUse {
     pub use_keyword: Token![use],
     pub tree: UseTree,
     pub semi_punct: Token![;],
+}
+
+impl Attributed for ItemUse {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
 }
 
 impl Parse for ItemUse {

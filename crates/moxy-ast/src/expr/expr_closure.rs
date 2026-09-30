@@ -19,6 +19,12 @@ pub struct ExprClosure {
     pub body: Box<Expr>,
 }
 
+impl Attributed for ExprClosure {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprClosure> for Expr {
     fn from(value: ExprClosure) -> Self {
         Self::Closure(value)

@@ -11,6 +11,12 @@ pub struct ExprMacro {
     pub mac: MacroCall,
 }
 
+impl Attributed for ExprMacro {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprMacro> for Expr {
     fn from(value: ExprMacro) -> Self {
         Self::Macro(value)

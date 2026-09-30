@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Expr, Generics, Type, Visibility};
+use crate::*;
 
 /// A constant item (`const NAME: Type = expr;`).
 #[derive(Clone)]
@@ -19,6 +17,12 @@ pub struct ItemConst {
     pub eq_punct: Option<Token![=]>,
     pub expr: Option<Expr>,
     pub semi_punct: Token![;],
+}
+
+impl Attributed for ItemConst {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
 }
 
 impl Parse for ItemConst {

@@ -13,6 +13,12 @@ pub struct PatReference {
     pub pat: Box<Pattern>,
 }
 
+impl Attributed for PatReference {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatReference {
     fn span(&self) -> Span {
         self.attrs.span().join(self.pat.span())

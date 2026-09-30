@@ -11,6 +11,12 @@ pub struct PatParen {
     pub content: Delimited<Box<Pattern>>,
 }
 
+impl Attributed for PatParen {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatParen {
     fn span(&self) -> Span {
         self.content.span()

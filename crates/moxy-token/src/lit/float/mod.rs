@@ -5,7 +5,7 @@ pub use f32::*;
 pub use f64::*;
 
 use crate::lex::{Cursor, LexError, Scan};
-use crate::{Lit, Span, Spanner};
+use crate::{Lit, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 /// A parsed Rust float literal token.
 #[derive(Debug, Clone, PartialEq, Eq, Hash)]
@@ -93,9 +93,21 @@ impl Spanner for LitFloat {
     }
 }
 
+impl ToTokens for LitFloat {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(TokenTree::Literal(self.clone().into()));
+    }
+}
+
 impl std::fmt::Display for LitFloat {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         f.write_str(self.repr())
+    }
+}
+
+impl From<LitFloat> for Lit {
+    fn from(value: LitFloat) -> Self {
+        Self::Float(value)
     }
 }
 

@@ -11,6 +11,12 @@ pub struct PatTuple {
     pub elems: Delimited<Punctuated<Pattern, Token![,]>>,
 }
 
+impl Attributed for PatTuple {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatTuple {
     fn span(&self) -> Span {
         self.elems.span()

@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Group, Ident, LexError, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use crate::Attributes;
+use crate::*;
 
 /// A `macro_rules!` definition item.
 #[derive(Clone)]
@@ -14,6 +12,12 @@ pub struct ItemMacroRules {
     pub not_punct: Token![!],
     pub ident: Ident,
     pub body: Group,
+}
+
+impl Attributed for ItemMacroRules {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
 }
 
 impl Parse for ItemMacroRules {

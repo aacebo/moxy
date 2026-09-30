@@ -14,6 +14,12 @@ pub struct PatIdent {
     pub subpat: Option<(Token![@], Box<Pattern>)>,
 }
 
+impl Attributed for PatIdent {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatIdent {
     fn span(&self) -> Span {
         let end = if let Some((_, sub)) = &self.subpat {

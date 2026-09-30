@@ -13,6 +13,12 @@ pub struct ExprField {
     pub member: Member,
 }
 
+impl Attributed for ExprField {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprField> for Expr {
     fn from(value: ExprField) -> Self {
         Self::Field(value)

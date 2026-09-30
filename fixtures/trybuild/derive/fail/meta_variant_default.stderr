@@ -1,0 +1,5 @@
+error: `default` is not supported on enum variants
+ --> fixtures/trybuild/derive/fail/meta_variant_default.rs:3:20
+  |
+3 |     #[meta(default)]
+  |                    ^

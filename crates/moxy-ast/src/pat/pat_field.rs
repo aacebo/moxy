@@ -14,6 +14,12 @@ pub struct PatField {
     pub pat: Pattern,
 }
 
+impl Attributed for PatField {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl PatField {
     pub fn is_shorthand(&self) -> bool {
         self.colon.is_none()

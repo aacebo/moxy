@@ -44,7 +44,8 @@ mod token {
 mod attribute;
 mod derive;
 mod function;
-mod to_tokens;
+mod meta;
+mod tokens;
 
 use moxy_ast::parse;
 use moxy_fmt::fmt;
@@ -86,8 +87,18 @@ use moxy_template::template;
 /// A missing, repeated, or malformed template attribute produces a
 /// span-targeted compiler error.
 #[proc_macro_derive(ToTokens, attributes(moxy))]
-pub fn derive_to_tokens(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    to_tokens::expand(tokens.into()).into()
+pub fn derive_tokens(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    tokens::expand(tokens.into()).into()
+}
+
+/// Derives [`moxy::ast::FromMeta`] for a struct or enum.
+///
+/// Named fields and newtype enum variants are converted recursively through
+/// `FromMeta`. Consequently, every nested value type must implement `FromMeta`;
+/// implementing `Parse` alone is no longer sufficient.
+#[proc_macro_derive(FromMeta, attributes(meta))]
+pub fn derive_meta(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    meta::expand(tokens.into()).into()
 }
 
 /// Turns a public token-to-token function into a function-like procedural macro.

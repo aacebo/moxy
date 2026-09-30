@@ -14,6 +14,12 @@ pub struct ExprWhile {
     pub body: StmtBlock,
 }
 
+impl Attributed for ExprWhile {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprWhile> for Expr {
     fn from(value: ExprWhile) -> Self {
         Self::While(value)

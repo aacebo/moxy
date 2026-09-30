@@ -24,6 +24,17 @@ pub enum ImplItem {
     Macro(ImplItemMacro),
 }
 
+impl Attributed for ImplItem {
+    fn attrs(&self) -> &[Attribute] {
+        match self {
+            Self::Fn(value) => &value.attrs,
+            Self::Const(value) => &value.attrs,
+            Self::Type(value) => &value.attrs,
+            Self::Macro(value) => &value.attrs,
+        }
+    }
+}
+
 impl ImplItem {
     pub fn is_fn(&self) -> bool {
         matches!(self, Self::Fn(_))

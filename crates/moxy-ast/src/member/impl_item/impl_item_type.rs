@@ -18,6 +18,12 @@ pub struct ImplItemType {
     pub semi: Option<Token![;]>,
 }
 
+impl Attributed for ImplItemType {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for ImplItemType {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);

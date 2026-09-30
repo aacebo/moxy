@@ -15,6 +15,12 @@ pub struct StmtLocal {
     pub semi: Option<Token![;]>,
 }
 
+impl Attributed for StmtLocal {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for StmtLocal {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor)

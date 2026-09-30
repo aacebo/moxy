@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Fields, Generics, Visibility};
+use crate::*;
 
 /// A struct item (`struct Name<T> { ... }` or `struct Name(T);`).
 #[derive(Clone)]
@@ -16,6 +14,12 @@ pub struct ItemStruct {
     pub generics: Generics,
     pub fields: Fields,
     pub semi: Option<Token![;]>,
+}
+
+impl Attributed for ItemStruct {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
 }
 
 impl Parse for ItemStruct {

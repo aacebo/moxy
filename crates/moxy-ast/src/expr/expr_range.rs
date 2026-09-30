@@ -13,6 +13,12 @@ pub struct ExprRange {
     pub end: Option<Box<Expr>>,
 }
 
+impl Attributed for ExprRange {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprRange> for Expr {
     fn from(value: ExprRange) -> Self {
         Self::Range(value)

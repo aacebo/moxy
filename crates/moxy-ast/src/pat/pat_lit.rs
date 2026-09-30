@@ -11,6 +11,12 @@ pub struct PatLit {
     pub lit: Lit,
 }
 
+impl Attributed for PatLit {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatLit {
     fn span(&self) -> Span {
         self.attrs.span().join(self.lit.span())

@@ -13,6 +13,12 @@ pub struct TraitItemFn {
     pub semi: Option<Token![;]>,
 }
 
+impl Attributed for TraitItemFn {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for TraitItemFn {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor)

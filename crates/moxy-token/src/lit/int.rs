@@ -1,6 +1,6 @@
 use crate::lex::Cursor;
 use crate::lit::Lit;
-use crate::{LexError, Scan, Span, Spanner};
+use crate::{LexError, Scan, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 /// A parsed Rust int literal token.
 #[derive(Debug, Default, Clone)]
@@ -78,6 +78,12 @@ impl std::str::FromStr for LitInt {
 impl Spanner for LitInt {
     fn span(&self) -> Span {
         self.span
+    }
+}
+
+impl ToTokens for LitInt {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(TokenTree::Literal(self.clone().into()));
     }
 }
 

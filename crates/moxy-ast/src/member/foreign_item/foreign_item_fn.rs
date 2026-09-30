@@ -13,6 +13,12 @@ pub struct ForeignItemFn {
     pub semi: Option<Token![;]>,
 }
 
+impl Attributed for ForeignItemFn {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for ForeignItemFn {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);

@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Visibility};
+use crate::*;
 
 /// An `extern crate` item (`extern crate foo;` or `extern crate foo as bar;`).
 #[derive(Clone)]
@@ -17,6 +15,12 @@ pub struct ItemExternCrate {
     pub as_keyword: Option<Token![as]>,
     pub rename: Option<Ident>,
     pub semi_punct: Token![;],
+}
+
+impl Attributed for ItemExternCrate {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
 }
 
 impl Parse for ItemExternCrate {

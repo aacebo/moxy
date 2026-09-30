@@ -14,6 +14,12 @@ pub struct ImplItemFn {
     pub body: StmtBlock,
 }
 
+impl Attributed for ImplItemFn {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for ImplItemFn {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);

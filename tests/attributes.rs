@@ -1,4 +1,4 @@
-use moxy::ast::Item;
+use moxy::ast::{Item, Meta};
 use moxy::token::Spanner;
 
 #[test]
@@ -27,4 +27,75 @@ fn field_attributes_remain_with_the_field_syntax() {
         moxy::fmt!(&item).unwrap(),
         "struct Packet {\n\t#[cfg(unix)]\n\tbytes: Vec<u8>,\n}"
     );
+}
+
+#[test]
+fn metadata_converts_builtin_scalar_values() {
+    let value: Meta = moxy::parse!("value").unwrap();
+    assert!(value.parse::<bool>().unwrap());
+
+    let value: Meta = moxy::parse!("value = false").unwrap();
+    assert!(!value.parse::<bool>().unwrap());
+
+    let value: Meta = moxy::parse!("value = \"text\"").unwrap();
+    assert_eq!(value.parse::<String>().unwrap(), "text");
+
+    let value: Meta = moxy::parse!("value = 'x'").unwrap();
+    assert_eq!(value.parse::<char>().unwrap(), 'x');
+
+    let value: Meta = moxy::parse!("value = 1").unwrap();
+    assert_eq!(value.parse::<u8>().unwrap(), 1);
+    assert_eq!(value.parse::<u16>().unwrap(), 1);
+    assert_eq!(value.parse::<u32>().unwrap(), 1);
+    assert_eq!(value.parse::<u64>().unwrap(), 1);
+    assert_eq!(value.parse::<u128>().unwrap(), 1);
+    assert_eq!(value.parse::<usize>().unwrap(), 1);
+    assert_eq!(value.parse::<i8>().unwrap(), 1);
+    assert_eq!(value.parse::<i16>().unwrap(), 1);
+    assert_eq!(value.parse::<i32>().unwrap(), 1);
+    assert_eq!(value.parse::<i64>().unwrap(), 1);
+    assert_eq!(value.parse::<i128>().unwrap(), 1);
+    assert_eq!(value.parse::<isize>().unwrap(), 1);
+
+    let value: Meta = moxy::parse!("value = -1").unwrap();
+    assert_eq!(value.parse::<i8>().unwrap(), -1);
+    assert_eq!(value.parse::<i16>().unwrap(), -1);
+    assert_eq!(value.parse::<i32>().unwrap(), -1);
+    assert_eq!(value.parse::<i64>().unwrap(), -1);
+    assert_eq!(value.parse::<i128>().unwrap(), -1);
+    assert_eq!(value.parse::<isize>().unwrap(), -1);
+
+    let value: Meta = moxy::parse!("value = 1.5").unwrap();
+    assert_eq!(value.parse::<f32>().unwrap(), 1.5);
+    assert_eq!(value.parse::<f64>().unwrap(), 1.5);
+
+    let value: Meta = moxy::parse!("value = -1.5").unwrap();
+    assert_eq!(value.parse::<f32>().unwrap(), -1.5);
+    assert_eq!(value.parse::<f64>().unwrap(), -1.5);
+}
+
+#[test]
+fn metadata_rejects_scalar_overflow_and_invalid_literal_shapes() {
+    let value: Meta = moxy::parse!("value = 256").unwrap();
+    assert!(value.parse::<u8>().is_err());
+
+    let value: Meta = moxy::parse!("value = -129").unwrap();
+    assert!(value.parse::<i8>().is_err());
+
+    let value: Meta = moxy::parse!("value = -1").unwrap();
+    assert!(value.parse::<u8>().is_err());
+
+    let value: Meta = moxy::parse!("value = 1").unwrap();
+    assert!(value.parse::<String>().is_err());
+    assert!(value.parse::<char>().is_err());
+    assert!(value.parse::<f64>().is_err());
+
+    let value: Meta = moxy::parse!("value(1)").unwrap();
+    assert!(value.parse::<u8>().is_err());
+
+    let value: Meta = moxy::parse!("value = 1 + 2").unwrap();
+    assert!(value.parse::<u8>().is_err());
+
+    let value: Meta = moxy::parse!("value = true && false").unwrap();
+    assert!(value.parse::<bool>().is_err());
 }

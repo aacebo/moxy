@@ -13,6 +13,12 @@ pub struct FieldValue {
     pub expr: Expr,
 }
 
+impl Attributed for FieldValue {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl FieldValue {
     pub fn is_shorthand(&self) -> bool {
         self.colon_punct.is_none()

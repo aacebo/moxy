@@ -13,6 +13,12 @@ pub struct ExprAsync {
     pub block: StmtBlock,
 }
 
+impl Attributed for ExprAsync {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprAsync> for Expr {
     fn from(value: ExprAsync) -> Self {
         Self::Async(value)

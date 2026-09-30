@@ -1,6 +1,6 @@
 use crate::lex::{Cursor, LexError, Scan};
 use crate::lit::Lit;
-use crate::{Span, Spanner};
+use crate::{Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 /// A parsed Rust str literal token.
 #[derive(Debug, Clone)]
@@ -74,6 +74,12 @@ impl std::fmt::Display for LitStr {
 impl Spanner for LitStr {
     fn span(&self) -> Span {
         self.span
+    }
+}
+
+impl ToTokens for LitStr {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(TokenTree::Literal(self.clone().into()));
     }
 }
 

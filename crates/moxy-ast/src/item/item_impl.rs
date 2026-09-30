@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{LexError, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Delimited, Generics, ImplItem, TraitRef, Type};
+use crate::*;
 
 /// An `impl` block, optionally implementing a trait (`impl Trait for Type { ... }`).
 #[derive(Clone)]
@@ -18,6 +16,12 @@ pub struct ItemImpl {
     pub trait_ref: Option<TraitRef>,
     pub self_ty: Type,
     pub items: Delimited<Vec<ImplItem>>,
+}
+
+impl Attributed for ItemImpl {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
 }
 
 impl ItemImpl {

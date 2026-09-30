@@ -1,0 +1,5 @@
+error: `Meta` tuple variants must contain exactly one field
+ --> fixtures/trybuild/derive/fail/meta_invalid_enum.rs:3:20
+  |
+3 |     Pair(bool, bool),
+  |                    ^

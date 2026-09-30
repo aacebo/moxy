@@ -12,6 +12,12 @@ pub struct TraitItemMacro {
     pub semi: Token![;],
 }
 
+impl Attributed for TraitItemMacro {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for TraitItemMacro {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor)

@@ -11,6 +11,12 @@ pub struct ExprArray {
     pub elems: Delimited<Punctuated<Expr, Token![,]>>,
 }
 
+impl Attributed for ExprArray {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprArray> for Expr {
     fn from(value: ExprArray) -> Self {
         Self::Array(value)

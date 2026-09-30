@@ -12,6 +12,12 @@ pub struct PatConst {
     pub block: StmtBlock,
 }
 
+impl Attributed for PatConst {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatConst {
     fn span(&self) -> Span {
         self.attrs.span().join(self.block.span())

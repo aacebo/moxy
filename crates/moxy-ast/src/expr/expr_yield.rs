@@ -12,6 +12,12 @@ pub struct ExprYield {
     pub expr: Option<Box<Expr>>,
 }
 
+impl Attributed for ExprYield {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprYield> for Expr {
     fn from(value: ExprYield) -> Self {
         Self::Yield(value)

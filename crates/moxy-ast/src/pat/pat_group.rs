@@ -11,6 +11,12 @@ pub struct PatGroup {
     pub pat: Box<Pattern>,
 }
 
+impl Attributed for PatGroup {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatGroup {
     fn span(&self) -> Span {
         self.attrs.span().join(self.pat.span())

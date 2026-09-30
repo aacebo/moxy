@@ -13,6 +13,12 @@ pub struct ExprMatch {
     pub arms: Delimited<Vec<MatchArm>>,
 }
 
+impl Attributed for ExprMatch {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprMatch> for Expr {
     fn from(value: ExprMatch) -> Self {
         Self::Match(value)
@@ -46,6 +52,12 @@ pub struct MatchArm {
     pub fat_arrow: Token![=>],
     pub body: Expr,
     pub comma: Option<Token![,]>,
+}
+
+impl Attributed for MatchArm {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
 }
 
 impl Parse for MatchArm {

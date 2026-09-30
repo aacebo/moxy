@@ -12,6 +12,12 @@ pub struct StmtMacro {
     pub semi: Option<Token![;]>,
 }
 
+impl Attributed for StmtMacro {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for StmtMacro {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor)

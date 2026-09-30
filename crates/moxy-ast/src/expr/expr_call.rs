@@ -12,6 +12,12 @@ pub struct ExprCall {
     pub args: Delimited<Punctuated<Expr, Token![,]>>,
 }
 
+impl Attributed for ExprCall {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprCall> for Expr {
     fn from(value: ExprCall) -> Self {
         Self::Call(value)

@@ -1,0 +1,5 @@
+error: `Meta` cannot be derived for unions
+ --> fixtures/trybuild/derive/fail/meta_union.rs:4:1
+  |
+4 | }
+  | ^

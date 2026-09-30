@@ -57,6 +57,14 @@ impl Path {
         None
     }
 
+    pub fn is_ident(&self, ident: impl AsRef<str>) -> bool {
+        let Some(v) = self.as_ident() else {
+            return false;
+        };
+
+        v == ident.as_ref()
+    }
+
     pub(crate) fn parse_rest(parser: &Parser, first: PathSegment) -> Result<Self, ParseError> {
         let mut segments = Punctuated::new();
         segments.push_value(first);

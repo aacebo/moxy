@@ -11,6 +11,12 @@ pub struct PatSlice {
     pub elems: Delimited<Punctuated<Pattern, Token![,]>>,
 }
 
+impl Attributed for PatSlice {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatSlice {
     fn span(&self) -> Span {
         self.elems.span()

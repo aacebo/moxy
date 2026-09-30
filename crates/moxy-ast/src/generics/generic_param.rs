@@ -12,6 +12,16 @@ pub enum GenericParam {
     Const(Box<generics::ConstParam>),
 }
 
+impl Attributed for GenericParam {
+    fn attrs(&self) -> &[Attribute] {
+        match self {
+            Self::Lifetime(value) => &value.attrs,
+            Self::Type(value) => &value.attrs,
+            Self::Const(value) => &value.attrs,
+        }
+    }
+}
+
 impl GenericParam {
     pub fn is_lifetime(&self) -> bool {
         matches!(self, Self::Lifetime(_))

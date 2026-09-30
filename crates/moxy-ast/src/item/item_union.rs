@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, FieldsNamed, Generics, Visibility};
+use crate::*;
 
 /// A union item (`union Name<T> { field: Type, ... }`).
 #[derive(Clone)]
@@ -15,6 +13,12 @@ pub struct ItemUnion {
     pub ident: Ident,
     pub generics: Generics,
     pub fields: FieldsNamed,
+}
+
+impl Attributed for ItemUnion {
+    fn attrs(&self) -> &[Attribute] {
+        &self.attrs
+    }
 }
 
 impl Parse for ItemUnion {
