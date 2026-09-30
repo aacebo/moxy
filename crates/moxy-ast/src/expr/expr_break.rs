@@ -14,7 +14,7 @@ pub struct ExprBreak {
 }
 
 impl Attributed for ExprBreak {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

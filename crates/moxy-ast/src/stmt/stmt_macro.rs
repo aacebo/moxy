@@ -13,7 +13,7 @@ pub struct StmtMacro {
 }
 
 impl Attributed for StmtMacro {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

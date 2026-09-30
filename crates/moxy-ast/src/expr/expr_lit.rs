@@ -12,7 +12,7 @@ pub struct ExprLit {
 }
 
 impl Attributed for ExprLit {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

@@ -13,7 +13,7 @@ pub struct ExprPath {
 }
 
 impl Attributed for ExprPath {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

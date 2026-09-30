@@ -13,7 +13,7 @@ pub struct ExprUnary {
 }
 
 impl Attributed for ExprUnary {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

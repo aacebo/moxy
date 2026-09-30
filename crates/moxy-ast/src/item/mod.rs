@@ -60,7 +60,7 @@ pub enum Item {
 }
 
 impl Attributed for Item {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         match self {
             Self::Use(value) => &value.attrs,
             Self::ExternCrate(value) => &value.attrs,

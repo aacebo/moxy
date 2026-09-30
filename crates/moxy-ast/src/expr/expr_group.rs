@@ -12,7 +12,7 @@ pub struct ExprGroup {
 }
 
 impl Attributed for ExprGroup {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

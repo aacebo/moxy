@@ -14,7 +14,7 @@ pub struct ExprMatch {
 }
 
 impl Attributed for ExprMatch {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }
@@ -55,7 +55,7 @@ pub struct MatchArm {
 }
 
 impl Attributed for MatchArm {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

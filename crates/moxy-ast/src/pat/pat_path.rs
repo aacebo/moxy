@@ -14,7 +14,7 @@ pub struct PatPath {
 }
 
 impl Attributed for PatPath {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

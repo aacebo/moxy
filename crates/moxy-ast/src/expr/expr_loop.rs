@@ -14,7 +14,7 @@ pub struct ExprLoop {
 }
 
 impl Attributed for ExprLoop {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

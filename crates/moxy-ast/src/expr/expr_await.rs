@@ -14,7 +14,7 @@ pub struct ExprAwait {
 }
 
 impl Attributed for ExprAwait {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

@@ -16,7 +16,7 @@ pub struct ItemEnum {
 }
 
 impl Attributed for ItemEnum {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

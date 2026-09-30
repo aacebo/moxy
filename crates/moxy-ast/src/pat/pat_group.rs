@@ -12,7 +12,7 @@ pub struct PatGroup {
 }
 
 impl Attributed for PatGroup {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

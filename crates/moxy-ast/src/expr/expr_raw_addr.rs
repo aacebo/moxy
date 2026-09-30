@@ -15,7 +15,7 @@ pub struct ExprRawAddr {
 }
 
 impl Attributed for ExprRawAddr {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

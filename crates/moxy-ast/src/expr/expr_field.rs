@@ -14,7 +14,7 @@ pub struct ExprField {
 }
 
 impl Attributed for ExprField {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

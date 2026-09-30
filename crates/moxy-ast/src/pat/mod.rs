@@ -72,7 +72,7 @@ pub enum Pattern {
 }
 
 impl Attributed for Pattern {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         match self {
             Self::Wild(value) => &value.attrs,
             Self::Rest(value) => &value.attrs,

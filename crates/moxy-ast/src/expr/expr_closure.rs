@@ -20,7 +20,7 @@ pub struct ExprClosure {
 }
 
 impl Attributed for ExprClosure {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

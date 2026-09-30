@@ -21,7 +21,7 @@ pub struct ImplItemConst {
 }
 
 impl Attributed for ImplItemConst {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

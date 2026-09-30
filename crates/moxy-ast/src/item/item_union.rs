@@ -16,7 +16,7 @@ pub struct ItemUnion {
 }
 
 impl Attributed for ItemUnion {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

@@ -15,7 +15,7 @@ pub struct PatIdent {
 }
 
 impl Attributed for PatIdent {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

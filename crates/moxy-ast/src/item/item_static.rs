@@ -21,7 +21,7 @@ pub struct ItemStatic {
 }
 
 impl Attributed for ItemStatic {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

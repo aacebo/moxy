@@ -13,7 +13,7 @@ pub struct ImplItemMacro {
 }
 
 impl Attributed for ImplItemMacro {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

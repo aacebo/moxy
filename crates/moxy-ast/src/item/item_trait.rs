@@ -20,7 +20,7 @@ pub struct ItemTrait {
 }
 
 impl Attributed for ItemTrait {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

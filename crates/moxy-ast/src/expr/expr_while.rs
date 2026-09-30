@@ -15,7 +15,7 @@ pub struct ExprWhile {
 }
 
 impl Attributed for ExprWhile {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

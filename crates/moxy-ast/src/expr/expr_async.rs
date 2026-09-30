@@ -14,7 +14,7 @@ pub struct ExprAsync {
 }
 
 impl Attributed for ExprAsync {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

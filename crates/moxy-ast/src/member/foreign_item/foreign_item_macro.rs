@@ -13,7 +13,7 @@ pub struct ForeignItemMacro {
 }
 
 impl Attributed for ForeignItemMacro {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

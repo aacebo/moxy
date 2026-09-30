@@ -16,7 +16,7 @@ pub struct Field {
 }
 
 impl Attributed for Field {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

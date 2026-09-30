@@ -13,7 +13,7 @@ pub struct ExprBlock {
 }
 
 impl Attributed for ExprBlock {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

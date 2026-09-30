@@ -14,7 +14,7 @@ pub struct ExprReference {
 }
 
 impl Attributed for ExprReference {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

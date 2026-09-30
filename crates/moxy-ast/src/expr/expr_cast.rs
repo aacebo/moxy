@@ -14,7 +14,7 @@ pub struct ExprCast {
 }
 
 impl Attributed for ExprCast {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

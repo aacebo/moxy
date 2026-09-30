@@ -13,7 +13,7 @@ pub struct Variadic {
 }
 
 impl Attributed for Variadic {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

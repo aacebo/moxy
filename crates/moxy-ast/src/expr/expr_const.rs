@@ -13,7 +13,7 @@ pub struct ExprConst {
 }
 
 impl Attributed for ExprConst {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

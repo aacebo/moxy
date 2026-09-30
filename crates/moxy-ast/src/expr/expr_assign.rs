@@ -14,7 +14,7 @@ pub struct ExprAssign {
 }
 
 impl Attributed for ExprAssign {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

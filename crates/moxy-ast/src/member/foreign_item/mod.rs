@@ -25,7 +25,7 @@ pub enum ForeignItem {
 }
 
 impl Attributed for ForeignItem {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         match self {
             Self::Fn(value) => &value.attrs,
             Self::Static(value) => &value.attrs,

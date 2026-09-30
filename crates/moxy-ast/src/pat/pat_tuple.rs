@@ -12,7 +12,7 @@ pub struct PatTuple {
 }
 
 impl Attributed for PatTuple {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

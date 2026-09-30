@@ -14,7 +14,7 @@ pub struct ForeignItemFn {
 }
 
 impl Attributed for ForeignItemFn {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

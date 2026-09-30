@@ -15,7 +15,7 @@ pub struct ItemUse {
 }
 
 impl Attributed for ItemUse {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

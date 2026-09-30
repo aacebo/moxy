@@ -13,7 +13,7 @@ pub struct ExprTry {
 }
 
 impl Attributed for ExprTry {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

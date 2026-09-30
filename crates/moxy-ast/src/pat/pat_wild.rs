@@ -12,7 +12,7 @@ pub struct PatWild {
 }
 
 impl Attributed for PatWild {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

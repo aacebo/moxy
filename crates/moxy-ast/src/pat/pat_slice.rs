@@ -12,7 +12,7 @@ pub struct PatSlice {
 }
 
 impl Attributed for PatSlice {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

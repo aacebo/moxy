@@ -20,7 +20,7 @@ pub struct ItemTypeAlias {
 }
 
 impl Attributed for ItemTypeAlias {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

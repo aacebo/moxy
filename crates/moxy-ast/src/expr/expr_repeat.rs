@@ -12,7 +12,7 @@ pub struct ExprRepeat {
 }
 
 impl Attributed for ExprRepeat {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

@@ -12,7 +12,7 @@ pub struct ExprArray {
 }
 
 impl Attributed for ExprArray {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

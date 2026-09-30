@@ -12,7 +12,7 @@ pub struct ExprMacro {
 }
 
 impl Attributed for ExprMacro {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

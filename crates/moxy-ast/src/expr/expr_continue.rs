@@ -13,7 +13,7 @@ pub struct ExprContinue {
 }
 
 impl Attributed for ExprContinue {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

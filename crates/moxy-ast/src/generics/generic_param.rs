@@ -13,7 +13,7 @@ pub enum GenericParam {
 }
 
 impl Attributed for GenericParam {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         match self {
             Self::Lifetime(value) => &value.attrs,
             Self::Type(value) => &value.attrs,

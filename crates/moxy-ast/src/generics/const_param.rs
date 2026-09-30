@@ -17,7 +17,7 @@ pub struct ConstParam {
 }
 
 impl Attributed for ConstParam {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

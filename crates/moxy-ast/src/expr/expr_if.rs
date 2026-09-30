@@ -16,7 +16,7 @@ pub struct ExprIf {
 }
 
 impl Attributed for ExprIf {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

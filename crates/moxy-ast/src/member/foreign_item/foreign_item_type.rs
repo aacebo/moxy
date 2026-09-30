@@ -16,7 +16,7 @@ pub struct ForeignItemType {
 }
 
 impl Attributed for ForeignItemType {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

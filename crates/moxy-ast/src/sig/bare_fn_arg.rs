@@ -13,7 +13,7 @@ pub struct BareFnArg {
 }
 
 impl Attributed for BareFnArg {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

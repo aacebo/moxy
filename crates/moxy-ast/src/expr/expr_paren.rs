@@ -12,7 +12,7 @@ pub struct ExprParen {
 }
 
 impl Attributed for ExprParen {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

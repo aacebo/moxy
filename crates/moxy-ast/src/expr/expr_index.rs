@@ -13,7 +13,7 @@ pub struct ExprIndex {
 }
 
 impl Attributed for ExprIndex {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

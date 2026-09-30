@@ -12,7 +12,7 @@ pub struct ExprTuple {
 }
 
 impl Attributed for ExprTuple {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

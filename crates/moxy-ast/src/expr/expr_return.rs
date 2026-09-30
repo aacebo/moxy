@@ -13,7 +13,7 @@ pub struct ExprReturn {
 }
 
 impl Attributed for ExprReturn {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

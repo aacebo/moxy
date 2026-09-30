@@ -13,7 +13,7 @@ pub struct PatBox {
 }
 
 impl Attributed for PatBox {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

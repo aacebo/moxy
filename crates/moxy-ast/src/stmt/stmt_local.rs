@@ -16,7 +16,7 @@ pub struct StmtLocal {
 }
 
 impl Attributed for StmtLocal {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

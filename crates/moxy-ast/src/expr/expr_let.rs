@@ -15,7 +15,7 @@ pub struct ExprLet {
 }
 
 impl Attributed for ExprLet {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

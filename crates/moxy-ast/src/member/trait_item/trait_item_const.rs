@@ -18,7 +18,7 @@ pub struct TraitItemConst {
 }
 
 impl Attributed for TraitItemConst {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

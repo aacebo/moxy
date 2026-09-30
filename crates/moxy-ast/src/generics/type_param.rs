@@ -16,7 +16,7 @@ pub struct TypeParam {
 }
 
 impl Attributed for TypeParam {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

@@ -13,7 +13,7 @@ pub struct ExprYield {
 }
 
 impl Attributed for ExprYield {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

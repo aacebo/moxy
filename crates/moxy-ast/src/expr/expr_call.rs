@@ -13,7 +13,7 @@ pub struct ExprCall {
 }
 
 impl Attributed for ExprCall {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

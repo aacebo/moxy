@@ -14,7 +14,7 @@ pub struct ExprBinary {
 }
 
 impl Attributed for ExprBinary {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

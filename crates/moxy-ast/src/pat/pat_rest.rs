@@ -12,7 +12,7 @@ pub struct PatRest {
 }
 
 impl Attributed for PatRest {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

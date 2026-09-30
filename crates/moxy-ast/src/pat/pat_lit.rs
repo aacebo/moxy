@@ -12,7 +12,7 @@ pub struct PatLit {
 }
 
 impl Attributed for PatLit {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

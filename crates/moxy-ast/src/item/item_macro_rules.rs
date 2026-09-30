@@ -15,7 +15,7 @@ pub struct ItemMacroRules {
 }
 
 impl Attributed for ItemMacroRules {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

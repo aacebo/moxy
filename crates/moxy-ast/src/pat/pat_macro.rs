@@ -12,7 +12,7 @@ pub struct PatMacro {
 }
 
 impl Attributed for PatMacro {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

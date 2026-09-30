@@ -18,7 +18,7 @@ pub struct TraitItemType {
 }
 
 impl Attributed for TraitItemType {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

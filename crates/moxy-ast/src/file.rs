@@ -12,7 +12,7 @@ pub struct File {
 }
 
 impl Attributed for File {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

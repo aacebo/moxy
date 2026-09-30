@@ -15,7 +15,7 @@ pub struct Receiver {
 }
 
 impl Attributed for Receiver {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

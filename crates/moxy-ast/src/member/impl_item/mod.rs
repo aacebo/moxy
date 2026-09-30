@@ -25,7 +25,7 @@ pub enum ImplItem {
 }
 
 impl Attributed for ImplItem {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         match self {
             Self::Fn(value) => &value.attrs,
             Self::Const(value) => &value.attrs,

@@ -14,7 +14,7 @@ pub struct PatReference {
 }
 
 impl Attributed for PatReference {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

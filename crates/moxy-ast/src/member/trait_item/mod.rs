@@ -25,7 +25,7 @@ pub enum TraitItem {
 }
 
 impl Attributed for TraitItem {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         match self {
             Self::Fn(value) => &value.attrs,
             Self::Const(value) => &value.attrs,

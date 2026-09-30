@@ -15,7 +15,7 @@ pub struct PatTupleStruct {
 }
 
 impl Attributed for PatTupleStruct {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }

@@ -13,7 +13,7 @@ pub enum Declaration {
 }
 
 impl Attributed for Declaration {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         match self {
             Self::Enum(value) => &value.attrs,
             Self::Struct(value) => &value.attrs,

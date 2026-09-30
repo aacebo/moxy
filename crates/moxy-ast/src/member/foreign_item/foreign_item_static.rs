@@ -18,7 +18,7 @@ pub struct ForeignItemStatic {
 }
 
 impl Attributed for ForeignItemStatic {
-    fn attrs(&self) -> &[crate::Attribute] {
+    fn attrs(&self) -> &[Attribute] {
         &self.attrs
     }
 }
