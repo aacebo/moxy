@@ -60,6 +60,10 @@ impl Variant {
                         ));
                     }
                     MetaRule::Message(value) => {
+                        if message.is_some() {
+                            return Err(moxy::ast::ParseError::new(value.span(), "duplicate `message` rule"));
+                        }
+
                         message = Some(value);
                     }
                 }

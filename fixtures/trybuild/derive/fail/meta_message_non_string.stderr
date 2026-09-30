@@ -1,0 +1,7 @@
+error: expected string literal
+ --> fixtures/trybuild/derive/fail/meta_message_non_string.rs:1:10
+  |
+1 | #[derive(moxy::Meta)]
+  |          ^^^^^^^^^^
+  |
+  = note: this error originates in the derive macro `moxy::Meta` (in Nightly builds, run with -Z macro-backtrace for more info)

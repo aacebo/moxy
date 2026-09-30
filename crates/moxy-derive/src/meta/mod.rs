@@ -1,5 +1,6 @@
 mod enums;
 mod fields;
+mod generics;
 mod structs;
 mod variants;
 
@@ -7,15 +8,35 @@ use moxy_ast::Punctuated;
 use moxy_diagnostic::SpanExt;
 use moxy_token::{Ident, LitStr, Spanner, ToTokenStream, TokenStream};
 
+fn parse_error(message: Option<&LitStr>, ident: &LitStr, span: TokenStream, path: TokenStream, fallback: &str) -> TokenStream {
+    match message {
+        Some(message) => moxy::template! {
+            ::moxy::ast::ParseError::new(
+                {{ span }},
+                ::std::format!(
+                    {{ message }},
+                    ident = {{ ident }},
+                    path = {{ path }},
+                ),
+            )
+        },
+        None => {
+            let fallback = LitStr::new(fallback, moxy::token::Span::call_site());
+            moxy::template! { ::moxy::ast::ParseError::new({{ span }}, {{ fallback }}) }
+        }
+    }
+}
+
 pub fn expand(tokens: TokenStream) -> TokenStream {
     let target = match moxy::parse!(tokens as moxy::ast::Declaration) {
         Err(err) => return err.to_compile_error(),
         Ok(v) => v,
     };
 
-    let (ident, body, skip) = match &target {
+    let (ident, generics, body, skip) = match &target {
         moxy::ast::Declaration::Struct(target) => (
             &target.ident,
+            generics::Generics::from(target.generics.clone()),
             structs::expand(target),
             moxy::template! {
                 cursor = <::moxy::ast::Meta as ::moxy::ast::Parse>::skip(cursor)?;
@@ -30,6 +51,7 @@ pub fn expand(tokens: TokenStream) -> TokenStream {
         ),
         moxy::ast::Declaration::Enum(target) => (
             &target.ident,
+            generics::Generics::from(target.generics.clone()),
             enums::expand(target),
             moxy::template! {
                 <::moxy::ast::Meta as ::moxy::ast::Parse>::skip(cursor)
@@ -41,7 +63,7 @@ pub fn expand(tokens: TokenStream) -> TokenStream {
     };
 
     moxy::template! {
-        impl ::moxy::ast::Parse for {{ ident }} {
+        impl {{ generics.impl_params }} ::moxy::ast::Parse for {{ ident }} {{ generics.type_params }} {{ generics.where_clause }} {
             fn peek(cursor: ::moxy::ast::Cursor<'_>) -> bool {
                 <::moxy::ast::Meta as ::moxy::ast::Parse>::peek(cursor)
             }

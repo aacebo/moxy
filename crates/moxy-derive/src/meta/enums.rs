@@ -47,13 +47,17 @@ pub fn expand(target: &moxy::ast::ItemEnum) -> TokenStream {
 fn expand_variant(variant: &variants::Variant) -> TokenStream {
     let key = &variant.key;
     let ident = &variant.ident;
+    let message = variant.message.as_ref();
     let body = match &variant.kind {
         variants::Kind::Unit => moxy::template! {
             let ::moxy::ast::MetaContent::Unit = &entry.content else {
-                return Err(::moxy::ast::ParseError::new(
-                    ::moxy::token::Spanner::span(&entry),
+                return Err({{ parse_error(
+                    message,
+                    key,
+                    moxy::template! { ::moxy::token::Spanner::span(&entry) },
+                    moxy::template! { ::moxy::token::ToTokenStream::to_token_stream(&entry.path) },
                     "unit enum variant does not accept a value",
-                ));
+                ) }});
             };
 
             Ok(Self::{{ ident }})
@@ -63,22 +67,31 @@ fn expand_variant(variant: &variants::Variant) -> TokenStream {
                 ::moxy::ast::MetaContent::List(group) => ::moxy::ast::Parser::from_tokens(&group.tokens),
                 ::moxy::ast::MetaContent::Expr { expr, .. } => ::moxy::ast::Parser::from_tokens(expr),
                 ::moxy::ast::MetaContent::Unit => {
-                    return Err(::moxy::ast::ParseError::new(
-                        ::moxy::token::Spanner::span(&entry),
+                    return Err({{ parse_error(
+                        message,
+                        key,
+                        moxy::template! { ::moxy::token::Spanner::span(&entry) },
+                        moxy::template! { ::moxy::token::ToTokenStream::to_token_stream(&entry.path) },
                         "enum variant requires a value",
-                    ));
+                    ) }});
                 }
             };
 
             let value = <{{ ty }} as ::moxy::ast::Parse>::parse(&parser)?;
 
             if !parser.is_empty() {
-                return Err(parser.error("unexpected trailing enum variant input"));
+                return Err({{ parse_error(
+                    message,
+                    key,
+                    moxy::template! { parser.span() },
+                    moxy::template! { ::moxy::token::ToTokenStream::to_token_stream(&entry.path) },
+                    "unexpected trailing enum variant input",
+                ) }});
             }
 
             Ok(Self::{{ ident }}(value))
         },
-        variants::Kind::Named(fields) => expand_named(ident, fields),
+        variants::Kind::Named(fields) => expand_named(ident, fields, message, key),
     };
 
     moxy::template! {
@@ -88,13 +101,16 @@ fn expand_variant(variant: &variants::Variant) -> TokenStream {
     }
 }
 
-fn expand_named(ident: &Ident, fields: &[fields::Field]) -> TokenStream {
+fn expand_named(ident: &Ident, fields: &[fields::Field], message: Option<&LitStr>, key: &LitStr) -> TokenStream {
     moxy::template! {
         let ::moxy::ast::MetaContent::List(group) = &entry.content else {
-            return Err(::moxy::ast::ParseError::new(
-                ::moxy::token::Spanner::span(&entry),
+            return Err({{ parse_error(
+                message,
+                key,
+                moxy::template! { ::moxy::token::Spanner::span(&entry) },
+                moxy::template! { ::moxy::token::ToTokenStream::to_token_stream(&entry.path) },
                 "named enum variant requires parenthesized arguments",
-            ));
+            ) }});
         };
         let parser = ::moxy::ast::Parser::from_tokens(&group.tokens);
         let entries = ::moxy::ast::Punctuated::<
@@ -117,27 +133,39 @@ fn expand_named(ident: &Ident, fields: &[fields::Field]) -> TokenStream {
             @for (field in fields) {
                 if name == {{ field.key }} {
                     if {{ field.binding }}.is_some() {
-                        return Err(::moxy::ast::ParseError::new(
-                            ::moxy::token::Spanner::span(&entry),
+                        return Err({{ parse_error(
+                            field.message.as_ref(),
+                            &field.key,
+                            moxy::template! { ::moxy::token::Spanner::span(&entry) },
+                            moxy::template! { ::moxy::token::ToTokenStream::to_token_stream(&entry.path) },
                             "duplicate meta argument",
-                        ));
+                        ) }});
                     }
 
                     let parser = match &entry.content {
                         ::moxy::ast::MetaContent::List(group) => ::moxy::ast::Parser::from_tokens(&group.tokens),
                         ::moxy::ast::MetaContent::Expr { expr, .. } => ::moxy::ast::Parser::from_tokens(expr),
                         ::moxy::ast::MetaContent::Unit => {
-                            return Err(::moxy::ast::ParseError::new(
-                                ::moxy::token::Spanner::span(&entry),
+                            return Err({{ parse_error(
+                                field.message.as_ref(),
+                                &field.key,
+                                moxy::template! { ::moxy::token::Spanner::span(&entry) },
+                                moxy::template! { ::moxy::token::ToTokenStream::to_token_stream(&entry.path) },
                                 "expected a value for meta argument",
-                            ));
+                            ) }});
                         }
                     };
 
                     let value = <{{ field.ty }} as ::moxy::ast::Parse>::parse(&parser)?;
 
                     if !parser.is_empty() {
-                        return Err(parser.error("unexpected trailing meta argument input"));
+                        return Err({{ parse_error(
+                            field.message.as_ref(),
+                            &field.key,
+                            moxy::template! { parser.span() },
+                            moxy::template! { ::moxy::token::ToTokenStream::to_token_stream(&entry.path) },
+                            "unexpected trailing meta argument input",
+                        ) }});
                     }
 
                     {{ field.binding }} = Some(value);
@@ -165,10 +193,13 @@ fn expand_named(ident: &Ident, fields: &[fields::Field]) -> TokenStream {
                             {{ field.member }}: match {{ field.binding }} {
                                 Some(value) => value,
                                 None => {
-                                    return Err(::moxy::ast::ParseError::new(
-                                        ::moxy::token::Span::call_site(),
+                                    return Err({{ parse_error(
+                                        field.message.as_ref(),
+                                        &field.key,
+                                        moxy::template! { ::moxy::token::Span::call_site() },
+                                        moxy::template! { {{ &field.key }} },
                                         "missing required meta argument",
-                                    ));
+                                    ) }});
                                 }
                             }
                         },

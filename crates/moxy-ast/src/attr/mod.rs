@@ -8,6 +8,24 @@ use moxy_token::{Group, Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
+pub trait Attributed {
+    fn attrs(&self) -> &[Attribute];
+
+    fn parse_meta<T: FromMeta>(&self, name: &str) -> Result<Option<T>, ParseError> {
+        for attr in self.attrs() {
+            if attr.path.is_ident(name) {
+                return Ok(Some(T::from_meta(&attr.meta)?));
+            }
+        }
+
+        Ok(None)
+    }
+}
+
+pub trait FromMeta: Sized {
+    fn from_meta(meta: &Meta) -> Result<Self, ParseError>;
+}
+
 /// A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement.
 #[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]

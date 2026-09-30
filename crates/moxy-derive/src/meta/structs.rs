@@ -10,7 +10,13 @@ pub fn expand(target: &moxy::ast::ItemStruct) -> TokenStream {
     for (index, field) in named.fields.iter().enumerate() {
         match fields::Field::parse(field, index) {
             Ok(field) => fields.push(field),
-            Err(err) => return err.to_compile_error(),
+            Err(err) => {
+                let diagnostic = err.to_compile_error();
+                return moxy::template! {
+                    {{ diagnostic }}
+                    unreachable!()
+                };
+            }
         }
     }
 
@@ -35,27 +41,39 @@ pub fn expand(target: &moxy::ast::ItemStruct) -> TokenStream {
             @for (field in &fields) {
                 if name == {{ field.key }} {
                     if {{ field.binding }}.is_some() {
-                        return Err(::moxy::ast::ParseError::new(
-                            ::moxy::token::Spanner::span(&entry),
+                        return Err({{ parse_error(
+                            field.message.as_ref(),
+                            &field.key,
+                            moxy::template! { ::moxy::token::Spanner::span(&entry) },
+                            moxy::template! { ::moxy::token::ToTokenStream::to_token_stream(&entry.path) },
                             "duplicate meta argument",
-                        ));
+                        ) }});
                     }
 
                     let parser = match &entry.content {
                         ::moxy::ast::MetaContent::List(group) => ::moxy::ast::Parser::from_tokens(&group.tokens),
                         ::moxy::ast::MetaContent::Expr { expr, .. } => ::moxy::ast::Parser::from_tokens(expr),
                         ::moxy::ast::MetaContent::Unit => {
-                            return Err(::moxy::ast::ParseError::new(
-                                ::moxy::token::Spanner::span(&entry),
+                            return Err({{ parse_error(
+                                field.message.as_ref(),
+                                &field.key,
+                                moxy::template! { ::moxy::token::Spanner::span(&entry) },
+                                moxy::template! { ::moxy::token::ToTokenStream::to_token_stream(&entry.path) },
                                 "expected a value for meta argument",
-                            ));
+                            ) }});
                         }
                     };
 
                     let value = <{{ field.ty }} as ::moxy::ast::Parse>::parse(&parser)?;
 
                     if !parser.is_empty() {
-                        return Err(parser.error("unexpected trailing meta argument input"));
+                        return Err({{ parse_error(
+                            field.message.as_ref(),
+                            &field.key,
+                            moxy::template! { parser.span() },
+                            moxy::template! { ::moxy::token::ToTokenStream::to_token_stream(&entry.path) },
+                            "unexpected trailing meta argument input",
+                        ) }});
                     }
 
                     {{ field.binding }} = Some(value);
@@ -83,10 +101,13 @@ pub fn expand(target: &moxy::ast::ItemStruct) -> TokenStream {
                             {{ field.member }}: match {{ field.binding }} {
                                 Some(value) => value,
                                 None => {
-                                    return Err(::moxy::ast::ParseError::new(
-                                        ::moxy::token::Span::call_site(),
+                                    return Err({{ parse_error(
+                                        field.message.as_ref(),
+                                        &field.key,
+                                        moxy::template! { ::moxy::token::Span::call_site() },
+                                        moxy::template! { {{ &field.key }} },
                                         "missing required meta argument",
-                                    ));
+                                    ) }});
                                 }
                             }
                         },

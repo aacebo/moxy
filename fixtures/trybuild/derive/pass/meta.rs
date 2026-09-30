@@ -14,6 +14,60 @@ struct Args {
     inner: Inner,
 }
 
+#[derive(Debug, PartialEq, Eq)]
+struct Marker<'a>(std::marker::PhantomData<&'a ()>);
+
+impl<'a> moxy::ast::Parse for Marker<'a> {
+    fn peek(cursor: moxy::ast::Cursor<'_>) -> bool {
+        <bool as moxy::ast::Parse>::peek(cursor)
+    }
+
+    fn parse(parser: &moxy::ast::Parser) -> Result<Self, moxy::ast::ParseError> {
+        let _ = <bool as moxy::ast::Parse>::parse(parser)?;
+        Ok(Self(std::marker::PhantomData))
+    }
+
+    fn skip(cursor: moxy::ast::Cursor<'_>) -> Option<moxy::ast::Cursor<'_>> {
+        <bool as moxy::ast::Parse>::skip(cursor)
+    }
+}
+
+#[derive(moxy::Meta, Debug, PartialEq, Eq)]
+struct Generic<'a, T: Clone = bool, const N: usize = 1>
+where
+    T: 'a,
+{
+    value: T,
+    marker: Marker<'a>,
+}
+
+#[derive(moxy::Meta, Debug, PartialEq, Eq)]
+enum GenericEnum<'a, T: Clone = bool, const N: usize = 1>
+where
+    T: 'a,
+{
+    Value {
+        value: T,
+        marker: Marker<'a>,
+    },
+}
+
+#[derive(moxy::Meta, Debug)]
+struct Messages {
+    #[meta(rename = "named", message = "field {ident} at {path}")]
+    value: bool,
+}
+
+#[derive(moxy::Meta, Debug)]
+enum MessageVolume {
+    #[meta(rename = "custom", message = "variant {ident} at {path}")]
+    Custom(bool),
+    Named {
+        #[meta(message = "nested {ident} at {path}")]
+        value: bool,
+    },
+}
+
 #[derive(moxy::Meta, Debug, PartialEq, Eq)]
 enum Volume {
     Low,
@@ -34,6 +88,14 @@ fn main() {
     assert!(!args.retry);
     assert!(args.fallback);
     assert!(!args.inner.value);
+
+    let generic_meta: moxy::ast::Meta = moxy::parse!("generic(value = true, marker = true)").unwrap();
+    let generic: Generic<'static, bool, 1> = generic_meta.parse().unwrap();
+    assert_eq!(generic, Generic { value: true, marker: Marker(std::marker::PhantomData) });
+
+    let generic_enum_meta: moxy::ast::Meta = moxy::parse!("generic_enum(value(value = true, marker = true))").unwrap();
+    let generic_enum: GenericEnum<'static, bool, 1> = generic_enum_meta.parse().unwrap();
+    assert_eq!(generic_enum, GenericEnum::Value { value: true, marker: Marker(std::marker::PhantomData) });
 
     let missing: moxy::ast::Meta = moxy::parse!("build(enabled = true)").unwrap();
     assert!(missing.parse::<Args>().is_err());
@@ -67,4 +129,16 @@ fn main() {
 
     let missing_value: moxy::ast::Meta = moxy::parse!("volume(dB)").unwrap();
     assert!(missing_value.parse::<Volume>().is_err());
+
+    let missing: moxy::ast::Meta = moxy::parse!("message()").unwrap();
+    assert_eq!(missing.parse::<Messages>().unwrap_err().message(), "field named at named");
+
+    let duplicate: moxy::ast::Meta = moxy::parse!("message(named = true, named = false)").unwrap();
+    assert_eq!(duplicate.parse::<Messages>().unwrap_err().message(), "field named at named");
+
+    let unit: moxy::ast::Meta = moxy::parse!("message_volume(custom)").unwrap();
+    assert_eq!(unit.parse::<MessageVolume>().unwrap_err().message(), "variant custom at custom");
+
+    let named: moxy::ast::Meta = moxy::parse!("message_volume(named())").unwrap();
+    assert_eq!(named.parse::<MessageVolume>().unwrap_err().message(), "nested value at value");
 }

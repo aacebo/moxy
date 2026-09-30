@@ -68,3 +68,5 @@ Template control flow syntax should support things like
     ...
 }
 ```
+
+## 8. Rename `moxy::ast::Declaration` to `CustomType`

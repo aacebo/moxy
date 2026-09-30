@@ -8,6 +8,7 @@ mod punct;
 mod range;
 mod return_type;
 mod safety;
+mod variant;
 mod visibility;
 
 pub use bound_lifetimes::*;
@@ -20,4 +21,5 @@ pub use punct::*;
 pub use range::*;
 pub use return_type::*;
 pub use safety::*;
+pub use variant::*;
 pub use visibility::*;
