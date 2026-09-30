@@ -4,11 +4,12 @@ mod tmpl_interp;
 mod tmpl_tokens;
 
 pub use keyword::TmplKeyword;
-use moxy_ast::{Cursor, Parse, ParseError, Parser};
-use moxy_token::{Delim, Group, Keyword, LexError, Punct, Span, ToTokens, TokenStream, TokenTree};
 pub use paste::Paste;
 pub use tmpl_interp::*;
 pub use tmpl_tokens::*;
+
+use moxy_ast::{Cursor, Parse, ParseError, Parser};
+use moxy_token::{Delim, Group, Keyword, LexError, Punct, Span, ToTokens, TokenStream, TokenTree};
 
 /// A parsed template: a sequence of nodes (literal tokens, interpolations, and control flow).
 #[derive(Clone)]
@@ -75,13 +76,6 @@ impl Node {
     }
 }
 
-pub fn lone_brace_child(parser: &TokenStream) -> Option<Group> {
-    match (parser.len(), parser.get(0)) {
-        (1, Some(TokenTree::Group(g))) if g.delim == Delim::Brace => Some(g.clone()),
-        _ => None,
-    }
-}
-
 impl Parse for Node {
     fn peek(cursor: Cursor<'_>) -> bool {
         !cursor.is_empty()
@@ -140,6 +134,13 @@ impl ToTokens for Node {
             Self::Group(delim, body) => emit_group(*delim, body, out),
             Self::Keyword(v) => v.to_tokens(out),
         }
+    }
+}
+
+pub fn lone_brace_child(parser: &TokenStream) -> Option<Group> {
+    match (parser.len(), parser.get(0)) {
+        (1, Some(TokenTree::Group(g))) if g.delim == Delim::Brace => Some(g.clone()),
+        _ => None,
     }
 }
 

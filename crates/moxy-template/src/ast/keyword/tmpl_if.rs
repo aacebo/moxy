@@ -5,7 +5,9 @@ use moxy_token::{Delim, Group, Span, ToTokenStream, ToTokens, TokenStream, Token
 
 use crate::Template;
 
-#[doc = "A template if/else-if/else directive: `@if (cond) { body } @else if (cond) { body } @else { body }`."]
+use super::{parse_unparenthesized_expr, skip_unparenthesized_expr};
+
+#[doc = "A template if/else-if/else directive: `@if cond { body } @else if cond { body } @else { body }`. Parentheses around conditions are optional."]
 #[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug))]
 pub struct TmplIf {
@@ -16,49 +18,6 @@ pub struct TmplIf {
     pub else_at_punct: Option<Token![@]>,
     pub else_keyword: Option<Token![else]>,
     pub else_body: Option<Box<Template>>,
-}
-
-#[doc = "A single branch of a `@if` or `@else if` directive."]
-#[derive(Clone)]
-#[cfg_attr(feature = "derives", derive(Debug))]
-pub struct TmplIfBranch {
-    pub span: Span,
-    pub at_punct: Option<Token![@]>,
-    pub else_keyword: Option<Token![else]>,
-    pub if_keyword: Token![if],
-    pub cond: TokenStream,
-    pub body: Template,
-}
-
-impl Parse for TmplIfBranch {
-    fn peek(cursor: Cursor<'_>) -> bool {
-        <Token![if]>::peek(cursor)
-    }
-
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let if_keyword: Token![if] = <_ as Parse>::parse(parser)?;
-        let span = if_keyword.span();
-        let cond = parser.parse_group(Delim::Paren)?.to_token_stream();
-        let body = Template::parse(&parser.parse_group(Delim::Brace)?)?;
-
-        Ok(Self {
-            span,
-            at_punct: None,
-            else_keyword: None,
-            if_keyword,
-            cond,
-            body,
-        })
-    }
-
-    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let cursor = <Token![if]>::skip(cursor)?;
-        let inner = cursor.descend(Delim::Paren)?;
-        let cursor = inner.offset(inner.remaining()).is_empty().then(|| cursor.offset(1))?;
-        let inner = cursor.descend(Delim::Brace)?;
-        let inner = Template::skip(inner)?;
-        inner.is_empty().then(|| cursor.offset(1))
-    }
 }
 
 impl Parse for TmplIf {
@@ -147,5 +106,58 @@ impl ToTokens for TmplIf {
             self.else_keyword.to_tokens(out);
             out.extend_one(TokenTree::Group(Group::new(Delim::Brace, else_b.to_token_stream())));
         }
+    }
+}
+
+#[doc = "A single branch of a `@if` or `@else if` directive."]
+#[derive(Clone)]
+#[cfg_attr(feature = "derives", derive(Debug))]
+pub struct TmplIfBranch {
+    pub span: Span,
+    pub at_punct: Option<Token![@]>,
+    pub else_keyword: Option<Token![else]>,
+    pub if_keyword: Token![if],
+    pub cond: TokenStream,
+    pub body: Template,
+}
+
+impl Parse for TmplIfBranch {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        <Token![if]>::peek(cursor)
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let if_keyword: Token![if] = <_ as Parse>::parse(parser)?;
+        let span = if_keyword.span();
+        let cond = if parser.is_delimited(Delim::Paren) {
+            parser.parse_group(Delim::Paren)?.to_token_stream()
+        } else {
+            parse_unparenthesized_expr(parser)?
+        };
+
+        let body = Template::parse(&parser.parse_group(Delim::Brace)?)?;
+
+        Ok(Self {
+            span,
+            at_punct: None,
+            else_keyword: None,
+            if_keyword,
+            cond,
+            body,
+        })
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let cursor = <Token![if]>::skip(cursor)?;
+        let cursor = if cursor.is_delimited(Delim::Paren) {
+            let inner = cursor.descend(Delim::Paren)?;
+            inner.offset(inner.remaining()).is_empty().then(|| cursor.offset(1))?
+        } else {
+            skip_unparenthesized_expr(cursor)?
+        };
+
+        let inner = cursor.descend(Delim::Brace)?;
+        let inner = Template::skip(inner)?;
+        inner.is_empty().then(|| cursor.offset(1))
     }
 }
