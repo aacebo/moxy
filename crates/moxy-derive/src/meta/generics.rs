@@ -40,7 +40,7 @@ impl From<moxy::ast::Generics> for Generics {
                     impl_params.push(param.to_token_stream());
                     type_params.push(param.ident.to_token_stream());
                     let ident = &param.ident;
-                    predicates.push(moxy::template! { {{ ident }}: ::moxy::ast::Parse });
+                    predicates.push(moxy::template! { {{ ident }}: ::moxy::ast::FromMeta });
                 }
                 moxy::ast::GenericParam::Const(param) => {
                     let mut param = (**param).clone();

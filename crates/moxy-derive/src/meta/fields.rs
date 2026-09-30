@@ -19,7 +19,7 @@ impl Field {
         let mut default = None;
         let mut message = None;
 
-        for attr in &field.attrs {
+        for attr in <moxy::ast::Field as moxy::ast::Attributed>::attrs(field) {
             let Some(ident) = attr.path.as_ident() else {
                 continue;
             };

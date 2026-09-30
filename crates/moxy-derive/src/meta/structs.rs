@@ -50,31 +50,7 @@ pub fn expand(target: &moxy::ast::ItemStruct) -> TokenStream {
                         ) }});
                     }
 
-                    let parser = match &entry.content {
-                        ::moxy::ast::MetaContent::List(group) => ::moxy::ast::Parser::from_tokens(&group.tokens),
-                        ::moxy::ast::MetaContent::Expr { expr, .. } => ::moxy::ast::Parser::from_tokens(expr),
-                        ::moxy::ast::MetaContent::Unit => {
-                            return Err({{ parse_error(
-                                field.message.as_ref(),
-                                &field.key,
-                                moxy::template! { ::moxy::token::Spanner::span(&entry) },
-                                moxy::template! { ::moxy::token::ToTokenStream::to_token_stream(&entry.path) },
-                                "expected a value for meta argument",
-                            ) }});
-                        }
-                    };
-
-                    let value = <{{ field.ty }} as ::moxy::ast::Parse>::parse(&parser)?;
-
-                    if !parser.is_empty() {
-                        return Err({{ parse_error(
-                            field.message.as_ref(),
-                            &field.key,
-                            moxy::template! { parser.span() },
-                            moxy::template! { ::moxy::token::ToTokenStream::to_token_stream(&entry.path) },
-                            "unexpected trailing meta argument input",
-                        ) }});
-                    }
+                    let value = <{{ field.ty }} as ::moxy::ast::FromMeta>::from_meta(&entry)?;
 
                     {{ field.binding }} = Some(value);
                     continue;

@@ -36,17 +36,6 @@ pub trait Attributed {
     }
 }
 
-/// Converts an attribute's parsed metadata into a caller-defined value.
-///
-/// Implement this trait for a type used with [`Attributed::parse_meta`]. The
-/// method receives the full [`Meta`] node for the matching attribute, including
-/// its path and content. Return a [`ParseError`] when that metadata does not
-/// have the expected shape or values.
-pub trait FromMeta: Sized {
-    /// Converts a parsed metadata node into `Self`.
-    fn from_meta(meta: &Meta) -> Result<Self, ParseError>;
-}
-
 /// A Rust attribute (`#[...]` or `#![...]`) applied to an item, expression, or statement.
 #[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]

@@ -27,7 +27,7 @@ impl Variant {
         let mut renamed = false;
         let mut message = None;
 
-        for attr in &variant.attrs {
+        for attr in <moxy::ast::Variant as moxy::ast::Attributed>::attrs(variant) {
             let Some(ident) = attr.path.as_ident() else {
                 continue;
             };

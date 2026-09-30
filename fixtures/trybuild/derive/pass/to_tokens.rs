@@ -4,6 +4,7 @@ use moxy::token::{Spanner, ToTokenStream};
 
 #[derive(ToTokens)]
 #[moxy(template { const VALUE: &str = {{ self.value }}; })]
+#[moxy(debug)]
 struct Generated {
     value: String,
 }

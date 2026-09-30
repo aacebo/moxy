@@ -33,29 +33,16 @@ pub fn expand(tokens: TokenStream) -> TokenStream {
         Ok(v) => v,
     };
 
-    let (ident, generics, body, skip) = match &target {
+    let (ident, generics, body) = match &target {
         moxy::ast::Declaration::Struct(target) => (
             &target.ident,
             generics::Generics::from(target.generics.clone()),
             structs::expand(target),
-            moxy::template! {
-                cursor = <::moxy::ast::Meta as ::moxy::ast::Parse>::skip(cursor)?;
-
-                while <::moxy::ast::Token![,]>::peek(cursor) {
-                    cursor = <::moxy::ast::Token![,]>::skip(cursor)?;
-                    cursor = <::moxy::ast::Meta as ::moxy::ast::Parse>::skip(cursor)?;
-                }
-
-                Some(cursor)
-            },
         ),
         moxy::ast::Declaration::Enum(target) => (
             &target.ident,
             generics::Generics::from(target.generics.clone()),
             enums::expand(target),
-            moxy::template! {
-                <::moxy::ast::Meta as ::moxy::ast::Parse>::skip(cursor)
-            },
         ),
         moxy::ast::Declaration::Union(target) => {
             return target.span().error("`Meta` cannot be derived for unions").emit();
@@ -63,17 +50,16 @@ pub fn expand(tokens: TokenStream) -> TokenStream {
     };
 
     moxy::template! {
-        impl {{ generics.impl_params }} ::moxy::ast::Parse for {{ ident }} {{ generics.type_params }} {{ generics.where_clause }} {
-            fn peek(cursor: ::moxy::ast::Cursor<'_>) -> bool {
-                <::moxy::ast::Meta as ::moxy::ast::Parse>::peek(cursor)
-            }
-
-            fn parse(parser: &::moxy::ast::Parser) -> Result<Self, ::moxy::ast::ParseError> {
+        impl {{ generics.impl_params }} ::moxy::ast::FromMeta for {{ ident }} {{ generics.type_params }} {{ generics.where_clause }} {
+            fn from_meta(meta: &::moxy::ast::Meta) -> Result<Self, ::moxy::ast::ParseError> {
+                let parser = match &meta.content {
+                    ::moxy::ast::MetaContent::List(group) => &::moxy::ast::Parser::from_tokens(&group.tokens),
+                    _ => return Err(::moxy::ast::ParseError::new(
+                        ::moxy::token::Spanner::span(meta),
+                        "expected parenthesized meta arguments",
+                    )),
+                };
                 {{ body }}
-            }
-
-            fn skip(mut cursor: ::moxy::ast::Cursor<'_>) -> Option<::moxy::ast::Cursor<'_>> {
-                {{ skip }}
             }
         }
     }

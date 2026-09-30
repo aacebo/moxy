@@ -17,18 +17,10 @@ struct Args {
 #[derive(Debug, PartialEq, Eq)]
 struct Marker<'a>(std::marker::PhantomData<&'a ()>);
 
-impl<'a> moxy::ast::Parse for Marker<'a> {
-    fn peek(cursor: moxy::ast::Cursor<'_>) -> bool {
-        <bool as moxy::ast::Parse>::peek(cursor)
-    }
-
-    fn parse(parser: &moxy::ast::Parser) -> Result<Self, moxy::ast::ParseError> {
-        let _ = <bool as moxy::ast::Parse>::parse(parser)?;
+impl<'a> moxy::ast::FromMeta for Marker<'a> {
+    fn from_meta(meta: &moxy::ast::Meta) -> Result<Self, moxy::ast::ParseError> {
+        let _ = <bool as moxy::ast::FromMeta>::from_meta(meta)?;
         Ok(Self(std::marker::PhantomData))
-    }
-
-    fn skip(cursor: moxy::ast::Cursor<'_>) -> Option<moxy::ast::Cursor<'_>> {
-        <bool as moxy::ast::Parse>::skip(cursor)
     }
 }
 
@@ -128,7 +120,7 @@ fn main() {
     assert!(unit_value.parse::<Volume>().is_err());
 
     let missing_value: moxy::ast::Meta = moxy::parse!("volume(dB)").unwrap();
-    assert!(missing_value.parse::<Volume>().is_err());
+    assert_eq!(missing_value.parse::<Volume>().unwrap(), Volume::Decibels(true));
 
     let missing: moxy::ast::Meta = moxy::parse!("message()").unwrap();
     assert_eq!(missing.parse::<Messages>().unwrap_err().message(), "field named at named");
@@ -137,7 +129,7 @@ fn main() {
     assert_eq!(duplicate.parse::<Messages>().unwrap_err().message(), "field named at named");
 
     let unit: moxy::ast::Meta = moxy::parse!("message_volume(custom)").unwrap();
-    assert_eq!(unit.parse::<MessageVolume>().unwrap_err().message(), "variant custom at custom");
+    assert!(matches!(unit.parse::<MessageVolume>().unwrap(), MessageVolume::Custom(true)));
 
     let named: moxy::ast::Meta = moxy::parse!("message_volume(named())").unwrap();
     assert_eq!(named.parse::<MessageVolume>().unwrap_err().message(), "nested value at value");
