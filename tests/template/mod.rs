@@ -79,6 +79,57 @@ fn template_matches_generate_real_constant_syntax() {
     }
 }
 
+#[test]
+fn template_directives_support_rust_patterns_and_optional_headers() {
+    let value = Some((1, "matched"));
+    let fields = [("first", "String"), ("second", "usize")];
+    let enabled = true;
+    let tokens = moxy::template! {
+        @if let Some((1, text)) = value {
+            const IF_VALUE: &str = {{ text }};
+        } @else {
+            const IF_VALUE: &str = "missing";
+        }
+
+        @if enabled {
+            const ENABLED: bool = true;
+        }
+
+        struct Fields {
+            @for ((name, ty) in &fields) { {{ name }}: {{ ty }}, }
+        }
+
+        @for value in ["one", "two"].into_iter().map(|value| value.to_string()) {
+            const _: &str = {{ value }};
+        }
+
+        @match (value) {
+            Some((1, text)) if text == "matched" => { const MATCH_VALUE: &str = {{ text }}; },
+            None | Some(_) => { const MATCH_VALUE: &str = "other"; },
+        }
+    };
+    let rendered = tokens.to_string();
+    assert!(rendered.contains("IF_VALUE"));
+    assert!(rendered.contains("struct Fields"));
+    assert!(rendered.contains("MATCH_VALUE"));
+}
+
+#[test]
+#[allow(clippy::let_and_return)]
+fn template_interpolation_blocks_return_the_tail_value() {
+    let values = ["first", "second"];
+    let tokens = moxy::template! {
+        @for value in values {
+            {{
+                let rendered = value.to_uppercase();
+                rendered
+            }}
+        }
+    };
+
+    assert_eq!(tokens.to_string(), "\"FIRST\" \"SECOND\"");
+}
+
 moxy::paste! {
     struct {{ Pasted Record }} {
         {{ field_ value }}: u32,

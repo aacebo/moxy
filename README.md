@@ -136,6 +136,32 @@ moxy::paste! {
 assert_eq!(read_value(), 7);
 ```
 
+Template control flow accepts ordinary Rust bindings and may omit the header
+parentheses. `@if let` and destructuring `@for` bindings work directly, while
+`@match` arms accept Rust patterns and guards:
+
+```rust
+let value = Some("enabled");
+let fields = [("name", "String")];
+
+let tokens = moxy::template! {
+    @if let Some(value) = value { const ENABLED: &str = {{ value }}; }
+    struct Config { @for ((name, ty) in &fields) { {{ name }}: {{ ty }}, } }
+};
+```
+
+Interpolations can also use a Rust statement block when their final expression
+is the value to emit:
+
+```rust
+let tokens = moxy::template! {
+    {{
+        let value = "generated".to_string();
+        value
+    }}
+};
+```
+
 ### Formatting
 
 The `fmt` feature formats parsed syntax trees with configurable width,

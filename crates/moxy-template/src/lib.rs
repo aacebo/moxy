@@ -7,6 +7,7 @@
 //! [`template!`] returns a `moxy::token::TokenStream`. `{{ expr }}` emits a
 //! value implementing `moxy::token::ToTokens`; `@for`, `@if`/`@else`, and
 //! `@match` evaluate ordinary Rust control flow while building the stream.
+//! Directive headers may use Rust patterns and omit their outer parentheses.
 //!
 //! ```ignore
 //! let fields = ["id", "name"];
@@ -30,10 +31,12 @@ use moxy_ast::{Parse, Parser};
 /// Interpolations and control flow are evaluated against the surrounding scope:
 ///
 /// - `{{ expr }}` splices the runtime value of `expr` (via `moxy::token::ToTokens`),
-///   preserving its source spans.
-/// - `@for (binding in iter) { … }`, `@if (cond) { … } @else { … }`, and
+///   preserving its source spans. Multiple Rust statements with a tail expression
+///   are evaluated as a block: `{{ let value = source(); value }}`.
+/// - `@for pattern in iter { … }`, `@if cond { … } @else { … }`, and
 ///   `@match (expr) { pat => { … }, … }` run as real control flow, appending to
-///   the output as they execute.
+///   the output as they execute. Parentheses around `@for` and `@if` headers
+///   remain supported, and conditions may use `if let` bindings.
 ///
 /// # Example
 ///

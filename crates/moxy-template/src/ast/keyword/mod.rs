@@ -2,11 +2,12 @@ mod tmpl_for;
 mod tmpl_if;
 mod tmpl_match;
 
-use moxy_ast::{Cursor, Parse, ParseError, Parser};
-use moxy_token::{ToTokens, TokenStream};
 pub use tmpl_for::*;
 pub use tmpl_if::*;
 pub use tmpl_match::*;
+
+use moxy_ast::{Cursor, Expr, Parse, ParseError, Parser};
+use moxy_token::{Delim, ToTokens, TokenStream, TokenTree};
 
 #[doc = "A template `@`-directive: `@if`, `@for`, or `@match`."]
 #[derive(Clone)]
@@ -62,5 +63,42 @@ impl ToTokens for TmplKeyword {
             Self::For(v) => v.to_tokens(out),
             Self::Match(v) => v.to_tokens(out),
         }
+    }
+}
+
+pub(super) fn parse_unparenthesized_expr(parser: &Parser) -> Result<TokenStream, ParseError> {
+    let mut expr = TokenStream::new();
+
+    loop {
+        if matches!(parser.curr(), Some(TokenTree::Group(group)) if group.delim == Delim::Brace) {
+            let expr_parser = Parser::from_tokens(&expr);
+
+            if <Expr as Parse>::parse(&expr_parser).is_ok() && expr_parser.is_empty() {
+                return Ok(expr);
+            }
+        }
+
+        let Some(token) = parser.advance() else {
+            return parser.error("expected template directive body").into();
+        };
+
+        expr.extend_one(token.clone());
+    }
+}
+
+pub(super) fn skip_unparenthesized_expr(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+    let mut expr = TokenStream::new();
+
+    loop {
+        if matches!(cursor.curr(), Some(TokenTree::Group(group)) if group.delim == Delim::Brace) {
+            let expr_parser = Parser::from_tokens(&expr);
+
+            if <Expr as Parse>::parse(&expr_parser).is_ok() && expr_parser.is_empty() {
+                return Some(cursor);
+            }
+        }
+
+        expr.extend_one(cursor.curr()?.clone());
+        cursor = cursor.offset(1);
     }
 }
