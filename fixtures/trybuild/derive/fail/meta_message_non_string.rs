@@ -1,4 +1,4 @@
-#[derive(moxy::Meta)]
+#[derive(moxy::FromMeta)]
 struct Args {
     #[meta(message = true)]
     value: bool,

@@ -3,7 +3,7 @@ use moxy::diagnostic::SpanExt;
 use moxy::token::{Spanner, TokenStream};
 
 #[allow(unused)]
-#[derive(moxy::Meta)]
+#[derive(moxy::FromMeta)]
 struct Args {
     skip: bool,
 }

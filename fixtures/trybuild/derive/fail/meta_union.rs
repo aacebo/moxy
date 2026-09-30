@@ -1,4 +1,4 @@
-#[derive(moxy::Meta)]
+#[derive(moxy::FromMeta)]
 union Unsupported {
     flag: bool,
 }

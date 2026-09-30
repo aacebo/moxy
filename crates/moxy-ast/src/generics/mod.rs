@@ -40,6 +40,12 @@ pub struct Generics {
 }
 
 impl Generics {
+    /// Splits these generics into tokens for an `impl` header, a type path,
+    /// and its optional `where` clause.
+    ///
+    /// [`ImplGenerics`] preserves parameter bounds but omits type and const
+    /// defaults. [`TypeGenerics`] emits only generic arguments. Neither token
+    /// view emits the `where` clause returned as the third tuple element.
     pub fn split(&self) -> (ImplGenerics<'_>, TypeGenerics<'_>, Option<&WhereClause>) {
         (self.into(), self.into(), self.where_clause.as_ref())
     }
@@ -112,6 +118,12 @@ impl ToTokens for Generics {
     }
 }
 
+/// A token view of [`Generics`] suitable for an `impl` header.
+///
+/// Type and const parameter defaults are omitted because they are not valid
+/// in an `impl` declaration. Bounds, attributes, punctuation, and delimiters
+/// are preserved. The associated `where` clause is available from
+/// [`Generics::split`] and is not emitted by this type.
 #[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
@@ -166,6 +178,12 @@ impl<'a> std::ops::Deref for ImplGenerics<'a> {
     }
 }
 
+/// A token view of [`Generics`] suitable for a generic type path.
+///
+/// It emits each lifetime, type, or const argument without parameter
+/// attributes, bounds, types, or defaults, while preserving punctuation and
+/// delimiters. The associated `where` clause is available from
+/// [`Generics::split`] and is not emitted by this type.
 #[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]

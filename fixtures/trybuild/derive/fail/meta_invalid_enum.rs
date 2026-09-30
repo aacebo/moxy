@@ -1,4 +1,4 @@
-#[derive(moxy::Meta)]
+#[derive(moxy::FromMeta)]
 enum Invalid {
     Pair(bool, bool),
 }

@@ -1,9 +1,9 @@
-#[derive(moxy::Meta, Debug, PartialEq, Eq)]
+#[derive(moxy::FromMeta, Debug, PartialEq, Eq)]
 struct Inner {
     value: bool,
 }
 
-#[derive(moxy::Meta)]
+#[derive(moxy::FromMeta)]
 struct Args {
     #[meta(rename = "enabled")]
     flag: bool,
@@ -24,7 +24,7 @@ impl<'a> moxy::ast::FromMeta for Marker<'a> {
     }
 }
 
-#[derive(moxy::Meta, Debug, PartialEq, Eq)]
+#[derive(moxy::FromMeta, Debug, PartialEq, Eq)]
 struct Generic<'a, T: Clone = bool, const N: usize = 1>
 where
     T: 'a,
@@ -33,7 +33,7 @@ where
     marker: Marker<'a>,
 }
 
-#[derive(moxy::Meta, Debug, PartialEq, Eq)]
+#[derive(moxy::FromMeta, Debug, PartialEq, Eq)]
 enum GenericEnum<'a, T: Clone = bool, const N: usize = 1>
 where
     T: 'a,
@@ -44,13 +44,13 @@ where
     },
 }
 
-#[derive(moxy::Meta, Debug)]
+#[derive(moxy::FromMeta, Debug)]
 struct Messages {
     #[meta(rename = "named", message = "field {ident} at {path}")]
     value: bool,
 }
 
-#[derive(moxy::Meta, Debug)]
+#[derive(moxy::FromMeta, Debug)]
 enum MessageVolume {
     #[meta(rename = "custom", message = "variant {ident} at {path}")]
     Custom(bool),
@@ -60,7 +60,7 @@ enum MessageVolume {
     },
 }
 
-#[derive(moxy::Meta, Debug, PartialEq, Eq)]
+#[derive(moxy::FromMeta, Debug, PartialEq, Eq)]
 enum Volume {
     Low,
     High,
