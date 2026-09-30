@@ -15,6 +15,12 @@
 //! let item: Item = moxy::parse!("pub struct User;").unwrap();
 //! assert!(item.is_struct());
 //! ```
+//!
+//! ## Attributes
+//!
+//! Nodes that carry Rust attributes implement [`Attributed`]. It exposes their
+//! attributes in source order and can parse a named attribute through
+//! [`Attributed::parse_meta`].
 
 mod _crate;
 mod args;

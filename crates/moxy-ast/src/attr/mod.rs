@@ -8,9 +8,23 @@ use moxy_token::{Group, Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
+/// Provides read-only access to the attributes attached to an AST node.
+///
+/// Implementations return the node's attributes in source order. This trait is
+/// implemented for concrete AST nodes that store attributes and for wrapper
+/// enums whose variants all store attributes.
+///
+/// Use [`Self::parse_meta`] to find the first attribute with a matching
+/// single-segment path and convert its metadata with [`FromMeta`].
 pub trait Attributed {
+    /// Returns the attributes attached directly to this node.
     fn attrs(&self) -> &[Attribute];
 
+    /// Parses the metadata of the first attribute named `name`.
+    ///
+    /// Returns `Ok(None)` when this node has no matching attribute. If a
+    /// matching attribute is present, conversion is delegated to
+    /// [`FromMeta::from_meta`].
     fn parse_meta<T: FromMeta>(&self, name: &str) -> Result<Option<T>, ParseError> {
         for attr in self.attrs() {
             if attr.path.is_ident(name) {
@@ -22,7 +36,14 @@ pub trait Attributed {
     }
 }
 
+/// Converts an attribute's parsed metadata into a caller-defined value.
+///
+/// Implement this trait for a type used with [`Attributed::parse_meta`]. The
+/// method receives the full [`Meta`] node for the matching attribute, including
+/// its path and content. Return a [`ParseError`] when that metadata does not
+/// have the expected shape or values.
 pub trait FromMeta: Sized {
+    /// Converts a parsed metadata node into `Self`.
     fn from_meta(meta: &Meta) -> Result<Self, ParseError>;
 }
 
