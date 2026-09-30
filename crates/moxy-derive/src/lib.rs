@@ -94,8 +94,7 @@ pub fn derive_tokens(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream
 /// Derives [`moxy::ast::FromMeta`] for a struct or enum.
 ///
 /// Named fields and newtype enum variants are converted recursively through
-/// `FromMeta`. Consequently, every nested value type must implement `FromMeta`;
-/// implementing `Parse` alone is no longer sufficient.
+/// `FromMeta`. Consequently, every nested value type must implement `FromMeta`.
 #[proc_macro_derive(FromMeta, attributes(meta))]
 pub fn derive_meta(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     meta::expand(tokens.into()).into()
