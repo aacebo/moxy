@@ -44,6 +44,7 @@ mod token {
     pub use moxy_token::*;
 }
 
+mod apply;
 mod attribute;
 mod derive;
 mod function;
@@ -226,4 +227,49 @@ pub fn attribute(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -
 #[proc_macro_attribute]
 pub fn derive(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
     derive::expand(attr.into(), item.into()).into()
+}
+
+/// Applies one or more item macros to the annotated item.
+///
+/// `#[moxy::apply(first, second)]` invokes `first!` with the item and forwards
+/// `second` through a new `apply` attribute. Applied macros must preserve item
+/// attributes for a chain to continue.
+///
+/// # Example
+///
+/// ```ignore
+/// macro_rules! wrap {
+///     ($(#[$attr:meta])* $item:item) => {
+///         $(#[$attr])* $item
+///     };
+/// }
+///
+/// #[moxy::apply(wrap)]
+/// fn generated() {}
+/// ```
+///
+/// # Chaining `macro_rules!` macros
+///
+/// Each macro in a chain must accept and re-emit the item's attributes so the
+/// next `apply` attribute reaches the following macro.
+///
+/// ```ignore
+/// macro_rules! first {
+///     ($(#[$($attr:meta),*])* $item:item) => {
+///         $(#[$($attr),*])* $item
+///     };
+/// }
+///
+/// macro_rules! second {
+///     ($(#[$($attr:meta),*])* $item:item) => {
+///         $(#[$($attr),*])* $item
+///     };
+/// }
+///
+/// #[moxy::apply(first, second)]
+/// fn generated() {}
+/// ```
+#[proc_macro_attribute]
+pub fn apply(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    apply::expand(attr.into(), item.into()).into()
 }
