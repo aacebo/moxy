@@ -62,31 +62,23 @@ pub fn expand(target: &moxy::ast::ItemStruct) -> TokenStream {
         }
 
         Ok(Self {
-            @for (field in &fields) {
-                {{
-                    match &field.default {
-                        Some(default) => moxy::template! {
-                            {{ field.member }}: match {{ field.binding }} {
-                                Some(value) => value,
-                                None => {{ default }},
-                            }
-                        },
-                        None => moxy::template! {
-                            {{ field.member }}: match {{ field.binding }} {
-                                Some(value) => value,
-                                None => {
-                                    return Err({{ parse_error(
-                                        field.message.as_ref(),
-                                        &field.key,
-                                        moxy::template! { ::moxy::token::Span::call_site() },
-                                        moxy::template! { {{ &field.key }} },
-                                        "missing required meta argument",
-                                    ) }});
-                                }
-                            }
-                        },
+            @for field in &fields {
+                {{ field.member }}: match {{ field.binding }} {
+                    Some(value) => value,
+                    None => {
+                    @if (let Some(default) = &field.default) {
+                        {{ default }}
+                    } @else {
+                        return Err({{ parse_error(
+                            field.message.as_ref(),
+                            &field.key,
+                            moxy::template! { ::moxy::token::Span::call_site() },
+                            moxy::template! { {{ &field.key }} },
+                            "missing required meta argument",
+                        ) }});
                     }
-                }},
+                    },
+                },
             }
         })
     }

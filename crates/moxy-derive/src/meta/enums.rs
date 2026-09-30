@@ -17,8 +17,6 @@ pub fn expand(target: &moxy::ast::ItemEnum) -> TokenStream {
         }
     }
 
-    let arms = variants.iter().map(expand_variant).collect::<Vec<_>>();
-
     moxy::template! {
         let entry = <::moxy::ast::Meta as ::moxy::ast::Parse>::parse(parser)?;
 
@@ -33,8 +31,8 @@ pub fn expand(target: &moxy::ast::ItemEnum) -> TokenStream {
             ));
         };
 
-        @for (arm in arms.iter()) {
-            {{ arm }}
+        @for variant in &variants {
+            {{ expand_variant(variant) }}
         }
 
         Err(::moxy::ast::ParseError::new(
@@ -132,31 +130,23 @@ fn expand_named(ident: &Ident, fields: &[fields::Field], message: Option<&LitStr
         }
 
         Ok(Self::{{ ident }} {
-            @for (field in fields) {
-                {{
-                    match &field.default {
-                        Some(default) => moxy::template! {
-                            {{ field.member }}: match {{ field.binding }} {
-                                Some(value) => value,
-                                None => {{ default }},
-                            }
-                        },
-                        None => moxy::template! {
-                            {{ field.member }}: match {{ field.binding }} {
-                                Some(value) => value,
-                                None => {
-                                    return Err({{ parse_error(
-                                        field.message.as_ref(),
-                                        &field.key,
-                                        moxy::template! { ::moxy::token::Span::call_site() },
-                                        moxy::template! { {{ &field.key }} },
-                                        "missing required meta argument",
-                                    ) }});
-                                }
-                            }
-                        },
+            @for field in fields {
+                {{ field.member }}: match {{ field.binding }} {
+                    Some(value) => value,
+                    None => {
+                    @if (let Some(default) = &field.default) {
+                        {{ default }}
+                    } @else {
+                        return Err({{ parse_error(
+                            field.message.as_ref(),
+                            &field.key,
+                            moxy::template! { ::moxy::token::Span::call_site() },
+                            moxy::template! { {{ &field.key }} },
+                            "missing required meta argument",
+                        ) }});
                     }
-                }},
+                    },
+                },
             }
         })
     }
