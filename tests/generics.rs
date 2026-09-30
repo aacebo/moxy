@@ -1,5 +1,5 @@
 use moxy::ast::{GenericParam, Item, WherePredicate};
-use moxy::token::Spanner;
+use moxy::token::{Spanner, ToTokenStream};
 
 #[test]
 fn lifetime_type_and_const_parameters_are_inspectable_in_struct_syntax() {
@@ -15,6 +15,21 @@ fn lifetime_type_and_const_parameters_are_inspectable_in_struct_syntax() {
         moxy::fmt!(&item).unwrap(),
         "pub struct Buffer<'a, T: Clone, const N: usize>\nwhere\nT: Send {\n\tdata: &'a [T; N],\n}"
     );
+}
+
+#[test]
+fn split_generics_emits_impl_type_and_where_tokens_separately() {
+    let item: Item =
+        moxy::parse!("struct Buffer<'a, T: Clone = bool, const N: usize = 1> where T: Send { data: &'a [T; N] }").unwrap();
+    let generics = &item.as_struct().unwrap().generics;
+    let (impl_generics, type_generics, where_clause) = generics.split();
+
+    assert_eq!(
+        impl_generics.to_token_stream().to_string(),
+        "< 'a , T : Clone , const N : usize >"
+    );
+    assert_eq!(type_generics.to_token_stream().to_string(), "< 'a , T , N >");
+    assert_eq!(where_clause.unwrap().to_token_stream().to_string(), "where T : Send");
 }
 
 #[test]

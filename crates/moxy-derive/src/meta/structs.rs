@@ -11,9 +11,8 @@ pub fn expand(target: &moxy::ast::ItemStruct) -> TokenStream {
         match fields::Field::parse(field, index) {
             Ok(field) => fields.push(field),
             Err(err) => {
-                let diagnostic = err.to_compile_error();
                 return moxy::template! {
-                    {{ diagnostic }}
+                    {{ err.to_compile_error() }}
                     unreachable!()
                 };
             }
@@ -51,7 +50,6 @@ pub fn expand(target: &moxy::ast::ItemStruct) -> TokenStream {
                     }
 
                     let value = <{{ field.ty }} as ::moxy::ast::FromMeta>::from_meta(&entry)?;
-
                     {{ field.binding }} = Some(value);
                     continue;
                 }

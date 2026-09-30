@@ -1,6 +1,5 @@
 mod enums;
 mod fields;
-mod generics;
 mod structs;
 mod variants;
 
@@ -34,23 +33,37 @@ pub fn expand(tokens: TokenStream) -> TokenStream {
     };
 
     let (ident, generics, body) = match &target {
-        moxy::ast::Declaration::Struct(target) => (
-            &target.ident,
-            generics::Generics::from(target.generics.clone()),
-            structs::expand(target),
-        ),
-        moxy::ast::Declaration::Enum(target) => (
-            &target.ident,
-            generics::Generics::from(target.generics.clone()),
-            enums::expand(target),
-        ),
+        moxy::ast::Declaration::Struct(target) => (&target.ident, &target.generics, structs::expand(target)),
+        moxy::ast::Declaration::Enum(target) => (&target.ident, &target.generics, enums::expand(target)),
         moxy::ast::Declaration::Union(target) => {
             return target.span().error("`Meta` cannot be derived for unions").emit();
         }
     };
 
+    let (impl_generics, type_generics, where_clause) = generics.split();
+    let where_clause = if let Some(mut clause) = where_clause.cloned() {
+        for param in &generics.params {
+            if let moxy::ast::GenericParam::Type(param) = param {
+                let tokens = moxy::template! {
+                    {{ param.ident }}: ::moxy::ast::FromMeta
+                };
+
+                clause.predicates.push_value(match moxy::parse!(tokens) {
+                    Err(err) => return err.to_compile_error(),
+                    Ok(v) => v,
+                });
+
+                clause.predicates.push_punct(Default::default());
+            }
+        }
+
+        Some(clause)
+    } else {
+        None
+    };
+
     moxy::template! {
-        impl {{ generics.impl_params }} ::moxy::ast::FromMeta for {{ ident }} {{ generics.type_params }} {{ generics.where_clause }} {
+        impl {{ impl_generics }} ::moxy::ast::FromMeta for {{ ident }} {{ type_generics }} {{ where_clause }} {
             fn from_meta(meta: &::moxy::ast::Meta) -> Result<Self, ::moxy::ast::ParseError> {
                 let parser = match &meta.content {
                     ::moxy::ast::MetaContent::List(group) => &::moxy::ast::Parser::from_tokens(&group.tokens),

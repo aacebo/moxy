@@ -88,6 +88,7 @@ fn expand_named(ident: &Ident, fields: &[fields::Field], message: Option<&LitStr
                 "named enum variant requires parenthesized arguments",
             ) }});
         };
+
         let parser = ::moxy::ast::Parser::from_tokens(&group.tokens);
         let entries = ::moxy::ast::Punctuated::<
             ::moxy::ast::Meta,
@@ -119,7 +120,6 @@ fn expand_named(ident: &Ident, fields: &[fields::Field], message: Option<&LitStr
                     }
 
                     let value = <{{ field.ty }} as ::moxy::ast::FromMeta>::from_meta(&entry)?;
-
                     {{ field.binding }} = Some(value);
                     continue;
                 }
