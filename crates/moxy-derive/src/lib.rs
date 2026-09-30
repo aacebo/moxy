@@ -93,8 +93,39 @@ pub fn derive_tokens(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream
 
 /// Derives [`moxy::ast::FromMeta`] for a struct or enum.
 ///
-/// Named fields and newtype enum variants are converted recursively through
-/// `FromMeta`. Consequently, every nested value type must implement `FromMeta`.
+/// Parse a matching attribute with [`moxy::ast::Attributed::parse_meta`]. Named
+/// struct fields map to meta-item names and are converted recursively through
+/// `FromMeta`; nested values must therefore implement `FromMeta` as well.
+///
+/// Field behavior can be customized with `#[meta(...)]`:
+///
+/// - `rename = "..."` changes the accepted meta-item name.
+/// - `default` or `default = expr` supplies a value when the item is absent.
+/// - `message = "..."` customizes missing-item and duplicate-item errors.
+///
+/// Newtype enum variants accept their inner value directly, and named enum
+/// variants parse their fields from a nested attribute list. Generic type
+/// parameters receive a `FromMeta` bound in the generated implementation.
+///
+/// # Example
+///
+/// ```ignore
+/// use moxy::ast::Attributed;
+///
+/// #[derive(moxy::FromMeta)]
+/// struct BuildArgs {
+///     #[meta(default)]
+///     rename: Option<String>,
+///
+///     #[meta(rename = "default", default)]
+///     is_default: bool,
+/// }
+///
+/// let field: moxy::ast::Field = moxy::parse!(#[build(rename = "set_name", default)] name: String).unwrap();
+/// let args: BuildArgs = field.parse_meta("build")?.unwrap();
+/// assert_eq!(args.rename.as_deref(), Some("set_name"));
+/// assert!(args.is_default);
+/// ```
 #[proc_macro_derive(FromMeta, attributes(meta))]
 pub fn derive_meta(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     meta::expand(tokens.into()).into()
