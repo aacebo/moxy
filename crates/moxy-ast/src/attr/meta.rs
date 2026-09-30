@@ -44,7 +44,7 @@ impl Meta {
     /// Converts this metadata node through [`FromMeta`].
     ///
     /// This does not parse the metadata's inner tokens through [`Parse`]. Types
-    /// accepted here, including nested values produced by `#[derive(Meta)]`,
+    /// accepted here, including nested values produced by `#[derive(FromMeta)]`,
     /// must implement [`FromMeta`].
     pub fn parse<T>(&self) -> Result<T, ParseError>
     where

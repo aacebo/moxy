@@ -35,7 +35,8 @@
 //! | `fmt` | no | Formatting through `fmt!`; implies `ast` |
 //! | `diagnostic` | no | Span-aware diagnostics and `compile_error!` fallback |
 //! | `build` | no | Cargo build-script directives and rustc version helpers |
-//! | `derive` | no | `#[derive(ToTokens)]`; implies its supporting features |
+//! | `derive` | no | `#[derive(ToTokens)]`, `#[derive(FromMeta)]`, and macro-authoring attributes |
+//! | `derives` | no | Standard trait derives for supported AST and template types |
 //! | `serde` | no | Serialization for supported AST, token, and formatter types |
 //! | `proc-macro2` | no | Conversion between Moxy and `proc_macro2` tokens |
 //! | `full` | no | Every feature above |
@@ -76,16 +77,27 @@
 //!
 //! The `template` feature creates token streams from Rust-shaped templates.
 //! Interpolate values with `{{ expr }}` and use `@for`, `@if`, and `@match` for
-//! runtime control flow.
+//! runtime control flow. `@for pattern in iter` and `@if condition` accept
+//! Rust patterns and conditions without header parentheses; `@match (expr)`
+//! accepts Rust patterns and guards. An interpolation can also be a statement
+//! block whose tail expression is emitted.
 //!
 //! ```ignore
 //! let fields = ["id", "name"];
 //! let tokens = moxy::template! {
 //!     struct User {
-//!         @for (field in fields) { {{ field }}: String, }
+//!         @for field in fields { {{ field }}: String, }
 //!     }
 //! };
 //! assert!(tokens.to_string().contains("struct User"));
+//! ```
+//!
+//! ```ignore
+//! let value = Some("enabled");
+//! let tokens = moxy::template! {
+//!     @if let Some(value) = value { const ENABLED: &str = {{ value }}; }
+//!     {{ let name = "generated"; name }}
+//! };
 //! ```
 //!
 //! `paste!` creates an identifier at macro expansion time:
@@ -150,6 +162,53 @@
 //! parsed input declaration and generated `ToTokens` implementation. This is
 //! intended for inspecting a derive expansion during development; on stable
 //! Rust, the debug notes are not emitted.
+//!
+//! ### FromMeta
+//!
+//! `#[derive(moxy::FromMeta)]` converts a structured attribute into a named
+//! struct or enum. Parse a matching attribute with
+//! `moxy::ast::Attributed::parse_meta`. The derive adds `FromMeta` bounds for
+//! generic type parameters.
+//!
+//! ```ignore
+//! use moxy::ast::Attributed;
+//!
+//! #[derive(moxy::FromMeta)]
+//! struct BuildArgs {
+//!     // Use `None` when `rename` is omitted.
+//!     #[meta(default)]
+//!     rename: Option<String>,
+//!
+//!     // Read the `default` meta item as `is_default`.
+//!     #[meta(rename = "default", default)]
+//!     is_default: bool,
+//!
+//!     // Customize the error for this required value.
+//!     #[meta(message = "missing build name")]
+//!     name: String,
+//! }
+//!
+//! let field: moxy::ast::Field =
+//!     moxy::parse!(#[build(rename = "set_name", default, name = "Build")] name: String)?;
+//! let args: BuildArgs = field.parse_meta("build")?.unwrap();
+//! ```
+//!
+//! ### Custom derives
+//!
+//! `#[moxy::derive(Name)]` turns a public function that accepts one parseable
+//! moxy AST value into a derive macro:
+//!
+//! ```ignore
+//! use moxy::ast::{ItemStruct, ParseError};
+//! use moxy::token::TokenStream;
+//!
+//! #[moxy::derive(Builder)]
+//! pub fn builder(item: ItemStruct) -> Result<TokenStream, ParseError> {
+//!     Ok(moxy::template! {
+//!         impl {{ item.ident }} { pub fn builder() -> Self { todo!() } }
+//!     })
+//! }
+//! ```
 //!
 //! ### Function
 //!

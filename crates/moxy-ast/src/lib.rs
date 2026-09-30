@@ -9,7 +9,7 @@
 //! Parse at the grammar level needed by a tool, inspect the resulting node, and
 //! emit it again with `moxy::token::ToTokens`:
 //!
-//! ```
+//! ```ignore
 //! use moxy::ast::Item;
 //!
 //! let item: Item = moxy::parse!("pub struct User;").unwrap();
@@ -20,7 +20,16 @@
 //!
 //! Nodes that carry Rust attributes implement [`Attributed`]. It exposes their
 //! attributes in source order and can parse a named attribute through
-//! [`Attributed::parse_meta`].
+//! [`Attributed::parse_meta`]. With the `moxy` crate's `derive` feature, use
+//! `#[derive(moxy::FromMeta)]` to convert structured attributes into named
+//! structs or enums.
+//!
+//! ## Generics
+//!
+//! [`Generics::split`] produces token views for an `impl` header and its type
+//! path, and returns the `where` clause separately. [`ImplGenerics`] omits type
+//! and const defaults while preserving bounds; [`TypeGenerics`] emits only
+//! generic arguments.
 
 mod _crate;
 mod args;

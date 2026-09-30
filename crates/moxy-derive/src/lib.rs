@@ -1,6 +1,6 @@
 //! # Moxy derive
 //!
-//! Derive support for `moxy::token::ToTokens`.
+//! Derive support for `moxy::token::ToTokens` and `moxy::ast::FromMeta`.
 //! It also provides `#[moxy::derive(Name)]` for authoring custom derive macros
 //! from a typed moxy AST input.
 //!
@@ -15,6 +15,10 @@
 //! #[moxy(template { struct {{ self.name }}; })]
 //! struct Generated { name: String }
 //! ```
+//!
+//! `#[derive(FromMeta)]` converts a structured attribute into a named struct
+//! or enum. Parse matching attributes with `moxy::ast::Attributed::parse_meta`.
+//! The derive adds `moxy::ast::FromMeta` bounds for generic type parameters.
 //!
 //! ## Debugging expansions
 //!
@@ -93,19 +97,8 @@ pub fn derive_tokens(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream
 
 /// Derives [`moxy::ast::FromMeta`] for a struct or enum.
 ///
-/// Parse a matching attribute with [`moxy::ast::Attributed::parse_meta`]. Named
-/// struct fields map to meta-item names and are converted recursively through
-/// `FromMeta`; nested values must therefore implement `FromMeta` as well.
-///
-/// Field behavior can be customized with `#[meta(...)]`:
-///
-/// - `rename = "..."` changes the accepted meta-item name.
-/// - `default` or `default = expr` supplies a value when the item is absent.
-/// - `message = "..."` customizes missing-item and duplicate-item errors.
-///
-/// Newtype enum variants accept their inner value directly, and named enum
-/// variants parse their fields from a nested attribute list. Generic type
-/// parameters receive a `FromMeta` bound in the generated implementation.
+/// Parse a matching attribute with [`moxy::ast::Attributed::parse_meta`]. The
+/// derive adds `FromMeta` bounds for generic type parameters.
 ///
 /// # Example
 ///
@@ -114,14 +107,21 @@ pub fn derive_tokens(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream
 ///
 /// #[derive(moxy::FromMeta)]
 /// struct BuildArgs {
+///     // This option is `None` when `rename` is absent.
 ///     #[meta(default)]
 ///     rename: Option<String>,
 ///
+///     // Accept `default` as the key and use `false` when it is absent.
 ///     #[meta(rename = "default", default)]
 ///     is_default: bool,
+///
+///     // Customize the error for this required value.
+///     #[meta(message = "missing build name")]
+///     name: String,
 /// }
 ///
-/// let field: moxy::ast::Field = moxy::parse!(#[build(rename = "set_name", default)] name: String).unwrap();
+/// // `#[build(rename = "set_name", default, name = "Build")]` maps into `BuildArgs`.
+/// let field: moxy::ast::Field = moxy::parse!(#[build(rename = "set_name", default, name = "Build")] name: String).unwrap();
 /// let args: BuildArgs = field.parse_meta("build")?.unwrap();
 /// assert_eq!(args.rename.as_deref(), Some("set_name"));
 /// assert!(args.is_default);

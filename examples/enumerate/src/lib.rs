@@ -11,7 +11,7 @@ pub fn apply(tokens: TokenStream) -> Result<TokenStream, ParseError> {
         impl {{ &item.ident }} {
             pub fn as_str(&self) -> &'static str {
                 match self {
-                    @for (variant in item.variants.iter()) {
+                    @for variant in item.variants.iter() {
                         Self::{{ variant.ident }} => stringify!({{ variant.ident }}),
                     }
                 }

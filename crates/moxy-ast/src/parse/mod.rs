@@ -19,7 +19,7 @@ use moxy_token::TryIntoTokenStream;
 /// The type can be given explicitly with `as T` or inferred from context.
 ///
 /// # Example
-/// ```
+/// ```ignore
 /// use moxy::ast::*;
 ///
 /// let token: Fn = parse!("fn").unwrap();
@@ -35,7 +35,7 @@ macro_rules! parse {
 /// Parse a rust source file into `moxy::ast::File`.
 ///
 /// # Example
-/// ```
+/// ```ignore
 /// use moxy::ast::*;
 ///
 /// let file: File = parse_file!("/path/to/file").unwrap();

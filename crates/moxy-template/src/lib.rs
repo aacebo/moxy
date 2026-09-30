@@ -12,7 +12,7 @@
 //! ```ignore
 //! let fields = ["id", "name"];
 //! let tokens = moxy::template! {
-//!     struct User { @for (field in fields) { {{ field }}: String, } }
+//!     struct User { @for field in fields { {{ field }}: String, } }
 //! };
 //! ```
 //!
@@ -43,7 +43,7 @@ use moxy_ast::{Parse, Parser};
 /// ```ignore
 /// let items = vec!["a", "b", "c"];
 /// let tokens = template! {
-///     @for (item in items) {
+///     @for item in items {
 ///         {{ item }}
 ///     }
 /// };

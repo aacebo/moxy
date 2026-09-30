@@ -63,6 +63,7 @@ Default features are `token` and `ast`.
 | `diagnostic` | no | Span-aware error, warning, note, and help diagnostics |
 | `build` | no | Cargo build-script and rustc-version helpers |
 | `derive` | no | `#[derive(ToTokens)]`, `#[derive(FromMeta)]`, and supporting macro tooling |
+| `derives` | no | Standard trait derives for supported AST and template types |
 | `serde` | no | Serialization for supported token, AST, and formatting types |
 | `proc-macro2` | no | Conversions between moxy and `proc_macro2` tokens |
 | `full` | no | Every feature above |
@@ -117,7 +118,7 @@ let fields = ["id", "name"];
 
 let tokens = moxy::template! {
     struct User {
-        @for (field in fields) {
+        @for field in fields {
             {{ field }}: String,
         }
     }
@@ -146,7 +147,7 @@ let fields = [("name", "String")];
 
 let tokens = moxy::template! {
     @if let Some(value) = value { const ENABLED: &str = {{ value }}; }
-    struct Config { @for ((name, ty) in &fields) { {{ name }}: {{ ty }}, } }
+    struct Config { @for (name, ty) in &fields { {{ name }}: {{ ty }}, } }
 };
 ```
 
@@ -224,32 +225,33 @@ Stable Rust does not emit these debug notes.
 
 `#[derive(moxy::FromMeta)]` converts structured attributes into a named struct
 or enum. Call [`Attributed::parse_meta`](https://docs.rs/moxy/latest/moxy/ast/trait.Attributed.html#method.parse_meta)
-on an AST node to parse the first matching attribute.
+on an AST node to parse the first matching attribute. The derive adds
+`FromMeta` bounds for generic type parameters.
 
 ```rust
 use moxy::ast::Attributed;
 
 #[derive(moxy::FromMeta)]
 struct BuildArgs {
+    // Field names are meta-item names unless renamed.
+    // `default` uses `None` when `rename` is absent.
     #[meta(default)]
     rename: Option<String>,
 
+    // Parse `default` into `is_default`; use `default = expr` for a custom fallback.
     #[meta(rename = "default", default)]
     is_default: bool,
+
+    // Customize the error for this required value.
+    #[meta(message = "missing build name")]
+    name: String,
 }
 
 fn build_args(field: &moxy::ast::Field) -> Result<Option<BuildArgs>, moxy::ast::ParseError> {
+    // Parse the first `#[build(...)]` attribute on this field.
     field.parse_meta("build")
 }
 ```
-
-For example, `#[build(rename = "set_name", default)]` produces
-`BuildArgs { rename: Some("set_name".into()), is_default: true }`. Struct
-fields map to meta-item names by default. Use `#[meta(rename = "...")]` to
-change a name, `#[meta(default)]` or `#[meta(default = expr)]` for an omitted
-field, and `#[meta(message = "...")]` to customize a missing-field or
-duplicate-field error. Nested values must implement `FromMeta`; deriving it
-adds the required bounds for generic type parameters.
 
 #### Custom derive macros
 

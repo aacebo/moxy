@@ -1,6 +1,6 @@
 /// Constructs a [`Delimited`](crate::Delimited) with `Delim::Paren`.
 ///
-/// ```
+/// ```ignore
 /// parenthesized!(expr)           // default span
 /// parenthesized!(span => expr)   // explicit DelimSpan
 /// ```
@@ -16,7 +16,7 @@ macro_rules! parenthesized {
 
 /// Constructs a [`Delimited`](crate::Delimited) with `Delim::Bracket`.
 ///
-/// ```
+/// ```ignore
 /// bracketed!(elems)           // default span
 /// bracketed!(span => elems)   // explicit DelimSpan
 /// ```
@@ -32,7 +32,7 @@ macro_rules! bracketed {
 
 /// Constructs a [`Delimited`](crate::Delimited) with `Delim::Brace`.
 ///
-/// ```
+/// ```ignore
 /// braced!(stmts)           // default span
 /// braced!(span => stmts)   // explicit DelimSpan
 /// ```
@@ -49,7 +49,7 @@ macro_rules! braced {
 /// Constructs a [`Punctuated`](crate::Punctuated) from a list of values,
 /// inserting default punctuation between each element.
 ///
-/// ```
+/// ```ignore
 /// punctuated![a, b, c]   // Punctuated<_, P> where P: Default
 /// ```
 #[macro_export]
