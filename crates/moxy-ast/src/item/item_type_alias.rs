@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Generics, Punctuated, Type, TypeBound, Visibility, WhereClause};
+use crate::*;
 
 /// A type alias item (`type Name<T> = Type;`).
 #[derive(Clone)]
@@ -19,6 +17,12 @@ pub struct ItemTypeAlias {
     pub eq_punct: Option<Token![=]>,
     pub ty: Option<Type>,
     pub semi_punct: Token![;],
+}
+
+impl Attributed for ItemTypeAlias {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
 }
 
 impl Parse for ItemTypeAlias {

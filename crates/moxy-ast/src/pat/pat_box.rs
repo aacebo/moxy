@@ -12,6 +12,12 @@ pub struct PatBox {
     pub pattern: Box<Pattern>,
 }
 
+impl Attributed for PatBox {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatBox {
     fn span(&self) -> Span {
         self.attrs.span().join(self.pattern.span())

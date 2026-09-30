@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, MacroCall};
+use crate::*;
 
 /// A macro invocation used as an item (`name!(...);`).
 #[derive(Clone)]
@@ -12,6 +10,12 @@ pub struct ItemMacro {
     pub attrs: Attributes,
     pub call: MacroCall,
     pub semi_punct: Option<Token![;]>,
+}
+
+impl Attributed for ItemMacro {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
 }
 
 impl Parse for ItemMacro {

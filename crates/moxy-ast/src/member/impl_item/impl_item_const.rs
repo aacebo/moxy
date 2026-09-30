@@ -20,6 +20,12 @@ pub struct ImplItemConst {
     pub semi: Option<Token![;]>,
 }
 
+impl Attributed for ImplItemConst {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for ImplItemConst {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);

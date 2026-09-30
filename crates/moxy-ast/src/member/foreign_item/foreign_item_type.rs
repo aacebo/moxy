@@ -15,6 +15,12 @@ pub struct ForeignItemType {
     pub semi: Option<Token![;]>,
 }
 
+impl Attributed for ForeignItemType {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for ForeignItemType {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);

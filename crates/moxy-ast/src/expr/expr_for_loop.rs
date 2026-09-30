@@ -16,6 +16,12 @@ pub struct ExprForLoop {
     pub body: StmtBlock,
 }
 
+impl Attributed for ExprForLoop {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprForLoop> for Expr {
     fn from(value: ExprForLoop) -> Self {
         Self::ForLoop(value)

@@ -12,6 +12,12 @@ pub struct ImplItemMacro {
     pub semi: Option<Token![;]>,
 }
 
+impl Attributed for ImplItemMacro {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for ImplItemMacro {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor)

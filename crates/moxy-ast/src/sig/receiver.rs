@@ -14,6 +14,12 @@ pub struct Receiver {
     pub self_keyword: Token![self],
 }
 
+impl Attributed for Receiver {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for Receiver {
     fn peek(cursor: Cursor<'_>) -> bool {
         Self::skip(cursor).is_some()

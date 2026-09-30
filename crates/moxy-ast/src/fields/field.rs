@@ -15,6 +15,12 @@ pub struct Field {
     pub ty: Type,
 }
 
+impl Attributed for Field {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for Field {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);

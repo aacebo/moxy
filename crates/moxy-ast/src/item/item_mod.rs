@@ -1,9 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Delim, Ident, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
-use super::Item;
-use crate::{Attributes, Delimited, Visibility};
+use crate::*;
 
 /// A module item (`mod foo;` or `mod foo { ... }`).
 #[derive(Clone)]
@@ -17,6 +14,12 @@ pub struct ItemMod {
     pub ident: Ident,
     pub content: Option<Delimited<Vec<Item>>>,
     pub semi_punct: Option<Token![;]>,
+}
+
+impl Attributed for ItemMod {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
 }
 
 impl Parse for ItemMod {

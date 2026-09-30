@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Signature, StmtBlock, Token, Visibility};
+use crate::*;
 
 /// A free function item (`fn name(...) -> T { ... }`).
 #[derive(Clone)]
@@ -13,6 +12,12 @@ pub struct ItemFn {
     pub sig: Signature,
     pub body: Option<StmtBlock>,
     pub semi_punct: Option<Token![;]>,
+}
+
+impl Attributed for ItemFn {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
 }
 
 impl Parse for ItemFn {

@@ -12,6 +12,12 @@ pub struct ExprContinue {
     pub label: Option<Lifetime>,
 }
 
+impl Attributed for ExprContinue {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprContinue> for Expr {
     fn from(value: ExprContinue) -> Self {
         Self::Continue(value)

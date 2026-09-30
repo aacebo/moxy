@@ -13,6 +13,12 @@ pub struct ExprAssign {
     pub right: Box<Expr>,
 }
 
+impl Attributed for ExprAssign {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprAssign> for Expr {
     fn from(value: ExprAssign) -> Self {
         Self::Assign(value)

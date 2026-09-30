@@ -13,6 +13,12 @@ pub struct ExprCast {
     pub ty: Box<Type>,
 }
 
+impl Attributed for ExprCast {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprCast> for Expr {
     fn from(value: ExprCast) -> Self {
         Self::Cast(value)

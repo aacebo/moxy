@@ -11,6 +11,12 @@ pub struct ExprRepeat {
     pub content: Delimited<RepeatInner>,
 }
 
+impl Attributed for ExprRepeat {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprRepeat> for Expr {
     fn from(value: ExprRepeat) -> Self {
         Self::Repeat(value)

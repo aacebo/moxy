@@ -11,6 +11,12 @@ pub struct ExprLit {
     pub lit: Lit,
 }
 
+impl Attributed for ExprLit {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprLit> for Expr {
     fn from(value: ExprLit) -> Self {
         Self::Lit(value)

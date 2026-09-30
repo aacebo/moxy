@@ -12,6 +12,16 @@ pub enum Declaration {
     Union(item::ItemUnion),
 }
 
+impl Attributed for Declaration {
+    fn attrs(&self) -> &[crate::Attribute] {
+        match self {
+            Self::Enum(value) => &value.attrs,
+            Self::Struct(value) => &value.attrs,
+            Self::Union(value) => &value.attrs,
+        }
+    }
+}
+
 impl Declaration {
     pub fn is_enum(&self) -> bool {
         matches!(self, Self::Enum(_))

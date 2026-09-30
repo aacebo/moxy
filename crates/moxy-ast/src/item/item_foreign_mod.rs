@@ -1,7 +1,6 @@
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Abi, Attributes, Delimited, ForeignItem, Token};
+use crate::*;
 
 /// An `extern` block (`extern "C" { ... }`).
 #[derive(Clone)]
@@ -12,6 +11,12 @@ pub struct ItemForeignMod {
     pub unsafety: Option<Token![unsafe]>,
     pub abi: Abi,
     pub items: Delimited<Vec<ForeignItem>>,
+}
+
+impl Attributed for ItemForeignMod {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
 }
 
 impl Parse for ItemForeignMod {

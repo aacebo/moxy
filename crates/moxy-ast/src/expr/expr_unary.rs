@@ -12,6 +12,12 @@ pub struct ExprUnary {
     pub expr: Box<Expr>,
 }
 
+impl Attributed for ExprUnary {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprUnary> for Expr {
     fn from(value: ExprUnary) -> Self {
         Self::Unary(value)

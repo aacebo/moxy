@@ -15,6 +15,12 @@ pub struct ExprIf {
     pub else_branch: Option<Box<Expr>>,
 }
 
+impl Attributed for ExprIf {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprIf> for Expr {
     fn from(value: ExprIf) -> Self {
         Self::If(value)

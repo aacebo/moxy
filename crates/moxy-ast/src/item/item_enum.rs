@@ -15,6 +15,12 @@ pub struct ItemEnum {
     pub variants: Delimited<Punctuated<Variant, Token![,]>>,
 }
 
+impl Attributed for ItemEnum {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for ItemEnum {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);

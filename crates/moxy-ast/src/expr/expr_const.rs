@@ -12,6 +12,12 @@ pub struct ExprConst {
     pub block: StmtBlock,
 }
 
+impl Attributed for ExprConst {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprConst> for Expr {
     fn from(value: ExprConst) -> Self {
         Self::Const(value)

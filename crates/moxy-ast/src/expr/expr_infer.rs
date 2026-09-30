@@ -11,6 +11,12 @@ pub struct ExprInfer {
     pub underscore: Token![_],
 }
 
+impl Attributed for ExprInfer {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprInfer> for Expr {
     fn from(value: ExprInfer) -> Self {
         Self::Infer(value)

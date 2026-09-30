@@ -14,6 +14,12 @@ pub struct ExprLet {
     pub expr: Box<Expr>,
 }
 
+impl Attributed for ExprLet {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprLet> for Expr {
     fn from(value: ExprLet) -> Self {
         Self::Let(value)

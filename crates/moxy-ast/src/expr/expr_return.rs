@@ -12,6 +12,12 @@ pub struct ExprReturn {
     pub expr: Option<Box<Expr>>,
 }
 
+impl Attributed for ExprReturn {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprReturn> for Expr {
     fn from(value: ExprReturn) -> Self {
         Self::Return(value)

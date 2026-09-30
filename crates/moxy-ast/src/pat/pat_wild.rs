@@ -11,6 +11,12 @@ pub struct PatWild {
     pub token: Token![_],
 }
 
+impl Attributed for PatWild {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatWild {
     fn span(&self) -> Span {
         self.attrs.span().join(self.token.span())

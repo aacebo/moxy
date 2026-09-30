@@ -13,6 +13,12 @@ pub struct LifetimeParam {
     pub bounds: Punctuated<Lifetime, Token![+]>,
 }
 
+impl Attributed for LifetimeParam {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for LifetimeParam {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor).map(|cursor| Lifetime::peek(cursor)).unwrap_or(false)

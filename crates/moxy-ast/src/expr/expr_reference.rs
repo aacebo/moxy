@@ -13,6 +13,12 @@ pub struct ExprReference {
     pub expr: Box<Expr>,
 }
 
+impl Attributed for ExprReference {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprReference> for Expr {
     fn from(value: ExprReference) -> Self {
         Self::Reference(value)

@@ -13,6 +13,12 @@ pub struct ExprBinary {
     pub right: Box<Expr>,
 }
 
+impl Attributed for ExprBinary {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprBinary> for Expr {
     fn from(value: ExprBinary) -> Self {
         Self::Binary(value)

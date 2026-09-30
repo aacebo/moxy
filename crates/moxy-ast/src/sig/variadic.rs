@@ -12,6 +12,12 @@ pub struct Variadic {
     pub dots: Token![...],
 }
 
+impl Attributed for Variadic {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for Variadic {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);

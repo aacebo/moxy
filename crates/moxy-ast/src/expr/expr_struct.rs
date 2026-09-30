@@ -13,6 +13,12 @@ pub struct ExprStruct {
     pub body: Delimited<StructBody>,
 }
 
+impl Attributed for ExprStruct {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprStruct> for Expr {
     fn from(value: ExprStruct) -> Self {
         Self::Struct(value)

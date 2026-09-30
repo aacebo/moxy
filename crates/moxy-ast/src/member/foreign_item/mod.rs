@@ -24,6 +24,17 @@ pub enum ForeignItem {
     Macro(ForeignItemMacro),
 }
 
+impl Attributed for ForeignItem {
+    fn attrs(&self) -> &[crate::Attribute] {
+        match self {
+            Self::Fn(value) => &value.attrs,
+            Self::Static(value) => &value.attrs,
+            Self::Type(value) => &value.attrs,
+            Self::Macro(value) => &value.attrs,
+        }
+    }
+}
+
 impl ForeignItem {
     pub fn is_fn(&self) -> bool {
         matches!(self, Self::Fn(_))

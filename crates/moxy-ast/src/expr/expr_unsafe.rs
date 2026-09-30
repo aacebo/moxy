@@ -12,6 +12,12 @@ pub struct ExprUnsafe {
     pub block: StmtBlock,
 }
 
+impl Attributed for ExprUnsafe {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprUnsafe> for Expr {
     fn from(value: ExprUnsafe) -> Self {
         Self::Unsafe(value)

@@ -11,6 +11,12 @@ pub struct PatRest {
     pub token: Token![..],
 }
 
+impl Attributed for PatRest {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatRest {
     fn span(&self) -> Span {
         self.attrs.span().join(self.token.span())

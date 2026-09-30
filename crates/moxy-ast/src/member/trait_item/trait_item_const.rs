@@ -17,6 +17,12 @@ pub struct TraitItemConst {
     pub semi: Token![;],
 }
 
+impl Attributed for TraitItemConst {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for TraitItemConst {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor)

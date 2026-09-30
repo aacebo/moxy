@@ -16,6 +16,12 @@ pub struct ConstParam {
     pub default: Option<Expr>,
 }
 
+impl Attributed for ConstParam {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for ConstParam {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor)

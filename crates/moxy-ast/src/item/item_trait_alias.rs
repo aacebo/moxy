@@ -1,8 +1,6 @@
-use crate::Token;
-use crate::{Parse, ParseError, Parser};
 use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Attributes, Generics, Punctuated, TypeBound, Visibility};
+use crate::*;
 
 /// A trait alias item (`trait Alias<T> = Bound1 + Bound2;`).
 #[derive(Clone)]
@@ -17,6 +15,12 @@ pub struct ItemTraitAlias {
     pub eq_punct: Token![=],
     pub bounds: Punctuated<TypeBound, Token![+]>,
     pub semi_punct: Token![;],
+}
+
+impl Attributed for ItemTraitAlias {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
 }
 
 impl Parse for ItemTraitAlias {

@@ -12,6 +12,12 @@ pub struct ExprIndex {
     pub index: Delimited<Box<Expr>>,
 }
 
+impl Attributed for ExprIndex {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprIndex> for Expr {
     fn from(value: ExprIndex) -> Self {
         Self::Index(value)

@@ -17,6 +17,12 @@ pub struct ForeignItemStatic {
     pub semi: Option<Token![;]>,
 }
 
+impl Attributed for ForeignItemStatic {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for ForeignItemStatic {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);

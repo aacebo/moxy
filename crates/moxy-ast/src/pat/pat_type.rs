@@ -13,6 +13,12 @@ pub struct PatType {
     pub ty: Box<Type>,
 }
 
+impl Attributed for PatType {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatType {
     fn span(&self) -> Span {
         self.attrs.span().join(self.ty.span())

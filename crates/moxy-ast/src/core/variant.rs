@@ -15,6 +15,12 @@ pub struct Variant {
     pub discriminant: Option<Expr>,
 }
 
+impl Attributed for Variant {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Parse for Variant {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         Attributes::skip(cursor)

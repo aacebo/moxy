@@ -11,6 +11,12 @@ pub struct File {
     pub items: Vec<Item>,
 }
 
+impl Attributed for File {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for File {
     fn span(&self) -> Span {
         let first = self.shebang.as_ref().map(|v| v.span()).unwrap_or(self.attrs.span());

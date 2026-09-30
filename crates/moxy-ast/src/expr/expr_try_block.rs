@@ -12,6 +12,12 @@ pub struct ExprTryBlock {
     pub block: StmtBlock,
 }
 
+impl Attributed for ExprTryBlock {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprTryBlock> for Expr {
     fn from(value: ExprTryBlock) -> Self {
         Self::TryBlock(value)

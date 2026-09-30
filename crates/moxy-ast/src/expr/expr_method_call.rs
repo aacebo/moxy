@@ -15,6 +15,12 @@ pub struct ExprMethodCall {
     pub args: Delimited<Punctuated<Expr, Token![,]>>,
 }
 
+impl Attributed for ExprMethodCall {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprMethodCall> for Expr {
     fn from(value: ExprMethodCall) -> Self {
         Self::MethodCall(value)

@@ -13,6 +13,12 @@ pub struct ExprAwait {
     pub await_keyword: Token![await],
 }
 
+impl Attributed for ExprAwait {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprAwait> for Expr {
     fn from(value: ExprAwait) -> Self {
         Self::Await(value)

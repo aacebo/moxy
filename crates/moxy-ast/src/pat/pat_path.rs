@@ -13,6 +13,12 @@ pub struct PatPath {
     pub path: Path,
 }
 
+impl Attributed for PatPath {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for PatPath {
     fn span(&self) -> Span {
         self.attrs.span().join(self.path.span())

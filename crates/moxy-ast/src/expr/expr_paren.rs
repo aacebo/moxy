@@ -11,6 +11,12 @@ pub struct ExprParen {
     pub content: Delimited<Box<Expr>>,
 }
 
+impl Attributed for ExprParen {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprParen> for Expr {
     fn from(value: ExprParen) -> Self {
         Self::Paren(value)

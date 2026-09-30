@@ -12,6 +12,12 @@ pub struct ExprPath {
     pub path: Path,
 }
 
+impl Attributed for ExprPath {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl From<ExprPath> for Expr {
     fn from(value: ExprPath) -> Self {
         Self::Path(value)

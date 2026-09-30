@@ -11,6 +11,12 @@ pub struct Crate {
     pub items: Vec<Item>,
 }
 
+impl Attributed for Crate {
+    fn attrs(&self) -> &[crate::Attribute] {
+        &self.attrs
+    }
+}
+
 impl Spanner for Crate {
     fn span(&self) -> Span {
         let start = self
