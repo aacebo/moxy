@@ -8,7 +8,7 @@ use crate::*;
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FnParams {
-    pub inputs: Punctuated<FnParam, Token![,]>,
+    pub inputs: List<FnParam, Token![,]>,
     pub variadic: Option<Variadic>,
 }
 

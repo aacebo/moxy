@@ -8,7 +8,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ExprArray {
     pub attrs: Attributes,
-    pub elems: Delimited<Punctuated<Expr, Token![,]>>,
+    pub elems: Delimited<List<Expr, Token![,]>>,
 }
 
 impl Attributed for ExprArray {

@@ -44,10 +44,10 @@ mod item;
 mod macro_call;
 #[macro_use]
 mod macros;
+mod list;
 mod member;
 mod pat;
 mod path;
-mod punctuated;
 mod sig;
 mod stmt;
 mod ty;
@@ -81,6 +81,8 @@ pub use generics::*;
 #[doc(inline)]
 pub use item::*;
 #[doc(inline)]
+pub use list::*;
+#[doc(inline)]
 pub use macro_call::*;
 #[doc(inline)]
 pub use member::*;
@@ -90,8 +92,6 @@ pub use parse::*;
 pub use pat::*;
 #[doc(inline)]
 pub use path::*;
-#[doc(inline)]
-pub use punctuated::*;
 #[doc(inline)]
 pub use sig::*;
 #[doc(inline)]

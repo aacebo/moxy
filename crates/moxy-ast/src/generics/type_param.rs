@@ -10,7 +10,7 @@ pub struct TypeParam {
     pub attrs: Attributes,
     pub ident: Ident,
     pub colon_punct: Option<Token![:]>,
-    pub bounds: Punctuated<TypeBound, Token![+]>,
+    pub bounds: List<TypeBound, Token![+]>,
     pub eq_punct: Option<Token![=]>,
     pub default: Option<Type>,
 }
@@ -34,7 +34,7 @@ impl Parse for TypeParam {
             let bounds = TypeBound::parse_bounds(parser)?;
             (Some(colon_punct), bounds)
         } else {
-            (None, Punctuated::new())
+            (None, List::new())
         };
 
         let (eq_punct, default) = if <Token![=]>::peek(parser.cursor()) {

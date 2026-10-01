@@ -13,7 +13,7 @@ pub struct ItemTraitAlias {
     pub ident: Ident,
     pub generics: Generics,
     pub eq_punct: Token![=],
-    pub bounds: Punctuated<TypeBound, Token![+]>,
+    pub bounds: List<TypeBound, Token![+]>,
     pub semi_punct: Token![;],
 }
 

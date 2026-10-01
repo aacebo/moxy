@@ -7,7 +7,7 @@ use crate::*;
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct FieldsNamed {
-    pub fields: Delimited<Punctuated<Field, Token![,]>>,
+    pub fields: Delimited<List<Field, Token![,]>>,
 }
 
 impl Parse for FieldsNamed {
@@ -16,7 +16,7 @@ impl Parse for FieldsNamed {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let fields = Delimited::parse_brace_with(parser, Punctuated::parse_terminated)?;
+        let fields = Delimited::parse_brace_with(parser, List::parse_terminated)?;
         Ok(Self { fields })
     }
 

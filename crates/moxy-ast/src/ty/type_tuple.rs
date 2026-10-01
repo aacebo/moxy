@@ -1,13 +1,13 @@
 use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Cursor, Delimited, Parse, ParseError, Parser, Punctuated, Type};
+use crate::{Cursor, Delimited, List, Parse, ParseError, Parser, Type};
 
 /// A tuple type (e.g. `()`, `(A, B)`, `(T,)`).
 #[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeTuple {
-    pub elems: Delimited<Punctuated<Type, Token![,]>>,
+    pub elems: Delimited<List<Type, Token![,]>>,
 }
 
 impl Parse for TypeTuple {
@@ -52,7 +52,7 @@ impl Parse for TypeTuple {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let elems = Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?;
+        let elems = Delimited::parse_paren_with(parser, List::parse_terminated)?;
         Ok(Self { elems })
     }
 

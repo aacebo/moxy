@@ -20,7 +20,7 @@ pub fn expand(target: &moxy::ast::ItemStruct) -> TokenStream {
     }
 
     moxy::template! {
-        let entries = ::moxy::ast::Punctuated::<
+        let entries = ::moxy::ast::List::<
             ::moxy::ast::Meta,
             ::moxy::ast::Token![,],
         >::parse_terminated(parser)?;

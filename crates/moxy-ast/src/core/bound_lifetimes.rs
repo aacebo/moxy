@@ -9,7 +9,7 @@ use crate::*;
 pub struct BoundLifetimes {
     pub for_keyword: Token![for],
     pub lt: Token![<],
-    pub params: Punctuated<Lifetime, Token![,]>,
+    pub params: List<Lifetime, Token![,]>,
     pub gt: Token![>],
 }
 
@@ -21,7 +21,7 @@ impl Parse for BoundLifetimes {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let for_keyword = <_ as Parse>::parse(parser)?;
         let lt = <_ as Parse>::parse(parser)?;
-        let params = Punctuated::parse_separated_nonempty(parser)?;
+        let params = List::parse_separated_nonempty(parser)?;
         let gt = <_ as Parse>::parse(parser)?;
 
         Ok(Self {

@@ -9,7 +9,7 @@ use crate::*;
 pub struct ExprCall {
     pub attrs: Attributes,
     pub func: Box<Expr>,
-    pub args: Delimited<Punctuated<Expr, Token![,]>>,
+    pub args: Delimited<List<Expr, Token![,]>>,
 }
 
 impl Attributed for ExprCall {

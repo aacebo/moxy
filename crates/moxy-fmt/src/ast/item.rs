@@ -36,7 +36,7 @@ impl Format for Signature {
         f.group(|f| {
             for pair in self.params.inner.inputs.pairs() {
                 match pair {
-                    moxy_ast::Pair::Punctuated(param, _) => {
+                    moxy_ast::Pair::List(param, _) => {
                         param.format(f)?;
                         f.text(",")?;
                         f.text(" ")?;
@@ -137,7 +137,7 @@ impl Format for FieldsNamed {
                 f.hard_break()?;
 
                 match pair {
-                    moxy_ast::Pair::Punctuated(field, _) => {
+                    moxy_ast::Pair::List(field, _) => {
                         field.format(f)?;
                         f.text(",")?;
                     }
@@ -403,7 +403,7 @@ impl Format for ItemEnum {
                 f.hard_break()?;
 
                 match pair {
-                    moxy_ast::Pair::Punctuated(v, _) => {
+                    moxy_ast::Pair::List(v, _) => {
                         v.format(f)?;
                         f.text(",")?;
                     }

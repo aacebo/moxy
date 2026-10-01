@@ -1,7 +1,7 @@
 use crate::{Cursor, Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Punctuated, TypeBound};
+use crate::{List, TypeBound};
 
 /// A trait object type (e.g. `dyn Iterator<Item = u8>`, `dyn Fn() + 'a`).
 #[derive(Clone)]
@@ -9,7 +9,7 @@ use crate::{Punctuated, TypeBound};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeTraitObject {
     pub dyn_token: Option<Token![dyn]>,
-    pub bounds: Punctuated<TypeBound, Token![+]>,
+    pub bounds: List<TypeBound, Token![+]>,
 }
 
 impl Parse for TypeTraitObject {

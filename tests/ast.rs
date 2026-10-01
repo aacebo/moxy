@@ -1,7 +1,7 @@
 use std::str::FromStr;
 
 use moxy::Token;
-use moxy::ast::{Item, Parse, Parser, Punctuated};
+use moxy::ast::{Item, List, Parse, Parser};
 use moxy::token::{Ident, Span, TokenStream};
 
 fn parse_token<T: Parse>(source: &str) -> Result<T, moxy::ast::ParseError> {
@@ -14,7 +14,7 @@ fn parse_token<T: Parse>(source: &str) -> Result<T, moxy::ast::ParseError> {
 
 #[test]
 fn punctuated_parsing_and_mutation_cover_list_shapes() {
-    type Idents = Punctuated<Ident, Token![,]>;
+    type Idents = List<Ident, Token![,]>;
 
     let tokens = TokenStream::from_str("first, second,").unwrap();
     let parser = Parser::from_tokens(&tokens);

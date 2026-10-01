@@ -36,7 +36,7 @@ impl Parse for TypeBareFn {
         let abi = <_ as Parse>::parse(parser)?;
         let fn_keyword = <_ as Parse>::parse(parser)?;
         let params = Delimited::parse_paren_with(parser, |inner| {
-            let mut inputs = Punctuated::new();
+            let mut inputs = List::new();
             let mut variadic = None;
 
             while !inner.is_empty() {
@@ -136,7 +136,7 @@ impl ToTokens for TypeBareFn {
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct BareFnParams {
-    pub inputs: Punctuated<BareFnArg, Token![,]>,
+    pub inputs: List<BareFnArg, Token![,]>,
     pub variadic: Option<Variadic>,
 }
 

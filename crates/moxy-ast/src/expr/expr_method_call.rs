@@ -12,7 +12,7 @@ pub struct ExprMethodCall {
     pub dot: Token![.],
     pub method: Ident,
     pub turbofish: Option<AngleArguments>,
-    pub args: Delimited<Punctuated<Expr, Token![,]>>,
+    pub args: Delimited<List<Expr, Token![,]>>,
 }
 
 impl Attributed for ExprMethodCall {

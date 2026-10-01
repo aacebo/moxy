@@ -154,7 +154,7 @@ fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
             expr = ExprCall {
                 attrs: Default::default(),
                 func: Box::new(expr),
-                args: Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?,
+                args: Delimited::parse_paren_with(parser, List::parse_terminated)?,
             }
             .into();
 
@@ -200,7 +200,7 @@ fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
                         dot: <_ as Parse>::parse(parser)?,
                         method: <_ as Parse>::parse(parser)?,
                         turbofish: <_ as Parse>::parse(parser)?,
-                        args: Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?,
+                        args: Delimited::parse_paren_with(parser, List::parse_terminated)?,
                     }
                     .into();
                 }
@@ -506,7 +506,7 @@ pub(crate) fn paren_or_tuple(parser: &Parser, attrs: Attributes) -> Result<Expr,
     let first = <_ as Parse>::parse(&parser)?;
 
     if <Token![,]>::peek(parser.cursor()) {
-        let mut elems = Punctuated::new();
+        let mut elems = List::new();
         elems.push_value(first);
 
         while <Token![,]>::peek(parser.cursor()) {
@@ -559,7 +559,7 @@ pub(crate) fn array_or_repeat(parser: &Parser, attrs: Attributes) -> Result<Expr
         .into());
     }
 
-    let mut elems = Punctuated::new();
+    let mut elems = List::new();
     elems.push_value(first);
 
     while <Token![,]>::peek(parser.cursor()) {
@@ -585,10 +585,10 @@ fn closure(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     let capture = <_ as Parse>::parse(parser)?;
     let (pipes, inputs) = if <Token![||]>::peek(parser.cursor()) {
         let oror = <_ as Parse>::parse(parser)?;
-        (ClosurePipes::Empty(oror), Punctuated::new())
+        (ClosurePipes::Empty(oror), List::new())
     } else {
         let open = <_ as Parse>::parse(parser)?;
-        let mut params = Punctuated::new();
+        let mut params = List::new();
 
         while !<Token![|]>::peek(parser.cursor()) && !parser.is_empty() {
             params.push_value(<_ as Parse>::parse(parser)?);

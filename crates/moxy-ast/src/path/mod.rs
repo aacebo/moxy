@@ -37,7 +37,7 @@ macro_rules! path {
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Path {
     colon: Option<Token![::]>,
-    segments: Punctuated<PathSegment, Token![::]>,
+    segments: List<PathSegment, Token![::]>,
 }
 
 impl Path {
@@ -66,7 +66,7 @@ impl Path {
     }
 
     pub(crate) fn parse_rest(parser: &Parser, first: PathSegment) -> Result<Self, ParseError> {
-        let mut segments = Punctuated::new();
+        let mut segments = List::new();
         segments.push_value(first);
 
         while <Token![::]>::peek(parser.cursor()) {
@@ -136,7 +136,7 @@ impl std::str::FromStr for Path {
 
 impl From<Ident> for Path {
     fn from(ident: Ident) -> Self {
-        let mut segments = Punctuated::new();
+        let mut segments = List::new();
 
         segments.push_value(PathSegment {
             ident,
@@ -151,7 +151,7 @@ impl From<Vec<PathSegment>> for Path {
     fn from(value: Vec<PathSegment>) -> Self {
         Self {
             colon: None,
-            segments: Punctuated::from_iter(value),
+            segments: List::from_iter(value),
         }
     }
 }
@@ -163,7 +163,7 @@ impl Extend<PathSegment> for Path {
 }
 
 impl std::ops::Deref for Path {
-    type Target = Punctuated<PathSegment, Token![::]>;
+    type Target = List<PathSegment, Token![::]>;
 
     fn deref(&self) -> &Self::Target {
         &self.segments

@@ -1,6 +1,6 @@
 use moxy_token::TokenStream;
 
-type Paths = moxy::ast::Punctuated<moxy::ast::Path, moxy::ast::Token![,]>;
+type Paths = moxy::ast::List<moxy::ast::Path, moxy::ast::Token![,]>;
 
 pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
     let parser = moxy::ast::Parser::from_tokens(&attr);

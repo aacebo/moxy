@@ -9,7 +9,7 @@ use crate::*;
 pub struct LifetimePredicate {
     pub lifetime: Lifetime,
     pub colon_punct: Token![:],
-    pub bounds: Punctuated<Lifetime, Token![+]>,
+    pub bounds: List<Lifetime, Token![+]>,
 }
 
 impl Parse for LifetimePredicate {
@@ -21,7 +21,7 @@ impl Parse for LifetimePredicate {
         Ok(Self {
             lifetime: <_ as Parse>::parse(parser)?,
             colon_punct: <_ as Parse>::parse(parser)?,
-            bounds: Punctuated::parse_separated_nonempty(parser)?,
+            bounds: List::parse_separated_nonempty(parser)?,
         })
     }
 

@@ -44,7 +44,7 @@ impl ToTokens for ExprStruct {
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StructBody {
-    pub fields: Punctuated<FieldValue, Token![,]>,
+    pub fields: List<FieldValue, Token![,]>,
     pub rest: Option<(Token![..], Box<Expr>)>,
 }
 
@@ -54,7 +54,7 @@ impl Parse for StructBody {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let mut fields = Punctuated::new();
+        let mut fields = List::new();
         let mut rest = None;
 
         while !parser.is_empty() {

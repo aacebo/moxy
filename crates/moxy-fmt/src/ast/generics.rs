@@ -32,7 +32,7 @@ impl Format for WhereClause {
         for pair in self.predicates.pairs() {
             f.hard_break()?;
             f.indent(|f| match pair {
-                moxy_ast::Pair::Punctuated(pred, _) => {
+                moxy_ast::Pair::List(pred, _) => {
                     pred.format(f)?;
                     f.text(",")
                 }

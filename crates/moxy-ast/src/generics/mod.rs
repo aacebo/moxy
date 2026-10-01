@@ -34,7 +34,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct Generics {
     pub lt: Option<Token![<]>,
-    pub params: Punctuated<GenericParam, Token![,]>,
+    pub params: List<GenericParam, Token![,]>,
     pub gt: Option<Token![>]>,
     pub where_clause: Option<WhereClause>,
 }
@@ -59,9 +59,9 @@ impl Parse for Generics {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let lt: Option<Token![<]> = <_ as Parse>::parse(parser)?;
         let params = if lt.is_some() {
-            Punctuated::parse_separated_nonempty(parser)?
+            List::parse_separated_nonempty(parser)?
         } else {
-            Punctuated::new()
+            List::new()
         };
 
         let gt = if lt.is_some() {

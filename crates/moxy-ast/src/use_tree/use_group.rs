@@ -7,7 +7,7 @@ use crate::*;
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseGroup {
-    pub items: Delimited<Punctuated<UseTree, Token![,]>>,
+    pub items: Delimited<List<UseTree, Token![,]>>,
 }
 
 impl Parse for UseGroup {
@@ -19,7 +19,7 @@ impl Parse for UseGroup {
         let (span, parser) = parser.parse_group_spanned(Delim::Brace)?;
 
         Ok(Self {
-            items: Delimited::brace(span, Punctuated::parse_separated_nonempty(&parser)?),
+            items: Delimited::brace(span, List::parse_separated_nonempty(&parser)?),
         })
     }
 

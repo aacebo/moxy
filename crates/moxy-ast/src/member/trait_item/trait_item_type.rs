@@ -12,7 +12,7 @@ pub struct TraitItemType {
     pub ident: Ident,
     pub generics: Generics,
     pub colon: Option<Token![:]>,
-    pub bounds: Punctuated<TypeBound, Token![+]>,
+    pub bounds: List<TypeBound, Token![+]>,
     pub default: Option<(Token![=], Type)>,
     pub semi: Token![;],
 }
@@ -39,12 +39,12 @@ impl Parse for TraitItemType {
             let colon = <_ as Parse>::parse(parser)?;
 
             if TypeBound::peek(parser.cursor()) {
-                (Some(colon), Punctuated::parse_separated_nonempty(parser)?)
+                (Some(colon), List::parse_separated_nonempty(parser)?)
             } else {
-                (Some(colon), Punctuated::new())
+                (Some(colon), List::new())
             }
         } else {
-            (None, Punctuated::new())
+            (None, List::new())
         };
 
         let default = if <Token![=]>::peek(parser.cursor()) {

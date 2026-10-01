@@ -8,7 +8,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatSlice {
     pub attrs: Attributes,
-    pub elems: Delimited<Punctuated<Pattern, Token![,]>>,
+    pub elems: Delimited<List<Pattern, Token![,]>>,
 }
 
 impl Attributed for PatSlice {
@@ -34,7 +34,7 @@ impl Parse for PatSlice {
 
         Ok(Self {
             attrs,
-            elems: Delimited::bracket(span, Punctuated::parse_terminated(&parser)?),
+            elems: Delimited::bracket(span, List::parse_terminated(&parser)?),
         })
     }
 

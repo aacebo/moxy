@@ -46,19 +46,19 @@ macro_rules! braced {
     };
 }
 
-/// Constructs a [`Punctuated`](crate::Punctuated) from a list of values,
+/// Constructs a [`List`](crate::List) from a list of values,
 /// inserting default punctuation between each element.
 ///
 /// ```ignore
-/// punctuated![a, b, c]   // Punctuated<_, P> where P: Default
+/// punctuated![a, b, c]   // List<_, P> where P: Default
 /// ```
 #[macro_export]
 macro_rules! punctuated {
     () => {
-        $crate::Punctuated::new()
+        $crate::List::new()
     };
     ($($item:expr),+ $(,)?) => {{
-        let mut p = $crate::Punctuated::new();
+        let mut p = $crate::List::new();
         $(p.push($item);)+
         p
     }};

@@ -55,7 +55,7 @@ impl Parse for Signature {
         let ident = <_ as Parse>::parse(parser)?;
         let mut generics: Generics = <_ as Parse>::parse(parser)?;
         let params = Delimited::parse_paren_with(parser, |parser| {
-            let mut inputs = Punctuated::new();
+            let mut inputs = List::new();
             let mut variadic = None;
 
             while !parser.is_empty() {

@@ -1,6 +1,6 @@
 use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{AngleArguments, Cursor, GenericArgument, Parse, ParseError, Parser, Punctuated, Token, TypeBound};
+use crate::{AngleArguments, Cursor, GenericArgument, List, Parse, ParseError, Parser, Token, TypeBound};
 
 /// An associated type bound constraint (`Item: Bound`).
 #[derive(Clone)]
@@ -10,7 +10,7 @@ pub struct ConstraintArgument {
     pub ident: Ident,
     pub generics: Option<AngleArguments>,
     pub colon_punct: Token![:],
-    pub bounds: Punctuated<TypeBound, Token![+]>,
+    pub bounds: List<TypeBound, Token![+]>,
 }
 
 impl ConstraintArgument {
@@ -45,7 +45,7 @@ impl Parse for ConstraintArgument {
             ident: <_ as Parse>::parse(parser)?,
             generics: <_ as Parse>::parse(parser)?,
             colon_punct: <_ as Parse>::parse(parser)?,
-            bounds: Punctuated::parse_separated_nonempty(parser)?,
+            bounds: List::parse_separated_nonempty(parser)?,
         })
     }
 

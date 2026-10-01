@@ -253,12 +253,12 @@ impl Formatter {
     }
 }
 
-impl<T: Format, P: std::fmt::Display> Format for moxy_ast::Punctuated<T, P> {
+impl<T: Format, P: std::fmt::Display> Format for moxy_ast::List<T, P> {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.group(|f| {
             for pair in self.pairs() {
                 match pair {
-                    moxy_ast::Pair::Punctuated(t, p) => {
+                    moxy_ast::Pair::List(t, p) => {
                         t.format(f)?;
                         let sep = p.to_string();
 

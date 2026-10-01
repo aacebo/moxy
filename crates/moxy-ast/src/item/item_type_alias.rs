@@ -12,7 +12,7 @@ pub struct ItemTypeAlias {
     pub type_keyword: Token![type],
     pub ident: Ident,
     pub generics: Generics,
-    pub bounds: Punctuated<TypeBound, Token![+]>,
+    pub bounds: List<TypeBound, Token![+]>,
     pub where_clause: Option<WhereClause>,
     pub eq_punct: Option<Token![=]>,
     pub ty: Option<Type>,
@@ -42,7 +42,7 @@ impl Parse for ItemTypeAlias {
             let _: Token![:] = <_ as Parse>::parse(parser)?;
             TypeBound::parse_bounds(parser)?
         } else {
-            Punctuated::new()
+            List::new()
         };
 
         let where_clause = generics

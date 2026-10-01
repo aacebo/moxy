@@ -38,8 +38,8 @@ impl TypeBound {
         if let Self::Use(v) = self { Some(v) } else { None }
     }
 
-    pub fn parse_bounds(parser: &Parser) -> Result<crate::Punctuated<Self, Token![+]>, ParseError> {
-        let mut bounds = crate::Punctuated::new();
+    pub fn parse_bounds(parser: &Parser) -> Result<crate::List<Self, Token![+]>, ParseError> {
+        let mut bounds = crate::List::new();
         bounds.push_value(<_ as Parse>::parse(parser)?);
 
         while <Token![+]>::peek(parser.cursor()) {

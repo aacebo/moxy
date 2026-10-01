@@ -9,7 +9,7 @@ use crate::*;
 pub struct UseBound {
     pub use_keyword: Token![use],
     pub lt_punct: Token![<],
-    pub params: Punctuated<UseBoundParam, Token![,]>,
+    pub params: List<UseBoundParam, Token![,]>,
     pub gt_punct: Token![>],
 }
 
@@ -23,9 +23,9 @@ impl Parse for UseBound {
             use_keyword: <_ as Parse>::parse(parser)?,
             lt_punct: <_ as Parse>::parse(parser)?,
             params: if <Token![>]>::peek(parser.cursor()) {
-                Punctuated::new()
+                List::new()
             } else {
-                Punctuated::parse_separated_nonempty(parser)?
+                List::parse_separated_nonempty(parser)?
             },
             gt_punct: <_ as Parse>::parse(parser)?,
         })

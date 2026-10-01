@@ -344,7 +344,7 @@ impl Parse for Pattern {
             return Ok(first);
         }
 
-        let mut cases = Punctuated::new();
+        let mut cases = List::new();
         cases.push_value(first);
 
         while <Token![|]>::peek(parser.cursor()) {

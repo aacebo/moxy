@@ -88,7 +88,7 @@ fn expand_named(ident: &Ident, fields: &[fields::Field], message: Option<&LitStr
         };
 
         let parser = ::moxy::ast::Parser::from_tokens(&group.tokens);
-        let entries = ::moxy::ast::Punctuated::<
+        let entries = ::moxy::ast::List::<
             ::moxy::ast::Meta,
             ::moxy::ast::Token![,],
         >::parse_terminated(&parser)?;

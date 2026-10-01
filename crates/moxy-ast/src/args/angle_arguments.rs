@@ -1,6 +1,6 @@
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Cursor, GenericArgument, Parse, ParseError, Parser, Punctuated, Token};
+use crate::{Cursor, GenericArgument, List, Parse, ParseError, Parser, Token};
 
 /// A `<...>` argument list.
 #[derive(Clone)]
@@ -9,7 +9,7 @@ use crate::{Cursor, GenericArgument, Parse, ParseError, Parser, Punctuated, Toke
 pub struct AngleArguments {
     pub colon2: Option<Token![::]>,
     pub lt_punct: Token![<],
-    pub args: Punctuated<GenericArgument, Token![,]>,
+    pub args: List<GenericArgument, Token![,]>,
     pub gt_punct: Token![>],
 }
 
@@ -22,7 +22,7 @@ impl Parse for AngleArguments {
         Ok(Self {
             colon2: <_ as Parse>::parse(parser)?,
             lt_punct: <_ as Parse>::parse(parser)?,
-            args: Punctuated::parse_separated_nonempty(parser)?,
+            args: List::parse_separated_nonempty(parser)?,
             gt_punct: <_ as Parse>::parse(parser)?,
         })
     }

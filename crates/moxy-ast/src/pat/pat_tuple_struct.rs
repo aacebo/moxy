@@ -11,7 +11,7 @@ pub struct PatTupleStruct {
     pub attrs: Attributes,
     pub qself: Option<QSelf>,
     pub path: Path,
-    pub elems: Delimited<Punctuated<Pattern, Token![,]>>,
+    pub elems: Delimited<List<Pattern, Token![,]>>,
 }
 
 impl Attributed for PatTupleStruct {
@@ -61,7 +61,7 @@ impl Parse for PatTupleStruct {
             attrs,
             qself,
             path,
-            elems: Delimited::paren(span, Punctuated::parse_terminated(&parser)?),
+            elems: Delimited::paren(span, List::parse_terminated(&parser)?),
         })
     }
 

@@ -87,7 +87,7 @@ impl Parse for GenericArgument {
 
             if <Token![:]>::peek(parser.cursor()) {
                 let colon_punct = <_ as Parse>::parse(parser)?;
-                let bounds = Punctuated::parse_separated_nonempty(parser)?;
+                let bounds = List::parse_separated_nonempty(parser)?;
 
                 return Ok(ConstraintArgument {
                     ident,

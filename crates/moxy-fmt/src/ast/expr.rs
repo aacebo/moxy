@@ -93,7 +93,7 @@ impl Format for ExprPath {
                     }
 
                     match pair {
-                        Pair::Punctuated(seg, _) => {
+                        Pair::List(seg, _) => {
                             seg.format(f)?;
                         }
                         Pair::End(seg) => {
@@ -111,7 +111,7 @@ impl Format for ExprPath {
                 }
 
                 match pair {
-                    Pair::Punctuated(seg, _) => {
+                    Pair::List(seg, _) => {
                         seg.format(f)?;
                     }
                     Pair::End(seg) => {
@@ -137,7 +137,7 @@ impl Format for ExprStruct {
                 f.hard_break()?;
 
                 match pair {
-                    Pair::Punctuated(fv, _) => {
+                    Pair::List(fv, _) => {
                         fv.format(f)?;
                         f.text(",")?;
                     }

@@ -10,7 +10,7 @@ pub struct TypePredicate {
     pub lifetimes: Option<BoundLifetimes>,
     pub bounded_ty: Type,
     pub colon_punct: Token![:],
-    pub bounds: Punctuated<TypeBound, Token![+]>,
+    pub bounds: List<TypeBound, Token![+]>,
 }
 
 impl Parse for TypePredicate {

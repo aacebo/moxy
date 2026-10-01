@@ -8,7 +8,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatOr {
     pub attrs: Attributes,
-    pub cases: Punctuated<Pattern, Token![|]>,
+    pub cases: List<Pattern, Token![|]>,
 }
 
 impl Attributed for PatOr {

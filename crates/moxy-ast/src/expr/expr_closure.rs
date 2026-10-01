@@ -14,7 +14,7 @@ pub struct ExprClosure {
     pub asyncness: Option<Token![async]>,
     pub capture: Option<Token![move]>,
     pub pipes: ClosurePipes,
-    pub inputs: Punctuated<ClosureParam, Token![,]>,
+    pub inputs: List<ClosureParam, Token![,]>,
     pub output: ReturnType,
     pub body: Box<Expr>,
 }

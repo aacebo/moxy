@@ -39,7 +39,7 @@ impl Format for TypePath {
                     }
 
                     match pair {
-                        moxy_ast::Pair::Punctuated(seg, _) => {
+                        moxy_ast::Pair::List(seg, _) => {
                             seg.format(f)?;
                         }
                         moxy_ast::Pair::End(seg) => {
@@ -59,7 +59,7 @@ impl Format for TypePath {
                 }
 
                 match pair {
-                    moxy_ast::Pair::Punctuated(seg, _) => {
+                    moxy_ast::Pair::List(seg, _) => {
                         seg.format(f)?;
                         f.text("::")?;
                     }

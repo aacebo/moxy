@@ -92,7 +92,7 @@ impl ToTokens for PatStruct {
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatStructBody {
-    pub fields: Punctuated<pat::PatField, Token![,]>,
+    pub fields: List<pat::PatField, Token![,]>,
     pub dotdot: Option<Token![..]>,
 }
 
@@ -112,7 +112,7 @@ impl Parse for PatStructBody {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let mut fields = Punctuated::new();
+        let mut fields = List::new();
         let mut dotdot = None;
 
         while !parser.is_empty() {

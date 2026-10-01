@@ -1,7 +1,7 @@
 use crate::{Cursor, Parse, ParseError, Parser};
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Punctuated, TypeBound};
+use crate::{List, TypeBound};
 
 /// An `impl Trait` type (e.g. `impl Iterator<Item = u8>`).
 #[derive(Clone)]
@@ -9,7 +9,7 @@ use crate::{Punctuated, TypeBound};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeImplTrait {
     pub impl_keyword: Token![impl],
-    pub bounds: Punctuated<TypeBound, Token![+]>,
+    pub bounds: List<TypeBound, Token![+]>,
 }
 
 impl Parse for TypeImplTrait {

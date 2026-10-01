@@ -89,7 +89,7 @@ impl Format for PatStruct {
                 f.hard_break()?;
 
                 match pair {
-                    moxy_ast::Pair::Punctuated(field, _) => {
+                    moxy_ast::Pair::List(field, _) => {
                         field.format(f)?;
                         f.text(",")?;
                     }
@@ -159,7 +159,7 @@ impl Format for PatOr {
 
         for pair in self.cases.pairs() {
             match pair {
-                moxy_ast::Pair::Punctuated(pat, _) => {
+                moxy_ast::Pair::List(pat, _) => {
                     pat.format(f)?;
                     f.text(" | ")?;
                 }

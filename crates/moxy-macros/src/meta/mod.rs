@@ -3,7 +3,7 @@ mod fields;
 mod structs;
 mod variants;
 
-use moxy_ast::Punctuated;
+use moxy_ast::List;
 use moxy_diagnostic::SpanExt;
 use moxy_token::{Ident, LitStr, Spanner, ToTokenStream, TokenStream};
 

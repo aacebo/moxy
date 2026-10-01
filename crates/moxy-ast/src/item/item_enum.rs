@@ -12,7 +12,7 @@ pub struct ItemEnum {
     pub enum_keyword: Token![enum],
     pub ident: Ident,
     pub generics: Generics,
-    pub variants: Delimited<Punctuated<Variant, Token![,]>>,
+    pub variants: Delimited<List<Variant, Token![,]>>,
 }
 
 impl Attributed for ItemEnum {
@@ -34,7 +34,7 @@ impl Parse for ItemEnum {
         let enum_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
         let generics = <_ as Parse>::parse(parser)?;
-        let variants = Delimited::parse_brace_with(parser, Punctuated::parse_terminated)?;
+        let variants = Delimited::parse_brace_with(parser, List::parse_terminated)?;
 
         Ok(Self {
             attrs,

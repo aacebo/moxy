@@ -1,10 +1,10 @@
-use moxy_ast::Punctuated;
+use moxy_ast::List;
 use moxy_diagnostic::SpanExt;
 use moxy_token::{Spanner, TokenStream};
 
 pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
     let parser = moxy::ast::Parser::from_tokens(&attr);
-    let list = match Punctuated::<moxy::ast::Meta, moxy::ast::Token![,]>::parse_separated_nonempty(&parser) {
+    let list = match List::<moxy::ast::Meta, moxy::ast::Token![,]>::parse_separated_nonempty(&parser) {
         Err(err) => return err.to_compile_error(),
         Ok(v) => v,
     };

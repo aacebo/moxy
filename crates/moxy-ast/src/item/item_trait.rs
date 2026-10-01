@@ -15,7 +15,7 @@ pub struct ItemTrait {
     pub ident: Ident,
     pub generics: Generics,
     pub colon_punct: Option<Token![:]>,
-    pub supertraits: Punctuated<TypeBound, Token![+]>,
+    pub supertraits: List<TypeBound, Token![+]>,
     pub items: Delimited<Vec<TraitItem>>,
 }
 
@@ -52,12 +52,12 @@ impl Parse for ItemTrait {
             let supertraits = if !<Token![;]>::peek(parser.cursor()) && TypeBound::peek(parser.cursor()) {
                 TypeBound::parse_bounds(parser)?
             } else {
-                Punctuated::new()
+                List::new()
             };
 
             (Some(colon_punct), supertraits)
         } else {
-            (None, Punctuated::new())
+            (None, List::new())
         };
 
         generics.where_clause = <_ as Parse>::parse(parser)?;

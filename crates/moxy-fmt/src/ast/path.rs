@@ -17,7 +17,7 @@ impl Format for Path {
 
         for (i, pair) in self.pairs().enumerate() {
             match pair {
-                moxy_ast::Pair::Punctuated(seg, sep) => {
+                moxy_ast::Pair::List(seg, sep) => {
                     seg.format(f)?;
                     f.text(sep)?;
                 }

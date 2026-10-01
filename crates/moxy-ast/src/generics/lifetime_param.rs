@@ -10,7 +10,7 @@ pub struct LifetimeParam {
     pub attrs: Attributes,
     pub lifetime: Lifetime,
     pub colon_punct: Option<Token![:]>,
-    pub bounds: Punctuated<Lifetime, Token![+]>,
+    pub bounds: List<Lifetime, Token![+]>,
 }
 
 impl Attributed for LifetimeParam {
@@ -29,10 +29,10 @@ impl Parse for LifetimeParam {
         let lifetime = <_ as Parse>::parse(parser)?;
         let (colon_punct, bounds) = if <Token![:]>::peek(parser.cursor()) {
             let colon_punct = Some(<_ as Parse>::parse(parser)?);
-            let bounds = Punctuated::parse_separated_nonempty(parser)?;
+            let bounds = List::parse_separated_nonempty(parser)?;
             (colon_punct, bounds)
         } else {
-            (None, Punctuated::new())
+            (None, List::new())
         };
 
         Ok(Self {

@@ -1768,7 +1768,7 @@ pub fn walk_attributes_mut<V: VisitMut>(v: &mut V, node: &mut Attributes) {
     }
 }
 
-/// `Path` has private fields but derefs to `Punctuated<PathSegment, _>`.
+/// `Path` has private fields but derefs to `List<PathSegment, _>`.
 pub fn walk_path<'ast, V: Visit<'ast>>(v: &mut V, node: &'ast Path) {
     for seg in node.iter() {
         v.visit_path_segment(seg);

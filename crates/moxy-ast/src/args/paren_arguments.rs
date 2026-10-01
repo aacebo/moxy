@@ -1,6 +1,6 @@
 use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{Cursor, Delimited, Parse, ParseError, Parser, Punctuated, ReturnType, Token, Type};
+use crate::{Cursor, Delimited, List, Parse, ParseError, Parser, ReturnType, Token, Type};
 
 /// Parenthesized path arguments (`Fn(A, B) -> C`).
 #[derive(Clone)]
@@ -8,7 +8,7 @@ use crate::{Cursor, Delimited, Parse, ParseError, Parser, Punctuated, ReturnType
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct ParenArguments {
     pub colon2: Option<Token![::]>,
-    pub params: Delimited<Punctuated<Type, Token![,]>>,
+    pub params: Delimited<List<Type, Token![,]>>,
     pub output: ReturnType,
 }
 
@@ -20,7 +20,7 @@ impl Parse for ParenArguments {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let colon2 = <_ as Parse>::parse(parser)?;
-        let params = Delimited::parse_paren_with(parser, Punctuated::parse_terminated)?;
+        let params = Delimited::parse_paren_with(parser, List::parse_terminated)?;
         let output = <_ as Parse>::parse(parser)?;
         Ok(Self { colon2, params, output })
     }

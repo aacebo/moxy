@@ -8,7 +8,7 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct WhereClause {
     pub where_keyword: Token![where],
-    pub predicates: Punctuated<WherePredicate, Token![,]>,
+    pub predicates: List<WherePredicate, Token![,]>,
 }
 
 impl Parse for WhereClause {
@@ -18,7 +18,7 @@ impl Parse for WhereClause {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let where_keyword = <_ as Parse>::parse(parser)?;
-        let mut predicates = Punctuated::new();
+        let mut predicates = List::new();
 
         while WherePredicate::peek(parser.cursor()) {
             predicates.push_value(<_ as Parse>::parse(parser)?);
