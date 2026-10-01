@@ -18,7 +18,7 @@ fn punctuated_parsing_and_mutation_cover_list_shapes() {
 
     let tokens = TokenStream::from_str("first, second,").unwrap();
     let parser = Parser::from_tokens(&tokens);
-    let mut terminated = Idents::parse_terminated(&parser).unwrap();
+    let mut terminated = Idents::parse_all(&parser).unwrap();
     assert!(parser.is_empty());
     assert_eq!(terminated.len(), 2);
     assert!(terminated.is_trailing());
@@ -36,14 +36,14 @@ fn punctuated_parsing_and_mutation_cover_list_shapes() {
 
     let tokens = TokenStream::from_str("left, right").unwrap();
     let parser = Parser::from_tokens(&tokens);
-    let separated = Idents::parse_separated_nonempty(&parser).unwrap();
+    let separated = Idents::parse_nonempty(&parser).unwrap();
     assert!(parser.is_empty());
     assert_eq!(separated.len(), 2);
     assert!(!separated.is_trailing());
 
     let empty = TokenStream::new();
     let parser = Parser::from_tokens(&empty);
-    assert!(Idents::parse_terminated(&parser).unwrap().is_empty());
+    assert!(Idents::parse_all(&parser).unwrap().is_empty());
 }
 
 #[test]

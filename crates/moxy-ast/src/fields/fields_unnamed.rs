@@ -16,7 +16,7 @@ impl Parse for FieldsUnnamed {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let fields = Delimited::parse_paren_with(parser, List::parse_terminated)?;
+        let fields = Delimited::parse_paren_with(parser, List::parse_all)?;
         Ok(Self { fields })
     }
 

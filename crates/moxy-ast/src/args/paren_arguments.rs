@@ -20,7 +20,7 @@ impl Parse for ParenArguments {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let colon2 = <_ as Parse>::parse(parser)?;
-        let params = Delimited::parse_paren_with(parser, List::parse_terminated)?;
+        let params = Delimited::parse_paren_with(parser, List::parse_all)?;
         let output = <_ as Parse>::parse(parser)?;
         Ok(Self { colon2, params, output })
     }

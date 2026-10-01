@@ -91,7 +91,7 @@ fn expand_named(ident: &Ident, fields: &[fields::Field], message: Option<&LitStr
         let entries = ::moxy::ast::List::<
             ::moxy::ast::Meta,
             ::moxy::ast::Token![,],
-        >::parse_terminated(&parser)?;
+        >::parse_all(&parser)?;
 
         @for (field in fields) {
             let mut {{ field.binding }}: Option<{{ field.ty }}> = None;

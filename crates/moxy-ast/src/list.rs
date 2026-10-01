@@ -7,8 +7,8 @@ use crate::*;
 
 /// An AST representation of Rust syntax punctuated list.
 pub struct List<T, P> {
-    pub inner: Vec<(T, P)>,
-    pub last: Option<Box<T>>,
+    inner: Vec<(T, P)>,
+    last: Option<Box<T>>,
 }
 
 impl<T, P> List<T, P> {
@@ -177,7 +177,29 @@ impl<T, P> List<T, P> {
 }
 
 impl<T: Parse, P: Parse> List<T, P> {
-    pub fn parse_terminated(parser: &Parser) -> Result<Self, ParseError> {
+    /// Parses zero or more values separated by punctuation until `parser` is
+    /// empty.
+    ///
+    /// A trailing punctuation token is accepted and retained in the list. Use
+    /// this for a complete delimited or attribute-style list whose contents
+    /// must be consumed in full.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use moxy::ast::{Ident, List, Parser};
+    /// use moxy::token::TokenStream;
+    ///
+    /// let tokens: TokenStream = "first, second,".parse().unwrap();
+    /// let parser = Parser::from_tokens(&tokens);
+    /// let names = List::<Ident, moxy::ast::Token![,]>::parse_all(&parser)?;
+    ///
+    /// assert_eq!(names.len(), 2);
+    /// assert!(names.is_trailing());
+    /// assert!(parser.is_empty());
+    /// # Ok::<(), moxy::ast::ParseError>(())
+    /// ```
+    pub fn parse_all(parser: &Parser) -> Result<Self, ParseError> {
         let mut punctuated = Self::new();
 
         loop {
@@ -197,7 +219,27 @@ impl<T: Parse, P: Parse> List<T, P> {
         Ok(punctuated)
     }
 
-    pub fn parse_separated_nonempty(parser: &Parser) -> Result<Self, ParseError> {
+    /// Parses one or more values separated by punctuation.
+    ///
+    /// Parsing stops after a value that is not followed by punctuation, leaving
+    /// the remaining tokens in `parser`. Unlike [`Self::parse_all`], an
+    /// empty list and trailing punctuation are errors.
+    ///
+    /// # Example
+    ///
+    /// ```ignore
+    /// use moxy::ast::{Ident, List, Parse, Parser};
+    /// use moxy::token::TokenStream;
+    ///
+    /// let tokens: TokenStream = "first, second = value".parse().unwrap();
+    /// let parser = Parser::from_tokens(&tokens);
+    /// let names = List::<Ident, moxy::ast::Token![,]>::parse_nonempty(&parser)?;
+    ///
+    /// assert_eq!(names.len(), 2);
+    /// assert!(moxy::ast::Token![=]::peek(parser.cursor()));
+    /// # Ok::<(), moxy::ast::ParseError>(())
+    /// ```
+    pub fn parse_nonempty(parser: &Parser) -> Result<Self, ParseError> {
         let mut punctuated = Self::new();
 
         loop {

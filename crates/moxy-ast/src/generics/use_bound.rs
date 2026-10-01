@@ -25,7 +25,7 @@ impl Parse for UseBound {
             params: if <Token![>]>::peek(parser.cursor()) {
                 List::new()
             } else {
-                List::parse_separated_nonempty(parser)?
+                List::parse_nonempty(parser)?
             },
             gt_punct: <_ as Parse>::parse(parser)?,
         })

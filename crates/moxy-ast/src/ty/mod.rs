@@ -347,7 +347,7 @@ impl Parse for Type {
         // Both variants share the same `(` token so we disambiguate inline.
         if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
             let (paren_span, inner) = parser.parse_group_spanned(Delim::Paren)?;
-            let elems: List<Self, Token![,]> = List::parse_terminated(&inner)?;
+            let elems: List<Self, Token![,]> = List::parse_all(&inner)?;
 
             return if elems.len() == 1 && !elems.is_trailing() {
                 let content = Delimited::paren(paren_span, Box::new(elems.into_iter().next().unwrap()));

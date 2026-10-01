@@ -154,7 +154,7 @@ fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
             expr = ExprCall {
                 attrs: Default::default(),
                 func: Box::new(expr),
-                args: Delimited::parse_paren_with(parser, List::parse_terminated)?,
+                args: Delimited::parse_paren_with(parser, List::parse_all)?,
             }
             .into();
 
@@ -200,7 +200,7 @@ fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
                         dot: <_ as Parse>::parse(parser)?,
                         method: <_ as Parse>::parse(parser)?,
                         turbofish: <_ as Parse>::parse(parser)?,
-                        args: Delimited::parse_paren_with(parser, List::parse_terminated)?,
+                        args: Delimited::parse_paren_with(parser, List::parse_all)?,
                     }
                     .into();
                 }

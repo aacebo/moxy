@@ -19,7 +19,7 @@ impl Parse for UseGroup {
         let (span, parser) = parser.parse_group_spanned(Delim::Brace)?;
 
         Ok(Self {
-            items: Delimited::brace(span, List::parse_separated_nonempty(&parser)?),
+            items: Delimited::brace(span, List::parse_nonempty(&parser)?),
         })
     }
 

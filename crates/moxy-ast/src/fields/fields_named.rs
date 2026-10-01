@@ -16,7 +16,7 @@ impl Parse for FieldsNamed {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let fields = Delimited::parse_brace_with(parser, List::parse_terminated)?;
+        let fields = Delimited::parse_brace_with(parser, List::parse_all)?;
         Ok(Self { fields })
     }
 

@@ -34,7 +34,7 @@ impl Parse for ItemEnum {
         let enum_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
         let generics = <_ as Parse>::parse(parser)?;
-        let variants = Delimited::parse_brace_with(parser, List::parse_terminated)?;
+        let variants = Delimited::parse_brace_with(parser, List::parse_all)?;
 
         Ok(Self {
             attrs,

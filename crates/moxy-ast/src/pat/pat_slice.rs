@@ -34,7 +34,7 @@ impl Parse for PatSlice {
 
         Ok(Self {
             attrs,
-            elems: Delimited::bracket(span, List::parse_terminated(&parser)?),
+            elems: Delimited::bracket(span, List::parse_all(&parser)?),
         })
     }
 

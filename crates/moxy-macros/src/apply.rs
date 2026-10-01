@@ -4,7 +4,7 @@ type Paths = moxy::ast::List<moxy::ast::Path, moxy::ast::Token![,]>;
 
 pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
     let parser = moxy::ast::Parser::from_tokens(&attr);
-    let list = match Paths::parse_separated_nonempty(&parser) {
+    let list = match Paths::parse_nonempty(&parser) {
         Err(err) => return err.to_compile_error(),
         Ok(v) if parser.is_empty() => v,
         Ok(_) => return parser.error("expected comma-separated macro paths").to_compile_error(),

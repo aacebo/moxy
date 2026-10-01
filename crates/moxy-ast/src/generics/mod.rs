@@ -59,7 +59,7 @@ impl Parse for Generics {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let lt: Option<Token![<]> = <_ as Parse>::parse(parser)?;
         let params = if lt.is_some() {
-            List::parse_separated_nonempty(parser)?
+            List::parse_nonempty(parser)?
         } else {
             List::new()
         };

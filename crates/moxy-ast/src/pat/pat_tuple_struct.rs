@@ -61,7 +61,7 @@ impl Parse for PatTupleStruct {
             attrs,
             qself,
             path,
-            elems: Delimited::paren(span, List::parse_terminated(&parser)?),
+            elems: Delimited::paren(span, List::parse_all(&parser)?),
         })
     }
 

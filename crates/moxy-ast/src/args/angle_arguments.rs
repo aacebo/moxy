@@ -22,7 +22,7 @@ impl Parse for AngleArguments {
         Ok(Self {
             colon2: <_ as Parse>::parse(parser)?,
             lt_punct: <_ as Parse>::parse(parser)?,
-            args: List::parse_separated_nonempty(parser)?,
+            args: List::parse_nonempty(parser)?,
             gt_punct: <_ as Parse>::parse(parser)?,
         })
     }

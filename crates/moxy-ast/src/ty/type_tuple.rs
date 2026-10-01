@@ -52,7 +52,7 @@ impl Parse for TypeTuple {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let elems = Delimited::parse_paren_with(parser, List::parse_terminated)?;
+        let elems = Delimited::parse_paren_with(parser, List::parse_all)?;
         Ok(Self { elems })
     }
 

@@ -48,7 +48,7 @@ impl Parse for PatTuple {
 
         Ok(Self {
             attrs,
-            elems: Delimited::paren(span, List::parse_terminated(&parser)?),
+            elems: Delimited::paren(span, List::parse_all(&parser)?),
         })
     }
 

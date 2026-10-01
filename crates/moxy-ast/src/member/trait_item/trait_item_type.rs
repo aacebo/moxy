@@ -39,7 +39,7 @@ impl Parse for TraitItemType {
             let colon = <_ as Parse>::parse(parser)?;
 
             if TypeBound::peek(parser.cursor()) {
-                (Some(colon), List::parse_separated_nonempty(parser)?)
+                (Some(colon), List::parse_nonempty(parser)?)
             } else {
                 (Some(colon), List::new())
             }

@@ -4,7 +4,7 @@ use moxy_token::{Spanner, TokenStream};
 
 pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
     let parser = moxy::ast::Parser::from_tokens(&attr);
-    let list = match List::<moxy::ast::Meta, moxy::ast::Token![,]>::parse_separated_nonempty(&parser) {
+    let list = match List::<moxy::ast::Meta, moxy::ast::Token![,]>::parse_nonempty(&parser) {
         Err(err) => return err.to_compile_error(),
         Ok(v) => v,
     };

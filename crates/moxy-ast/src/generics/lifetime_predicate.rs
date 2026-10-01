@@ -21,7 +21,7 @@ impl Parse for LifetimePredicate {
         Ok(Self {
             lifetime: <_ as Parse>::parse(parser)?,
             colon_punct: <_ as Parse>::parse(parser)?,
-            bounds: List::parse_separated_nonempty(parser)?,
+            bounds: List::parse_nonempty(parser)?,
         })
     }
 

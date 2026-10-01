@@ -33,7 +33,7 @@ impl Field {
             };
 
             let parser = moxy::ast::Parser::from_tokens(&group.tokens);
-            let rules = List::<MetaRule, moxy::ast::Token![,]>::parse_terminated(&parser)?;
+            let rules = List::<MetaRule, moxy::ast::Token![,]>::parse_all(&parser)?;
 
             for rule in rules {
                 match rule {

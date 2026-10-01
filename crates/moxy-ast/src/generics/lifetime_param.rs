@@ -29,7 +29,7 @@ impl Parse for LifetimeParam {
         let lifetime = <_ as Parse>::parse(parser)?;
         let (colon_punct, bounds) = if <Token![:]>::peek(parser.cursor()) {
             let colon_punct = Some(<_ as Parse>::parse(parser)?);
-            let bounds = List::parse_separated_nonempty(parser)?;
+            let bounds = List::parse_nonempty(parser)?;
             (colon_punct, bounds)
         } else {
             (None, List::new())
