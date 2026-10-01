@@ -8,29 +8,6 @@ use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-/// Constructs a [`Path`] from identifier segments separated by `::`.
-///
-/// `path!(std::collections::HashMap)` parses the equivalent Rust path and
-/// panics when its input is not valid path syntax.
-#[macro_export]
-macro_rules! path {
-    ($x:ident) => { $crate::Path::try_from_str(stringify!($x)).expect("invalid syntax") };
-    ($head:ident :: $($tail:tt)+) => {{
-        let mut __ident = stringify!($head).to_string();
-        path!(@accum __ident, $($tail)+)
-    }};
-    (@accum $acc:ident, $next:ident :: $($tail:tt)+) => {{
-        $acc += "::";
-        $acc += stringify!($next);
-        path!(@accum $acc, $($tail)+)
-    }};
-    (@accum $acc:ident, $last:ident) => {{
-        $acc += "::";
-        $acc += stringify!($last);
-        $crate::Path::try_from_str($acc).expect("invalid syntax")
-    }};
-}
-
 /// A path expression or type path (e.g. `std::collections::HashMap`, `crate::Foo`).
 #[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
