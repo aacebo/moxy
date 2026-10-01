@@ -43,7 +43,3 @@ pub fn apply(tokens: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
 	}
 }
 ```
-
-## 4. Make Punctuated and Delimited More Ergonomic
-
-Make parsing/generating punctuated/delimited syntax easier.
