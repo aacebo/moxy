@@ -23,7 +23,7 @@ macro_rules! Token {
     [=>]    => { $crate::FatArrow };
     [->]    => { $crate::RArrow };
     [<-]    => { $crate::LArrow };
-    [::]    => { $crate::PathSep };
+    [::]    => { $crate::ColonColon };
     [..]    => { $crate::DotDot };
     [<<=]   => { $crate::ShlEq };
     [>>=]   => { $crate::ShrEq };

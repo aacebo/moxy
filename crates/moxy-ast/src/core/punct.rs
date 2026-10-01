@@ -110,7 +110,7 @@ define_punct! {
     FatArrow(2) => [0: Eq, 1: Gt],
     RArrow(2) => [0: Minus, 1: Gt],
     LArrow(2) => [0: Lt, 1: Minus],
-    PathSep(2) => [0: Colon, 1: Colon],
+    ColonColon(2) => [0: Colon, 1: Colon],
     DotDot(2) => [0: Dot, 1: Dot],
     ShlEq(3) => [0: Lt, 1: Lt, 2: Eq],
     ShrEq(3) => [0: Gt, 1: Gt, 2: Eq],
