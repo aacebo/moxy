@@ -260,22 +260,23 @@
 //! `proc-macro2` feature converts token streams for interoperability with the
 //! wider procedural-macro ecosystem.
 
-/// Typed Rust syntax trees and parsing APIs; enabled by the `ast` feature.
+/// Rust syntax tree types, parsers, and traversal APIs from [`moxy_ast`].
 #[cfg(feature = "ast")]
 #[doc(inline)]
 pub use moxy_ast as ast;
 
-/// Build-script and rustc-version helpers; enabled by the `build` feature.
+/// Build-script helpers for emitting Cargo instructions and inspecting `rustc`.
 #[cfg(feature = "build")]
 #[doc(inline)]
 pub use moxy_build as build;
 
-/// Procedural macros; enabled by the `macros` feature.
+/// Derives [`ToTokens`] and [`FromMeta`], and provides the [`function`],
+/// [`attribute`], [`derive`], and [`apply`] procedural-macro attributes.
 #[cfg(feature = "macros")]
 #[doc(inline)]
 pub use moxy_macros::*;
 
-/// Span-aware diagnostics; enabled by the `diagnostic` feature.
+/// Types for building span-aware compiler diagnostics.
 #[cfg(feature = "diagnostic")]
 #[doc(inline)]
 pub use moxy_diagnostic as diagnostic;
@@ -284,7 +285,7 @@ pub use moxy_diagnostic as diagnostic;
 #[doc(inline)]
 pub use moxy_diagnostic::{error, help, note, warn};
 
-/// Formatting APIs; enabled by the `fmt` feature.
+/// Pretty-printing configuration, formatting traits, and formatting errors.
 #[cfg(feature = "fmt")]
 #[doc(inline)]
 pub use moxy_fmt as fmt;
@@ -293,7 +294,8 @@ pub use moxy_fmt as fmt;
 #[doc(inline)]
 pub use moxy_fmt::fmt;
 
-/// Runtime token templates and identifier pasting; enabled by the `template` feature.
+/// Macros for constructing token streams from runtime templates and for joining
+/// identifier fragments during macro expansion.
 #[cfg(feature = "template")]
 #[doc(inline)]
 pub use moxy_template as template;
@@ -302,7 +304,7 @@ pub use moxy_template as template;
 #[doc(inline)]
 pub use moxy_template::*;
 
-/// Token streams, lexing, spans, and token-construction APIs; enabled by `token`.
+/// Token-stream types, lexer support, source spans, and token-construction APIs.
 #[cfg(feature = "token")]
 #[doc(inline)]
 pub use moxy_token as token;
