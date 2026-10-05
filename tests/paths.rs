@@ -21,6 +21,45 @@ fn associated_and_turbofish_paths_render_in_expressions() {
 }
 
 #[test]
+fn crate_relative_paths_preserve_ast_structure_and_formatting() {
+    let expression: Expr = moxy::parse!("crate::module::VALUE").unwrap();
+    let path = &expression.as_path().unwrap().path;
+
+    assert!(path.colon().is_none());
+    assert_eq!(path.len(), 3);
+    assert_eq!(path.first().unwrap().ident.text(), "crate");
+    assert_eq!(path.iter().nth(1).unwrap().ident.text(), "module");
+    assert_eq!(path.last().unwrap().ident.text(), "VALUE");
+    assert_eq!(moxy::fmt!(&expression).unwrap(), "crate::module::VALUE");
+}
+
+#[test]
+fn super_relative_paths_preserve_ast_structure_and_formatting() {
+    let expression: Expr = moxy::parse!("super::module::VALUE").unwrap();
+    let path = &expression.as_path().unwrap().path;
+
+    assert!(path.colon().is_none());
+    assert_eq!(path.len(), 3);
+    assert_eq!(path.first().unwrap().ident.text(), "super");
+    assert_eq!(path.iter().nth(1).unwrap().ident.text(), "module");
+    assert_eq!(path.last().unwrap().ident.text(), "VALUE");
+    assert_eq!(moxy::fmt!(&expression).unwrap(), "super::module::VALUE");
+}
+
+#[test]
+fn self_relative_paths_preserve_ast_structure_and_formatting() {
+    let expression: Expr = moxy::parse!("self::module::VALUE").unwrap();
+    let path = &expression.as_path().unwrap().path;
+
+    assert!(path.colon().is_none());
+    assert_eq!(path.len(), 3);
+    assert_eq!(path.first().unwrap().ident.text(), "self");
+    assert_eq!(path.iter().nth(1).unwrap().ident.text(), "module");
+    assert_eq!(path.last().unwrap().ident.text(), "VALUE");
+    assert_eq!(moxy::fmt!(&expression).unwrap(), "self::module::VALUE");
+}
+
+#[test]
 fn turbofish_paths_render_complete_valid_syntax() {
     for source in ["function::<T>(a, b)", "object.method::<T>(a, b)"] {
         let expression: Expr = moxy::parse!(source).unwrap();
