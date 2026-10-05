@@ -25,11 +25,6 @@
 Rust syntax tools for procedural macros: tokens, typed syntax trees, templates,
 formatting, and diagnostics.
 
-> [!WARNING]
-> **Moxy is under active development.**
->
-> APIs, behavior, and documentation may change frequently and without notice. Moxy is not yet considered stable or production-ready.
-
 ## Quick Start
 
 ```console
