@@ -73,6 +73,11 @@ impl Parse for TmplTokens {
 impl ToTokens for TmplTokens {
     fn to_tokens(&self, out: &mut TokenStream) {
         let src = self.tokens.to_string();
-        out.extend(TokenStream::from_str(&format!("::moxy::token::ToTokens::to_tokens(&{src:?}, &mut __moxy_tmpl);")).unwrap());
+        out.extend(
+            TokenStream::from_str(&format!(
+                "::moxy::token::ToTokens::to_tokens(&::moxy::token::TokenStream::from_string({src:?}.to_owned()).expect(\"moxy template literal tokens must lex\"), &mut __moxy_tmpl);"
+            ))
+            .unwrap(),
+        );
     }
 }

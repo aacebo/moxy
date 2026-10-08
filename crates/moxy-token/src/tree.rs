@@ -153,11 +153,7 @@ impl Spanner for TokenTree {
 
 impl ToTokens for &str {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        use std::str::FromStr;
-
-        if let Ok(ts) = TokenStream::from_str(self) {
-            ts.to_tokens(tokens);
-        }
+        crate::Lit::string(self).to_tokens(tokens);
     }
 }
 
