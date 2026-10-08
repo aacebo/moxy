@@ -1,0 +1,5 @@
+error: this token is wrong
+ --> fixtures/trybuild/bridge/fail/proc_macro2_span.rs:1:33
+  |
+1 | moxy_test_macros::via_moxy!(a b wrong c);
+  |                                 ^^^^^

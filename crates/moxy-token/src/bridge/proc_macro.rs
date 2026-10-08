@@ -1,9 +1,8 @@
-use crate::span::fallback;
 use crate::{Delim, Group, Ident, Keyword, LexError, Lit, Spacing, Span, ToTokens, TokenStream, TokenTree, TryIntoTokenStream};
 
 // --- Span (fallback) ---
 
-impl From<proc_macro::Span> for fallback::Span {
+impl From<proc_macro::Span> for crate::span::fallback::Span {
     fn from(#[allow(unused)] value: proc_macro::Span) -> Self {
         #[cfg(nightly)]
         {
@@ -18,8 +17,8 @@ impl From<proc_macro::Span> for fallback::Span {
     }
 }
 
-impl From<fallback::Span> for proc_macro::Span {
-    fn from(_value: fallback::Span) -> Self {
+impl From<crate::span::fallback::Span> for proc_macro::Span {
+    fn from(_value: crate::span::fallback::Span) -> Self {
         Self::call_site()
     }
 }
@@ -156,6 +155,8 @@ impl From<Group> for proc_macro::Group {
     fn from(value: Group) -> Self {
         let span = value.span.span().into();
         let mut group = Self::new(value.delim.into(), value.tokens.into());
+        // `proc_macro::Group` accepts one span, so separate opening and
+        // closing delimiter spans are represented by their combined span.
         group.set_span(span);
         group
     }

@@ -1,4 +1,6 @@
-use crate::{Delim, Group, Ident, Keyword, LexError, Lit, Spacing, Span, ToTokens, TokenStream, TokenTree, TryIntoTokenStream};
+use crate::{
+    Delim, DelimSpan, Group, Ident, Keyword, LexError, Lit, Spacing, Span, ToTokens, TokenStream, TokenTree, TryIntoTokenStream,
+};
 
 // --- Span ---
 
@@ -10,7 +12,11 @@ impl From<proc_macro2::Span> for crate::span::fallback::Span {
 
 impl From<proc_macro2::Span> for Span {
     fn from(value: proc_macro2::Span) -> Self {
-        Self::Fallback(value.into())
+        if proc_macro::is_available() {
+            Self::Compiler(value.unwrap())
+        } else {
+            Self::Fallback(value.into())
+        }
     }
 }
 
@@ -18,8 +24,18 @@ impl From<Span> for proc_macro2::Span {
     fn from(value: Span) -> Self {
         match value {
             Span::Compiler(v) => v.into(),
+            // `proc_macro2` cannot construct a compiler span from source
+            // locations outside a procedural macro invocation.
             Span::Fallback(_) => proc_macro2::Span::call_site(),
         }
+    }
+}
+
+// --- DelimSpan ---
+
+impl From<proc_macro2::extra::DelimSpan> for DelimSpan {
+    fn from(value: proc_macro2::extra::DelimSpan) -> Self {
+        Self::new(value.open().into(), value.close().into())
     }
 }
 
@@ -100,7 +116,9 @@ impl From<proc_macro2::Literal> for Lit {
 impl From<Lit> for proc_macro2::Literal {
     fn from(value: Lit) -> Self {
         let repr = value.repr();
-        repr.parse().unwrap_or_else(|_| Self::string(repr))
+        let mut lit = repr.parse().unwrap_or_else(|_| Self::string(repr));
+        lit.set_span(value.span().into());
+        lit
     }
 }
 
@@ -108,15 +126,22 @@ impl From<Lit> for proc_macro2::Literal {
 
 impl From<proc_macro2::Group> for Group {
     fn from(value: proc_macro2::Group) -> Self {
-        let mut inner = TokenStream::new();
-        value.stream().to_tokens(&mut inner);
-        Self::new(value.delimiter().into(), inner)
+        Self {
+            span: value.delim_span().into(),
+            delim: value.delimiter().into(),
+            tokens: value.stream().into(),
+        }
     }
 }
 
 impl From<Group> for proc_macro2::Group {
     fn from(value: Group) -> Self {
-        Self::new(value.delim.into(), value.tokens.into())
+        let span = value.span.span().into();
+        let mut group = Self::new(value.delim.into(), value.tokens.into());
+        // `proc_macro2::Group` exposes one output span, so preserve the
+        // combined delimiter span rather than dropping both endpoints.
+        group.set_span(span);
+        group
     }
 }
 
@@ -168,17 +193,18 @@ impl ToTokens<proc_macro2::TokenStream> for TokenTree {
             Self::Group(g) => out.extend([proc_macro2::TokenTree::Group(g.clone().into())]),
             Self::Ident(v) => out.extend([proc_macro2::TokenTree::Ident(v.clone().into())]),
             Self::Keyword(kw) => {
-                let id = proc_macro2::Ident::new(kw.as_str(), proc_macro2::Span::call_site());
+                let id = proc_macro2::Ident::new(kw.as_str(), kw.span().into());
                 out.extend([proc_macro2::TokenTree::Ident(id)])
             }
             // `true`/`false` are identifiers to the compiler, not literals.
             Self::Literal(Lit::Bool(v)) => {
-                let id = proc_macro2::Ident::new(v.repr(), proc_macro2::Span::call_site());
+                let id = proc_macro2::Ident::new(v.repr(), v.span().into());
                 out.extend([proc_macro2::TokenTree::Ident(id)])
             }
             Self::Literal(v) => out.extend([proc_macro2::TokenTree::Literal(v.clone().into())]),
             Self::Punct(op) => {
                 let text = op.as_str();
+                let span: proc_macro2::Span = op.span().into();
                 let last = text.chars().count() - 1;
 
                 for (i, ch) in text.chars().enumerate() {
@@ -187,7 +213,9 @@ impl ToTokens<proc_macro2::TokenStream> for TokenTree {
                     } else {
                         proc_macro2::Spacing::Joint
                     };
-                    out.extend([proc_macro2::TokenTree::Punct(proc_macro2::Punct::new(ch, spacing))]);
+                    let mut punct = proc_macro2::Punct::new(ch, spacing);
+                    punct.set_span(span);
+                    out.extend([proc_macro2::TokenTree::Punct(punct)]);
                 }
             }
         }

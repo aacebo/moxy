@@ -315,6 +315,7 @@ dependencies = [
  "moxy-fmt",
  "moxy-macros",
  "moxy-template",
+ "moxy-test-macros",
  "moxy-token",
  "proc-macro2",
  "quote",
@@ -371,6 +372,15 @@ version = "0.5.3"
 dependencies = [
  "moxy-ast",
  "moxy-token",
+]
+
+[[package]]
+name = "moxy-test-macros"
+version = "0.0.0"
+dependencies = [
+ "moxy",
+ "proc-macro2",
+ "syn 3.0.4",
 ]
 
 [[package]]

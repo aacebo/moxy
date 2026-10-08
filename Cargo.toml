@@ -114,3 +114,4 @@ proc-macro2.workspace = true
 trybuild.workspace = true
 serde_json = "1"
 criterion = { version = "0.5", features = ["html_reports"] }
+moxy-test-macros = { path = "crates/moxy-test-macros" }
