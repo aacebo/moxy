@@ -309,6 +309,10 @@ pub use moxy_template::*;
 #[doc(inline)]
 pub use moxy_token as token;
 
+#[cfg(feature = "token")]
+#[doc(inline)]
+pub use moxy_token::ident;
+
 #[cfg(all(feature = "token", not(feature = "ast")))]
 #[doc(inline)]
 pub use moxy_token::Token;

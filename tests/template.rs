@@ -1,5 +1,5 @@
 use moxy::ast::{Expr, Item};
-use moxy::token::Spanner;
+use moxy::token::{Spanner, TokenStream};
 
 #[test]
 fn macro_invocations_preserve_paths_delimiters_and_body_tokens() {
@@ -23,8 +23,8 @@ fn macro_invocations_preserve_paths_delimiters_and_body_tokens() {
 
 #[test]
 fn templates_generate_a_real_struct_syntax_pipeline() {
-    let name = "Generated";
-    let fields = ["first", "second"];
+    let name = moxy::ident!("Generated");
+    let fields = [moxy::ident!("first"), moxy::ident!("second")];
     let tokens = moxy::template! {
         pub struct {{ name }} {
             @for (field in fields) { {{ field }}: String, }
@@ -64,7 +64,10 @@ fn template_conditionals_generate_real_struct_syntax() {
 
 #[test]
 fn template_matches_generate_real_constant_syntax() {
-    for (value, expected) in [(Some("1"), "const VALUE: usize = 1;"), (None, "const VALUE: usize = 0;")] {
+    for (value, expected) in [
+        (Some("1".parse::<TokenStream>().unwrap()), "const VALUE: usize = 1;"),
+        (None, "const VALUE: usize = 0;"),
+    ] {
         let tokens = moxy::template! {
             @match (value) {
                 Some(value) => { const VALUE: usize = {{ value }}; },
@@ -82,7 +85,10 @@ fn template_matches_generate_real_constant_syntax() {
 #[test]
 fn template_directives_support_rust_patterns_and_optional_headers() {
     let value = Some((1, "matched"));
-    let fields = [("first", "String"), ("second", "usize")];
+    let fields = [
+        (moxy::ident!("first"), moxy::ident!("String")),
+        (moxy::ident!("second"), moxy::ident!("usize")),
+    ];
     let enabled = true;
     let tokens = moxy::template! {
         @if let Some((1, text)) = value {
@@ -112,6 +118,20 @@ fn template_directives_support_rust_patterns_and_optional_headers() {
     assert!(rendered.contains("IF_VALUE"));
     assert!(rendered.contains("struct Fields"));
     assert!(rendered.contains("MATCH_VALUE"));
+}
+
+#[test]
+fn template_interpolates_string_slices_as_literals() {
+    let name: &str = "hello world";
+    let apostrophe: &str = "it's done";
+    let unlexable: &str = "say \"hi";
+    let owned = String::from("hello world");
+
+    let tokens = moxy::template! {
+        {{ name }} {{ apostrophe }} {{ unlexable }} {{ owned }}
+    };
+
+    assert_eq!(tokens.to_string(), format!("{name:?} {apostrophe:?} {unlexable:?} {owned:?}"));
 }
 
 #[test]
