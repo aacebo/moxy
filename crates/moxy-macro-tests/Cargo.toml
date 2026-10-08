@@ -1,5 +1,5 @@
 [package]
-name = "moxy-test-macros"
+name = "moxy-macro-tests"
 publish = false
 version = "0.0.0"
 edition.workspace = true
@@ -16,3 +16,6 @@ workspace = true
 moxy = { workspace = true, features = ["proc-macro2", "template"] }
 proc-macro2.workspace = true
 syn.workspace = true
+
+[dev-dependencies]
+trybuild.workspace = true

@@ -1,6 +1,4 @@
 mod ast;
-#[cfg(all(feature = "template", feature = "proc-macro2"))]
-mod bridge;
 mod fixtures;
 mod parser;
 
