@@ -355,6 +355,16 @@ dependencies = [
 ]
 
 [[package]]
+name = "moxy-macro-tests"
+version = "0.0.0"
+dependencies = [
+ "moxy",
+ "proc-macro2",
+ "syn 3.0.4",
+ "trybuild",
+]
+
+[[package]]
 name = "moxy-macros"
 version = "0.5.3"
 dependencies = [

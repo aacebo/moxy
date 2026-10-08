@@ -1,0 +1,21 @@
+[package]
+name = "moxy-macro-tests"
+publish = false
+version = "0.0.0"
+edition.workspace = true
+license.workspace = true
+
+[lib]
+proc-macro = true
+doctest = false
+
+[lints]
+workspace = true
+
+[dependencies]
+moxy = { workspace = true, features = ["proc-macro2", "template"] }
+proc-macro2.workspace = true
+syn.workspace = true
+
+[dev-dependencies]
+trybuild.workspace = true
