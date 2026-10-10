@@ -120,6 +120,13 @@ impl From<Ident> for proc_macro::Ident {
     }
 }
 
+impl ToTokens for proc_macro::Ident {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let token = Ident::from(self.clone()).into_token_tree();
+        tokens.extend_one(token);
+    }
+}
+
 // --- Literal ---
 
 impl From<proc_macro::Literal> for Lit {
@@ -135,6 +142,13 @@ impl From<Lit> for proc_macro::Literal {
 
         lit.set_span(value.span().into());
         lit
+    }
+}
+
+impl ToTokens for proc_macro::Literal {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let token = Lit::from(self.clone()).into_token_tree();
+        tokens.extend_one(token);
     }
 }
 
@@ -159,6 +173,13 @@ impl From<Group> for proc_macro::Group {
         // closing delimiter spans are represented by their combined span.
         group.set_span(span);
         group
+    }
+}
+
+impl ToTokens for proc_macro::Group {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let token = Group::from(self.clone()).into_token_tree();
+        tokens.extend_one(token);
     }
 }
 

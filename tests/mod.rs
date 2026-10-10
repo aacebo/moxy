@@ -67,3 +67,6 @@ mod macros;
 
 #[cfg(all(feature = "fmt", feature = "template"))]
 mod template;
+
+#[cfg(all(feature = "quote", feature = "template"))]
+mod quote;

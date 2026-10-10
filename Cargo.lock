@@ -389,6 +389,7 @@ version = "0.5.3"
 dependencies = [
  "moxy-build",
  "proc-macro2",
+ "quote",
  "serde",
  "unicode-ident",
 ]

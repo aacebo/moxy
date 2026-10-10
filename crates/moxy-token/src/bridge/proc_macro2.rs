@@ -104,6 +104,13 @@ impl From<Ident> for proc_macro2::Ident {
     }
 }
 
+impl ToTokens for proc_macro2::Ident {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let token = Ident::from(self.clone()).into_token_tree();
+        tokens.extend_one(token);
+    }
+}
+
 // --- Literal ---
 
 impl From<proc_macro2::Literal> for Lit {
@@ -122,6 +129,13 @@ impl From<Lit> for proc_macro2::Literal {
     }
 }
 
+impl ToTokens for proc_macro2::Literal {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let token = Lit::from(self.clone()).into_token_tree();
+        tokens.extend_one(token);
+    }
+}
+
 // --- Group ---
 
 impl From<proc_macro2::Group> for Group {
@@ -136,12 +150,18 @@ impl From<proc_macro2::Group> for Group {
 
 impl From<Group> for proc_macro2::Group {
     fn from(value: Group) -> Self {
-        let span = value.span.span().into();
         let mut group = Self::new(value.delim.into(), value.tokens.into());
         // `proc_macro2::Group` exposes one output span, so preserve the
         // combined delimiter span rather than dropping both endpoints.
-        group.set_span(span);
+        group.set_span(value.span.span().into());
         group
+    }
+}
+
+impl ToTokens for proc_macro2::Group {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        let token = Group::from(self.clone()).into_token_tree();
+        tokens.extend_one(token);
     }
 }
 
@@ -159,6 +179,7 @@ impl ToTokens<TokenStream> for proc_macro2::TokenStream {
                         crate::scan_puncts_spanned(&punct_run, tokens);
                         punct_run.clear();
                     }
+
                     match other {
                         proc_macro2::TokenTree::Ident(v) => {
                             let span = v.span().into();

@@ -96,6 +96,7 @@ diagnostic = ["dep:moxy-diagnostic"]
 serde = ["moxy-ast?/serde", "moxy-token?/serde", "moxy-fmt?/serde"]
 proc-macro2 = ["moxy-token?/proc-macro2"]
 visit = ["moxy-ast?/visit"]
+quote = ["moxy-token?/quote", "proc-macro2"]
 
 [dependencies]
 moxy-ast = { workspace = true, optional = true }
