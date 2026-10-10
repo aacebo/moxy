@@ -37,6 +37,8 @@ mod keyword;
 mod lex;
 mod lit;
 mod punct;
+#[cfg(feature = "quote")]
+mod quote;
 /// Source files, locations, and source maps used by spans.
 pub mod source;
 mod spacing;
@@ -58,6 +60,9 @@ pub use lex::*;
 pub use lit::*;
 #[doc(inline)]
 pub use punct::*;
+#[cfg(feature = "quote")]
+#[doc(inline)]
+pub use quote::*;
 #[doc(inline)]
 pub use source::Location;
 #[doc(inline)]

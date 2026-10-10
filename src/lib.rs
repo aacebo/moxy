@@ -313,6 +313,10 @@ pub use moxy_token as token;
 #[doc(inline)]
 pub use moxy_token::ident;
 
+#[cfg(feature = "quote")]
+#[doc(inline)]
+pub use moxy_token::quoted;
+
 #[cfg(all(feature = "token", not(feature = "ast")))]
 #[doc(inline)]
 pub use moxy_token::Token;
