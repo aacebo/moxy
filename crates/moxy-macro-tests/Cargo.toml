@@ -1,7 +1,7 @@
 [package]
 name = "moxy-macro-tests"
 publish = false
-version = "0.0.0"
+version.workspace = true
 edition.workspace = true
 license.workspace = true
 
