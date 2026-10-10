@@ -13,7 +13,7 @@ use crate::{Span, TokenTree};
 /// # Examples
 ///
 /// ```ignore
-/// use moxy::token::ident;
+/// use moxy::ident;
 ///
 /// // Bare identifier
 /// let counter = ident!(counter);

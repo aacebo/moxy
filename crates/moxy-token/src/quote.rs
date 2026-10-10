@@ -1,5 +1,19 @@
 use crate::{ToTokens, TokenStream};
 
+/// Makes any implementer of [`quote::ToTokens`] compatible/usable
+/// with moxy templates.
+///
+/// # Examples
+///
+/// ```ignore
+/// let literal: syn::LitStr = syn::parse_quote!("hello");
+/// let expression: syn::Expr = syn::parse_quote!(a::B);
+/// let tokens = moxy::template! {
+///     {{ moxy::quoted!(literal) }}
+///     {{ moxy::quoted!(&expression) }}
+/// };
+/// assert_eq!(tokens.to_string(), "\"hello\" a :: B");
+/// ```
 #[macro_export]
 macro_rules! quoted {
     [&$input:expr] => { $crate::Quoted(&$input) };
