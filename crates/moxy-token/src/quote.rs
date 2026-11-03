@@ -21,21 +21,21 @@ macro_rules! quoted {
 }
 
 #[doc(hidden)]
-pub struct Quoted<'a, T: quote::ToTokens>(pub &'a T);
+pub struct Quoted<'a, T: quote::ToTokens + ?Sized>(pub &'a T);
 
-impl<'a, T: quote::ToTokens> Quoted<'a, T> {
+impl<'a, T: quote::ToTokens + ?Sized> Quoted<'a, T> {
     pub fn new<V: AsRef<T> + 'a>(value: &'a V) -> Self {
         Self(value.as_ref())
     }
 }
 
-impl<'a, T: quote::ToTokens> From<&'a T> for Quoted<'a, T> {
+impl<'a, T: quote::ToTokens + ?Sized> From<&'a T> for Quoted<'a, T> {
     fn from(value: &'a T) -> Self {
         Self(value)
     }
 }
 
-impl<'a, T: quote::ToTokens> ToTokens for Quoted<'a, T> {
+impl<'a, T: quote::ToTokens + ?Sized> ToTokens for Quoted<'a, T> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let out = quote::ToTokens::to_token_stream(self.0);
         let out: TokenStream = out.into();

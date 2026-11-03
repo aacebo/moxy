@@ -155,13 +155,13 @@ impl TryIntoTokenStream for &&String {
     }
 }
 
-impl<T: ToTokens> ToTokens for ::std::boxed::Box<T> {
+impl<T: ToTokens + ?Sized> ToTokens for ::std::boxed::Box<T> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         (**self).to_tokens(tokens);
     }
 }
 
-impl<T: ToTokens> ToTokens for &T {
+impl<T: ToTokens + ?Sized> ToTokens for &T {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         ToTokens::to_tokens(*self, tokens);
     }
