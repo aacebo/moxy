@@ -35,13 +35,25 @@ impl Spanner for PatField {
 impl Parse for PatField {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        Member::peek(cursor)
+        Member::peek(cursor) || PatIdent::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = <_ as Parse>::parse(parser)?;
-        let member = <_ as Parse>::parse(parser)?;
-        let (colon, pat) = if <Token![:]>::peek(parser.cursor()) {
+        let by_ref = <Option<Token![ref]> as Parse>::parse(parser)?;
+        let mutability = <Option<Token![mut]> as Parse>::parse(parser)?;
+        let modified = by_ref.is_some() || mutability.is_some();
+        let member = if modified {
+            Member::Named(<_ as Parse>::parse(parser)?)
+        } else {
+            <_ as Parse>::parse(parser)?
+        };
+
+        if modified && <Token![:]>::peek(parser.cursor()) {
+            return parser.error("shorthand binding cannot have a colon").into();
+        }
+
+        let (colon, pat) = if !modified && <Token![:]>::peek(parser.cursor()) {
             (Some(<_ as Parse>::parse(parser)?), <_ as Parse>::parse(parser)?)
         } else {
             let Member::Named(ident) = &member else {
@@ -52,8 +64,8 @@ impl Parse for PatField {
                 None,
                 Pattern::Ident(PatIdent {
                     attrs: Attributes::default(),
-                    by_ref: None,
-                    mutability: None,
+                    by_ref,
+                    mutability,
                     ident: ident.clone(),
                     subpat: None,
                 }),
@@ -70,7 +82,16 @@ impl Parse for PatField {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
+        let modified = <Token![ref]>::peek(cursor) || <Token![mut]>::peek(cursor);
+        cursor = Option::<Token![ref]>::skip(cursor)?;
+        cursor = Option::<Token![mut]>::skip(cursor)?;
         let shorthand = Ident::peek(cursor);
+
+        if modified {
+            cursor = Ident::skip(cursor)?;
+            return (!<Token![:]>::peek(cursor)).then_some(cursor);
+        }
+
         cursor = Member::skip(cursor)?;
 
         if <Token![:]>::peek(cursor) {
@@ -87,8 +108,12 @@ impl Parse for PatField {
 impl ToTokens for PatField {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
-        self.member.to_tokens(t);
-        self.colon.to_tokens(t);
+
+        if !self.is_shorthand() {
+            self.member.to_tokens(t);
+            self.colon.to_tokens(t);
+        }
+
         self.pat.to_tokens(t);
     }
 }
