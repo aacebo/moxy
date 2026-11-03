@@ -326,3 +326,14 @@ fn audited_stable_forms_parse_and_round_trip() {
     let emitted = stmt.to_token_stream().to_string();
     assert!(moxy::parse!(emitted as Stmt).is_ok());
 }
+
+#[test]
+fn field_shorthand_fixture_parses_and_round_trips() {
+    let source = include_str!("../fixtures/parse/item/field_shorthand.rs");
+    syn::parse_file(source).unwrap();
+    let item: Item = moxy::parse!(source).unwrap();
+    let emitted = item.to_token_stream().to_string();
+    syn::parse_file(&emitted).unwrap();
+    let reparsed: Item = moxy::parse!((emitted.clone())).unwrap();
+    assert_eq!(reparsed.to_token_stream().to_string(), emitted);
+}

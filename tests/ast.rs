@@ -1,8 +1,8 @@
 use std::str::FromStr;
 
 use moxy::Token;
-use moxy::ast::{Item, List, Parse, Parser};
-use moxy::token::{Ident, Span, TokenStream};
+use moxy::ast::{Item, List, Parse, Parser, PatField, Pattern};
+use moxy::token::{Ident, Span, ToTokenStream, TokenStream};
 
 fn parse_token<T: Parse>(source: &str) -> Result<T, moxy::ast::ParseError> {
     let tokens = TokenStream::from_str(source).unwrap();
@@ -90,4 +90,51 @@ fn lexical_spans_track_source_ranges_and_support_span_operations() {
     let (head, tail) = third.split(2);
     assert_eq!(head.len() + tail.len(), third.len());
     assert!(Span::call_site().is_empty());
+}
+
+#[test]
+fn field_shorthand_preserves_bindings_and_tokens() {
+    for (source, by_ref, mutable) in [
+        ("field", false, false),
+        ("r#type", false, false),
+        ("ref field", true, false),
+        ("mut field", false, true),
+        ("ref mut field", true, true),
+    ] {
+        let tokens = TokenStream::from_str(source).unwrap();
+        assert!(PatField::peek(Parser::from_tokens(&tokens).cursor()));
+        assert!(PatField::skip(Parser::from_tokens(&tokens).cursor()).unwrap().is_empty());
+
+        let field = parse_token::<PatField>(source).unwrap();
+        assert!(field.is_shorthand());
+
+        let Pattern::Ident(binding) = &field.pat else {
+            panic!("expected identifier binding");
+        };
+
+        assert_eq!(binding.ident.text(), field.member.as_named().unwrap().text());
+        assert_eq!(binding.by_ref.is_some(), by_ref);
+        assert_eq!(binding.mutability.is_some(), mutable);
+        assert_eq!(field.to_token_stream().to_string(), tokens.to_string());
+        parse_token::<PatField>(&field.to_token_stream().to_string()).unwrap();
+    }
+
+    for source in ["field: renamed", "0: binding"] {
+        let field = parse_token::<PatField>(source).unwrap();
+        assert!(!field.is_shorthand());
+        assert_eq!(
+            field.to_token_stream().to_string(),
+            TokenStream::from_str(source).unwrap().to_string()
+        );
+    }
+
+    for source in [
+        "Point { 0 }",
+        "Point { ref }",
+        "Point { mut ref field }",
+        "Point { ref field: renamed }",
+        "Point { ref mut 0 }",
+    ] {
+        assert!(moxy::parse!(source as Pattern).is_err(), "{source}");
+    }
 }
