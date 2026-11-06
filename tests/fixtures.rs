@@ -10,6 +10,7 @@ const LARGE_ITEMS: &str = include_str!("../fixtures/parse/item/large_items.rs");
 const MACRO_HEAVY: &str = include_str!("../fixtures/parse/item/macro_heavy.rs");
 const DECLARATION_HEAVY: &str = include_str!("../fixtures/parse/item/declaration_heavy.rs");
 const PATTERN_HEAVY: &str = include_str!("../fixtures/parse/item/pattern_heavy.rs");
+const META_DIAGNOSTICS: &str = include_str!("../fixtures/parse/item/meta_diagnostics.rs");
 
 const CONTROL_FLOW_EXPR: &str = include_str!("../fixtures/parse/expr/control_flow.rs");
 const POSTFIX_ASYNC_EXPR: &str = include_str!("../fixtures/parse/expr/postfix_async.rs");
@@ -60,6 +61,13 @@ fn pattern_heavy_fixture_parses_as_items() {
     let _: syn::File = syn::parse_file(PATTERN_HEAVY).unwrap();
     let items: Vec<Item> = moxy::parse!(PATTERN_HEAVY).unwrap();
     assert_eq!(items.len(), 1);
+}
+
+#[test]
+fn macro_diagnostics_fixture_parses_as_items() {
+    let _: syn::File = syn::parse_file(META_DIAGNOSTICS).unwrap();
+    let items: Vec<Item> = moxy::parse!(META_DIAGNOSTICS).unwrap();
+    assert_eq!(items.len(), 6);
 }
 
 #[test]

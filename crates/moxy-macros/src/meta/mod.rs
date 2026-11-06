@@ -68,7 +68,7 @@ pub fn expand(tokens: TokenStream) -> TokenStream {
                 let parser = match &meta.content {
                     ::moxy::ast::MetaContent::List(group) => &::moxy::ast::Parser::from_tokens(&group.tokens),
                     _ => return Err(::moxy::ast::ParseError::new(
-                        ::moxy::token::Spanner::span(meta),
+                        ::moxy::token::Spanner::span(&meta.path),
                         "expected parenthesized meta arguments",
                     )),
                 };

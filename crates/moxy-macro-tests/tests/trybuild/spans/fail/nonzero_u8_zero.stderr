@@ -1,0 +1,5 @@
+error: expected a nonzero u8 literal
+ --> tests/trybuild/spans/fail/nonzero_u8_zero.rs:1:67
+  |
+1 | const VALUE: core::num::NonZeroU8 = moxy_macro_tests::nonzero_u8!(0);
+  |                                                                   ^
