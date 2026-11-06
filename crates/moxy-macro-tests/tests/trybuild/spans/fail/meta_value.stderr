@@ -1,0 +1,5 @@
+error: expected parenthesized meta arguments
+ --> tests/trybuild/spans/fail/meta_value.rs:2:3
+  |
+2 | #[range = 1]
+  |   ^^^^^

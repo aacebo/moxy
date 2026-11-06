@@ -1,0 +1,5 @@
+error: missing required meta argument
+ --> tests/trybuild/spans/fail/meta_missing_required.rs:2:3
+  |
+2 | #[range(min = 1)]
+  |   ^^^^^

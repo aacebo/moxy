@@ -13,7 +13,7 @@ doctest = false
 workspace = true
 
 [dependencies]
-moxy = { workspace = true, features = ["proc-macro2", "template"] }
+moxy = { workspace = true, features = ["macros", "proc-macro2", "template"] }
 proc-macro2.workspace = true
 syn.workspace = true
 

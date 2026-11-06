@@ -1,0 +1,5 @@
+error: unknown meta argument
+ --> tests/trybuild/spans/fail/meta_unknown_value.rs:2:27
+  |
+2 | #[range(min = 1, max = 2, nope = 3)]
+  |                           ^^^^

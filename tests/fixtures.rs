@@ -67,7 +67,7 @@ fn pattern_heavy_fixture_parses_as_items() {
 fn macro_diagnostics_fixture_parses_as_items() {
     let _: syn::File = syn::parse_file(META_DIAGNOSTICS).unwrap();
     let items: Vec<Item> = moxy::parse!(META_DIAGNOSTICS).unwrap();
-    assert_eq!(items.len(), 1);
+    assert_eq!(items.len(), 6);
 }
 
 #[test]

@@ -56,7 +56,10 @@ impl Meta {
 
 impl Spanner for Meta {
     fn span(&self) -> Span {
-        self.path.span().join(self.content.span())
+        match &self.content {
+            MetaContent::Unit => self.path.span(),
+            _ => self.content.span().join(self.path.span()),
+        }
     }
 }
 

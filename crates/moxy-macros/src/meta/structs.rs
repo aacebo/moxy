@@ -56,7 +56,7 @@ pub fn expand(target: &moxy::ast::ItemStruct) -> TokenStream {
             }
 
             return Err(::moxy::ast::ParseError::new(
-                ::moxy::token::Spanner::span(&entry),
+                ::moxy::token::Spanner::span(&entry.path),
                 "unknown meta argument",
             ));
         }
@@ -72,7 +72,7 @@ pub fn expand(target: &moxy::ast::ItemStruct) -> TokenStream {
                         return Err({{ parse_error(
                             field.message.as_ref(),
                             &field.key,
-                            moxy::template! { ::moxy::token::Span::call_site() },
+                            moxy::template! { ::moxy::token::Spanner::span(&meta.path) },
                             moxy::template! { {{ &field.key }} },
                             "missing required meta argument",
                         ) }});
