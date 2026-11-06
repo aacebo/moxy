@@ -1,0 +1,27 @@
+{
+  "lsp": {
+    "rust-analyzer": {
+      "initialization_options": {
+        "cargo": {
+          "features": "all",
+          "autoreload": true,
+          "targetDir": true
+        },
+        "procMacro": {
+          "enable": true
+        },
+        "check": {
+          "workspace": true,
+          "allTargets": true
+        }
+      }
+    },
+    "taplo": {
+      "settings": {
+        "schema": {
+          "enabled": false
+        }
+      }
+    }
+  }
+}
