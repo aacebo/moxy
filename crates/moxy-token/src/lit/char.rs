@@ -135,10 +135,15 @@ fn escape(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
     match c.first() {
         None => c.error().into(),
         Some('n' | 'r' | 't' | '\\' | '\'' | '"' | '0') => Ok(c.advance()),
+        // A character escape `\x` is ASCII: at most `\x7F`
         Some('x') => {
             let c = c.advance();
-            let c = hex_digit(c)?;
-            hex_digit(c)
+
+            if !matches!(c.first(), Some('0'..='7')) {
+                return c.error().message("out of range hex escape").into();
+            }
+
+            hex_digit(c.advance())
         }
         Some('u') => {
             let c = c.advance();

@@ -193,6 +193,15 @@ impl Scan for Ident {
 
             let span = cursor.span_to(&end);
             let name = &cursor.rest()[..end.offset() as usize - cursor.offset() as usize];
+
+            // These path keywords and `_` cannot be raw identifiers
+            if matches!(&name[2..], "self" | "super" | "crate" | "Self" | "_") {
+                return cursor
+                    .error()
+                    .message(format!("`{}` cannot be a raw identifier", &name[2..]))
+                    .into();
+            }
+
             return Ok((end, Self::new(name).with_span(span)));
         }
 

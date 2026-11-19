@@ -121,7 +121,7 @@ fn visitors_reach_every_lifetime() {
     }
 
     let item: Item = moxy::parse!(
-        "fn f<'a: 'b, 'b>(x: &'a str, y: Cow<'_, str>, z: &'_ dyn Trait + 'b) -> impl Sized + use<'a, T> where 'b: 'a, T: for<'c> Fn(&'c u8) { 'outer: loop { break 'outer; continue 'outer; } }"
+        "fn f<'a: 'b, 'b>(x: &'a str, y: Cow<'_, str>, z: &'_ (dyn Trait + 'b)) -> impl Sized + use<'a, T> where 'b: 'a, T: for<'c> Fn(&'c u8) { 'outer: loop { break 'outer; continue 'outer; } }"
     )
     .unwrap();
     let mut lifetimes = Lifetimes(Vec::new());
@@ -142,7 +142,7 @@ fn visitors_reach_every_lifetime() {
     assert!(
         item.to_token_stream()
             .to_string()
-            .contains("y : Cow < 'p0 , str > , z : & 'p1 dyn Trait + 'b")
+            .contains("y : Cow < 'p0 , str > , z : & 'p1 (dyn Trait + 'b)")
     );
 }
 

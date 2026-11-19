@@ -1,6 +1,7 @@
 mod ast;
 mod differential;
 mod fixtures;
+mod mutations;
 mod parser;
 mod precedence;
 mod round_trip;

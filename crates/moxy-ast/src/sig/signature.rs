@@ -38,7 +38,7 @@ impl Parse for Signature {
         if <Token![extern]>::peek(cursor) {
             cursor = cursor.offset(1);
 
-            if matches!(cursor.curr(), Some(moxy_token::TokenTree::Literal(lit)) if lit.repr().starts_with('"')) {
+            if matches!(cursor.curr(), Some(moxy_token::TokenTree::Literal(moxy_token::Lit::Str(_)))) {
                 cursor = cursor.offset(1);
             }
         }

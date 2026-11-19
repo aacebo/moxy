@@ -80,7 +80,11 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
             cursor = <Token![|]>::skip(cursor)?;
         }
 
-        cursor = ReturnType::skip(cursor)?;
+        // With a return type the body is a block, as in the parser
+        if <Token![->]>::peek(cursor) {
+            return StmtBlock::skip(ReturnType::skip(cursor)?);
+        }
+
         return expr(cursor, context);
     }
 
@@ -398,27 +402,23 @@ fn binary_rest(mut cursor: Cursor<'_>, context: ExprContext, min: Precedence) ->
 }
 
 fn range(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
-    if RangeLimits::peek(cursor) {
-        cursor = RangeLimits::skip(cursor)?;
+    if !RangeLimits::peek(cursor) {
+        cursor = binary(cursor, context)?;
 
-        if !context.is_end(cursor) && peek::expr(cursor, context) {
-            cursor = binary(cursor, context)?;
-        }
-
-        return Some(cursor);
-    }
-
-    cursor = binary(cursor, context)?;
-
-    if RangeLimits::peek(cursor) {
-        cursor = RangeLimits::skip(cursor)?;
-
-        if !context.is_end(cursor) && peek::expr(cursor, context) {
-            cursor = binary(cursor, context)?;
+        if !RangeLimits::peek(cursor) {
+            return Some(cursor);
         }
     }
 
-    Some(cursor)
+    // An inclusive range needs an end, as in the parser
+    let closed = <Token![..=]>::peek(cursor);
+    cursor = RangeLimits::skip(cursor)?;
+
+    if !context.is_end(cursor) && peek::expr(cursor, context) {
+        return binary(cursor, context);
+    }
+
+    (!closed).then_some(cursor)
 }
 
 fn assignment(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {

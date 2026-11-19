@@ -133,6 +133,10 @@ fn range_rest(
         end = Some(binary(parser, Default::default(), context, Precedence::Or)?);
     }
 
+    if end.is_none() && matches!(limits, RangeLimits::Closed(_)) {
+        return parser.error("an inclusive range needs an end").into();
+    }
+
     Ok(boxed(ExprRange {
         attrs,
         start,
@@ -870,8 +874,19 @@ fn closure(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<B
     let asyncness = <_ as Parse>::parse(parser)?;
     let capture = <_ as Parse>::parse(parser)?;
     let (pipes, inputs) = closure_params(parser)?;
-    let output = <_ as Parse>::parse(parser)?;
-    let body = boxed_expr(parser, context)?;
+    let output: ReturnType = <_ as Parse>::parse(parser)?;
+
+    // With a return type the body is a block, which ends the closure: in
+    // `|| -> u8 { 1 }.x` the field belongs to the closure
+    let body = if output.is_type() {
+        if !parser.is_delimited(Delim::Brace) {
+            return parser.error("expected a block after the closure's return type").into();
+        }
+
+        block(parser, Attributes::default())?
+    } else {
+        boxed_expr(parser, context)?
+    };
 
     Ok(boxed(ExprClosure {
         attrs,

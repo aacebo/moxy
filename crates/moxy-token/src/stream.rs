@@ -151,6 +151,11 @@ impl Scan for TokenStream {
         loop {
             c = c.skip_whitespace();
 
+            // `skip_whitespace` stops at a block comment it cannot close
+            if c.starts_with("/*") && c.skip_comment().is_none() {
+                return c.error().message("unterminated block comment").into();
+            }
+
             if c.is_empty() {
                 break;
             }
@@ -176,7 +181,19 @@ impl Scan for TokenStream {
                 continue;
             }
 
-            if let Ok((next, lit)) = crate::Lit::scan(c) {
+            // A digit or a quote always starts a literal, whose error is the
+            // error of the stream
+            let literal = if matches!(c.first(), Some('0'..='9' | '"'))
+                || ["'\\", "b'", "b\"", "br\"", "br#", "c\"", "cr\"", "cr#", "r\"", "r#\"", "r##"]
+                    .iter()
+                    .any(|prefix| c.starts_with(prefix))
+            {
+                Some(crate::Lit::scan(c)?)
+            } else {
+                crate::Lit::scan(c).ok()
+            };
+
+            if let Some((next, lit)) = literal {
                 // After a field access dot, `0.1` is two tuple indices, as in
                 // `x.0.1`, so the tokens read back as they parse
                 if let crate::Lit::Float(float) = &lit
@@ -196,6 +213,18 @@ impl Scan for TokenStream {
 
             if let Ok((next, keyword)) = crate::Keyword::scan(c) {
                 tokens.push(TokenTree::Keyword(keyword));
+                c = next;
+                continue;
+            }
+
+            // `r#` and a name start a raw identifier, whose error is the error
+            if c.starts_with("r#")
+                && c.advance_by(2)
+                    .first()
+                    .is_some_and(|ch| ch == '_' || unicode_ident::is_xid_start(ch))
+            {
+                let (next, ident) = crate::Ident::scan(c)?;
+                tokens.push(TokenTree::Ident(ident));
                 c = next;
                 continue;
             }

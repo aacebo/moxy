@@ -39,9 +39,12 @@ impl TypeBound {
     }
 
     // Skips bounds as `parse_bounds` parses them, with a trailing `+` allowed
-    pub(crate) fn skip_bounds(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = Self::skip(cursor)?;
+    pub(crate) fn skip_bounds(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::skip_bounds_after(Self::skip(cursor)?)
+    }
 
+    // Skips the `+` and further bounds after a first bound
+    pub(crate) fn skip_bounds_after(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         while <Token![+]>::peek(cursor) {
             cursor = <Token![+]>::skip(cursor)?;
 

@@ -243,20 +243,27 @@ impl Lit {
             return Ok((end, Self::Bool(v)));
         }
 
-        if let Ok((end, v)) = LitByte::scan(cursor) {
-            return Ok((end, Self::Byte(v)));
+        // A quote after a literal prefix always starts that literal, so its
+        // error, such as an invalid escape, is the error
+        if cursor.starts_with("b'") {
+            return LitByte::scan(cursor).map(|(end, v)| (end, Self::Byte(v)));
         }
 
-        if let Ok((end, v)) = LitByteStr::scan(cursor) {
-            return Ok((end, Self::ByteStr(v)));
+        if cursor.starts_with("b\"") || cursor.starts_with("br\"") || cursor.starts_with("br#") {
+            return LitByteStr::scan(cursor).map(|(end, v)| (end, Self::ByteStr(v)));
         }
 
-        if let Ok((end, v)) = LitCStr::scan(cursor) {
-            return Ok((end, Self::CStr(v)));
+        if cursor.starts_with("c\"") || cursor.starts_with("cr\"") || cursor.starts_with("cr#") {
+            return LitCStr::scan(cursor).map(|(end, v)| (end, Self::CStr(v)));
         }
 
-        if let Ok((end, v)) = LitStr::scan(cursor) {
-            return Ok((end, Self::Str(v)));
+        if cursor.starts_with("\"") || cursor.starts_with("r\"") || cursor.starts_with("r#\"") || cursor.starts_with("r##") {
+            return LitStr::scan(cursor).map(|(end, v)| (end, Self::Str(v)));
+        }
+
+        // A quote and a backslash start a character literal, never a lifetime
+        if cursor.starts_with("'\\") {
+            return LitChar::scan(cursor).map(|(end, v)| (end, Self::Char(v)));
         }
 
         if let Ok((end, v)) = LitChar::scan(cursor) {
@@ -274,7 +281,8 @@ impl Lit {
         // A number the typed literals cannot hold keeps its text, as the
         // compiler's lexer does: `1.0f16`, `1f128`, a custom suffix as in `2b`,
         // or an integer past `u128::MAX`
-        if let Ok(end) = float::scan_number(cursor) {
+        if cursor.first().is_some_and(|ch| ch.is_ascii_digit()) {
+            let end = float::scan_number(cursor)?;
             let len = end.offset() as usize - cursor.offset() as usize;
             return Ok((
                 end,

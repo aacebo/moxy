@@ -244,31 +244,112 @@ impl From<TypeBareFn> for Type {
 impl Type {
     /// Parses a type that `+` does not continue, as after `as` in an
     /// expression, where `a as usize + 1` adds to the cast, and after `&` or
-    /// `*`, where Rust rejects `&A + B` as ambiguous.
+    /// `*`, where Rust rejects `&A + B` and `&dyn A + B` as ambiguous.
     pub(crate) fn parse_without_plus(parser: &Parser) -> Result<Self, ParseError> {
-        if Self::peek_bare_bounds(parser.cursor()) {
-            return Ok(Self::Path(<_ as Parse>::parse(parser)?));
+        if Self::peek_plain_path(parser.cursor()) {
+            return Self::parse_path_or_macro(parser, false);
+        }
+
+        // `impl` and `dyn` take one bound here, as in `&dyn A` and `Fn() -> impl A`
+        if <Token![impl]>::peek(parser.cursor()) {
+            let impl_keyword = <_ as Parse>::parse(parser)?;
+            let mut bounds = List::new();
+            bounds.push_value(<_ as Parse>::parse(parser)?);
+            return Ok(Self::ImplTrait(TypeImplTrait { impl_keyword, bounds }));
+        }
+
+        if <Token![dyn]>::peek(parser.cursor()) {
+            let dyn_token = <_ as Parse>::parse(parser)?;
+            let mut bounds = List::new();
+            bounds.push_value(<_ as Parse>::parse(parser)?);
+            return Ok(Self::TraitObject(TypeTraitObject { dyn_token, bounds }));
         }
 
         <Self as Parse>::parse(parser)
     }
 
     pub(crate) fn skip_without_plus(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if Self::peek_bare_bounds(cursor) {
-            return TypePath::skip(cursor);
+        if Self::peek_plain_path(cursor) {
+            return Self::skip_path_or_macro(cursor, false);
+        }
+
+        if <Token![impl]>::peek(cursor) || <Token![dyn]>::peek(cursor) {
+            return TypeBound::skip(cursor.offset(1));
         }
 
         <Self as Parse>::skip(cursor)
     }
 
-    // A path followed by `+`, which a type position that takes bounds reads
-    // as a trait object
-    fn peek_bare_bounds(cursor: Cursor<'_>) -> bool {
-        !<Token![dyn]>::peek(cursor) && Path::peek(cursor) && TypeTraitObject::peek(cursor)
+    // A path that is not qualified with `<..>` and starts no other form
+    fn peek_plain_path(cursor: Cursor<'_>) -> bool {
+        !<Token![dyn]>::peek(cursor)
+            && !<Token![impl]>::peek(cursor)
+            && !<Token![fn]>::peek(cursor)
+            && !<Token![unsafe]>::peek(cursor)
+            && !<Token![extern]>::peek(cursor)
+            && Path::peek(cursor)
+    }
+
+    // A trait object that does not start with a path: `dyn A`, or a bound with
+    // a binder as in `for<'a> A<'a> + B`. One that starts with a path is told
+    // apart after the path, by the `+` that follows it, so the path is read
+    // once.
+    fn peek_trait_object(cursor: Cursor<'_>) -> bool {
+        if <Token![dyn]>::peek(cursor) {
+            return true;
+        }
+
+        <Token![for]>::peek(cursor)
+            && BoundLifetimes::skip(cursor).is_some_and(|after| {
+                !<Token![fn]>::peek(after) && !<Token![unsafe]>::peek(after) && !<Token![extern]>::peek(after)
+            })
     }
 
     fn parse_never(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self::Never(<_ as Parse>::parse(parser)?))
+    }
+
+    // A bare trait object whose first bound is `path`, at the `+` after it
+    pub(crate) fn parse_bare_trait_object(parser: &Parser, path: Path) -> Result<Self, ParseError> {
+        let mut bounds = List::new();
+        bounds.push_value(TypeBound::Trait(TraitBound {
+            paren: None,
+            polarity: None,
+            lifetimes: None,
+            modifier: None,
+            path,
+        }));
+
+        while <Token![+]>::peek(parser.cursor()) {
+            bounds.push_punct(<_ as Parse>::parse(parser)?);
+
+            if !TypeBound::peek(parser.cursor()) {
+                break;
+            }
+
+            bounds.push_value(<_ as Parse>::parse(parser)?);
+        }
+
+        Ok(Self::TraitObject(TypeTraitObject { dyn_token: None, bounds }))
+    }
+
+    fn skip_path_or_macro(cursor: Cursor<'_>, plus: bool) -> Option<Cursor<'_>> {
+        if <Token![<]>::peek(cursor) {
+            return TypePath::skip(cursor);
+        }
+
+        let mut cursor = Path::skip(cursor)?;
+
+        if plus && <Token![+]>::peek(cursor) {
+            return TypeBound::skip_bounds_after(cursor);
+        }
+
+        if <Token![!]>::peek(cursor) && !<Token![!=]>::peek(cursor) {
+            cursor = <Token![!]>::skip(cursor)?;
+            cursor = Group::skip(cursor)?;
+        }
+
+        Some(cursor)
     }
 
     fn parse_infer(parser: &Parser) -> Result<Self, ParseError> {
@@ -329,12 +410,18 @@ impl Type {
 
     // A path type, `T`, `std::vec::Vec`, or a qualified `<T as Trait>::Item`,
     // or a type macro
-    fn parse_path_or_macro(parser: &Parser) -> Result<Self, ParseError> {
+    // With `plus`, a `+` after the path makes a bare trait object of it, as in
+    // `Box<A + Send>`
+    fn parse_path_or_macro(parser: &Parser, plus: bool) -> Result<Self, ParseError> {
         if <Token![<]>::peek(parser.cursor()) {
             return Ok(Self::Path(<_ as Parse>::parse(parser)?));
         }
 
-        let path = <_ as Parse>::parse(parser)?;
+        let path: Path = <_ as Parse>::parse(parser)?;
+
+        if plus && <Token![+]>::peek(parser.cursor()) {
+            return Self::parse_bare_trait_object(parser, path);
+        }
 
         // `!=` after a type ends a cast (`a as u8 != b`), not a type macro
         if <Token![!]>::peek(parser.cursor()) && !<Token![!=]>::peek(parser.cursor()) {
@@ -401,7 +488,7 @@ impl Parse for Type {
             Self::parse_slice_or_array
         } else if <Token![impl]>::peek(parser.cursor()) {
             parse_into::<TypeImplTrait, Self>
-        } else if TypeTraitObject::peek(parser.cursor()) {
+        } else if Self::peek_trait_object(parser.cursor()) {
             // `dyn Trait` and the legacy bare multi-bound trait-object form
             parse_into::<TypeTraitObject, Self>
         } else if <Token![fn]>::peek(parser.cursor())
@@ -415,7 +502,7 @@ impl Parse for Type {
         } else if parser.is_delimited(Delim::None) {
             Self::parse_group
         } else {
-            Self::parse_path_or_macro
+            |parser| Self::parse_path_or_macro(parser, true)
         };
 
         parse(parser)
@@ -461,7 +548,7 @@ impl Parse for Type {
             return TypeImplTrait::skip(cursor);
         }
 
-        if TypeTraitObject::peek(cursor) {
+        if Self::peek_trait_object(cursor) {
             return TypeTraitObject::skip(cursor);
         }
 
@@ -485,18 +572,7 @@ impl Parse for Type {
             return TypeGroup::skip(cursor);
         }
 
-        if <Token![<]>::peek(cursor) {
-            return TypePath::skip(cursor);
-        }
-
-        let mut cursor = Path::skip(cursor)?;
-
-        if <Token![!]>::peek(cursor) && !<Token![!=]>::peek(cursor) {
-            cursor = <Token![!]>::skip(cursor)?;
-            cursor = Group::skip(cursor)?;
-        }
-
-        Some(cursor)
+        Self::skip_path_or_macro(cursor, true)
     }
 }
 

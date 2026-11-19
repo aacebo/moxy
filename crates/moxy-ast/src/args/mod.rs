@@ -130,6 +130,10 @@ impl Parse for GenericArgument {
 
             cursor = Path::skip_rest(cursor)?;
 
+            if <Token![+]>::peek(cursor) {
+                return TypeBound::skip_bounds_after(cursor);
+            }
+
             if <Token![!]>::peek(cursor) {
                 cursor = <Token![!]>::skip(cursor)?;
                 cursor = Group::skip(cursor)?;
@@ -214,7 +218,9 @@ impl GenericArgument {
     fn parse_path(parser: &Parser, ident: Ident, generics: Option<AngleArguments>) -> Result<Self, ParseError> {
         let args = generics.map_or(PathArguments::None, PathArguments::AngleBracketed);
         let path = Path::parse_rest(parser, PathSegment { ident, args })?;
-        let ty = if <Token![!]>::peek(parser.cursor()) {
+        let ty = if <Token![+]>::peek(parser.cursor()) {
+            Type::parse_bare_trait_object(parser, path)?
+        } else if <Token![!]>::peek(parser.cursor()) {
             Type::Macro(TypeMacro {
                 mac: MacroCall {
                     path,

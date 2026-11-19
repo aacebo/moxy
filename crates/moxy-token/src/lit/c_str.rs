@@ -76,12 +76,19 @@ impl ToTokens for LitCStr {
 
 impl Scan for LitCStr {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
-        let end = scan_cooked(cursor, "c\"").or_else(|_| scan_raw(cursor, "cr"))?;
+        // A cooked literal reports its own error, such as an invalid escape
+        let end = if cursor.starts_with("c\"") {
+            scan_cooked(cursor, "c\"")?
+        } else {
+            scan_raw(cursor, "cr")?
+        };
         let len = end.offset() as usize - cursor.offset() as usize;
         let repr = &cursor.rest()[..len];
         let span = cursor.span_to(&end);
 
         match repr.strip_prefix('c').and_then(decode_string_body) {
+            // A C string ends at its only nul character, which it adds itself
+            Some(value) if value.contains('\0') => cursor.error().message("nul character in C string literal").into(),
             Some(value) => Ok((end, Self::from_parts(value.into_bytes(), repr, span))),
             None => cursor.error().into(),
         }

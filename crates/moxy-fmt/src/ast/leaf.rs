@@ -22,7 +22,7 @@ impl Format for Abi {
 
         if let Some(name) = &self.name {
             f.text(" ")?;
-            f.text(format!("\"{}\"", name))?;
+            f.text(name.repr())?;
         }
 
         Ok(())

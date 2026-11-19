@@ -46,3 +46,19 @@ fn foreign_statics_keep_their_safety_qualifier() {
         assert_eq!(moxy::fmt!(&item).unwrap(), formatted);
     }
 }
+
+#[test]
+fn abi_strings_format_and_emit_as_written() {
+    for (source, value) in [(r#"extern "a\"b" fn f() {}"#, "a\"b"), (r##"extern r#"C"# fn f() {}"##, "C")] {
+        let item: Item = moxy::parse!(source).unwrap();
+        let abi = item.as_fn().unwrap().sig.abi.as_ref().unwrap();
+        assert_eq!(abi.name.as_ref().unwrap().value(), value);
+        assert_eq!(moxy::fmt!(&item).unwrap(), source);
+        let emitted = moxy::token::ToTokenStream::to_token_stream(abi).to_string();
+        assert_eq!(emitted, source[..source.find(" fn").unwrap()]);
+        assert_eq!(
+            moxy::token::Spanner::span(abi).byte_range().len(),
+            source.find(" fn").unwrap()
+        );
+    }
+}

@@ -668,3 +668,20 @@ fn skipping_an_expression_ends_where_parsing_it_ends() {
         assert_eq!(skipped, parsed, "`{source}`");
     }
 }
+
+#[test]
+fn a_closure_with_a_return_type_takes_a_block_and_an_inclusive_range_an_end() {
+    let expression: Expr = moxy::parse!("|| -> u8 { 1 }.x").unwrap();
+    assert!(expression.as_field().unwrap().base.is_closure());
+
+    for (source, message) in [
+        ("|x: u8| -> u8 x", "expected a block after the closure's return type"),
+        ("a..=", "an inclusive range needs an end"),
+        ("..=", "an inclusive range needs an end"),
+    ] {
+        let error = moxy::parse!(source as Expr)
+            .err()
+            .unwrap_or_else(|| panic!("`{source}` parsed"));
+        assert_eq!(error.message(), message, "`{source}`");
+    }
+}

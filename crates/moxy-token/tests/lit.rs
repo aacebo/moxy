@@ -164,3 +164,33 @@ fn quoted_literals_keep_a_suffix() {
     let tokens: Vec<_> = "\"a\" b".parse::<TokenStream>().unwrap().into_iter().collect();
     assert_eq!(tokens.len(), 2);
 }
+
+#[test]
+fn invalid_tokens_are_lex_errors() {
+    for (source, message) in [
+        ("1 /* unterminated", "unterminated block comment"),
+        ("/** doc", "unterminated block comment"),
+        ("0b12", "invalid digit for a base 2 literal"),
+        ("0o79", "invalid digit for a base 8 literal"),
+        ("'\\x80'", "out of range hex escape"),
+        ("\"\\xff\"", "out of range hex escape"),
+        ("b'é'", "non-ASCII character in byte literal"),
+        ("b\"é\"", "non-ASCII character in byte string literal"),
+        ("r#self", "`self` cannot be a raw identifier"),
+        ("r#crate", "`crate` cannot be a raw identifier"),
+        ("b'\\u{1}'", "unicode escape in byte literal"),
+        ("b\"\\u{1}\"", "unicode escape in byte string literal"),
+        ("c\"\\0\"", "nul character in C string literal"),
+        ("c\"a\\x00\"", "nul character in C string literal"),
+    ] {
+        let error = source
+            .parse::<TokenStream>()
+            .err()
+            .unwrap_or_else(|| panic!("`{source}` lexed"));
+        assert_eq!(error.to_string(), message, "`{source}`");
+    }
+
+    for source in ["b'\\xff'", "b\"\\x80\"", "'\\x7f'", "0b1", "r#type"] {
+        assert!(source.parse::<TokenStream>().is_ok(), "`{source}`");
+    }
+}

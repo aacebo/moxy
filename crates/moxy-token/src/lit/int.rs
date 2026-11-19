@@ -455,11 +455,11 @@ fn scan(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
             }
             Some('o' | 'O') => {
                 cur = digits(next.advance(), |ch| matches!(ch, '0'..='7'))?;
-                return Ok(suffix(cur));
+                return radix_end(cur, 8);
             }
             Some('b' | 'B') => {
                 cur = digits(next.advance(), |ch| matches!(ch, '0' | '1'))?;
-                return Ok(suffix(cur));
+                return radix_end(cur, 2);
             }
             _ => {}
         }
@@ -522,5 +522,17 @@ fn suffix(c: Cursor<'_>) -> Cursor<'_> {
             c.advance_by(ch.len_utf8()).skip_while(unicode_ident::is_xid_continue)
         }
         _ => c,
+    }
+}
+
+// The end of a binary or octal literal, where a decimal digit is an invalid
+// digit of the literal, as in `0b12`, rather than a second token
+fn radix_end(cursor: Cursor<'_>, radix: u32) -> Result<Cursor<'_>, LexError> {
+    match cursor.first() {
+        Some(ch) if ch.is_ascii_digit() => cursor
+            .error()
+            .message(format!("invalid digit for a base {radix} literal"))
+            .into(),
+        _ => Ok(suffix(cursor)),
     }
 }

@@ -1,4 +1,5 @@
 use moxy::ast::Item;
+use moxy::token::ToTokenStream;
 
 #[test]
 fn function_signatures_and_bodies_complete_the_syntax_pipeline() {
@@ -112,4 +113,18 @@ fn weak_keywords_begin_paths_in_use_items_types_and_expressions() {
     // Followed by `!`, `macro_rules` still defines a macro
     let item: Item = moxy::parse!("macro_rules! m { () => {} }").unwrap();
     assert!(item.is_macro2());
+}
+
+#[test]
+fn an_abi_keeps_the_value_of_its_string() {
+    for (source, abi, emitted) in [
+        ("extern \"C\" fn f() {}", "C", "extern \"C\" fn f () {}"),
+        ("extern \"\\0C\" fn f() {}", "\0C", "extern \"\\0C\" fn f () {}"),
+        ("extern r\"C\" fn f() {}", "C", "extern r\"C\" fn f () {}"),
+    ] {
+        let item: moxy::ast::Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let function = item.as_fn().unwrap();
+        assert_eq!(function.sig.abi.as_ref().unwrap().name.as_ref().unwrap().value(), abi);
+        assert_eq!(item.to_token_stream().to_string(), emitted);
+    }
 }

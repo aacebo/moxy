@@ -85,7 +85,12 @@ impl ToTokens for LitStr {
 
 impl Scan for LitStr {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
-        let end = scan_cooked(cursor, "\"").or_else(|_| scan_raw(cursor, "r"))?;
+        // A cooked literal reports its own error, such as an invalid escape
+        let end = if cursor.starts_with("\"") {
+            scan_cooked(cursor, "\"")?
+        } else {
+            scan_raw(cursor, "r")?
+        };
         let len = end.offset() as usize - cursor.offset() as usize;
         let repr = &cursor.rest()[..len];
         let span = cursor.span_to(&end);
@@ -174,10 +179,15 @@ fn escape(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
         // A line continuation: the newline and the whitespace after it are skipped
         Some('\n') => Ok(skip_continuation(c.advance())),
         Some('\r') if c.advance().first() == Some('\n') => Ok(skip_continuation(c.advance_by(2))),
+        // A character escape `\x` is ASCII: at most `\x7F`
         Some('x') => {
             let c = c.advance();
-            let c = hex_digit(c)?;
-            hex_digit(c)
+
+            if !matches!(c.first(), Some('0'..='7')) {
+                return c.error().message("out of range hex escape").into();
+            }
+
+            hex_digit(c.advance())
         }
         Some('u') => {
             let c = c.advance();
