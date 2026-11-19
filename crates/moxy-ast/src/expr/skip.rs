@@ -23,6 +23,19 @@ pub(crate) fn pattern_bound(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     expr(cursor, ExprContext::PATTERN_BOUND)
 }
 
+pub(crate) fn arm_body(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+    let start = Attributes::skip(cursor)?;
+
+    if peek::block_like(start)
+        && let Some(end) = primary(start, ExprContext::NORMAL)
+        && !peek::continues_block_like(end)
+    {
+        return Some(end);
+    }
+
+    expr(cursor, ExprContext::NORMAL)
+}
+
 pub(crate) fn const_generic_default(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     expr(cursor, ExprContext::CONST_GENERIC_DEFAULT)
 }
@@ -140,7 +153,12 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
 
         if <Token![else]>::peek(cursor) {
             cursor = <Token![else]>::skip(cursor)?;
-            cursor = Expr::skip(cursor)?;
+
+            if !cursor.is_delimited(Delim::Brace) && !<Token![if]>::peek(cursor) {
+                return None;
+            }
+
+            cursor = primary(cursor, ExprContext::NORMAL)?;
         }
 
         return Some(cursor);
@@ -235,7 +253,7 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     cursor = if qualified {
         ty::TypePath::skip(cursor)?
     } else {
-        Path::skip(cursor)?
+        Path::skip_expr(cursor)?
     };
 
     if !qualified && <Token![!]>::peek(cursor) && !<Token![!=]>::peek(cursor) {

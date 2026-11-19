@@ -8,6 +8,25 @@ pub(super) fn expr(parser: &Parser, context: ExprContext) -> Result<Expr, ParseE
     assignment(parser, attrs, context)
 }
 
+// A match arm body. A block-like body (`{ .. }`, `if`, `match`, a loop, ..)
+// ends the arm unless a method call, field access, or `?` continues it, so
+// `a => { x } (b, c) => y` holds two arms rather than a call on the block.
+pub(crate) fn arm_body(parser: &Parser) -> Result<Expr, ParseError> {
+    let fork = parser.fork();
+    let attrs = <_ as Parse>::parse(&fork)?;
+
+    if peek::block_like(fork.cursor()) {
+        let body = primary(&fork, attrs, ExprContext::NORMAL)?;
+
+        if !peek::continues_block_like(fork.cursor()) {
+            parser.seek(&fork);
+            return Ok(body);
+        }
+    }
+
+    expr(parser, ExprContext::NORMAL)
+}
+
 pub(crate) fn const_generic_default(parser: &Parser) -> Result<Expr, ParseError> {
     expr(parser, ExprContext::CONST_GENERIC_DEFAULT)
 }
@@ -304,7 +323,18 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
         let cond = Box::new(expr(parser, ExprContext::EARLY)?);
         let then_branch = <_ as Parse>::parse(parser)?;
         let (else_keyword, else_branch) = if <Token![else]>::peek(parser.cursor()) {
-            (Some(<_ as Parse>::parse(parser)?), Some(<_ as Parse>::parse(parser)?))
+            let else_keyword = <_ as Parse>::parse(parser)?;
+
+            // `else` takes a block or another `if`, which ends the expression:
+            // `if a { 1 } else { 2 } [x]` does not index the else block
+            if !parser.is_delimited(Delim::Brace) && !<Token![if]>::peek(parser.cursor()) {
+                return parser.error("expected `{` or `if` after `else`").into();
+            }
+
+            (
+                Some(else_keyword),
+                Some(Box::new(primary(parser, Attributes::default(), ExprContext::NORMAL)?)),
+            )
         } else {
             (None, None)
         };
@@ -460,7 +490,7 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
             let (qself, path) = QSelf::parse_qualified(parser)?;
             (Some(qself), path)
         } else {
-            (None, <_ as Parse>::parse(parser)?)
+            (None, Path::parse_expr(parser)?)
         };
 
         if qself.is_none() && <Token![!]>::peek(parser.cursor()) && !<Token![!=]>::peek(parser.cursor()) {

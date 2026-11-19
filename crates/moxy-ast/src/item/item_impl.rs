@@ -115,10 +115,13 @@ impl ToTokens for ItemImpl {
         self.defaultness.to_tokens(t);
         self.unsafety.to_tokens(t);
         self.impl_keyword.to_tokens(t);
-        self.generics.to_tokens(t);
+        self.generics.lt.to_tokens(t);
+        self.generics.params.to_tokens(t);
+        self.generics.gt.to_tokens(t);
         self.trait_ref.to_tokens(t);
         self.for_keyword.to_tokens(t);
         self.self_ty.to_tokens(t);
+        self.generics.where_clause.to_tokens(t);
         self.items.to_tokens(t);
     }
 }

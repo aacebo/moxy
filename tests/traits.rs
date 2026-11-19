@@ -1,4 +1,5 @@
-use moxy::ast::Item;
+use moxy::ast::{Item, TraitItem};
+use moxy::token::ToTokenStream;
 
 #[test]
 fn traits_preserve_supertraits_and_every_member_family() {
@@ -38,4 +39,63 @@ fn trait_aliases_render_bounds_with_canonical_spacing() {
     assert_eq!(alias.ident.text(), "Portable");
     assert_eq!(alias.bounds.len(), 3);
     assert_eq!(moxy::fmt!(&item).unwrap(), "pub trait Portable = Clone + Send + 'static;");
+}
+
+#[test]
+fn trait_where_clauses_follow_the_supertraits() {
+    for (source, tokens, formatted) in [
+        (
+            "trait A<T> where T: Clone {}",
+            "trait A < T > where T : Clone {}",
+            "trait A<T>\nwhere\nT: Clone {}",
+        ),
+        (
+            "trait A: Send where Self: Sized { fn a(&self); }",
+            "trait A : Send where Self : Sized {fn a (& self) ;}",
+            "trait A: Send\nwhere\nSelf: Sized {\n\tfn a(&self);\n}",
+        ),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap();
+        assert!(item.as_trait().unwrap().generics.where_clause.is_some(), "`{source}`");
+        assert_eq!(item.to_token_stream().to_string(), tokens);
+        assert_eq!(moxy::fmt!(&item).unwrap(), formatted);
+    }
+}
+
+#[test]
+fn associated_types_keep_a_where_clause_after_their_bounds() {
+    let item: Item = moxy::parse!("trait A { type Gat<'a>: Iterator<Item = &'a u8> where Self: 'a; }").unwrap();
+    let TraitItem::Type(ty) = &item.as_trait().unwrap().items.inner[0] else {
+        panic!("expected an associated type");
+    };
+    assert!(ty.generics.where_clause.is_some());
+    assert_eq!(
+        item.to_token_stream().to_string(),
+        "trait A {type Gat < 'a > : Iterator < Item = & 'a u8 > where Self : 'a ;}"
+    );
+}
+
+#[test]
+fn associated_type_where_clauses_are_formatted() {
+    let item: Item = moxy::parse!("trait A { type Gat<'a>: Iterator<Item = &'a u8> where Self: 'a; }").unwrap();
+    assert_eq!(
+        moxy::fmt!(&item).unwrap(),
+        "trait A {\n\ttype Gat<'a>: Iterator<Item = &'a u8>\n\twhere\n\tSelf: 'a;\n}"
+    );
+}
+
+#[test]
+fn brace_delimited_macro_items_need_no_semicolon() {
+    let item: Item = moxy::parse!("trait A { fn f(&self) {} declare! { x } fn g(&self); }").unwrap();
+    let items = &item.as_trait().unwrap().items.inner;
+    assert_eq!(items.len(), 3);
+    assert!(items[1].is_macro());
+    assert_eq!(
+        item.to_token_stream().to_string(),
+        "trait A {fn f (& self) {} declare ! {x} fn g (& self) ;}"
+    );
+    assert_eq!(
+        moxy::fmt!(&item).unwrap(),
+        "trait A {\n\tfn f(&self) {}\n\tdeclare!{x}\n\tfn g(&self);\n}"
+    );
 }

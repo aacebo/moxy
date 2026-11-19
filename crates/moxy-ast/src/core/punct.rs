@@ -117,3 +117,9 @@ define_punct! {
     DotDotDot(3) => [0: Dot, 1: Dot, 2: Dot],
     DotDotEq(3) => [0: Dot, 1: Dot, 2: Eq],
 }
+
+/// Whether the next token is a `:` that does not start the path separator
+/// `::`, as in `name: Type` against `io::Error`.
+pub(crate) fn peek_lone_colon(cursor: Cursor<'_>) -> bool {
+    <crate::Token![:]>::peek(cursor) && !<crate::Token![::]>::peek(cursor)
+}

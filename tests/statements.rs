@@ -39,3 +39,23 @@ fn malformed_local_syntax_returns_a_specific_parse_failure() {
     let result: Result<Stmt, _> = moxy::parse!("let = 1;");
     assert_eq!(result.unwrap_err().message(), "expected pattern");
 }
+
+#[test]
+fn keywords_followed_by_a_negation_are_expressions_not_macro_calls() {
+    for source in [
+        "if !ready { wait(); }",
+        "while !done { step(); }",
+        "return !value;",
+        "default!();",
+    ] {
+        let statement: Stmt = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(statement.as_macro().is_some(), source == "default!();", "`{source}`");
+    }
+
+    let item: moxy::ast::Item = moxy::parse!("fn f() { if !ready { wait(); } done() }").unwrap();
+    assert_eq!(item.as_fn().unwrap().body.as_ref().unwrap().stmts.len(), 2);
+    assert_eq!(
+        moxy::fmt!(&item).unwrap(),
+        "fn f() {\n\tif !ready {\n\t\twait();\n\t}\n\tdone()\n}"
+    );
+}

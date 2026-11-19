@@ -64,6 +64,35 @@ impl Path {
     }
 }
 
+impl Path {
+    /// Parses a path in expression position, where generic arguments need the
+    /// turbofish (`f::<T>`), so `a < b` stays a comparison.
+    pub(crate) fn parse_expr(parser: &Parser) -> Result<Self, ParseError> {
+        let colon = <_ as Parse>::parse(parser)?;
+        let mut segments = List::new();
+        segments.push_value(PathSegment::parse_expr(parser)?);
+
+        while <Token![::]>::skip(parser.cursor()).is_some_and(|cursor| PathSegment::peek(cursor)) {
+            segments.push_punct(<_ as Parse>::parse(parser)?);
+            segments.push_value(PathSegment::parse_expr(parser)?);
+        }
+
+        Ok(Self { colon, segments })
+    }
+
+    pub(crate) fn skip_expr(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Option::<Token![::]>::skip(cursor)?;
+        cursor = PathSegment::skip_expr(cursor)?;
+
+        while <Token![::]>::skip(cursor).is_some_and(|cursor| PathSegment::peek(cursor)) {
+            cursor = <Token![::]>::skip(cursor)?;
+            cursor = PathSegment::skip_expr(cursor)?;
+        }
+
+        Some(cursor)
+    }
+}
+
 impl Parse for Path {
     fn peek(cursor: Cursor<'_>) -> bool {
         <Token![::]>::peek(cursor) || PathSegment::peek(cursor)

@@ -21,12 +21,12 @@ impl Attributed for BareFnArg {
 impl Parse for BareFnArg {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        (Ident::peek(cursor) && <Token![:]>::peek(cursor.offset(1))) || Type::peek(cursor)
+        (Ident::peek(cursor) && peek_lone_colon(cursor.offset(1))) || Type::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = <_ as Parse>::parse(parser)?;
-        let name = if Ident::peek(parser.cursor()) && <Token![:]>::peek(parser.cursor().offset(1)) {
+        let name = if Ident::peek(parser.cursor()) && peek_lone_colon(parser.cursor().offset(1)) {
             Some((<_ as Parse>::parse(parser)?, <_ as Parse>::parse(parser)?))
         } else {
             None
@@ -40,7 +40,7 @@ impl Parse for BareFnArg {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
 
-        if Ident::peek(cursor) && <Token![:]>::peek(cursor.offset(1)) {
+        if Ident::peek(cursor) && peek_lone_colon(cursor.offset(1)) {
             cursor = Ident::skip(cursor)?;
             cursor = <Token![:]>::skip(cursor)?;
         }

@@ -26,6 +26,27 @@ impl MacroCall {
 
 impl Parse for MacroCall {
     fn peek(cursor: Cursor<'_>) -> bool {
+        // A strict keyword such as `if` or `while` followed by `!` starts an
+        // expression (`if !ready {}`), never a macro call. Only the path keywords
+        // and the weak keywords, which are valid identifiers, can name a macro.
+        let first = Option::<Token![::]>::skip(cursor).unwrap_or(cursor);
+
+        if let Some(token) = first.curr()
+            && token.is_keyword()
+            && !(token.is_keyword_crate()
+                || token.is_keyword_self_value()
+                || token.is_keyword_self_type()
+                || token.is_keyword_super()
+                || token.is_keyword_auto()
+                || token.is_keyword_default()
+                || token.is_keyword_macro_rules()
+                || token.is_keyword_raw()
+                || token.is_keyword_safe()
+                || token.is_keyword_union())
+        {
+            return false;
+        }
+
         let Some(cursor) = Path::skip(cursor) else {
             return false;
         };

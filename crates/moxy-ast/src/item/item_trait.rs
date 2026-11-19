@@ -60,7 +60,12 @@ impl Parse for ItemTrait {
             (None, List::new())
         };
 
-        generics.where_clause = <_ as Parse>::parse(parser)?;
+        // Without supertraits, `Generics` has already read a where clause that
+        // directly follows the parameters
+        if generics.where_clause.is_none() {
+            generics.where_clause = <_ as Parse>::parse(parser)?;
+        }
+
         let items = Delimited::parse_brace_with(parser, |parser| parser.parse_until_empty::<TraitItem>())?;
 
         Ok(Self {
@@ -124,9 +129,12 @@ impl ToTokens for ItemTrait {
         self.auto_keyword.to_tokens(t);
         self.trait_keyword.to_tokens(t);
         self.ident.to_tokens(t);
-        self.generics.to_tokens(t);
+        self.generics.lt.to_tokens(t);
+        self.generics.params.to_tokens(t);
+        self.generics.gt.to_tokens(t);
         self.colon_punct.to_tokens(t);
         self.supertraits.to_tokens(t);
+        self.generics.where_clause.to_tokens(t);
         self.items.to_tokens(t);
     }
 }

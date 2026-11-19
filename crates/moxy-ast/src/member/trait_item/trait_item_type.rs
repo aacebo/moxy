@@ -34,7 +34,7 @@ impl Parse for TraitItemType {
         let attrs = <_ as Parse>::parse(parser)?;
         let type_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
-        let generics = <_ as Parse>::parse(parser)?;
+        let mut generics: Generics = <_ as Parse>::parse(parser)?;
         let (colon, bounds) = if <Token![:]>::peek(parser.cursor()) {
             let colon = <_ as Parse>::parse(parser)?;
 
@@ -47,12 +47,23 @@ impl Parse for TraitItemType {
             (None, List::new())
         };
 
+        // A where clause follows the bounds; without bounds, `Generics` has
+        // already read it
+        if generics.where_clause.is_none() {
+            generics.where_clause = <_ as Parse>::parse(parser)?;
+        }
+
         let default = if <Token![=]>::peek(parser.cursor()) {
             let eq = <_ as Parse>::parse(parser)?;
             Some((eq, <_ as Parse>::parse(parser)?))
         } else {
             None
         };
+
+        // The where clause can also follow the default, where Rust prefers it
+        if default.is_some() && generics.where_clause.is_none() {
+            generics.where_clause = <_ as Parse>::parse(parser)?;
+        }
 
         let semi = <_ as Parse>::parse(parser)?;
 
@@ -87,9 +98,12 @@ impl Parse for TraitItemType {
             }
         }
 
+        cursor = Option::<WhereClause>::skip(cursor)?;
+
         if <Token![=]>::peek(cursor) {
             cursor = <Token![=]>::skip(cursor)?;
             cursor = Type::skip(cursor)?;
+            cursor = Option::<WhereClause>::skip(cursor)?;
         }
 
         <Token![;]>::skip(cursor)
@@ -107,14 +121,19 @@ impl ToTokens for TraitItemType {
         self.attrs.to_tokens(t);
         self.type_keyword.to_tokens(t);
         self.ident.to_tokens(t);
-        self.generics.to_tokens(t);
+        self.generics.lt.to_tokens(t);
+        self.generics.params.to_tokens(t);
+        self.generics.gt.to_tokens(t);
         self.colon.to_tokens(t);
         self.bounds.to_tokens(t);
 
+        // With a default, the where clause goes after it, where Rust prefers it
         if let Some((eq, d)) = &self.default {
             eq.to_tokens(t);
             d.to_tokens(t);
         }
+
+        self.generics.where_clause.to_tokens(t);
 
         self.semi.to_tokens(t);
     }

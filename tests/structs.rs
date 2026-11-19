@@ -80,3 +80,14 @@ fn raw_identifiers_bridge_back_to_proc_macro_raw_identifiers() {
         "struct Bridged {r#type : u32}"
     );
 }
+
+#[test]
+fn tuple_struct_where_clauses_follow_the_fields() {
+    let item: Item = moxy::parse!("struct S<T>(T) where T: Clone;").unwrap();
+    assert!(item.as_struct().unwrap().generics.where_clause.is_some());
+    assert_eq!(item.to_token_stream().to_string(), "struct S < T > (T) where T : Clone ;");
+    assert_eq!(moxy::fmt!(&item).unwrap(), "struct S<T>(T)\nwhere\nT: Clone;");
+
+    let item: Item = moxy::parse!("struct S<T> where T: Clone { a: T }").unwrap();
+    assert_eq!(item.to_token_stream().to_string(), "struct S < T > where T : Clone {a : T}");
+}

@@ -33,15 +33,29 @@ impl Parse for ImplItemType {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let defaultness = <_ as Parse>::parse(parser)?;
+        let type_keyword = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
+        let mut generics: Generics = <_ as Parse>::parse(parser)?;
+        let eq = <_ as Parse>::parse(parser)?;
+        let ty = <_ as Parse>::parse(parser)?;
+
+        // The where clause can also follow the type, where Rust prefers it
+        if generics.where_clause.is_none() {
+            generics.where_clause = <_ as Parse>::parse(parser)?;
+        }
+
         Ok(Self {
-            attrs: <_ as Parse>::parse(parser)?,
-            vis: <_ as Parse>::parse(parser)?,
-            defaultness: <_ as Parse>::parse(parser)?,
-            type_keyword: <_ as Parse>::parse(parser)?,
-            ident: <_ as Parse>::parse(parser)?,
-            generics: <_ as Parse>::parse(parser)?,
-            eq: <_ as Parse>::parse(parser)?,
-            ty: <_ as Parse>::parse(parser)?,
+            attrs,
+            vis,
+            defaultness,
+            type_keyword,
+            ident,
+            generics,
+            eq,
+            ty,
             semi: <_ as Parse>::parse(parser)?,
         })
     }
@@ -55,6 +69,7 @@ impl Parse for ImplItemType {
         cursor = Generics::skip(cursor)?;
         cursor = <Token![=]>::skip(cursor)?;
         cursor = Type::skip(cursor)?;
+        cursor = Option::<WhereClause>::skip(cursor)?;
         Option::<Token![;]>::skip(cursor)
     }
 }
@@ -73,9 +88,12 @@ impl ToTokens for ImplItemType {
         self.defaultness.to_tokens(t);
         self.type_keyword.to_tokens(t);
         self.ident.to_tokens(t);
-        self.generics.to_tokens(t);
+        self.generics.lt.to_tokens(t);
+        self.generics.params.to_tokens(t);
+        self.generics.gt.to_tokens(t);
         self.eq.to_tokens(t);
         self.ty.to_tokens(t);
+        self.generics.where_clause.to_tokens(t);
         self.semi.to_tokens(t);
     }
 }

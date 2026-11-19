@@ -1377,6 +1377,7 @@ define_visit! {
             lifetime: skip,
             mutability: leaf,
             self_keyword: skip,
+            ty: opt_pair => visit_type / visit_type_mut,
         }
     }
     struct BareFnArg {

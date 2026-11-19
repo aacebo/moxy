@@ -398,3 +398,55 @@ fn remaining_expression_public_variants_match_rendered_syntax() {
         assert_eq!(moxy::fmt!(&expression).unwrap(), expected);
     }
 }
+
+#[test]
+fn a_less_than_after_a_path_is_a_comparison() {
+    for (source, tokens) in [
+        ("a < b", "a < b"),
+        ("n < 2.0 && m > 3", "n < 2.0 && m > 3"),
+        ("x::y < z", "x :: y < z"),
+        ("f::<u8>(x) < g", "f :: < u8 > (x) < g"),
+        ("Vec::<u8>::new()", "Vec :: < u8 > :: new ()"),
+    ] {
+        let expression: Expr = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(expression.to_token_stream().to_string(), tokens);
+    }
+
+    let expression: Expr = moxy::parse!("if n < 2.0 { return 1; }").unwrap();
+    assert!(expression.as_if().unwrap().cond.is_binary());
+}
+
+#[test]
+fn block_bodied_match_arms_end_without_a_comma() {
+    let expression: Expr = moxy::parse!("match x { (a, b) => { 1 } (c, d) => 2, e => if f { 3 } [g] => 5 }").unwrap();
+    let arms = &expression.as_match().unwrap().arms.inner;
+    assert_eq!(arms.len(), 4);
+    assert_eq!(
+        expression.to_token_stream().to_string(),
+        "match x {(a , b) => {1} (c , d) => 2 , e => if f {3} [g] => 5}"
+    );
+
+    // A method call, field access, or `?` continues the block
+    let expression: Expr = moxy::parse!("match x { a => { y }.len(), b => { z }?, }").unwrap();
+    let arms = &expression.as_match().unwrap().arms.inner;
+    assert!(arms[0].body.is_method_call());
+    assert!(arms[1].body.is_try());
+
+    let expression: Expr = moxy::parse!("match x { (1, _) => const { 1 } (_, _) => 3 }").unwrap();
+    assert_eq!(expression.as_match().unwrap().arms.inner.len(), 2);
+}
+
+#[test]
+fn else_branches_end_at_their_block() {
+    let expression: Expr =
+        moxy::parse!("match x { e => if f { 3 } else { 4 }, [g] => if h { 5 } else if i { 6 } else { 7 } }").unwrap();
+    assert_eq!(expression.as_match().unwrap().arms.inner.len(), 2);
+
+    // The index applies to the whole `if`, not to the else block
+    let expression: Expr = moxy::parse!("if a { 1 } else { 2 }[0]").unwrap();
+    let base = &expression.as_index().unwrap().base;
+    assert!(base.as_if().unwrap().else_branch.as_ref().unwrap().is_block());
+
+    let error = moxy::parse!("if a { 1 } else 2" as Expr).err().unwrap();
+    assert_eq!(error.message(), "expected `{` or `if` after `else`");
+}

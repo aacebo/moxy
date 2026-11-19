@@ -14,3 +14,18 @@ fn leading_paths_and_single_names_render_without_extra_spaces() {
     let item: Item = moxy::parse!("use ::core::fmt;").unwrap();
     assert_eq!(moxy::fmt!(&item).unwrap(), "use ::core::fmt;");
 }
+
+#[test]
+fn use_paths_accept_path_keywords() {
+    for (source, expected) in [
+        ("use crate::a;", "use crate::a;"),
+        ("use self::a;", "use self::a;"),
+        ("use super::super::a;", "use super::super::a;"),
+        ("use super::{A, B as C};", "use super::{A, B as C};"),
+        ("use a::{self, b};", "use a::{self, b};"),
+        ("use a::{self as c};", "use a::{self as c};"),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(moxy::fmt!(&item).unwrap(), expected);
+    }
+}

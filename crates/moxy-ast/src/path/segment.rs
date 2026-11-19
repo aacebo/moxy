@@ -11,6 +11,38 @@ pub struct PathSegment {
     pub args: path::PathArguments,
 }
 
+impl PathSegment {
+    // A segment in expression position takes generic arguments only after `::`
+    pub(crate) fn parse_expr(parser: &Parser) -> Result<Self, ParseError> {
+        let ident = parser.parse_ident_any()?;
+        let args = if Self::peek_turbofish(parser.cursor()) {
+            AngleArguments::parse(parser)?.into()
+        } else {
+            path::PathArguments::None
+        };
+
+        Ok(Self { ident, args })
+    }
+
+    pub(crate) fn skip_expr(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let cursor = if Ident::peek(cursor) {
+            Ident::skip(cursor)?
+        } else {
+            Keyword::skip(cursor)?
+        };
+
+        if Self::peek_turbofish(cursor) {
+            AngleArguments::skip(cursor)
+        } else {
+            Some(cursor)
+        }
+    }
+
+    fn peek_turbofish(cursor: Cursor<'_>) -> bool {
+        <Token![::]>::skip(cursor).is_some_and(|cursor| <Token![<]>::peek(cursor))
+    }
+}
+
 impl Parse for PathSegment {
     fn peek(cursor: Cursor<'_>) -> bool {
         Keyword::peek(cursor) || Ident::peek(cursor)

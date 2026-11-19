@@ -34,8 +34,14 @@ impl Parse for ItemStruct {
         let vis = <_ as Parse>::parse(parser)?;
         let struct_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
-        let generics = <_ as Parse>::parse(parser)?;
-        let fields = <_ as Parse>::parse(parser)?;
+        let mut generics: Generics = <_ as Parse>::parse(parser)?;
+        let fields: Fields = <_ as Parse>::parse(parser)?;
+
+        // A tuple struct's where clause follows its fields: `struct S<T>(T) where T: A;`
+        if fields.is_unnamed() && generics.where_clause.is_none() {
+            generics.where_clause = <_ as Parse>::parse(parser)?;
+        }
+
         let semi = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
@@ -56,6 +62,7 @@ impl Parse for ItemStruct {
         cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
         cursor = Fields::skip(cursor)?;
+        cursor = Option::<WhereClause>::skip(cursor)?;
         Option::<Token![;]>::skip(cursor)
     }
 }
@@ -72,8 +79,18 @@ impl ToTokens for ItemStruct {
         self.vis.to_tokens(t);
         self.struct_keyword.to_tokens(t);
         self.ident.to_tokens(t);
-        self.generics.to_tokens(t);
-        self.fields.to_tokens(t);
+        self.generics.lt.to_tokens(t);
+        self.generics.params.to_tokens(t);
+        self.generics.gt.to_tokens(t);
+
+        if self.fields.is_unnamed() {
+            self.fields.to_tokens(t);
+            self.generics.where_clause.to_tokens(t);
+        } else {
+            self.generics.where_clause.to_tokens(t);
+            self.fields.to_tokens(t);
+        }
+
         self.semi.to_tokens(t);
     }
 }

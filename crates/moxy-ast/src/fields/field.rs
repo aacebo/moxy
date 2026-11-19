@@ -33,7 +33,7 @@ impl Parse for Field {
         let attrs = <_ as Parse>::parse(parser)?;
         let vis = <_ as Parse>::parse(parser)?;
         let mutability = <_ as Parse>::parse(parser)?;
-        let (ident, colon) = if Ident::peek(parser.cursor()) && <Token![:]>::peek(parser.cursor().offset(1)) {
+        let (ident, colon) = if Ident::peek(parser.cursor()) && peek_lone_colon(parser.cursor().offset(1)) {
             (Some(<_ as Parse>::parse(parser)?), Some(<_ as Parse>::parse(parser)?))
         } else {
             (None, None)
@@ -56,7 +56,7 @@ impl Parse for Field {
         cursor = Visibility::skip(cursor)?;
         cursor = Option::<Token![mut]>::skip(cursor)?;
 
-        if Ident::peek(cursor) && <Token![:]>::peek(cursor.offset(1)) {
+        if Ident::peek(cursor) && peek_lone_colon(cursor.offset(1)) {
             cursor = Ident::skip(cursor)?;
             cursor = <Token![:]>::skip(cursor)?;
         }

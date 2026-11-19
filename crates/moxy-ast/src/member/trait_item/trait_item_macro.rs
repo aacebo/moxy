@@ -9,7 +9,7 @@ use crate::*;
 pub struct TraitItemMacro {
     pub attrs: Attributes,
     pub mac: MacroCall,
-    pub semi: Token![;],
+    pub semi: Option<Token![;]>,
 }
 
 impl Attributed for TraitItemMacro {
@@ -36,13 +36,14 @@ impl Parse for TraitItemMacro {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = MacroCall::skip(cursor)?;
-        <Token![;]>::skip(cursor)
+        Option::<Token![;]>::skip(cursor)
     }
 }
 
 impl Spanner for TraitItemMacro {
     fn span(&self) -> Span {
-        self.attrs.span().join(self.semi.span())
+        let end = self.semi.as_ref().map(|s| s.span()).unwrap_or_else(|| self.mac.span());
+        self.attrs.span().join(end)
     }
 }
 
