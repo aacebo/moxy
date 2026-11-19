@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use super::{Abi, FnParams, Variadic};
 use crate::*;
@@ -129,24 +129,7 @@ impl Parse for Signature {
 
 impl Spanner for Signature {
     fn span(&self) -> Span {
-        let start = if let Some(v) = &self.constness {
-            v.span()
-        } else if let Some(v) = &self.asyncness {
-            v.span()
-        } else if let Some(v) = &self.safety {
-            v.span()
-        } else if let Some(abi) = &self.abi {
-            abi.span()
-        } else {
-            self.fn_keyword.span()
-        };
-
-        let end = match &self.output {
-            ReturnType::Type(_, ty) => ty.span(),
-            ReturnType::Default => self.params.span(),
-        };
-
-        start.join(end)
+        self.to_token_stream().span()
     }
 }
 

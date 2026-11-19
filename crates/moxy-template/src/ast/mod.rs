@@ -83,7 +83,9 @@ impl Parse for Node {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         match parser.curr() {
-            Some(TokenTree::Punct(Punct::At(_))) => Ok(Self::Keyword(<_ as Parse>::parse(parser)?)),
+            Some(TokenTree::Punct(Punct::At(_))) if directive_at(parser.cursor()) => {
+                Ok(Self::Keyword(<_ as Parse>::parse(parser)?))
+            }
             Some(TokenTree::Group(g)) if Self::is_interp_group(g) => {
                 let interp: TmplInterp = <_ as Parse>::parse(parser)?;
                 let wrap = interp.wrap;
@@ -135,6 +137,26 @@ impl ToTokens for Node {
             Self::Keyword(v) => v.to_tokens(out),
         }
     }
+}
+
+// Whether an `@` starts a directive. A directive keyword after it always
+// does, as in `x @if a { .. }`. Otherwise an `@` after a name binds that name
+// in a pattern, as in `n @ 1..=9`, and is a token; no pattern starts with a
+// directive keyword. Any other `@` must start a directive.
+pub(crate) fn directive_at(cursor: Cursor<'_>) -> bool {
+    if !matches!(cursor.curr(), Some(TokenTree::Punct(Punct::At(_)))) {
+        return false;
+    }
+
+    // `@sep` belongs to the `@for` it follows, which reads it itself
+    let keyword = matches!(
+        cursor.offset(1).curr(),
+        Some(TokenTree::Keyword(
+            Keyword::If(_) | Keyword::Else(_) | Keyword::For(_) | Keyword::Match(_)
+        ))
+    );
+
+    keyword || !matches!(cursor.prev(), Some(TokenTree::Ident(_)))
 }
 
 pub fn lone_brace_child(parser: &TokenStream) -> Option<Group> {

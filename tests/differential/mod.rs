@@ -176,6 +176,48 @@ fn skip_and_peek_agree_with_parse() {
     assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
+// Two parses of one source at different positions compare equal, so tree
+// equality depends on no span
+#[test]
+fn parses_of_one_source_compare_equal() {
+    // The second parse reads the source shifted, so every span differs; a
+    // shebang or byte order mark only starts a source, so it stays first
+    fn check<T: m::Parse + PartialEq>(source: &str) -> bool {
+        if source.starts_with("#!") || source.starts_with('\u{feff}') {
+            return true;
+        }
+
+        let shifted = format!("\n  {source}");
+
+        match (moxy::parse!(source as T), moxy::parse!(shifted as T)) {
+            (Ok(first), Ok(second)) => first == second,
+            _ => true,
+        }
+    }
+
+    let mut unequal = Vec::new();
+
+    for line in entries(CORPUS) {
+        let (kind, source) = line.split_once(": ").unwrap();
+        let source = source.replace("\\n", "\n");
+        let equal = match kind {
+            "e" => check::<m::Expr>(&source),
+            "b" => check::<m::StmtBlock>(&source),
+            "p" => check::<m::Pattern>(&source),
+            "t" => check::<m::Type>(&source),
+            "i" => check::<m::Item>(&source),
+            "f" => check::<m::File>(&source),
+            _ => panic!("unknown kind `{kind}`"),
+        };
+
+        if !equal {
+            unequal.push(line);
+        }
+    }
+
+    assert!(unequal.is_empty(), "parses differ:\n{}", unequal.join("\n"));
+}
+
 #[test]
 #[ignore = "set MOXY_DIFF_DIR to a directory of Rust files"]
 fn directory() {

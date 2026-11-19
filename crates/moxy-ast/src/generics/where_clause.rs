@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -55,12 +55,7 @@ impl Parse for WhereClause {
 
 impl Spanner for WhereClause {
     fn span(&self) -> Span {
-        let end = self
-            .predicates
-            .last()
-            .map(|p| p.span())
-            .unwrap_or_else(|| self.where_keyword.span());
-        self.where_keyword.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

@@ -96,9 +96,25 @@ macro_rules! define_keyword {
 
         $(
             #[doc = concat!("The Rust keyword token `", $text, "`. ")]
-            #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
+            #[derive(Debug, Default, Copy, Clone)]
             pub struct $name {
                 span: Span,
+            }
+
+            // Like identifiers, tokens compare by text: two of one kind are
+            // equal whatever their spans
+            impl PartialEq for $name {
+                fn eq(&self, _: &Self) -> bool {
+                    true
+                }
+            }
+
+            impl std::cmp::Eq for $name {}
+
+            impl std::hash::Hash for $name {
+                fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+                    $text.hash(state);
+                }
             }
 
             impl $name {

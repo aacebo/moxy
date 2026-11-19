@@ -16,7 +16,8 @@ pub struct TmplTokens {
 impl Parse for TmplTokens {
     fn peek(cursor: Cursor<'_>) -> bool {
         match cursor.curr() {
-            Some(TokenTree::Punct(Punct::At(_))) | None => false,
+            Some(TokenTree::Punct(Punct::At(_))) if super::directive_at(cursor) => false,
+            None => false,
             Some(TokenTree::Group(group)) => !super::Node::is_interp_group(group) && !super::Node::group_has_interp(group),
             Some(_) => true,
         }
@@ -27,7 +28,7 @@ impl Parse for TmplTokens {
         let mut tokens = TokenStream::new();
 
         while let Some(token) = parser.curr() {
-            if matches!(token, TokenTree::Punct(Punct::At(_))) {
+            if matches!(token, TokenTree::Punct(Punct::At(_))) && super::directive_at(parser.cursor()) {
                 break;
             }
 
@@ -52,7 +53,7 @@ impl Parse for TmplTokens {
         let mut skipped = false;
 
         while let Some(token) = cursor.curr() {
-            if matches!(token, TokenTree::Punct(Punct::At(_))) {
+            if matches!(token, TokenTree::Punct(Punct::At(_))) && super::directive_at(cursor) {
                 break;
             }
 

@@ -217,3 +217,21 @@ fn a_rest_pattern_in_parentheses_is_a_tuple() {
     let pattern: Pattern = moxy::parse!("(a,)").unwrap();
     assert!(matches!(pattern, Pattern::Tuple(_)));
 }
+
+#[test]
+fn reference_patterns_before_an_error_fail_in_linear_time() {
+    // Peeking for a range skipped the rest of the input as an expression at
+    // every `&`, and an expression's `let` skipped a pattern again
+    let source = format!("fn f() {{ {} {{ }} }}", format!("let {} ", "&".repeat(12)).repeat(6));
+    let start = std::time::Instant::now();
+    assert!(moxy::parse!(source as moxy::ast::File).is_err());
+    assert!(
+        start.elapsed() < std::time::Duration::from_secs(5),
+        "took {:?}",
+        start.elapsed()
+    );
+
+    // A range after `&` is the referenced pattern, as in syn
+    let pattern: Pattern = moxy::parse!("&1..=2").unwrap();
+    assert!(matches!(pattern, Pattern::Reference(_)));
+}

@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Ident, Lit, Span, Spanner, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 use crate::*;
 
@@ -26,8 +26,19 @@ impl Spanner for PatRange {
 }
 
 impl Parse for PatRange {
+    // A bound is a literal, a negated literal, a path, or a block, so only a
+    // token that starts one, or the limits, starts a range. Without that check
+    // every reference pattern skipped the rest of the input as an expression.
     fn peek(cursor: Cursor<'_>) -> bool {
-        Self::skip(cursor).is_some()
+        let start = Attributes::skip(cursor).unwrap_or(cursor);
+        let bound = PatRangeLimits::peek(start)
+            || Lit::peek(start)
+            || <Token![-]>::peek(start)
+            || <Token![<]>::peek(start)
+            || <Token![const]>::peek(start)
+            || Path::peek(start);
+
+        bound && Self::skip(cursor).is_some()
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {

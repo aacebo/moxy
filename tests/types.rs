@@ -296,3 +296,24 @@ fn nested_function_sugar_in_generic_arguments_parses_in_linear_time() {
     let ty: Type = moxy::parse!("Box<A + Send>").unwrap();
     assert_eq!(ty.to_token_stream().to_string(), "Box < A + Send >");
 }
+
+#[cfg(feature = "serde")]
+#[test]
+fn serialized_bounds_and_lifetimes_hold_no_source_offsets() {
+    let ty: Type = moxy::parse!("Box<dyn (Fn() -> u8) + Send + 'a>").unwrap();
+    let json = serde_json::to_string(&ty).unwrap();
+    assert!(json.contains(r#""paren":true"#), "{json}");
+    assert!(json.contains(r#""paren":false"#), "{json}");
+    assert!(!json.contains("span") && !json.contains("start"), "{json}");
+
+    let inner: moxy::token::TokenStream = "u8".parse().unwrap();
+    let mut tokens = moxy::token::TokenStream::new();
+    tokens.extend_one(moxy::token::TokenTree::Group(moxy::token::Group::new(
+        moxy::token::Delim::None,
+        inner,
+    )));
+    let ty: Type = moxy::parse!(tokens).unwrap();
+    assert!(matches!(ty, Type::Group(_)));
+    let json = serde_json::to_string(&ty).unwrap();
+    assert!(!json.contains("span") && !json.contains("start"), "{json}");
+}

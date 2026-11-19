@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use super::UseTree;
 use crate::*;
@@ -48,7 +48,7 @@ impl Parse for UsePath {
 
 impl Spanner for UsePath {
     fn span(&self) -> Span {
-        self.ident.span().join(self.tree.span())
+        self.to_token_stream().span()
     }
 }
 

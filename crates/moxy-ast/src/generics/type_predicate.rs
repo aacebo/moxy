@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -46,18 +46,7 @@ impl Parse for TypePredicate {
 
 impl Spanner for TypePredicate {
     fn span(&self) -> Span {
-        let start = if let Some(l) = &self.lifetimes {
-            l.span()
-        } else {
-            self.bounded_ty.span()
-        };
-
-        let end = self
-            .bounds
-            .last()
-            .map(|b| b.span())
-            .unwrap_or_else(|| self.colon_punct.span());
-        start.join(end)
+        self.to_token_stream().span()
     }
 }
 

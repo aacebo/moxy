@@ -129,7 +129,9 @@ impl Parse for TmplIfBranch {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let if_keyword: Token![if] = <_ as Parse>::parse(parser)?;
         let span = if_keyword.span();
-        let cond = if parser.is_delimited(Delim::Paren) {
+        // Parentheses hold the whole condition only when the body follows
+        // them, unlike in `@if (a || b) && c { .. }`
+        let cond = if parser.is_delimited(Delim::Paren) && parser.cursor().offset(1).is_delimited(Delim::Brace) {
             parser.parse_group(Delim::Paren)?.to_token_stream()
         } else {
             parse_unparenthesized_expr(parser)?
@@ -149,7 +151,7 @@ impl Parse for TmplIfBranch {
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         let cursor = <Token![if]>::skip(cursor)?;
-        let cursor = if cursor.is_delimited(Delim::Paren) {
+        let cursor = if cursor.is_delimited(Delim::Paren) && cursor.offset(1).is_delimited(Delim::Brace) {
             let inner = cursor.descend(Delim::Paren)?;
             inner.offset(inner.remaining()).is_empty().then(|| cursor.offset(1))?
         } else {

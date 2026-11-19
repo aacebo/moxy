@@ -1,5 +1,5 @@
 use crate::{Cursor, Parse, ParseError, Parser};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::{List, TypeBound};
 
@@ -31,12 +31,7 @@ impl Parse for TypeImplTrait {
 
 impl Spanner for TypeImplTrait {
     fn span(&self) -> Span {
-        let end = self
-            .bounds
-            .last()
-            .map(|b| b.span())
-            .unwrap_or_else(|| self.impl_keyword.span());
-        self.impl_keyword.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

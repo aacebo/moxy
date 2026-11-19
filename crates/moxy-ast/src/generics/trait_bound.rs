@@ -9,6 +9,8 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitBound {
     /// The parentheses around the bound, as in `dyn (Fn() -> u8) + Send`.
+    /// Serialization writes only whether they are present.
+    #[cfg_attr(feature = "serde", serde(serialize_with = "serialize_present"))]
     pub paren: Option<DelimSpan>,
     pub polarity: Option<Token![!]>,
     pub lifetimes: Option<BoundLifetimes>,
@@ -101,4 +103,9 @@ impl ToTokens for TraitBound {
             None => tokens.extend(bound),
         }
     }
+}
+
+#[cfg(feature = "serde")]
+fn serialize_present<S: serde::Serializer>(paren: &Option<DelimSpan>, s: S) -> Result<S::Ok, S::Error> {
+    s.serialize_bool(paren.is_some())
 }

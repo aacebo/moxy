@@ -42,10 +42,13 @@ impl ToTokens for Lifetime {
 }
 
 /// The name part of a lifetime (e.g. the `a` in `'a`, or the `static` in `'static`).
+///
+/// Equality and serialization ignore the span, as for [`Ident`].
 #[derive(Clone)]
-#[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
+#[cfg_attr(feature = "derives", derive(Debug))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct LifetimeName {
+    #[cfg_attr(feature = "serde", serde(skip))]
     pub span: Span,
     pub text: String,
     pub raw: bool,
@@ -88,6 +91,16 @@ impl Parse for LifetimeName {
         }
     }
 }
+
+#[cfg(feature = "derives")]
+impl PartialEq for LifetimeName {
+    fn eq(&self, other: &Self) -> bool {
+        self.text == other.text && self.raw == other.raw
+    }
+}
+
+#[cfg(feature = "derives")]
+impl Eq for LifetimeName {}
 
 impl Spanner for LifetimeName {
     fn span(&self) -> Span {

@@ -121,7 +121,15 @@ fn float_constructors_reject_nan() {
 
 #[test]
 fn literals_the_typed_variants_cannot_hold_keep_their_text() {
-    for source in ["1.0f16", "1f128", "2b", "10px", "340282366920938463463374607431768211456"] {
+    for source in [
+        "1.0f16",
+        "1f128",
+        "2b",
+        "10px",
+        "1em",
+        "1e",
+        "340282366920938463463374607431768211456",
+    ] {
         let tokens: TokenStream = source.parse().unwrap_or_else(|error| panic!("`{source}`: {error:?}"));
         let tokens: Vec<_> = tokens.into_iter().collect();
         assert_eq!(tokens.len(), 1, "`{source}`");

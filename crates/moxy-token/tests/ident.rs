@@ -48,3 +48,27 @@ fn equality_compares_text_not_spans() {
     assert_ne!(idents[0], idents[2]);
     assert_ne!(idents[0], idents[3]);
 }
+
+#[test]
+fn punctuation_and_keywords_compare_by_text_like_identifiers() {
+    let first: moxy_token::TokenStream = "fn a + b ; :: x".parse().unwrap();
+    let second: moxy_token::TokenStream = "fn   a+b;   ::x".parse().unwrap();
+    assert_eq!(first, second);
+
+    let other: moxy_token::TokenStream = "fn a - b ; :: x".parse().unwrap();
+    assert_ne!(first, other);
+
+    let hash = |tokens: &moxy_token::TokenStream| {
+        use std::hash::{Hash, Hasher};
+        let mut hasher = std::collections::hash_map::DefaultHasher::new();
+        for token in tokens.iter() {
+            if let moxy_token::TokenTree::Punct(punct) = token {
+                punct.hash(&mut hasher);
+            } else if let moxy_token::TokenTree::Keyword(keyword) = token {
+                keyword.hash(&mut hasher);
+            }
+        }
+        hasher.finish()
+    };
+    assert_eq!(hash(&first), hash(&second));
+}

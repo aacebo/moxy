@@ -1,4 +1,4 @@
-use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -19,7 +19,7 @@ impl Attributed for PatParen {
 
 impl Spanner for PatParen {
     fn span(&self) -> Span {
-        self.content.span()
+        self.to_token_stream().span()
     }
 }
 

@@ -74,6 +74,130 @@ impl<'ast> Visit<'ast> for SpanCheck {
         self.check("generic parameter", node);
         walk_generic_param(self, node);
     }
+    fn visit_path(&mut self, node: &'ast Path) {
+        self.check("path", node);
+        walk_path(self, node);
+    }
+
+    fn visit_path_segment(&mut self, node: &'ast PathSegment) {
+        self.check("path segment", node);
+        walk_path_segment(self, node);
+    }
+
+    fn visit_qself(&mut self, node: &'ast QSelf) {
+        self.check("qualified self", node);
+        walk_qself(self, node);
+    }
+
+    fn visit_generics(&mut self, node: &'ast Generics) {
+        self.check("generics", node);
+        walk_generics(self, node);
+    }
+
+    fn visit_where_clause(&mut self, node: &'ast WhereClause) {
+        self.check("where clause", node);
+        walk_where_clause(self, node);
+    }
+
+    fn visit_where_predicate(&mut self, node: &'ast WherePredicate) {
+        self.check("where predicate", node);
+        walk_where_predicate(self, node);
+    }
+
+    fn visit_signature(&mut self, node: &'ast Signature) {
+        self.check("signature", node);
+
+        if let Some(abi) = &node.abi {
+            self.check("abi", abi);
+        }
+
+        walk_signature(self, node);
+    }
+
+    fn visit_use_tree(&mut self, node: &'ast UseTree) {
+        self.check("use tree", node);
+        walk_use_tree(self, node);
+    }
+
+    fn visit_use_path(&mut self, node: &'ast UsePath) {
+        self.check("use path", node);
+        walk_use_path(self, node);
+    }
+
+    fn visit_trait_bound(&mut self, node: &'ast TraitBound) {
+        self.check("trait bound", node);
+        walk_trait_bound(self, node);
+    }
+
+    fn visit_type_bound(&mut self, node: &'ast TypeBound) {
+        self.check("type bound", node);
+        walk_type_bound(self, node);
+    }
+
+    fn visit_generic_argument(&mut self, node: &'ast GenericArgument) {
+        self.check("generic argument", node);
+        walk_generic_argument(self, node);
+    }
+
+    fn visit_fn_param(&mut self, node: &'ast FnParam) {
+        self.check("parameter", node);
+        walk_fn_param(self, node);
+    }
+
+    fn visit_field_value(&mut self, node: &'ast FieldValue) {
+        self.check("field value", node);
+        walk_field_value(self, node);
+    }
+
+    fn visit_match_arm(&mut self, node: &'ast MatchArm) {
+        self.check("match arm", node);
+        walk_match_arm(self, node);
+    }
+
+    fn visit_attribute(&mut self, node: &'ast Attribute) {
+        self.check("attribute", node);
+        walk_attribute(self, node);
+    }
+
+    fn visit_receiver(&mut self, node: &'ast Receiver) {
+        self.check("receiver", node);
+        walk_receiver(self, node);
+    }
+
+    fn visit_foreign_item(&mut self, node: &'ast ForeignItem) {
+        self.check("foreign item", node);
+        walk_foreign_item(self, node);
+    }
+
+    fn visit_closure_param(&mut self, node: &'ast ClosureParam) {
+        self.check("closure parameter", node);
+        walk_closure_param(self, node);
+    }
+
+    fn visit_return_type(&mut self, node: &'ast ReturnType) {
+        self.check("return type", node);
+        walk_return_type(self, node);
+    }
+
+    fn visit_visibility(&mut self, node: &'ast Visibility) {
+        self.check("visibility", node);
+        walk_visibility(self, node);
+    }
+
+    fn visit_lifetime(&mut self, node: &'ast Lifetime) {
+        self.check("lifetime", node);
+        walk_lifetime(self, node);
+    }
+
+    fn visit_stmt_block(&mut self, node: &'ast StmtBlock) {
+        self.check("block", node);
+        walk_stmt_block(self, node);
+    }
+
+    fn visit_bare_fn_arg(&mut self, node: &'ast BareFnArg) {
+        self.check("function pointer parameter", node);
+        walk_bare_fn_arg(self, node);
+    }
 }
 
 #[test]
@@ -126,4 +250,35 @@ fn a_group_closes_at_its_closing_delimiter() {
     let (open, close) = (paren.content.open().byte_range(), paren.content.close().byte_range());
     assert_eq!(close.start - open.start, "(a * b".len());
     assert_eq!(close.len(), 1);
+}
+
+// Every node of every differential corpus source that parses
+#[test]
+fn every_corpus_node_spans_exactly_its_tokens() {
+    let mut check = SpanCheck::default();
+
+    for line in include_str!("differential/corpus.txt").lines() {
+        let Some((kind, source)) = line.split_once(": ").filter(|_| !line.starts_with('#')) else {
+            continue;
+        };
+        let source = source.replace("\\n", "\n");
+        let before = check.mismatches.len();
+
+        match kind {
+            "e" => moxy::parse!(source as Expr).map(|node| check.visit_expr(&node)),
+            "b" => moxy::parse!(source as StmtBlock).map(|node| check.visit_stmt_block(&node)),
+            "p" => moxy::parse!(source as Pattern).map(|node| check.visit_pattern(&node)),
+            "t" => moxy::parse!(source as Type).map(|node| check.visit_type(&node)),
+            "i" => moxy::parse!(source as Item).map(|node| check.visit_item(&node)),
+            "f" => moxy::parse!(source as File).map(|node| node.items.iter().for_each(|item| check.visit_item(item))),
+            _ => panic!("unknown kind `{kind}`"),
+        }
+        .ok();
+
+        for mismatch in &mut check.mismatches[before..] {
+            mismatch.push_str(&format!(" in {line}"));
+        }
+    }
+
+    assert!(check.mismatches.is_empty(), "{}", check.mismatches.join("\n"));
 }

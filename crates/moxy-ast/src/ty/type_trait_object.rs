@@ -1,5 +1,5 @@
 use crate::{Cursor, Parse, ParseError, Parser};
-use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::{List, TypeBound};
 
@@ -46,16 +46,7 @@ impl Parse for TypeTraitObject {
 
 impl Spanner for TypeTraitObject {
     fn span(&self) -> Span {
-        let start = if let Some(d) = &self.dyn_token {
-            d.span()
-        } else if let Some(b) = self.bounds.first() {
-            b.span()
-        } else {
-            Span::call_site()
-        };
-
-        let end = self.bounds.last().map(|b| b.span()).unwrap_or(start);
-        start.join(end)
+        self.to_token_stream().span()
     }
 }
 

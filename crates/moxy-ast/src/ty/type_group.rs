@@ -7,6 +7,7 @@ use crate::*;
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TypeGroup {
+    #[cfg_attr(feature = "serde", serde(skip))]
     pub span: Span,
     pub elem: Box<Type>,
 }

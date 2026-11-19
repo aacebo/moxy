@@ -313,3 +313,51 @@ fn template_literals_the_compiler_accepts_build_at_run_time() {
         "1.0f16 1f128 10px 340282366920938463463374607431768211456 '\\u{00_41}'"
     );
 }
+
+#[test]
+fn template_conditions_may_start_with_parentheses_and_patterns_may_bind_with_at() {
+    let (a, b, c) = (false, true, true);
+    let tokens = moxy::template! { @if (a || b) && c { yes } @else { no } };
+    assert_eq!(tokens.to_string(), "yes");
+
+    let value = moxy::ident!("x");
+    let tokens = moxy::template! { match {{ value }} { n @ 1..=9 => n, _ => 0 } };
+    assert_eq!(tokens.to_string(), "match x {n @ 1 ..= 9 => n , _ => 0}");
+}
+
+#[test]
+fn template_directives_follow_any_token_and_bindings_stay_tokens() {
+    let a = true;
+    let rows = vec![moxy::ident!("p"), moxy::ident!("q")];
+    let tokens = moxy::template! { x @if a { yes } };
+    assert_eq!(tokens.to_string(), "x yes");
+
+    let tokens = moxy::template! { f @for r in &rows { {{ r }} } };
+    assert_eq!(tokens.to_string(), "f p q");
+
+    let tokens = moxy::template! { let x = y @match (a) { true => { t }, false => { f } } };
+    assert_eq!(tokens.to_string(), "let x = y t");
+
+    let tokens = moxy::template! { struct S @if a { <T> } @else { <U> }; };
+    assert_eq!(tokens.to_string(), "struct S < T > ;");
+
+    let tokens = moxy::template! { f() @if a { yes } };
+    assert_eq!(tokens.to_string(), "f () yes");
+
+    let tokens = moxy::template! { Vec<T> @if !a { no } @else { yes } };
+    assert_eq!(tokens.to_string(), "Vec < T > yes");
+
+    // An interpolation makes the arms a template, which reads every `@`
+    let one = moxy::ident!("one");
+    let tokens = moxy::template! { match v { x @ sep => {{ one }} } };
+    assert_eq!(tokens.to_string(), "match v {x @ sep => one}");
+
+    let tokens = moxy::template! { @for r in &rows { {{ r }} } @sep { , } };
+    assert_eq!(tokens.to_string(), "p , q");
+
+    let tokens = moxy::template! { match v { n @ 1..=9 => n, all @ Some(_) => all, w @ _ => w } };
+    assert_eq!(
+        tokens.to_string(),
+        "match v {n @ 1 ..= 9 => n , all @ Some (_) => all , w @ _ => w}"
+    );
+}

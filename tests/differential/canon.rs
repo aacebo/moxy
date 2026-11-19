@@ -1098,11 +1098,15 @@ pub(super) fn mitem(i: &m::Item) -> String {
             s.expr.as_ref().map(|e| format!("={}", mexpr(e))).unwrap_or_default()
         ),
         I::TypeAlias(t) => format!(
-            "{}{}type {}{}{}",
+            "{}{}type {}{}{}{}",
             mattrs(&t.attrs),
             mt(&t.vis),
             mt(&t.ident),
             mgenerics(&t.generics),
+            t.where_clause
+                .as_ref()
+                .map(|w| format!(" where[{}]", mt(&w.predicates)))
+                .unwrap_or_default(),
             t.ty.as_ref().map(|ty| format!("={}", mtype(ty))).unwrap_or_default()
         ),
         other => format!("tokens<{}>", mt(other)),

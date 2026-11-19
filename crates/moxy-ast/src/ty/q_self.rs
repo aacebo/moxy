@@ -77,7 +77,7 @@ impl QSelf {
 
 impl Spanner for QSelf {
     fn span(&self) -> Span {
-        self.lt.span().join(self.ty.span())
+        self.lt.span().join(self.gt.span())
     }
 }
 
