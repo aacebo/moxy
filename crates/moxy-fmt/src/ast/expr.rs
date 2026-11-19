@@ -14,7 +14,7 @@ impl Format for Expr {
             Self::Break(v) => v.format(f),
             Self::Continue(v) => v.format(f),
             Self::Yield(v) => v.format(f),
-            Self::If(v) => v.format(f),
+            Self::IfChain(v) => v.format(f),
             Self::While(v) => v.format(f),
             Self::ForLoop(v) => v.format(f),
             Self::Loop(v) => v.format(f),
@@ -423,13 +423,20 @@ impl Format for ExprBlock {
     }
 }
 
-impl Format for ExprIf {
+impl Format for ExprIfChain {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
         f.text("if ")?;
         self.cond.format(f)?;
         f.text(" ")?;
         self.then_branch.format(f)?;
+
+        for branch in &self.else_ifs {
+            f.text(" else if ")?;
+            branch.cond.format(f)?;
+            f.text(" ")?;
+            branch.then_branch.format(f)?;
+        }
 
         if let Some(else_branch) = &self.else_branch {
             f.text(" else ")?;

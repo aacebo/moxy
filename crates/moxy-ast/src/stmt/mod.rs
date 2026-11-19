@@ -157,7 +157,7 @@ pub(crate) fn ends_block(expr: &Expr) -> bool {
     matches!(
         expr,
         Expr::Block(_)
-            | Expr::If(_)
+            | Expr::IfChain(_)
             | Expr::Match(_)
             | Expr::Loop(_)
             | Expr::While(_)

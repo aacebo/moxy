@@ -10,7 +10,7 @@ mod expr_const;
 mod expr_continue;
 mod expr_for_loop;
 mod expr_group;
-mod expr_if;
+mod expr_if_chain;
 mod expr_infer;
 mod expr_let;
 mod expr_lit;
@@ -55,7 +55,7 @@ pub use expr_const::*;
 pub use expr_continue::*;
 pub use expr_for_loop::*;
 pub use expr_group::*;
-pub use expr_if::*;
+pub use expr_if_chain::*;
 pub use expr_infer::*;
 pub use expr_let::*;
 pub use expr_lit::*;
@@ -106,7 +106,7 @@ pub enum Expr {
     Continue(ExprContinue),
     ForLoop(ExprForLoop),
     Group(ExprGroup),
-    If(ExprIf),
+    IfChain(ExprIfChain),
     Infer(ExprInfer),
     Let(ExprLet),
     Lit(ExprLit),
@@ -146,7 +146,7 @@ impl Expr {
             Self::Continue(v) => Some(&v.attrs),
             Self::ForLoop(v) => Some(&v.attrs),
             Self::Group(v) => Some(&v.attrs),
-            Self::If(v) => Some(&v.attrs),
+            Self::IfChain(v) => Some(&v.attrs),
             Self::Infer(v) => Some(&v.attrs),
             Self::Let(v) => Some(&v.attrs),
             Self::Lit(v) => Some(&v.attrs),
@@ -186,7 +186,7 @@ impl Expr {
             Self::Continue(v) => Some(&mut v.attrs),
             Self::ForLoop(v) => Some(&mut v.attrs),
             Self::Group(v) => Some(&mut v.attrs),
-            Self::If(v) => Some(&mut v.attrs),
+            Self::IfChain(v) => Some(&mut v.attrs),
             Self::Infer(v) => Some(&mut v.attrs),
             Self::Let(v) => Some(&mut v.attrs),
             Self::Lit(v) => Some(&mut v.attrs),
@@ -260,8 +260,8 @@ impl Expr {
         matches!(self, Self::Group(_))
     }
 
-    pub fn is_if(&self) -> bool {
-        matches!(self, Self::If(_))
+    pub fn is_if_chain(&self) -> bool {
+        matches!(self, Self::IfChain(_))
     }
 
     pub fn is_infer(&self) -> bool {
@@ -400,8 +400,8 @@ impl Expr {
         if let Self::Group(v) = self { Some(v) } else { None }
     }
 
-    pub fn as_if(&self) -> Option<&ExprIf> {
-        if let Self::If(v) = self { Some(v) } else { None }
+    pub fn as_if_chain(&self) -> Option<&ExprIfChain> {
+        if let Self::IfChain(v) = self { Some(v) } else { None }
     }
 
     pub fn as_infer(&self) -> Option<&ExprInfer> {
@@ -508,7 +508,7 @@ impl Spanner for Expr {
             Self::Continue(v) => v.span(),
             Self::ForLoop(v) => v.span(),
             Self::Group(v) => v.span(),
-            Self::If(v) => v.span(),
+            Self::IfChain(v) => v.span(),
             Self::Infer(v) => v.span(),
             Self::Let(v) => v.span(),
             Self::Lit(v) => v.span(),
@@ -550,7 +550,7 @@ impl ToTokens for Expr {
             Self::Continue(v) => v.to_tokens(t),
             Self::ForLoop(v) => v.to_tokens(t),
             Self::Group(v) => v.to_tokens(t),
-            Self::If(v) => v.to_tokens(t),
+            Self::IfChain(v) => v.to_tokens(t),
             Self::Infer(v) => v.to_tokens(t),
             Self::Let(v) => v.to_tokens(t),
             Self::Lit(v) => v.to_tokens(t),

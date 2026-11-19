@@ -236,16 +236,23 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
             mblock(&x.body)
         ),
         E::Group(x) => mexpr(&x.expr),
-        E::If(x) => format!(
-            "{}if {} {}{}",
-            mattrs_with(&x.attrs, &x.then_branch.inner_attrs),
-            mexpr(&x.cond),
-            mblock(&x.then_branch),
-            x.else_branch
-                .as_ref()
-                .map(|e| format!(" else {}", mexpr(e)))
-                .unwrap_or_default()
-        ),
+        // The `else if` branches render nested, as syn holds them
+        E::IfChain(x) => {
+            let mut rest = x.else_branch.as_ref().map(mblock);
+
+            for branch in x.else_ifs.iter().rev() {
+                let tail = rest.map(|tail| format!(" else {tail}")).unwrap_or_default();
+                rest = Some(format!("if {} {}{tail}", mexpr(&branch.cond), mblock(&branch.then_branch)));
+            }
+
+            format!(
+                "{}if {} {}{}",
+                mattrs_with(&x.attrs, &x.then_branch.inner_attrs),
+                mexpr(&x.cond),
+                mblock(&x.then_branch),
+                rest.map(|tail| format!(" else {tail}")).unwrap_or_default()
+            )
+        }
         E::Infer(x) => format!("{}_", mattrs(&x.attrs)),
         E::Let(x) => format!(
             "{}{}",

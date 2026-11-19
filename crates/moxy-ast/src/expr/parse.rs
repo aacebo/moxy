@@ -634,34 +634,45 @@ fn if_expr(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> 
     let cond = boxed_expr(parser, ExprContext::EARLY)?;
     let then_branch: StmtBlock = <_ as Parse>::parse(parser)?;
     if_block_inner(&then_branch)?;
+    let mut else_ifs = Vec::new();
+
+    // `else` takes another `if`, held as a branch of this node, or a block,
+    // which ends the expression: `if a { 1 } else { 2 } [x]` does not index
+    // the else block
+    while <Token![else]>::peek(parser.cursor()) && <Token![if]>::peek(parser.cursor().offset(1)) {
+        let else_keyword = <_ as Parse>::parse(parser)?;
+        let if_keyword = <_ as Parse>::parse(parser)?;
+        let cond = boxed_expr(parser, ExprContext::EARLY)?;
+        let then_branch: StmtBlock = <_ as Parse>::parse(parser)?;
+        if_block_inner(&then_branch)?;
+        else_ifs.push(ElseIf {
+            else_keyword,
+            if_keyword,
+            cond,
+            then_branch,
+        });
+    }
 
     let (else_keyword, else_branch) = if <Token![else]>::peek(parser.cursor()) {
         let else_keyword = <_ as Parse>::parse(parser)?;
 
-        // `else` takes a block or another `if`, which ends the expression:
-        // `if a { 1 } else { 2 } [x]` does not index the else block
-        if !parser.is_delimited(Delim::Brace) && !<Token![if]>::peek(parser.cursor()) {
+        if !parser.is_delimited(Delim::Brace) {
             return parser.error("expected `{` or `if` after `else`").into();
         }
 
-        // An `else if` chain nests one level per branch
-        let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
-        let else_branch = primary(parser, Attributes::default(), ExprContext::NORMAL)?;
-
-        if let Expr::Block(block) = &*else_branch {
-            if_block_inner(&block.block)?;
-        }
-
+        let else_branch: StmtBlock = <_ as Parse>::parse(parser)?;
+        if_block_inner(&else_branch)?;
         (Some(else_keyword), Some(else_branch))
     } else {
         (None, None)
     };
 
-    Ok(boxed(ExprIf {
+    Ok(boxed(ExprIfChain {
         attrs,
         if_keyword,
         cond,
         then_branch,
+        else_ifs,
         else_keyword,
         else_branch,
     }))

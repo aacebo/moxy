@@ -179,7 +179,6 @@ fn input_nested_past_the_depth_limit_is_an_error() {
             format!("{}a{}", "match a { _ => ".repeat(depth), " }".repeat(depth)),
             "expression",
         ),
-        (format!("if a {{}}{} else {{}}", " else if a {}".repeat(depth)), "expression"),
         (format!("{}u8", "&".repeat(depth)), "type"),
         (format!("{}u8{}", "Vec<".repeat(depth), ">".repeat(depth)), "type"),
         (format!("{}a", "&".repeat(depth)), "pattern"),

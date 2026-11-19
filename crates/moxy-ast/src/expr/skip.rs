@@ -175,19 +175,13 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
         cursor = expr(cursor, ExprContext::EARLY)?;
         cursor = if_block(cursor)?;
 
+        while <Token![else]>::peek(cursor) && <Token![if]>::peek(cursor.offset(1)) {
+            cursor = expr(cursor.offset(2), ExprContext::EARLY)?;
+            cursor = if_block(cursor)?;
+        }
+
         if <Token![else]>::peek(cursor) {
-            cursor = <Token![else]>::skip(cursor)?;
-
-            if cursor.is_delimited(Delim::Brace) {
-                return if_block(cursor);
-            }
-
-            if !<Token![if]>::peek(cursor) {
-                return None;
-            }
-
-            let _depth = moxy_token::Depth::enter()?;
-            cursor = primary(cursor, ExprContext::NORMAL)?;
+            return if_block(<Token![else]>::skip(cursor)?);
         }
 
         return Some(cursor);

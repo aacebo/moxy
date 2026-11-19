@@ -27,7 +27,7 @@ define_visit! {
             Assign(visit_expr_assign / visit_expr_assign_mut),
             Range(visit_expr_range / visit_expr_range_mut),
             Block(visit_expr_block / visit_expr_block_mut),
-            If(visit_expr_if / visit_expr_if_mut),
+            IfChain(visit_expr_if_chain / visit_expr_if_chain_mut),
             While(visit_expr_while / visit_expr_while_mut),
             ForLoop(visit_expr_for_loop / visit_expr_for_loop_mut),
             Loop(visit_expr_loop / visit_expr_loop_mut),
@@ -191,16 +191,27 @@ define_visit! {
             block => visit_stmt_block / visit_stmt_block_mut,
         }
     }
-    struct ExprIf {
-        visit: visit_expr_if, visit_mut: visit_expr_if_mut,
-        walk: walk_expr_if, walk_mut: walk_expr_if_mut,
+    struct ExprIfChain {
+        visit: visit_expr_if_chain, visit_mut: visit_expr_if_chain_mut,
+        walk: walk_expr_if_chain, walk_mut: walk_expr_if_chain_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
             if_keyword: skip,
             cond: box => visit_expr / visit_expr_mut,
             then_branch => visit_stmt_block / visit_stmt_block_mut,
+            else_ifs: vec => visit_else_if / visit_else_if_mut,
             else_keyword: skip,
-            else_branch: opt_box => visit_expr / visit_expr_mut,
+            else_branch: opt => visit_stmt_block / visit_stmt_block_mut,
+        }
+    }
+    struct ElseIf {
+        visit: visit_else_if, visit_mut: visit_else_if_mut,
+        walk: walk_else_if, walk_mut: walk_else_if_mut,
+        fields {
+            else_keyword: skip,
+            if_keyword: skip,
+            cond: box => visit_expr / visit_expr_mut,
+            then_branch => visit_stmt_block / visit_stmt_block_mut,
         }
     }
     struct ExprWhile {

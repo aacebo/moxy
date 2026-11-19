@@ -70,7 +70,7 @@ fn parenthesize(expression: &Expr) -> String {
             Some(value) => format!("(break {})", parenthesize(value)),
             None => "(break)".to_string(),
         },
-        Expr::If(v) => format!("(if {} {{..}})", parenthesize(&v.cond)),
+        Expr::IfChain(v) => format!("(if {} {{..}})", parenthesize(&v.cond)),
         Expr::While(v) => format!("(while {} {{..}})", parenthesize(&v.cond)),
         Expr::Match(v) => format!("(match {} {{..}})", parenthesize(&v.expr)),
         other => compact(other),

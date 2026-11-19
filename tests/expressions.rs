@@ -46,7 +46,7 @@ fn collection_and_struct_expressions_complete_the_pipeline() {
 #[test]
 fn control_flow_expressions_preserve_conditions_arms_and_bodies() {
     let conditional: Expr = moxy::parse!("if ready { yes() } else { no() }").unwrap();
-    assert!(conditional.is_if());
+    assert!(conditional.is_if_chain());
     assert_eq!(moxy::fmt!(&conditional).unwrap(), "if ready {\n\tyes()\n} else {\n\tno()\n}");
 
     let matching: Expr = moxy::parse!("match value { Some(x) if x > 0 => x, None => 0, _ => 1 }").unwrap();
@@ -159,7 +159,7 @@ fn expression_syntax_has_concrete_serde_tags_and_exact_output() {
         ("-value", "Unary", "-value"),
         ("target = value", "Assign", "target = value"),
         ("function(a)", "Postfix", "function(a)"),
-        ("if ready { yes() }", "If", "if ready {\n\tyes()\n}"),
+        ("if ready { yes() }", "IfChain", "if ready {\n\tyes()\n}"),
         ("return value", "Return", "return value"),
         ("[a, b]", "Array", "[a, b]"),
     ] {
@@ -264,7 +264,7 @@ fn remaining_expression_public_variants_match_rendered_syntax() {
         assert_eq!(
             [
                 expression.is_block(),
-                expression.is_if(),
+                expression.is_if_chain(),
                 expression.is_while(),
                 expression.is_for_loop(),
                 expression.is_loop(),
@@ -279,7 +279,7 @@ fn remaining_expression_public_variants_match_rendered_syntax() {
         assert_eq!(
             [
                 expression.as_block().is_some(),
-                expression.as_if().is_some(),
+                expression.as_if_chain().is_some(),
                 expression.as_while().is_some(),
                 expression.as_for_loop().is_some(),
                 expression.as_loop().is_some(),
@@ -388,7 +388,7 @@ fn a_less_than_after_a_path_is_a_comparison() {
     }
 
     let expression: Expr = moxy::parse!("if n < 2.0 { return 1; }").unwrap();
-    assert!(expression.as_if().unwrap().cond.is_binary_chain());
+    assert!(expression.as_if_chain().unwrap().cond.is_binary_chain());
 }
 
 #[test]
@@ -422,7 +422,7 @@ fn else_branches_end_at_their_block() {
     let chain = expression.as_postfix().unwrap();
     assert!(matches!(chain.ops[..], [Postfix::Index(_)]));
     let base = &chain.base;
-    assert!(base.as_if().unwrap().else_branch.as_ref().unwrap().is_block());
+    assert!(base.as_if_chain().unwrap().else_branch.is_some());
 
     let error = moxy::parse!("if a { 1 } else 2" as Expr).err().unwrap();
     assert_eq!(error.message(), "expected `{` or `if` after `else`");
