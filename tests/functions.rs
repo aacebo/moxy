@@ -62,3 +62,54 @@ fn typed_self_receivers_keep_their_type() {
         assert_eq!(moxy::fmt!(&item).unwrap(), expected);
     }
 }
+
+#[test]
+fn weak_keywords_are_identifiers_outside_their_keyword_position() {
+    for (source, tokens) in [
+        ("fn default() {}", "fn default () {}"),
+        (
+            "fn f() { x.default; self.raw == 1; }",
+            "fn f () {x . default ; self . raw == 1 ;}",
+        ),
+        (
+            "fn f() { S { raw: false }; union(); }",
+            "fn f () {S {raw : false} ; union () ;}",
+        ),
+        (
+            "struct S { default: u8, raw: u8, union: u8, safe: u8, auto: u8 }",
+            "struct S {default : u8 , raw : u8 , union : u8 , safe : u8 , auto : u8}",
+        ),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(moxy::token::ToTokenStream::to_token_stream(&item).to_string(), tokens);
+    }
+
+    // In their keyword positions they still declare
+    let union: Item = moxy::parse!("union U { a: u8 }").unwrap();
+    let auto_trait: Item = moxy::parse!("unsafe auto trait A {}").unwrap();
+    assert!(union.is_union());
+    assert!(auto_trait.as_trait().unwrap().auto_keyword.is_some());
+}
+
+#[test]
+fn weak_keywords_begin_paths_in_use_items_types_and_expressions() {
+    for source in [
+        "use crate::raw::Bucket;",
+        "pub use core::default::Default;",
+        "use raw::{default, union as u};",
+        "fn f(x: raw::A) -> default {}",
+        "impl default::A {}",
+        "fn f() { let macro_rules = 1; macro_rules + 1; }",
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(
+            moxy::token::ToTokenStream::to_token_stream(&item).to_string(),
+            lexed.to_string()
+        );
+    }
+
+    // Followed by `!`, `macro_rules` still defines a macro
+    let item: Item = moxy::parse!("macro_rules! m { () => {} }").unwrap();
+    assert!(item.is_macro2());
+}

@@ -162,6 +162,9 @@ fn escape(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
     match c.first() {
         None => c.error().into(),
         Some('n' | 'r' | 't' | '\\' | '\'' | '"' | '0') => Ok(c.advance()),
+        // A line continuation: the newline and the whitespace after it are skipped
+        Some('\n') => Ok(skip_continuation(c.advance())),
+        Some('\r') if c.advance().first() == Some('\n') => Ok(skip_continuation(c.advance_by(2))),
         Some('x') => {
             let c = c.advance();
             let c = hex_digit(c)?;
@@ -192,6 +195,14 @@ fn escape(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
     }
 }
 
+fn skip_continuation(mut c: Cursor<'_>) -> Cursor<'_> {
+    while let Some(' ' | '\t' | '\n' | '\r') = c.first() {
+        c = c.advance();
+    }
+
+    c
+}
+
 fn hex_digit(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
     match c.first() {
         Some(ch) if ch.is_ascii_hexdigit() => Ok(c.advance()),
@@ -214,10 +225,19 @@ fn decode_string_body(repr: &str) -> Option<String> {
     let mut chars = inner.chars();
 
     while let Some(c) = chars.next() {
-        if c == '\\' {
-            out.push(decode_escape(&mut chars)?);
-        } else {
+        if c != '\\' {
             out.push(c);
+        } else if chars.clone().next().is_some_and(|next| next == '\n' || next == '\r') {
+            // A line continuation adds nothing, and the whitespace after it is skipped
+            while chars
+                .clone()
+                .next()
+                .is_some_and(|next| matches!(next, ' ' | '\t' | '\n' | '\r'))
+            {
+                chars.next();
+            }
+        } else {
+            out.push(decode_escape(&mut chars)?);
         }
     }
 

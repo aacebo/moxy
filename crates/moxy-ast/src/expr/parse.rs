@@ -119,7 +119,7 @@ fn cast(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr
             attrs: Default::default(),
             expr: Box::new(expr),
             as_keyword: <_ as Parse>::parse(parser)?,
-            ty: <_ as Parse>::parse(parser)?,
+            ty: Box::new(Type::parse_without_plus(parser)?),
         }
         .into();
     }

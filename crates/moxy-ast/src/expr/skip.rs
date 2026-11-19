@@ -355,7 +355,7 @@ fn cast(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
 
     while <Token![as]>::peek(cursor) {
         cursor = <Token![as]>::skip(cursor)?;
-        cursor = Type::skip(cursor)?;
+        cursor = Type::skip_without_plus(cursor)?;
     }
 
     Some(cursor)

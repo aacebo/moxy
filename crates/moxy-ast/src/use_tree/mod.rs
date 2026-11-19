@@ -10,7 +10,7 @@ pub use use_name::*;
 pub use use_path::*;
 pub use use_rename::*;
 
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -136,16 +136,13 @@ impl ToTokens for UseTree {
     }
 }
 
-// A use path segment: an identifier or one of the path keywords `crate`,
-// `self`, `super`, and `Self`
+// A use path segment: an identifier, including a weak keyword such as `raw`,
+// or one of the path keywords `crate`, `self`, `super`, and `Self`
 fn peek_segment(cursor: Cursor<'_>) -> bool {
-    cursor.curr().is_some_and(|token| {
-        token.is_ident()
-            || token.is_keyword_crate()
-            || token.is_keyword_self_value()
-            || token.is_keyword_super()
-            || token.is_keyword_self_type()
-    })
+    Ident::peek(cursor)
+        || cursor.curr().is_some_and(|token| {
+            token.is_keyword_crate() || token.is_keyword_self_value() || token.is_keyword_super() || token.is_keyword_self_type()
+        })
 }
 
 fn skip_segment(cursor: Cursor<'_>) -> Option<Cursor<'_>> {

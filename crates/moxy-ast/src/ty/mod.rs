@@ -241,10 +241,40 @@ impl From<TypeBareFn> for Type {
     }
 }
 
+impl Type {
+    /// Parses a type that `+` does not continue, as after `as` in an
+    /// expression, where `a as usize + 1` adds to the cast.
+    pub(crate) fn parse_without_plus(parser: &Parser) -> Result<Self, ParseError> {
+        if Self::peek_bare_bounds(parser.cursor()) {
+            return Ok(Self::Path(<_ as Parse>::parse(parser)?));
+        }
+
+        <Self as Parse>::parse(parser)
+    }
+
+    pub(crate) fn skip_without_plus(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if Self::peek_bare_bounds(cursor) {
+            return TypePath::skip(cursor);
+        }
+
+        <Self as Parse>::skip(cursor)
+    }
+
+    // A path followed by `+`, which a type position that takes bounds reads
+    // as a trait object
+    fn peek_bare_bounds(cursor: Cursor<'_>) -> bool {
+        !<Token![dyn]>::peek(cursor) && Path::peek(cursor) && TypeTraitObject::peek(cursor)
+    }
+}
+
 impl Parse for Type {
     fn peek(cursor: Cursor<'_>) -> bool {
+        // A weak keyword such as `raw` or `default` can name a type or begin its path
+        if Ident::peek(cursor) {
+            return true;
+        }
+
         match cursor.curr() {
-            Some(TokenTree::Ident(_)) => true,
             Some(TokenTree::Group(g)) => matches!(g.delim, Delim::Paren | Delim::Bracket | Delim::None),
             Some(TokenTree::Keyword(k)) => matches!(
                 k,

@@ -25,7 +25,8 @@ impl Parse for ItemUnion {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        <Token![union]>::peek(cursor)
+        // `union` is a weak keyword: only `union Name` declares a union
+        <Token![union]>::peek(cursor) && Ident::peek(cursor.offset(1))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
