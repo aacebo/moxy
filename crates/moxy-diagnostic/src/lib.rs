@@ -286,28 +286,29 @@ impl Diagnostic {
         let mut tokens = TokenStream::new();
         let start = self.spans.first().copied().unwrap_or_default();
         let end = self.spans.last().copied().unwrap_or_default();
-        let span = start.join(end);
 
-        fn cerror(span: Span, message: impl std::fmt::Display) -> TokenStream {
-            let ident = Ident::new("compile_error").with_span(span);
-            let bang = <Token![!]>::new(span);
+        // The compiler underlines from the name's span to the arguments' span, which on stable
+        // marks the whole range where a joined span would keep the last token only
+        fn cerror(start: Span, end: Span, message: impl std::fmt::Display) -> TokenStream {
+            let ident = Ident::new("compile_error").with_span(start);
+            let bang = <Token![!]>::new(start);
             let mut lit = Lit::string(&message.to_string());
-            lit.set_span(span);
+            lit.set_span(end);
 
             let mut group = Group::new(Delim::Paren, lit.into_token_tree().into_token_stream());
-            group.span = DelimSpan::new(span, span);
+            group.span = DelimSpan::new(end, end);
 
             vec![
                 ident.into_token_tree(),
                 Punct::from(bang).into_token_tree(),
                 group.into_token_tree(),
-                Punct::from(<Token![;]>::new(span)).into_token_tree(),
+                Punct::from(<Token![;]>::new(end)).into_token_tree(),
             ]
             .into_token_stream()
         }
 
         if let Some(msg) = &self.message {
-            tokens.extend(cerror(span, msg));
+            tokens.extend(cerror(start, end, msg));
         }
 
         for child in &self.children {
@@ -366,6 +367,10 @@ impl std::fmt::Display for Diagnostic {
 impl From<&ParseError> for Diagnostic {
     fn from(err: &ParseError) -> Self {
         let mut builder = Self::new().level(Level::Error).span(err.span()).message(err.message());
+
+        if err.end_span() != err.span() {
+            builder = builder.span(err.end_span());
+        }
 
         for child in err.children() {
             builder = builder.child(Self::from(child));

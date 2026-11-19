@@ -11,3 +11,9 @@ fn derived_meta_errors_retain_their_source_span() {
     cases.pass("tests/trybuild/spans/pass/meta_*.rs");
     cases.compile_fail("tests/trybuild/spans/fail/meta_*.rs");
 }
+
+#[test]
+fn round_tripped_groups_keep_their_whole_span() {
+    let cases = trybuild::TestCases::new();
+    cases.compile_fail("tests/trybuild/spans/fail/round_trip_*.rs");
+}

@@ -65,3 +65,16 @@ fn string_line_continuations_skip_the_newline_and_indentation() {
     };
     assert_eq!(c_text.value(), b"a b");
 }
+
+#[test]
+fn suffixed_integer_constructors_keep_the_suffix() {
+    for (literal, text) in [
+        (moxy_token::Lit::u8_suffixed(7), "7u8"),
+        (moxy_token::Lit::u64_suffixed(10923128598635462381), "10923128598635462381u64"),
+        (moxy_token::Lit::usize_suffixed(3), "3usize"),
+        (moxy_token::Lit::i32_suffixed(5), "5i32"),
+        (moxy_token::Lit::u64_unsuffixed(9), "9"),
+    ] {
+        assert_eq!(literal.to_string(), text);
+    }
+}

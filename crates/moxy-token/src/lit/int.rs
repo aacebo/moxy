@@ -127,7 +127,7 @@ impl From<LitInt> for String {
 impl Lit {
     pub fn u8_suffixed(value: u8) -> Self {
         Self::Int(LitInt {
-            repr: value.to_string().into(),
+            repr: format!("{value}u8").into(),
             suffix: IntSuffix::U8,
             value: value as u128,
             ..Default::default()
@@ -144,7 +144,7 @@ impl Lit {
 
     pub fn u16_suffixed(value: u16) -> Self {
         Self::Int(LitInt {
-            repr: value.to_string().into(),
+            repr: format!("{value}u16").into(),
             suffix: IntSuffix::U16,
             value: value as u128,
             ..Default::default()
@@ -161,7 +161,7 @@ impl Lit {
 
     pub fn u32_suffixed(value: u32) -> Self {
         Self::Int(LitInt {
-            repr: value.to_string().into(),
+            repr: format!("{value}u32").into(),
             suffix: IntSuffix::U32,
             value: value as u128,
             ..Default::default()
@@ -178,7 +178,7 @@ impl Lit {
 
     pub fn u64_suffixed(value: u64) -> Self {
         Self::Int(LitInt {
-            repr: value.to_string().into(),
+            repr: format!("{value}u64").into(),
             suffix: IntSuffix::U64,
             value: value as u128,
             ..Default::default()
@@ -195,7 +195,7 @@ impl Lit {
 
     pub fn usize_suffixed(value: usize) -> Self {
         Self::Int(LitInt {
-            repr: value.to_string().into(),
+            repr: format!("{value}usize").into(),
             suffix: IntSuffix::USize,
             value: value as u128,
             ..Default::default()
@@ -212,7 +212,7 @@ impl Lit {
 
     pub fn i8_suffixed(value: i8) -> Self {
         Self::Int(LitInt {
-            repr: value.to_string().into(),
+            repr: format!("{value}i8").into(),
             suffix: IntSuffix::I8,
             value: value as u128,
             ..Default::default()
@@ -229,7 +229,7 @@ impl Lit {
 
     pub fn i16_suffixed(value: i16) -> Self {
         Self::Int(LitInt {
-            repr: value.to_string().into(),
+            repr: format!("{value}i16").into(),
             suffix: IntSuffix::I16,
             value: value as u128,
             ..Default::default()
@@ -246,7 +246,7 @@ impl Lit {
 
     pub fn i32_suffixed(value: i32) -> Self {
         Self::Int(LitInt {
-            repr: value.to_string().into(),
+            repr: format!("{value}i32").into(),
             suffix: IntSuffix::I32,
             value: value as u128,
             ..Default::default()
@@ -263,7 +263,7 @@ impl Lit {
 
     pub fn i64_suffixed(value: i64) -> Self {
         Self::Int(LitInt {
-            repr: value.to_string().into(),
+            repr: format!("{value}i64").into(),
             suffix: IntSuffix::I64,
             value: value as u128,
             ..Default::default()
@@ -280,7 +280,7 @@ impl Lit {
 
     pub fn isize_suffixed(value: isize) -> Self {
         Self::Int(LitInt {
-            repr: value.to_string().into(),
+            repr: format!("{value}isize").into(),
             suffix: IntSuffix::ISize,
             value: value as u128,
             ..Default::default()

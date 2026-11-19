@@ -31,3 +31,20 @@ fn from_concat() {
     let ident = ident!(this, "_", "is", "_", a, "_", test);
     assert_eq!(ident, "this_is_a_test");
 }
+
+#[test]
+fn equality_compares_text_not_spans() {
+    let tokens: moxy_token::TokenStream = "value value other r#value".parse().unwrap();
+    let idents: Vec<moxy_token::Ident> = tokens
+        .iter()
+        .map(|token| match token {
+            moxy_token::TokenTree::Ident(ident) => ident.clone(),
+            other => panic!("expected an identifier, got {other}"),
+        })
+        .collect();
+
+    assert_ne!(idents[0].span(), idents[1].span());
+    assert_eq!(idents[0], idents[1]);
+    assert_ne!(idents[0], idents[2]);
+    assert_ne!(idents[0], idents[3]);
+}

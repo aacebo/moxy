@@ -71,7 +71,10 @@ macro_rules! ident {
 }
 
 /// A Rust identifier token, including its source span and raw-identifier form.
-#[derive(Debug, Clone, PartialEq, Eq)]
+///
+/// Two identifiers are equal when their text is, whatever their spans, as
+/// with `proc_macro2::Ident`; a raw identifier differs from its plain form.
+#[derive(Debug, Clone)]
 pub struct Ident {
     text: Box<str>,
     span: Span,
@@ -243,6 +246,14 @@ impl serde::Serialize for Ident {
         self.text.serialize(s)
     }
 }
+
+impl PartialEq for Ident {
+    fn eq(&self, other: &Self) -> bool {
+        self.text == other.text
+    }
+}
+
+impl Eq for Ident {}
 
 impl PartialEq<str> for Ident {
     fn eq(&self, other: &str) -> bool {
