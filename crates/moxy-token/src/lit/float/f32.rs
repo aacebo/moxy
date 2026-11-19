@@ -13,13 +13,26 @@ pub struct LitF32 {
 }
 
 impl LitF32 {
+    /// Creates a literal of `value`, written as Rust source writes it: with a
+    /// `.0` when it has no fractional part and no suffix, as in `1.0`.
+    ///
+    /// # Panics
+    ///
+    /// Panics if `value` is not finite, as `proc_macro2` does, since no literal
+    /// can express NaN or an infinity.
     #[inline]
     pub fn new(value: f32, suffixed: bool, span: Span) -> Self {
-        let repr = if suffixed {
-            format!("{value}f32").into_boxed_str()
-        } else {
-            format!("{value}").into_boxed_str()
-        };
+        assert!(value.is_finite(), "a float literal must be finite, found {value}");
+
+        let mut repr = value.to_string();
+
+        if suffixed {
+            repr.push_str("f32");
+        } else if !repr.contains('.') {
+            repr.push_str(".0");
+        }
+
+        let repr = repr.into_boxed_str();
 
         Self {
             value,

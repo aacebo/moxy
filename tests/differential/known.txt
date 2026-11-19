@@ -33,8 +33,6 @@ TREE f: fn f() { { #![a] x } }
 TREE f: fn f() { match x { #![a] _ => 1 } }
 TREE f: fn f() { while x { #![a] y; } }
 TREE f: fn f() { for x in y { #![a] z; } }
-TREE f: fn f() { /** a /* nested */ b */ fn g() {} }
-TREE f: /** multi\n * line\n */ fn f() {}
 TREE t: impl Fn() -> impl A + B
 TREE t: impl Fn() -> dyn A + B
 
@@ -52,13 +50,11 @@ REJECT e: a.0.1
 REJECT e: match a { box x => 1 }
 REJECT e: match a { const { 1 } => 1 }
 REJECT e: 1e
-REJECT e: 1u256
 REJECT e: a.1.0
 REJECT e: a.1.0.2
 REJECT e: a.0x1
 REJECT e: a.0_0
 REJECT e: "a"suffix
-REJECT e: 1suffix
 REJECT e: 'a'suffix
 REJECT e: b"a"suffix
 REJECT e: r#"a"#suffix
@@ -212,14 +208,7 @@ REJECT f: #!/bin/sh -c 'exec rustc "$0"'\nfn main() {}
 REJECT f: #!/usr/bin/rustc --edition=2021\nfn main() {}
 REJECT f: #!/usr/bin/env run-cargo-script\n//! doc\nfn main() {}
 REJECT f: #!\nfn main() {}
-REJECT f: /** a /* nested */ b */ fn g() {}
-REJECT f: /*! a /* nested */ b */ fn g() {}
-REJECT f: fn f() { '\u{00_41}' }
-REJECT f: fn f() { "\u{00_41}" }
-REJECT f: fn f() { 0xdeadbeef; 0xDEAD_BEEF; 0x1E; 0x1e3; 0xe; 0xE1; 0x1f32; 0x1_f64; 0b1e; }
 REJECT f: fn f() { 1f16; 1.0f128; 1f16; 2b; 1px; 1em; 0x1p3; 1_; 1__; }
-REJECT f: fn f() { 340282366920938463463374607431768211455; 340282366920938463463374607431768211456; 99999999999999999999999999999999999999999999999999 }
-REJECT f: fn f() { 0xffffffffffffffffffffffffffffffffffffffffff }
 REJECT t: Fn<u8>
 REJECT t: a::Fn<'a>
 REJECT t: FnMut<(A,), Output = B>

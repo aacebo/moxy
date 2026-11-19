@@ -134,24 +134,27 @@ impl<'a> Cursor<'a> {
     }
 
     /// If positioned at a doc comment, return `(cursor after it, is_inner, text)`.
+    /// The text is kept as written, as the compiler gives it: only the line
+    /// break that ends a line comment is left out.
     pub fn doc_comment(&self) -> Option<(Self, bool, String)> {
         if self.is_line_doc() {
             let inner = self.starts_with("//!");
             let body = self.advance_by(3); // skip /// or //!
             let end = body.skip_while(|ch| ch != '\n');
-            let text: String = body.rest()[..(end.offset() - body.offset()) as usize].to_string();
+            let text = &body.rest()[..(end.offset() - body.offset()) as usize];
+            let text = text.strip_suffix('\r').unwrap_or(text);
             let next = if end.starts_with("\n") { end.advance() } else { end };
-            return Some((next, inner, text.trim().to_string()));
+            return Some((next, inner, text.to_string()));
         }
 
         if self.is_block_doc() {
             let inner = self.starts_with("/*!");
-            let body = self.advance_by(3); // skip /** or /*!
-            let close = body.skip_comment_to_close()?;
-            // close is positioned just after `*/`; text is between body and `*/`.
-            let len = (close.offset() - body.offset()) as usize - 2;
-            let text: String = body.rest()[..len].to_string();
-            return Some((close, inner, text.trim().to_string()));
+            let close = self.skip_comment()?;
+            // `close` is just after the matching `*/`; the text is between the
+            // opening `/**` or `/*!` and that `*/`
+            let len = (close.offset() - self.offset()) as usize;
+            let text = &self.rest()[3..len - 2];
+            return Some((close, inner, text.to_string()));
         }
 
         None
@@ -176,22 +179,6 @@ impl<'a> Cursor<'a> {
                 let ch = cur.first().unwrap();
                 cur = cur.advance_by(ch.len_utf8());
             }
-        }
-
-        None
-    }
-
-    /// Skip to just past the matching `*/` of a (non-nested) block comment body.
-    fn skip_comment_to_close(&self) -> Option<Self> {
-        let mut cur = *self;
-
-        while !cur.is_empty() {
-            if cur.starts_with("*/") {
-                return Some(cur.advance_by(2));
-            }
-
-            let ch = cur.first().unwrap();
-            cur = cur.advance_by(ch.len_utf8());
         }
 
         None

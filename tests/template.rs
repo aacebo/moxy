@@ -1,5 +1,5 @@
 use moxy::ast::{Expr, Item};
-use moxy::token::{Spanner, TokenStream};
+use moxy::token::{Spanner, ToTokenStream, TokenStream};
 
 #[test]
 fn macro_invocations_preserve_paths_delimiters_and_body_tokens() {
@@ -262,4 +262,54 @@ fn template_separator_state_is_hidden_from_user_bindings() {
 fn malformed_template_separator_is_rejected() {
     let cases = trybuild::TestCases::new();
     cases.compile_fail("fixtures/trybuild/template/fail/malformed_separator.rs");
+}
+
+macro_rules! scaled {
+    ($e:expr) => {
+        moxy::template! { let x = $e * 2; }
+    };
+}
+
+macro_rules! referenced {
+    ($t:ty) => {
+        moxy::template! { let x: &$t = y; }
+    };
+}
+
+macro_rules! crate_call {
+    () => {
+        moxy::template! { $crate::foo() }
+    };
+}
+
+#[test]
+fn macro_rules_fragments_keep_their_invisible_groups() {
+    let tokens = scaled!(1 + 2);
+    let statement: moxy::ast::Stmt = moxy::parse!(tokens).unwrap();
+    let local = statement.as_local().unwrap();
+    let product = local.init.as_ref().unwrap().expr.as_binary().unwrap();
+    assert!(product.left.is_group());
+    assert_eq!(product.left.to_token_stream().to_string(), "1 + 2");
+
+    let tokens = referenced!(dyn A + B);
+    let groups = |tokens: &TokenStream| {
+        tokens
+            .iter()
+            .filter(|token| matches!(token, moxy::token::TokenTree::Group(group) if group.delim == moxy::token::Delim::None))
+            .count()
+    };
+    assert_eq!(groups(&tokens), 1);
+
+    let tokens = crate_call!();
+    let first = tokens.iter().next().unwrap();
+    assert!(matches!(first, moxy::token::TokenTree::Ident(ident) if ident.text() == "$crate"));
+}
+
+#[test]
+fn template_literals_the_compiler_accepts_build_at_run_time() {
+    let tokens = moxy::template! { 1.0f16 1f128 10px 340282366920938463463374607431768211456 '\u{00_41}' };
+    assert_eq!(
+        tokens.to_string(),
+        "1.0f16 1f128 10px 340282366920938463463374607431768211456 '\\u{00_41}'"
+    );
 }

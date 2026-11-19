@@ -164,7 +164,7 @@ fn is_template(parser: &TokenStream) -> bool {
     false
 }
 
-fn emit_group(delim: Delim, body: &Template, out: &mut TokenStream) {
+fn emit_group(delim: Delim, body: &impl ToTokens, out: &mut TokenStream) {
     use std::str::FromStr;
 
     let delim_path = match delim {

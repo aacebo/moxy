@@ -146,3 +146,20 @@ fn outer_attributes_at_the_start_of_a_file_belong_to_its_first_item() {
     assert!(file.attrs.is_empty());
     assert_eq!(file.items[0].attrs().len(), 1);
 }
+
+#[test]
+fn doc_comments_keep_their_text_as_written() {
+    for (source, doc) in [
+        ("///     code block\nfn f() {}", "\"     code block\""),
+        ("/// trailing  \r\nfn f() {}", "\" trailing  \""),
+        ("/** a /* nested */ b */ fn f() {}", "\" a /* nested */ b \""),
+        ("/** multi\n * line\n */ fn f() {}", "\" multi\\n * line\\n \""),
+        ("//! inner\nfn f() {}", "\" inner\""),
+    ] {
+        let tokens: moxy::token::TokenStream = source.parse().unwrap_or_else(|error| panic!("`{source}`: {error:?}"));
+        let expected: proc_macro2::TokenStream = source.parse().unwrap();
+        let text = tokens.to_string();
+        assert!(text.contains(doc), "`{source}` lexed as `{text}`");
+        assert_eq!(text.replace(' ', ""), expected.to_string().replace(' ', ""), "`{source}`");
+    }
+}

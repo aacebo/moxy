@@ -157,6 +157,7 @@ fn escape(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
                         count += 1;
                         c = c.advance();
                     }
+                    Some('_') if count > 0 => c = c.advance(),
                     _ => return c.error().into(),
                 }
             }
@@ -210,6 +211,10 @@ fn decode_escape(chars: &mut std::str::Chars<'_>) -> Option<char> {
             for c in chars.by_ref() {
                 if c == '}' {
                     break;
+                }
+                // Underscores may separate the digits after the first
+                if c == '_' && count > 0 {
+                    continue;
                 }
                 value = value.checked_mul(16)?.checked_add(c.to_digit(16)?)?;
                 count += 1;

@@ -98,3 +98,50 @@ fn a_trailing_dot_ends_a_float_literal() {
     let token = stream.into_iter().next().unwrap();
     assert!(token.as_literal().unwrap().is_float());
 }
+
+#[test]
+fn float_constructors_write_floats_as_rust_source_does() {
+    for (literal, text) in [
+        (moxy_token::Lit::f64_unsuffixed(1.0), "1.0"),
+        (moxy_token::Lit::f64_unsuffixed(-0.0), "-0.0"),
+        (moxy_token::Lit::f64_unsuffixed(2.5), "2.5"),
+        (moxy_token::Lit::f32_unsuffixed(3.0), "3.0"),
+        (moxy_token::Lit::f64_suffixed(1.0), "1f64"),
+        (moxy_token::Lit::f32_suffixed(0.5), "0.5f32"),
+    ] {
+        assert_eq!(literal.to_string(), text);
+    }
+}
+
+#[test]
+#[should_panic(expected = "a float literal must be finite")]
+fn float_constructors_reject_nan() {
+    let _ = moxy_token::Lit::f64_unsuffixed(f64::NAN);
+}
+
+#[test]
+fn literals_the_typed_variants_cannot_hold_keep_their_text() {
+    for source in ["1.0f16", "1f128", "2b", "10px", "340282366920938463463374607431768211456"] {
+        let tokens: TokenStream = source.parse().unwrap_or_else(|error| panic!("`{source}`: {error:?}"));
+        let tokens: Vec<_> = tokens.into_iter().collect();
+        assert_eq!(tokens.len(), 1, "`{source}`");
+        let moxy_token::TokenTree::Literal(literal) = &tokens[0] else {
+            panic!("`{source}` is not a literal");
+        };
+        assert!(literal.is_verbatim(), "`{source}`");
+        assert_eq!(literal.repr(), source);
+    }
+
+    for (source, value) in [("'\\u{00_41}'", "A"), ("\"\\u{0_4_1}\"", "A")] {
+        let tokens: TokenStream = source.parse().unwrap_or_else(|error| panic!("`{source}`: {error:?}"));
+        let moxy_token::TokenTree::Literal(literal) = tokens.into_iter().next().unwrap() else {
+            panic!("`{source}` is not a literal");
+        };
+        let decoded = match literal {
+            moxy_token::Lit::Char(c) => c.value().to_string(),
+            moxy_token::Lit::Str(s) => s.value().to_string(),
+            other => panic!("`{source}` lexed as {other:?}"),
+        };
+        assert_eq!(decoded, value);
+    }
+}

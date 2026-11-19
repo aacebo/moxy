@@ -251,6 +251,17 @@ impl Scan for Lit {
             return Ok((end, Self::Int(v)));
         }
 
+        // A number the typed literals cannot hold keeps its text, as the
+        // compiler's lexer does: `1.0f16`, `1f128`, a custom suffix as in `2b`,
+        // or an integer past `u128::MAX`
+        if let Ok(end) = float::scan_number(cursor) {
+            let len = end.offset() as usize - cursor.offset() as usize;
+            return Ok((
+                end,
+                Self::Verbatim(LitVerbatim::new(&cursor.rest()[..len], cursor.span_to(&end))),
+            ));
+        }
+
         cursor.error().into()
     }
 }
