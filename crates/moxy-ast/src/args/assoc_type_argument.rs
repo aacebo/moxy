@@ -15,11 +15,11 @@ pub struct AssocTypeArgument {
 
 impl AssocTypeArgument {
     pub fn to_generic_argument(&self) -> GenericArgument {
-        GenericArgument::AssocType(self.clone())
+        GenericArgument::AssocType(Box::new(self.clone()))
     }
 
     pub fn into_generic_argument(self) -> GenericArgument {
-        GenericArgument::AssocType(self)
+        GenericArgument::AssocType(Box::new(self))
     }
 }
 

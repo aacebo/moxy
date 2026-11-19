@@ -15,11 +15,11 @@ pub struct ConstraintArgument {
 
 impl ConstraintArgument {
     pub fn to_generic_argument(&self) -> GenericArgument {
-        GenericArgument::Constraint(self.clone())
+        GenericArgument::Constraint(Box::new(self.clone()))
     }
 
     pub fn into_generic_argument(self) -> GenericArgument {
-        GenericArgument::Constraint(self)
+        GenericArgument::Constraint(Box::new(self))
     }
 }
 

@@ -238,3 +238,11 @@ fn a_quote_that_starts_no_literal_or_lifetime_is_a_lex_error() {
         assert!(source.parse::<moxy::token::TokenStream>().is_ok(), "`{source}`");
     }
 }
+
+#[test]
+fn a_cloned_identifier_shares_its_text() {
+    let ident = moxy::ident!("value");
+    let clone = ident.clone();
+    assert_eq!(clone.text().as_ptr(), ident.text().as_ptr());
+    assert_eq!(clone, ident);
+}

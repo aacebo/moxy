@@ -38,7 +38,7 @@ impl Parse for ItemTrait {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         match Self::parse_or_alias(parser)? {
-            super::Item::Trait(item) => Ok(item),
+            super::Item::Trait(item) => Ok(*item),
             _ => parser.error("expected trait").into(),
         }
     }
@@ -68,7 +68,7 @@ impl ItemTrait {
                 return parser.error("a trait alias cannot be `unsafe` or `auto`").into();
             }
 
-            return Ok(super::Item::TraitAlias(ItemTraitAlias {
+            return Ok(super::Item::TraitAlias(Box::new(ItemTraitAlias {
                 attrs,
                 vis,
                 trait_keyword,
@@ -77,7 +77,7 @@ impl ItemTrait {
                 eq_punct: <_ as Parse>::parse(parser)?,
                 bounds: TypeBound::parse_bounds(parser)?,
                 semi_punct: <_ as Parse>::parse(parser)?,
-            }));
+            })));
         }
 
         // Supertraits come before a where clause, never after it
@@ -110,7 +110,7 @@ impl ItemTrait {
             parser.parse_until_empty::<TraitItem>()
         })?;
 
-        Ok(super::Item::Trait(Self {
+        Ok(super::Item::Trait(Box::new(Self {
             attrs,
             vis,
             unsafety,
@@ -122,7 +122,7 @@ impl ItemTrait {
             supertraits,
             inner_attrs,
             items,
-        }))
+        })))
     }
 
     // Skips a trait or a trait alias as `parse_or_alias` reads them, and

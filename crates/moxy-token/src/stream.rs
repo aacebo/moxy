@@ -206,11 +206,31 @@ impl Scan for TokenStream {
 
             // A digit or a quote always starts a literal, whose error is the
             // error of the stream
-            let literal = if matches!(c.first(), Some('0'..='9' | '"'))
+            let starts_literal = matches!(c.first(), Some('0'..='9' | '"'))
                 || ["'\\", "b'", "b\"", "br\"", "br#", "c\"", "cr\"", "cr#", "r\"", "r#\"", "r##"]
                     .iter()
-                    .any(|prefix| c.starts_with(prefix))
+                    .any(|prefix| c.starts_with(prefix));
+
+            // Any other word is read once, then told apart as a boolean, a
+            // keyword, or an identifier
+            if !starts_literal
+                && !c.starts_with("r#")
+                && let Some(next) = word_end(c)
             {
+                let span = c.span_to(&next);
+                let text = &c.rest()[..next.offset() as usize - c.offset() as usize];
+                tokens.push(match text {
+                    "true" | "false" => TokenTree::Literal(crate::LitBool::new(text == "true", span).into()),
+                    _ => match crate::Keyword::from_str(text, span) {
+                        Some(keyword) => TokenTree::Keyword(keyword),
+                        None => TokenTree::Ident(crate::Ident::scanned(text, span)),
+                    },
+                });
+                c = next;
+                continue;
+            }
+
+            let literal = if starts_literal {
                 Some(crate::Lit::scan(c)?)
             } else {
                 crate::Lit::scan(c).ok()
@@ -350,6 +370,14 @@ impl serde::Serialize for TokenStream {
     {
         self.0.serialize(s)
     }
+}
+
+// The end of an identifier or keyword that starts at the cursor
+fn word_end(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+    let first = cursor.first()?;
+
+    (first == '_' || unicode_ident::is_xid_start(first))
+        .then(|| cursor.advance_by(first.len_utf8()).skip_while(unicode_ident::is_xid_continue))
 }
 
 // Whether the last token is a single `.`, not the end of `..`

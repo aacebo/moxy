@@ -103,6 +103,24 @@ pub trait ToTokenStream: ToTokens<TokenStream> {
 /// lexing, such as Rust source text.
 pub trait TryIntoTokenStream: ToTokenStream {
     fn try_into_token_stream(self) -> Result<TokenStream, LexError>;
+
+    /// Runs `f` on the input as a token stream, borrowing it when the input is
+    /// a stream already and lexing it otherwise, so parsing a stream does not
+    /// copy it.
+    ///
+    /// ```
+    /// use moxy_token::{TokenStream, TryIntoTokenStream};
+    ///
+    /// let tokens: TokenStream = "a + b".parse().unwrap();
+    /// assert_eq!((&tokens).with_token_stream(|tokens| tokens.len()).unwrap(), 3);
+    /// assert_eq!("a + b".with_token_stream(|tokens| tokens.len()).unwrap(), 3);
+    /// ```
+    fn with_token_stream<R>(self, f: impl FnOnce(&TokenStream) -> R) -> Result<R, LexError>
+    where
+        Self: Sized,
+    {
+        Ok(f(&self.try_into_token_stream()?))
+    }
 }
 
 impl<X: ToTokens<TokenStream> + ?Sized> ToTokenStream for X {}
@@ -117,11 +135,19 @@ impl TryIntoTokenStream for &TokenStream {
     fn try_into_token_stream(self) -> Result<TokenStream, LexError> {
         Ok(self.clone())
     }
+
+    fn with_token_stream<R>(self, f: impl FnOnce(&TokenStream) -> R) -> Result<R, LexError> {
+        Ok(f(self))
+    }
 }
 
 impl TryIntoTokenStream for &&TokenStream {
     fn try_into_token_stream(self) -> Result<TokenStream, LexError> {
         Ok((*self).clone())
+    }
+
+    fn with_token_stream<R>(self, f: impl FnOnce(&TokenStream) -> R) -> Result<R, LexError> {
+        Ok(f(self))
     }
 }
 

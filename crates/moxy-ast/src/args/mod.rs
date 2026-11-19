@@ -22,9 +22,10 @@ pub enum GenericArgument {
     Lifetime(Lifetime),
     Type(Type),
     Const(Expr),
-    AssocType(AssocTypeArgument),
-    AssocConst(AssocConstArgument),
-    Constraint(ConstraintArgument),
+    // The associated forms are boxed, as they are larger than a type and rare
+    AssocType(Box<AssocTypeArgument>),
+    AssocConst(Box<AssocConstArgument>),
+    Constraint(Box<ConstraintArgument>),
 }
 
 impl Spanner for GenericArgument {

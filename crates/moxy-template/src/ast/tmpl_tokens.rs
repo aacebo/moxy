@@ -128,6 +128,8 @@ fn needs_tokens(token: &TokenTree) -> bool {
     }
 }
 
+// The literal tokens are lexed once per thread and copied on each expansion;
+// their spans point into the thread's source map, so the copy stays valid
 fn emit_text(tokens: &TokenStream, out: &mut TokenStream) {
     if tokens.is_empty() {
         return;
@@ -137,7 +139,7 @@ fn emit_text(tokens: &TokenStream, out: &mut TokenStream) {
 
     out.extend(
         TokenStream::from_str(&format!(
-            "::moxy::token::ToTokens::to_tokens(&::moxy::token::TokenStream::from_string({src:?}.to_owned()).expect(\"moxy template literal tokens must lex\"), &mut __moxy_tmpl);"
+            "{{ ::std::thread_local! {{ static __MOXY_TOKENS: ::moxy::token::TokenStream = ::moxy::token::TokenStream::from_string({src:?}.to_owned()).expect(\"moxy template literal tokens must lex\"); }} __MOXY_TOKENS.with(|tokens| ::moxy::token::ToTokens::to_tokens(tokens, &mut __moxy_tmpl)); }}"
         ))
         .unwrap(),
     );

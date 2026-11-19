@@ -97,15 +97,16 @@ macro_rules! parse_files {
 /// This is public only so [`parse!`](crate::parse) can call it from downstream crates.
 #[doc(hidden)]
 pub fn __parse_owned<T: Parse>(source: impl TryIntoTokenStream) -> Result<T, ParseError> {
-    let tokens = source.try_into_token_stream()?;
-    let parser = Parser::from_tokens(&tokens);
-    let value = T::parse(&parser)?;
+    source.with_token_stream(|tokens| {
+        let parser = Parser::from_tokens(tokens);
+        let value = T::parse(&parser)?;
 
-    if !parser.is_empty() {
-        return Err(parser.error("unexpected trailing input"));
-    }
+        if !parser.is_empty() {
+            return Err(parser.error("unexpected trailing input"));
+        }
 
-    Ok(value)
+        Ok(value)
+    })?
 }
 
 // Parses a node and converts it into the enum that holds it. Choosing this

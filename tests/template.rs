@@ -361,3 +361,17 @@ fn template_directives_follow_any_token_and_bindings_stay_tokens() {
         "match v {n @ 1 ..= 9 => n , all @ Some (_) => all , w @ _ => w}"
     );
 }
+
+#[test]
+fn template_literal_tokens_are_lexed_once_per_thread() {
+    use moxy::token::source::SourceMap;
+
+    let expand = || moxy::template! { pub struct Widget { a: u8 } };
+    let first = expand();
+    let sources = SourceMap::with(|map| map.len());
+    let second = expand();
+
+    assert_eq!(SourceMap::with(|map| map.len()), sources);
+    assert_eq!(first.to_string(), second.to_string());
+    assert_eq!(first.to_string(), "pub struct Widget {a : u8}");
+}

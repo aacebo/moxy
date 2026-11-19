@@ -42,7 +42,8 @@ struct InvalidFileFixture {
 
 fn bench_file_pair(c: &mut Criterion, fixture: FileFixture) {
     let source = fixture.source;
-    let moxy_items: Vec<moxy::ast::Item> = moxy::parse!(source).expect(fixture.name);
+    // A file holds its leading inner attributes, which no item takes
+    let moxy_items = moxy::parse!(source as moxy::ast::File).expect(fixture.name).items;
     let syn_file = syn::parse_file(source).expect(fixture.name);
 
     assert_eq!(
@@ -64,8 +65,8 @@ fn bench_file_pair(c: &mut Criterion, fixture: FileFixture) {
     group.bench_function("moxy", |b| {
         b.iter(|| {
             let source = black_box(fixture.source);
-            let items: Vec<moxy::ast::Item> = moxy::parse!(source).unwrap();
-            black_box(items)
+            let file: moxy::ast::File = moxy::parse!(source).unwrap();
+            black_box(file)
         })
     });
 
@@ -191,7 +192,7 @@ pub fn run(c: &mut Criterion) {
         FileFixture {
             name: "attributed_uses",
             source: ATTRIBUTED_USES,
-            expected_items: 12,
+            expected_items: 14,
         },
     );
     bench_file_pair(

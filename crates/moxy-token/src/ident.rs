@@ -76,16 +76,24 @@ macro_rules! ident {
 /// with `proc_macro2::Ident`; a raw identifier differs from its plain form.
 #[derive(Debug, Clone)]
 pub struct Ident {
-    text: Box<str>,
+    // Shared, so cloning an identifier, as each parse of one does, copies no
+    // text
+    text: std::rc::Rc<str>,
     span: Span,
 }
 
 impl Ident {
     pub fn new(text: impl std::fmt::Display) -> Self {
         Self {
-            text: text.to_string().into_boxed_str(),
+            text: text.to_string().into(),
             span: Span::default(),
         }
+    }
+
+    // An identifier of text the lexer has read, copied once into its shared
+    // text
+    pub(crate) fn scanned(text: &str, span: Span) -> Self {
+        Self { text: text.into(), span }
     }
 
     pub fn lex(input: impl std::fmt::Display) -> Result<Self, LexError> {
@@ -122,12 +130,12 @@ impl Ident {
     }
 
     pub fn to_lowercase(mut self) -> Self {
-        self.text = self.text.to_lowercase().into_boxed_str();
+        self.text = self.text.to_lowercase().into();
         self
     }
 
     pub fn to_uppercase(mut self) -> Self {
-        self.text = self.text.to_uppercase().into_boxed_str();
+        self.text = self.text.to_uppercase().into();
         self
     }
 
@@ -202,7 +210,7 @@ impl Scan for Ident {
                     .into();
             }
 
-            return Ok((end, Self::new(name).with_span(span)));
+            return Ok((end, Self::scanned(name, span)));
         }
 
         let first = cursor.first().ok_or(cursor.error())?;
@@ -214,7 +222,7 @@ impl Scan for Ident {
         let end = cursor.advance_by(first.len_utf8()).skip_while(unicode_ident::is_xid_continue);
         let span = cursor.span_to(&end);
         let text = &cursor.rest()[..end.offset() as usize - cursor.offset() as usize];
-        Ok((end, Self::new(text).with_span(span)))
+        Ok((end, Self::scanned(text, span)))
     }
 }
 

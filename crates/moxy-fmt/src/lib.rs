@@ -241,12 +241,14 @@ impl Formatter {
     }
 
     pub fn write_newline(&mut self) -> Result<(), FmtError> {
-        write!(
-            &mut self.output,
-            "{}{}",
-            self.config.newline,
-            self.config.indent.to_string().repeat(self.depth)
-        )?;
+        write!(&mut self.output, "{}", self.config.newline)?;
+
+        let (ch, width) = match self.config.indent {
+            IndentStyle::Tab(width) => ('\t', width),
+            IndentStyle::Space(width) => (' ', width),
+        };
+
+        self.output.extend(std::iter::repeat_n(ch, width * self.depth));
 
         self.column = self.depth * self.config.indent.spaces();
         Ok(())

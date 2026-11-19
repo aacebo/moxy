@@ -15,11 +15,11 @@ pub struct AssocConstArgument {
 
 impl AssocConstArgument {
     pub fn to_generic_argument(&self) -> GenericArgument {
-        GenericArgument::AssocConst(self.clone())
+        GenericArgument::AssocConst(Box::new(self.clone()))
     }
 
     pub fn into_generic_argument(self) -> GenericArgument {
-        GenericArgument::AssocConst(self)
+        GenericArgument::AssocConst(Box::new(self))
     }
 }
 

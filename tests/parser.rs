@@ -732,3 +732,16 @@ fn a_token_stream_nested_any_depth_converts_drops_and_reports_the_depth() {
     });
     assert_eq!(reported, message);
 }
+
+#[test]
+fn parsing_a_token_stream_borrows_it() {
+    use moxy::token::TryIntoTokenStream;
+
+    // A borrowed stream reaches the parser as itself, not as a copy
+    let tokens: moxy::token::TokenStream = "a + b".parse().unwrap();
+    let address = (&tokens).with_token_stream(std::ptr::from_ref).unwrap();
+    assert_eq!(address, std::ptr::from_ref(&tokens));
+
+    let expression: moxy::ast::Expr = moxy::parse!(tokens).unwrap();
+    assert!(expression.is_binary_chain());
+}

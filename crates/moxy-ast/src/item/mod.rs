@@ -45,22 +45,22 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[non_exhaustive]
 pub enum Item {
-    Use(ItemUse),
-    ExternCrate(ItemExternCrate),
-    Mod(ItemMod),
-    Fn(ItemFn),
-    Struct(ItemStruct),
-    Enum(ItemEnum),
-    Union(ItemUnion),
-    Trait(ItemTrait),
-    TraitAlias(ItemTraitAlias),
-    Impl(ItemImpl),
-    TypeAlias(ItemTypeAlias),
-    Const(ItemConst),
-    Static(ItemStatic),
+    Use(Box<ItemUse>),
+    ExternCrate(Box<ItemExternCrate>),
+    Mod(Box<ItemMod>),
+    Fn(Box<ItemFn>),
+    Struct(Box<ItemStruct>),
+    Enum(Box<ItemEnum>),
+    Union(Box<ItemUnion>),
+    Trait(Box<ItemTrait>),
+    TraitAlias(Box<ItemTraitAlias>),
+    Impl(Box<ItemImpl>),
+    TypeAlias(Box<ItemTypeAlias>),
+    Const(Box<ItemConst>),
+    Static(Box<ItemStatic>),
     Macro(ItemMacro),
     Macro2(ItemMacroRules),
-    DeclMacro(ItemDeclMacro),
+    DeclMacro(Box<ItemDeclMacro>),
     ForeignMod(ItemForeignMod),
 }
 
@@ -158,55 +158,67 @@ impl Item {
     }
 
     pub fn as_use(&self) -> Option<&ItemUse> {
-        if let Self::Use(v) = self { Some(v) } else { None }
+        if let Self::Use(v) = self { Some(v.as_ref()) } else { None }
     }
 
     pub fn as_extern_crate(&self) -> Option<&ItemExternCrate> {
-        if let Self::ExternCrate(v) = self { Some(v) } else { None }
+        if let Self::ExternCrate(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
     }
 
     pub fn as_mod(&self) -> Option<&ItemMod> {
-        if let Self::Mod(v) = self { Some(v) } else { None }
+        if let Self::Mod(v) = self { Some(v.as_ref()) } else { None }
     }
 
     pub fn as_fn(&self) -> Option<&ItemFn> {
-        if let Self::Fn(v) = self { Some(v) } else { None }
+        if let Self::Fn(v) = self { Some(v.as_ref()) } else { None }
     }
 
     pub fn as_struct(&self) -> Option<&ItemStruct> {
-        if let Self::Struct(v) = self { Some(v) } else { None }
+        if let Self::Struct(v) = self { Some(v.as_ref()) } else { None }
     }
 
     pub fn as_enum(&self) -> Option<&ItemEnum> {
-        if let Self::Enum(v) = self { Some(v) } else { None }
+        if let Self::Enum(v) = self { Some(v.as_ref()) } else { None }
     }
 
     pub fn as_union(&self) -> Option<&ItemUnion> {
-        if let Self::Union(v) = self { Some(v) } else { None }
+        if let Self::Union(v) = self { Some(v.as_ref()) } else { None }
     }
 
     pub fn as_trait(&self) -> Option<&ItemTrait> {
-        if let Self::Trait(v) = self { Some(v) } else { None }
+        if let Self::Trait(v) = self { Some(v.as_ref()) } else { None }
     }
 
     pub fn as_trait_alias(&self) -> Option<&ItemTraitAlias> {
-        if let Self::TraitAlias(v) = self { Some(v) } else { None }
+        if let Self::TraitAlias(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
     }
 
     pub fn as_impl(&self) -> Option<&ItemImpl> {
-        if let Self::Impl(v) = self { Some(v) } else { None }
+        if let Self::Impl(v) = self { Some(v.as_ref()) } else { None }
     }
 
     pub fn as_type_alias(&self) -> Option<&ItemTypeAlias> {
-        if let Self::TypeAlias(v) = self { Some(v) } else { None }
+        if let Self::TypeAlias(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
     }
 
     pub fn as_const(&self) -> Option<&ItemConst> {
-        if let Self::Const(v) = self { Some(v) } else { None }
+        if let Self::Const(v) = self { Some(v.as_ref()) } else { None }
     }
 
     pub fn as_static(&self) -> Option<&ItemStatic> {
-        if let Self::Static(v) = self { Some(v) } else { None }
+        if let Self::Static(v) = self { Some(v.as_ref()) } else { None }
     }
 
     pub fn as_macro(&self) -> Option<&ItemMacro> {
@@ -218,7 +230,11 @@ impl Item {
     }
 
     pub fn as_decl_macro(&self) -> Option<&ItemDeclMacro> {
-        if let Self::DeclMacro(v) = self { Some(v) } else { None }
+        if let Self::DeclMacro(v) = self {
+            Some(v.as_ref())
+        } else {
+            None
+        }
     }
 
     pub fn as_foreign_mod(&self) -> Option<&ItemForeignMod> {
@@ -252,79 +268,79 @@ impl Spanner for Item {
 
 impl From<ItemUse> for Item {
     fn from(value: ItemUse) -> Self {
-        Self::Use(value)
+        Self::Use(Box::new(value))
     }
 }
 
 impl From<ItemExternCrate> for Item {
     fn from(value: ItemExternCrate) -> Self {
-        Self::ExternCrate(value)
+        Self::ExternCrate(Box::new(value))
     }
 }
 
 impl From<ItemMod> for Item {
     fn from(value: ItemMod) -> Self {
-        Self::Mod(value)
+        Self::Mod(Box::new(value))
     }
 }
 
 impl From<ItemFn> for Item {
     fn from(value: ItemFn) -> Self {
-        Self::Fn(value)
+        Self::Fn(Box::new(value))
     }
 }
 
 impl From<ItemStruct> for Item {
     fn from(value: ItemStruct) -> Self {
-        Self::Struct(value)
+        Self::Struct(Box::new(value))
     }
 }
 
 impl From<ItemEnum> for Item {
     fn from(value: ItemEnum) -> Self {
-        Self::Enum(value)
+        Self::Enum(Box::new(value))
     }
 }
 
 impl From<ItemUnion> for Item {
     fn from(value: ItemUnion) -> Self {
-        Self::Union(value)
+        Self::Union(Box::new(value))
     }
 }
 
 impl From<ItemTrait> for Item {
     fn from(value: ItemTrait) -> Self {
-        Self::Trait(value)
+        Self::Trait(Box::new(value))
     }
 }
 
 impl From<ItemTraitAlias> for Item {
     fn from(value: ItemTraitAlias) -> Self {
-        Self::TraitAlias(value)
+        Self::TraitAlias(Box::new(value))
     }
 }
 
 impl From<ItemImpl> for Item {
     fn from(value: ItemImpl) -> Self {
-        Self::Impl(value)
+        Self::Impl(Box::new(value))
     }
 }
 
 impl From<ItemTypeAlias> for Item {
     fn from(value: ItemTypeAlias) -> Self {
-        Self::TypeAlias(value)
+        Self::TypeAlias(Box::new(value))
     }
 }
 
 impl From<ItemConst> for Item {
     fn from(value: ItemConst) -> Self {
-        Self::Const(value)
+        Self::Const(Box::new(value))
     }
 }
 
 impl From<ItemStatic> for Item {
     fn from(value: ItemStatic) -> Self {
-        Self::Static(value)
+        Self::Static(Box::new(value))
     }
 }
 
@@ -342,7 +358,7 @@ impl From<ItemMacroRules> for Item {
 
 impl From<ItemDeclMacro> for Item {
     fn from(value: ItemDeclMacro) -> Self {
-        Self::DeclMacro(value)
+        Self::DeclMacro(Box::new(value))
     }
 }
 
