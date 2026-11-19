@@ -42,6 +42,11 @@ impl Parse for UsePath {
         cursor = Option::<Token![::]>::skip(cursor)?;
         cursor = super::skip_segment(cursor)?;
         cursor = <Token![::]>::skip(cursor)?;
+
+        if cursor.curr().is_some_and(|token| token.is_keyword_crate()) {
+            return None;
+        }
+
         UseTree::skip(cursor)
     }
 }

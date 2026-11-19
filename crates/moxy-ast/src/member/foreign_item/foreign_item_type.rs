@@ -17,6 +17,8 @@ pub struct ForeignItemType {
     pub colon: Option<Token![:]>,
     pub bounds: List<TypeBound, Token![+]>,
     pub default: Option<(Token![=], Type)>,
+    /// A where clause after the default; one before it is in `generics`.
+    pub where_clause_after: Option<WhereClause>,
     pub semi: Option<Token![;]>,
 }
 
@@ -39,7 +41,7 @@ impl Parse for ForeignItemType {
         let type_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
         let mut generics = <_ as Parse>::parse(parser)?;
-        let (colon, bounds, default) = super::super::parse_type_rest(parser, &mut generics)?;
+        let (colon, bounds, default, where_clause_after) = super::super::parse_type_rest(parser, &mut generics)?;
 
         Ok(Self {
             attrs,
@@ -50,6 +52,7 @@ impl Parse for ForeignItemType {
             colon,
             bounds,
             default,
+            where_clause_after,
             semi: <_ as Parse>::parse(parser)?,
         })
     }
@@ -77,7 +80,14 @@ impl ToTokens for ForeignItemType {
         self.vis.to_tokens(t);
         self.type_keyword.to_tokens(t);
         self.ident.to_tokens(t);
-        super::super::type_rest_to_tokens(&self.generics, &self.colon, &self.bounds, &self.default, t);
+        super::super::type_rest_to_tokens(
+            &self.generics,
+            &self.colon,
+            &self.bounds,
+            &self.default,
+            &self.where_clause_after,
+            t,
+        );
         self.semi.to_tokens(t);
     }
 }

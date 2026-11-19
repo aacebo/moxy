@@ -15,6 +15,8 @@ pub struct ImplItemType {
     pub generics: Generics,
     pub eq: Token![=],
     pub ty: Type,
+    /// A where clause after the type; one before `=` is in `generics`.
+    pub where_clause_after: Option<WhereClause>,
     pub semi: Option<Token![;]>,
 }
 
@@ -38,14 +40,12 @@ impl Parse for ImplItemType {
         let defaultness = <_ as Parse>::parse(parser)?;
         let type_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
-        let mut generics: Generics = <_ as Parse>::parse(parser)?;
+        let generics: Generics = <_ as Parse>::parse(parser)?;
         let eq = <_ as Parse>::parse(parser)?;
         let ty = <_ as Parse>::parse(parser)?;
 
-        // The where clause can also follow the type, where Rust prefers it
-        if generics.where_clause.is_none() {
-            generics.where_clause = <_ as Parse>::parse(parser)?;
-        }
+        // A where clause can also follow the type, where Rust prefers it
+        let where_clause_after = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
             attrs,
@@ -56,6 +56,7 @@ impl Parse for ImplItemType {
             generics,
             eq,
             ty,
+            where_clause_after,
             semi: <_ as Parse>::parse(parser)?,
         })
     }
@@ -90,9 +91,10 @@ impl ToTokens for ImplItemType {
         self.generics.lt.to_tokens(t);
         self.generics.params.to_tokens(t);
         self.generics.gt.to_tokens(t);
+        self.generics.where_clause.to_tokens(t);
         self.eq.to_tokens(t);
         self.ty.to_tokens(t);
-        self.generics.where_clause.to_tokens(t);
+        self.where_clause_after.to_tokens(t);
         self.semi.to_tokens(t);
     }
 }

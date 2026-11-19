@@ -158,7 +158,8 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
         cursor = <Token![let]>::skip(cursor)?;
         cursor = Pattern::skip(cursor)?;
         cursor = <Token![=]>::skip(cursor)?;
-        return expr(cursor, context);
+        // The scrutinee ends before `&&` and `||`, as in the parser
+        return binary_rest(cast(cursor, context)?, context, Precedence::Compare);
     }
 
     if <Token![if]>::peek(cursor) {
@@ -259,7 +260,6 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
         return optional_expr(cursor, context);
     }
 
-    let path_start = cursor;
     let qualified = <Token![<]>::peek(cursor);
 
     if !qualified && !Path::peek(cursor) {
@@ -272,8 +272,10 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
         Path::skip_expr(cursor)?
     };
 
+    // The path of an expression macro is read as the parser reads it, so
+    // `A::<B>!()` skips as it parses
     if !qualified && <Token![!]>::peek(cursor) && !<Token![!=]>::peek(cursor) {
-        return MacroCall::skip(path_start);
+        return moxy_token::Group::skip(<Token![!]>::skip(cursor)?);
     }
 
     if context.allow_struct && cursor.is_delimited(Delim::Brace) {
@@ -455,6 +457,7 @@ fn range_limits(mut cursor: Cursor<'_>, context: ExprContext) -> Option<(Cursor<
 
     if RangeLimits::peek(cursor) {
         if peek::nested_range(cursor) {
+            let _depth = moxy_token::Depth::enter()?;
             return range(cursor, context);
         }
 

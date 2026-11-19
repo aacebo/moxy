@@ -127,6 +127,9 @@ fn continue_after_range(
     context: ExprContext,
 ) -> Result<Box<Expr>, ParseError> {
     if ranged {
+        // The assignment that follows nests the tree one level, as in
+        // `a = b.. = c`
+        let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
         assignment_rest(parser, assignment, context)
     } else {
         Ok(assignment)
@@ -166,7 +169,9 @@ fn range_rest(
 
     // The end may itself be a range without a start, as in `a.. ..b`
     if RangeLimits::peek(parser.cursor()) {
+        // A range in the end of a range nests one level, as in `.. .. a`
         if peek::nested_range(parser.cursor()) {
+            let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
             end = Some(range_rest(parser, Default::default(), None, context)?);
         }
     } else if !context.is_end(parser.cursor()) && Expr::peek(parser.cursor()) {

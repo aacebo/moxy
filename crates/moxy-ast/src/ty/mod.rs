@@ -303,10 +303,19 @@ impl Type {
             return true;
         }
 
+        // A bare trait object may start with a lifetime bound, as in `'a + A`
+        if Self::peek_lifetime_bound(cursor) {
+            return true;
+        }
+
         <Token![for]>::peek(cursor)
             && BoundLifetimes::skip(cursor).is_some_and(|after| {
                 !<Token![fn]>::peek(after) && !<Token![unsafe]>::peek(after) && !<Token![extern]>::peek(after)
             })
+    }
+
+    pub(crate) fn peek_lifetime_bound(cursor: Cursor<'_>) -> bool {
+        Lifetime::skip(cursor).is_some_and(|after| <Token![+]>::peek(after))
     }
 
     fn parse_never(parser: &Parser) -> Result<Self, ParseError> {
@@ -467,6 +476,7 @@ impl Parse for Type {
                     | Keyword::Super(_)
                     | Keyword::Crate(_)
             ),
+            Some(TokenTree::Punct(Punct::Quote(_))) => Self::peek_lifetime_bound(cursor),
             Some(TokenTree::Punct(p)) => matches!(
                 p,
                 Punct::And(_) | Punct::Star(_) | Punct::Not(_) | Punct::Colon(_) | Punct::Lt(_)

@@ -12,12 +12,14 @@ pub struct ItemTypeAlias {
     pub type_keyword: Token![type],
     pub ident: Ident,
     pub generics: Generics,
+    pub colon: Option<Token![:]>,
     pub bounds: List<TypeBound, Token![+]>,
-    /// The where clause, written before `=` or after the type; it emits after
-    /// the type when there is one, where Rust prefers it.
+    /// The where clause before `=`, or before `;` without a type.
     pub where_clause: Option<WhereClause>,
     pub eq_punct: Option<Token![=]>,
     pub ty: Option<Type>,
+    /// A where clause after the type, where Rust prefers it.
+    pub where_clause_after: Option<WhereClause>,
     pub semi_punct: Token![;],
 }
 
@@ -40,14 +42,14 @@ impl Parse for ItemTypeAlias {
         let type_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
         let mut generics: Generics = <_ as Parse>::parse(parser)?;
-        let bounds = if <Token![:]>::peek(parser.cursor()) {
-            let _: Token![:] = <_ as Parse>::parse(parser)?;
-            TypeBound::parse_bounds(parser)?
+        let colon: Option<Token![:]> = <_ as Parse>::parse(parser)?;
+        let bounds = if colon.is_some() {
+            List::parse_while_present(parser)?
         } else {
             List::new()
         };
 
-        let mut where_clause = generics
+        let where_clause = generics
             .where_clause
             .take()
             .or_else(|| <_ as Parse>::parse(parser).ok().flatten());
@@ -58,9 +60,7 @@ impl Parse for ItemTypeAlias {
             None
         };
 
-        if ty.is_some() && where_clause.is_none() {
-            where_clause = <_ as Parse>::parse(parser)?;
-        }
+        let where_clause_after = if ty.is_some() { <_ as Parse>::parse(parser)? } else { None };
 
         let semi_punct = <_ as Parse>::parse(parser)?;
 
@@ -70,10 +70,12 @@ impl Parse for ItemTypeAlias {
             type_keyword,
             ident,
             generics,
+            colon,
             bounds,
             where_clause,
             eq_punct,
             ty,
+            where_clause_after,
             semi_punct,
         })
     }
@@ -87,23 +89,15 @@ impl Parse for ItemTypeAlias {
 
         if <Token![:]>::peek(cursor) {
             cursor = <Token![:]>::skip(cursor)?;
-            cursor = TypeBound::skip(cursor)?;
-            while <Token![+]>::peek(cursor) {
-                cursor = <Token![+]>::skip(cursor)?;
-                cursor = TypeBound::skip(cursor)?;
-            }
+            cursor = List::<TypeBound, Token![+]>::skip_while_present(cursor)?;
         }
 
-        let before = WhereClause::peek(cursor);
         cursor = Option::<WhereClause>::skip(cursor)?;
 
         if <Token![=]>::peek(cursor) {
             cursor = <Token![=]>::skip(cursor)?;
             cursor = Type::skip(cursor)?;
-
-            if !before {
-                cursor = Option::<WhereClause>::skip(cursor)?;
-            }
+            cursor = Option::<WhereClause>::skip(cursor)?;
         }
 
         <Token![;]>::skip(cursor)
@@ -124,21 +118,13 @@ impl ToTokens for ItemTypeAlias {
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);
 
-        if !self.bounds.is_empty() {
-            <Token![:]>::default().to_tokens(t);
-            self.bounds.to_tokens(t);
-        }
+        self.colon.to_tokens(t);
+        self.bounds.to_tokens(t);
 
-        if self.ty.is_none() {
-            self.where_clause.to_tokens(t);
-        }
-
+        self.where_clause.to_tokens(t);
         self.eq_punct.to_tokens(t);
         self.ty.to_tokens(t);
-
-        if self.ty.is_some() {
-            self.where_clause.to_tokens(t);
-        }
+        self.where_clause_after.to_tokens(t);
 
         self.semi_punct.to_tokens(t);
     }

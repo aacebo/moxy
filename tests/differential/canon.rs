@@ -1105,6 +1105,7 @@ pub(super) fn mitem(i: &m::Item) -> String {
             mgenerics(&t.generics),
             t.where_clause
                 .as_ref()
+                .or(t.where_clause_after.as_ref())
                 .map(|w| format!(" where[{}]", mt(&w.predicates)))
                 .unwrap_or_default(),
             t.ty.as_ref().map(|ty| format!("={}", mtype(ty))).unwrap_or_default()

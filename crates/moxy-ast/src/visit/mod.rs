@@ -1036,10 +1036,12 @@ define_visit! {
             type_keyword: skip,
             ident: skip,
             generics => visit_generics / visit_generics_mut,
+            colon: skip,
             bounds: punct => visit_type_bound / visit_type_bound_mut,
             where_clause: opt => visit_where_clause / visit_where_clause_mut,
             eq_punct: skip,
             ty: opt => visit_type / visit_type_mut,
+            where_clause_after: opt => visit_where_clause / visit_where_clause_mut,
             semi_punct: skip,
         }
     }
@@ -1158,6 +1160,7 @@ define_visit! {
             colon: skip,
             bounds: punct => visit_type_bound / visit_type_bound_mut,
             default: opt_pair => visit_type / visit_type_mut,
+            where_clause_after: opt => visit_where_clause / visit_where_clause_mut,
             semi: skip,
         }
     }
@@ -1220,6 +1223,7 @@ define_visit! {
             generics => visit_generics / visit_generics_mut,
             eq: skip,
             ty => visit_type / visit_type_mut,
+            where_clause_after: opt => visit_where_clause / visit_where_clause_mut,
             semi: skip,
         }
     }
@@ -1280,6 +1284,7 @@ define_visit! {
             colon: skip,
             bounds: punct => visit_type_bound / visit_type_bound_mut,
             default: opt_pair => visit_type / visit_type_mut,
+            where_clause_after: opt => visit_where_clause / visit_where_clause_mut,
             semi: skip,
         }
     }

@@ -42,11 +42,11 @@ fn associated_type_where_clauses_follow_the_type() {
             "trait A {type X < T > : B = Vec < T > where T : Clone ;}",
             "trait A {\n\ttype X<T>: B = Vec<T>\n\twhere\n\tT: Clone;\n}",
         ),
-        // The older place before `=` moves after the type
+        // The older place before `=` stays where it is written
         (
             "impl A for B { type X<T> where T: Clone = Vec<T>; }",
-            "impl A for B {type X < T > = Vec < T > where T : Clone ;}",
-            "impl A for B {\n\ttype X<T> = Vec<T>\n\twhere\n\tT: Clone;\n}",
+            "impl A for B {type X < T > where T : Clone = Vec < T > ;}",
+            "impl A for B {\n\ttype X<T>\n\twhere\n\tT: Clone = Vec<T>;\n}",
         ),
     ] {
         let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
@@ -57,14 +57,23 @@ fn associated_type_where_clauses_follow_the_type() {
 
 #[test]
 fn a_type_alias_takes_its_where_clause_before_or_after_the_type() {
-    for source in ["type T<U> = Vec<U> where U: A;", "type T<U> where U: A = Vec<U>;"] {
+    for source in [
+        "type T<U> = Vec<U> where U: A;",
+        "type T<U> where U: A = Vec<U>;",
+        "type T<U> where U: A = Vec<U> where U: B;",
+        "type T<U> where U: A;",
+        "type T: = u8;",
+        "impl X { type T<U> where U: A = Vec<U> where U: B; }",
+        "trait X { type T<U>: C where U: A = Vec<U> where U: B; }",
+        "extern \"C\" { type T where Self: A = u8 where Self: B; }",
+    ] {
         let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
-        assert_eq!(item.to_token_stream().to_string(), "type T < U > = Vec < U > where U : A ;");
-        assert_eq!(moxy::fmt!(&item).unwrap(), "type T<U> = Vec<U>\nwhere\nU: A;");
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(item.to_token_stream().to_string(), lexed.to_string(), "`{source}`");
     }
 
-    let item: Item = moxy::parse!("type T<U> where U: A;").unwrap();
-    assert_eq!(item.to_token_stream().to_string(), "type T < U > where U : A ;");
+    let item: Item = moxy::parse!("type T<U> where U: A = Vec<U>;").unwrap();
+    assert_eq!(moxy::fmt!(&item).unwrap(), "type T<U>\nwhere\nU: A = Vec<U>;");
 }
 
 #[test]

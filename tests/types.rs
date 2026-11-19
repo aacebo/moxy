@@ -317,3 +317,16 @@ fn serialized_bounds_and_lifetimes_hold_no_source_offsets() {
     let json = serde_json::to_string(&ty).unwrap();
     assert!(!json.contains("span") && !json.contains("start"), "{json}");
 }
+
+#[test]
+fn a_bare_trait_object_may_start_with_a_lifetime() {
+    for source in ["'a + A", "'a + 'b", "Box<'a + A>", "&('a + A)"] {
+        let ty: Type = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(ty.to_token_stream().to_string(), lexed.to_string());
+    }
+
+    let ty: Type = moxy::parse!("A<'a, T>").unwrap();
+    assert_eq!(ty.to_token_stream().to_string(), "A < 'a , T >");
+    assert!(moxy::parse!("'a" as Type).is_err());
+}

@@ -17,6 +17,8 @@ pub struct TraitItemType {
     pub colon: Option<Token![:]>,
     pub bounds: List<TypeBound, Token![+]>,
     pub default: Option<(Token![=], Type)>,
+    /// A where clause after the default; one before it is in `generics`.
+    pub where_clause_after: Option<WhereClause>,
     pub semi: Token![;],
 }
 
@@ -40,7 +42,7 @@ impl Parse for TraitItemType {
         let type_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
         let mut generics: Generics = <_ as Parse>::parse(parser)?;
-        let (colon, bounds, default) = parse_type_rest(parser, &mut generics)?;
+        let (colon, bounds, default, where_clause_after) = parse_type_rest(parser, &mut generics)?;
         let semi = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
@@ -52,6 +54,7 @@ impl Parse for TraitItemType {
             colon,
             bounds,
             default,
+            where_clause_after,
             semi,
         })
     }
@@ -67,11 +70,18 @@ impl Parse for TraitItemType {
     }
 }
 
-/// The bounds and default of an associated or foreign type, after its generics
-pub(crate) type TypeRest = (Option<Token![:]>, List<TypeBound, Token![+]>, Option<(Token![=], Type)>);
+/// The bounds, default, and where clause after the default of an associated
+/// or foreign type, after its generics
+pub(crate) type TypeRest = (
+    Option<Token![:]>,
+    List<TypeBound, Token![+]>,
+    Option<(Token![=], Type)>,
+    Option<WhereClause>,
+);
 
-// The bounds, where clause, and default of an associated or foreign type,
-// after its generics, with the where clause read into `generics`
+// The bounds, where clauses, and default of an associated or foreign type,
+// after its generics, with the where clause before the default read into
+// `generics`
 pub(crate) fn parse_type_rest(parser: &Parser, generics: &mut Generics) -> Result<TypeRest, ParseError> {
     let (colon, bounds) = if <Token![:]>::peek(parser.cursor()) {
         let colon = <_ as Parse>::parse(parser)?;
@@ -93,12 +103,14 @@ pub(crate) fn parse_type_rest(parser: &Parser, generics: &mut Generics) -> Resul
         None
     };
 
-    // The where clause can also follow the default, where Rust prefers it
-    if default.is_some() && generics.where_clause.is_none() {
-        generics.where_clause = <_ as Parse>::parse(parser)?;
-    }
+    // A where clause can also follow the default, where Rust prefers it
+    let where_clause_after = if default.is_some() {
+        <_ as Parse>::parse(parser)?
+    } else {
+        None
+    };
 
-    Ok((colon, bounds, default))
+    Ok((colon, bounds, default, where_clause_after))
 }
 
 pub(crate) fn skip_type_rest(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
@@ -118,14 +130,14 @@ pub(crate) fn skip_type_rest(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     Some(cursor)
 }
 
-// Emits the generics, bounds, default, and where clause of an associated or
-// foreign type; with a default, the where clause goes after it, where Rust
-// prefers it
+// Emits the generics, bounds, where clauses, and default of an associated or
+// foreign type, each where clause where the source has it
 pub(crate) fn type_rest_to_tokens(
     generics: &Generics,
     colon: &Option<Token![:]>,
     bounds: &List<TypeBound, Token![+]>,
     default: &Option<(Token![=], Type)>,
+    where_clause_after: &Option<WhereClause>,
     t: &mut TokenStream,
 ) {
     generics.lt.to_tokens(t);
@@ -133,13 +145,14 @@ pub(crate) fn type_rest_to_tokens(
     generics.gt.to_tokens(t);
     colon.to_tokens(t);
     bounds.to_tokens(t);
+    generics.where_clause.to_tokens(t);
 
     if let Some((eq, d)) = default {
         eq.to_tokens(t);
         d.to_tokens(t);
     }
 
-    generics.where_clause.to_tokens(t);
+    where_clause_after.to_tokens(t);
 }
 
 impl Spanner for TraitItemType {
@@ -154,7 +167,14 @@ impl ToTokens for TraitItemType {
         self.vis.to_tokens(t);
         self.type_keyword.to_tokens(t);
         self.ident.to_tokens(t);
-        type_rest_to_tokens(&self.generics, &self.colon, &self.bounds, &self.default, t);
+        type_rest_to_tokens(
+            &self.generics,
+            &self.colon,
+            &self.bounds,
+            &self.default,
+            &self.where_clause_after,
+            t,
+        );
         self.semi.to_tokens(t);
     }
 }

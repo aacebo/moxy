@@ -183,7 +183,7 @@ fn an_underscore_is_a_wildcard_pattern_and_an_inferred_expression() {
 #[test]
 fn deeply_nested_parenthesized_patterns_parse_in_linear_time() {
     // Each level doubled the work before, which never ends at this depth
-    let depth = moxy::token::MAX_DEPTH - 1;
+    let depth = moxy::token::MAX_DEPTH - 2;
     let source = format!("{}a{}", "(".repeat(depth), ")".repeat(depth));
     let tuples = format!("{}a{}", "(".repeat(depth), ",)".repeat(depth));
 

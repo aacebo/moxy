@@ -3,6 +3,7 @@ use super::*;
 // Mirrors the dispatch of `parse::single`, peek for peek
 pub(crate) fn single(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     let _depth = moxy_token::Depth::enter()?;
+    moxy_token::Depth::enter()?;
 
     if <Token![#]>::peek(cursor) {
         return None;

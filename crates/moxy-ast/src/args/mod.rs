@@ -64,16 +64,17 @@ impl Parse for GenericArgument {
 
         // One call site for every form keeps one return slot in this frame,
         // which every nested argument holds
-        let parse: fn(&Parser) -> Result<Self, ParseError> = if token.is_punct_quote() {
-            |parser| Ok(Self::Lifetime(<_ as Parse>::parse(parser)?))
-        } else if starts_const(parser.cursor()) {
-            // A literal or block expression
-            |parser| Ok(Self::Const(expr::parse::unary(parser, Default::default())?))
-        } else if token.is_ident() {
-            Self::parse_named
-        } else {
-            |parser| Ok(Self::Type(<_ as Parse>::parse(parser)?))
-        };
+        let parse: fn(&Parser) -> Result<Self, ParseError> =
+            if token.is_punct_quote() && !Type::peek_lifetime_bound(parser.cursor()) {
+                |parser| Ok(Self::Lifetime(<_ as Parse>::parse(parser)?))
+            } else if starts_const(parser.cursor()) {
+                // A literal or block expression
+                |parser| Ok(Self::Const(expr::parse::unary(parser, Default::default())?))
+            } else if token.is_ident() {
+                Self::parse_named
+            } else {
+                |parser| Ok(Self::Type(<_ as Parse>::parse(parser)?))
+            };
 
         parse(parser)
     }
@@ -81,7 +82,7 @@ impl Parse for GenericArgument {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         let _depth = moxy_token::Depth::enter()?;
 
-        if Lifetime::peek(cursor) {
+        if Lifetime::peek(cursor) && !Type::peek_lifetime_bound(cursor) {
             return Lifetime::skip(cursor);
         }
 

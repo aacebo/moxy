@@ -1,10 +1,11 @@
-# Known differences from syn, one `TAG kind: source` per line, under a comment that
-# says why. The corpus test fails when one of these no longer differs, so the list
-# only shrinks.
+# Known differences from syn, one `TAG kind: source` per line, under a comment
+# that says why. Each reason is checked against rustc's parser: a source in an
+# item under `#[cfg(any())]` parses or not without the later checks. The corpus
+# test fails when one of these no longer differs, so the list only shrinks.
 
-# Intentional: inner attributes attach to the first item or statement of their
-# container, not to the container as in syn; a container without items has no
-# place for them, so a lone inner attribute is rejected
+# Inner attributes in a container without items, which are valid Rust: moxy
+# attaches inner attributes to the first item or statement, so such a container
+# has no place for them
 REJECT f: extern "C" { #![a] }
 REJECT f: fn f() { #![a] }
 REJECT f: fn f() { //! inner\n }
@@ -16,6 +17,9 @@ REJECT f: mod m { //! doc\n }
 REJECT f: trait A { #![a] }
 REJECT i: fn f() { #![allow(x)] }
 REJECT i: mod m { #![allow(x)] }
+
+# Intentional: moxy attaches inner attributes to the first item or statement of
+# their container, where syn holds them on the container
 TREE f: fn f() { #![a] let x = 1; }
 TREE f: fn f() { #![a] x }
 TREE f: fn f() { #![allow(unused)] x; y }
@@ -38,21 +42,19 @@ ACCEPT e: static || 1
 REJECT e: become f()
 REJECT f: const X: u8 = 1 where T: U;
 REJECT f: const trait A {}
-REJECT f: m! ident ();
-REJECT f: m! ident {}
 REJECT f: macro m() {}
 REJECT f: pub macro m($a:expr) { $a }
 REJECT f: struct S { a: u8 = 1 }
+REJECT f: trait A = ;
+REJECT f: trait A<T> = B<T> where T: C;
 REJECT p: S { box a }
 REJECT t: impl const A
 REJECT t: unsafe<'a> &'a A
 
-# Intentional: edition 2015 syntax that syn rejects: bare trait objects and
-# anonymous parameters, and `try!` as a macro
+# Intentional: bare trait objects with parenthesized arguments, which rustc's
+# parser accepts and newer editions reject later; syn rejects them
 ACCEPT e: <a::Fn(A) -> B>::c
 ACCEPT e: f::<Fn::(A) -> B>()
-ACCEPT f: trait A { fn f(&u8, mut x: u8); }
-ACCEPT f: trait A { fn f(u8); }
 ACCEPT t: A<a::b()>
 ACCEPT t: Box<Fn(A) -> B>
 ACCEPT t: F::<A>::Fn::(A) -> B
@@ -70,31 +72,54 @@ ACCEPT t: FnMut(&mut A) -> B<C>
 ACCEPT t: FnOnce(&mut A) -> &B
 ACCEPT t: a::Fn(A)
 ACCEPT t: a::Fn(A) -> B
+
+# Intentional: edition 2015 parameters without a name in a trait, which syn
+# rejects
+ACCEPT f: trait A { fn f(&u8, mut x: u8); }
+ACCEPT f: trait A { fn f(u8); }
+
+# Intentional: edition 2015 `try!`, which moxy lexes as the keyword `try` of
+# later editions
 REJECT b: { try!(x) }
 REJECT e: try!(a)
 REJECT f: macro_rules! try { () => {} }
-REJECT t: 'a + A
 
-# Intentional: rustc's parser accepts these and rejects them later, which syn
-# rejects while parsing or keeps as tokens
-ACCEPT f: use a::{::b};
-TREE f: trait A { pub fn f(); }
+# Intentional: rustc's parser accepts these and rejects them later, where syn
+# rejects them or keeps them as tokens
+ACCEPT e: A::<B>!()
 ACCEPT f: impl A { type T where Self: Sized = u8; }
 ACCEPT f: safe fn f() {}
 ACCEPT f: safe static X: u8 = 1;
 ACCEPT f: unsafe static X: u8 = 1;
 ACCEPT f: use Self::A;
 ACCEPT f: use a::Self;
-REJECT f: static X = 1;
-REJECT f: trait A = ;
-REJECT f: trait A<T> = B<T> where T: C;
+ACCEPT f: use a::{::b};
+ACCEPT p: -'a'
+ACCEPT p: [1.., 2]
+ACCEPT p: [1..]
+REJECT f: impl<T> X<T> { type Item; #[inline] fn next() -> Option<T> {} fn advance_by(self, n: usize) -> Result<(), NonZero<usize>> { rem = if len < n {} else {} } }
+TREE f: trait A { pub fn f(); }
 
-# Intentional: a type alias's where clause before `=`, the older place, emits
-# after the type, where Rust prefers it, as for associated types
-TOKENS f: type T<U> where U: A = Vec<U>;
+# Intentional: rustc rejects these while parsing, as moxy does, and syn accepts
+# them: an obsolete macro call with an identifier, a static without a type, a
+# keyword as a lifetime name, and `mut self` as a pattern
+REJECT f: m! ident ();
+REJECT f: m! ident {}
+REJECT f: static X = 1;
+REJECT f: type Symbols<'false> = Table<Symbol<'false>>;
+REJECT p: mut self
+
+# Intentional: rustc rejects `crate` after the first segment of a use path when
+# it resolves the path; moxy rejects it while parsing
+REJECT f: use a::crate;
+
+# Intentional: rustc's lexer rejects an exponent without digits, even in macro
+# input, which syn accepts as a suffix
+REJECT e: 1e
+REJECT f: fn f() { 1f16; 1.0f128; 1f16; 2b; 1px; 1em; 0x1p3; 1_; 1__; }
 
 # Intentional: moxy keeps tokens as written where syn normalizes them: the
-# obsolete `...` range, a leading zero in a tuple index, generic parameter order
+# obsolete `...` range, the text of a tuple index, generic parameter order
 TOKENS t: A<T, 'a>
 TREE e: a.01
 TREE e: a.0_0
@@ -111,35 +136,18 @@ TREE p: self
 
 # Intentional: moxy emits the empty `<>`, `:`, and `where` and the variant
 # visibility that the source has, which syn drops
+TOKENS f: enum E { pub A }
+TOKENS f: fn f() where {}
+TOKENS f: fn f<>() {}
 TOKENS f: fn min<T:>(v1: T) -> T {}
 TOKENS f: impl<> Bound<> {}
 TOKENS f: impl<> X {}
-TOKENS f: struct S<T: >(T);
 TOKENS f: struct S<>;
-TOKENS f: fn f<>() {}
-TOKENS i: struct S<T: >(T);
-TOKENS f: enum E { pub A }
-TOKENS f: fn f() where {}
+TOKENS f: struct S<T: >(T);
 TOKENS f: trait A: {}
+TOKENS i: struct S<T: >(T);
 
 # Intentional: moxy keeps a shebang of a path and one word as the file's
-# shebang tokens, which syn drops from the tokens
+# shebang tokens; syn drops the line
 TOKENS f: #!/usr/bin/env rust\n fn f() {}
 TOKENS f: #!/usr/bin/env rust\n#![allow(a)]\nfn main() {}
-
-# Intentional: rustc's lexer rejects an exponent without digits, even in macro
-# input, which syn accepts as a suffix
-REJECT e: 1e
-REJECT f: fn f() { 1f16; 1.0f128; 1f16; 2b; 1px; 1em; 0x1p3; 1_; 1__; }
-
-# Intentional: rustc rejects these after parsing, as moxy does while parsing:
-# a keyword as a lifetime name and an associated type without a type in an impl
-REJECT f: type Symbols<'false> = Table<Symbol<'false>>;
-REJECT f: impl<T> X<T> { type Item; #[inline] fn next() -> Option<T> {} fn advance_by(self, n: usize) -> Result<(), NonZero<usize>> { rem = if len < n {} else {} } }
-
-# Pending: invalid input that moxy accepts and `mut self` as a pattern, not
-# yet fixed
-ACCEPT p: -'a'
-ACCEPT p: [1.., 2]
-ACCEPT p: [1..]
-REJECT p: mut self

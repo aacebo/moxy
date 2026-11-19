@@ -617,15 +617,14 @@ impl Format for ItemTypeAlias {
             self.bounds.format(f)?;
         }
 
-        match &self.ty {
-            Some(ty) => {
-                f.text(" = ")?;
-                ty.format(f)?;
-                self.where_clause.format(f)?;
-            }
-            None => self.where_clause.format(f)?,
+        self.where_clause.format(f)?;
+
+        if let Some(ty) = &self.ty {
+            f.text(" = ")?;
+            ty.format(f)?;
         }
 
+        self.where_clause_after.format(f)?;
         f.text(";")
     }
 }
@@ -825,9 +824,10 @@ impl Format for ImplItemType {
         f.text("type ")?;
         self.ident.format(f)?;
         self.generics.format(f)?;
+        self.generics.where_clause.format(f)?;
         f.text(" = ")?;
         self.ty.format(f)?;
-        self.generics.where_clause.format(f)?;
+        self.where_clause_after.format(f)?;
         f.text(";")
     }
 }
@@ -923,12 +923,14 @@ impl Format for TraitItemType {
             self.bounds.format(f)?;
         }
 
+        self.generics.where_clause.format(f)?;
+
         if let Some((_, default)) = &self.default {
             f.text(" = ")?;
             default.format(f)?;
         }
 
-        self.generics.where_clause.format(f)?;
+        self.where_clause_after.format(f)?;
         f.text(";")
     }
 }
@@ -1026,12 +1028,14 @@ impl Format for ForeignItemType {
             self.bounds.format(f)?;
         }
 
+        self.generics.where_clause.format(f)?;
+
         if let Some((_, default)) = &self.default {
             f.text(" = ")?;
             default.format(f)?;
         }
 
-        self.generics.where_clause.format(f)?;
+        self.where_clause_after.format(f)?;
         f.text(";")
     }
 }

@@ -3,6 +3,10 @@ use super::*;
 pub(crate) fn single(parser: &Parser) -> Result<Pattern, ParseError> {
     let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
 
+    // The peeks below skip one level deeper, so without that room they would
+    // misread the input, as `1..=2` for `1` at the limit
+    moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+
     // As in rustc, a pattern takes no attributes; a parameter, match arm, or
     // struct pattern field holds them
     if <Token![#]>::peek(parser.cursor()) {
