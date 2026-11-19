@@ -24,6 +24,13 @@ pub fn nonzero_u8(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     }
 }
 
+// Re-emits its input after a round trip through moxy's token stream
+#[proc_macro]
+pub fn round_trip(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let tokens: moxy::token::TokenStream = input.into();
+    tokens.into()
+}
+
 #[derive(moxy::FromMeta)]
 struct RangeArgs {
     #[meta(default)]

@@ -35,7 +35,7 @@ impl From<Span> for proc_macro2::Span {
 
 impl From<proc_macro2::extra::DelimSpan> for DelimSpan {
     fn from(value: proc_macro2::extra::DelimSpan) -> Self {
-        Self::new(value.open().into(), value.close().into())
+        Self::with_whole(value.open().into(), value.close().into(), value.join().into())
     }
 }
 
@@ -151,8 +151,8 @@ impl From<proc_macro2::Group> for Group {
 impl From<Group> for proc_macro2::Group {
     fn from(value: Group) -> Self {
         let mut group = Self::new(value.delim.into(), value.tokens.into());
-        // `proc_macro2::Group` exposes one output span, so preserve the
-        // combined delimiter span rather than dropping both endpoints.
+        // `proc_macro2::Group` accepts one span, the whole group's, which also
+        // places both delimiters.
         group.set_span(value.span.span().into());
         group
     }
