@@ -135,3 +135,19 @@ impl ToTokens for UseTree {
         }
     }
 }
+
+// A use path segment: an identifier or one of the path keywords `crate`,
+// `self`, `super`, and `Self`
+fn peek_segment(cursor: Cursor<'_>) -> bool {
+    cursor.curr().is_some_and(|token| {
+        token.is_ident()
+            || token.is_keyword_crate()
+            || token.is_keyword_self_value()
+            || token.is_keyword_super()
+            || token.is_keyword_self_type()
+    })
+}
+
+fn skip_segment(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+    peek_segment(cursor).then(|| cursor.offset(1))
+}

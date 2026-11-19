@@ -14,19 +14,19 @@ pub struct UseRename {
 
 impl Parse for UseRename {
     fn peek(cursor: Cursor<'_>) -> bool {
-        Ident::peek(cursor) && <Token![as]>::peek(cursor.offset(1)) && Ident::peek(cursor.offset(2))
+        super::peek_segment(cursor) && <Token![as]>::peek(cursor.offset(1)) && Ident::peek(cursor.offset(2))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            ident: <_ as Parse>::parse(parser)?,
+            ident: parser.parse_ident_any()?,
             as_keyword: <_ as Parse>::parse(parser)?,
             rename: <_ as Parse>::parse(parser)?,
         })
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        Ident::skip(<Token![as]>::skip(Ident::skip(cursor)?)?)
+        Ident::skip(<Token![as]>::skip(super::skip_segment(cursor)?)?)
     }
 }
 
