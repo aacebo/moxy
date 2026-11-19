@@ -188,61 +188,30 @@ impl Parse for Attributes {
         Attribute::peek(cursor)
     }
 
-    // As in rustc, an inner attribute follows no outer one: `#[a] #![b]` is an
-    // error
+    // Outer attributes; an inner attribute here is an error, as rustc reports
+    // it, since only the start of a file or of a body holds inner ones
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs: Vec<Attribute> = parser.parse_while();
         let mut outer = false;
 
         for attr in &attrs {
-            if attr.style.is_inner() && outer {
-                return Err(ParseError::new(
-                    attr.span(),
-                    "an inner attribute is not permitted following an outer attribute",
-                ));
+            if attr.style.is_inner() {
+                let message = if outer {
+                    "an inner attribute is not permitted following an outer attribute"
+                } else {
+                    "an inner attribute is not permitted in this context"
+                };
+
+                return Err(ParseError::new(attr.span(), message));
             }
 
-            outer |= !attr.style.is_inner();
+            outer = true;
         }
 
         Ok(Self(attrs))
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let mut outer = false;
-
-        while let Some(next) = Attribute::skip(cursor) {
-            let inner = <Token![!]>::peek(cursor.offset(1));
-
-            if inner && outer {
-                return None;
-            }
-
-            outer |= !inner;
-            cursor = next;
-        }
-
-        Some(cursor)
-    }
-}
-
-impl Attributes {
-    // Parses the attributes of a node that takes no inner attributes, such as
-    // an expression that starts no statement
-    pub(crate) fn parse_outer(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = <Self as Parse>::parse(parser)?;
-
-        if let Some(attr) = attrs.iter().find(|attr| attr.style.is_inner()) {
-            return Err(ParseError::new(
-                attr.span(),
-                "an inner attribute is not permitted in this context",
-            ));
-        }
-
-        Ok(attrs)
-    }
-
-    pub(crate) fn skip_outer(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         while let Some(next) = Attribute::skip(cursor) {
             if <Token![!]>::peek(cursor.offset(1)) {
                 return None;
@@ -252,5 +221,33 @@ impl Attributes {
         }
 
         Some(cursor)
+    }
+}
+
+impl Attributes {
+    // The inner attributes that open a file or a body, as `#![a]` in
+    // `mod m { #![a] }`
+    pub(crate) fn parse_inner(parser: &Parser) -> Result<Self, ParseError> {
+        let mut attrs = Self::default();
+
+        while Self::peek_inner(parser.cursor()) {
+            attrs.push(<_ as Parse>::parse(parser)?);
+        }
+
+        Ok(attrs)
+    }
+
+    pub(crate) fn skip_inner(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        while Self::peek_inner(cursor) {
+            cursor = Attribute::skip(cursor)?;
+        }
+
+        Some(cursor)
+    }
+
+    fn peek_inner(cursor: Cursor<'_>) -> bool {
+        <Token![#]>::peek(cursor)
+            && <Token![!]>::peek(cursor.offset(1))
+            && cursor.offset(2).is_delimited(moxy_token::Delim::Bracket)
     }
 }

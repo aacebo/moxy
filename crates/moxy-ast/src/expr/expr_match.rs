@@ -10,6 +10,8 @@ pub struct ExprMatch {
     pub attrs: Attributes,
     pub match_keyword: Token![match],
     pub expr: Box<Expr>,
+    /// The inner attributes that open the body, as `#![a]`.
+    pub inner_attrs: Attributes,
     pub arms: Delimited<Vec<MatchArm>>,
 }
 
@@ -36,7 +38,10 @@ impl ToTokens for ExprMatch {
         self.attrs.to_tokens(t);
         self.match_keyword.to_tokens(t);
         self.expr.to_tokens(t);
-        self.arms.to_tokens(t);
+        let mut body = TokenStream::new();
+        self.inner_attrs.to_tokens(&mut body);
+        self.arms.inner.to_tokens(&mut body);
+        self.arms.surround(t, body);
     }
 }
 

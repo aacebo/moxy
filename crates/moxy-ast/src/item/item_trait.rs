@@ -16,6 +16,8 @@ pub struct ItemTrait {
     pub generics: Generics,
     pub colon_punct: Option<Token![:]>,
     pub supertraits: List<TypeBound, Token![+]>,
+    /// The inner attributes that open the body, as `#![a]`.
+    pub inner_attrs: Attributes,
     pub items: Delimited<Vec<TraitItem>>,
 }
 
@@ -72,7 +74,11 @@ impl Parse for ItemTrait {
             generics.where_clause = <_ as Parse>::parse(parser)?;
         }
 
-        let items = Delimited::parse_brace_with(parser, |parser| parser.parse_until_empty::<TraitItem>())?;
+        let mut inner_attrs = Attributes::default();
+        let items = Delimited::parse_brace_with(parser, |parser| {
+            inner_attrs = Attributes::parse_inner(parser)?;
+            parser.parse_until_empty::<TraitItem>()
+        })?;
 
         Ok(Self {
             attrs,
@@ -84,6 +90,7 @@ impl Parse for ItemTrait {
             generics,
             colon_punct,
             supertraits,
+            inner_attrs,
             items,
         })
     }
@@ -116,7 +123,7 @@ impl Parse for ItemTrait {
         }
 
         cursor = Option::<crate::WhereClause>::skip(cursor)?;
-        let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
+        let mut inner = Attributes::skip_inner(cursor.descend(moxy_token::Delim::Brace)?)?;
 
         while !inner.is_empty() {
             inner = TraitItem::skip(inner)?;
@@ -146,7 +153,10 @@ impl ToTokens for ItemTrait {
         self.colon_punct.to_tokens(t);
         self.supertraits.to_tokens(t);
         self.generics.where_clause.to_tokens(t);
-        self.items.to_tokens(t);
+        let mut body = TokenStream::new();
+        self.inner_attrs.to_tokens(&mut body);
+        self.items.inner.to_tokens(&mut body);
+        self.items.surround(t, body);
     }
 }
 

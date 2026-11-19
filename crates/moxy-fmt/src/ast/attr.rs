@@ -14,6 +14,16 @@ impl Format for Attributes {
     }
 }
 
+// The inner attributes that open a body, each on its own line
+pub(crate) fn inner_attrs(attrs: &Attributes, f: &mut Formatter) -> Result<(), FmtError> {
+    for attr in attrs.iter() {
+        f.hard_break()?;
+        attr.format(f)?;
+    }
+
+    Ok(())
+}
+
 impl Format for Attribute {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.style.format(f)?;

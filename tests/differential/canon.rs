@@ -29,6 +29,12 @@ pub(super) fn mattrs(a: &m::Attributes) -> String {
     if s.is_empty() { s } else { format!("@[{s}]") }
 }
 
+// Outer attributes and the inner attributes of a body, which syn holds together
+fn mattrs_with(outer: &m::Attributes, inner: &m::Attributes) -> String {
+    let s = mt(outer) + &mt(inner);
+    if s.is_empty() { s } else { format!("@[{s}]") }
+}
+
 pub(super) fn sattrs(a: &[syn::Attribute]) -> String {
     let s: String = a.iter().map(st).collect();
     if s.is_empty() { s } else { format!("@[{s}]") }
@@ -71,7 +77,7 @@ fn mstmt(stmt: &m::Stmt) -> String {
             }
             s
         }
-        m::Stmt::Block(b) => mblock(b),
+        m::Stmt::Block(b) => format!("{}{}", mattrs_with(&m::Attributes::default(), &b.inner_attrs), mblock(b)),
         m::Stmt::Item(i) => format!("item<{}>", mt(&**i)),
         m::Stmt::Expr(e, semi) => format!("{}{}", mexpr(e), if semi.is_some() { ";" } else { "" }),
         m::Stmt::Macro(mac) => format!(
@@ -158,7 +164,7 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
         ),
         E::Async(x) => format!(
             "{}async{}{}",
-            mattrs(&x.attrs),
+            mattrs_with(&x.attrs, &x.block.inner_attrs),
             if x.move_keyword.is_some() { " move" } else { "" },
             mblock(&x.block)
         ),
@@ -170,7 +176,7 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
         ),
         E::Block(x) => format!(
             "{}{}{}",
-            mattrs(&x.attrs),
+            mattrs_with(&x.attrs, &x.block.inner_attrs),
             x.label.as_ref().map(mt).unwrap_or_default(),
             mblock(&x.block)
         ),
@@ -206,7 +212,7 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
             mt(&x.output),
             mexpr(&x.body)
         ),
-        E::Const(x) => format!("{}const{}", mattrs(&x.attrs), mblock(&x.block)),
+        E::Const(x) => format!("{}const{}", mattrs_with(&x.attrs, &x.block.inner_attrs), mblock(&x.block)),
         E::Continue(x) => format!(
             "{}(continue {})",
             mattrs(&x.attrs),
@@ -215,7 +221,7 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
         E::Field(x) => format!("{}({}.{})", mattrs(&x.attrs), mexpr(&x.base), mt(&x.member)),
         E::ForLoop(x) => format!(
             "{}{}for {} in {} {}",
-            mattrs(&x.attrs),
+            mattrs_with(&x.attrs, &x.body.inner_attrs),
             x.label.as_ref().map(mt).unwrap_or_default(),
             mpat(&x.pat),
             mexpr(&x.expr),
@@ -224,7 +230,7 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
         E::Group(x) => mexpr(&x.expr),
         E::If(x) => format!(
             "{}if {} {}{}",
-            mattrs(&x.attrs),
+            mattrs_with(&x.attrs, &x.then_branch.inner_attrs),
             mexpr(&x.cond),
             mblock(&x.then_branch),
             x.else_branch
@@ -242,14 +248,14 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
         E::Lit(x) => format!("{}{}", mattrs(&x.attrs), mt(&x.lit)),
         E::Loop(x) => format!(
             "{}{}loop{}",
-            mattrs(&x.attrs),
+            mattrs_with(&x.attrs, &x.body.inner_attrs),
             x.label.as_ref().map(mt).unwrap_or_default(),
             mblock(&x.body)
         ),
         E::Macro(x) => format!("{}mac<{}>", mattrs(&x.attrs), mt(&x.mac)),
         E::Match(x) => format!(
             "{}match {} {{{}}}",
-            mattrs(&x.attrs),
+            mattrs_with(&x.attrs, &x.inner_attrs),
             mexpr(&x.expr),
             x.arms
                 .iter()
@@ -317,7 +323,7 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
                 .unwrap_or_default()
         ),
         E::Try(x) => format!("{}({}?)", mattrs(&x.attrs), mexpr(&x.expr)),
-        E::TryBlock(x) => format!("{}try{}", mattrs(&x.attrs), mblock(&x.block)),
+        E::TryBlock(x) => format!("{}try{}", mattrs_with(&x.attrs, &x.block.inner_attrs), mblock(&x.block)),
         E::Tuple(x) => format!(
             "{}tup({})",
             mattrs(&x.attrs),
@@ -326,11 +332,11 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
         // syn reads `-1` as a negative literal in patterns and generic arguments
         E::Unary(x) if matches!(x.op, m::UnOp::Neg(_)) && x.expr.is_lit() && x.attrs.is_empty() => format!("-{}", mexpr(&x.expr)),
         E::Unary(x) => format!("{}({} {})", mattrs(&x.attrs), mt(&x.op), mexpr(&x.expr)),
-        E::Unsafe(x) => format!("{}unsafe{}", mattrs(&x.attrs), mblock(&x.block)),
+        E::Unsafe(x) => format!("{}unsafe{}", mattrs_with(&x.attrs, &x.block.inner_attrs), mblock(&x.block)),
         E::Verbatim(x) => format!("V<{}>", strip(&x.to_string())),
         E::While(x) => format!(
             "{}{}while {} {}",
-            mattrs(&x.attrs),
+            mattrs_with(&x.attrs, &x.body.inner_attrs),
             x.label.as_ref().map(mt).unwrap_or_default(),
             mexpr(&x.cond),
             mblock(&x.body)
@@ -994,7 +1000,13 @@ fn mbody(b: &Option<m::StmtBlock>) -> String {
 pub(super) fn mitem(i: &m::Item) -> String {
     use m::Item as I;
     match i {
-        I::Fn(f) => format!("{}{}{} {}", mattrs(&f.attrs), mt(&f.vis), msig(&f.sig), mbody(&f.body)),
+        I::Fn(f) => format!(
+            "{}{}{} {}",
+            mattrs_with(&f.attrs, &f.body.as_ref().map(|b| b.inner_attrs.clone()).unwrap_or_default()),
+            mt(&f.vis),
+            msig(&f.sig),
+            mbody(&f.body)
+        ),
         I::Struct(s) => format!(
             "{}{}struct {}{}{}",
             mattrs(&s.attrs),
@@ -1032,7 +1044,7 @@ pub(super) fn mitem(i: &m::Item) -> String {
         ),
         I::Impl(x) => format!(
             "{}impl{} {}{} {{{}}}",
-            mattrs(&x.attrs),
+            mattrs_with(&x.attrs, &x.inner_attrs),
             mgenerics(&x.generics),
             x.trait_ref
                 .as_ref()
@@ -1043,7 +1055,13 @@ pub(super) fn mitem(i: &m::Item) -> String {
                 .inner
                 .iter()
                 .map(|it| match it {
-                    m::ImplItem::Fn(f) => format!("{}{}{} {}", mattrs(&f.attrs), mt(&f.vis), msig(&f.sig), mblock(&f.body)),
+                    m::ImplItem::Fn(f) => format!(
+                        "{}{}{} {}",
+                        mattrs_with(&f.attrs, &f.body.inner_attrs),
+                        mt(&f.vis),
+                        msig(&f.sig),
+                        mblock(&f.body)
+                    ),
                     other => format!("tokens<{}>", mt(other)),
                 })
                 .collect::<Vec<_>>()
@@ -1051,7 +1069,7 @@ pub(super) fn mitem(i: &m::Item) -> String {
         ),
         I::Trait(t) => format!(
             "{}{}trait {}{}{} {{{}}}",
-            mattrs(&t.attrs),
+            mattrs_with(&t.attrs, &t.inner_attrs),
             mt(&t.vis),
             mt(&t.ident),
             mgenerics(&t.generics),
@@ -1064,7 +1082,12 @@ pub(super) fn mitem(i: &m::Item) -> String {
                 .inner
                 .iter()
                 .map(|it| match it {
-                    m::TraitItem::Fn(f) => format!("{}{} {}", mattrs(&f.attrs), msig(&f.sig), mbody(&f.body)),
+                    m::TraitItem::Fn(f) => format!(
+                        "{}{} {}",
+                        mattrs_with(&f.attrs, &f.body.as_ref().map(|b| b.inner_attrs.clone()).unwrap_or_default()),
+                        msig(&f.sig),
+                        mbody(&f.body)
+                    ),
                     other => format!("tokens<{}>", mt(other)),
                 })
                 .collect::<Vec<_>>()
@@ -1072,7 +1095,7 @@ pub(super) fn mitem(i: &m::Item) -> String {
         ),
         I::Mod(x) => format!(
             "{}{}mod {}{}",
-            mattrs(&x.attrs),
+            mattrs_with(&x.attrs, &x.inner_attrs),
             mt(&x.vis),
             mt(&x.ident),
             x.content

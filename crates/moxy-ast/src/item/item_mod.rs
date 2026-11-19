@@ -12,6 +12,8 @@ pub struct ItemMod {
     pub unsafety: Option<Token![unsafe]>,
     pub mod_keyword: Token![mod],
     pub ident: Ident,
+    /// The inner attributes that open the content, as `#![a]`.
+    pub inner_attrs: Attributes,
     pub content: Option<Delimited<Vec<Item>>>,
     pub semi_punct: Option<Token![;]>,
 }
@@ -36,8 +38,12 @@ impl Parse for ItemMod {
         let unsafety = <_ as Parse>::parse(parser)?;
         let mod_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
+        let mut inner_attrs = Attributes::default();
         let (content, semi_punct) = if matches!(parser.curr(), Some(TokenTree::Group(g)) if g.delim == Delim::Brace) {
-            let brace = Delimited::<Vec<Item>>::parse_brace(parser)?;
+            let brace = Delimited::parse_brace_with(parser, |parser| {
+                inner_attrs = Attributes::parse_inner(parser)?;
+                <Vec<Item> as Parse>::parse(parser)
+            })?;
             (Some(brace), None)
         } else {
             let semi_punct = <_ as Parse>::parse(parser)?;
@@ -50,6 +56,7 @@ impl Parse for ItemMod {
             unsafety,
             mod_keyword,
             ident,
+            inner_attrs,
             content,
             semi_punct,
         })
@@ -63,7 +70,7 @@ impl Parse for ItemMod {
         cursor = Ident::skip(cursor)?;
 
         if cursor.is_delimited(Delim::Brace) {
-            let mut inner = cursor.descend(Delim::Brace)?;
+            let mut inner = Attributes::skip_inner(cursor.descend(Delim::Brace)?)?;
 
             while !inner.is_empty() {
                 inner = Item::skip(inner)?;
@@ -91,7 +98,12 @@ impl ToTokens for ItemMod {
         self.ident.to_tokens(t);
 
         match &self.content {
-            Some(brace) => brace.to_tokens(t),
+            Some(brace) => {
+                let mut body = TokenStream::new();
+                self.inner_attrs.to_tokens(&mut body);
+                brace.inner.to_tokens(&mut body);
+                brace.surround(t, body);
+            }
             None => self.semi_punct.to_tokens(t),
         }
     }

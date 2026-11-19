@@ -243,6 +243,7 @@ define_visit! {
             attrs => visit_attributes / visit_attributes_mut,
             match_keyword: skip,
             expr: box => visit_expr / visit_expr_mut,
+            inner_attrs => visit_attributes / visit_attributes_mut,
             arms: seq => visit_match_arm / visit_match_arm_mut,
         }
     }
@@ -472,6 +473,7 @@ define_visit! {
         visit: visit_stmt_block, visit_mut: visit_stmt_block_mut,
         walk: walk_stmt_block, walk_mut: walk_stmt_block_mut,
         fields {
+            inner_attrs => visit_attributes / visit_attributes_mut,
             stmts: seq => visit_stmt / visit_stmt_mut,
         }
     }
@@ -918,6 +920,7 @@ define_visit! {
             unsafety: leaf,
             mod_keyword: skip,
             ident: skip,
+            inner_attrs => visit_attributes / visit_attributes_mut,
             content: opt => visit_item_mod_content / visit_item_mod_content_mut,
             semi_punct: skip,
         }
@@ -995,6 +998,7 @@ define_visit! {
             generics => visit_generics / visit_generics_mut,
             colon_punct: skip,
             supertraits: punct => visit_type_bound / visit_type_bound_mut,
+            inner_attrs => visit_attributes / visit_attributes_mut,
             items: seq => visit_trait_item / visit_trait_item_mut,
         }
     }
@@ -1024,6 +1028,7 @@ define_visit! {
             for_keyword: skip,
             trait_ref: opt => visit_trait_ref / visit_trait_ref_mut,
             self_ty => visit_type / visit_type_mut,
+            inner_attrs => visit_attributes / visit_attributes_mut,
             items: seq => visit_impl_item / visit_impl_item_mut,
         }
     }
@@ -1106,6 +1111,7 @@ define_visit! {
             attrs => visit_attributes / visit_attributes_mut,
             unsafety: leaf,
             abi: skip,
+            inner_attrs => visit_attributes / visit_attributes_mut,
             items: seq => visit_foreign_item / visit_foreign_item_mut,
         }
     }

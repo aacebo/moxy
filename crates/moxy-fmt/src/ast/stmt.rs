@@ -6,6 +6,8 @@ impl Format for StmtBlock {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("{")?;
         f.indent(|f| {
+            super::attr::inner_attrs(&self.inner_attrs, f)?;
+
             for stmt in &self.stmts.inner {
                 f.hard_break()?;
                 stmt.format(f)?;
@@ -14,7 +16,7 @@ impl Format for StmtBlock {
             Ok(())
         })?;
 
-        if !self.stmts.inner.is_empty() {
+        if !self.stmts.inner.is_empty() || !self.inner_attrs.is_empty() {
             f.hard_break()?;
         }
 

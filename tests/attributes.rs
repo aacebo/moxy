@@ -260,3 +260,45 @@ fn inner_attributes_start_a_container_before_any_outer_attribute() {
 
     assert!(moxy::parse!("#![a] x" as Expr).is_err());
 }
+
+#[test]
+fn bodies_hold_their_inner_attributes() {
+    use moxy::token::ToTokenStream;
+
+    for source in [
+        "mod m { #![a] }",
+        "mod m { //! doc\n }",
+        "fn f() { #![a] }",
+        "fn f() { #![a] let x = 1; }",
+        "impl A { #![a] fn f() {} }",
+        "trait A { #![a] }",
+        "extern \"C\" { #![a] }",
+        "fn f() { match x { #![a] _ => 1 } }",
+        "fn f() { loop { #![a] } }",
+        "fn f() { { #![a] x } }",
+    ] {
+        let file: moxy::ast::File = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(file.to_token_stream().to_string(), lexed.to_string(), "`{source}`");
+        let formatted = moxy::fmt!(&file).unwrap();
+        assert!(moxy::parse!(formatted as moxy::ast::File).is_ok(), "`{source}`");
+    }
+
+    let item: Item = moxy::parse!("mod m { #![a] #![b] fn f() {} }").unwrap();
+    let module = item.as_mod().unwrap();
+    assert_eq!(module.inner_attrs.len(), 2);
+    assert!(module.content.as_ref().unwrap().inner[0].attrs().is_empty());
+
+    let item: Item = moxy::parse!("fn f() { #![a] x }").unwrap();
+    let body = item.as_fn().unwrap().body.as_ref().unwrap();
+    assert_eq!(body.inner_attrs.len(), 1);
+    assert_eq!(moxy::fmt!(&item).unwrap(), "fn f() {\n\t#![a]\n\tx\n}");
+
+    for source in [
+        "fn f() { if x { #![a] } }",
+        "fn f() { if x {} else { #![a] } }",
+        "mod m { fn f() {} #![a] }",
+    ] {
+        assert!(moxy::parse!(source as moxy::ast::File).is_err(), "`{source}`");
+    }
+}

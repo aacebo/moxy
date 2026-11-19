@@ -336,6 +336,8 @@ impl Format for ItemMod {
         if let Some(content) = &self.content {
             f.text(" {")?;
             f.indent(|f| {
+                super::attr::inner_attrs(&self.inner_attrs, f)?;
+
                 for (i, item) in content.inner.iter().enumerate() {
                     f.hard_break()?;
                     if i > 0 {
@@ -347,7 +349,7 @@ impl Format for ItemMod {
                 Ok(())
             })?;
 
-            if !content.inner.is_empty() {
+            if !content.inner.is_empty() || !self.inner_attrs.is_empty() {
                 f.hard_break()?;
             }
 
@@ -517,6 +519,8 @@ impl Format for ItemTrait {
         self.generics.where_clause.format(f)?;
         f.text(" {")?;
         f.indent(|f| {
+            super::attr::inner_attrs(&self.inner_attrs, f)?;
+
             for item in &self.items.inner {
                 f.hard_break()?;
                 item.format(f)?;
@@ -525,7 +529,7 @@ impl Format for ItemTrait {
             Ok(())
         })?;
 
-        if !self.items.inner.is_empty() {
+        if !self.items.inner.is_empty() || !self.inner_attrs.is_empty() {
             f.hard_break()?;
         }
 
@@ -580,6 +584,8 @@ impl Format for ItemImpl {
 
         f.text(" {")?;
         f.indent(|f| {
+            super::attr::inner_attrs(&self.inner_attrs, f)?;
+
             for (i, item) in self.items.inner.iter().enumerate() {
                 f.hard_break()?;
                 if i > 0 {
@@ -591,7 +597,7 @@ impl Format for ItemImpl {
             Ok(())
         })?;
 
-        if !self.items.inner.is_empty() {
+        if !self.items.inner.is_empty() || !self.inner_attrs.is_empty() {
             f.hard_break()?;
         }
 
@@ -724,6 +730,8 @@ impl Format for ItemForeignMod {
         self.abi.format(f)?;
         f.text(" {")?;
         f.indent(|f| {
+            super::attr::inner_attrs(&self.inner_attrs, f)?;
+
             for (i, item) in self.items.inner.iter().enumerate() {
                 f.hard_break()?;
 
@@ -737,7 +745,7 @@ impl Format for ItemForeignMod {
             Ok(())
         })?;
 
-        if !self.items.inner.is_empty() {
+        if !self.items.inner.is_empty() || !self.inner_attrs.is_empty() {
             f.hard_break()?;
         }
 

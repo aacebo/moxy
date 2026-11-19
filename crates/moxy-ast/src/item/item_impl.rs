@@ -15,6 +15,8 @@ pub struct ItemImpl {
     pub for_keyword: Option<Token![for]>,
     pub trait_ref: Option<TraitRef>,
     pub self_ty: Type,
+    /// The inner attributes that open the body, as `#![a]`.
+    pub inner_attrs: Attributes,
     pub items: Delimited<Vec<ImplItem>>,
 }
 
@@ -71,7 +73,11 @@ impl Parse for ItemImpl {
         };
 
         generics.where_clause = <_ as Parse>::parse(parser)?;
-        let items = Delimited::<Vec<ImplItem>>::parse_brace(parser)?;
+        let mut inner_attrs = Attributes::default();
+        let items = Delimited::parse_brace_with(parser, |parser| {
+            inner_attrs = Attributes::parse_inner(parser)?;
+            <Vec<ImplItem> as Parse>::parse(parser)
+        })?;
 
         Ok(Self {
             attrs,
@@ -82,6 +88,7 @@ impl Parse for ItemImpl {
             for_keyword,
             trait_ref,
             self_ty,
+            inner_attrs,
             items,
         })
     }
@@ -106,7 +113,7 @@ impl Parse for ItemImpl {
         }
 
         cursor = Option::<crate::WhereClause>::skip(cursor)?;
-        let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
+        let mut inner = Attributes::skip_inner(cursor.descend(moxy_token::Delim::Brace)?)?;
 
         while !inner.is_empty() {
             inner = ImplItem::skip(inner)?;
@@ -135,6 +142,9 @@ impl ToTokens for ItemImpl {
         self.for_keyword.to_tokens(t);
         self.self_ty.to_tokens(t);
         self.generics.where_clause.to_tokens(t);
-        self.items.to_tokens(t);
+        let mut body = TokenStream::new();
+        self.inner_attrs.to_tokens(&mut body);
+        self.items.inner.to_tokens(&mut body);
+        self.items.surround(t, body);
     }
 }

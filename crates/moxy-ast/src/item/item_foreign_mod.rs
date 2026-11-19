@@ -10,6 +10,8 @@ pub struct ItemForeignMod {
     pub attrs: Attributes,
     pub unsafety: Option<Token![unsafe]>,
     pub abi: Abi,
+    /// The inner attributes that open the body, as `#![a]`.
+    pub inner_attrs: Attributes,
     pub items: Delimited<Vec<ForeignItem>>,
 }
 
@@ -34,12 +36,17 @@ impl Parse for ItemForeignMod {
         let attrs = <_ as Parse>::parse(parser)?;
         let unsafety = <_ as Parse>::parse(parser)?;
         let abi = <_ as Parse>::parse(parser)?;
-        let items = Delimited::<Vec<ForeignItem>>::parse_brace(parser)?;
+        let mut inner_attrs = Attributes::default();
+        let items = Delimited::parse_brace_with(parser, |parser| {
+            inner_attrs = Attributes::parse_inner(parser)?;
+            <Vec<ForeignItem> as Parse>::parse(parser)
+        })?;
 
         Ok(Self {
             attrs,
             unsafety,
             abi,
+            inner_attrs,
             items,
         })
     }
@@ -48,7 +55,7 @@ impl Parse for ItemForeignMod {
         cursor = Attributes::skip(cursor)?;
         cursor = Option::<Token![unsafe]>::skip(cursor)?;
         cursor = Abi::skip(cursor)?;
-        let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
+        let mut inner = Attributes::skip_inner(cursor.descend(moxy_token::Delim::Brace)?)?;
 
         while !inner.is_empty() {
             inner = ForeignItem::skip(inner)?;
@@ -69,7 +76,10 @@ impl ToTokens for ItemForeignMod {
         self.attrs.to_tokens(t);
         self.unsafety.to_tokens(t);
         self.abi.to_tokens(t);
-        self.items.to_tokens(t);
+        let mut body = TokenStream::new();
+        self.inner_attrs.to_tokens(&mut body);
+        self.items.inner.to_tokens(&mut body);
+        self.items.surround(t, body);
     }
 }
 

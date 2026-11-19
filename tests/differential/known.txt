@@ -3,38 +3,6 @@
 # item under `#[cfg(any())]` parses or not without the later checks. The corpus
 # test fails when one of these no longer differs, so the list only shrinks.
 
-# Inner attributes in a container without items, which are valid Rust: moxy
-# attaches inner attributes to the first item or statement, so such a container
-# has no place for them
-REJECT f: extern "C" { #![a] }
-REJECT f: fn f() { #![a] }
-REJECT f: fn f() { //! inner\n }
-REJECT f: fn f() { loop { #![a] } }
-REJECT f: fn f() { match x { #![a] } }
-REJECT f: impl A { #![a] }
-REJECT f: mod m { #![a] }
-REJECT f: mod m { //! doc\n }
-REJECT f: trait A { #![a] }
-REJECT i: fn f() { #![allow(x)] }
-REJECT i: mod m { #![allow(x)] }
-
-# Intentional: moxy attaches inner attributes to the first item or statement of
-# their container, where syn holds them on the container
-TREE f: fn f() { #![a] let x = 1; }
-TREE f: fn f() { #![a] x }
-TREE f: fn f() { #![allow(unused)] x; y }
-TREE f: fn f() { //! doc\n x }
-TREE f: fn f() { for x in y { #![a] z; } }
-TREE f: fn f() { match x { #![a] _ => 1 } }
-TREE f: fn f() { unsafe { #![a] x } }
-TREE f: fn f() { while x { #![a] y; } }
-TREE f: fn f() { { #![a] x } }
-TREE f: impl A { #![inner] fn f() {} }
-TREE f: mod m { #![a] #![b] use c; }
-TREE f: mod m { #![a] fn f() {} }
-TREE f: mod m { //! doc\n fn f() {} }
-TREE f: trait A { #![a] fn f(); }
-
 # Intentional: nightly or unstable syntax, out of scope
 ACCEPT b: { let x = static || 1; }
 ACCEPT e: static move || 1

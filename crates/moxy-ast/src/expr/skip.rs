@@ -5,7 +5,7 @@ use super::peek;
 use super::*;
 
 pub(super) fn expr(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
-    assignment(Attributes::skip_outer(cursor)?, context)
+    assignment(Attributes::skip(cursor)?, context)
 }
 
 fn optional_expr(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
@@ -49,6 +49,17 @@ pub(crate) fn early_block_like(cursor: Cursor<'_>) -> Option<(Cursor<'_>, bool)>
     }
 
     Some((assignment(start, ExprContext::NORMAL)?, false))
+}
+
+// A block of an `if`, which takes no inner attributes
+fn if_block(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+    let inner = cursor.descend(Delim::Brace)?;
+
+    if <Token![#]>::peek(inner) && <Token![!]>::peek(inner.offset(1)) {
+        return None;
+    }
+
+    StmtBlock::skip(cursor)
 }
 
 fn list(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
@@ -165,12 +176,16 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     if <Token![if]>::peek(cursor) {
         cursor = <Token![if]>::skip(cursor)?;
         cursor = expr(cursor, ExprContext::EARLY)?;
-        cursor = StmtBlock::skip(cursor)?;
+        cursor = if_block(cursor)?;
 
         if <Token![else]>::peek(cursor) {
             cursor = <Token![else]>::skip(cursor)?;
 
-            if !cursor.is_delimited(Delim::Brace) && !<Token![if]>::peek(cursor) {
+            if cursor.is_delimited(Delim::Brace) {
+                return if_block(cursor);
+            }
+
+            if !<Token![if]>::peek(cursor) {
                 return None;
             }
 
@@ -213,7 +228,7 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     if <Token![match]>::peek(cursor) {
         cursor = <Token![match]>::skip(cursor)?;
         cursor = expr(cursor, ExprContext::EARLY)?;
-        let mut inner = cursor.descend(Delim::Brace)?;
+        let mut inner = Attributes::skip_inner(cursor.descend(Delim::Brace)?)?;
 
         while !inner.is_empty() {
             inner = MatchArm::skip(inner)?;

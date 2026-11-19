@@ -474,6 +474,8 @@ impl Format for ExprMatch {
         self.expr.format(f)?;
         f.text(" {")?;
         f.indent(|f| {
+            super::attr::inner_attrs(&self.inner_attrs, f)?;
+
             for arm in &self.arms.inner {
                 f.hard_break()?;
                 arm.format(f)?;

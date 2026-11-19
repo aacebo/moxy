@@ -43,11 +43,7 @@ impl Parse for File {
         let shebang = <_ as Parse>::parse(parser)?;
 
         // Only inner attributes belong to the file; outer ones belong to its first item
-        let mut attrs = Attributes::default();
-
-        while AttrStyle::peek(parser.cursor()) && <Token![!]>::peek(parser.cursor().offset(1)) {
-            attrs.push(<_ as Parse>::parse(parser)?);
-        }
+        let attrs = Attributes::parse_inner(parser)?;
 
         Ok(Self {
             shebang,
@@ -60,6 +56,8 @@ impl Parse for File {
         if Shebang::peek(cursor) {
             cursor = Shebang::skip(cursor)?;
         }
+
+        cursor = Attributes::skip_inner(cursor)?;
 
         while let Some(next) = Item::skip(cursor) {
             cursor = next;

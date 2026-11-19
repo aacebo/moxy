@@ -10,7 +10,7 @@ pub(super) fn expr(parser: &Parser, context: ExprContext) -> Result<Expr, ParseE
 // The parse functions return boxed expressions, which every parent node
 // stores, so a nested expression's stack frames hold pointers, not nodes
 fn boxed_expr(parser: &Parser, context: ExprContext) -> Result<Box<Expr>, ParseError> {
-    let attrs = Attributes::parse_outer(parser)?;
+    let attrs = <_ as Parse>::parse(parser)?;
     assignment(parser, attrs, context)
 }
 
@@ -685,7 +685,9 @@ fn let_expr(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<
 fn if_expr(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
     let if_keyword = <_ as Parse>::parse(parser)?;
     let cond = boxed_expr(parser, ExprContext::EARLY)?;
-    let then_branch = <_ as Parse>::parse(parser)?;
+    let then_branch: StmtBlock = <_ as Parse>::parse(parser)?;
+    if_block_inner(&then_branch)?;
+
     let (else_keyword, else_branch) = if <Token![else]>::peek(parser.cursor()) {
         let else_keyword = <_ as Parse>::parse(parser)?;
 
@@ -698,6 +700,11 @@ fn if_expr(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> 
         // An `else if` chain nests one level per branch
         let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let else_branch = primary(parser, Attributes::default(), ExprContext::NORMAL)?;
+
+        if let Expr::Block(block) = &*else_branch {
+            if_block_inner(&block.block)?;
+        }
+
         (Some(else_keyword), Some(else_branch))
     } else {
         (None, None)
@@ -711,6 +718,17 @@ fn if_expr(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> 
         else_keyword,
         else_branch,
     }))
+}
+
+// As in rustc, the blocks of an `if` take no inner attributes
+fn if_block_inner(block: &StmtBlock) -> Result<(), ParseError> {
+    match block.inner_attrs.iter().next() {
+        Some(attr) => Err(ParseError::new(
+            attr.span(),
+            "an inner attribute is not permitted in this context",
+        )),
+        None => Ok(()),
+    }
 }
 
 fn while_loop(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
@@ -756,11 +774,13 @@ fn match_expr(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseErro
     let match_keyword = <_ as Parse>::parse(parser)?;
     let expr = boxed_expr(parser, ExprContext::EARLY)?;
     let (span, arms) = parser.parse_group_spanned(Delim::Brace)?;
+    let inner = Attributes::parse_inner(&arms)?;
 
     Ok(boxed(ExprMatch {
         attrs,
         match_keyword,
         expr,
+        inner_attrs: inner,
         arms: Delimited::brace(span, arms.parse_until_empty()?),
     }))
 }
