@@ -24,7 +24,7 @@ impl Parse for TypeReference {
         let and = <_ as Parse>::parse(parser)?;
         let lifetime = <_ as Parse>::parse(parser)?;
         let mutability = <_ as Parse>::parse(parser)?;
-        let elem = Box::new(<_ as Parse>::parse(parser)?);
+        let elem = Box::new(Type::parse_without_plus(parser)?);
 
         Ok(Self {
             and,
@@ -35,7 +35,7 @@ impl Parse for TypeReference {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        Type::skip(Option::<Token![mut]>::skip(Option::<Lifetime>::skip(<Token![&]>::skip(
+        Type::skip_without_plus(Option::<Token![mut]>::skip(Option::<Lifetime>::skip(<Token![&]>::skip(
             cursor,
         )?)?)?)
     }

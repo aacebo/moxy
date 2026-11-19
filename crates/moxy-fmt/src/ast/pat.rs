@@ -1,5 +1,6 @@
 use moxy_ast::*;
 
+use super::path::format_qualified_path;
 use crate::{FmtError, Format, Formatter};
 
 impl Format for Pattern {
@@ -56,7 +57,7 @@ impl Format for PatIdent {
 impl Format for PatPath {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
-        self.path.format(f)
+        format_qualified_path(self.qself.as_ref(), &self.path, f)
     }
 }
 
@@ -72,7 +73,7 @@ impl Format for PatTuple {
 impl Format for PatTupleStruct {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
-        self.path.format(f)?;
+        format_qualified_path(self.qself.as_ref(), &self.path, f)?;
         f.text("(")?;
         self.elems.inner.format(f)?;
         f.text(")")
@@ -82,7 +83,7 @@ impl Format for PatTupleStruct {
 impl Format for PatStruct {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
-        self.path.format(f)?;
+        format_qualified_path(self.qself.as_ref(), &self.path, f)?;
         f.text(" {")?;
         f.indent(|f| {
             for pair in self.body.inner.fields.pairs() {

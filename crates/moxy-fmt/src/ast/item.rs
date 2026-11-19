@@ -948,6 +948,11 @@ impl Format for ForeignItemStatic {
             f.text(" ")?;
         }
 
+        if let Some(safety) = &self.safety {
+            safety.format(f)?;
+            f.text(" ")?;
+        }
+
         f.text("static ")?;
         self.mutability.format(f)?;
 

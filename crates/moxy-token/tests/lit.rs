@@ -78,3 +78,23 @@ fn suffixed_integer_constructors_keep_the_suffix() {
         assert_eq!(literal.to_string(), text);
     }
 }
+
+#[test]
+fn a_trailing_dot_ends_a_float_literal() {
+    for (source, tokens) in [
+        ("3.", vec!["3."]),
+        ("(x / 3.).floor()", vec!["(x / 3.)", ".", "floor", "()"]),
+        ("[1., 2.]", vec!["[1. , 2.]"]),
+        ("1..2", vec!["1", ".", ".", "2"]),
+        ("3.max(1)", vec!["3", ".", "max", "(1)"]),
+        ("x.0._a", vec!["x", ".", "0", ".", "_a"]),
+    ] {
+        let stream: TokenStream = source.parse().unwrap();
+        let texts: Vec<String> = stream.into_iter().map(|token| token.to_string()).collect();
+        assert_eq!(texts, tokens, "`{source}`");
+    }
+
+    let stream: TokenStream = "3.".parse().unwrap();
+    let token = stream.into_iter().next().unwrap();
+    assert!(token.as_literal().unwrap().is_float());
+}

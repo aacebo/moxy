@@ -21,3 +21,28 @@ fn foreign_modules_preserve_functions_statics_types_and_macros() {
         "extern \"C\" {\n\tfn call(value: usize) -> usize;\n\t\n\tstatic mut VALUE: usize;\n\t\n\ttype Output;\n\t\n\tinvoke!();\n}"
     );
 }
+
+#[test]
+fn foreign_statics_keep_their_safety_qualifier() {
+    for (source, tokens, formatted) in [
+        (
+            "unsafe extern \"C\" { pub safe static A: u8; }",
+            "unsafe extern \"C\" {pub safe static A : u8 ;}",
+            "unsafe extern \"C\" {\n\tpub safe static A: u8;\n}",
+        ),
+        (
+            "unsafe extern { unsafe static mut B: u8; }",
+            "unsafe extern {unsafe static mut B : u8 ;}",
+            "unsafe extern {\n\tunsafe static mut B: u8;\n}",
+        ),
+        (
+            "extern \"C\" { static C: u8; }",
+            "extern \"C\" {static C : u8 ;}",
+            "extern \"C\" {\n\tstatic C: u8;\n}",
+        ),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(moxy::token::ToTokenStream::to_token_stream(&item).to_string(), tokens);
+        assert_eq!(moxy::fmt!(&item).unwrap(), formatted);
+    }
+}

@@ -1,5 +1,6 @@
 use moxy_ast::*;
 
+use super::path::format_qualified_path;
 use crate::{FmtError, Format, Formatter};
 
 impl Format for Type {
@@ -26,53 +27,7 @@ impl Format for Type {
 
 impl Format for TypePath {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        if let Some(qself) = &self.qself {
-            f.text("<")?;
-            qself.ty.format(f)?;
-
-            if qself.position > 0 {
-                f.text(" as ")?;
-                // emit all segments up to position as a path prefix
-                for (i, pair) in self.path.pairs().enumerate() {
-                    if i >= qself.position {
-                        break;
-                    }
-
-                    match pair {
-                        moxy_ast::Pair::List(seg, _) => {
-                            seg.format(f)?;
-                        }
-                        moxy_ast::Pair::End(seg) => {
-                            seg.format(f)?;
-                        }
-                    }
-                }
-            }
-
-            f.text(">")?;
-            f.text("::")?;
-
-            // emit remaining segments
-            for (i, pair) in self.path.pairs().enumerate() {
-                if i < qself.position {
-                    continue;
-                }
-
-                match pair {
-                    moxy_ast::Pair::List(seg, _) => {
-                        seg.format(f)?;
-                        f.text("::")?;
-                    }
-                    moxy_ast::Pair::End(seg) => {
-                        seg.format(f)?;
-                    }
-                }
-            }
-        } else {
-            self.path.format(f)?;
-        }
-
-        Ok(())
+        format_qualified_path(self.qself.as_ref(), &self.path, f)
     }
 }
 

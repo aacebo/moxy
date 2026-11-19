@@ -78,3 +78,26 @@ fn block_like_expression_statements_end_at_their_block() {
     let item: moxy::ast::Item = moxy::parse!("fn f() { if a { b } else { c }.len(); }").unwrap();
     assert_eq!(item.as_fn().unwrap().body.as_ref().unwrap().stmts.inner.len(), 1);
 }
+
+#[test]
+fn macro_rules_definitions_in_parentheses_or_brackets_end_with_a_semicolon() {
+    for (source, tokens) in [
+        ("macro_rules! m ( () => {} );", "macro_rules ! m (() => {}) ;"),
+        ("macro_rules! m [ () => {} ];", "macro_rules ! m [() => {}] ;"),
+        ("macro_rules! m { () => {} }", "macro_rules ! m {() => {}}"),
+    ] {
+        let item: moxy::ast::Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(item.to_token_stream().to_string(), tokens);
+    }
+
+    let item: moxy::ast::Item = moxy::parse!("fn f() { macro_rules! m ( () => {} ); g() }").unwrap();
+    let statements = &item.as_fn().unwrap().body.as_ref().unwrap().stmts.inner;
+    assert_eq!(statements.len(), 2);
+    assert!(statements[0].as_item().unwrap().as_macro2().unwrap().semi.is_some());
+
+    let error = moxy::parse!("macro_rules! m ( () => {} )" as moxy::ast::Item).err().unwrap();
+    assert_eq!(
+        error.message(),
+        "expected `;` after a `macro_rules!` body in parentheses or brackets"
+    );
+}

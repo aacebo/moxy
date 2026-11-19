@@ -686,11 +686,14 @@ impl ExprContext {
         const_generic_default: true,
     };
 
+    // Whether a range ends here without an end operand. Where a struct
+    // literal is not allowed, as in `for i in 0.. {}`, a `{` starts the body
     fn is_end(self, cursor: Cursor<'_>) -> bool {
         cursor.is_empty()
             || <Token![,]>::peek(cursor)
             || <Token![;]>::peek(cursor)
             || (self.const_generic_default && <Token![>]>::peek(cursor))
+            || (!self.allow_struct && cursor.is_delimited(Delim::Brace))
     }
 
     fn is_end_before_infix(self, cursor: Cursor<'_>) -> bool {

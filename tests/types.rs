@@ -164,3 +164,21 @@ fn qualified_paths_emit_joined_path_separators() {
     let built = moxy::ast::ColonColon::default().to_token_stream();
     assert_eq!(built.to_string(), "::");
 }
+
+#[test]
+fn qualified_paths_keep_the_leading_colons_of_their_trait() {
+    for (source, tokens) in [
+        ("type X = <T as ::a::B>::C;", "type X = < T as :: a :: B > :: C ;"),
+        ("fn f() { <T as ::B>::f(x); }", "fn f () {< T as :: B > :: f (x) ;}"),
+        (
+            "fn f() { match x { <T as ::B>::C(a) => {} } }",
+            "fn f () {match x {< T as :: B > :: C (a) => {}}}",
+        ),
+    ] {
+        let item: moxy::ast::Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(item.to_token_stream().to_string(), tokens);
+    }
+
+    let ty: Type = moxy::parse!("<T as ::a::B>::C").unwrap();
+    assert_eq!(moxy::fmt!(&ty).unwrap(), "<T as ::a::B>::C");
+}

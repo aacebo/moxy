@@ -35,7 +35,7 @@ impl Parse for PatPath {
 
             cursor
         } else {
-            let Some(cursor) = Path::skip(cursor) else {
+            let Some(cursor) = Path::skip_expr(cursor) else {
                 return false;
             };
 
@@ -53,7 +53,7 @@ impl Parse for PatPath {
             let (qself, path) = QSelf::parse_qualified(parser)?;
             (Some(qself), path)
         } else {
-            (None, <_ as Parse>::parse(parser)?)
+            (None, Path::parse_expr(parser)?)
         };
 
         Ok(Self { attrs, qself, path })
@@ -65,7 +65,7 @@ impl Parse for PatPath {
         if <Token![<]>::peek(cursor) {
             TypePath::skip(cursor)
         } else {
-            Path::skip(cursor)
+            Path::skip_expr(cursor)
         }
     }
 }

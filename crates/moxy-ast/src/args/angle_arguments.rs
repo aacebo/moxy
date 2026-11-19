@@ -15,7 +15,9 @@ pub struct AngleArguments {
 
 impl Parse for AngleArguments {
     fn peek(cursor: Cursor<'_>) -> bool {
-        <Token![<]>::peek(cursor) || <Token![::]>::skip(cursor).is_some_and(|cursor| <Token![<]>::peek(cursor))
+        // `<=` is a comparison, as in `x as u64 <= max`, never the start of arguments
+        let cursor = <Token![::]>::skip(cursor).unwrap_or(cursor);
+        <Token![<]>::peek(cursor) && !<Token![<=]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {

@@ -33,6 +33,44 @@ impl Format for Path {
     }
 }
 
+/// Writes `path` qualified by `qself`, `<ty as Trait>::rest` where the first
+/// `position` segments of `path` belong to the trait, or `path` alone when it
+/// has no qualifier.
+pub(crate) fn format_qualified_path(qself: Option<&QSelf>, path: &Path, f: &mut Formatter) -> Result<(), FmtError> {
+    let Some(qself) = qself else {
+        return path.format(f);
+    };
+
+    f.text("<")?;
+    qself.ty.format(f)?;
+    let segments: Vec<&PathSegment> = path.iter().collect();
+
+    if qself.as_keyword.is_some() {
+        f.text(" as ")?;
+
+        if path.colon().is_some() {
+            f.text("::")?;
+        }
+
+        for (index, segment) in segments[..qself.position].iter().enumerate() {
+            if index > 0 {
+                f.text("::")?;
+            }
+
+            segment.format(f)?;
+        }
+    }
+
+    f.text(">")?;
+
+    for segment in &segments[qself.position..] {
+        f.text("::")?;
+        segment.format(f)?;
+    }
+
+    Ok(())
+}
+
 impl Format for PathSegment {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.ident.format(f)?;

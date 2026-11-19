@@ -84,6 +84,8 @@ impl QSelf {
 
         if let Some(as_keyword) = &qself.as_keyword {
             as_keyword.to_tokens(tokens);
+            // The trait path's leading `::`, as in `<T as ::a::B>::C`
+            path.colon().to_tokens(tokens);
 
             for (index, segment) in segments[..qself.position].iter().enumerate() {
                 if index > 0 {

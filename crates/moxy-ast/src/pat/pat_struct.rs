@@ -36,7 +36,7 @@ impl Parse for PatStruct {
 
             cursor
         } else {
-            let Some(cursor) = Path::skip(cursor) else {
+            let Some(cursor) = Path::skip_expr(cursor) else {
                 return false;
             };
 
@@ -52,7 +52,7 @@ impl Parse for PatStruct {
             let (qself, path) = QSelf::parse_qualified(parser)?;
             (Some(qself), path)
         } else {
-            (None, <_ as Parse>::parse(parser)?)
+            (None, Path::parse_expr(parser)?)
         };
 
         let body = Delimited::parse_brace(parser)?;
@@ -69,7 +69,7 @@ impl Parse for PatStruct {
         cursor = if <Token![<]>::peek(cursor) {
             TypePath::skip(cursor)?
         } else {
-            Path::skip(cursor)?
+            Path::skip_expr(cursor)?
         };
 
         let mut inner = cursor.descend(moxy_token::Delim::Brace)?;

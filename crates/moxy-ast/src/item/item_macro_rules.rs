@@ -1,4 +1,4 @@
-use moxy_token::{Group, Ident, LexError, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, Ident, LexError, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::*;
 
@@ -12,6 +12,8 @@ pub struct ItemMacroRules {
     pub not_punct: Token![!],
     pub ident: Ident,
     pub body: Group,
+    /// The `;` that ends a definition whose body is in parentheses or brackets.
+    pub semi: Option<Token![;]>,
 }
 
 impl Attributed for ItemMacroRules {
@@ -45,12 +47,24 @@ impl Parse for ItemMacroRules {
             }
         };
 
+        // Only a brace-delimited definition ends without a semicolon
+        let semi = if body.delim.is_brace() {
+            None
+        } else if <Token![;]>::peek(parser.cursor()) {
+            Some(<_ as Parse>::parse(parser)?)
+        } else {
+            return parser
+                .error("expected `;` after a `macro_rules!` body in parentheses or brackets")
+                .into();
+        };
+
         Ok(Self {
             attrs,
             macro_rules_keyword,
             not_punct,
             ident,
             body,
+            semi,
         })
     }
 
@@ -59,13 +73,19 @@ impl Parse for ItemMacroRules {
         cursor = <Token![macro_rules]>::skip(cursor)?;
         cursor = <Token![!]>::skip(cursor)?;
         cursor = Ident::skip(cursor)?;
-        Group::skip(cursor)
+
+        if cursor.is_delimited(Delim::Brace) {
+            return Group::skip(cursor);
+        }
+
+        <Token![;]>::skip(Group::skip(cursor)?)
     }
 }
 
 impl Spanner for ItemMacroRules {
     fn span(&self) -> Span {
-        self.attrs.span().join(self.body.span())
+        let end = self.semi.as_ref().map(|s| s.span()).unwrap_or_else(|| self.body.span());
+        self.attrs.span().join(end)
     }
 }
 
@@ -76,6 +96,7 @@ impl ToTokens for ItemMacroRules {
         self.not_punct.to_tokens(t);
         self.ident.to_tokens(t);
         t.extend_one(TokenTree::Group(self.body.clone()));
+        self.semi.to_tokens(t);
     }
 }
 

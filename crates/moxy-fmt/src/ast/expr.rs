@@ -1,5 +1,6 @@
 use moxy_ast::*;
 
+use super::path::format_qualified_path;
 use crate::{FmtError, Format, Formatter};
 
 impl Format for Expr {
@@ -78,59 +79,14 @@ impl Format for ExprLit {
 impl Format for ExprPath {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
-
-        if let Some(qself) = &self.qself {
-            // reuse TypePath QSelf logic via inline emit
-            f.text("<")?;
-            qself.ty.format(f)?;
-
-            if qself.position > 0 {
-                f.text(" as ")?;
-
-                for (i, pair) in self.path.pairs().enumerate() {
-                    if i >= qself.position {
-                        break;
-                    }
-
-                    match pair {
-                        Pair::List(seg, _) => {
-                            seg.format(f)?;
-                        }
-                        Pair::End(seg) => {
-                            seg.format(f)?;
-                        }
-                    }
-                }
-            }
-
-            f.text(">")?;
-
-            for (i, pair) in self.path.pairs().enumerate() {
-                if i < qself.position {
-                    continue;
-                }
-
-                match pair {
-                    Pair::List(seg, _) => {
-                        seg.format(f)?;
-                    }
-                    Pair::End(seg) => {
-                        seg.format(f)?;
-                    }
-                }
-            }
-        } else {
-            self.path.format(f)?;
-        }
-
-        Ok(())
+        format_qualified_path(self.qself.as_ref(), &self.path, f)
     }
 }
 
 impl Format for ExprStruct {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
-        self.path.format(f)?;
+        format_qualified_path(self.qself.as_ref(), &self.path, f)?;
         f.text(" {")?;
         f.indent(|f| {
             for pair in self.body.inner.fields.pairs() {

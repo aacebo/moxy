@@ -197,10 +197,12 @@ fn scan_number(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
     if cur.starts_with(".") {
         let after_dot = cur.advance();
 
-        if let Some(ch) = after_dot.first() {
-            if ch.is_ascii_digit() {
-                cur = digits_opt(after_dot, |ch| ch.is_ascii_digit());
-            }
+        match after_dot.first() {
+            Some(ch) if ch.is_ascii_digit() => cur = digits_opt(after_dot, |ch| ch.is_ascii_digit()),
+            // `1..2`, `1.max(2)`, and `x.0._a` keep the dot out of the literal
+            Some(ch) if ch == '.' || ch == '_' || ch.is_alphabetic() => {}
+            // A trailing dot, as in `3.` or `(x / 3.)`, ends a float literal
+            _ => return Ok(after_dot),
         }
     }
 

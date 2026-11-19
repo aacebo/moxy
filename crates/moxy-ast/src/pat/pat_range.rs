@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::*;
 
@@ -45,14 +45,10 @@ impl Parse for PatRange {
         };
 
         let limits = <_ as Parse>::parse(parser)?;
-        let end = if parser.is_empty()
-            || <Token![,]>::peek(parser.cursor())
-            || <Token![|]>::peek(parser.cursor())
-            || <Token![:]>::peek(parser.cursor())
-        {
-            None
-        } else {
+        let end = if Self::peek_end(parser.cursor()) {
             Some(expr::parse::unary(parser, Attributes::default())?)
+        } else {
+            None
         };
 
         if start.is_none() && end.is_none() && matches!(limits, PatRangeLimits::HalfOpen(_)) {
@@ -78,11 +74,28 @@ impl Parse for PatRange {
         let closed = <Token![..=]>::peek(cursor);
         cursor = PatRangeLimits::skip(cursor)?;
 
-        if cursor.is_empty() || <Token![,]>::peek(cursor) || <Token![|]>::peek(cursor) || <Token![:]>::peek(cursor) {
+        if !Self::peek_end(cursor) {
             return (has_start || closed).then_some(cursor);
         }
 
         expr::skip::pattern_bound(cursor)
+    }
+}
+
+impl PatRange {
+    // A range bound is a literal, a negated literal, or a path, so any other
+    // token, such as the `=>` or `if` of a match arm, ends a half-open `a..`
+    fn peek_end(cursor: Cursor<'_>) -> bool {
+        cursor.curr().is_some_and(|token| {
+            matches!(token, TokenTree::Literal(_))
+                || token.is_keyword_crate()
+                || token.is_keyword_self_value()
+                || token.is_keyword_self_type()
+                || token.is_keyword_super()
+        }) || Ident::peek(cursor)
+            || <Token![-]>::peek(cursor)
+            || <Token![::]>::peek(cursor)
+            || <Token![<]>::peek(cursor)
     }
 }
 

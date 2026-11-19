@@ -21,12 +21,12 @@ impl Parse for TypePointer {
         Ok(Self {
             star: <_ as Parse>::parse(parser)?,
             mutability: <_ as Parse>::parse(parser)?,
-            elem: Box::new(<_ as Parse>::parse(parser)?),
+            elem: Box::new(Type::parse_without_plus(parser)?),
         })
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        Type::skip(PointerMutability::skip(<Token![*]>::skip(cursor)?)?)
+        Type::skip_without_plus(PointerMutability::skip(<Token![*]>::skip(cursor)?)?)
     }
 }
 

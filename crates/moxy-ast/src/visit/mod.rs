@@ -1097,6 +1097,7 @@ define_visit! {
             not_punct: skip,
             ident: skip,
             body: skip,
+            semi: skip,
         }
     }
     struct ItemForeignMod {
@@ -1138,6 +1139,7 @@ define_visit! {
         fields {
             attrs => visit_attributes / visit_attributes_mut,
             vis => visit_visibility / visit_visibility_mut,
+            safety: leaf,
             static_keyword: skip,
             mutability: leaf,
             ident: skip,

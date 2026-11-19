@@ -243,7 +243,8 @@ impl From<TypeBareFn> for Type {
 
 impl Type {
     /// Parses a type that `+` does not continue, as after `as` in an
-    /// expression, where `a as usize + 1` adds to the cast.
+    /// expression, where `a as usize + 1` adds to the cast, and after `&` or
+    /// `*`, where Rust rejects `&A + B` as ambiguous.
     pub(crate) fn parse_without_plus(parser: &Parser) -> Result<Self, ParseError> {
         if Self::peek_bare_bounds(parser.cursor()) {
             return Ok(Self::Path(<_ as Parse>::parse(parser)?));
@@ -404,7 +405,8 @@ impl Parse for Type {
 
         let path = <_ as Parse>::parse(parser)?;
 
-        if <Token![!]>::peek(parser.cursor()) {
+        // `!=` after a type ends a cast (`a as u8 != b`), not a type macro
+        if <Token![!]>::peek(parser.cursor()) && !<Token![!=]>::peek(parser.cursor()) {
             return Ok(Self::Macro(TypeMacro {
                 mac: MacroCall {
                     path,
@@ -480,7 +482,7 @@ impl Parse for Type {
 
         let mut cursor = Path::skip(cursor)?;
 
-        if <Token![!]>::peek(cursor) {
+        if <Token![!]>::peek(cursor) && !<Token![!=]>::peek(cursor) {
             cursor = <Token![!]>::skip(cursor)?;
             cursor = Group::skip(cursor)?;
         }
