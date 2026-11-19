@@ -55,6 +55,8 @@ REJECT f: macro_rules! try { () => {} }
 # Intentional: rustc's parser accepts these and rejects them later, where syn
 # rejects them or keeps them as tokens
 ACCEPT e: A::<B>!()
+ACCEPT e: a.1e1
+ACCEPT f: fn f() { x.0; x.0.1; x.0 .1; x.0. 1; (x.0).1; x.00; x.0x0; x.1e1; x.1_0; }
 ACCEPT f: impl A { type T where Self: Sized = u8; }
 ACCEPT f: safe fn f() {}
 ACCEPT f: safe static X: u8 = 1;

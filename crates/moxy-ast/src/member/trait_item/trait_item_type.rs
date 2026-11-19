@@ -11,6 +11,7 @@ pub struct TraitItemType {
     /// A visibility, which rustc's parser accepts and the compiler rejects
     /// later, as in `pub fn f();`.
     pub vis: Visibility,
+    pub defaultness: Option<Token![default]>,
     pub type_keyword: Token![type],
     pub ident: Ident,
     pub generics: Generics,
@@ -32,6 +33,7 @@ impl Parse for TraitItemType {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor)
             .and_then(|cursor| Visibility::skip(cursor))
+            .map(|cursor| Option::<Token![default]>::skip(cursor).unwrap_or(cursor))
             .map(|cursor| <Token![type]>::peek(cursor) && Ident::peek(cursor.offset(1)))
             .unwrap_or(false)
     }
@@ -39,6 +41,7 @@ impl Parse for TraitItemType {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = <_ as Parse>::parse(parser)?;
         let vis = <_ as Parse>::parse(parser)?;
+        let defaultness = <_ as Parse>::parse(parser)?;
         let type_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
         let mut generics: Generics = <_ as Parse>::parse(parser)?;
@@ -48,6 +51,7 @@ impl Parse for TraitItemType {
         Ok(Self {
             attrs,
             vis,
+            defaultness,
             type_keyword,
             ident,
             generics,
@@ -62,6 +66,7 @@ impl Parse for TraitItemType {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
+        cursor = Option::<Token![default]>::skip(cursor)?;
         cursor = <Token![type]>::skip(cursor)?;
         cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
@@ -165,6 +170,7 @@ impl ToTokens for TraitItemType {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.vis.to_tokens(t);
+        self.defaultness.to_tokens(t);
         self.type_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         type_rest_to_tokens(

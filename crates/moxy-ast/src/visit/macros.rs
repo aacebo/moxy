@@ -17,14 +17,13 @@
 ///
 /// Each node is declared as:
 /// ```ignore
-/// struct ExprBinaryChain {
-///     visit:  visit_expr_binary_chain,  visit_mut:  visit_expr_binary_chain_mut,
-///     walk:   walk_expr_binary_chain,   walk_mut:   walk_expr_binary_chain_mut,
+/// struct ExprUnary {
+///     visit:  visit_expr_unary,  visit_mut:  visit_expr_unary_mut,
+///     walk:   walk_expr_unary,   walk_mut:   walk_expr_unary_mut,
 ///     fields {
-///         attrs            => visit_attributes / visit_attributes_mut,
-///         left:  box       => visit_expr / visit_expr_mut,
-///         op:    leaf,
-///         right: box       => visit_expr / visit_expr_mut,
+///         attrs      => visit_attributes / visit_attributes_mut,
+///         op:   leaf,
+///         expr: box  => visit_expr / visit_expr_mut,
 ///     }
 /// }
 /// enum Expr {

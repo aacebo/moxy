@@ -59,9 +59,11 @@ impl Spanner for Member {
 }
 
 // As in rustc's parser, any integer literal without a suffix is a tuple
-// index, as `0x1` in `a.0x1`; the compiler checks its value later
+// index, as `0x1` in `a.0x1` and `S { 0x1: a }`; the compiler checks the
+// value later. After a field dot a number with an exponent is one too, which
+// field access reads itself
 fn is_tuple_index(lit: &Lit) -> bool {
-    lit.as_int().is_some_and(|int| int.suffix() == moxy_token::IntSuffix::None)
+    matches!(lit, Lit::Int(int) if int.suffix() == moxy_token::IntSuffix::None)
 }
 
 impl Parse for Member {

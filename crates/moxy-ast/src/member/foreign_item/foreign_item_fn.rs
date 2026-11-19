@@ -9,6 +9,7 @@ use crate::*;
 pub struct ForeignItemFn {
     pub attrs: Attributes,
     pub vis: Visibility,
+    pub defaultness: Option<Token![default]>,
     pub sig: Signature,
     /// A body, which rustc's parser accepts and the compiler rejects later.
     pub body: Option<StmtBlock>,
@@ -25,12 +26,14 @@ impl Parse for ForeignItemFn {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        let cursor = Option::<Token![default]>::skip(cursor).unwrap_or(cursor);
         Signature::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = <_ as Parse>::parse(parser)?;
         let vis = <_ as Parse>::parse(parser)?;
+        let defaultness = <_ as Parse>::parse(parser)?;
         let sig = Signature::parse_with(parser, false)?;
         let (body, semi) = if StmtBlock::peek(parser.cursor()) {
             (Some(<_ as Parse>::parse(parser)?), None)
@@ -41,6 +44,7 @@ impl Parse for ForeignItemFn {
         Ok(Self {
             attrs,
             vis,
+            defaultness,
             sig,
             body,
             semi,
@@ -50,6 +54,7 @@ impl Parse for ForeignItemFn {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
+        cursor = Option::<Token![default]>::skip(cursor)?;
         cursor = Signature::skip_with(cursor, false)?;
 
         if StmtBlock::peek(cursor) {
@@ -70,6 +75,7 @@ impl ToTokens for ForeignItemFn {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.vis.to_tokens(t);
+        self.defaultness.to_tokens(t);
         self.sig.to_tokens(t);
         self.body.to_tokens(t);
         self.semi.to_tokens(t);

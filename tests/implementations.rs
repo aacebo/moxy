@@ -110,3 +110,41 @@ fn a_colon_without_bounds_formats() {
         assert_eq!(moxy::fmt!(&item).unwrap(), formatted, "`{source}`");
     }
 }
+
+#[test]
+fn impl_trait_and_extern_members_take_the_forms_rustc_parses() {
+    // rustc's parser reads the members of the three kinds of block with one
+    // grammar and rejects most of these later
+    let accepted = [
+        ("impl A", "const X: u8;"),
+        ("impl A", "type T: B = u8;"),
+        ("impl A", "type T: B where Self: A;"),
+        ("trait A", "default const X: u8 = 1;"),
+        ("trait A", "default type T = u8;"),
+        ("trait A", "pub default unsafe fn f() {}"),
+        ("extern \"C\"", "default type T = u8;"),
+        ("extern \"C\"", "default fn f() {}"),
+        ("extern \"C\"", "static X: u8 = 1;"),
+    ];
+    let rejected = [
+        ("extern \"C\"", "const X: u8;"),
+        ("extern \"C\"", "default static X: u8;"),
+        ("impl A", "default static X: u8;"),
+        ("trait A", "default pub fn f();"),
+    ];
+
+    for (block, member) in accepted {
+        let source = format!("{block} {{ {member} }}");
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let expected: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(item.to_token_stream().to_string(), expected.to_string());
+        let formatted = moxy::fmt!(&item).unwrap();
+        let again: Item = moxy::parse!(formatted).unwrap_or_else(|error| panic!("`{formatted}`: {error}"));
+        assert_eq!(again.to_token_stream().to_string(), expected.to_string());
+    }
+
+    for (block, member) in rejected {
+        let source = format!("{block} {{ {member} }}");
+        assert!(moxy::parse!(source as Item).is_err(), "`{source}`");
+    }
+}

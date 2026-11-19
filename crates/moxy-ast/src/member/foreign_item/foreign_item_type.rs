@@ -9,6 +9,7 @@ use crate::*;
 pub struct ForeignItemType {
     pub attrs: Attributes,
     pub vis: Visibility,
+    pub defaultness: Option<Token![default]>,
     pub type_keyword: Token![type],
     pub ident: Ident,
     pub generics: Generics,
@@ -32,12 +33,14 @@ impl Parse for ForeignItemType {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
+        let cursor = Option::<Token![default]>::skip(cursor).unwrap_or(cursor);
         <Token![type]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = <_ as Parse>::parse(parser)?;
         let vis = <_ as Parse>::parse(parser)?;
+        let defaultness = <_ as Parse>::parse(parser)?;
         let type_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
         let mut generics = <_ as Parse>::parse(parser)?;
@@ -46,6 +49,7 @@ impl Parse for ForeignItemType {
         Ok(Self {
             attrs,
             vis,
+            defaultness,
             type_keyword,
             ident,
             generics,
@@ -60,6 +64,7 @@ impl Parse for ForeignItemType {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
+        cursor = Option::<Token![default]>::skip(cursor)?;
         cursor = <Token![type]>::skip(cursor)?;
         cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
@@ -78,6 +83,7 @@ impl ToTokens for ForeignItemType {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.vis.to_tokens(t);
+        self.defaultness.to_tokens(t);
         self.type_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         super::super::type_rest_to_tokens(

@@ -16,6 +16,25 @@ pub enum LitFloat {
 }
 
 impl LitFloat {
+    /// Whether this literal names a member after a field dot, as rustc's
+    /// parser reads `1e5` in `x.1e5`: digits with an unsigned exponent and no
+    /// suffix. A float with a dot is two members instead; see
+    /// [`split_tuple_index`](Self::split_tuple_index).
+    ///
+    /// ```
+    /// use moxy_token::{Lit, TokenStream, TokenTree};
+    ///
+    /// let tokens: TokenStream = "1e5 1e+5 1.5".parse().unwrap();
+    /// let members: Vec<bool> = tokens
+    ///     .iter()
+    ///     .map(|token| matches!(token, TokenTree::Literal(Lit::Float(float)) if float.is_member()))
+    ///     .collect();
+    /// assert_eq!(members, [true, false, false]);
+    /// ```
+    pub fn is_member(&self) -> bool {
+        is_member_number(self.repr())
+    }
+
     #[inline]
     pub fn repr(&self) -> &str {
         match self {
@@ -74,17 +93,17 @@ impl LitFloat {
 }
 
 impl LitFloat {
-    /// Splits a float of a digit run, a dot, and an optional digit run, as in
-    /// `x.0.1` and `x.0. 1`, into a tuple index, the dot, and the second tuple
-    /// index if there is one, each with its part of the span. The compiler
-    /// lexes `0.1` and `0.` there as one float literal.
+    /// Splits a float of a digit run, a dot, and an optional unsuffixed
+    /// number, as in `x.0.1`, `x.0. 1`, and `x.0.1e1`, into a tuple index,
+    /// the dot, and the second member if there is one, each with its part of
+    /// the span. The compiler lexes `0.1` and `0.` there as one float literal.
     #[doc(hidden)]
-    pub fn split_tuple_index(&self) -> Option<(crate::LitInt, crate::Dot, Option<crate::LitInt>)> {
+    pub fn split_tuple_index(&self) -> Option<(crate::LitInt, crate::Dot, Option<crate::Lit>)> {
         let repr = self.repr();
         let (head, tail) = repr.split_once('.')?;
         let digits = |text: &str| !text.is_empty() && text.bytes().all(|byte| byte.is_ascii_digit());
 
-        if !digits(head) || !(tail.is_empty() || digits(tail)) {
+        if !digits(head) || !(tail.is_empty() || is_member_number(tail)) {
             return None;
         }
 
@@ -95,13 +114,34 @@ impl LitFloat {
         let second = if tail.is_empty() {
             None
         } else {
-            let mut second: crate::LitInt = tail.parse().ok()?;
-            second.set_span(tail_span);
+            let second: crate::Lit = if tail.contains(['e', 'E']) {
+                Self::from_repr(tail, tail_span)?.into()
+            } else {
+                let mut second: crate::LitInt = tail.parse().ok()?;
+                second.set_span(tail_span);
+                second.into()
+            };
+
             Some(second)
         };
 
         Some((first, crate::Dot::new(dot_span), second))
     }
+}
+
+// Whether a number written after a field dot names a member as rustc's parser
+// reads it: digits, or digits with an unsigned exponent, without a suffix, as
+// `1` and `1e5` in `x.1` and `x.1e5`
+fn is_member_number(text: &str) -> bool {
+    let (mantissa, exponent) = match text.find(['e', 'E']) {
+        Some(index) => (&text[..index], Some(&text[index + 1..])),
+        None => (text, None),
+    };
+    let digits = |text: &str| {
+        text.bytes().any(|byte| byte.is_ascii_digit()) && text.bytes().all(|byte| byte.is_ascii_digit() || byte == b'_')
+    };
+
+    digits(mantissa) && mantissa.as_bytes()[0].is_ascii_digit() && exponent.is_none_or(digits)
 }
 
 impl Scan for LitFloat {

@@ -205,7 +205,7 @@ impl Scan for TokenStream {
                     tokens.push(TokenTree::Punct(dot.into()));
 
                     if let Some(second) = second {
-                        tokens.push(TokenTree::Literal(second.into()));
+                        tokens.push(TokenTree::Literal(second));
                     }
                 } else {
                     tokens.push(TokenTree::Literal(lit));

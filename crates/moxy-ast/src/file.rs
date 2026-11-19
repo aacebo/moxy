@@ -36,7 +36,7 @@ impl ToTokens for File {
 
 impl Parse for File {
     fn peek(cursor: Cursor<'_>) -> bool {
-        Shebang::peek(cursor) || Item::peek(cursor)
+        Shebang::peek(cursor) || Attributes::peek_inner(cursor) || Item::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -58,12 +58,7 @@ impl Parse for File {
         }
 
         cursor = Attributes::skip_inner(cursor)?;
-
-        while let Some(next) = Item::skip(cursor) {
-            cursor = next;
-        }
-
-        Some(cursor)
+        Vec::<Item>::skip(cursor)
     }
 }
 

@@ -1,4 +1,4 @@
-use moxy_token::{Delim, Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -12,9 +12,7 @@ pub struct ItemMod {
     pub unsafety: Option<Token![unsafe]>,
     pub mod_keyword: Token![mod],
     pub ident: Ident,
-    /// The inner attributes that open the content, as `#![a]`.
-    pub inner_attrs: Attributes,
-    pub content: Option<Delimited<Vec<Item>>>,
+    pub content: Option<ItemModContent>,
     pub semi_punct: Option<Token![;]>,
 }
 
@@ -38,16 +36,17 @@ impl Parse for ItemMod {
         let unsafety = <_ as Parse>::parse(parser)?;
         let mod_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
-        let mut inner_attrs = Attributes::default();
-        let (content, semi_punct) = if matches!(parser.curr(), Some(TokenTree::Group(g)) if g.delim == Delim::Brace) {
-            let brace = Delimited::parse_brace_with(parser, |parser| {
+        // The body is read here rather than in its own parse, which would add
+        // a frame per nested module
+        let (content, semi_punct) = if ItemModContent::peek(parser.cursor()) {
+            let mut inner_attrs = Attributes::default();
+            let items = Delimited::parse_brace_with(parser, |parser| {
                 inner_attrs = Attributes::parse_inner(parser)?;
                 <Vec<Item> as Parse>::parse(parser)
             })?;
-            (Some(brace), None)
+            (Some(ItemModContent { inner_attrs, items }), None)
         } else {
-            let semi_punct = <_ as Parse>::parse(parser)?;
-            (None, Some(semi_punct))
+            (None, Some(<_ as Parse>::parse(parser)?))
         };
 
         Ok(Self {
@@ -56,7 +55,6 @@ impl Parse for ItemMod {
             unsafety,
             mod_keyword,
             ident,
-            inner_attrs,
             content,
             semi_punct,
         })
@@ -69,14 +67,8 @@ impl Parse for ItemMod {
         cursor = <Token![mod]>::skip(cursor)?;
         cursor = Ident::skip(cursor)?;
 
-        if cursor.is_delimited(Delim::Brace) {
-            let mut inner = Attributes::skip_inner(cursor.descend(Delim::Brace)?)?;
-
-            while !inner.is_empty() {
-                inner = Item::skip(inner)?;
-            }
-
-            Some(cursor.offset(1))
+        if ItemModContent::peek(cursor) {
+            ItemModContent::skip(cursor)
         } else {
             <Token![;]>::skip(cursor)
         }
@@ -96,16 +88,8 @@ impl ToTokens for ItemMod {
         self.unsafety.to_tokens(t);
         self.mod_keyword.to_tokens(t);
         self.ident.to_tokens(t);
-
-        match &self.content {
-            Some(brace) => {
-                let mut body = TokenStream::new();
-                self.inner_attrs.to_tokens(&mut body);
-                brace.inner.to_tokens(&mut body);
-                brace.surround(t, body);
-            }
-            None => self.semi_punct.to_tokens(t),
-        }
+        self.content.to_tokens(t);
+        self.semi_punct.to_tokens(t);
     }
 }
 

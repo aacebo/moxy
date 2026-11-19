@@ -697,8 +697,25 @@ fn any_unsuffixed_integer_after_a_field_dot_is_a_tuple_index() {
         assert_eq!(expression.to_token_stream().to_string(), emitted);
     }
 
-    for source in ["x.0u8", "x.0."] {
+    // A number with an exponent names a member too, as rustc's parser reads it
+    for (source, emitted) in [("a.1e5", "a . 1e5"), ("a.0.1e1", "a . 0 . 1e1"), ("a.1E2", "a . 1E2")] {
+        let expression: Expr = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(expression.to_token_stream().to_string(), emitted);
+    }
+
+    for source in ["x.0u8", "x.0.", "x.1e5f32", "x.1E+2", "x.1.5e-3"] {
         assert!(moxy::parse!(source as Expr).is_err(), "`{source}`");
+    }
+
+    // A field name in a struct literal or pattern is an integer only
+    assert_eq!(
+        moxy::parse!("S { 0x1: a }" as Expr).unwrap().to_token_stream().to_string(),
+        "S {0x1 : a}"
+    );
+
+    for source in ["S { 1e5: a }", "S { 1E2: a }"] {
+        assert!(moxy::parse!(source as Expr).is_err(), "`{source}`");
+        assert!(moxy::parse!(source as moxy::ast::Pattern).is_err(), "`{source}`");
     }
 }
 
@@ -820,4 +837,156 @@ fn chain_nodes_serialize_every_step_and_operator() {
             "semi_punct": ";",
         }})
     );
+}
+
+#[test]
+fn postfix_steps_tell_their_kind() {
+    let expression: Expr = moxy::parse!("a(b).c(d).e[f]?.g.await").unwrap();
+    let ops = &expression.as_postfix().unwrap().ops;
+    let kinds: Vec<[bool; 6]> = ops
+        .iter()
+        .map(|op| {
+            [
+                op.is_call(),
+                op.is_method_call(),
+                op.is_field(),
+                op.is_index(),
+                op.is_try(),
+                op.is_await(),
+            ]
+        })
+        .collect();
+    let accessed: Vec<[bool; 6]> = ops
+        .iter()
+        .map(|op| {
+            [
+                op.as_call().is_some(),
+                op.as_method_call().is_some(),
+                op.as_field().is_some(),
+                op.as_index().is_some(),
+                op.as_try().is_some(),
+                op.as_await().is_some(),
+            ]
+        })
+        .collect();
+    let expected: Vec<[bool; 6]> = [0, 1, 2, 3, 4, 2, 5]
+        .iter()
+        .map(|&kind| std::array::from_fn(|index| index == kind))
+        .collect();
+    assert_eq!(kinds, expected);
+    assert_eq!(accessed, expected);
+    assert_eq!(ops[1].as_method_call().unwrap().method.text(), "c");
+}
+
+#[test]
+fn visitors_see_each_chain_once_and_each_step_through_its_own_callback() {
+    use moxy::ast::{ElseIf, ExprBinaryChain, ExprCastChain, ExprIfChain, PostfixMethodCall, UsePathChain, Visit};
+
+    #[derive(Default)]
+    struct Count([usize; 6]);
+
+    impl<'ast> Visit<'ast> for Count {
+        fn visit_expr_binary_chain(&mut self, node: &'ast ExprBinaryChain) {
+            self.0[0] += 1;
+            moxy::ast::walk_expr_binary_chain(self, node);
+        }
+        fn visit_expr_cast_chain(&mut self, node: &'ast ExprCastChain) {
+            self.0[1] += 1;
+            moxy::ast::walk_expr_cast_chain(self, node);
+        }
+        fn visit_expr_if_chain(&mut self, node: &'ast ExprIfChain) {
+            self.0[2] += 1;
+            moxy::ast::walk_expr_if_chain(self, node);
+        }
+        fn visit_else_if(&mut self, node: &'ast ElseIf) {
+            self.0[3] += 1;
+            moxy::ast::walk_else_if(self, node);
+        }
+        fn visit_postfix_method_call(&mut self, node: &'ast PostfixMethodCall) {
+            self.0[4] += 1;
+            moxy::ast::walk_postfix_method_call(self, node);
+        }
+        fn visit_use_path_chain(&mut self, node: &'ast UsePathChain) {
+            self.0[5] += 1;
+            moxy::ast::walk_use_path_chain(self, node);
+        }
+    }
+
+    let expression: Expr = moxy::parse!("if a + b + c * d {} else if x.f().g() as u8 as u16 {} else if y {}").unwrap();
+    let mut count = Count::default();
+    count.visit_expr(&expression);
+    // `a + b + c * d` is two chains, `+` and `*`
+    assert_eq!(count.0, [2, 1, 1, 2, 2, 0]);
+
+    let item: moxy::ast::Item = moxy::parse!("use a::b::{c::d, e};").unwrap();
+    let mut count = Count::default();
+    count.visit_item(&item);
+    assert_eq!(count.0, [0, 0, 0, 0, 0, 2]);
+}
+
+#[test]
+fn chains_split_off_their_last_step_as_expressions() {
+    use moxy::ast::ExprPostfix;
+
+    // `a.b()` rewritten as `b(a)`
+    let Expr::Postfix(chain) = moxy::parse!("a.b()" as Expr).unwrap() else {
+        panic!()
+    };
+    let (_, receiver, last) = chain.split_last().unwrap();
+    let method = &last.as_method_call().unwrap().method;
+    let call: Expr = moxy::parse!((format!("{}({})", method, receiver.to_token_stream()))).unwrap();
+    assert_eq!(call.to_token_stream().to_string(), "b (a)");
+
+    // The attributes of a chain come back apart; no operand takes them
+    let Expr::Postfix(chain) = moxy::parse!("#[a] x.f().g()" as Expr).unwrap() else {
+        panic!()
+    };
+    let (base, before, final_step) = chain.split_last_ref().unwrap();
+    assert_eq!(
+        [
+            base.to_token_stream().to_string(),
+            before.len().to_string(),
+            final_step.to_token_stream().to_string()
+        ],
+        ["x", "1", ". g ()"]
+    );
+    let (attrs, receiver, _) = chain.split_last().unwrap();
+    assert_eq!(
+        [attrs.len().to_string(), receiver.to_token_stream().to_string()],
+        ["1", "x . f ()"]
+    );
+
+    // An outer attribute before a sum belongs to its first operand
+    let Expr::BinaryChain(chain) = moxy::parse!("#[a] x + y" as Expr).unwrap() else {
+        panic!()
+    };
+    let (attrs, left, _, right) = chain.split_last().unwrap();
+    assert_eq!(
+        [
+            attrs.len().to_string(),
+            left.to_token_stream().to_string(),
+            right.to_token_stream().to_string()
+        ],
+        ["0", "# [a] x", "y"]
+    );
+
+    let Expr::BinaryChain(chain) = moxy::parse!("x * y * z" as Expr).unwrap() else {
+        panic!()
+    };
+    assert!(chain.as_pair().is_none());
+    let (_, left, _, _) = chain.split_last().unwrap();
+    let (x, _, y) = left.as_binary_chain().unwrap().as_pair().unwrap();
+    assert_eq!([x.to_token_stream().to_string(), y.to_token_stream().to_string()], ["x", "y"]);
+
+    // A chain without a step, which only direct construction makes, splits to
+    // nothing instead of panicking
+    let Expr::Postfix(mut empty) = moxy::parse!("x?" as Expr).unwrap() else {
+        panic!()
+    };
+    empty.ops.clear();
+    assert!(empty.split_last_ref().is_none());
+    assert!(empty.split_last().is_none());
+
+    let built = ExprPostfix::new(moxy::parse!("y" as Expr).unwrap(), last.clone());
+    assert_eq!(built.to_token_stream().to_string(), "y . b ()");
 }

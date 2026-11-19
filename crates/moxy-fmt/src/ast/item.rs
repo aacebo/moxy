@@ -339,9 +339,9 @@ impl Format for ItemMod {
         if let Some(content) = &self.content {
             f.text(" {")?;
             f.indent(|f| {
-                super::attr::inner_attrs(&self.inner_attrs, f)?;
+                super::attr::inner_attrs(&content.inner_attrs, f)?;
 
-                for (i, item) in content.inner.iter().enumerate() {
+                for (i, item) in content.items.inner.iter().enumerate() {
                     f.hard_break()?;
                     if i > 0 {
                         f.hard_break()?;
@@ -352,7 +352,7 @@ impl Format for ItemMod {
                 Ok(())
             })?;
 
-            if !content.inner.is_empty() || !self.inner_attrs.is_empty() {
+            if !content.items.inner.is_empty() || !content.inner_attrs.is_empty() {
                 f.hard_break()?;
             }
 
@@ -821,8 +821,11 @@ impl Format for ImplItemConst {
         self.generics.format(f)?;
         f.text(": ")?;
         self.ty.format(f)?;
-        f.text(" = ")?;
-        self.expr.format(f)?;
+        if let Some(expr) = &self.expr {
+            f.text(" = ")?;
+            expr.format(f)?;
+        }
+
         f.text(";")
     }
 }
@@ -845,6 +848,16 @@ impl Format for ImplItemType {
         f.text("type ")?;
         self.ident.format(f)?;
         self.generics.format(f)?;
+
+        if self.colon.is_some() {
+            f.text(":")?;
+
+            if !self.bounds.is_empty() {
+                f.text(" ")?;
+                self.bounds.format(f)?;
+            }
+        }
+
         self.generics.where_clause.format(f)?;
 
         if let Some(ty) = &self.ty {
@@ -893,6 +906,12 @@ impl Format for TraitItemFn {
             f.text(" ")?;
         }
 
+        self.defaultness.format(f)?;
+
+        if self.defaultness.is_some() {
+            f.text(" ")?;
+        }
+
         self.sig.format(f)?;
 
         if let Some(body) = &self.body {
@@ -912,6 +931,12 @@ impl Format for TraitItemConst {
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
+            f.text(" ")?;
+        }
+
+        self.defaultness.format(f)?;
+
+        if self.defaultness.is_some() {
             f.text(" ")?;
         }
 
@@ -936,6 +961,12 @@ impl Format for TraitItemType {
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
+            f.text(" ")?;
+        }
+
+        self.defaultness.format(f)?;
+
+        if self.defaultness.is_some() {
             f.text(" ")?;
         }
 
@@ -1000,6 +1031,12 @@ impl Format for ForeignItemFn {
             f.text(" ")?;
         }
 
+        self.defaultness.format(f)?;
+
+        if self.defaultness.is_some() {
+            f.text(" ")?;
+        }
+
         self.sig.format(f)?;
 
         if let Some(body) = &self.body {
@@ -1035,6 +1072,12 @@ impl Format for ForeignItemStatic {
         self.ident.format(f)?;
         f.text(": ")?;
         self.ty.format(f)?;
+
+        if let Some(expr) = &self.expr {
+            f.text(" = ")?;
+            expr.format(f)?;
+        }
+
         f.text(";")
     }
 }
@@ -1045,6 +1088,12 @@ impl Format for ForeignItemType {
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
+            f.text(" ")?;
+        }
+
+        self.defaultness.format(f)?;
+
+        if self.defaultness.is_some() {
             f.text(" ")?;
         }
 

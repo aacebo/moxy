@@ -167,8 +167,8 @@ impl<T: Parse> Parse for Vec<T> {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        while let Some(next) = T::skip(cursor) {
-            cursor = next;
+        while T::peek(cursor) {
+            cursor = T::skip(cursor)?;
         }
 
         Some(cursor)

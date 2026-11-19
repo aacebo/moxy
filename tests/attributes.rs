@@ -286,8 +286,9 @@ fn bodies_hold_their_inner_attributes() {
 
     let item: Item = moxy::parse!("mod m { #![a] #![b] fn f() {} }").unwrap();
     let module = item.as_mod().unwrap();
-    assert_eq!(module.inner_attrs.len(), 2);
-    assert!(module.content.as_ref().unwrap().inner[0].attrs().is_empty());
+    let content = module.content.as_ref().unwrap();
+    assert_eq!(content.inner_attrs.len(), 2);
+    assert!(content.items.inner[0].attrs().is_empty());
 
     let item: Item = moxy::parse!("fn f() { #![a] x }").unwrap();
     let body = item.as_fn().unwrap().body.as_ref().unwrap();
@@ -301,4 +302,12 @@ fn bodies_hold_their_inner_attributes() {
     ] {
         assert!(moxy::parse!(source as moxy::ast::File).is_err(), "`{source}`");
     }
+}
+
+#[test]
+fn a_file_that_starts_with_an_inner_attribute_peeks_as_a_file() {
+    use moxy::ast::{Cursor, File, Parse};
+
+    let tokens: moxy::token::TokenStream = "#![a] fn f() {}".parse().unwrap();
+    assert!(<File as Parse>::peek(Cursor::from_tokens(&tokens)));
 }

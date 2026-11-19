@@ -362,6 +362,13 @@ fn postfix_rest(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
                 continue;
             }
 
+            if let Some(TokenTree::Literal(Lit::Float(float))) = cursor.curr()
+                && float.is_member()
+            {
+                cursor = cursor.offset(1);
+                continue;
+            }
+
             cursor = Member::skip(cursor)?;
             continue;
         }

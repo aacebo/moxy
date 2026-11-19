@@ -481,11 +481,21 @@ fn dot(parser: &Parser, ops: &mut Vec<Postfix>) -> Result<(), ParseError> {
         }));
 
         let member = match second {
-            Some(second) => Member::Unnamed(second.into()),
+            Some(second) => Member::Unnamed(second),
             None => <_ as Parse>::parse(parser)?,
         };
 
         ops.push(Postfix::Field(PostfixField { dot: inner_dot, member }));
+        return Ok(());
+    }
+
+    // `1e5` in `x.1e5` is a member, as rustc's parser reads it
+    if let Some(TokenTree::Literal(Lit::Float(float))) = parser.cursor().offset(1).curr()
+        && float.is_member()
+    {
+        let dot = <_ as Parse>::parse(parser)?;
+        let member = Member::Unnamed(<_ as Parse>::parse(parser)?);
+        ops.push(Postfix::Field(PostfixField { dot, member }));
         return Ok(());
     }
 

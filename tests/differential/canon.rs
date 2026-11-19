@@ -1125,12 +1125,15 @@ pub(super) fn mitem(i: &m::Item) -> String {
         ),
         I::Mod(x) => format!(
             "{}{}mod {}{}",
-            mattrs_with(&x.attrs, &x.inner_attrs),
+            mattrs_with(
+                &x.attrs,
+                &x.content.as_ref().map(|c| c.inner_attrs.clone()).unwrap_or_default()
+            ),
             mt(&x.vis),
             mt(&x.ident),
             x.content
                 .as_ref()
-                .map(|c| format!("{{{}}}", c.inner.iter().map(mitem).collect::<Vec<_>>().join(" ")))
+                .map(|c| format!("{{{}}}", c.items.inner.iter().map(mitem).collect::<Vec<_>>().join(" ")))
                 .unwrap_or_else(|| ";".into())
         ),
         I::Const(c) => format!(

@@ -16,6 +16,9 @@ pub struct ForeignItemStatic {
     pub ident: Ident,
     pub colon: Token![:],
     pub ty: Type,
+    /// A value, which rustc's parser accepts and the compiler rejects later.
+    pub eq: Option<Token![=]>,
+    pub expr: Option<Expr>,
     pub semi: Option<Token![;]>,
 }
 
@@ -34,15 +37,32 @@ impl Parse for ForeignItemStatic {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let safety = <_ as Parse>::parse(parser)?;
+        let static_keyword = <_ as Parse>::parse(parser)?;
+        let mutability = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
+        let colon = <_ as Parse>::parse(parser)?;
+        let ty = <_ as Parse>::parse(parser)?;
+        let eq: Option<Token![=]> = <_ as Parse>::parse(parser)?;
+        let expr = if eq.is_some() {
+            Some(<_ as Parse>::parse(parser)?)
+        } else {
+            None
+        };
+
         Ok(Self {
-            attrs: <_ as Parse>::parse(parser)?,
-            vis: <_ as Parse>::parse(parser)?,
-            safety: <_ as Parse>::parse(parser)?,
-            static_keyword: <_ as Parse>::parse(parser)?,
-            mutability: <_ as Parse>::parse(parser)?,
-            ident: <_ as Parse>::parse(parser)?,
-            colon: <_ as Parse>::parse(parser)?,
-            ty: <_ as Parse>::parse(parser)?,
+            attrs,
+            vis,
+            safety,
+            static_keyword,
+            mutability,
+            ident,
+            colon,
+            ty,
+            eq,
+            expr,
             semi: <_ as Parse>::parse(parser)?,
         })
     }
@@ -56,6 +76,12 @@ impl Parse for ForeignItemStatic {
         cursor = Ident::skip(cursor)?;
         cursor = <Token![:]>::skip(cursor)?;
         cursor = Type::skip(cursor)?;
+
+        if <Token![=]>::peek(cursor) {
+            cursor = <Token![=]>::skip(cursor)?;
+            cursor = Expr::skip(cursor)?;
+        }
+
         Option::<Token![;]>::skip(cursor)
     }
 }
@@ -76,6 +102,8 @@ impl ToTokens for ForeignItemStatic {
         self.ident.to_tokens(t);
         self.colon.to_tokens(t);
         self.ty.to_tokens(t);
+        self.eq.to_tokens(t);
+        self.expr.to_tokens(t);
         self.semi.to_tokens(t);
     }
 }

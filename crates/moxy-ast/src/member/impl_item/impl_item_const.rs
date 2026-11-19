@@ -15,8 +15,10 @@ pub struct ImplItemConst {
     pub generics: Generics,
     pub colon: Token![:],
     pub ty: Type,
-    pub eq: Token![=],
-    pub expr: Expr,
+    /// The `=` and value, or none before `;`, which rustc's parser accepts and
+    /// the compiler rejects later.
+    pub eq: Option<Token![=]>,
+    pub expr: Option<Expr>,
     pub semi: Option<Token![;]>,
 }
 
@@ -35,17 +37,32 @@ impl Parse for ImplItemConst {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let defaultness = <_ as Parse>::parse(parser)?;
+        let const_keyword = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
+        let generics = <_ as Parse>::parse(parser)?;
+        let colon = <_ as Parse>::parse(parser)?;
+        let ty = <_ as Parse>::parse(parser)?;
+        let eq: Option<Token![=]> = <_ as Parse>::parse(parser)?;
+        let expr = if eq.is_some() {
+            Some(<_ as Parse>::parse(parser)?)
+        } else {
+            None
+        };
+
         Ok(Self {
-            attrs: <_ as Parse>::parse(parser)?,
-            vis: <_ as Parse>::parse(parser)?,
-            defaultness: <_ as Parse>::parse(parser)?,
-            const_keyword: <_ as Parse>::parse(parser)?,
-            ident: <_ as Parse>::parse(parser)?,
-            generics: <_ as Parse>::parse(parser)?,
-            colon: <_ as Parse>::parse(parser)?,
-            ty: <_ as Parse>::parse(parser)?,
-            eq: <_ as Parse>::parse(parser)?,
-            expr: <_ as Parse>::parse(parser)?,
+            attrs,
+            vis,
+            defaultness,
+            const_keyword,
+            ident,
+            generics,
+            colon,
+            ty,
+            eq,
+            expr,
             semi: <_ as Parse>::parse(parser)?,
         })
     }
@@ -59,8 +76,11 @@ impl Parse for ImplItemConst {
         cursor = Generics::skip(cursor)?;
         cursor = <Token![:]>::skip(cursor)?;
         cursor = Type::skip(cursor)?;
-        cursor = <Token![=]>::skip(cursor)?;
-        cursor = Expr::skip(cursor)?;
+        if <Token![=]>::peek(cursor) {
+            cursor = <Token![=]>::skip(cursor)?;
+            cursor = Expr::skip(cursor)?;
+        }
+
         Option::<Token![;]>::skip(cursor)
     }
 }

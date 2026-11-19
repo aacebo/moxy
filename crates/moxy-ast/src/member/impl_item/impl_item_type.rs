@@ -13,6 +13,10 @@ pub struct ImplItemType {
     pub type_keyword: Token![type],
     pub ident: Ident,
     pub generics: Generics,
+    /// Bounds, which rustc's parser accepts and the compiler rejects later, as
+    /// in `type T: A = u8;`.
+    pub colon: Option<Token![:]>,
+    pub bounds: List<TypeBound, Token![+]>,
     /// The `=` and type, or none before `;`, which rustc's parser accepts and
     /// the compiler rejects later.
     pub eq: Option<Token![=]>,
@@ -42,16 +46,9 @@ impl Parse for ImplItemType {
         let defaultness = <_ as Parse>::parse(parser)?;
         let type_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
-        let generics: Generics = <_ as Parse>::parse(parser)?;
-        let eq: Option<Token![=]> = <_ as Parse>::parse(parser)?;
-        let ty = if eq.is_some() {
-            Some(<_ as Parse>::parse(parser)?)
-        } else {
-            None
-        };
-
-        // A where clause can also follow the type, where Rust prefers it
-        let where_clause_after = if ty.is_some() { <_ as Parse>::parse(parser)? } else { None };
+        let mut generics: Generics = <_ as Parse>::parse(parser)?;
+        let (colon, bounds, default, where_clause_after) = super::super::parse_type_rest(parser, &mut generics)?;
+        let (eq, ty) = default.unzip();
 
         Ok(Self {
             attrs,
@@ -60,6 +57,8 @@ impl Parse for ImplItemType {
             type_keyword,
             ident,
             generics,
+            colon,
+            bounds,
             eq,
             ty,
             where_clause_after,
@@ -74,12 +73,7 @@ impl Parse for ImplItemType {
         cursor = <Token![type]>::skip(cursor)?;
         cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
-        if <Token![=]>::peek(cursor) {
-            cursor = <Token![=]>::skip(cursor)?;
-            cursor = Type::skip(cursor)?;
-            cursor = Option::<WhereClause>::skip(cursor)?;
-        }
-
+        cursor = super::super::skip_type_rest(cursor)?;
         Option::<Token![;]>::skip(cursor)
     }
 }
@@ -100,6 +94,8 @@ impl ToTokens for ImplItemType {
         self.generics.lt.to_tokens(t);
         self.generics.params.to_tokens(t);
         self.generics.gt.to_tokens(t);
+        self.colon.to_tokens(t);
+        self.bounds.to_tokens(t);
         self.generics.where_clause.to_tokens(t);
         self.eq.to_tokens(t);
         self.ty.to_tokens(t);

@@ -171,6 +171,29 @@ fn skip_and_peek_agree_with_parse() {
         check::<m::Type>("type", &tokens, line, &mut failures);
         check::<m::Item>("item", &tokens, line, &mut failures);
         check::<m::Stmt>("statement", &tokens, line, &mut failures);
+
+        // A file parses from any position, empty if no item follows, so its
+        // peek answers for the positions where it reads tokens
+        let root = m::Cursor::from_tokens(&tokens);
+
+        for index in 0..tokens.len() {
+            let cursor = root.seek(index);
+            let parser = m::Parser::from_cursor(cursor);
+            let parsed = <m::File as m::Parse>::parse(&parser)
+                .ok()
+                .map(|_| parser.cursor().remaining());
+            let skipped = <m::File as m::Parse>::skip(cursor).map(|cursor| cursor.remaining());
+
+            if parsed != skipped {
+                failures.push(format!(
+                    "file skip at token {index}: parse {parsed:?}, skip {skipped:?}: {line}"
+                ));
+            }
+
+            if parsed.is_some_and(|remaining| remaining < cursor.remaining()) && !<m::File as m::Parse>::peek(cursor) {
+                failures.push(format!("file peek at token {index}: {line}"));
+            }
+        }
     }
 
     assert!(failures.is_empty(), "{}", failures.join("\n"));

@@ -245,7 +245,7 @@ impl Attributes {
         Some(cursor)
     }
 
-    fn peek_inner(cursor: Cursor<'_>) -> bool {
+    pub(crate) fn peek_inner(cursor: Cursor<'_>) -> bool {
         <Token![#]>::peek(cursor)
             && <Token![!]>::peek(cursor.offset(1))
             && cursor.offset(2).is_delimited(moxy_token::Delim::Bracket)
