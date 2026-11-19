@@ -128,6 +128,17 @@ impl Parser<'_> {
         items
     }
 
+    /// Returns an error at the first remaining token unless the input is fully
+    /// consumed, so a list that stops early inside a delimited group fails
+    /// instead of dropping the rest of the group.
+    pub fn ensure_empty(&self) -> Result<(), ParseError> {
+        if self.is_empty() {
+            Ok(())
+        } else {
+            Err(self.error("unexpected trailing input"))
+        }
+    }
+
     pub fn parse_until_empty<T: Parse>(&self) -> Result<Vec<T>, ParseError> {
         let mut items = Vec::new();
 

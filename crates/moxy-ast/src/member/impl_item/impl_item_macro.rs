@@ -26,11 +26,18 @@ impl Parse for ImplItemMacro {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self {
-            attrs: <_ as Parse>::parse(parser)?,
-            mac: <_ as Parse>::parse(parser)?,
-            semi: <_ as Parse>::parse(parser)?,
-        })
+        let attrs = <_ as Parse>::parse(parser)?;
+        let mac: MacroCall = <_ as Parse>::parse(parser)?;
+        let semi: Option<Token![;]> = <_ as Parse>::parse(parser)?;
+
+        // Only a brace-delimited macro item ends without a semicolon
+        if semi.is_none() && !mac.body.delim.is_brace() {
+            return parser
+                .error("expected `;` after a macro item in parentheses or brackets")
+                .into();
+        }
+
+        Ok(Self { attrs, mac, semi })
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {

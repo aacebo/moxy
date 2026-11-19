@@ -507,3 +507,18 @@ fn break_keeps_its_label() {
     let label = statement.as_break().unwrap().label.as_ref().unwrap();
     assert_eq!(label.to_token_stream().to_string(), "'a");
 }
+
+#[test]
+fn comparisons_do_not_chain() {
+    for source in ["a < b > c", "a == b == c", "x < y && a < b < c"] {
+        let error = moxy::parse!(source as Expr)
+            .err()
+            .unwrap_or_else(|| panic!("`{source}` parsed"));
+        assert_eq!(error.message(), "comparison operators cannot be chained", "`{source}`");
+    }
+
+    for source in ["a < b && c > d", "a + b < c * d", "a == b || c != d"] {
+        let expression: Expr = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert!(expression.is_binary());
+    }
+}

@@ -73,3 +73,24 @@ fn group_parsing_creates_an_independent_nested_parser() {
 fn public_parse_rejects_trailing_tokens() {
     assert!(moxy::parse!("fn value" as Token![fn]).is_err());
 }
+
+#[test]
+fn delimited_lists_that_stop_early_are_errors() {
+    for source in [
+        "fn f(x: u8 y: u8) {}",
+        "fn f(x: Vec<u8 u8>) {}",
+        "fn f() { g(a b) }",
+        "fn f() { match x { 1 => a b } }",
+        "fn f() { let s = S { a: 1 b: 2 }; }",
+        "fn f() { [1 2] }",
+        "fn f() { (1 2) }",
+        "fn f() { x.y::<u8 u8>() }",
+        "impl A { fn f() {} @ }",
+        "mod m { fn f() {} @ }",
+    ] {
+        let error = moxy::parse!(source as moxy::ast::Item)
+            .err()
+            .unwrap_or_else(|| panic!("`{source}` parsed"));
+        assert_eq!(error.message(), "unexpected trailing input", "`{source}`");
+    }
+}

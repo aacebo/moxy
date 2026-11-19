@@ -35,3 +35,9 @@ fn extern_crate_self_names_the_current_crate() {
     let item: Item = moxy::parse!("extern crate self as name;").unwrap();
     assert_eq!(moxy::fmt!(&item).unwrap(), "extern crate self as name;");
 }
+
+#[test]
+fn crate_only_begins_a_use_path() {
+    let error = moxy::parse!("use a::crate;" as Item).err().unwrap();
+    assert_eq!(error.message(), "`crate` can only begin a path");
+}

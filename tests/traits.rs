@@ -99,3 +99,17 @@ fn brace_delimited_macro_items_need_no_semicolon() {
         "trait A {\n\tfn f(&self) {}\n\tdeclare!{x}\n\tfn g(&self);\n}"
     );
 }
+
+#[test]
+fn parenthesized_macro_items_need_a_semicolon() {
+    let error = moxy::parse!("trait A { m!() }" as Item).err().unwrap();
+    assert_eq!(error.message(), "expected `;` after a macro item in parentheses or brackets");
+    // An impl's item list stops at the item and reports the rest of the block
+    let error = moxy::parse!("impl A { m![] }" as Item).err().unwrap();
+    assert_eq!(error.message(), "unexpected trailing input");
+
+    for source in ["trait A { m!(); n! {} }", "impl A { m![]; n! {} }"] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(item.to_token_stream().to_string().matches('!').count(), 2);
+    }
+}

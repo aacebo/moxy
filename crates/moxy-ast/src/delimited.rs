@@ -57,6 +57,7 @@ impl<T> Delimited<T> {
     {
         let (span, parser) = parser.parse_group_spanned(style)?;
         let inner = f(&parser)?;
+        parser.ensure_empty()?;
         Ok(Self { style, span, inner })
     }
 

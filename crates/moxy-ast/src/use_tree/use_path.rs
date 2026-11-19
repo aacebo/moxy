@@ -21,10 +21,19 @@ impl Parse for UsePath {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let prefix = <_ as Parse>::parse(parser)?;
+        let ident = parser.parse_ident_any()?;
+        let path_sep = <_ as Parse>::parse(parser)?;
+
+        // `crate` names the crate root, so only the first segment can be it
+        if parser.curr().is_some_and(|token| token.is_keyword_crate()) {
+            return parser.error("`crate` can only begin a path").into();
+        }
+
         Ok(Self {
-            prefix: <_ as Parse>::parse(parser)?,
-            ident: parser.parse_ident_any()?,
-            path_sep: <_ as Parse>::parse(parser)?,
+            prefix,
+            ident,
+            path_sep,
             tree: Box::new(<_ as Parse>::parse(parser)?),
         })
     }

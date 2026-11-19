@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Lit};
+use moxy_token::{DelimSpan, Ident, Lit};
 
 use super::peek;
 use super::*;
@@ -98,12 +98,27 @@ fn range(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Exp
 
 fn binary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
     let mut left = cast(parser, attrs.clone(), context)?;
+    // Comparisons bind tighter than `&&` and `||` and looser than the other operators, and do
+    // not chain: between two logical operators there is at most one
+    let mut compared = false;
 
     while BinOp::peek(parser.cursor()) && !context.is_end_before_infix(parser.cursor()) {
+        let op: BinOp = <_ as Parse>::parse(parser)?;
+
+        if op.is_comparison() {
+            if compared {
+                return Err(ParseError::new(op.span(), "comparison operators cannot be chained"));
+            }
+
+            compared = true;
+        } else if matches!(op, BinOp::And(_) | BinOp::Or(_)) {
+            compared = false;
+        }
+
         left = ExprBinary {
             attrs: attrs.clone(),
             left: Box::new(left),
-            op: <_ as Parse>::parse(parser)?,
+            op,
             right: Box::new(cast(parser, attrs.clone(), context)?),
         }
         .into();
@@ -525,7 +540,12 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
 
 pub(crate) fn paren_or_tuple(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseError> {
     let (span, parser) = parser.parse_group_spanned(Delim::Paren)?;
+    let expr = paren_or_tuple_content(&parser, span, attrs)?;
+    parser.ensure_empty()?;
+    Ok(expr)
+}
 
+fn paren_or_tuple_content(parser: &Parser, span: DelimSpan, attrs: Attributes) -> Result<Expr, ParseError> {
     if parser.is_empty() {
         return Ok(ExprTuple {
             attrs,
@@ -534,17 +554,17 @@ pub(crate) fn paren_or_tuple(parser: &Parser, attrs: Attributes) -> Result<Expr,
         .into());
     }
 
-    let first = <_ as Parse>::parse(&parser)?;
+    let first = <_ as Parse>::parse(parser)?;
 
     if <Token![,]>::peek(parser.cursor()) {
         let mut elems = List::new();
         elems.push_value(first);
 
         while <Token![,]>::peek(parser.cursor()) {
-            elems.push_punct(<_ as Parse>::parse(&parser)?);
+            elems.push_punct(<_ as Parse>::parse(parser)?);
 
             if !parser.is_empty() {
-                elems.push_value(<_ as Parse>::parse(&parser)?);
+                elems.push_value(<_ as Parse>::parse(parser)?);
             }
         }
 
@@ -564,7 +584,12 @@ pub(crate) fn paren_or_tuple(parser: &Parser, attrs: Attributes) -> Result<Expr,
 
 pub(crate) fn array_or_repeat(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseError> {
     let (span, parser) = parser.parse_group_spanned(Delim::Bracket)?;
+    let expr = array_or_repeat_content(&parser, span, attrs)?;
+    parser.ensure_empty()?;
+    Ok(expr)
+}
 
+fn array_or_repeat_content(parser: &Parser, span: DelimSpan, attrs: Attributes) -> Result<Expr, ParseError> {
     if parser.is_empty() {
         return Ok(ExprArray {
             attrs,
@@ -573,7 +598,7 @@ pub(crate) fn array_or_repeat(parser: &Parser, attrs: Attributes) -> Result<Expr
         .into());
     }
 
-    let first = <_ as Parse>::parse(&parser)?;
+    let first = <_ as Parse>::parse(parser)?;
 
     if <Token![;]>::peek(parser.cursor()) {
         return Ok(ExprRepeat {
@@ -582,8 +607,8 @@ pub(crate) fn array_or_repeat(parser: &Parser, attrs: Attributes) -> Result<Expr
                 span,
                 RepeatInner {
                     elem: Box::new(first),
-                    semi: <_ as Parse>::parse(&parser)?,
-                    len: Box::new(<_ as Parse>::parse(&parser)?),
+                    semi: <_ as Parse>::parse(parser)?,
+                    len: Box::new(<_ as Parse>::parse(parser)?),
                 },
             ),
         }
@@ -594,10 +619,10 @@ pub(crate) fn array_or_repeat(parser: &Parser, attrs: Attributes) -> Result<Expr
     elems.push_value(first);
 
     while <Token![,]>::peek(parser.cursor()) {
-        elems.push_punct(<_ as Parse>::parse(&parser)?);
+        elems.push_punct(<_ as Parse>::parse(parser)?);
 
         if !parser.is_empty() {
-            elems.push_value(<_ as Parse>::parse(&parser)?);
+            elems.push_value(<_ as Parse>::parse(parser)?);
         }
     }
 

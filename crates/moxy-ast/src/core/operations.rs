@@ -37,6 +37,16 @@ pub enum BinOp {
     Gt(Token![>]),
 }
 
+impl BinOp {
+    /// Whether this is `==`, `!=`, `<`, `<=`, `>`, or `>=`.
+    pub fn is_comparison(&self) -> bool {
+        matches!(
+            self,
+            Self::Eq(_) | Self::Ne(_) | Self::Lt(_) | Self::Le(_) | Self::Gt(_) | Self::Ge(_)
+        )
+    }
+}
+
 impl Spanner for BinOp {
     fn span(&self) -> Span {
         match self {
