@@ -29,7 +29,9 @@ pub(crate) fn early(parser: &Parser) -> Result<Box<Expr>, ParseError> {
         return assignment(parser, attrs, ExprContext::NORMAL);
     }
 
+    let subtree = moxy_token::__private::Depth::subtree();
     let mut body = primary(parser, Attributes::default(), ExprContext::NORMAL)?;
+    let part = subtree.height();
 
     if !peek::continues_block_like(parser.cursor()) {
         if let Some(slot) = body.attrs_mut() {
@@ -39,14 +41,29 @@ pub(crate) fn early(parser: &Parser) -> Result<Box<Expr>, ParseError> {
         return Ok(body);
     }
 
-    block_like_rest(parser, body, attrs)
+    block_like_rest(parser, body, attrs, &subtree, part)
 }
 
 // The rest of an expression that a block-like one starts, as in
 // `{ x }.len() + 1`, parsed apart from `early` so the frame that a nested
 // block recurses through stays small
-fn block_like_rest(parser: &Parser, body: Box<Expr>, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
-    let operand = cast_rest(parser, postfix_rest(parser, body, attrs)?)?;
+fn block_like_rest(
+    parser: &Parser,
+    body: Box<Expr>,
+    attrs: Attributes,
+    subtree: &moxy_token::__private::Subtree,
+    part: usize,
+) -> Result<Box<Expr>, ParseError> {
+    // The postfix operations, and the casts after them, each wrap what they
+    // follow
+    let operand = postfix_rest(parser, body, attrs)?;
+    wrap(parser, subtree, part)?;
+
+    if <Token![as]>::peek(parser.cursor()) {
+        wrap(parser, subtree, subtree.height())?;
+    }
+
+    let operand = cast_rest(parser, operand)?;
     let left = binary_rest(parser, ExprContext::NORMAL, operand, Precedence::Or, false)?;
 
     if RangeLimits::peek(parser.cursor()) {
@@ -125,7 +142,7 @@ fn continue_after_range(
     if ranged {
         // The assignment that follows nests the tree one level, as in
         // `a = b.. = c`
-        let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+        let _depth = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
         assignment_rest(parser, assignment, context)
     } else {
         Ok(assignment)
@@ -135,7 +152,7 @@ fn continue_after_range(
 // The right side of an assignment, which nests one level per operator as
 // assignment associates to the right
 fn assignment_right(parser: &Parser, context: ExprContext) -> Result<Box<Expr>, ParseError> {
-    let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+    let _depth = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
     assignment(parser, Default::default(), context)
 }
 
@@ -167,7 +184,7 @@ fn range_rest(
     if RangeLimits::peek(parser.cursor()) {
         // A range in the end of a range nests one level, as in `.. .. a`
         if peek::nested_range(parser.cursor()) {
-            let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+            let _depth = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
             end = Some(range_rest(parser, Default::default(), None, context)?);
         }
     } else if !context.is_end(parser.cursor()) && Expr::peek(parser.cursor()) {
@@ -262,6 +279,13 @@ fn binary(
     binary_rest(parser, context, left, min, nested)
 }
 
+// Counts a level for a node that wraps the subtree read before it, as a chain
+// of casts or postfix operations wraps its operand: walking the tree takes a
+// level of stack for it however the parse nested
+fn wrap(parser: &Parser, subtree: &moxy_token::__private::Subtree, part: usize) -> Result<(), ParseError> {
+    subtree.wrap(part).ok_or_else(|| ParseError::too_deep(parser.span()))
+}
+
 // Precedence climbing over the operators at least as strong as `min`. The
 // operators of one strength form one chain node and associate to the left;
 // comparisons do not chain
@@ -282,7 +306,7 @@ fn binary_rest(
         // A chain inside an operand of a weaker chain nests a level, which the
         // depth counts; the steps of one chain do not nest
         let _depth = match nested {
-            true => Some(moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?),
+            true => Some(moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?),
             false => None,
         };
         let mut operands = List::new();
@@ -319,7 +343,18 @@ fn binary_rest(
 }
 
 fn cast(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
-    let expr = unary_with(parser, attrs, context)?;
+    let subtree = moxy_token::__private::Depth::subtree();
+    cast_wrapped(parser, unary_with(parser, attrs, context)?, &subtree)
+}
+
+// The casts after an operand, which wrap it. Apart from `cast`, whose frame
+// stays on the stack while the operand parses
+fn cast_wrapped(parser: &Parser, expr: Box<Expr>, subtree: &moxy_token::__private::Subtree) -> Result<Box<Expr>, ParseError> {
+    if !<Token![as]>::peek(parser.cursor()) {
+        return Ok(expr);
+    }
+
+    wrap(parser, subtree, subtree.height())?;
     cast_rest(parser, expr)
 }
 
@@ -349,7 +384,7 @@ pub(crate) fn unary(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseErr
 // Outer attributes belong to the operand of a binary operator or cast: the
 // unary expression, or the whole chain of postfix operators, that follows them
 fn unary_with(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
-    let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+    let _depth = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
     let attrs = if attrs.is_empty() {
         <_ as Parse>::parse(parser)?
     } else {
@@ -401,8 +436,27 @@ fn unary_op(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<
 }
 
 fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
-    let expr = primary(parser, Default::default(), context)?;
-    postfix_rest(parser, expr, attrs)
+    let subtree = moxy_token::__private::Depth::subtree();
+    postfix_wrapped(parser, primary(parser, Default::default(), context)?, attrs, &subtree)
+}
+
+// The postfix operations after a primary expression, which wrap it; its
+// arguments are children of their own, which take no level for the base.
+// Apart from `postfix`, whose frame stays on the stack while the base parses
+fn postfix_wrapped(
+    parser: &Parser,
+    base: Box<Expr>,
+    attrs: Attributes,
+    subtree: &moxy_token::__private::Subtree,
+) -> Result<Box<Expr>, ParseError> {
+    let part = subtree.height();
+    let expr = postfix_rest(parser, base, attrs)?;
+
+    if matches!(*expr, Expr::Postfix(_)) {
+        wrap(parser, subtree, part)?;
+    }
+
+    Ok(expr)
 }
 
 // The postfix operations that follow a primary expression, held in one
@@ -470,7 +524,15 @@ pub(super) fn peek_member_name(cursor: Cursor<'_>) -> bool {
         })
 }
 
+// The arguments of a call, method call, or index take a level of their own:
+// their parse frames take more stack than the nesting they hold
+fn arguments_level(parser: &Parser) -> Result<moxy_token::__private::Depth, ParseError> {
+    moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))
+}
+
 fn method_call(parser: &Parser) -> Result<Postfix, ParseError> {
+    let _depth = arguments_level(parser)?;
+
     Ok(Postfix::MethodCall(PostfixMethodCall {
         dot: <_ as Parse>::parse(parser)?,
         method: parser.parse_ident_any()?,
@@ -480,12 +542,16 @@ fn method_call(parser: &Parser) -> Result<Postfix, ParseError> {
 }
 
 fn call(parser: &Parser) -> Result<Postfix, ParseError> {
+    let _depth = arguments_level(parser)?;
+
     Ok(Postfix::Call(PostfixCall {
         args: Delimited::parse_paren_with(parser, List::parse_all)?,
     }))
 }
 
 fn index(parser: &Parser) -> Result<Postfix, ParseError> {
+    let _depth = arguments_level(parser)?;
+
     Ok(Postfix::Index(PostfixIndex {
         index: Delimited::parse_bracket_with(parser, |inner| boxed_expr(inner, ExprContext::NORMAL))?,
     }))
@@ -756,6 +822,9 @@ fn else_branches(parser: &Parser) -> Result<(Vec<ElseIf>, Option<Token![else]>, 
         return parser.error("expected `{` or `if` after `else`").into();
     }
 
+    // The final block takes a second level: an `if` nested in it takes more
+    // stack per level than one in the first block
+    let _weight = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
     let else_branch: StmtBlock = <_ as Parse>::parse(parser)?;
     if_block_inner(&else_branch)?;
     Ok((else_ifs, Some(else_keyword), Some(else_branch)))
@@ -814,6 +883,8 @@ fn labeled_block(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseE
 fn match_expr(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
     let match_keyword = <_ as Parse>::parse(parser)?;
     let expr = boxed_expr(parser, ExprContext::EARLY)?;
+    // The arms take a level, as their bodies and guards nest no other way
+    let _depth = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
     let (span, arms) = parser.parse_group_spanned(Delim::Brace)?;
     let inner = Attributes::parse_inner(&arms)?;
 
@@ -912,7 +983,7 @@ fn path_macro_or_struct(parser: &Parser, attrs: Attributes, context: ExprContext
 
     if context.allow_struct && parser.is_delimited(Delim::Brace) {
         // A struct literal takes two levels of stack, as in `S { a: S { .. } }`
-        let _weight = moxy_token::Depth::enter_by(1).ok_or_else(|| ParseError::too_deep(parser.span()))?;
+        let _weight = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
 
         return Ok(boxed(ExprStruct {
             attrs,
@@ -1032,7 +1103,7 @@ fn closure(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<B
     let output: ReturnType = <_ as Parse>::parse(parser)?;
     // A closure with a return type and a block takes another level of stack
     let _weight = if output.is_type() {
-        Some(moxy_token::Depth::enter_by(1).ok_or_else(|| ParseError::too_deep(parser.span()))?)
+        Some(moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?)
     } else {
         None
     };

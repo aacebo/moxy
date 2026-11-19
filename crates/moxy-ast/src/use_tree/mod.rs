@@ -91,7 +91,7 @@ impl Parse for UseTree {
 
     // A brace group nests the trees inside it one level, as in `a::{b::{c}}`
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+        let _depth = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
 
         if UseGlob::peek(parser.cursor()) {
             return Ok(Self::Glob(<_ as Parse>::parse(parser)?));
@@ -113,7 +113,7 @@ impl Parse for UseTree {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let _depth = moxy_token::Depth::enter()?;
+        let _depth = moxy_token::__private::Depth::enter()?;
 
         if UseGlob::peek(cursor) {
             UseGlob::skip(cursor)

@@ -18,12 +18,16 @@ impl Parse for TypeImplTrait {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        // An `impl` type takes a second level: its bounds parse through large
+        // frames, as in `impl A<impl A<T>>`
+        let _weight = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let impl_keyword = <_ as Parse>::parse(parser)?;
         let bounds = TypeBound::parse_bounds_of_keyword(parser)?;
         Ok(Self { impl_keyword, bounds })
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let _weight = moxy_token::__private::Depth::enter()?;
         let cursor = <Token![impl]>::skip(cursor)?;
         TypeBound::skip_bounds_of_keyword(cursor)
     }

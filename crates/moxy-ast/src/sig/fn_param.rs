@@ -62,7 +62,13 @@ impl Parse for FnParam {
             return Ok(Self::Receiver(Box::new(<_ as Parse>::parse(parser)?)));
         }
 
-        if pat::PatType::peek(parser.cursor()) {
+        // As `skip` reads it: a typed pattern, or else a type. A pattern that
+        // fails to peek for the depth limit, where no type reads either, parses
+        // as a typed pattern so that its parse reports the depth error
+        let watch = moxy_token::__private::Watch::start();
+        let typed = pat::PatType::peek(parser.cursor());
+
+        if typed || watch.exceeded() && Type::skip(parser.cursor()).is_none() {
             Ok(Self::Typed(Box::new(<_ as Parse>::parse(parser)?)))
         } else {
             Ok(Self::Type(Box::new(<_ as Parse>::parse(parser)?)))

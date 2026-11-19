@@ -106,7 +106,7 @@ impl Parse for Stmt {
             // An item inside a block takes another level of stack, as in
             // `fn f() { fn f() { .. } }`
             |parser| {
-                let _weight = moxy_token::Depth::enter_by(1).ok_or_else(|| ParseError::too_deep(parser.span()))?;
+                let _weight = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
                 Ok(Self::Item(Box::new(<_ as Parse>::parse(parser)?)))
             }
         } else {
@@ -138,6 +138,7 @@ impl Parse for Stmt {
         } else if block(cursor) {
             StmtBlock::skip(cursor)
         } else if Item::peek(cursor) && !macro_expr(cursor) {
+            let _weight = moxy_token::__private::Depth::enter()?;
             Item::skip(cursor)
         } else {
             let (cursor, block_like) = crate::expr::skip::early_block_like(cursor)?;

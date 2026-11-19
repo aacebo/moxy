@@ -1004,3 +1004,204 @@ fn a_path_keyword_names_a_field_or_method_after_a_dot() {
         assert!(moxy::parse!(source as Expr).is_err(), "`{source}`");
     }
 }
+
+// A serializer that checks that every sequence, tuple, map, and struct
+// announces its length and holds that many elements, as formats that write
+// the length first need
+#[cfg(feature = "serde")]
+mod length_check {
+    use serde::ser::{self, Serialize};
+
+    type Error = serde::de::value::Error;
+
+    pub struct Check;
+
+    pub struct Compound {
+        announced: Option<usize>,
+        seen: usize,
+    }
+
+    impl Compound {
+        fn element<T: Serialize + ?Sized>(&mut self, value: &T) -> Result<(), Error> {
+            self.seen += 1;
+            value.serialize(Check)
+        }
+
+        fn finish(self) -> Result<(), Error> {
+            match self.announced {
+                Some(announced) if announced == self.seen => Ok(()),
+                Some(announced) => Err(ser::Error::custom(format!(
+                    "announced {announced} elements, held {}",
+                    self.seen
+                ))),
+                None => Err(ser::Error::custom(format!("announced no length for {} elements", self.seen))),
+            }
+        }
+    }
+
+    macro_rules! leaves {
+        ($($name:ident($($ty:ty),*)),*) => {
+            $(fn $name(self, $(_: $ty),*) -> Result<(), Error> { Ok(()) })*
+        };
+    }
+
+    macro_rules! compound {
+        ($($trait:ident :: $method:ident $(($key:ident))?),*) => {
+            $(impl ser::$trait for Compound {
+                type Ok = ();
+                type Error = Error;
+
+                fn $method<T: Serialize + ?Sized>(&mut self, $($key: &'static str,)? value: &T) -> Result<(), Error> {
+                    $(let _ = $key;)?
+                    self.element(value)
+                }
+
+                fn end(self) -> Result<(), Error> {
+                    self.finish()
+                }
+            })*
+        };
+    }
+
+    compound!(
+        SerializeSeq::serialize_element,
+        SerializeTuple::serialize_element,
+        SerializeTupleStruct::serialize_field,
+        SerializeTupleVariant::serialize_field,
+        SerializeStruct::serialize_field(key),
+        SerializeStructVariant::serialize_field(key)
+    );
+
+    impl ser::SerializeMap for Compound {
+        type Ok = ();
+        type Error = Error;
+
+        fn serialize_key<T: Serialize + ?Sized>(&mut self, key: &T) -> Result<(), Error> {
+            key.serialize(Check)
+        }
+
+        fn serialize_value<T: Serialize + ?Sized>(&mut self, value: &T) -> Result<(), Error> {
+            self.element(value)
+        }
+
+        fn end(self) -> Result<(), Error> {
+            self.finish()
+        }
+    }
+
+    impl ser::Serializer for Check {
+        type Ok = ();
+        type Error = Error;
+        type SerializeSeq = Compound;
+        type SerializeTuple = Compound;
+        type SerializeTupleStruct = Compound;
+        type SerializeTupleVariant = Compound;
+        type SerializeMap = Compound;
+        type SerializeStruct = Compound;
+        type SerializeStructVariant = Compound;
+
+        leaves!(
+            serialize_bool(bool),
+            serialize_i8(i8),
+            serialize_i16(i16),
+            serialize_i32(i32),
+            serialize_i64(i64),
+            serialize_u8(u8),
+            serialize_u16(u16),
+            serialize_u32(u32),
+            serialize_u64(u64),
+            serialize_f32(f32),
+            serialize_f64(f64),
+            serialize_char(char),
+            serialize_str(&str),
+            serialize_bytes(&[u8]),
+            serialize_none(),
+            serialize_unit(),
+            serialize_unit_struct(&'static str),
+            serialize_unit_variant(&'static str, u32, &'static str)
+        );
+
+        fn serialize_some<T: Serialize + ?Sized>(self, value: &T) -> Result<(), Error> {
+            value.serialize(Check)
+        }
+
+        fn serialize_newtype_struct<T: Serialize + ?Sized>(self, _: &'static str, value: &T) -> Result<(), Error> {
+            value.serialize(Check)
+        }
+
+        fn serialize_newtype_variant<T: Serialize + ?Sized>(
+            self,
+            _: &'static str,
+            _: u32,
+            _: &'static str,
+            value: &T,
+        ) -> Result<(), Error> {
+            value.serialize(Check)
+        }
+
+        fn serialize_seq(self, announced: Option<usize>) -> Result<Compound, Error> {
+            Ok(Compound { announced, seen: 0 })
+        }
+
+        fn serialize_tuple(self, len: usize) -> Result<Compound, Error> {
+            self.serialize_seq(Some(len))
+        }
+
+        fn serialize_tuple_struct(self, _: &'static str, len: usize) -> Result<Compound, Error> {
+            self.serialize_seq(Some(len))
+        }
+
+        fn serialize_tuple_variant(self, _: &'static str, _: u32, _: &'static str, len: usize) -> Result<Compound, Error> {
+            self.serialize_seq(Some(len))
+        }
+
+        fn serialize_map(self, announced: Option<usize>) -> Result<Compound, Error> {
+            self.serialize_seq(announced)
+        }
+
+        fn serialize_struct(self, _: &'static str, len: usize) -> Result<Compound, Error> {
+            self.serialize_seq(Some(len))
+        }
+
+        fn serialize_struct_variant(self, _: &'static str, _: u32, _: &'static str, len: usize) -> Result<Compound, Error> {
+            self.serialize_seq(Some(len))
+        }
+    }
+}
+
+#[cfg(feature = "serde")]
+#[test]
+fn every_tree_of_the_parse_fixtures_serializes_with_announced_lengths() {
+    use serde::Serialize;
+
+    // A binary chain announced no length for its operands and operators
+    for source in ["a - b / c", "a || b && c == d", "f(a, b)", "[a; 2]"] {
+        let expression: Expr = moxy::parse!(source).unwrap();
+        assert_eq!(
+            expression.serialize(length_check::Check).map_err(|error| error.to_string()),
+            Ok(()),
+            "{source}"
+        );
+    }
+
+    // Every item fixture is a file; the expression and type fixtures that are
+    // files are checked too
+    for (dir, all_files) in [
+        ("fixtures/parse/item", true),
+        ("fixtures/parse/expr", false),
+        ("fixtures/parse/type", false),
+    ] {
+        for entry in std::fs::read_dir(dir).unwrap() {
+            let path = entry.unwrap().path();
+            let source = std::fs::read_to_string(&path).unwrap();
+
+            match moxy::parse!(source as moxy::ast::File) {
+                Ok(file) => {
+                    let serialized = file.serialize(length_check::Check).map_err(|error| error.to_string());
+                    assert_eq!(serialized, Ok(()), "{}", path.display());
+                }
+                Err(error) => assert!(!all_files, "{}: {error}", path.display()),
+            }
+        }
+    }
+}

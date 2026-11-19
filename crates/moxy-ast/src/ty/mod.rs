@@ -246,7 +246,7 @@ impl Type {
     /// expression, where `a as usize + 1` adds to the cast, and after `&` or
     /// `*`, where Rust rejects `&A + B` and `&dyn A + B` as ambiguous.
     pub(crate) fn parse_without_plus(parser: &Parser) -> Result<Self, ParseError> {
-        let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+        let _depth = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
 
         if Self::peek_plain_path(parser.cursor()) {
             return Self::parse_path_or_macro(parser, false);
@@ -254,6 +254,8 @@ impl Type {
 
         // `impl` and `dyn` take one bound here, as in `&dyn A` and `Fn() -> impl A`
         if <Token![impl]>::peek(parser.cursor()) {
+            // The second level of an `impl` type, as in `TypeImplTrait`
+            let _weight = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
             let impl_keyword = <_ as Parse>::parse(parser)?;
             let mut bounds = List::new();
 
@@ -284,13 +286,18 @@ impl Type {
     }
 
     pub(crate) fn skip_without_plus(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let _depth = moxy_token::Depth::enter()?;
+        let _depth = moxy_token::__private::Depth::enter()?;
 
         if Self::peek_plain_path(cursor) {
             return Self::skip_path_or_macro(cursor, false);
         }
 
         if <Token![impl]>::peek(cursor) || <Token![dyn]>::peek(cursor) {
+            let _weight = if <Token![impl]>::peek(cursor) {
+                Some(moxy_token::__private::Depth::enter()?)
+            } else {
+                None
+            };
             let cursor = cursor.offset(1);
             return if TypeBound::peek(cursor) {
                 TypeBound::skip(cursor)
@@ -406,7 +413,7 @@ impl Type {
     // An array type takes another level of stack for its length, as in
     // `[u8; { let x: [u8; ..]; 1 }]`
     fn parse_slice_or_array(parser: &Parser) -> Result<Self, ParseError> {
-        let _weight = moxy_token::Depth::enter_by(1).ok_or_else(|| ParseError::too_deep(parser.span()))?;
+        let _weight = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let (bracket_span, inner) = parser.parse_group_spanned(Delim::Bracket)?;
         let elem = Box::new(<_ as Parse>::parse(&inner)?);
 
@@ -521,7 +528,7 @@ impl Parse for Type {
             return parser.error("expected type").into();
         }
 
-        let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+        let _depth = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
 
         // One call site for every form keeps one return slot in this frame
         let parse: fn(&Parser) -> Result<Self, ParseError> = if <Token![&]>::peek(parser.cursor()) {
@@ -557,7 +564,7 @@ impl Parse for Type {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let _depth = moxy_token::Depth::enter()?;
+        let _depth = moxy_token::__private::Depth::enter()?;
 
         // Only what starts a type for the parser starts one here
         if !Self::peek(cursor) {
@@ -581,6 +588,7 @@ impl Parse for Type {
         }
 
         if cursor.is_delimited(Delim::Bracket) {
+            let _weight = moxy_token::__private::Depth::enter()?;
             let mut inner = cursor.descend(Delim::Bracket)?;
             inner = Type::skip(inner)?;
 

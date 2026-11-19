@@ -71,3 +71,18 @@ pub fn derive_range(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     }
     .into()
 }
+
+// Re-emits its input, through the entry that `moxy::function` generates
+#[moxy::function(name = "echo")]
+pub fn echo(tokens: moxy::token::TokenStream) -> Result<moxy::token::TokenStream, moxy::ast::ParseError> {
+    Ok(tokens)
+}
+
+// Re-emits its item, through the entry that `moxy::attribute` generates
+#[moxy::attribute(name = "echo_item")]
+pub fn echo_item(
+    _meta: moxy::token::TokenStream,
+    tokens: moxy::token::TokenStream,
+) -> Result<moxy::token::TokenStream, moxy::ast::ParseError> {
+    Ok(tokens)
+}

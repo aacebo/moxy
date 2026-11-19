@@ -2,8 +2,8 @@ use super::*;
 
 // Mirrors the dispatch of `parse::single`, peek for peek
 pub(crate) fn single(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-    let _depth = moxy_token::Depth::enter()?;
-    moxy_token::Depth::enter()?;
+    let _depth = moxy_token::__private::Depth::enter()?;
+    moxy_token::__private::Depth::enter()?;
 
     if <Token![#]>::peek(cursor) {
         return None;
@@ -41,24 +41,11 @@ pub(crate) fn single(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
             let after = super::Form::path_end(cursor)?;
 
             if after.is_delimited(moxy_token::Delim::Paren) {
-                let mut inner = after.descend(moxy_token::Delim::Paren)?;
-
-                while !inner.is_empty() {
-                    inner = Pattern::skip(inner)?;
-
-                    if inner.is_empty() {
-                        break;
-                    }
-
-                    inner = <Token![,]>::skip(inner)?;
-                }
-
-                return Some(after.offset(1));
+                return PatTupleStruct::skip_elems(after);
             }
 
             if after.is_delimited(moxy_token::Delim::Brace) {
-                let inner = PatStructBody::skip(after.descend(moxy_token::Delim::Brace)?)?;
-                return inner.is_empty().then(|| after.offset(1));
+                return PatStruct::skip_body(after);
             }
 
             after

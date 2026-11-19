@@ -56,6 +56,8 @@ impl QSelf {
     /// Parse `< Type ( as Path )? >`, returning the qself plus the trait path
     /// segments (if any) that the enclosing `TypePath` must prepend to its path.
     pub fn parse_with_trait(parser: &Parser) -> Result<(Self, Option<Path>), ParseError> {
+        // A type inside a qualifier takes another level's worth of stack
+        let _weight = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let lt = <_ as Parse>::parse(parser)?;
         let ty = Box::new(<_ as Parse>::parse(parser)?);
         let (as_keyword, trait_path) = if <Token![as]>::peek(parser.cursor()) {

@@ -33,7 +33,7 @@ impl Parse for PatConst {
     // A block in a pattern, inside the statement that holds the pattern, takes
     // another level of stack
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let _weight = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+        let _weight = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
         Ok(Self {
             attrs: <_ as Parse>::parse(parser)?,
             keyword: <_ as Parse>::parse(parser)?,
@@ -42,7 +42,7 @@ impl Parse for PatConst {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let _weight = moxy_token::Depth::enter()?;
+        let _weight = moxy_token::__private::Depth::enter()?;
         StmtBlock::skip(<Token![const]>::skip(Attributes::skip(cursor)?)?)
     }
 }

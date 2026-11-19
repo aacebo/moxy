@@ -28,7 +28,10 @@ impl Parse for TraitBound {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        // A bound in parentheses takes a second level, as one nested in it
+        // takes more stack than the level it nests
         if parser.is_delimited(Delim::Paren) {
+            let _weight = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
             let (span, inner) = parser.parse_group_spanned(Delim::Paren)?;
             let mut bound = Self::parse_bare(&inner)?;
             inner.ensure_empty()?;
@@ -41,6 +44,7 @@ impl Parse for TraitBound {
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         if cursor.is_delimited(Delim::Paren) {
+            let _weight = moxy_token::__private::Depth::enter()?;
             let inner = Self::skip_bare(cursor.descend(Delim::Paren)?)?;
             return inner.is_empty().then(|| cursor.offset(1));
         }

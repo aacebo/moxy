@@ -139,12 +139,18 @@ impl ToTokens for proc_macro2::Literal {
 
 // --- Group ---
 
+/// Panics when the group's tokens nest deeper than [`crate::MAX_DEPTH`];
+/// [`TryIntoTokenStream::try_into_token_stream`] on a stream that holds the
+/// group returns that as an error.
 impl From<proc_macro2::Group> for Group {
     fn from(value: proc_macro2::Group) -> Self {
-        Self {
-            span: value.delim_span().into(),
-            delim: value.delimiter().into(),
-            tokens: convert(value.stream()),
+        // Converted as a stream so the group's own level counts
+        let stream = proc_macro2::TokenStream::from(proc_macro2::TokenTree::Group(value));
+        let mut converted = super::expect_converted(convert(stream)).into_iter();
+
+        match converted.next() {
+            Some(TokenTree::Group(group)) => group,
+            _ => unreachable!("a group converts to a group"),
         }
     }
 }
@@ -159,6 +165,9 @@ impl From<Group> for proc_macro2::Group {
     }
 }
 
+/// Panics when the group's tokens nest deeper than [`crate::MAX_DEPTH`];
+/// [`TryIntoTokenStream::try_into_token_stream`] on a stream that holds the
+/// group returns that as an error.
 impl ToTokens for proc_macro2::Group {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let token = Group::from(self.clone()).into_token_tree();
@@ -168,9 +177,11 @@ impl ToTokens for proc_macro2::Group {
 
 // --- TokenStream ---
 
+/// Panics when the stream's groups nest deeper than [`crate::MAX_DEPTH`];
+/// [`TryIntoTokenStream::try_into_token_stream`] returns that as an error.
 impl ToTokens<TokenStream> for proc_macro2::TokenStream {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        for token in Vec::<TokenTree>::from(convert(self.clone())) {
+        for token in Vec::<TokenTree>::from(super::expect_converted(convert(self.clone()))) {
             tokens.extend_one(token);
         }
     }
@@ -204,8 +215,10 @@ impl Level {
 }
 
 // Converts a stream with a stack of the groups it is inside rather than by
-// recursion, so a stream nested any depth converts on any stack
-fn convert(stream: proc_macro2::TokenStream) -> TokenStream {
+// recursion, and refuses groups nested past `MAX_DEPTH` as the lexer does, so
+// no stream deeper than the lexer builds reaches the traversals that recurse
+// per group
+fn convert(stream: proc_macro2::TokenStream) -> Result<TokenStream, LexError> {
     let mut levels = vec![Level::new(stream, None)];
 
     loop {
@@ -217,6 +230,11 @@ fn convert(stream: proc_macro2::TokenStream) -> TokenStream {
             }
             Some(proc_macro2::TokenTree::Group(group)) => {
                 level.flush();
+                // The outermost level holds no group
+                if levels.len() > crate::MAX_DEPTH {
+                    return Err(LexError::too_deep(group.span().into()));
+                }
+
                 let stream = group.stream();
                 levels.push(Level::new(stream, Some(group)));
             }
@@ -243,7 +261,7 @@ fn convert(stream: proc_macro2::TokenStream) -> TokenStream {
                 let done = levels.pop().expect("a level is open");
 
                 let Some(group) = done.group else {
-                    return done.out;
+                    return Ok(done.out);
                 };
 
                 let converted = Group {
@@ -306,9 +324,11 @@ impl ToTokens<proc_macro2::TokenStream> for TokenStream {
     }
 }
 
+/// Panics on a stream whose groups nest deeper than [`crate::MAX_DEPTH`];
+/// [`TryIntoTokenStream::try_into_token_stream`] returns that as an error.
 impl From<proc_macro2::TokenStream> for TokenStream {
     fn from(stream: proc_macro2::TokenStream) -> Self {
-        convert(stream)
+        super::expect_converted(convert(stream))
     }
 }
 
@@ -322,12 +342,12 @@ impl From<TokenStream> for proc_macro2::TokenStream {
 
 impl TryIntoTokenStream for proc_macro2::TokenStream {
     fn try_into_token_stream(self) -> Result<TokenStream, LexError> {
-        Ok(self.into())
+        convert(self)
     }
 }
 
 impl TryIntoTokenStream for &proc_macro2::TokenStream {
     fn try_into_token_stream(self) -> Result<TokenStream, LexError> {
-        Ok(self.clone().into())
+        convert(self.clone())
     }
 }

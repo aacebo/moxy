@@ -320,3 +320,10 @@ macro_rules! Token {
     [while]       => { $crate::While };
     [yield]       => { $crate::Yield };
 }
+
+/// The nesting count that the parser crate shares with the lexer. Not part of
+/// the public API.
+#[doc(hidden)]
+pub mod __private {
+    pub use crate::lex::depth::{Depth, Subtree, Watch};
+}

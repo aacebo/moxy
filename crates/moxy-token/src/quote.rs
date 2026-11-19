@@ -35,6 +35,8 @@ impl<'a, T: quote::ToTokens + ?Sized> From<&'a T> for Quoted<'a, T> {
     }
 }
 
+/// Panics when the quoted tokens' groups nest deeper than
+/// [`crate::MAX_DEPTH`], as converting a `proc_macro2` stream does.
 impl<'a, T: quote::ToTokens + ?Sized> ToTokens for Quoted<'a, T> {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         let out = quote::ToTokens::to_token_stream(self.0);

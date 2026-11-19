@@ -112,7 +112,8 @@ impl Parse for ImplItem {
     // A member of an impl, trait, or extern block, with the body of a function
     // and the items inside it, takes two more levels of stack
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let _weight = moxy_token::Depth::enter_by(2).ok_or_else(|| ParseError::too_deep(parser.span()))?;
+        let _weight =
+            moxy_token::__private::Depth::enter_by(super::EXTRA_LEVELS).ok_or_else(|| ParseError::too_deep(parser.span()))?;
 
         if ImplItemConst::peek(parser.cursor()) {
             return Ok(Self::Const(Box::new(<_ as Parse>::parse(parser)?)));
@@ -130,6 +131,9 @@ impl Parse for ImplItem {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        // The same two levels as its parse
+        let _weight = moxy_token::__private::Depth::enter_by(super::EXTRA_LEVELS)?;
+
         if ImplItemConst::peek(cursor) {
             ImplItemConst::skip(cursor)
         } else if ImplItemType::peek(cursor) {

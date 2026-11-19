@@ -389,7 +389,7 @@ impl Parse for Item {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+        let _depth = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
 
         // One call site for every form keeps one return slot in this frame
         let parse: fn(&Parser) -> Result<Self, ParseError> = if ItemMacroRules::peek(parser.cursor()) {
@@ -432,7 +432,7 @@ impl Parse for Item {
     }
 
     fn skip(cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
-        let _depth = moxy_token::Depth::enter()?;
+        let _depth = moxy_token::__private::Depth::enter()?;
 
         if ItemMacroRules::peek(cursor) {
             ItemMacroRules::skip(cursor)

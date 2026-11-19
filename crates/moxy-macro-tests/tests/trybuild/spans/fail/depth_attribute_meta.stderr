@@ -1,0 +1,6 @@
+error: delimiters nest deeper than 144 levels
+   --> tests/trybuild/spans/fail/depth_attribute_meta.rs:148:5
+    |
+148 | /     (
+149 | |     )
+    | |_____^

@@ -23,12 +23,46 @@ impl Attributed for Variadic {
 }
 
 impl Parse for Variadic {
+    // `...` alone or after a pattern and `:`, which ends the parameter. The
+    // parameter's tokens are scanned at its own level rather than skipped as
+    // a pattern, so peeking a parameter does not read a nested one again
     fn peek(cursor: Cursor<'_>) -> bool {
-        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        <Token![...]>::peek(cursor)
-            || Pattern::skip(cursor)
-                .and_then(|cursor| <Token![:]>::skip(cursor))
-                .is_some_and(|cursor| <Token![...]>::peek(cursor))
+        let start = Attributes::skip(cursor).unwrap_or(cursor);
+        let ends = |cursor: Cursor<'_>| cursor.is_empty() || <Token![,]>::peek(cursor);
+
+        if <Token![...]>::skip(start).is_some_and(ends) {
+            return true;
+        }
+
+        // A `,` inside generic arguments, as in `S::<A, B>(x)`, which are no
+        // group, does not end the parameter
+        let mut cursor = start;
+        let mut angles = 0usize;
+
+        while !cursor.is_empty() && !(angles == 0 && <Token![,]>::peek(cursor)) {
+            if angles == 0
+                && <Token![:]>::peek(cursor)
+                && cursor.remaining() < start.remaining()
+                && <Token![...]>::skip(cursor.offset(1)).is_some_and(ends)
+            {
+                return true;
+            }
+
+            angles = if <Token![<<]>::peek(cursor) {
+                angles + 2
+            } else if <Token![<]>::peek(cursor) {
+                angles + 1
+            } else if <Token![>>]>::peek(cursor) {
+                angles.saturating_sub(2)
+            } else if <Token![>]>::peek(cursor) && !<Token![->]>::peek(cursor) {
+                angles.saturating_sub(1)
+            } else {
+                angles
+            };
+            cursor = cursor.offset(1);
+        }
+
+        false
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {

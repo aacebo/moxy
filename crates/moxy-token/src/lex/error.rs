@@ -24,6 +24,13 @@ impl LexError {
     pub fn is_reject(&self) -> bool {
         self.message.is_none()
     }
+
+    // Groups nested past `MAX_DEPTH`, which lexing and the conversions from
+    // `proc_macro` and `proc_macro2` refuse. The parser reports its own depth
+    // error with another message.
+    pub(crate) fn too_deep(span: Span) -> Self {
+        Self::new(span).message(format!("delimiters nest deeper than {} levels", super::MAX_DEPTH))
+    }
 }
 
 impl<T> From<LexError> for Result<T, LexError> {

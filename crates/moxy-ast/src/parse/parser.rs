@@ -175,9 +175,19 @@ impl<'a> Parser<'a> {
         match self.advance() {
             Some(TokenTree::Ident(ident)) => Ok(ident.clone()),
             Some(TokenTree::Keyword(keyword)) => Ok(Ident::new(keyword.as_str()).with_span(keyword.span())),
-            Some(other) => Err(self.error(format!("expected Ident, received \"{}\"", other))),
+            Some(other) => Err(self.error(format!("expected Ident, received \"{}\"", received(other)))),
             None => Err(self.error("expected Ident, received \"<EOF>\"")),
         }
+    }
+}
+
+// A token as an error message quotes it: a group as its delimiters alone, as
+// `{ ... }`, so a message does not print a whole macro body
+pub(crate) fn received(token: &TokenTree) -> String {
+    match token {
+        TokenTree::Group(group) if group.tokens.is_empty() => format!("{}{}", group.delim.open(), group.delim.close()),
+        TokenTree::Group(group) => format!("{} ... {}", group.delim.open(), group.delim.close()),
+        other => other.to_string(),
     }
 }
 

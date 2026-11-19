@@ -26,6 +26,27 @@ impl Spanner for PatTupleStruct {
     }
 }
 
+impl PatTupleStruct {
+    // Skips the parenthesized elements after the path, with the level their
+    // parse takes
+    pub(crate) fn skip_elems(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let _weight = moxy_token::__private::Depth::enter()?;
+        let mut inner = cursor.descend(Delim::Paren)?;
+
+        while !inner.is_empty() {
+            inner = Pattern::skip(inner)?;
+
+            if inner.is_empty() {
+                break;
+            }
+
+            inner = <Token![,]>::skip(inner)?;
+        }
+
+        Some(cursor.offset(1))
+    }
+}
+
 impl Parse for PatTupleStruct {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
@@ -55,6 +76,9 @@ impl Parse for PatTupleStruct {
             (None, Path::parse_expr(parser)?)
         };
 
+        // The elements take a second level: a pattern nested in them takes
+        // more stack than the level it nests. `skip_elems` takes the same
+        let _weight = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let (span, parser) = parser.parse_group_spanned(Delim::Paren)?;
 
         Ok(Self {
@@ -73,19 +97,7 @@ impl Parse for PatTupleStruct {
             Path::skip_expr(cursor)?
         };
 
-        let mut inner = cursor.descend(Delim::Paren)?;
-
-        while !inner.is_empty() {
-            inner = Pattern::skip(inner)?;
-
-            if inner.is_empty() {
-                break;
-            }
-
-            inner = <Token![,]>::skip(inner)?;
-        }
-
-        Some(cursor.offset(1))
+        Self::skip_elems(cursor)
     }
 }
 

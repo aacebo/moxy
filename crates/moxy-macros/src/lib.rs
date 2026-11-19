@@ -92,7 +92,10 @@ use moxy_template::template;
 /// span-targeted compiler error.
 #[proc_macro_derive(ToTokens, attributes(moxy))]
 pub fn derive_tokens(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    tokens::expand(tokens.into()).into()
+    match input(tokens) {
+        Ok(tokens) => tokens::expand(tokens).into(),
+        Err(error) => error,
+    }
 }
 
 /// Derives [`moxy::ast::FromMeta`] for a struct or enum.
@@ -128,7 +131,10 @@ pub fn derive_tokens(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream
 /// ```
 #[proc_macro_derive(FromMeta, attributes(meta))]
 pub fn derive_meta(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    meta::expand(tokens.into()).into()
+    match input(tokens) {
+        Ok(tokens) => meta::expand(tokens).into(),
+        Err(error) => error,
+    }
 }
 
 /// Turns a public token-to-token function into a function-like procedural macro.
@@ -158,7 +164,10 @@ pub fn derive_meta(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn function(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    function::expand(attr.into(), item.into()).into()
+    match (input(attr), input(item)) {
+        (Ok(attr), Ok(item)) => function::expand(attr, item).into(),
+        (Err(error), _) | (_, Err(error)) => error,
+    }
 }
 
 /// Turns a public token-to-token function into an attribute procedural macro.
@@ -191,7 +200,10 @@ pub fn function(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) ->
 /// ```
 #[proc_macro_attribute]
 pub fn attribute(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    attribute::expand(attr.into(), item.into()).into()
+    match (input(attr), input(item)) {
+        (Ok(attr), Ok(item)) => attribute::expand(attr, item).into(),
+        (Err(error), _) | (_, Err(error)) => error,
+    }
 }
 
 /// Turns a public parseable-AST-to-token function into a custom derive macro.
@@ -226,7 +238,10 @@ pub fn attribute(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -
 /// return a `Result` whose error can produce a compile error.
 #[proc_macro_attribute]
 pub fn derive(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    derive::expand(attr.into(), item.into()).into()
+    match (input(attr), input(item)) {
+        (Ok(attr), Ok(item)) => derive::expand(attr, item).into(),
+        (Err(error), _) | (_, Err(error)) => error,
+    }
 }
 
 /// Applies one or more item macros to the annotated item.
@@ -271,5 +286,18 @@ pub fn derive(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> p
 /// ```
 #[proc_macro_attribute]
 pub fn apply(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    apply::expand(attr.into(), item.into()).into()
+    match (input(attr), input(item)) {
+        (Ok(attr), Ok(item)) => apply::expand(attr, item).into(),
+        (Err(error), _) | (_, Err(error)) => error,
+    }
+}
+
+// A macro's input as moxy tokens, or the compile error for input whose groups
+// nest past the depth limit
+fn input(tokens: proc_macro::TokenStream) -> Result<moxy_token::TokenStream, proc_macro::TokenStream> {
+    use moxy_token::TryIntoTokenStream;
+
+    tokens
+        .try_into_token_stream()
+        .map_err(|error| moxy_ast::ParseError::from(error).to_compile_error().into())
 }

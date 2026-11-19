@@ -110,3 +110,8 @@ impl ToTokens for Member {
         }
     }
 }
+
+// The levels a member of an impl, trait, or extern block takes beyond its own,
+// in parsing and in skipping: the body of a function and the items inside it
+// take that much more stack
+pub(crate) const EXTRA_LEVELS: usize = 2;

@@ -52,8 +52,10 @@ impl Parse for PatIdent {
             mutability: <_ as Parse>::parse(parser)?,
             ident: <_ as Parse>::parse(parser)?,
             // The subpattern has no top-level `|`: `a @ 1 | a @ 2` is two
-            // alternatives
+            // alternatives. It takes a second level, as a binding nested in it
+            // takes more stack than the level it nests
             subpat: if <Token![@]>::peek(parser.cursor()) {
+                let _weight = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
                 Some((<_ as Parse>::parse(parser)?, Box::new(super::parse::single(parser)?)))
             } else {
                 None
@@ -68,6 +70,7 @@ impl Parse for PatIdent {
         cursor = Ident::skip(cursor)?;
 
         if <Token![@]>::peek(cursor) {
+            let _weight = moxy_token::__private::Depth::enter()?;
             cursor = <Token![@]>::skip(cursor)?;
             cursor = super::skip::single(cursor)?;
         }

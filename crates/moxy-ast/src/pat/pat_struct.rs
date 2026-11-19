@@ -26,6 +26,15 @@ impl Spanner for PatStruct {
     }
 }
 
+impl PatStruct {
+    // Skips the braced body after the path, with the level its parse takes
+    pub(crate) fn skip_body(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let _weight = moxy_token::__private::Depth::enter()?;
+        let inner = PatStructBody::skip(cursor.descend(moxy_token::Delim::Brace)?)?;
+        inner.is_empty().then(|| cursor.offset(1))
+    }
+}
+
 impl Parse for PatStruct {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
@@ -46,9 +55,7 @@ impl Parse for PatStruct {
         cursor.is_delimited(moxy_token::Delim::Brace)
     }
 
-    // A struct pattern takes two levels of stack, as in `S { a: S { a: x } }`
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let _weight = moxy_token::Depth::enter_by(1).ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let attrs = <_ as Parse>::parse(parser)?;
         let (qself, path) = if <Token![<]>::peek(parser.cursor()) {
             let (qself, path) = QSelf::parse_qualified_expr(parser)?;
@@ -57,6 +64,9 @@ impl Parse for PatStruct {
             (None, Path::parse_expr(parser)?)
         };
 
+        // A struct pattern's body takes a second level of stack, as in
+        // `S { a: S { a: x } }`; `skip_body` takes the same
+        let _weight = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let body = Delimited::parse_brace(parser)?;
         Ok(Self {
             attrs,
@@ -74,9 +84,7 @@ impl Parse for PatStruct {
             Path::skip_expr(cursor)?
         };
 
-        let mut inner = cursor.descend(moxy_token::Delim::Brace)?;
-        inner = PatStructBody::skip(inner)?;
-        inner.is_empty().then(|| cursor.offset(1))
+        Self::skip_body(cursor)
     }
 }
 

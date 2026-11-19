@@ -58,7 +58,10 @@ use moxy_ast::{Parse, Parser};
 /// A malformed template produces a span-targeted compile error.
 #[proc_macro]
 pub fn template(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let tokens = tokens.into();
+    let tokens = match input(tokens) {
+        Ok(tokens) => tokens,
+        Err(error) => return error,
+    };
     let parser = Parser::from_tokens(&tokens);
     let expanded = match Template::parse(&parser) {
         Ok(tmpl) => tmpl.expand(),
@@ -88,7 +91,10 @@ pub fn template(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 /// span-targeted compile error.
 #[proc_macro]
 pub fn paste(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
-    let tokens = tokens.into();
+    let tokens = match input(tokens) {
+        Ok(tokens) => tokens,
+        Err(error) => return error,
+    };
     let parser = Parser::from_tokens(&tokens);
     let expanded = match Paste::parse(&parser) {
         Ok(p) => p.expand(),
@@ -96,4 +102,14 @@ pub fn paste(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
     };
 
     expanded.into()
+}
+
+// A macro's input as moxy tokens, or the compile error for input whose groups
+// nest past the depth limit
+fn input(tokens: proc_macro::TokenStream) -> Result<moxy_token::TokenStream, proc_macro::TokenStream> {
+    use moxy_token::TryIntoTokenStream;
+
+    tokens
+        .try_into_token_stream()
+        .map_err(|error| moxy_ast::ParseError::from(error).to_compile_error().into())
 }

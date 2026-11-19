@@ -72,7 +72,12 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
         pub fn {{ &name }}(tokens: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
             {{ &item }}
 
-            match __call__(tokens.into()) {
+            let tokens = match ::moxy::token::TryIntoTokenStream::try_into_token_stream(tokens) {
+                Err(err) => return ::moxy::ast::ParseError::from(err).to_compile_error().into(),
+                Ok(v) => v,
+            };
+
+            match __call__(tokens) {
                 Err(err) => err.to_compile_error().into(),
                 Ok(v) => v.into(),
             }

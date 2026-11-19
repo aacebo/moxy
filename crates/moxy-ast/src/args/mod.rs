@@ -57,7 +57,7 @@ impl Parse for GenericArgument {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+        let _depth = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
 
         let Some(token) = parser.cursor().curr() else {
             return Err(ParseError::new(parser.span(), "eof"));
@@ -81,7 +81,7 @@ impl Parse for GenericArgument {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let _depth = moxy_token::Depth::enter()?;
+        let _depth = moxy_token::__private::Depth::enter()?;
 
         if Lifetime::peek(cursor) && !Type::peek_lifetime_bound(cursor) {
             return Lifetime::skip(cursor);
@@ -102,12 +102,15 @@ impl Parse for GenericArgument {
 
             cursor = Option::<AngleArguments>::skip(cursor)?;
 
+            // The parser's extra levels for a constraint and a binding
             if peek_lone_colon(cursor) {
+                let _weight = moxy_token::__private::Depth::enter_by(CONSTRAINT_EXTRA_LEVELS)?;
                 cursor = <Token![:]>::skip(cursor)?;
                 return List::<TypeBound, Token![+]>::skip_while_present(cursor);
             }
 
             if <Token![=]>::peek(cursor) {
+                let _weight = moxy_token::__private::Depth::enter()?;
                 cursor = <Token![=]>::skip(cursor)?;
 
                 let is_const = starts_const(cursor);
@@ -176,7 +179,8 @@ impl GenericArgument {
     // An associated type bound takes three levels of stack, as in
     // `A<B: A<B: C>>`
     fn parse_constraint(parser: &Parser, ident: Ident, generics: Option<AngleArguments>) -> Result<Self, ParseError> {
-        let _weight = moxy_token::Depth::enter_by(2).ok_or_else(|| ParseError::too_deep(parser.span()))?;
+        let _weight =
+            moxy_token::__private::Depth::enter_by(CONSTRAINT_EXTRA_LEVELS).ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let colon_punct = <_ as Parse>::parse(parser)?;
         let bounds = List::parse_while_present(parser)?;
 
@@ -192,7 +196,7 @@ impl GenericArgument {
     // An associated type or constant: `Item = u8`, `N = 3`
     fn parse_assoc(parser: &Parser, ident: Ident, generics: Option<AngleArguments>) -> Result<Self, ParseError> {
         // Another level of stack, as in `A<B = A<B = u8>>`
-        let _weight = moxy_token::Depth::enter_by(1).ok_or_else(|| ParseError::too_deep(parser.span()))?;
+        let _weight = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let eq_punct = <_ as Parse>::parse(parser)?;
         let is_const = starts_const(parser.cursor());
 
@@ -263,3 +267,7 @@ fn starts_const(cursor: Cursor<'_>) -> bool {
         _ => false,
     }
 }
+
+// The levels an associated type bound takes beyond its own, in parsing and in
+// skipping, as in `A<B: A<B: C>>`
+const CONSTRAINT_EXTRA_LEVELS: usize = 2;

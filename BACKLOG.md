@@ -37,7 +37,11 @@ pub fn apply(tokens: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
 		let item = moxy::parse!(tokens as moxy :: ast :: ItemEnum)?;
 		Ok(moxy::template!{{{item}} impl {{& item . ident}} {pub fn as_str (& self) -> & 'static str {match self {@ for (variant in item . variants . iter ()) {Self :: {{variant . ident}} => stringify ! ({{variant . ident}}) ,}}}}})
 	}
-	match __call__(tokens.into()) {
+	let tokens = match ::moxy::token::TryIntoTokenStream::try_into_token_stream(tokens) {
+		Err(err) => return ::moxy::ast::ParseError::from(err).to_compile_error().into(),
+		Ok(v) => v,
+	};
+	match __call__(tokens) {
 		Err(err) => err.to_compile_error().into(),
 		Ok(v) => v.into(),
 	}

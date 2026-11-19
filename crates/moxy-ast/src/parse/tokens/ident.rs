@@ -12,14 +12,17 @@ impl Parse for Ident {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.advance().cloned() {
-            Some(TokenTree::Ident(v)) => Ok(v),
+        match parser.advance() {
+            Some(TokenTree::Ident(v)) => Ok(v.clone()),
             // A weak keyword is an identifier wherever its keyword use does not apply, as in
             // `fn default()` or `self.raw`
-            Some(TokenTree::Keyword(keyword)) if is_weak_keyword(&TokenTree::Keyword(keyword)) => {
+            Some(token @ TokenTree::Keyword(keyword)) if is_weak_keyword(token) => {
                 Ok(Ident::new(keyword.as_str()).with_span(keyword.span()))
             }
-            Some(other) => Err(parser.error(format!("expected ident, received \"{}\"", other))),
+            Some(other) => Err(parser.error(format!(
+                "expected ident, received \"{}\"",
+                crate::parse::parser::received(other)
+            ))),
             None => Err(parser.error("expected ident, received \"<EOF>\"")),
         }
     }

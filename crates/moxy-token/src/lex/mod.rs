@@ -1,9 +1,9 @@
 mod cursor;
-mod depth;
+pub(crate) mod depth;
 mod error;
 
 pub use cursor::*;
-pub use depth::*;
+pub use depth::MAX_DEPTH;
 pub use error::*;
 
 /// Parses one token value from the beginning of a lexer cursor.

@@ -52,11 +52,7 @@ impl Scan for Group {
         let ch = cursor.first().ok_or(cursor.error())?;
         let delim = Delim::from_open(ch).ok_or(cursor.error())?;
         let c = cursor.advance_by(ch.len_utf8());
-        let depth = crate::lex::Depth::enter().ok_or_else(|| {
-            cursor
-                .error()
-                .message(format!("nesting is deeper than {} levels", crate::lex::MAX_DEPTH))
-        })?;
+        let depth = crate::lex::depth::Depth::enter().ok_or_else(|| LexError::too_deep(cursor.error().span()))?;
         let (c, inner) = TokenStream::scan(c)?;
         drop(depth);
         let close_ch = c

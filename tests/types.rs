@@ -398,3 +398,25 @@ fn nested_parenthesized_first_bounds_parse_and_skip_in_linear_time() {
     let tokens: moxy::token::TokenStream = "(A) + B".parse().unwrap();
     assert!(moxy::ast::TypeTraitObject::peek(Parser::from_tokens(&tokens).cursor()));
 }
+
+#[test]
+fn trait_objects_and_variadics_skip_as_they_parse() {
+    use moxy::ast::{Expr, Parse, Parser, Variadic};
+
+    let skips_all = |source: &str, skip: fn(moxy::ast::Cursor<'_>) -> Option<moxy::ast::Cursor<'_>>| {
+        let tokens: moxy::token::TokenStream = source.parse().unwrap();
+        skip(Parser::from_tokens(&tokens).cursor()).map(|cursor| cursor.remaining())
+    };
+
+    // A variadic skips its trailing comma, a trait object its parenthesized
+    // first bound, and `as` a parenthesized type without the `+` after it
+    assert_eq!(skips_all("_: ...,", Variadic::skip), Some(0));
+    assert_eq!(skips_all("Box<(?Sized) + Copy>", Type::skip), Some(0));
+    assert_eq!(skips_all("(A) + B", Type::skip), Some(0));
+    assert_eq!(skips_all("x as (A) + b", Expr::skip), Some(0));
+
+    let expression: Expr = moxy::parse!("x as (A) + b").unwrap();
+    let chain = expression.as_binary_chain().unwrap();
+    let cast = chain.operands[0].as_cast_chain().unwrap();
+    assert!(cast.casts[0].1.is_paren());
+}
