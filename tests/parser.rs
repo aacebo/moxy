@@ -220,7 +220,8 @@ fn input_nested_to_the_depth_limit_parses_on_a_small_stack() {
         // A pattern keeps one level of room for the peeks that choose its
         // form
         let patterns = format!("{}a{}", "(".repeat(depth - 1), ")".repeat(depth - 1));
-        let modules = format!("{}{}", "mod m { ".repeat(depth), "}".repeat(depth));
+        // A module's item and its body each take a level
+        let modules = format!("{}{}", "mod m { ".repeat(depth / 2), "}".repeat(depth / 2));
         [
             moxy::parse!(parens as moxy::ast::Expr).is_ok(),
             moxy::parse!(arms as moxy::ast::Expr).is_ok(),
@@ -384,97 +385,135 @@ fn deep_trees_of_every_kind_parse_and_traverse_or_report_the_depth() {
     let pattern: fn(&Pattern) = |node| Walk.visit_pattern(node);
     let file: fn(&File) = |node| node.items.iter().for_each(|item| Walk.visit_item(item));
 
-    // Each kind with the depth it must reach
+    use moxy::token::MAX_DEPTH;
+
+    let block: fn(&moxy::ast::StmtBlock) = |node| Walk.visit_stmt_block(node);
+
+    // Each kind with the deepest nesting that the depth count accepts, which
+    // does not depend on the machine
     let kinds = [
         (
+            "nested blocks",
+            MAX_DEPTH - 2,
+            deepest::<Expr>(|n| format!("{}x{}", "{ ".repeat(n), " }".repeat(n)), expr),
+        ),
+        (
+            "modules",
+            MAX_DEPTH / 2,
+            deepest::<File>(|n| format!("{}{}", "mod m { ".repeat(n), "}".repeat(n)), file),
+        ),
+        (
+            "let initializers in blocks",
+            (MAX_DEPTH - 1) / 3,
+            deepest::<Expr>(|n| format!("{}1{}", "{ let a = ".repeat(n), "; a }".repeat(n)), expr),
+        ),
+        (
+            "const blocks in let patterns",
+            (MAX_DEPTH - 2) / 3,
+            deepest::<File>(
+                |n| format!("fn f() {{ {}1{} }}", "let const { ".repeat(n), " } = 1;".repeat(n)),
+                file,
+            ),
+        ),
+        (
+            "method call arguments",
+            MAX_DEPTH - 1,
+            deepest::<Expr>(|n| format!("{}x{}", "a.b(".repeat(n), ")".repeat(n)), expr),
+        ),
+        (
+            "nested ifs in a block",
+            MAX_DEPTH - 2,
+            deepest::<moxy::ast::StmtBlock>(|n| format!("{{ {}x{} }}", "if a { ".repeat(n), " }".repeat(n)), block),
+        ),
+        (
             "operator ladders in parentheses",
-            14,
+            (MAX_DEPTH - 1) / 9,
             deepest::<Expr>(|n| format!("{}0{}", "(0||0&&0==0|0^0&0<<0+0*".repeat(n), ")".repeat(n)), expr),
         ),
         (
             "operator ladders in closures",
-            14,
+            (MAX_DEPTH - 1) / 9,
             deepest::<Expr>(|n| format!("{}0", "|| 0||0&&0==0|0^0&0<<0+0*".repeat(n)), expr),
         ),
         (
             "parentheses",
-            140,
+            MAX_DEPTH - 1,
             deepest::<Expr>(|n| format!("{}a{}", "(".repeat(n), ")".repeat(n)), expr),
         ),
         (
             "struct literals",
-            70,
+            (MAX_DEPTH - 1) / 2,
             deepest::<Expr>(|n| format!("{}a{}", "S { a: ".repeat(n), " }".repeat(n)), expr),
         ),
         (
             "closures with a return type",
-            45,
+            (MAX_DEPTH - 1) / 3,
             deepest::<Expr>(|n| format!("{}1{}", "|| -> T { ".repeat(n), " }".repeat(n)), expr),
         ),
         (
             "blocks with a method call",
-            45,
+            MAX_DEPTH - 2,
             deepest::<Expr>(|n| format!("{}x{}", "{ ".repeat(n), " }.a()".repeat(n)), expr),
         ),
         (
             "function sugar",
-            70,
+            (MAX_DEPTH - 1) / 2,
             deepest::<Type>(|n| format!("{}T", "Fn() -> ".repeat(n)), ty),
         ),
         (
             "impl function sugar",
-            70,
+            (MAX_DEPTH - 1) / 2,
             deepest::<Type>(|n| format!("{}T", "impl Fn() -> ".repeat(n)), ty),
         ),
         (
             "associated types",
-            45,
+            (MAX_DEPTH - 1) / 3,
             deepest::<Type>(|n| format!("{}u8{}", "A<B = ".repeat(n), ">".repeat(n)), ty),
         ),
         (
             "associated bounds",
-            45,
+            (MAX_DEPTH - 1) / 3,
             deepest::<Type>(|n| format!("{}C{}", "A<B: ".repeat(n), ">".repeat(n)), ty),
         ),
         (
             "function pointers",
-            70,
+            (MAX_DEPTH - 1) / 2,
             deepest::<Type>(|n| format!("{}u8{}", "fn(".repeat(n), ")".repeat(n)), ty),
         ),
         (
             "array lengths",
-            30,
+            (MAX_DEPTH - 1) / 4,
             deepest::<Type>(|n| format!("{}u8{}", "[u8; { let x: ".repeat(n), "; 1 }]".repeat(n)), ty),
         ),
         (
             "generic arguments",
-            140,
+            MAX_DEPTH - 1,
             deepest::<Type>(|n| format!("{}u8{}", "Vec<".repeat(n), ">".repeat(n)), ty),
         ),
         (
             "struct patterns",
-            70,
+            (MAX_DEPTH - 1) / 2,
             deepest::<Pattern>(|n| format!("{}x{}", "S { a: ".repeat(n), " }".repeat(n)), pattern),
         ),
         (
             "impls",
-            25,
+            (MAX_DEPTH + 1) / 5,
             deepest::<File>(|n| format!("{}{}", "impl A { fn f() { ".repeat(n), "} }".repeat(n)), file),
         ),
         (
             "traits",
-            25,
+            (MAX_DEPTH + 1) / 5,
             deepest::<File>(|n| format!("{}{}", "trait A { fn f() { ".repeat(n), "} }".repeat(n)), file),
         ),
         (
             "functions",
-            45,
+            MAX_DEPTH / 3,
             deepest::<File>(|n| format!("{}{}", "fn f() { ".repeat(n), "}".repeat(n)), file),
         ),
     ];
 
-    for (kind, required, reached) in kinds {
-        assert!(reached >= required, "{kind} reach {reached} levels, fewer than {required}");
+    for (kind, expected, reached) in kinds {
+        assert_eq!(reached, expected, "{kind}");
     }
 }
 
@@ -669,4 +708,27 @@ fn a_chain_of_atoms_costs_no_level_of_its_own() {
     let message = format!("nesting is deeper than {} levels", moxy::token::MAX_DEPTH);
     let error = moxy::parse!((parens(depth + 1)) as moxy::ast::Expr).err().unwrap();
     assert_eq!(error.message(), message);
+}
+
+#[cfg(feature = "proc-macro2")]
+#[test]
+fn a_token_stream_nested_any_depth_converts_drops_and_reports_the_depth() {
+    use proc_macro2::{Delimiter, Group, TokenStream, TokenTree};
+
+    // Streams from the compiler or proc-macro2 are not lexed, so the lexer's
+    // limit on groups never sees them
+    let message = format!("nesting is deeper than {} levels", moxy::token::MAX_DEPTH);
+    let reported = on_small_stack(|| {
+        let mut stream = TokenStream::new();
+
+        for _ in 0..50_000 {
+            stream = TokenTree::Group(Group::new(Delimiter::Brace, stream)).into();
+        }
+
+        let tokens: moxy::token::TokenStream = stream.into();
+        let parser = moxy::ast::Parser::from_tokens(&tokens);
+        let error = <moxy::ast::StmtBlock as moxy::ast::Parse>::parse(&parser).err().unwrap();
+        error.message().to_string()
+    });
+    assert_eq!(reported, message);
 }

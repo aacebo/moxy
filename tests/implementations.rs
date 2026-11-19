@@ -148,3 +148,22 @@ fn impl_trait_and_extern_members_take_the_forms_rustc_parses() {
         assert!(moxy::parse!(source as Item).is_err(), "`{source}`");
     }
 }
+
+#[test]
+fn a_bang_without_a_type_after_it_is_the_never_type_of_an_impl() {
+    for source in ["impl ! {}", "impl<T> ! where T: A {}"] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let implementation = item.as_impl().unwrap();
+        assert!(
+            implementation.self_ty.is_never() && implementation.trait_ref.is_none(),
+            "`{source}`"
+        );
+    }
+
+    let item: Item = moxy::parse!("impl !Send for X {}").unwrap();
+    assert!(item.as_impl().unwrap().trait_ref.is_some());
+
+    for source in ["impl !A {}", "impl ! for X {}"] {
+        assert!(moxy::parse!(source as Item).is_err(), "`{source}`");
+    }
+}

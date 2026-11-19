@@ -39,8 +39,13 @@ pub(crate) fn early(parser: &Parser) -> Result<Box<Expr>, ParseError> {
         return Ok(body);
     }
 
-    // The block-like expression parsed once and the rest of the expression
-    // continues from it, as in `{ x }.len() + 1`
+    block_like_rest(parser, body, attrs)
+}
+
+// The rest of an expression that a block-like one starts, as in
+// `{ x }.len() + 1`, parsed apart from `early` so the frame that a nested
+// block recurses through stays small
+fn block_like_rest(parser: &Parser, body: Box<Expr>, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
     let operand = cast_rest(parser, postfix_rest(parser, body, attrs)?)?;
     let left = binary_rest(parser, ExprContext::NORMAL, operand, Precedence::Or, false)?;
 
@@ -406,23 +411,30 @@ fn postfix_rest(parser: &Parser, base: Box<Expr>, attrs: Attributes) -> Result<B
     let mut ops = Vec::new();
 
     loop {
-        if parser.is_delimited(Delim::Paren) {
-            ops.push(Postfix::Call(PostfixCall {
-                args: Delimited::parse_paren_with(parser, List::parse_all)?,
-            }));
+        // A step that nests expressions parses in its own small frame, chosen
+        // here and called from one site
+        let step: fn(&Parser) -> Result<Postfix, ParseError> = if parser.is_delimited(Delim::Paren) {
+            call
         } else if parser.is_delimited(Delim::Bracket) {
-            ops.push(Postfix::Index(PostfixIndex {
-                index: Delimited::parse_bracket_with(parser, |inner| boxed_expr(inner, ExprContext::NORMAL))?,
-            }));
+            index
         } else if <Token![.]>::peek(parser.cursor()) && !RangeLimits::peek(parser.cursor()) {
-            dot(parser, &mut ops)?;
+            if !peek_method_call(parser.cursor()) {
+                dot(parser, &mut ops)?;
+                continue;
+            }
+
+            method_call
         } else if <Token![?]>::peek(parser.cursor()) {
-            ops.push(Postfix::Try(PostfixTry {
-                question_punct: <_ as Parse>::parse(parser)?,
-            }));
+            |parser| {
+                Ok(Postfix::Try(PostfixTry {
+                    question_punct: <_ as Parse>::parse(parser)?,
+                }))
+            }
         } else {
             break;
-        }
+        };
+
+        ops.push(step(parser)?);
     }
 
     let mut expr = if ops.is_empty() {
@@ -442,6 +454,34 @@ fn postfix_rest(parser: &Parser, base: Box<Expr>, attrs: Attributes) -> Result<B
     Ok(expr)
 }
 
+// Arguments or a turbofish after `.name` make a method call; a turbofish makes
+// one even when its arguments are invalid, so their error is reported
+fn peek_method_call(cursor: Cursor<'_>) -> bool {
+    let method = cursor.offset(2);
+    Ident::peek(cursor.offset(1)) && (method.is_delimited(Delim::Paren) || <Token![::]>::peek(method))
+}
+
+fn method_call(parser: &Parser) -> Result<Postfix, ParseError> {
+    Ok(Postfix::MethodCall(PostfixMethodCall {
+        dot: <_ as Parse>::parse(parser)?,
+        method: <_ as Parse>::parse(parser)?,
+        turbofish: <_ as Parse>::parse(parser)?,
+        args: Delimited::parse_paren_with(parser, List::parse_all)?,
+    }))
+}
+
+fn call(parser: &Parser) -> Result<Postfix, ParseError> {
+    Ok(Postfix::Call(PostfixCall {
+        args: Delimited::parse_paren_with(parser, List::parse_all)?,
+    }))
+}
+
+fn index(parser: &Parser) -> Result<Postfix, ParseError> {
+    Ok(Postfix::Index(PostfixIndex {
+        index: Delimited::parse_bracket_with(parser, |inner| boxed_expr(inner, ExprContext::NORMAL))?,
+    }))
+}
+
 // `.await`, a method call, or a field access, or two field accesses where the
 // compiler lexes `0.1` in `x.0.1` as one float literal
 fn dot(parser: &Parser, ops: &mut Vec<Postfix>) -> Result<(), ParseError> {
@@ -451,22 +491,6 @@ fn dot(parser: &Parser, ops: &mut Vec<Postfix>) -> Result<(), ParseError> {
             await_keyword: <_ as Parse>::parse(parser)?,
         }));
         return Ok(());
-    }
-
-    if Ident::peek(parser.cursor().offset(1)) {
-        // Arguments or a turbofish make a method call; a turbofish makes one
-        // even when its arguments are invalid, so their error is reported
-        let method = parser.cursor().offset(2);
-
-        if method.is_delimited(Delim::Paren) || <Token![::]>::peek(method) {
-            ops.push(Postfix::MethodCall(PostfixMethodCall {
-                dot: <_ as Parse>::parse(parser)?,
-                method: <_ as Parse>::parse(parser)?,
-                turbofish: <_ as Parse>::parse(parser)?,
-                args: Delimited::parse_paren_with(parser, List::parse_all)?,
-            }));
-            return Ok(());
-        }
     }
 
     // `0.` in `x.0. 1` holds one index and the dot before the next
@@ -508,7 +532,17 @@ fn dot(parser: &Parser, ops: &mut Vec<Postfix>) -> Result<(), ParseError> {
 
 // Each form parses in its own function, so a nested expression's stack frame
 // holds only the form being parsed
+// One call site for every form keeps one return slot in this frame, which
+// each nested expression recurses through
 fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+    let form: Form = primary_form(parser).ok_or_else(|| parser.error("expected expression"))?;
+    form(parser, attrs, context)
+}
+
+type Form = fn(&Parser, Attributes, ExprContext) -> Result<Box<Expr>, ParseError>;
+
+// The parse function of the expression form that starts here
+fn primary_form(parser: &Parser) -> Option<Form> {
     let mut closure_cursor = parser.cursor();
     closure_cursor = BoundLifetimes::skip(closure_cursor).unwrap_or(closure_cursor);
     closure_cursor = Option::<Token![const]>::skip(closure_cursor).unwrap_or(closure_cursor);
@@ -517,101 +551,101 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<B
     closure_cursor = Option::<Token![move]>::skip(closure_cursor).unwrap_or(closure_cursor);
 
     if <Token![||]>::peek(closure_cursor) || <Token![|]>::peek(closure_cursor) {
-        return closure(parser, attrs, context);
+        return Some(closure);
     }
 
     if Lit::peek(parser.cursor()) {
-        return lit(parser, attrs);
+        return Some(|parser, attrs, _| lit(parser, attrs));
     }
 
     if <Token![_]>::peek(parser.cursor()) {
-        return infer(parser, attrs);
+        return Some(|parser, attrs, _| infer(parser, attrs));
     }
 
     if parser.is_delimited(Delim::Paren) {
-        return paren_or_tuple(parser, attrs);
+        return Some(|parser, attrs, _| paren_or_tuple(parser, attrs));
     }
 
     if parser.is_delimited(Delim::Bracket) {
-        return array_or_repeat(parser, attrs);
+        return Some(|parser, attrs, _| array_or_repeat(parser, attrs));
     }
 
     if parser.is_delimited(Delim::Brace) {
-        return block(parser, attrs);
+        return Some(|parser, attrs, _| block(parser, attrs));
     }
 
     if parser.is_delimited(Delim::None) {
-        return group(parser, attrs);
+        return Some(|parser, attrs, _| group(parser, attrs));
     }
 
     if <Token![let]>::peek(parser.cursor()) {
-        return let_expr(parser, attrs, context);
+        return Some(let_expr);
     }
 
     if <Token![if]>::peek(parser.cursor()) {
-        return if_expr(parser, attrs);
+        return Some(|parser, attrs, _| if_expr(parser, attrs));
     }
 
     let label_cursor = Label::skip(parser.cursor());
     let labeled = |keyword: fn(Cursor<'_>) -> bool| keyword(parser.cursor()) || label_cursor.is_some_and(keyword);
 
     if labeled(<Token![while]>::peek) {
-        return while_loop(parser, attrs);
+        return Some(|parser, attrs, _| while_loop(parser, attrs));
     }
 
     if labeled(<Token![for]>::peek) {
-        return for_loop(parser, attrs);
+        return Some(|parser, attrs, _| for_loop(parser, attrs));
     }
 
     if labeled(<Token![loop]>::peek) {
-        return loop_expr(parser, attrs);
+        return Some(|parser, attrs, _| loop_expr(parser, attrs));
     }
 
     if label_cursor.is_some_and(|cursor| cursor.is_delimited(Delim::Brace)) {
-        return labeled_block(parser, attrs);
+        return Some(|parser, attrs, _| labeled_block(parser, attrs));
     }
 
     if <Token![match]>::peek(parser.cursor()) {
-        return match_expr(parser, attrs);
+        return Some(|parser, attrs, _| match_expr(parser, attrs));
     }
 
     if <Token![unsafe]>::peek(parser.cursor()) {
-        return unsafe_block(parser, attrs);
+        return Some(|parser, attrs, _| unsafe_block(parser, attrs));
     }
 
     if <Token![const]>::peek(parser.cursor()) {
-        return const_block(parser, attrs);
+        return Some(|parser, attrs, _| const_block(parser, attrs));
     }
 
     if <Token![async]>::peek(parser.cursor()) {
-        return async_block(parser, attrs);
+        return Some(|parser, attrs, _| async_block(parser, attrs));
     }
 
     if <Token![try]>::peek(parser.cursor()) {
-        return try_block(parser, attrs);
+        return Some(|parser, attrs, _| try_block(parser, attrs));
     }
 
     if <Token![return]>::peek(parser.cursor()) {
-        return return_expr(parser, attrs, context);
+        return Some(return_expr);
     }
 
     if <Token![break]>::peek(parser.cursor()) {
-        return break_expr(parser, attrs, context);
+        return Some(break_expr);
     }
 
     if <Token![continue]>::peek(parser.cursor()) {
-        return continue_expr(parser, attrs);
+        return Some(|parser, attrs, _| continue_expr(parser, attrs));
     }
 
     if <Token![yield]>::peek(parser.cursor()) {
-        return yield_expr(parser, attrs, context);
+        return Some(yield_expr);
     }
 
     if <Token![<]>::peek(parser.cursor()) || Path::peek(parser.cursor()) {
-        return path_macro_or_struct(parser, attrs, context);
+        return Some(path_macro_or_struct);
     }
 
-    parser.error("expected expression").into()
+    None
 }
 
 fn lit(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
@@ -658,42 +692,8 @@ fn let_expr(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<
 }
 
 fn if_expr(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
-    let if_keyword = <_ as Parse>::parse(parser)?;
-    let cond = boxed_expr(parser, ExprContext::EARLY)?;
-    let then_branch: StmtBlock = <_ as Parse>::parse(parser)?;
-    if_block_inner(&then_branch)?;
-    let mut else_ifs = Vec::new();
-
-    // `else` takes another `if`, held as a branch of this node, or a block,
-    // which ends the expression: `if a { 1 } else { 2 } [x]` does not index
-    // the else block
-    while <Token![else]>::peek(parser.cursor()) && <Token![if]>::peek(parser.cursor().offset(1)) {
-        let else_keyword = <_ as Parse>::parse(parser)?;
-        let if_keyword = <_ as Parse>::parse(parser)?;
-        let cond = boxed_expr(parser, ExprContext::EARLY)?;
-        let then_branch: StmtBlock = <_ as Parse>::parse(parser)?;
-        if_block_inner(&then_branch)?;
-        else_ifs.push(ElseIf {
-            else_keyword,
-            if_keyword,
-            cond,
-            then_branch,
-        });
-    }
-
-    let (else_keyword, else_branch) = if <Token![else]>::peek(parser.cursor()) {
-        let else_keyword = <_ as Parse>::parse(parser)?;
-
-        if !parser.is_delimited(Delim::Brace) {
-            return parser.error("expected `{` or `if` after `else`").into();
-        }
-
-        let else_branch: StmtBlock = <_ as Parse>::parse(parser)?;
-        if_block_inner(&else_branch)?;
-        (Some(else_keyword), Some(else_branch))
-    } else {
-        (None, None)
-    };
+    let (if_keyword, cond, then_branch) = if_branch(parser)?;
+    let (else_ifs, else_keyword, else_branch) = else_branches(parser)?;
 
     Ok(boxed(ExprIfChain {
         attrs,
@@ -704,6 +704,48 @@ fn if_expr(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> 
         else_keyword,
         else_branch,
     }))
+}
+
+// The `if cond { .. }` of an if or of an else if branch. Kept apart from the
+// else branches so the frame that a nested if recurses through stays small
+fn if_branch(parser: &Parser) -> Result<(Token![if], Box<Expr>, StmtBlock), ParseError> {
+    let if_keyword = <_ as Parse>::parse(parser)?;
+    let cond = boxed_expr(parser, ExprContext::EARLY)?;
+    let then_branch: StmtBlock = <_ as Parse>::parse(parser)?;
+    if_block_inner(&then_branch)?;
+    Ok((if_keyword, cond, then_branch))
+}
+
+// `else` takes another `if`, held as a branch of this node, or a block, which
+// ends the expression: `if a { 1 } else { 2 } [x]` does not index the else
+// block
+fn else_branches(parser: &Parser) -> Result<(Vec<ElseIf>, Option<Token![else]>, Option<StmtBlock>), ParseError> {
+    let mut else_ifs = Vec::new();
+
+    while <Token![else]>::peek(parser.cursor()) && <Token![if]>::peek(parser.cursor().offset(1)) {
+        let else_keyword = <_ as Parse>::parse(parser)?;
+        let (if_keyword, cond, then_branch) = if_branch(parser)?;
+        else_ifs.push(ElseIf {
+            else_keyword,
+            if_keyword,
+            cond,
+            then_branch,
+        });
+    }
+
+    if !<Token![else]>::peek(parser.cursor()) {
+        return Ok((else_ifs, None, None));
+    }
+
+    let else_keyword = <_ as Parse>::parse(parser)?;
+
+    if !parser.is_delimited(Delim::Brace) {
+        return parser.error("expected `{` or `if` after `else`").into();
+    }
+
+    let else_branch: StmtBlock = <_ as Parse>::parse(parser)?;
+    if_block_inner(&else_branch)?;
+    Ok((else_ifs, Some(else_keyword), Some(else_branch)))
 }
 
 // As in rustc, the blocks of an `if` take no inner attributes

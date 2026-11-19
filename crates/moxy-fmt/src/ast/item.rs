@@ -276,6 +276,7 @@ impl Format for Item {
             Self::Static(v) => v.format(f),
             Self::Macro(v) => v.format(f),
             Self::Macro2(v) => v.format(f),
+            Self::DeclMacro(v) => v.format(f),
             Self::ForeignMod(v) => v.format(f),
             _ => Err(FmtError::unsupported("unsupported item variant")),
         }
@@ -719,6 +720,30 @@ impl Format for ItemMacroRules {
         self.attrs.format(f)?;
         f.text("macro_rules! ")?;
         self.ident.format(f)?;
+        f.text(" { ")?;
+        f.text(&self.body.tokens)?;
+        f.text(" }")
+    }
+}
+
+impl Format for ItemDeclMacro {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        self.attrs.format(f)?;
+        self.vis.format(f)?;
+
+        if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
+            f.text(" ")?;
+        }
+
+        f.text("macro ")?;
+        self.ident.format(f)?;
+
+        if let Some(params) = &self.params {
+            f.text("(")?;
+            f.text(&params.tokens)?;
+            f.text(")")?;
+        }
+
         f.text(" { ")?;
         f.text(&self.body.tokens)?;
         f.text(" }")

@@ -215,3 +215,26 @@ fn boolean_literals_bridge_back_to_proc_macro_identifiers() {
         );
     }
 }
+
+#[test]
+fn a_quote_that_starts_no_literal_or_lifetime_is_a_lex_error() {
+    // A lone quote emitted beside a character literal read back as another
+    // literal, as `''\\'` did
+    for (source, message) in [
+        ("a '' b", "empty character literal"),
+        ("''\\\\'", "empty character literal"),
+        ("a '1 b", "lifetimes cannot start with a number"),
+        ("a ' b", "unterminated character literal"),
+        ("x'", "unterminated character literal"),
+    ] {
+        let error = source
+            .parse::<moxy::token::TokenStream>()
+            .err()
+            .unwrap_or_else(|| panic!("`{source}` lexed"));
+        assert_eq!(error.to_string(), message, "`{source}`");
+    }
+
+    for source in ["'a", "'a'", "'\\\\'", "'r#a", "b'a'", "'static"] {
+        assert!(source.parse::<moxy::token::TokenStream>().is_ok(), "`{source}`");
+    }
+}

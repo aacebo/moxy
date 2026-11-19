@@ -24,10 +24,12 @@ impl Attributed for ItemMacroRules {
 
 impl Parse for ItemMacroRules {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
-        // `macro_rules` without `!` is an identifier, as in `macro_rules + 1`
+        // `macro_rules` without `!` is an identifier, as in `macro_rules + 1`,
+        // and without a name after it a call of a macro named `macro_rules`, as
+        // in `macro_rules! {}`
         Attributes::skip(cursor)
             .and_then(|cursor| <Token![macro_rules]>::skip(cursor))
-            .is_some_and(|cursor| <Token![!]>::peek(cursor))
+            .is_some_and(|cursor| <Token![!]>::peek(cursor) && Ident::peek(cursor.offset(1)))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {

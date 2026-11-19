@@ -159,10 +159,7 @@ impl ToTokens for proc_macro::Literal {
 impl From<proc_macro::Group> for Group {
     #[inline]
     fn from(value: proc_macro::Group) -> Self {
-        use crate::span::DelimSpan;
-        let mut group = Self::new(value.delimiter().into(), value.stream().into());
-        group.span = DelimSpan::with_whole(value.span_open().into(), value.span_close().into(), value.span().into());
-        group
+        group(&value, convert(value.stream()))
     }
 }
 
@@ -212,23 +209,79 @@ impl ToTokens<TokenStream> for proc_macro::TokenTree {
 
 impl ToTokens<TokenStream> for proc_macro::TokenStream {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let mut punct_run: Vec<(char, Span, Spacing)> = Vec::new();
-
-        for tt in self.clone() {
-            match tt {
-                proc_macro::TokenTree::Punct(p) => punct_run.push((p.as_char(), p.span().into(), p.spacing().into())),
-                other => {
-                    if !punct_run.is_empty() {
-                        crate::scan_puncts_spanned(&punct_run, tokens);
-                        punct_run.clear();
-                    }
-                    other.to_tokens(tokens);
-                }
-            }
+        for token in Vec::<TokenTree>::from(convert(self.clone())) {
+            tokens.extend_one(token);
         }
+    }
+}
 
-        if !punct_run.is_empty() {
-            crate::scan_puncts_spanned(&punct_run, tokens);
+fn group(value: &proc_macro::Group, tokens: TokenStream) -> Group {
+    use crate::span::DelimSpan;
+    let mut group = Group::new(value.delimiter().into(), tokens);
+    group.span = DelimSpan::with_whole(value.span_open().into(), value.span_close().into(), value.span().into());
+    group
+}
+
+// The trees of one stream being converted, and the group they go into
+struct Level {
+    trees: proc_macro::token_stream::IntoIter,
+    out: TokenStream,
+    punct_run: Vec<(char, Span, Spacing)>,
+    group: Option<proc_macro::Group>,
+}
+
+impl Level {
+    fn new(stream: proc_macro::TokenStream, group: Option<proc_macro::Group>) -> Self {
+        Self {
+            trees: stream.into_iter(),
+            out: TokenStream::new(),
+            punct_run: Vec::new(),
+            group,
+        }
+    }
+
+    // Joins the punctuation read so far into its multi-character operators
+    fn flush(&mut self) {
+        if !self.punct_run.is_empty() {
+            crate::scan_puncts_spanned(&self.punct_run, &mut self.out);
+            self.punct_run.clear();
+        }
+    }
+}
+
+// Converts a stream with a stack of the groups it is inside rather than by
+// recursion, so a stream nested any depth converts on any stack
+fn convert(stream: proc_macro::TokenStream) -> TokenStream {
+    let mut levels = vec![Level::new(stream, None)];
+
+    loop {
+        let level = levels.last_mut().expect("the outermost level is popped last");
+
+        match level.trees.next() {
+            Some(proc_macro::TokenTree::Punct(p)) => {
+                level.punct_run.push((p.as_char(), p.span().into(), p.spacing().into()));
+            }
+            Some(proc_macro::TokenTree::Group(group)) => {
+                level.flush();
+                let stream = group.stream();
+                levels.push(Level::new(stream, Some(group)));
+            }
+            Some(other) => {
+                level.flush();
+                other.to_tokens(&mut level.out);
+            }
+            None => {
+                level.flush();
+                let done = levels.pop().expect("a level is open");
+
+                let Some(value) = done.group else {
+                    return done.out;
+                };
+
+                let converted = group(&value, done.out);
+                let parent = levels.last_mut().expect("a group sits inside a level");
+                parent.out.extend_one(TokenTree::Group(converted));
+            }
         }
     }
 }
@@ -284,9 +337,7 @@ impl ToTokens<proc_macro::TokenStream> for TokenStream {
 
 impl From<proc_macro::TokenStream> for TokenStream {
     fn from(value: proc_macro::TokenStream) -> Self {
-        let mut out = Self::new();
-        value.to_tokens(&mut out);
-        out
+        convert(value)
     }
 }
 

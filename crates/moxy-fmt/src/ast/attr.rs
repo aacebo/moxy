@@ -106,13 +106,30 @@ impl Format for TokenStream {
 }
 
 // Whether two tokens written without a space between them lex as other
-// tokens, as `pub b` would as `pubb`, `/ /` as a comment, and `b 'a` as no
-// valid tokens
+// tokens, as `pub b` would as `pubb`, `/ /` as a comment, and `b 'a` as a
+// byte literal. A lifetime's quote joins its name and takes a space only after
+// a word. A token that does not lex back to itself, as `$crate` from a
+// `macro_rules!` fragment, takes a space only where one changes how the two
+// lex.
 fn joins(left: &str, right: &str) -> bool {
     fn texts(source: &str) -> Option<Vec<String>> {
         let tokens = source.parse::<TokenStream>().ok()?;
         Some(tokens.iter().map(ToString::to_string).collect())
     }
 
-    texts(&format!("{left}{right}")) != texts(&format!("{left} {right}"))
+    if left == "'" {
+        return false;
+    }
+
+    if right == "'" {
+        return left.ends_with(|ch: char| ch.is_alphanumeric() || ch == '_');
+    }
+
+    let together = texts(&format!("{left}{right}"));
+
+    if texts(left).as_deref() != Some(&[left.to_string()]) || texts(right).as_deref() != Some(&[right.to_string()]) {
+        return together != texts(&format!("{left} {right}"));
+    }
+
+    together.as_deref() != Some(&[left.to_string(), right.to_string()])
 }

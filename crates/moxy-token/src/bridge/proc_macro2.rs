@@ -144,7 +144,7 @@ impl From<proc_macro2::Group> for Group {
         Self {
             span: value.delim_span().into(),
             delim: value.delimiter().into(),
-            tokens: value.stream().into(),
+            tokens: convert(value.stream()),
         }
     }
 }
@@ -170,41 +170,90 @@ impl ToTokens for proc_macro2::Group {
 
 impl ToTokens<TokenStream> for proc_macro2::TokenStream {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        let mut punct_run: Vec<(char, Span, Spacing)> = Vec::new();
-
-        for tt in self.clone() {
-            match tt {
-                proc_macro2::TokenTree::Punct(p) => punct_run.push((p.as_char(), p.span().into(), p.spacing().into())),
-                other => {
-                    if !punct_run.is_empty() {
-                        crate::scan_puncts_spanned(&punct_run, tokens);
-                        punct_run.clear();
-                    }
-
-                    match other {
-                        proc_macro2::TokenTree::Ident(v) => {
-                            let span = v.span().into();
-                            let text = v.to_string();
-                            let tt = match text.as_str() {
-                                "true" => TokenTree::Literal(Lit::Bool(crate::LitBool::new(true, span))),
-                                "false" => TokenTree::Literal(Lit::Bool(crate::LitBool::new(false, span))),
-                                _ => match Keyword::from_str(&text, span) {
-                                    Some(kw) => TokenTree::Keyword(kw),
-                                    None => TokenTree::Ident(v.into()),
-                                },
-                            };
-                            tokens.extend_one(tt)
-                        }
-                        proc_macro2::TokenTree::Literal(v) => tokens.extend_one(TokenTree::Literal(v.into())),
-                        proc_macro2::TokenTree::Group(v) => tokens.extend_one(TokenTree::Group(v.into())),
-                        proc_macro2::TokenTree::Punct(_) => unreachable!(),
-                    }
-                }
-            }
+        for token in Vec::<TokenTree>::from(convert(self.clone())) {
+            tokens.extend_one(token);
         }
+    }
+}
 
-        if !punct_run.is_empty() {
-            crate::scan_puncts_spanned(&punct_run, tokens);
+// The trees of one stream being converted, and the group they go into
+struct Level {
+    trees: proc_macro2::token_stream::IntoIter,
+    out: TokenStream,
+    punct_run: Vec<(char, Span, Spacing)>,
+    group: Option<proc_macro2::Group>,
+}
+
+impl Level {
+    fn new(stream: proc_macro2::TokenStream, group: Option<proc_macro2::Group>) -> Self {
+        Self {
+            trees: stream.into_iter(),
+            out: TokenStream::new(),
+            punct_run: Vec::new(),
+            group,
+        }
+    }
+
+    // Joins the punctuation read so far into its multi-character operators
+    fn flush(&mut self) {
+        if !self.punct_run.is_empty() {
+            crate::scan_puncts_spanned(&self.punct_run, &mut self.out);
+            self.punct_run.clear();
+        }
+    }
+}
+
+// Converts a stream with a stack of the groups it is inside rather than by
+// recursion, so a stream nested any depth converts on any stack
+fn convert(stream: proc_macro2::TokenStream) -> TokenStream {
+    let mut levels = vec![Level::new(stream, None)];
+
+    loop {
+        let level = levels.last_mut().expect("the outermost level is popped last");
+
+        match level.trees.next() {
+            Some(proc_macro2::TokenTree::Punct(p)) => {
+                level.punct_run.push((p.as_char(), p.span().into(), p.spacing().into()));
+            }
+            Some(proc_macro2::TokenTree::Group(group)) => {
+                level.flush();
+                let stream = group.stream();
+                levels.push(Level::new(stream, Some(group)));
+            }
+            Some(proc_macro2::TokenTree::Ident(v)) => {
+                level.flush();
+                let span = v.span().into();
+                let text = v.to_string();
+                let tt = match text.as_str() {
+                    "true" => TokenTree::Literal(Lit::Bool(crate::LitBool::new(true, span))),
+                    "false" => TokenTree::Literal(Lit::Bool(crate::LitBool::new(false, span))),
+                    _ => match Keyword::from_str(&text, span) {
+                        Some(kw) => TokenTree::Keyword(kw),
+                        None => TokenTree::Ident(v.into()),
+                    },
+                };
+                level.out.extend_one(tt);
+            }
+            Some(proc_macro2::TokenTree::Literal(v)) => {
+                level.flush();
+                level.out.extend_one(TokenTree::Literal(v.into()));
+            }
+            None => {
+                level.flush();
+                let done = levels.pop().expect("a level is open");
+
+                let Some(group) = done.group else {
+                    return done.out;
+                };
+
+                let converted = Group {
+                    span: group.delim_span().into(),
+                    delim: group.delimiter().into(),
+                    tokens: done.out,
+                };
+                let parent = levels.last_mut().expect("a group sits inside a level");
+                parent.out.extend_one(TokenTree::Group(converted));
+            }
         }
     }
 }
@@ -259,9 +308,7 @@ impl ToTokens<proc_macro2::TokenStream> for TokenStream {
 
 impl From<proc_macro2::TokenStream> for TokenStream {
     fn from(stream: proc_macro2::TokenStream) -> Self {
-        let mut out = Self::new();
-        stream.to_tokens(&mut out);
-        out
+        convert(stream)
     }
 }
 

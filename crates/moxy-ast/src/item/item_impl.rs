@@ -53,7 +53,11 @@ impl Parse for ItemImpl {
         let unsafety = <_ as Parse>::parse(parser)?;
         let impl_keyword = <_ as Parse>::parse(parser)?;
         let mut generics: Generics = <_ as Parse>::parse(parser)?;
-        let polarity: Option<Token![!]> = <_ as Parse>::parse(parser)?;
+        let polarity: Option<Token![!]> = if negative(parser.cursor()) {
+            Some(<_ as Parse>::parse(parser)?)
+        } else {
+            None
+        };
 
         let first = <_ as Parse>::parse(parser)?;
 
@@ -99,8 +103,12 @@ impl Parse for ItemImpl {
         cursor = Option::<Token![unsafe]>::skip(cursor)?;
         cursor = <Token![impl]>::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
-        let negative = <Token![!]>::peek(cursor);
-        cursor = Option::<Token![!]>::skip(cursor)?;
+        let negative = negative(cursor);
+
+        if negative {
+            cursor = <Token![!]>::skip(cursor)?;
+        }
+
         cursor = Type::skip(cursor)?;
 
         if negative && !<Token![for]>::peek(cursor) {
@@ -147,4 +155,10 @@ impl ToTokens for ItemImpl {
         self.items.inner.to_tokens(&mut body);
         self.items.surround(t, body);
     }
+}
+
+// As in rustc, a `!` is the polarity of a negative impl when a type follows it,
+// and otherwise the never type, as in `impl ! {}`
+fn negative(cursor: crate::Cursor<'_>) -> bool {
+    <Token![!]>::peek(cursor) && Type::peek(cursor.offset(1))
 }

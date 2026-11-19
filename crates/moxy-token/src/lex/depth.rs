@@ -11,7 +11,8 @@ use std::cell::Cell;
 ///
 /// - Two levels: a struct literal or struct pattern, a closure with a return
 ///   type, a function pointer type, parenthesized path arguments as in
-///   `Fn() -> T`, an array type, and an item inside a block.
+///   `Fn() -> T`, an array type, an item inside a block, a module's body, a
+///   `let` initializer, and a `const` block in a pattern.
 /// - Three levels: an associated type or constant argument (`A<B = T>`), an
 ///   associated type bound (`A<B: C>`), and a member of an impl, trait, or
 ///   extern block.
@@ -20,11 +21,15 @@ use std::cell::Cell;
 /// `else if` branches, or use path segments are held flat, so a chain counts
 /// as one level however long it is.
 ///
-/// A level takes up to about 12 KiB of stack in a debug build and less in a
-/// release build, so input at the limit parses and traverses in under 1.9 MiB
-/// on the 2 MiB stack of a spawned thread or a test. rustc grows its stack to
-/// accept any depth; syn parses 256 nested parentheses on an 8 MiB stack and
-/// overflows a 2 MiB stack at that depth in a debug build.
+/// The count is the same on every build and platform, so a source parses or
+/// fails alike everywhere. It is sized for the 2 MiB stack of a spawned thread
+/// or a test in a debug build: input at the limit of each kind parses and runs
+/// every traversal in at most about 1.75 MiB there, and most kinds in under
+/// 1.5 MiB. A release build takes less. A caller on a smaller stack, such as a
+/// 1 MiB main thread on Windows, should parse on a thread with at least 2 MiB.
+/// rustc grows its stack to accept any depth; syn parses 256 nested
+/// parentheses on an 8 MiB stack and overflows a 2 MiB stack at that depth in
+/// a debug build.
 pub const MAX_DEPTH: usize = 144;
 
 thread_local! {

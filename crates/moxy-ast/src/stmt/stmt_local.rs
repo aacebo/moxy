@@ -113,7 +113,10 @@ impl Parse for StmtLocalInit {
         <Token![=]>::peek(cursor) && Expr::peek(cursor.offset(1))
     }
 
+    // An initializer, whose `let` holds a pattern and a type as well, takes
+    // another level of stack, as in `{ let a = { let a = .. }; }`
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let _weight = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let eq = <_ as Parse>::parse(parser)?;
         let expr = <_ as Parse>::parse(parser)?;
         let diverge = if <Token![else]>::peek(parser.cursor()) {
@@ -130,6 +133,7 @@ impl Parse for StmtLocalInit {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let _weight = moxy_token::Depth::enter()?;
         cursor = <Token![=]>::skip(cursor)?;
         cursor = Expr::skip(cursor)?;
 

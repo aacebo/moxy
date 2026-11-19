@@ -1,4 +1,5 @@
 mod item_const;
+mod item_decl_macro;
 mod item_enum;
 mod item_extern_crate;
 mod item_fn;
@@ -17,6 +18,7 @@ mod item_union;
 mod item_use;
 
 pub use item_const::*;
+pub use item_decl_macro::*;
 pub use item_enum::*;
 pub use item_extern_crate::*;
 pub use item_fn::*;
@@ -58,6 +60,7 @@ pub enum Item {
     Static(ItemStatic),
     Macro(ItemMacro),
     Macro2(ItemMacroRules),
+    DeclMacro(ItemDeclMacro),
     ForeignMod(ItemForeignMod),
 }
 
@@ -79,6 +82,7 @@ impl Attributed for Item {
             Self::Static(value) => &value.attrs,
             Self::Macro(value) => &value.attrs,
             Self::Macro2(value) => &value.attrs,
+            Self::DeclMacro(value) => &value.attrs,
             Self::ForeignMod(value) => &value.attrs,
         }
     }
@@ -145,6 +149,10 @@ impl Item {
         matches!(self, Self::Macro2(_))
     }
 
+    pub fn is_decl_macro(&self) -> bool {
+        matches!(self, Self::DeclMacro(_))
+    }
+
     pub fn is_foreign_mod(&self) -> bool {
         matches!(self, Self::ForeignMod(_))
     }
@@ -209,6 +217,10 @@ impl Item {
         if let Self::Macro2(v) = self { Some(v) } else { None }
     }
 
+    pub fn as_decl_macro(&self) -> Option<&ItemDeclMacro> {
+        if let Self::DeclMacro(v) = self { Some(v) } else { None }
+    }
+
     pub fn as_foreign_mod(&self) -> Option<&ItemForeignMod> {
         if let Self::ForeignMod(v) = self { Some(v) } else { None }
     }
@@ -232,6 +244,7 @@ impl Spanner for Item {
             Self::Static(v) => v.span(),
             Self::Macro(v) => v.span(),
             Self::Macro2(v) => v.span(),
+            Self::DeclMacro(v) => v.span(),
             Self::ForeignMod(v) => v.span(),
         }
     }
@@ -327,6 +340,12 @@ impl From<ItemMacroRules> for Item {
     }
 }
 
+impl From<ItemDeclMacro> for Item {
+    fn from(value: ItemDeclMacro) -> Self {
+        Self::DeclMacro(value)
+    }
+}
+
 impl From<ItemForeignMod> for Item {
     fn from(value: ItemForeignMod) -> Self {
         Self::ForeignMod(value)
@@ -349,6 +368,7 @@ impl Parse for Item {
             || ItemConst::peek(cursor)
             || ItemStatic::peek(cursor)
             || ItemFn::peek(cursor)
+            || ItemDeclMacro::peek(cursor)
             || ItemMacro::peek(cursor)
     }
 
@@ -384,6 +404,8 @@ impl Parse for Item {
             parse_into::<ItemStatic, Self>
         } else if ItemFn::peek(parser.cursor()) {
             parse_into::<ItemFn, Self>
+        } else if ItemDeclMacro::peek(parser.cursor()) {
+            parse_into::<ItemDeclMacro, Self>
         } else if ItemMacro::peek(parser.cursor()) {
             parse_into::<ItemMacro, Self>
         } else {
@@ -424,6 +446,8 @@ impl Parse for Item {
             ItemStatic::skip(cursor)
         } else if ItemFn::peek(cursor) {
             ItemFn::skip(cursor)
+        } else if ItemDeclMacro::peek(cursor) {
+            ItemDeclMacro::skip(cursor)
         } else if ItemMacro::peek(cursor) {
             ItemMacro::skip(cursor)
         } else {
@@ -450,6 +474,7 @@ impl ToTokens for Item {
             Self::Static(v) => v.to_tokens(t),
             Self::Macro(v) => v.to_tokens(t),
             Self::Macro2(v) => v.to_tokens(t),
+            Self::DeclMacro(v) => v.to_tokens(t),
             Self::ForeignMod(v) => v.to_tokens(t),
         }
     }

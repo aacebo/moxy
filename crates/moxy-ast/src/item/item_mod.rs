@@ -37,8 +37,9 @@ impl Parse for ItemMod {
         let mod_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
         // The body is read here rather than in its own parse, which would add
-        // a frame per nested module
+        // a frame per nested module, and takes a level besides the item's
         let (content, semi_punct) = if ItemModContent::peek(parser.cursor()) {
+            let _weight = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
             let mut inner_attrs = Attributes::default();
             let items = Delimited::parse_brace_with(parser, |parser| {
                 inner_attrs = Attributes::parse_inner(parser)?;
@@ -68,6 +69,7 @@ impl Parse for ItemMod {
         cursor = Ident::skip(cursor)?;
 
         if ItemModContent::peek(cursor) {
+            let _weight = moxy_token::Depth::enter()?;
             ItemModContent::skip(cursor)
         } else {
             <Token![;]>::skip(cursor)

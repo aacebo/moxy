@@ -891,6 +891,7 @@ define_visit! {
             Static(visit_item_static / visit_item_static_mut),
             Macro(visit_item_macro / visit_item_macro_mut),
             Macro2(visit_item_macro_rules / visit_item_macro_rules_mut),
+            DeclMacro(visit_item_decl_macro / visit_item_decl_macro_mut),
             ForeignMod(visit_item_foreign_mod / visit_item_foreign_mod_mut),
         }
     }
@@ -1105,6 +1106,18 @@ define_visit! {
             attrs => visit_attributes / visit_attributes_mut,
             call => visit_macro_call / visit_macro_call_mut,
             semi_punct: skip,
+        }
+    }
+    struct ItemDeclMacro {
+        visit: visit_item_decl_macro, visit_mut: visit_item_decl_macro_mut,
+        walk: walk_item_decl_macro, walk_mut: walk_item_decl_macro_mut,
+        fields {
+            attrs => visit_attributes / visit_attributes_mut,
+            vis => visit_visibility / visit_visibility_mut,
+            macro_keyword: skip,
+            ident: skip,
+            params: skip,
+            body: skip,
         }
     }
     struct ItemMacroRules {

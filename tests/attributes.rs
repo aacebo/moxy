@@ -311,3 +311,20 @@ fn a_file_that_starts_with_an_inner_attribute_peeks_as_a_file() {
     let tokens: moxy::token::TokenStream = "#![a] fn f() {}".parse().unwrap();
     assert!(<File as Parse>::peek(Cursor::from_tokens(&tokens)));
 }
+
+#[test]
+fn attribute_tokens_that_do_not_lex_alone_keep_their_spacing() {
+    use moxy::token::{Ident, TokenStream, TokenTree};
+
+    // `$crate` comes from a `macro_rules!` fragment and does not lex on its
+    // own, so the formatter cannot test it by lexing
+    let path: TokenStream = "::x".parse().unwrap();
+    let mut tokens = TokenStream::new();
+    tokens.extend_one(TokenTree::Ident(Ident::new("$crate")));
+    path.iter().cloned().for_each(|token| tokens.extend_one(token));
+    assert_eq!(moxy::fmt!(&tokens).unwrap(), "$crate::x");
+
+    // A lifetime's quote joins its name, and takes a space after a word
+    let tokens: TokenStream = "for<'a> b 'c".parse().unwrap();
+    assert_eq!(moxy::fmt!(&tokens).unwrap(), "for<'a>b 'c");
+}
