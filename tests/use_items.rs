@@ -1,4 +1,5 @@
 use moxy::ast::Item;
+use moxy::token::ToTokenStream;
 
 #[test]
 fn grouped_use_items_preserve_renames_globs_and_self_imports() {
@@ -27,5 +28,18 @@ fn use_paths_accept_path_keywords() {
     ] {
         let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
         assert_eq!(moxy::fmt!(&item).unwrap(), expected);
+    }
+}
+
+#[test]
+fn empty_use_groups_parse() {
+    for (source, tokens, formatted) in [
+        ("use a::{};", "use a :: {} ;", "use a::{};"),
+        ("use {};", "use {} ;", "use {};"),
+        ("use a::{b::{}, c};", "use a :: {b :: {} , c} ;", "use a::{b::{}, c};"),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(item.to_token_stream().to_string(), tokens);
+        assert_eq!(moxy::fmt!(&item).unwrap(), formatted);
     }
 }
