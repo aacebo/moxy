@@ -1,65 +1,42 @@
 use super::*;
 
+// Mirrors the dispatch of `parse::single`, peek for peek
 pub(crate) fn single(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     let _depth = moxy_token::Depth::enter()?;
 
     if PatWild::peek(cursor) {
-        return PatWild::skip(cursor);
+        PatWild::skip(cursor)
+    } else if PatRange::peek(cursor) {
+        PatRange::skip(cursor)
+    } else if PatRest::peek(cursor) {
+        PatRest::skip(cursor)
+    } else if PatBox::peek(cursor) {
+        PatBox::skip(cursor)
+    } else if PatConst::peek(cursor) {
+        PatConst::skip(cursor)
+    } else if PatReference::peek(cursor) {
+        PatReference::skip(cursor)
+    } else if PatGroup::peek(cursor) {
+        PatGroup::skip(cursor)
+    } else if PatSlice::peek(cursor) {
+        PatSlice::skip(cursor)
+    } else if Attributes::skip(cursor).is_some_and(|cursor| cursor.is_delimited(moxy_token::Delim::Paren)) {
+        // A parenthesized pattern skips as a one-element tuple, so nested
+        // parentheses skip in linear time
+        PatTuple::skip(cursor)
+    } else if PatMacro::peek(cursor) {
+        PatMacro::skip(cursor)
+    } else if PatTupleStruct::peek(cursor) {
+        PatTupleStruct::skip(cursor)
+    } else if PatStruct::peek(cursor) {
+        PatStruct::skip(cursor)
+    } else if PatIdent::peek(cursor) {
+        PatIdent::skip(cursor)
+    } else if PatPath::peek(cursor) {
+        PatPath::skip(cursor)
+    } else if PatLit::peek(cursor) {
+        PatLit::skip(cursor)
+    } else {
+        None
     }
-
-    if PatRange::peek(cursor) {
-        return PatRange::skip(cursor);
-    }
-
-    if PatRest::peek(cursor) {
-        return PatRest::skip(cursor);
-    }
-
-    if PatBox::peek(cursor) {
-        return PatBox::skip(cursor);
-    }
-
-    if PatConst::peek(cursor) {
-        return PatConst::skip(cursor);
-    }
-
-    if PatReference::peek(cursor) {
-        return PatReference::skip(cursor);
-    }
-
-    if cursor.is_delimited(moxy_token::Delim::None) {
-        return PatGroup::skip(cursor);
-    }
-
-    if cursor.is_delimited(moxy_token::Delim::Bracket) {
-        return PatSlice::skip(cursor);
-    }
-
-    // A parenthesized pattern skips as a one-element tuple, so nested
-    // parentheses skip in linear time
-    if Attributes::skip(cursor).is_some_and(|cursor| cursor.is_delimited(moxy_token::Delim::Paren)) {
-        return PatTuple::skip(cursor);
-    }
-
-    if MacroCall::peek(cursor) {
-        return MacroCall::skip(cursor);
-    }
-
-    if PatTupleStruct::peek(cursor) {
-        return PatTupleStruct::skip(cursor);
-    }
-
-    if PatStruct::peek(cursor) {
-        return PatStruct::skip(cursor);
-    }
-
-    if PatIdent::peek(cursor) {
-        return PatIdent::skip(cursor);
-    }
-
-    if PatPath::peek(cursor) {
-        return PatPath::skip(cursor);
-    }
-
-    PatLit::skip(cursor)
 }

@@ -36,8 +36,6 @@ TOKENS f: trait A: {}
 TOKENS f: enum E { pub A }
 
 # Valid Rust that moxy rejects
-REJECT e: match a { box x => 1 }
-REJECT e: match a { const { 1 } => 1 }
 REJECT e: 1e
 REJECT e: a.0x1
 REJECT e: a.0_0
@@ -49,9 +47,6 @@ REJECT f: type B = fn(_: ...) -> Status;
 REJECT f: impl<T> X<T> { type Item; #[inline] fn next() -> Option<T> {} fn advance_by(self, n: usize) -> Result<(), NonZero<usize>> { rem = if len < n {} else {} } }
 REJECT b: { try!(x) }
 REJECT p: S { box a }
-REJECT p: const { 1 }
-REJECT p: box x
-REJECT p: box 1..=2
 REJECT p: mut self
 REJECT t: A<B + C>
 REJECT t: fn(a: A, va: ...)

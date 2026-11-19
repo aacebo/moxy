@@ -33,6 +33,10 @@ impl Parse for ItemMacro {
     }
 
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        if !Self::peek(cursor) {
+            return None;
+        }
+
         cursor = Attributes::skip(cursor)?;
         cursor = MacroCall::skip(cursor)?;
         Option::<Token![;]>::skip(cursor)

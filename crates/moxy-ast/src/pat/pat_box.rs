@@ -27,19 +27,19 @@ impl Spanner for PatBox {
 impl Parse for PatBox {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        <Token![const]>::peek(cursor)
+        <Token![box]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
             attrs: <_ as Parse>::parse(parser)?,
             keyword: <_ as Parse>::parse(parser)?,
-            pattern: <_ as Parse>::parse(parser)?,
+            pattern: Box::new(super::parse::single(parser)?),
         })
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        StmtBlock::skip(<Token![const]>::skip(Attributes::skip(cursor)?)?)
+        super::skip::single(<Token![box]>::skip(Attributes::skip(cursor)?)?)
     }
 }
 

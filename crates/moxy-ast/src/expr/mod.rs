@@ -657,24 +657,12 @@ impl Parse for Expr {
 #[derive(Copy, Clone)]
 struct ExprContext {
     allow_struct: bool,
-    pattern_bound: bool,
 }
 
 impl ExprContext {
-    const NORMAL: Self = Self {
-        allow_struct: true,
-        pattern_bound: false,
-    };
+    const NORMAL: Self = Self { allow_struct: true };
 
-    const EARLY: Self = Self {
-        allow_struct: false,
-        pattern_bound: false,
-    };
-
-    const PATTERN_BOUND: Self = Self {
-        allow_struct: true,
-        pattern_bound: true,
-    };
+    const EARLY: Self = Self { allow_struct: false };
 
     // Whether a range ends here without an end operand. Where a struct
     // literal is not allowed, as in `for i in 0.. {}`, a `{` starts the body

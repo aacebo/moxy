@@ -68,7 +68,7 @@ define_visit! {
         walk: walk_expr_reference, walk_mut: walk_expr_reference_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
-            and_punct: skip,
+            and: skip,
             mutability: leaf,
             expr: box => visit_expr / visit_expr_mut,
         }
@@ -359,7 +359,7 @@ define_visit! {
             attrs => visit_attributes / visit_attributes_mut,
             qself: opt => visit_qself / visit_qself_mut,
             path => visit_path / visit_path_mut,
-            body: skip,
+            body: delim => visit_struct_body / visit_struct_body_mut,
         }
     }
     struct ExprClosure {
@@ -585,7 +585,6 @@ define_visit! {
         walk: walk_pat_struct_body, walk_mut: walk_pat_struct_body_mut,
         fields {
             fields: punct => visit_pat_field / visit_pat_field_mut,
-            rest: skip,
         }
     }
     struct PatField {
@@ -596,7 +595,6 @@ define_visit! {
             member: skip,
             colon: skip,
             pat => visit_pattern / visit_pattern_mut,
-            shorthand: skip,
         }
     }
     struct PatSlice {
@@ -700,7 +698,7 @@ define_visit! {
         walk: walk_pat_box, walk_mut: walk_pat_box_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
-            token: skip,
+            keyword: skip,
             pattern => visit_pattern / visit_pattern_mut,
         }
     }
@@ -709,7 +707,7 @@ define_visit! {
         walk: walk_pat_const, walk_mut: walk_pat_const_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
-            token: skip,
+            keyword: skip,
             block => visit_stmt_block / visit_stmt_block_mut,
         }
     }
@@ -945,7 +943,7 @@ define_visit! {
             ident: skip,
             generics => visit_generics / visit_generics_mut,
             fields => visit_fields / visit_fields_mut,
-            semi_punct: skip,
+            semi: skip,
         }
     }
     struct ItemEnum {
@@ -990,7 +988,7 @@ define_visit! {
         fields {
             attrs => visit_attributes / visit_attributes_mut,
             vis => visit_visibility / visit_visibility_mut,
-            safety: leaf,
+            unsafety: leaf,
             auto_keyword: skip,
             trait_keyword: skip,
             ident: skip,
@@ -1083,7 +1081,6 @@ define_visit! {
         walk: walk_item_macro, walk_mut: walk_item_macro_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
-            ident: skip,
             call => visit_macro_call / visit_macro_call_mut,
             semi_punct: skip,
         }
@@ -1105,7 +1102,7 @@ define_visit! {
         walk: walk_item_foreign_mod, walk_mut: walk_item_foreign_mod_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
-            safety: leaf,
+            unsafety: leaf,
             abi: skip,
             items: seq => visit_foreign_item / visit_foreign_item_mut,
         }
@@ -1334,7 +1331,6 @@ define_visit! {
             member: skip,
             colon_punct: skip,
             expr => visit_expr / visit_expr_mut,
-            shorthand: skip,
         }
     }
 
@@ -1346,7 +1342,7 @@ define_visit! {
         fields {
             constness: leaf,
             asyncness: leaf,
-            unsafety: leaf,
+            safety: leaf,
             abi: skip,
             fn_keyword: skip,
             ident: skip,
@@ -1409,8 +1405,8 @@ define_visit! {
         visit: visit_generics, visit_mut: visit_generics_mut,
         walk: walk_generics, walk_mut: walk_generics_mut,
         fields {
-            lt_punct: skip,
-            gt_punct: skip,
+            lt: skip,
+            gt: skip,
             params: punct => visit_generic_param / visit_generic_param_mut,
             where_clause: opt => visit_where_clause / visit_where_clause_mut,
         }
@@ -1749,6 +1745,11 @@ define_visit! {
 
     // ===== irregular nodes (walkers hand-written below) ==================
 
+    manual StructBody {
+        visit: visit_struct_body, visit_mut: visit_struct_body_mut,
+        walk: walk_struct_body, walk_mut: walk_struct_body_mut,
+        manual {}
+    }
     manual Attributes {
         visit: visit_attributes, visit_mut: visit_attributes_mut,
         walk: walk_attributes, walk_mut: walk_attributes_mut,
@@ -1792,6 +1793,26 @@ define_visit! {
 
 /// `Attributes` is a newtype over `Vec<Attribute>` with a private field; walk it
 /// via its `iter`/`iter_mut` accessors.
+/// `StructBody::rest` is an optional pair whose base is optional too.
+pub fn walk_struct_body<'ast, V: Visit<'ast>>(v: &mut V, node: &'ast StructBody) {
+    for field in node.fields.iter() {
+        v.visit_field_value(field);
+    }
+
+    if let Some((_, Some(base))) = &node.rest {
+        v.visit_expr(base);
+    }
+}
+pub fn walk_struct_body_mut<V: VisitMut>(v: &mut V, node: &mut StructBody) {
+    for field in node.fields.iter_mut() {
+        v.visit_field_value_mut(field);
+    }
+
+    if let Some((_, Some(base))) = &mut node.rest {
+        v.visit_expr_mut(base);
+    }
+}
+
 pub fn walk_attributes<'ast, V: Visit<'ast>>(v: &mut V, node: &'ast Attributes) {
     for attr in node {
         v.visit_attribute(attr);

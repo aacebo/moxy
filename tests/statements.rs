@@ -150,3 +150,34 @@ fn a_block_that_a_postfix_operator_follows_is_an_expression_statement() {
     let block: moxy::ast::StmtBlock = moxy::parse!("{ {} -1 }").unwrap();
     assert!(block.stmts.inner[0].is_block());
 }
+
+#[test]
+fn nested_block_statements_that_a_method_call_follows_parse_in_linear_time() {
+    // Each level parsed its block twice before, which never ends at this depth
+    let depth = 60;
+    let source = format!("{}a{}", "{ {".repeat(depth), "}.x }".repeat(depth));
+    let start = std::time::Instant::now();
+    let block: moxy::ast::StmtBlock = moxy::parse!(source).unwrap();
+    assert!(
+        start.elapsed() < std::time::Duration::from_secs(5),
+        "took {:?}",
+        start.elapsed()
+    );
+    assert!(block.stmts.inner[0].is_expr());
+}
+
+#[test]
+fn statements_in_blocks_inside_generic_arguments_parse_in_linear_time() {
+    // Peeking for a macro call skipped each statement's path with its generic
+    // arguments, and with them every block nested inside, before parsing it
+    let depth = 40;
+    let source = format!("{}1{}", "{ A::<{ ".repeat(depth), " }>::C }".repeat(depth));
+    let start = std::time::Instant::now();
+    let expression: moxy::ast::Expr = moxy::parse!(source).unwrap();
+    assert!(
+        start.elapsed() < std::time::Duration::from_secs(5),
+        "took {:?}",
+        start.elapsed()
+    );
+    assert!(expression.is_block());
+}

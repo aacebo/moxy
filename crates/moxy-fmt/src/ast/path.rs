@@ -5,6 +5,11 @@ use crate::{FmtError, Format, Formatter};
 impl Format for Lifetime {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("'")?;
+
+        if self.ident.raw {
+            f.text("r#")?;
+        }
+
         f.text(&self.ident.text)
     }
 }

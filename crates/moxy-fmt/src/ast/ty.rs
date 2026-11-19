@@ -109,7 +109,8 @@ impl Format for TypeBareFn {
         self.params.inner.inputs.format(f)?;
 
         if self.params.inner.variadic.is_some() {
-            if !self.params.inner.inputs.is_empty() {
+            // A trailing comma before `...` is already in the inputs
+            if !self.params.inner.inputs.is_empty() && !self.params.inner.inputs.is_trailing() {
                 f.text(", ")?;
             }
 

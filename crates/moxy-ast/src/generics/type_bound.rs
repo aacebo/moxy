@@ -38,6 +38,23 @@ impl TypeBound {
         if let Self::Use(v) = self { Some(v) } else { None }
     }
 
+    // Skips bounds as `parse_bounds` parses them, with a trailing `+` allowed
+    pub(crate) fn skip_bounds(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Self::skip(cursor)?;
+
+        while <Token![+]>::peek(cursor) {
+            cursor = <Token![+]>::skip(cursor)?;
+
+            if !Self::peek(cursor) {
+                break;
+            }
+
+            cursor = Self::skip(cursor)?;
+        }
+
+        Some(cursor)
+    }
+
     pub fn parse_bounds(parser: &Parser) -> Result<crate::List<Self, Token![+]>, ParseError> {
         let mut bounds = crate::List::new();
         bounds.push_value(<_ as Parse>::parse(parser)?);

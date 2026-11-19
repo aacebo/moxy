@@ -38,11 +38,15 @@ impl Parse for WhereClause {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = <Token![where]>::skip(cursor)?;
-        cursor = WherePredicate::skip(cursor)?;
 
-        while <Token![,]>::peek(cursor) {
-            cursor = <Token![,]>::skip(cursor)?;
+        while WherePredicate::peek(cursor) {
             cursor = WherePredicate::skip(cursor)?;
+
+            if !<Token![,]>::peek(cursor) {
+                break;
+            }
+
+            cursor = <Token![,]>::skip(cursor)?;
         }
 
         Some(cursor)

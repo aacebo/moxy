@@ -647,3 +647,24 @@ fn a_token_that_starts_no_expression_is_an_error() {
     let body = &expression.as_assign().unwrap().left.as_struct().unwrap().body.inner;
     assert!(body.rest.as_ref().unwrap().1.is_none());
 }
+
+#[test]
+fn skipping_an_expression_ends_where_parsing_it_ends() {
+    use moxy::ast::{Cursor, Parse, Parser};
+
+    for source in [
+        "a.b < c",
+        "continue 'a",
+        "break 'a 1 + 2",
+        "a += b + c",
+        "match a { x if x > 1 => 1, _ => 2 }",
+        "a < b == c",
+        "a.b::<c>",
+    ] {
+        let tokens: moxy::token::TokenStream = source.parse().unwrap();
+        let parser = Parser::from_tokens(&tokens);
+        let parsed = Expr::parse(&parser).ok().map(|_| parser.remaining());
+        let skipped = Expr::skip(Cursor::from_tokens(&tokens)).map(|cursor| cursor.remaining());
+        assert_eq!(skipped, parsed, "`{source}`");
+    }
+}

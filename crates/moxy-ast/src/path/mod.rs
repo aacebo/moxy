@@ -4,7 +4,7 @@ mod segment;
 pub use arguments::*;
 pub use segment::*;
 
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Keyword, Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -46,7 +46,7 @@ impl Path {
         let mut segments = List::new();
         segments.push_value(first);
 
-        while <Token![::]>::peek(parser.cursor()) {
+        while <Token![::]>::skip(parser.cursor()).is_some_and(|cursor| PathSegment::peek(cursor)) {
             segments.push_punct(<_ as Parse>::parse(parser)?);
             segments.push_value(<_ as Parse>::parse(parser)?);
         }
@@ -75,7 +75,7 @@ impl Path {
             args: PathArguments::None,
         });
 
-        while <Token![::]>::skip(parser.cursor()).is_some_and(|cursor| PathSegment::peek(cursor)) {
+        while <Token![::]>::skip(parser.cursor()).is_some_and(|cursor| Ident::peek(cursor) || Keyword::peek(cursor)) {
             segments.push_punct(<_ as Parse>::parse(parser)?);
             segments.push_value(PathSegment {
                 ident: parser.parse_ident_any()?,
@@ -87,10 +87,12 @@ impl Path {
     }
 
     pub(crate) fn skip_mod_style(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        // Any keyword names a segment, as `parse_mod_style` reads one
+        let name = |cursor: Cursor<'_>| Ident::peek(cursor) || Keyword::peek(cursor);
         cursor = Option::<Token![::]>::skip(cursor)?;
-        cursor = PathSegment::peek(cursor).then(|| cursor.offset(1))?;
+        cursor = name(cursor).then(|| cursor.offset(1))?;
 
-        while <Token![::]>::skip(cursor).is_some_and(|cursor| PathSegment::peek(cursor)) {
+        while <Token![::]>::skip(cursor).is_some_and(name) {
             cursor = <Token![::]>::skip(cursor)?.offset(1);
         }
 

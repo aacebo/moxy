@@ -145,3 +145,30 @@ fn visitors_reach_every_lifetime() {
             .contains("y : Cow < 'p0 , str > , z : & 'p1 dyn Trait + 'b")
     );
 }
+
+#[test]
+fn visitors_reach_the_fields_and_base_of_a_struct_literal() {
+    struct Paths(Vec<String>);
+
+    impl<'ast> moxy::ast::Visit<'ast> for Paths {
+        fn visit_expr_path(&mut self, node: &'ast moxy::ast::ExprPath) {
+            self.0.push(node.to_token_stream().to_string());
+        }
+    }
+
+    struct Rename;
+
+    impl moxy::ast::VisitMut for Rename {
+        fn visit_expr_path_mut(&mut self, node: &mut moxy::ast::ExprPath) {
+            node.path = moxy::parse!("renamed").unwrap();
+        }
+    }
+
+    let mut expression: moxy::ast::Expr = moxy::parse!("S { a: first, b, ..base }").unwrap();
+    let mut paths = Paths(Vec::new());
+    moxy::ast::Visit::visit_expr(&mut paths, &expression);
+    assert_eq!(paths.0, ["first", "b", "base"]);
+
+    moxy::ast::VisitMut::visit_expr_mut(&mut Rename, &mut expression);
+    assert_eq!(expression.to_token_stream().to_string(), "S {a : renamed , b , .. renamed}");
+}

@@ -24,15 +24,8 @@ impl Parse for TypeImplTrait {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let mut cursor = <Token![impl]>::skip(cursor)?;
-        cursor = TypeBound::skip(cursor)?;
-
-        while <Token![+]>::peek(cursor) {
-            cursor = <Token![+]>::skip(cursor)?;
-            cursor = TypeBound::skip(cursor)?;
-        }
-
-        Some(cursor)
+        let cursor = <Token![impl]>::skip(cursor)?;
+        TypeBound::skip_bounds(cursor)
     }
 }
 

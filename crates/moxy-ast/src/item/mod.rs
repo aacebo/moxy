@@ -427,8 +427,10 @@ impl Parse for Item {
             ItemStatic::skip(cursor)
         } else if ItemFn::peek(cursor) {
             ItemFn::skip(cursor)
-        } else {
+        } else if ItemMacro::peek(cursor) {
             ItemMacro::skip(cursor)
+        } else {
+            None
         }
     }
 }

@@ -112,3 +112,75 @@ fn generic_lists_and_bounds_may_be_empty() {
         Some(moxy::ast::GenericArgument::Type(moxy::ast::Type::Never(_)))
     ));
 }
+
+#[test]
+fn a_variadic_function_pointer_formats_one_separator() {
+    for (source, formatted) in [
+        ("type F = fn(A, ...);", "type F = fn(A, ...);"),
+        ("type F = fn(A, b: B, ...) -> u8;", "type F = fn(A, b: B, ...) -> u8;"),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(moxy::fmt!(&item).unwrap(), formatted, "`{source}`");
+    }
+}
+
+#[test]
+fn enums_and_unions_format_their_where_clause() {
+    for (source, formatted) in [
+        ("enum E<T> where T: U { A }", "enum E<T>\nwhere\nT: U {\n\tA,\n}"),
+        (
+            "union U<T> where T: Copy { a: T }",
+            "union U<T>\nwhere\nT: Copy {\n\ta: T,\n}",
+        ),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(moxy::fmt!(&item).unwrap(), formatted, "`{source}`");
+    }
+}
+
+#[test]
+fn attribute_arguments_keep_a_space_between_words() {
+    for (source, formatted) in [
+        ("#[a(pub b)] struct S;", "#[a(pub b)]\nstruct S;"),
+        ("#[a(in super)] struct S;", "#[a(in super)]\nstruct S;"),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(moxy::fmt!(&item).unwrap(), formatted, "`{source}`");
+    }
+}
+
+#[test]
+fn generic_parameters_format_their_attributes() {
+    for (source, formatted) in [
+        (
+            "struct S<#[a] T, #[b] 'a, #[c] const N: usize>(T);",
+            "struct S<#[a] T, #[b] 'a, #[c] const N: usize>(T);",
+        ),
+        ("fn f<#[a] #[b] T>() {}", "fn f<#[a] #[b] T>() {}"),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(moxy::fmt!(&item).unwrap(), formatted, "`{source}`");
+    }
+}
+
+#[test]
+fn raw_lifetimes_format_their_prefix() {
+    for (source, formatted) in [
+        ("fn f<'r#a>() {}", "fn f<'r#a>() {}"),
+        ("fn f<'a: 'r#b>() {}", "fn f<'a: 'r#b>() {}"),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(moxy::fmt!(&item).unwrap(), formatted, "`{source}`");
+    }
+}
+
+#[test]
+fn empty_statements_format_as_a_semicolon() {
+    for (source, formatted) in [
+        ("fn f() { ; }", "fn f() {\n\t;\n}"),
+        ("fn f() { a; ; }", "fn f() {\n\ta;\n\t;\n}"),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(moxy::fmt!(&item).unwrap(), formatted, "`{source}`");
+    }
+}

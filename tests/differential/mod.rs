@@ -131,6 +131,51 @@ fn corpus() {
     );
 }
 
+// At every token of every corpus line, `skip` ends where `parse` ends, or both
+// fail, and `peek` holds wherever `parse` succeeds, for each node a hand-written
+// `skip` exists for. They are kept by hand for speed: a skip that parsed would
+// parse nested input again at each level of nesting.
+#[test]
+fn skip_and_peek_agree_with_parse() {
+    fn check<T: m::Parse>(kind: &str, tokens: &TokenStream, line: &str, failures: &mut Vec<String>) {
+        let root = m::Cursor::from_tokens(tokens);
+
+        for index in 0..=tokens.len() {
+            let cursor = root.seek(index);
+            let parser = m::Parser::from_cursor(cursor);
+            let parsed = T::parse(&parser).ok().map(|_| parser.cursor().remaining());
+            let skipped = T::skip(cursor).map(|cursor| cursor.remaining());
+
+            if parsed != skipped {
+                failures.push(format!(
+                    "{kind} skip at token {index}: parse {parsed:?}, skip {skipped:?}: {line}"
+                ));
+            }
+
+            if parsed.is_some() && !T::peek(cursor) {
+                failures.push(format!("{kind} peek at token {index}: {line}"));
+            }
+        }
+    }
+
+    let mut failures = Vec::new();
+
+    for line in entries(CORPUS) {
+        let (_, source) = line.split_once(": ").unwrap();
+        let Ok(tokens) = source.replace("\\n", "\n").parse::<TokenStream>() else {
+            continue;
+        };
+
+        check::<m::Expr>("expression", &tokens, line, &mut failures);
+        check::<m::Pattern>("pattern", &tokens, line, &mut failures);
+        check::<m::Type>("type", &tokens, line, &mut failures);
+        check::<m::Item>("item", &tokens, line, &mut failures);
+        check::<m::Stmt>("statement", &tokens, line, &mut failures);
+    }
+
+    assert!(failures.is_empty(), "{}", failures.join("\n"));
+}
+
 #[test]
 #[ignore = "set MOXY_DIFF_DIR to a directory of Rust files"]
 fn directory() {

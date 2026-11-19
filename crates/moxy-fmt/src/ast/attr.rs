@@ -70,14 +70,39 @@ impl Format for MetaContent {
 
 impl Format for TokenStream {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        let mut previous: Option<String> = None;
+
         for token in self.iter() {
-            f.text(token)?;
+            let text = token.to_string();
+
+            if let Some(previous) = &previous
+                && joins(previous, &text)
+            {
+                f.text(" ")?;
+            }
+
+            f.text(&text)?;
 
             if token.is_punct_comma() {
                 f.text(" ")?;
+                previous = None;
+            } else {
+                previous = Some(text);
             }
         }
 
         Ok(())
     }
+}
+
+// Whether two tokens written without a space between them lex as other
+// tokens, as `pub b` would as `pubb`, `/ /` as a comment, and `b 'a` as no
+// valid tokens
+fn joins(left: &str, right: &str) -> bool {
+    fn texts(source: &str) -> Option<Vec<String>> {
+        let tokens = source.parse::<TokenStream>().ok()?;
+        Some(tokens.iter().map(ToString::to_string).collect())
+    }
+
+    texts(&format!("{left}{right}")) != texts(&format!("{left} {right}"))
 }

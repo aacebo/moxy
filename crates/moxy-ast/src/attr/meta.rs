@@ -162,13 +162,9 @@ impl Parse for MetaContent {
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         if cursor.is_empty() || <Token![,]>::peek(cursor) {
             Some(cursor)
-        } else if <Token![=]>::peek(cursor)
-            && !<Token![==]>::peek(cursor)
-            && !<Token![=>]>::peek(cursor)
-            && Expr::peek(cursor.offset(1))
-        {
-            <Token![=]>::skip(cursor)?;
-            Expr::skip(cursor)
+        } else if <Token![=]>::peek(cursor) && !<Token![==]>::peek(cursor) && !<Token![=>]>::peek(cursor) {
+            let value = <Token![=]>::skip(cursor)?;
+            Some(Expr::skip(value).unwrap_or(value))
         } else if Group::peek(cursor) {
             Group::skip(cursor)
         } else {

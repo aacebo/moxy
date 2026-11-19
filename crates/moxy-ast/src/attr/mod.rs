@@ -4,7 +4,7 @@ mod style;
 pub use meta::*;
 pub use style::*;
 
-use moxy_token::{Group, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -72,7 +72,8 @@ impl Parse for Attribute {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = AttrStyle::skip(cursor)?;
-        Group::skip(cursor)
+        let meta = Meta::skip(cursor.descend(moxy_token::Delim::Bracket)?)?;
+        meta.is_empty().then(|| cursor.offset(1))
     }
 }
 

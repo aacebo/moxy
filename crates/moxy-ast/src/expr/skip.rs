@@ -1,14 +1,11 @@
 use moxy_token::{Ident, Lit, TokenTree};
 
+use super::parse::{Precedence, peek_binary};
 use super::peek;
 use super::*;
 
 pub(super) fn expr(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
-    if context.pattern_bound {
-        unary(cursor, context)
-    } else {
-        assignment(Attributes::skip(cursor)?, context)
-    }
+    assignment(Attributes::skip(cursor)?, context)
 }
 
 fn optional_expr(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
@@ -20,7 +17,7 @@ fn optional_expr(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>>
 }
 
 pub(crate) fn pattern_bound(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-    expr(cursor, ExprContext::PATTERN_BOUND)
+    unary(cursor, ExprContext::NORMAL)
 }
 
 pub(crate) fn early(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
@@ -227,12 +224,12 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
 
     if <Token![break]>::peek(cursor) {
         cursor = <Token![break]>::skip(cursor)?;
-        cursor = Option::<Label>::skip(cursor)?;
+        cursor = Option::<Lifetime>::skip(cursor)?;
         return optional_expr(cursor, context);
     }
 
     if <Token![continue]>::peek(cursor) {
-        return Option::<Label>::skip(<Token![continue]>::skip(cursor)?);
+        return Option::<Lifetime>::skip(<Token![continue]>::skip(cursor)?);
     }
 
     if <Token![yield]>::peek(cursor) {
@@ -299,11 +296,14 @@ fn postfix(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
                 continue;
             }
 
-            if Ident::peek(cursor) {
-                let after_method = Ident::skip(cursor)?;
+            // Arguments or a turbofish make a method call, as in the parser
+            if Ident::peek(cursor)
+                && let Some(after_method) = Ident::skip(cursor)
+                && (after_method.is_delimited(Delim::Paren) || <Token![::]>::peek(after_method))
+            {
                 let args = Option::<AngleArguments>::skip(after_method)?;
 
-                if args.is_delimited(Delim::Paren) {
+                {
                     let inner = list(args.descend(Delim::Paren)?)?;
 
                     if !inner.is_empty() {
@@ -369,12 +369,29 @@ fn cast(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     Some(cursor)
 }
 
-fn binary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
-    cursor = cast(cursor, context)?;
+fn binary(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
+    binary_rest(cast(cursor, context)?, context, Precedence::Or)
+}
 
-    while BinOp::peek(cursor) {
-        cursor = BinOp::skip(cursor)?;
-        cursor = cast(cursor, context)?;
+// Mirrors the precedence climbing of the parser, which rejects chained
+// comparisons and leaves compound assignment to the assignment level
+fn binary_rest(mut cursor: Cursor<'_>, context: ExprContext, min: Precedence) -> Option<Cursor<'_>> {
+    while let Some(op) = peek_binary(cursor) {
+        let precedence = Precedence::of(&op);
+
+        if precedence < min || precedence == Precedence::Assign {
+            break;
+        }
+
+        cursor = cast(BinOp::skip(cursor)?, context)?;
+
+        if let Some(stronger) = precedence.next() {
+            cursor = binary_rest(cursor, context, stronger)?;
+        }
+
+        if precedence == Precedence::Compare && peek_binary(cursor).is_some_and(|next| next.is_comparison()) {
+            return None;
+        }
     }
 
     Some(cursor)
@@ -407,8 +424,15 @@ fn range(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
 fn assignment(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     cursor = range(cursor, context)?;
 
-    if <Token![=]>::peek(cursor) {
-        cursor = <Token![=]>::skip(cursor)?;
+    let assign = <Token![=]>::peek(cursor) && !<Token![==]>::peek(cursor) && !<Token![=>]>::peek(cursor);
+    let compound = peek_binary(cursor).is_some_and(|op| Precedence::of(&op) == Precedence::Assign);
+
+    if assign || compound {
+        cursor = if assign {
+            <Token![=]>::skip(cursor)?
+        } else {
+            BinOp::skip(cursor)?
+        };
         let _depth = moxy_token::Depth::enter()?;
         cursor = assignment(cursor, context)?;
     }

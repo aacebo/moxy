@@ -424,6 +424,11 @@ impl Parse for Type {
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         let _depth = moxy_token::Depth::enter()?;
 
+        // Only what starts a type for the parser starts one here
+        if !Self::peek(cursor) {
+            return None;
+        }
+
         if <Token![&]>::peek(cursor) {
             return TypeReference::skip(cursor);
         }

@@ -39,15 +39,8 @@ impl Parse for TypeTraitObject {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let mut cursor = Option::<Token![dyn]>::skip(cursor)?;
-        cursor = TypeBound::skip(cursor)?;
-
-        while <Token![+]>::peek(cursor) {
-            cursor = <Token![+]>::skip(cursor)?;
-            cursor = TypeBound::skip(cursor)?;
-        }
-
-        Some(cursor)
+        let cursor = Option::<Token![dyn]>::skip(cursor)?;
+        TypeBound::skip_bounds(cursor)
     }
 }
 

@@ -163,3 +163,72 @@ fn doc_comments_keep_their_text_as_written() {
         assert_eq!(text.replace(' ', ""), expected.to_string().replace(' ', ""), "`{source}`");
     }
 }
+
+// The texts of a token stream's tokens, with each group's delimiters around
+// its contents
+fn token_texts(tokens: &moxy::token::TokenStream, texts: &mut Vec<String>) {
+    for token in tokens.iter() {
+        if let moxy::token::TokenTree::Group(group) = token {
+            let (open, close) = match group.delim {
+                moxy::token::Delim::Paren => ("(", ")"),
+                moxy::token::Delim::Bracket => ("[", "]"),
+                moxy::token::Delim::Brace => ("{", "}"),
+                moxy::token::Delim::None => ("", ""),
+            };
+            texts.push(open.to_string());
+            token_texts(&group.tokens, texts);
+            texts.push(close.to_string());
+        } else {
+            texts.push(token.to_string());
+        }
+    }
+}
+
+// Every attribute of every differential corpus source formats to text that
+// lexes to the attribute's own tokens
+#[test]
+fn formatted_attributes_lex_to_their_own_tokens() {
+    use moxy::ast::{Attribute, Visit};
+
+    #[derive(Default)]
+    struct Attrs(Vec<Attribute>);
+
+    impl<'ast> Visit<'ast> for Attrs {
+        fn visit_attribute(&mut self, node: &'ast Attribute) {
+            self.0.push(node.clone());
+        }
+    }
+
+    let mut attrs = Attrs::default();
+
+    for line in include_str!("differential/corpus.txt").lines() {
+        let Some(source) = line.strip_prefix("f: ") else {
+            continue;
+        };
+        let source = source.replace("\\n", "\n");
+
+        if let Ok(file) = moxy::parse!(source as moxy::ast::File) {
+            file.attrs.iter().for_each(|attr| attrs.visit_attribute(attr));
+            file.items.iter().for_each(|item| attrs.visit_item(item));
+        }
+    }
+
+    assert!(attrs.0.len() > 100, "{} attributes", attrs.0.len());
+    let mut mismatches = Vec::new();
+
+    for attr in &attrs.0 {
+        let formatted = moxy::fmt!(attr).unwrap();
+        let (mut expected, mut actual) = (Vec::new(), Vec::new());
+        token_texts(&attr.to_token_stream(), &mut expected);
+
+        if let Ok(tokens) = formatted.parse::<moxy::token::TokenStream>() {
+            token_texts(&tokens, &mut actual);
+        }
+
+        if expected != actual {
+            mismatches.push(format!("{formatted}: {expected:?}"));
+        }
+    }
+
+    assert!(mismatches.is_empty(), "{}", mismatches.join("\n"));
+}

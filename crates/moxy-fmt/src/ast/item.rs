@@ -419,6 +419,7 @@ impl Format for ItemEnum {
         f.text("enum ")?;
         self.ident.format(f)?;
         self.generics.format(f)?;
+        self.generics.where_clause.format(f)?;
         f.text(" {")?;
         f.indent(|f| {
             for pair in self.variants.inner.pairs() {
@@ -480,6 +481,7 @@ impl Format for ItemUnion {
         f.text("union ")?;
         self.ident.format(f)?;
         self.generics.format(f)?;
+        self.generics.where_clause.format(f)?;
         self.fields.format(f)
     }
 }

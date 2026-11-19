@@ -2127,6 +2127,8 @@ f: ::a::m!();
 f: m! ident ();
 f: m! ident {}
 f: #[a] m!();
+f: #[a(b 'a, & &, / /, < -, - >, . ., 1 .2, r #x)] fn f() {}
+f: #[a = b'c'] #[d(e = "f", g::h)] fn f() {}
 f: pub m!();
 f: macro m() {}
 f: pub macro m($a:expr) { $a }

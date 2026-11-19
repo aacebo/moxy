@@ -67,12 +67,7 @@ impl Parse for TypeParam {
         if <Token![:]>::peek(cursor) {
             cursor = <Token![:]>::skip(cursor)?;
             if TypeBound::peek(cursor) {
-                cursor = TypeBound::skip(cursor)?;
-
-                while <Token![+]>::peek(cursor) {
-                    cursor = <Token![+]>::skip(cursor)?;
-                    cursor = TypeBound::skip(cursor)?;
-                }
+                cursor = TypeBound::skip_bounds(cursor)?;
             }
         }
 

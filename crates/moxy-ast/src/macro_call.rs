@@ -35,7 +35,9 @@ impl Parse for MacroCall {
             return false;
         }
 
-        let Some(cursor) = Path::skip(cursor) else {
+        // A macro path takes no generic arguments, so this never skips the
+        // arguments of a type path, which can hold whole blocks
+        let Some(cursor) = Path::skip_mod_style(cursor) else {
             return false;
         };
 
@@ -45,14 +47,14 @@ impl Parse for MacroCall {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            path: <_ as Parse>::parse(parser)?,
+            path: Path::parse_mod_style(parser)?,
             bang: <_ as Parse>::parse(parser)?,
             body: <_ as Parse>::parse(parser)?,
         })
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = Path::skip(cursor)?;
+        cursor = Path::skip_mod_style(cursor)?;
         cursor = <Token![!]>::skip(cursor)?;
         Group::skip(cursor)
     }
