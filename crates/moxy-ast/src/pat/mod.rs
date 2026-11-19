@@ -332,7 +332,7 @@ impl Parse for Pattern {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
 
-        PatOr::peek(cursor)
+        <Token![|]>::peek(cursor)
             || PatWild::peek(cursor)
             || PatRange::peek(cursor)
             || PatRest::peek(cursor)

@@ -127,6 +127,11 @@ TOKENS f: trait A: {}
 TOKENS f: #!/usr/bin/env rust\n fn f() {}
 TOKENS f: #!/usr/bin/env rust\n#![allow(a)]\nfn main() {}
 
+# Intentional: rustc's lexer rejects an exponent without digits, even in macro
+# input, which syn accepts as a suffix
+REJECT e: 1e
+REJECT f: fn f() { 1f16; 1.0f128; 1f16; 2b; 1px; 1em; 0x1p3; 1_; 1__; }
+
 # Intentional: rustc rejects these after parsing, as moxy does while parsing:
 # a keyword as a lifetime name and an associated type without a type in an impl
 REJECT f: type Symbols<'false> = Table<Symbol<'false>>;

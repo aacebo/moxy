@@ -717,3 +717,15 @@ fn the_reserved_keyword_abstract_is_no_identifier() {
     let expression: Expr = moxy::parse!("r#abstract").unwrap();
     assert_eq!(expression.to_token_stream().to_string(), "r#abstract");
 }
+
+#[test]
+fn an_optional_operand_ends_at_the_body_of_a_condition() {
+    for source in ["if break {}", "while break 'l {}", "match return {}", "for x in break {}"] {
+        let expression: Expr = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let emitted = expression.to_token_stream().to_string();
+        assert!(emitted.ends_with("{}"), "`{source}`: {emitted}");
+    }
+
+    let expression: Expr = moxy::parse!("return {}").unwrap();
+    assert!(matches!(expression, Expr::Return(value) if value.expr.is_some()));
+}

@@ -75,12 +75,7 @@ pub(crate) type TypeRest = (Option<Token![:]>, List<TypeBound, Token![+]>, Optio
 pub(crate) fn parse_type_rest(parser: &Parser, generics: &mut Generics) -> Result<TypeRest, ParseError> {
     let (colon, bounds) = if <Token![:]>::peek(parser.cursor()) {
         let colon = <_ as Parse>::parse(parser)?;
-
-        if TypeBound::peek(parser.cursor()) {
-            (Some(colon), List::parse_nonempty(parser)?)
-        } else {
-            (Some(colon), List::new())
-        }
+        (Some(colon), List::parse_while_present(parser)?)
     } else {
         (None, List::new())
     };
@@ -109,10 +104,7 @@ pub(crate) fn parse_type_rest(parser: &Parser, generics: &mut Generics) -> Resul
 pub(crate) fn skip_type_rest(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     if <Token![:]>::peek(cursor) {
         cursor = <Token![:]>::skip(cursor)?;
-
-        if TypeBound::peek(cursor) {
-            cursor = TypeBound::skip_bounds(cursor)?;
-        }
+        cursor = List::<TypeBound, Token![+]>::skip_while_present(cursor)?;
     }
 
     cursor = Option::<WhereClause>::skip(cursor)?;

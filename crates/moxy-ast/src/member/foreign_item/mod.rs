@@ -112,7 +112,11 @@ impl Parse for ForeignItem {
             || ForeignItemMacro::peek(cursor)
     }
 
+    // A member of an impl, trait, or extern block, with the body of a function
+    // and the items inside it, takes two more levels of stack
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let _weight = moxy_token::Depth::enter_by(2).ok_or_else(|| ParseError::too_deep(parser.span()))?;
+
         if ForeignItemStatic::peek(parser.cursor()) {
             return Ok(Self::Static(<_ as Parse>::parse(parser)?));
         }

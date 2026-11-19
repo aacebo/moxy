@@ -283,6 +283,41 @@ impl<T: Parse, P: Parse> List<T, P> {
     }
 }
 
+impl<T: Parse, P: Parse> List<T, P> {
+    // Parses values while one starts, separated by punctuation, which may
+    // trail; an empty list is valid. Rust's bounds take this form: `'a: 'b +`,
+    // `Item: Clone +`, `B: `
+    pub(crate) fn parse_while_present(parser: &Parser) -> Result<Self, ParseError> {
+        let mut list = Self::new();
+
+        while T::peek(parser.cursor()) {
+            list.push_value(<_ as Parse>::parse(parser)?);
+
+            if !P::peek(parser.cursor()) {
+                break;
+            }
+
+            list.push_punct(<_ as Parse>::parse(parser)?);
+        }
+
+        Ok(list)
+    }
+
+    pub(crate) fn skip_while_present(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        while T::peek(cursor) {
+            cursor = T::skip(cursor)?;
+
+            if !P::peek(cursor) {
+                break;
+            }
+
+            cursor = P::skip(cursor)?;
+        }
+
+        Some(cursor)
+    }
+}
+
 impl<T: Clone, P: Clone> Clone for List<T, P> {
     fn clone(&self) -> Self {
         Self {
@@ -458,6 +493,11 @@ impl<'a, T, P> IntoIterator for &'a mut List<T, P> {
 
 impl<T: Spanner, P> List<T, P> {
     pub fn span(&self) -> Span {
+        // One value spans once, so nested lists span in linear time
+        if self.len() == 1 {
+            return self.first().map(|v| v.span()).unwrap_or_default();
+        }
+
         let first = self.first().map(|v| v.span()).unwrap_or_default();
         let last = self.last().map(|v| v.span()).unwrap_or_default();
         first.join(last)

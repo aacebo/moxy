@@ -244,3 +244,115 @@ fn an_error_inside_a_list_of_items_is_reported_where_it_is() {
     assert_eq!(error.span().start().line(), 1);
     assert_ne!(error.message(), "unexpected trailing input");
 }
+
+// Runs `parse` on a worker thread and fails if it takes longer than a limit
+// no linear parse comes near, so an exponential one fails instead of hanging
+fn within_limit(label: &str, parse: impl FnOnce() -> bool + Send + 'static) {
+    let (sender, receiver) = std::sync::mpsc::channel();
+    std::thread::Builder::new()
+        .stack_size(64 << 20)
+        .spawn(move || sender.send(parse()).unwrap())
+        .unwrap();
+    let parsed = receiver
+        .recv_timeout(std::time::Duration::from_secs(10))
+        .unwrap_or_else(|_| panic!("{label} took longer than 10 seconds"));
+    assert!(parsed, "{label} did not parse");
+}
+
+#[test]
+fn nested_parentheses_in_types_and_block_chains_parse_in_linear_time() {
+    let depth = 64;
+    let parens = |inner: &str| format!("{}{inner}{}", "(".repeat(depth), ")".repeat(depth));
+    let tuples = format!("{}T{}", "(".repeat(depth), ",)".repeat(depth));
+    let qualified = format!("A::<{}>::B", parens("T"));
+    let chain = format!("{}x{}", "{ ".repeat(depth), " }.a()".repeat(depth));
+
+    for (label, source) in [
+        ("parameter type", format!("fn f(a: {}) {{}}", parens("T"))),
+        ("tuple parameter type", format!("fn f(a: {tuples}) {{}}")),
+        ("receiver type", format!("impl A {{ fn f(self: {}) {{}} }}", parens("T"))),
+        ("trait function", format!("trait A {{ fn f(a: {}); }}", parens("T"))),
+        ("foreign function", format!("extern \"C\" {{ fn f(a: {}); }}", parens("T"))),
+        ("pattern path", format!("fn f() {{ let {qualified} = x; }}")),
+        ("block chain", format!("fn f() {{ {chain}; }}")),
+    ] {
+        within_limit(label, move || moxy::parse!(source as moxy::ast::File).is_ok());
+    }
+}
+
+#[test]
+fn many_let_statements_parse_in_linear_time() {
+    // Peeking for an or-pattern read to the end of the block at every `let`
+    let source = format!("fn f() {{ {} }}", "let a = 1; ".repeat(20_000));
+    within_limit("let statements", move || moxy::parse!(source as moxy::ast::File).is_ok());
+
+    let pattern: moxy::ast::Pattern = moxy::parse!("a | b").unwrap();
+    assert!(matches!(pattern, moxy::ast::Pattern::Or(_)));
+}
+
+// Parses a source on a 2 MiB thread and, when it parses, emits, spans, clones,
+// and drops the tree; deep input must give the depth error instead of
+// overflowing the stack, which would abort the test
+fn traverse_on_small_stack<T>(source: String) -> Option<String>
+where
+    T: moxy::ast::Parse + moxy::token::ToTokenStream + moxy::token::Spanner + Clone,
+{
+    on_small_stack(move || match moxy::parse!(source as T) {
+        Ok(node) => {
+            let _ = node.to_token_stream();
+            let _ = node.span();
+            drop(node.clone());
+            drop(node);
+            None
+        }
+        Err(error) => Some(error.message().to_string()),
+    })
+}
+
+#[test]
+fn deep_trees_of_every_kind_parse_and_traverse_or_report_the_depth() {
+    let message = format!("nesting is deeper than {} levels", moxy::token::MAX_DEPTH);
+    let r = |text: &str, count: usize| text.repeat(count);
+
+    for n in [40, 100, 143, 400] {
+        let expressions = [
+            format!("{}a{}", r("S { a: ", n), r(" }", n)),
+            format!("{}1{}", r("|| -> T { ", n), r(" }", n)),
+            format!("{}a", r("a + ", 15 * n)),
+            format!("a{}", r(".b()", 15 * n)),
+            format!("a{}", r("?", 15 * n)),
+            format!("{}a{}{}", r("(", n), r(")", n), r(".b()", 2 * n)),
+            format!("{}x{}", r("{ ", n), r(" }.a()", n)),
+        ];
+        let types = [
+            format!("{}T", r("Fn() -> ", n)),
+            format!("{}T", r("impl Fn() -> ", n)),
+            format!("{}u8{}", r("A<B = ", n), r(">", n)),
+            format!("{}C{}", r("A<B: ", n), r(">", n)),
+            format!("{}u8{}", r("fn(", n), r(")", n)),
+            format!("{}u8{}", r("[u8; { let x: ", n), r("; 1 }]", n)),
+            format!("{}u8{}", r("Vec<", n), r(">", n)),
+        ];
+        let patterns = [format!("{}x{}", r("S { a: ", n), r(" }", n))];
+        let files = [
+            format!("{}{}", r("impl A { fn f() { ", n), r("} }", n)),
+            format!("{}{}", r("trait A { fn f() { ", n), r("} }", n)),
+            format!("{}{}", r("fn f() { ", n), r("}", n)),
+            format!("use {}a;", r("a::", 4 * n)),
+        ];
+
+        let errors = expressions
+            .into_iter()
+            .map(traverse_on_small_stack::<moxy::ast::Expr>)
+            .chain(types.into_iter().map(traverse_on_small_stack::<moxy::ast::Type>))
+            .chain(patterns.into_iter().map(traverse_on_small_stack::<moxy::ast::Pattern>))
+            .chain(files.into_iter().map(traverse_on_small_stack::<moxy::ast::File>));
+
+        for error in errors.flatten() {
+            assert_eq!(error, message, "at {n} levels");
+        }
+    }
+
+    // Real chains stay well inside the limit
+    assert!(traverse_on_small_stack::<moxy::ast::Expr>(format!("a{}", r(".b()", 200))).is_none());
+}

@@ -109,7 +109,11 @@ impl Parse for ImplItem {
         ImplItemConst::peek(cursor) || ImplItemType::peek(cursor) || ImplItemFn::peek(cursor) || ImplItemMacro::peek(cursor)
     }
 
+    // A member of an impl, trait, or extern block, with the body of a function
+    // and the items inside it, takes two more levels of stack
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let _weight = moxy_token::Depth::enter_by(2).ok_or_else(|| ParseError::too_deep(parser.span()))?;
+
         if ImplItemConst::peek(parser.cursor()) {
             return Ok(Self::Const(Box::new(<_ as Parse>::parse(parser)?)));
         }

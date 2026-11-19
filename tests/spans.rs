@@ -282,3 +282,22 @@ fn every_corpus_node_spans_exactly_its_tokens() {
 
     assert!(check.mismatches.is_empty(), "{}", check.mismatches.join("\n"));
 }
+
+#[test]
+fn nested_function_sugar_spans_in_linear_time() {
+    // A path, a list of one value, and parenthesized arguments each took the
+    // span of their last part twice, which doubled the work per level
+    let source = format!("{}T", "Fn(A) -> ".repeat(64));
+    let (sender, receiver) = std::sync::mpsc::channel();
+    std::thread::Builder::new()
+        .stack_size(64 << 20)
+        .spawn(move || {
+            let ty: Type = moxy::parse!(source).unwrap();
+            sender.send(ty.span().byte_range().len()).unwrap();
+        })
+        .unwrap();
+    let len = receiver
+        .recv_timeout(std::time::Duration::from_secs(10))
+        .expect("span took longer than 10 seconds");
+    assert_eq!(len, 64 * "Fn(A) -> ".len() + 1);
+}

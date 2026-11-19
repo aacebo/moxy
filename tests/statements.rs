@@ -226,3 +226,10 @@ fn a_let_statement_ends_with_a_semicolon_and_no_brace_before_else() {
         assert!(moxy::parse!(source as moxy::ast::StmtBlock).is_err(), "`{source}`");
     }
 }
+
+#[test]
+fn a_try_block_ends_a_statement_as_other_blocks_do() {
+    let block: moxy::ast::StmtBlock = moxy::parse!("{ try {} - 1 }").unwrap();
+    assert_eq!(block.stmts.inner.len(), 2);
+    assert!(moxy::parse!("{ try {} b }" as moxy::ast::StmtBlock).is_ok());
+}

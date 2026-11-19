@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::{AngleArguments, Cursor, GenericArgument, List, Parse, ParseError, Parser, Token, TypeBound};
 
@@ -45,7 +45,7 @@ impl Parse for ConstraintArgument {
             ident: <_ as Parse>::parse(parser)?,
             generics: <_ as Parse>::parse(parser)?,
             colon_punct: <_ as Parse>::parse(parser)?,
-            bounds: List::parse_nonempty(parser)?,
+            bounds: List::parse_while_present(parser)?,
         })
     }
 
@@ -53,25 +53,13 @@ impl Parse for ConstraintArgument {
         cursor = Ident::skip(cursor)?;
         cursor = Option::<AngleArguments>::skip(cursor)?;
         cursor = <Token![:]>::skip(cursor)?;
-        cursor = TypeBound::skip(cursor)?;
-
-        while <Token![+]>::peek(cursor) {
-            cursor = <Token![+]>::skip(cursor)?;
-            cursor = TypeBound::skip(cursor)?;
-        }
-
-        Some(cursor)
+        List::<TypeBound, Token![+]>::skip_while_present(cursor)
     }
 }
 
 impl Spanner for ConstraintArgument {
     fn span(&self) -> Span {
-        let end = self
-            .bounds
-            .last()
-            .map(|b| b.span())
-            .unwrap_or_else(|| self.colon_punct.span());
-        self.ident.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

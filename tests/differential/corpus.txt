@@ -2463,3 +2463,8 @@ e: f(&..)
 e: &..b + c
 e: a + ..b
 e: &mut ..
+f: fn g<'a: 'a +>() {}
+f: fn f(x: impl Iterator<Item: Clone +>) {}
+t: Box<dyn for<'b,> Fn(&'b u8)>
+f: fn f<'a>() -> impl Sized + use<'a,> {}
+t: A<B: >

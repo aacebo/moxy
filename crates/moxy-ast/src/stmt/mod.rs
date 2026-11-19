@@ -103,7 +103,12 @@ impl Parse for Stmt {
         } else if block(parser.cursor()) {
             |parser| Ok(Self::Block(<_ as Parse>::parse(parser)?))
         } else if Item::peek(parser.cursor()) && !macro_expr(parser.cursor()) {
-            |parser| Ok(Self::Item(Box::new(<_ as Parse>::parse(parser)?)))
+            // An item inside a block takes another level of stack, as in
+            // `fn f() { fn f() { .. } }`
+            |parser| {
+                let _weight = moxy_token::Depth::enter_by(1).ok_or_else(|| ParseError::too_deep(parser.span()))?;
+                Ok(Self::Item(Box::new(<_ as Parse>::parse(parser)?)))
+            }
         } else {
             |parser| {
                 let block_like = crate::expr::peek::block_like(Attributes::skip(parser.cursor()).unwrap_or(parser.cursor()));
@@ -159,6 +164,7 @@ fn ends_block(expr: &Expr) -> bool {
             | Expr::ForLoop(_)
             | Expr::Unsafe(_)
             | Expr::Const(_)
+            | Expr::TryBlock(_)
     )
 }
 

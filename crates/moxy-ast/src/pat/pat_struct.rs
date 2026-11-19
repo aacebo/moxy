@@ -46,7 +46,9 @@ impl Parse for PatStruct {
         cursor.is_delimited(moxy_token::Delim::Brace)
     }
 
+    // A struct pattern takes two levels of stack, as in `S { a: S { a: x } }`
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let _weight = moxy_token::Depth::enter_by(1).ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let attrs = <_ as Parse>::parse(parser)?;
         let (qself, path) = if <Token![<]>::peek(parser.cursor()) {
             let (qself, path) = QSelf::parse_qualified_expr(parser)?;

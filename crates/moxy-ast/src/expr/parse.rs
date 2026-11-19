@@ -1,4 +1,4 @@
-use moxy_token::{DelimSpan, Ident, Lit, TokenTree};
+use moxy_token::{Chain, DelimSpan, Ident, Lit, TokenTree};
 
 use super::peek;
 use super::*;
@@ -29,7 +29,10 @@ pub(crate) fn early(parser: &Parser) -> Result<Box<Expr>, ParseError> {
         return assignment(parser, attrs, ExprContext::NORMAL);
     }
 
+    // The block-like expression and what continues it form one chain
+    let mut chain = Chain::begin();
     let mut body = primary(parser, Attributes::default(), ExprContext::NORMAL)?;
+    chain.operand();
 
     if !peek::continues_block_like(parser.cursor()) {
         if let Some(slot) = body.attrs_mut() {
@@ -41,8 +44,9 @@ pub(crate) fn early(parser: &Parser) -> Result<Box<Expr>, ParseError> {
 
     // The block-like expression parsed once and the rest of the expression
     // continues from it, as in `{ x }.len() + 1`
-    let operand = cast_rest(parser, postfix_rest(parser, body, attrs)?)?;
-    let left = binary_rest(parser, ExprContext::NORMAL, operand, Precedence::Or)?;
+    let operand = postfix_rest(parser, body, attrs, &mut chain)?;
+    let operand = cast_rest(parser, operand, &mut chain)?;
+    let left = binary_rest(parser, ExprContext::NORMAL, operand, Precedence::Or, &mut chain)?;
 
     if RangeLimits::peek(parser.cursor()) {
         return range_rest(parser, Default::default(), Some(left), ExprContext::NORMAL);
@@ -247,13 +251,31 @@ pub(super) fn peek_binary(cursor: Cursor<'_>) -> Option<BinOp> {
 }
 
 fn binary(parser: &Parser, attrs: Attributes, context: ExprContext, min: Precedence) -> Result<Box<Expr>, ParseError> {
+    let mut chain = Chain::begin();
     let left = cast(parser, attrs, context)?;
-    binary_rest(parser, context, left, min)
+    chain.operand();
+    binary_rest(parser, context, left, min, &mut chain)
+}
+
+// One more step of a chain, or the depth error when the tree would nest too
+// deeply for its traversals
+fn chain_step(parser: &Parser, chain: &mut Chain) -> Result<(), ParseError> {
+    if chain.step() {
+        Ok(())
+    } else {
+        Err(ParseError::too_deep(parser.span()))
+    }
 }
 
 // Precedence climbing over the operators at least as strong as `min`. Operators
 // of one strength associate to the left; comparisons do not chain
-fn binary_rest(parser: &Parser, context: ExprContext, mut left: Box<Expr>, min: Precedence) -> Result<Box<Expr>, ParseError> {
+fn binary_rest(
+    parser: &Parser,
+    context: ExprContext,
+    mut left: Box<Expr>,
+    min: Precedence,
+    chain: &mut Chain,
+) -> Result<Box<Expr>, ParseError> {
     while let Some(op) = peek_binary(parser.cursor()) {
         let precedence = Precedence::of(&op);
 
@@ -261,12 +283,13 @@ fn binary_rest(parser: &Parser, context: ExprContext, mut left: Box<Expr>, min: 
             break;
         }
 
+        chain_step(parser, chain)?;
         let op: BinOp = <_ as Parse>::parse(parser)?;
-        let mut right = cast(parser, Default::default(), context)?;
-
-        if let Some(stronger) = precedence.next() {
-            right = binary_rest(parser, context, right, stronger)?;
-        }
+        let right = match precedence.next() {
+            Some(stronger) => binary(parser, Default::default(), context, stronger)?,
+            None => cast(parser, Default::default(), context)?,
+        };
+        chain.operand();
 
         left = boxed(ExprBinary {
             attrs: Default::default(),
@@ -287,14 +310,18 @@ fn binary_rest(parser: &Parser, context: ExprContext, mut left: Box<Expr>, min: 
 }
 
 fn cast(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+    let mut chain = Chain::begin();
     let expr = unary_with(parser, attrs, context)?;
-    cast_rest(parser, expr)
+    chain.operand();
+    cast_rest(parser, expr, &mut chain)
 }
 
 // The casts that follow an operand
-fn cast_rest(parser: &Parser, mut expr: Box<Expr>) -> Result<Box<Expr>, ParseError> {
+fn cast_rest(parser: &Parser, mut expr: Box<Expr>, chain: &mut Chain) -> Result<Box<Expr>, ParseError> {
     while <Token![as]>::peek(parser.cursor()) {
+        chain_step(parser, chain)?;
         expr = cast_to(parser, expr)?;
+        chain.operand();
     }
 
     Ok(expr)
@@ -368,14 +395,25 @@ fn unary_op(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<
 }
 
 fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+    let mut chain = Chain::begin();
     let expr = primary(parser, Default::default(), context)?;
-    postfix_rest(parser, expr, attrs)
+    chain.operand();
+    postfix_rest(parser, expr, attrs, &mut chain)
 }
 
 // The postfix operators that follow a primary expression, and the outer
 // attributes, which belong to the whole chain
-fn postfix_rest(parser: &Parser, mut expr: Box<Expr>, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
+fn postfix_rest(parser: &Parser, mut expr: Box<Expr>, attrs: Attributes, chain: &mut Chain) -> Result<Box<Expr>, ParseError> {
     loop {
+        let postfix = parser.is_delimited(Delim::Paren)
+            || parser.is_delimited(Delim::Bracket)
+            || (<Token![.]>::peek(parser.cursor()) && !RangeLimits::peek(parser.cursor()))
+            || <Token![?]>::peek(parser.cursor());
+
+        if postfix {
+            chain_step(parser, chain)?;
+        }
+
         expr = if parser.is_delimited(Delim::Paren) {
             call(parser, expr)?
         } else if parser.is_delimited(Delim::Bracket) {
@@ -390,6 +428,7 @@ fn postfix_rest(parser: &Parser, mut expr: Box<Expr>, attrs: Attributes) -> Resu
         } else {
             break;
         };
+        chain.operand();
     }
 
     if let Some(slot) = expr.attrs_mut() {
@@ -806,6 +845,9 @@ fn path_macro_or_struct(parser: &Parser, attrs: Attributes, context: ExprContext
     }
 
     if context.allow_struct && parser.is_delimited(Delim::Brace) {
+        // A struct literal takes two levels of stack, as in `S { a: S { .. } }`
+        let _weight = moxy_token::Depth::enter_by(1).ok_or_else(|| ParseError::too_deep(parser.span()))?;
+
         return Ok(boxed(ExprStruct {
             attrs,
             qself,
@@ -922,6 +964,12 @@ fn closure(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<B
     let capture = <_ as Parse>::parse(parser)?;
     let (pipes, inputs) = closure_params(parser)?;
     let output: ReturnType = <_ as Parse>::parse(parser)?;
+    // A closure with a return type and a block takes another level of stack
+    let _weight = if output.is_type() {
+        Some(moxy_token::Depth::enter_by(1).ok_or_else(|| ParseError::too_deep(parser.span()))?)
+    } else {
+        None
+    };
 
     // With a return type the body is a block, which ends the closure: in
     // `|| -> u8 { 1 }.x` the field belongs to the closure

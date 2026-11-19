@@ -58,28 +58,24 @@ impl Parse for GenericArgument {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
 
-        let token = match parser.cursor().curr() {
-            None => return Err(ParseError::new(parser.span(), "eof")),
-            Some(v) => v.clone(),
+        let Some(token) = parser.cursor().curr() else {
+            return Err(ParseError::new(parser.span(), "eof"));
         };
 
-        // Lifetime: starts with `'`.
-        if token.is_punct_quote() {
-            return Ok(Self::Lifetime(<_ as Parse>::parse(parser)?));
-        }
+        // One call site for every form keeps one return slot in this frame,
+        // which every nested argument holds
+        let parse: fn(&Parser) -> Result<Self, ParseError> = if token.is_punct_quote() {
+            |parser| Ok(Self::Lifetime(<_ as Parse>::parse(parser)?))
+        } else if starts_const(parser.cursor()) {
+            // A literal or block expression
+            |parser| Ok(Self::Const(expr::parse::unary(parser, Default::default())?))
+        } else if token.is_ident() {
+            Self::parse_named
+        } else {
+            |parser| Ok(Self::Type(<_ as Parse>::parse(parser)?))
+        };
 
-        // Literal or block expression const argument.
-        let is_const = starts_const(parser.cursor());
-
-        if is_const {
-            return Ok(Self::Const(expr::parse::unary(parser, Default::default())?));
-        }
-
-        if token.is_ident() {
-            return Self::parse_named(parser);
-        }
-
-        Ok(Self::Type(<_ as Parse>::parse(parser)?))
+        parse(parser)
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
@@ -106,14 +102,7 @@ impl Parse for GenericArgument {
 
             if peek_lone_colon(cursor) {
                 cursor = <Token![:]>::skip(cursor)?;
-                cursor = TypeBound::skip(cursor)?;
-
-                while <Token![+]>::peek(cursor) {
-                    cursor = <Token![+]>::skip(cursor)?;
-                    cursor = TypeBound::skip(cursor)?;
-                }
-
-                return Some(cursor);
+                return List::<TypeBound, Token![+]>::skip_while_present(cursor);
             }
 
             if <Token![=]>::peek(cursor) {
@@ -155,13 +144,22 @@ impl GenericArgument {
 
         // A bare trait object with parenthesized arguments, as in `Box<Fn(u8)>`
         if ParenArguments::peek(parser.cursor()) {
-            let args = PathArguments::Parenthesized(<_ as Parse>::parse(parser)?);
-            let path = Path::parse_rest(parser, PathSegment { ident, args })?;
-            return Ok(Self::Type(Type::Path(TypePath { qself: None, path })));
+            return Self::parse_paren_path(parser, ident);
         }
 
         let generics: Option<AngleArguments> = <_ as Parse>::parse(parser)?;
+        Self::parse_named_rest(parser, ident, generics)
+    }
 
+    fn parse_paren_path(parser: &Parser, ident: Ident) -> Result<Self, ParseError> {
+        let args = PathArguments::Parenthesized(<_ as Parse>::parse(parser)?);
+        let path = Path::parse_rest(parser, PathSegment { ident, args })?;
+        Ok(Self::Type(Type::Path(TypePath { qself: None, path })))
+    }
+
+    // The form after a named argument's name and generic arguments, in its own
+    // frame, which the nested generic arguments do not hold
+    fn parse_named_rest(parser: &Parser, ident: Ident, generics: Option<AngleArguments>) -> Result<Self, ParseError> {
         if peek_lone_colon(parser.cursor()) {
             return Self::parse_constraint(parser, ident, generics);
         }
@@ -173,9 +171,12 @@ impl GenericArgument {
         Self::parse_path(parser, ident, generics)
     }
 
+    // An associated type bound takes three levels of stack, as in
+    // `A<B: A<B: C>>`
     fn parse_constraint(parser: &Parser, ident: Ident, generics: Option<AngleArguments>) -> Result<Self, ParseError> {
+        let _weight = moxy_token::Depth::enter_by(2).ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let colon_punct = <_ as Parse>::parse(parser)?;
-        let bounds = List::parse_nonempty(parser)?;
+        let bounds = List::parse_while_present(parser)?;
 
         Ok(ConstraintArgument {
             ident,
@@ -188,6 +189,8 @@ impl GenericArgument {
 
     // An associated type or constant: `Item = u8`, `N = 3`
     fn parse_assoc(parser: &Parser, ident: Ident, generics: Option<AngleArguments>) -> Result<Self, ParseError> {
+        // Another level of stack, as in `A<B = A<B = u8>>`
+        let _weight = moxy_token::Depth::enter_by(1).ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let eq_punct = <_ as Parse>::parse(parser)?;
         let is_const = starts_const(parser.cursor());
 

@@ -30,7 +30,9 @@ impl Parse for TypeBareFn {
         <Token![fn]>::peek(cursor)
     }
 
+    // A function pointer type takes two levels of stack, as in `fn(fn(T))`
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let _weight = moxy_token::Depth::enter_by(1).ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let lifetimes = <_ as Parse>::parse(parser)?;
         let unsafety = <_ as Parse>::parse(parser)?;
         let abi = <_ as Parse>::parse(parser)?;

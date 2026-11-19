@@ -25,22 +25,10 @@ impl Spanner for PatOr {
 }
 
 impl Parse for PatOr {
+    // An or-pattern starts with `|` or with a pattern that `|` follows; the
+    // check reads no further than that first pattern
     fn peek(cursor: Cursor<'_>) -> bool {
-        let mut cursor = Attributes::skip(cursor).unwrap_or(cursor);
-
-        if <Token![|]>::peek(cursor) {
-            return true;
-        }
-
-        while !cursor.is_empty() {
-            if <Token![|]>::peek(cursor) {
-                return true;
-            }
-
-            cursor = cursor.offset(1);
-        }
-
-        false
+        <Token![|]>::peek(cursor) || super::skip::single(cursor).is_some_and(|cursor| <Token![|]>::peek(cursor))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {

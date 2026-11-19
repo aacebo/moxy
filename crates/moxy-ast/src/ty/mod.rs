@@ -246,6 +246,8 @@ impl Type {
     /// expression, where `a as usize + 1` adds to the cast, and after `&` or
     /// `*`, where Rust rejects `&A + B` and `&dyn A + B` as ambiguous.
     pub(crate) fn parse_without_plus(parser: &Parser) -> Result<Self, ParseError> {
+        let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+
         if Self::peek_plain_path(parser.cursor()) {
             return Self::parse_path_or_macro(parser, false);
         }
@@ -269,6 +271,8 @@ impl Type {
     }
 
     pub(crate) fn skip_without_plus(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let _depth = moxy_token::Depth::enter()?;
+
         if Self::peek_plain_path(cursor) {
             return Self::skip_path_or_macro(cursor, false);
         }
@@ -359,7 +363,10 @@ impl Type {
     }
 
     // `[T]` slice or `[T; N]` array, told apart by a `;` inside the brackets
+    // An array type takes another level of stack for its length, as in
+    // `[u8; { let x: [u8; ..]; 1 }]`
     fn parse_slice_or_array(parser: &Parser) -> Result<Self, ParseError> {
+        let _weight = moxy_token::Depth::enter_by(1).ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let (bracket_span, inner) = parser.parse_group_spanned(Delim::Bracket)?;
         let elem = Box::new(<_ as Parse>::parse(&inner)?);
 
@@ -560,12 +567,11 @@ impl Parse for Type {
             return TypeBareFn::skip(cursor);
         }
 
+        // A parenthesized type and a tuple skip alike, each element once, so
+        // nested parentheses skip in linear time
         if cursor.is_delimited(Delim::Paren) {
-            if TypeParen::peek(cursor) {
-                return TypeParen::skip(cursor);
-            }
-
-            return TypeTuple::skip(cursor);
+            let inner = List::<Type, Token![,]>::skip_while_present(cursor.descend(Delim::Paren)?)?;
+            return inner.is_empty().then(|| cursor.offset(1));
         }
 
         if cursor.is_delimited(Delim::None) {

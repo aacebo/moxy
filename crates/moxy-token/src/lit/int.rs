@@ -477,18 +477,15 @@ fn scan(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
         }
     }
 
-    // An `e` starts an exponent only when digits follow it; otherwise it
-    // starts a suffix, as in `1em`
-    if let Some('e' | 'E') = cur.first()
-        && exponent_follows(cur.advance())
-    {
+    if let Some('e' | 'E') = cur.first() {
         cur = cur.advance();
 
         if let Some('+' | '-') = cur.first() {
             cur = cur.advance();
         }
 
-        cur = digits(cur, |ch| ch.is_ascii_digit())?;
+        // As in rustc, even in macro input: `1e` and `1em` are errors
+        cur = digits(cur, |ch| ch.is_ascii_digit()).map_err(|e| e.message("expected at least one digit in exponent"))?;
     }
 
     Ok(suffix(cur))
@@ -539,15 +536,4 @@ fn radix_end(cursor: Cursor<'_>, radix: u32) -> Result<Cursor<'_>, LexError> {
             .into(),
         _ => Ok(suffix(cursor)),
     }
-}
-
-// Whether the digits of an exponent, after an optional sign, follow
-fn exponent_follows(cursor: Cursor<'_>) -> bool {
-    let cursor = if let Some('+' | '-') = cursor.first() {
-        cursor.advance()
-    } else {
-        cursor
-    };
-    let digits = cursor.skip_while(|ch| ch == '_');
-    digits.first().is_some_and(|ch| ch.is_ascii_digit())
 }

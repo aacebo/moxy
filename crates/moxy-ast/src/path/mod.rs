@@ -149,10 +149,12 @@ impl Parse for Path {
 
 impl Spanner for Path {
     fn span(&self) -> Span {
+        // The first segment starts with its name, so its arguments need no
+        // span, and a path of one segment spans its arguments once
         let first = self
             .colon
             .map(|colon| colon.span())
-            .or_else(|| self.segments.first().map(Spanner::span));
+            .or_else(|| self.segments.first().map(|segment| segment.ident.span()));
         let last = self.segments.last().map(Spanner::span);
 
         match (first, last) {

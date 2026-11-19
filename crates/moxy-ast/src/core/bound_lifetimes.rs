@@ -24,7 +24,7 @@ impl Parse for BoundLifetimes {
         let params = if <Token![>]>::peek(parser.cursor()) {
             List::new()
         } else {
-            List::parse_nonempty(parser)?
+            List::parse_nonempty_until::<Token![>]>(parser)?
         };
         let gt = <_ as Parse>::parse(parser)?;
 
@@ -48,6 +48,11 @@ impl Parse for BoundLifetimes {
 
         while <Token![,]>::peek(cursor) {
             cursor = <Token![,]>::skip(cursor)?;
+
+            if <Token![>]>::peek(cursor) {
+                break;
+            }
+
             cursor = Lifetime::skip(cursor)?;
         }
 

@@ -31,9 +31,21 @@ pub(crate) fn early_block_like(cursor: Cursor<'_>) -> Option<(Cursor<'_>, bool)>
 
     if peek::block_like(start)
         && let Some(end) = primary(start, ExprContext::NORMAL)
-        && !peek::continues_block_like(end)
     {
-        return Some((end, true));
+        if !peek::continues_block_like(end) {
+            return Some((end, true));
+        }
+
+        // The rest of the expression continues from the block-like one
+        // skipped once, as in the parser: `{ x }.len() + 1`
+        let context = ExprContext::NORMAL;
+        let cursor = binary_rest(cast_rest(postfix_rest(end)?)?, context, Precedence::Or)?;
+
+        if RangeLimits::peek(cursor) {
+            return Some((range_limits(cursor, context)?.0, false));
+        }
+
+        return Some((assignment_rest(cursor, context)?.0, false));
     }
 
     Some((assignment(start, ExprContext::NORMAL)?, false))
@@ -272,9 +284,12 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     Some(cursor)
 }
 
-fn postfix(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
-    cursor = primary(cursor, context)?;
+fn postfix(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
+    postfix_rest(primary(cursor, context)?)
+}
 
+// The postfix operators after a primary expression
+fn postfix_rest(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     loop {
         if cursor.is_delimited(Delim::Paren) {
             let inner = list(cursor.descend(Delim::Paren)?)?;
@@ -378,9 +393,11 @@ fn unary(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     postfix(cursor, context)
 }
 
-fn cast(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
-    cursor = unary(cursor, context)?;
+fn cast(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
+    cast_rest(unary(cursor, context)?)
+}
 
+fn cast_rest(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     while <Token![as]>::peek(cursor) {
         cursor = <Token![as]>::skip(cursor)?;
         cursor = Type::skip_without_plus(cursor)?;
@@ -427,6 +444,11 @@ fn range(mut cursor: Cursor<'_>, context: ExprContext) -> Option<(Cursor<'_>, bo
         }
     }
 
+    range_limits(cursor, context)
+}
+
+// The limits and end of a range, after its start if it has one
+fn range_limits(mut cursor: Cursor<'_>, context: ExprContext) -> Option<(Cursor<'_>, bool)> {
     // An inclusive range needs an end, as in the parser
     let closed = <Token![..=]>::peek(cursor);
     cursor = RangeLimits::skip(cursor)?;
@@ -453,12 +475,17 @@ fn assignment(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
 // Skips an assignment as the parser parses it, and tells whether a range
 // ended it
 fn assignment_ranged(cursor: Cursor<'_>, context: ExprContext) -> Option<(Cursor<'_>, bool)> {
-    let (mut cursor, ranged) = range(cursor, context)?;
+    let (cursor, ranged) = range(cursor, context)?;
 
     if ranged {
         return Some((cursor, true));
     }
 
+    assignment_rest(cursor, context)
+}
+
+// The assignments after a left side that a range does not end
+fn assignment_rest(mut cursor: Cursor<'_>, context: ExprContext) -> Option<(Cursor<'_>, bool)> {
     loop {
         let assign = <Token![=]>::peek(cursor) && !<Token![==]>::peek(cursor) && !<Token![=>]>::peek(cursor);
         let compound = peek_binary(cursor).is_some_and(|op| Precedence::of(&op) == Precedence::Assign);
