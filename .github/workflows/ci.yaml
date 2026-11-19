@@ -47,6 +47,25 @@ jobs:
       - name: Test
         run: cargo test --workspace --all-features --locked
 
+  features:
+    name: Features
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Install Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Cargo
+        uses: Swatinem/rust-cache@v2
+
+      - name: Check each feature alone
+        run: |
+          for feature in token ast template fmt diagnostic build macros derives serde proc-macro2 visit quote; do
+            cargo check -p moxy --no-default-features --features "$feature" --locked
+          done
+
   lint:
     name: Lint
     runs-on: ubuntu-latest
