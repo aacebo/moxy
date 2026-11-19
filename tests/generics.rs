@@ -60,3 +60,55 @@ fn closed_lists_accept_a_trailing_comma() {
     let error = moxy::parse!("use a::{b c};" as Item).err().unwrap();
     assert_eq!(error.message(), "expected punctuation");
 }
+
+#[test]
+fn const_generic_defaults_end_before_the_closing_angle_bracket() {
+    for source in [
+        "struct S<const N: usize = 3>(u8);",
+        "struct S<const B: bool = false>(usize);",
+        "struct S<T = u8, const B: usize = 3>(T);",
+        "struct S<const B: usize = { 3 }>(u8);",
+        "struct S<const B: usize = N>(u8);",
+        "struct S<const B: usize = -1>(u8);",
+        "trait T<const N: usize = 3>: U {}",
+        "type T<const N: usize = 3> = U;",
+        "impl<const N: usize = 3> S<N> {}",
+        "fn f<const N: usize = 3>(a: u8) {}",
+        "struct S<const N: usize = { M + 1 }>(u8) where T: U;",
+    ] {
+        let item: moxy::ast::Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(item.to_token_stream().to_string(), lexed.to_string());
+    }
+}
+
+#[test]
+fn generic_lists_and_bounds_may_be_empty() {
+    for source in [
+        "impl<> X {}",
+        "struct S<>;",
+        "fn f<T:>() where T: {}",
+        "fn f<T>() where Self:, T: {}",
+        "fn f() where 'a: 'b, 'b: {}",
+        "struct S<T: >(T);",
+        "impl<T: Sized<>> From<T> for OsString {}",
+        "type A = for<> fn();",
+        "type A = Result<T, !>;",
+        "type A = B<!, C>;",
+        "fn f() { Vec::<>::new(); x.collect::<>(); Ok::<B, !>(b) }",
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(item.to_token_stream().to_string(), lexed.to_string());
+    }
+
+    let ty: moxy::ast::Type = moxy::parse!("Result<T, !>").unwrap();
+    let path = ty.as_path().unwrap();
+    let moxy::ast::PathArguments::AngleBracketed(args) = &path.path.iter().next().unwrap().args else {
+        panic!("expected angle arguments");
+    };
+    assert!(matches!(
+        args.args.iter().nth(1),
+        Some(moxy::ast::GenericArgument::Type(moxy::ast::Type::Never(_)))
+    ));
+}

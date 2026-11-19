@@ -77,14 +77,13 @@ impl Parse for Meta {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            path: <_ as Parse>::parse(parser)?,
+            path: Path::parse_mod_style(parser)?,
             content: <_ as Parse>::parse(parser)?,
         })
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        Path::skip(cursor)?;
-        MetaContent::skip(cursor)
+        MetaContent::skip(Path::skip_mod_style(cursor)?)
     }
 }
 

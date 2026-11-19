@@ -658,32 +658,22 @@ impl Parse for Expr {
 struct ExprContext {
     allow_struct: bool,
     pattern_bound: bool,
-    const_generic_default: bool,
 }
 
 impl ExprContext {
     const NORMAL: Self = Self {
         allow_struct: true,
         pattern_bound: false,
-        const_generic_default: false,
     };
 
     const EARLY: Self = Self {
         allow_struct: false,
         pattern_bound: false,
-        const_generic_default: false,
     };
 
     const PATTERN_BOUND: Self = Self {
         allow_struct: true,
         pattern_bound: true,
-        const_generic_default: false,
-    };
-
-    const CONST_GENERIC_DEFAULT: Self = Self {
-        allow_struct: true,
-        pattern_bound: false,
-        const_generic_default: true,
     };
 
     // Whether a range ends here without an end operand. Where a struct
@@ -692,17 +682,6 @@ impl ExprContext {
         cursor.is_empty()
             || <Token![,]>::peek(cursor)
             || <Token![;]>::peek(cursor)
-            || (self.const_generic_default && <Token![>]>::peek(cursor))
             || (!self.allow_struct && cursor.is_delimited(Delim::Brace))
-    }
-
-    fn is_end_before_infix(self, cursor: Cursor<'_>) -> bool {
-        self.const_generic_default
-            && <Token![>]>::peek(cursor)
-            && (cursor.offset(1).is_empty()
-                || <Token![,]>::peek(cursor.offset(1))
-                || <Token![;]>::peek(cursor.offset(1))
-                || <Token![where]>::peek(cursor.offset(1))
-                || cursor.offset(1).is_delimited(Delim::Brace))
     }
 }

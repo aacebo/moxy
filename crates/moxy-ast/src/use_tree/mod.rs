@@ -145,6 +145,11 @@ fn peek_segment(cursor: Cursor<'_>) -> bool {
         })
 }
 
+// Skips the leading `::` of a path, if any
+fn skip_prefix(cursor: Cursor<'_>) -> Cursor<'_> {
+    Option::<Token![::]>::skip(cursor).unwrap_or(cursor)
+}
+
 fn skip_segment(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     peek_segment(cursor).then(|| cursor.offset(1))
 }

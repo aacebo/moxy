@@ -1507,6 +1507,7 @@ define_visit! {
         visit: visit_trait_bound, visit_mut: visit_trait_bound_mut,
         walk: walk_trait_bound, walk_mut: walk_trait_bound_mut,
         fields {
+            paren: skip,
             polarity: skip,
             lifetimes: opt => visit_bound_lifetimes / visit_bound_lifetimes_mut,
             modifier: leaf,
@@ -1705,6 +1706,7 @@ define_visit! {
         visit: visit_use_path, visit_mut: visit_use_path_mut,
         walk: walk_use_path, walk_mut: walk_use_path_mut,
         fields {
+            prefix: skip,
             ident: skip,
             path_sep: skip,
             tree: box => visit_use_tree / visit_use_tree_mut,
@@ -1714,6 +1716,7 @@ define_visit! {
         visit: visit_use_name, visit_mut: visit_use_name_mut,
         walk: walk_use_name, walk_mut: walk_use_name_mut,
         fields {
+            prefix: skip,
             ident: skip,
         }
     }
@@ -1721,6 +1724,7 @@ define_visit! {
         visit: visit_use_rename, visit_mut: visit_use_rename_mut,
         walk: walk_use_rename, walk_mut: walk_use_rename_mut,
         fields {
+            prefix: skip,
             ident: skip,
             as_keyword: skip,
             rename: skip,
@@ -1730,6 +1734,7 @@ define_visit! {
         visit: visit_use_glob, visit_mut: visit_use_glob_mut,
         walk: walk_use_glob, walk_mut: walk_use_glob_mut,
         fields {
+            prefix: skip,
             star: skip,
         }
     }
@@ -1737,6 +1742,7 @@ define_visit! {
         visit: visit_use_group, visit_mut: visit_use_group_mut,
         walk: walk_use_group, walk_mut: walk_use_group_mut,
         fields {
+            prefix: skip,
             items: seq_punct => visit_use_tree / visit_use_tree_mut,
         }
     }

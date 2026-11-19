@@ -21,18 +21,24 @@ impl Parse for LifetimePredicate {
         Ok(Self {
             lifetime: <_ as Parse>::parse(parser)?,
             colon_punct: <_ as Parse>::parse(parser)?,
-            bounds: List::parse_nonempty(parser)?,
+            bounds: if Lifetime::peek(parser.cursor()) {
+                List::parse_nonempty(parser)?
+            } else {
+                List::new()
+            },
         })
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Lifetime::skip(cursor)?;
         cursor = <Token![:]>::skip(cursor)?;
-        cursor = Lifetime::skip(cursor)?;
-
-        while <Token![+]>::peek(cursor) {
-            cursor = <Token![+]>::skip(cursor)?;
+        if Lifetime::peek(cursor) {
             cursor = Lifetime::skip(cursor)?;
+
+            while <Token![+]>::peek(cursor) {
+                cursor = <Token![+]>::skip(cursor)?;
+                cursor = Lifetime::skip(cursor)?;
+            }
         }
 
         Some(cursor)

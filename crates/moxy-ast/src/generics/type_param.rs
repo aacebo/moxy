@@ -31,7 +31,12 @@ impl Parse for TypeParam {
         let ident = <_ as Parse>::parse(parser)?;
         let (colon_punct, bounds) = if <Token![:]>::peek(parser.cursor()) {
             let colon_punct = <_ as Parse>::parse(parser)?;
-            let bounds = TypeBound::parse_bounds(parser)?;
+            // Bounds may be empty, as in `T:`
+            let bounds = if TypeBound::peek(parser.cursor()) {
+                TypeBound::parse_bounds(parser)?
+            } else {
+                List::new()
+            };
             (Some(colon_punct), bounds)
         } else {
             (None, List::new())
@@ -61,11 +66,13 @@ impl Parse for TypeParam {
 
         if <Token![:]>::peek(cursor) {
             cursor = <Token![:]>::skip(cursor)?;
-            cursor = TypeBound::skip(cursor)?;
-
-            while <Token![+]>::peek(cursor) {
-                cursor = <Token![+]>::skip(cursor)?;
+            if TypeBound::peek(cursor) {
                 cursor = TypeBound::skip(cursor)?;
+
+                while <Token![+]>::peek(cursor) {
+                    cursor = <Token![+]>::skip(cursor)?;
+                    cursor = TypeBound::skip(cursor)?;
+                }
             }
         }
 

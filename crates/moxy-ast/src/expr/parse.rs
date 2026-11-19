@@ -38,10 +38,6 @@ pub(crate) fn early(parser: &Parser) -> Result<Box<Expr>, ParseError> {
     boxed_expr(parser, ExprContext::NORMAL)
 }
 
-pub(crate) fn const_generic_default(parser: &Parser) -> Result<Expr, ParseError> {
-    expr(parser, ExprContext::CONST_GENERIC_DEFAULT)
-}
-
 fn optional_expr(parser: &Parser, context: ExprContext) -> Result<Option<Box<Expr>>, ParseError> {
     if peek::expr(parser.cursor(), context) {
         Ok(Some(boxed_expr(parser, context)?))
@@ -59,7 +55,7 @@ fn assignment(parser: &Parser, attrs: Attributes, context: ExprContext) -> Resul
 
     // Compound assignment is right-associative and binds looser than a range:
     // `x += y + z` adds first, `a += b = c` assigns `c` to `b` first
-    if peek_binary(parser.cursor(), context).is_some_and(|op| Precedence::of(&op) == Precedence::Assign) {
+    if peek_binary(parser.cursor()).is_some_and(|op| Precedence::of(&op) == Precedence::Assign) {
         return compound_assign(parser, left, context);
     }
 
@@ -184,8 +180,8 @@ impl Precedence {
 }
 
 // The binary operator that continues the expression here, if any
-fn peek_binary(cursor: Cursor<'_>, context: ExprContext) -> Option<BinOp> {
-    if !BinOp::peek(cursor) || context.is_end_before_infix(cursor) {
+fn peek_binary(cursor: Cursor<'_>) -> Option<BinOp> {
+    if !BinOp::peek(cursor) {
         return None;
     }
 
@@ -200,7 +196,7 @@ fn binary(parser: &Parser, attrs: Attributes, context: ExprContext, min: Precede
 // Precedence climbing over the operators at least as strong as `min`. Operators
 // of one strength associate to the left; comparisons do not chain
 fn binary_rest(parser: &Parser, context: ExprContext, mut left: Box<Expr>, min: Precedence) -> Result<Box<Expr>, ParseError> {
-    while let Some(op) = peek_binary(parser.cursor(), context) {
+    while let Some(op) = peek_binary(parser.cursor()) {
         let precedence = Precedence::of(&op);
 
         if precedence < min || precedence == Precedence::Assign {
@@ -222,7 +218,7 @@ fn binary_rest(parser: &Parser, context: ExprContext, mut left: Box<Expr>, min: 
         });
 
         if precedence == Precedence::Compare
-            && let Some(next) = peek_binary(parser.cursor(), context)
+            && let Some(next) = peek_binary(parser.cursor())
             && next.is_comparison()
         {
             return Err(ParseError::new(next.span(), "comparison operators cannot be chained"));
@@ -695,7 +691,7 @@ fn yield_expr(parser: &Parser, attrs: Attributes, context: ExprContext) -> Resul
 
 fn path_macro_or_struct(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
     let (qself, path) = if <Token![<]>::peek(parser.cursor()) {
-        let (qself, path) = QSelf::parse_qualified(parser)?;
+        let (qself, path) = QSelf::parse_qualified_expr(parser)?;
         (Some(qself), path)
     } else {
         (None, Path::parse_expr(parser)?)

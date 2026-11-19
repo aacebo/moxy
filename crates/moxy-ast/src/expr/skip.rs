@@ -36,10 +36,6 @@ pub(crate) fn early(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     expr(cursor, ExprContext::NORMAL)
 }
 
-pub(crate) fn const_generic_default(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-    expr(cursor, ExprContext::CONST_GENERIC_DEFAULT)
-}
-
 fn list(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     while !cursor.is_empty() {
         cursor = Expr::skip(cursor)?;
@@ -252,7 +248,7 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     }
 
     cursor = if qualified {
-        ty::TypePath::skip(cursor)?
+        ty::TypePath::skip_expr(cursor)?
     } else {
         Path::skip_expr(cursor)?
     };
@@ -368,7 +364,7 @@ fn cast(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
 fn binary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     cursor = cast(cursor, context)?;
 
-    while BinOp::peek(cursor) && !context.is_end_before_infix(cursor) {
+    while BinOp::peek(cursor) {
         cursor = BinOp::skip(cursor)?;
         cursor = cast(cursor, context)?;
     }

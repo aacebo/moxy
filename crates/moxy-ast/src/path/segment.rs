@@ -49,35 +49,22 @@ impl Parse for PathSegment {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let ident = parser.parse_ident_any()?;
-        let is_fn = matches!(ident.text(), "Fn" | "FnMut" | "FnOnce");
-
+        // Any segment of a type path can take either form of arguments, as in
+        // `Fn<T>`, `AsyncFn() -> u8`, and `MyTrait(A) -> B`
         Ok(Self {
-            ident,
-            args: if is_fn && ParenArguments::peek(parser.cursor()) {
-                ParenArguments::parse(parser)?.into()
-            } else if !is_fn && AngleArguments::peek(parser.cursor()) {
-                AngleArguments::parse(parser)?.into()
-            } else {
-                path::PathArguments::None
-            },
+            ident: parser.parse_ident_any()?,
+            args: <_ as Parse>::parse(parser)?,
         })
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let is_fn = matches!(cursor.curr().and_then(|token| token.text()), Some("Fn" | "FnMut" | "FnOnce"));
-
         cursor = if Ident::peek(cursor) {
             Ident::skip(cursor)?
         } else {
             Keyword::skip(cursor)?
         };
 
-        if is_fn && ParenArguments::peek(cursor) {
-            ParenArguments::skip(cursor)
-        } else {
-            Option::<AngleArguments>::skip(cursor)
-        }
+        PathArguments::skip(cursor)
     }
 }
 

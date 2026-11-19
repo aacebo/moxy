@@ -37,7 +37,9 @@ impl Parse for ConstParam {
         let ty = <_ as Parse>::parse(parser)?;
         let (default_eq_punct, default) = if <Token![=]>::peek(parser.cursor()) {
             let eq_punct = <_ as Parse>::parse(parser)?;
-            let expr = expr::parse::const_generic_default(parser)?;
+            // A default is a block, a literal, a negated literal, or a path,
+            // which ends before the `>` that closes the parameters
+            let expr = expr::parse::unary(parser, Attributes::default())?;
             (Some(eq_punct), Some(expr))
         } else {
             (None, None)
@@ -63,7 +65,7 @@ impl Parse for ConstParam {
 
         if <Token![=]>::peek(cursor) {
             cursor = <Token![=]>::skip(cursor)?;
-            cursor = expr::skip::const_generic_default(cursor)?;
+            cursor = expr::skip::pattern_bound(cursor)?;
         }
 
         Some(cursor)

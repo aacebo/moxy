@@ -24,7 +24,12 @@ impl Parse for AngleArguments {
         Ok(Self {
             colon2: <_ as Parse>::parse(parser)?,
             lt_punct: <_ as Parse>::parse(parser)?,
-            args: List::parse_nonempty_until::<Token![>]>(parser)?,
+            // Arguments may be empty, as in `Vec::<>::new()`
+            args: if <Token![>]>::peek(parser.cursor()) {
+                List::new()
+            } else {
+                List::parse_nonempty_until::<Token![>]>(parser)?
+            },
             gt_punct: <_ as Parse>::parse(parser)?,
         })
     }
@@ -32,6 +37,11 @@ impl Parse for AngleArguments {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Option::<Token![::]>::skip(cursor)?;
         cursor = <Token![<]>::skip(cursor)?;
+
+        if <Token![>]>::peek(cursor) {
+            return <Token![>]>::skip(cursor);
+        }
+
         cursor = GenericArgument::skip(cursor)?;
 
         while <Token![,]>::peek(cursor) {

@@ -21,8 +21,22 @@ impl QSelf {
     /// full merged path (trait segments followed by the trailing segments). Shared
     /// by `TypePath` and expression-path parsing.
     pub fn parse_qualified(parser: &Parser) -> Result<(Self, Path), ParseError> {
+        Self::parse_qualified_with(parser, <_ as Parse>::parse)
+    }
+
+    /// Parses a qualified path in expression or pattern position, where the
+    /// segments after the qualifier take arguments only after `::`, so
+    /// `<T>::f()` calls `f`.
+    pub(crate) fn parse_qualified_expr(parser: &Parser) -> Result<(Self, Path), ParseError> {
+        Self::parse_qualified_with(parser, Path::parse_expr)
+    }
+
+    fn parse_qualified_with(
+        parser: &Parser,
+        parse_rest: fn(&Parser) -> Result<Path, ParseError>,
+    ) -> Result<(Self, Path), ParseError> {
         let (qself, trait_path) = Self::parse_with_trait(parser)?;
-        let rest = <_ as Parse>::parse(parser)?;
+        let rest = parse_rest(parser)?;
         let path = if let Some(mut p) = trait_path {
             p.extend(rest);
             p

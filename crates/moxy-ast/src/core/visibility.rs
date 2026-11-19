@@ -68,7 +68,7 @@ impl Parse for Visibility {
         let pub_keyword = <_ as Parse>::parse(parser)?;
 
         // `pub(...)` restricted forms.
-        if parser.is_delimited(Delim::Paren) {
+        if restricted(parser.cursor()) {
             let (span, parser) = parser.parse_group_spanned(Delim::Paren)?;
 
             if <Token![crate]>::peek(parser.cursor()) {
@@ -117,7 +117,7 @@ impl Parse for Visibility {
 
         cursor = <Token![pub]>::skip(cursor)?;
 
-        if !cursor.is_delimited(Delim::Paren) {
+        if !restricted(cursor) {
             return Some(cursor);
         }
 
@@ -134,6 +134,17 @@ impl Parse for Visibility {
 
         if inner.is_empty() { Some(cursor.offset(1)) } else { None }
     }
+}
+
+// Whether parentheses after `pub` restrict it, as in `pub(crate)` or
+// `pub(in a::b)`. Others start the type of a tuple field: `pub (u8, u8)`.
+fn restricted(cursor: Cursor<'_>) -> bool {
+    let Some(inner) = cursor.descend(Delim::Paren) else {
+        return false;
+    };
+
+    let keyword = <Token![crate]>::peek(inner) || <Token![self]>::peek(inner) || <Token![super]>::peek(inner);
+    (keyword && inner.offset(1).is_empty()) || <Token![in]>::peek(inner)
 }
 
 impl Spanner for Visibility {

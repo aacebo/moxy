@@ -23,7 +23,12 @@ impl Parse for TypePredicate {
             lifetimes: <_ as Parse>::parse(parser)?,
             bounded_ty: <_ as Parse>::parse(parser)?,
             colon_punct: <_ as Parse>::parse(parser)?,
-            bounds: TypeBound::parse_bounds(parser)?,
+            // Bounds may be empty, as in `where T:`
+            bounds: if TypeBound::peek(parser.cursor()) {
+                TypeBound::parse_bounds(parser)?
+            } else {
+                List::new()
+            },
         })
     }
 
@@ -31,11 +36,13 @@ impl Parse for TypePredicate {
         cursor = Option::<BoundLifetimes>::skip(cursor)?;
         cursor = Type::skip(cursor)?;
         cursor = <Token![:]>::skip(cursor)?;
-        cursor = TypeBound::skip(cursor)?;
-
-        while <Token![+]>::peek(cursor) {
-            cursor = <Token![+]>::skip(cursor)?;
+        if TypeBound::peek(cursor) {
             cursor = TypeBound::skip(cursor)?;
+
+            while <Token![+]>::peek(cursor) {
+                cursor = <Token![+]>::skip(cursor)?;
+                cursor = TypeBound::skip(cursor)?;
+            }
         }
 
         Some(cursor)

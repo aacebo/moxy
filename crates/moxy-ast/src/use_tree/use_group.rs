@@ -7,24 +7,31 @@ use crate::*;
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseGroup {
+    /// The leading `::` of a path, as in `use ::{a, b};`.
+    pub prefix: Option<Token![::]>,
     pub items: Delimited<List<UseTree, Token![,]>>,
 }
 
 impl Parse for UseGroup {
     fn peek(cursor: Cursor<'_>) -> bool {
         // An empty group, as in `use a::{};`, is valid and imports nothing
-        cursor.is_delimited(Delim::Brace)
+        super::skip_prefix(cursor).is_delimited(Delim::Brace)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let prefix = <_ as Parse>::parse(parser)?;
         let (span, parser) = parser.parse_group_spanned(Delim::Brace)?;
+        // A tree inside braces may start with `::`, as rustc's parser accepts
+        let items = List::parse_all(&parser)?;
 
         Ok(Self {
-            items: Delimited::brace(span, List::parse_all(&parser)?),
+            prefix,
+            items: Delimited::brace(span, items),
         })
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let cursor = super::skip_prefix(cursor);
         let mut inner = cursor.descend(Delim::Brace)?;
 
         while !inner.is_empty() {
@@ -43,12 +50,16 @@ impl Parse for UseGroup {
 
 impl Spanner for UseGroup {
     fn span(&self) -> Span {
-        self.items.span()
+        match self.prefix {
+            Some(prefix) => prefix.span().join(self.items.span()),
+            None => self.items.span(),
+        }
     }
 }
 
 impl ToTokens for UseGroup {
     fn to_tokens(&self, t: &mut TokenStream) {
+        self.prefix.to_tokens(t);
         self.items.to_tokens(t);
     }
 }

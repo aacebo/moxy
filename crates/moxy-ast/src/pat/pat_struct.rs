@@ -30,7 +30,7 @@ impl Parse for PatStruct {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = if <Token![<]>::peek(cursor) {
-            let Some(cursor) = TypePath::skip(cursor) else {
+            let Some(cursor) = TypePath::skip_expr(cursor) else {
                 return false;
             };
 
@@ -49,7 +49,7 @@ impl Parse for PatStruct {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = <_ as Parse>::parse(parser)?;
         let (qself, path) = if <Token![<]>::peek(parser.cursor()) {
-            let (qself, path) = QSelf::parse_qualified(parser)?;
+            let (qself, path) = QSelf::parse_qualified_expr(parser)?;
             (Some(qself), path)
         } else {
             (None, Path::parse_expr(parser)?)
@@ -67,7 +67,7 @@ impl Parse for PatStruct {
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         let mut cursor = Attributes::skip(cursor)?;
         cursor = if <Token![<]>::peek(cursor) {
-            TypePath::skip(cursor)?
+            TypePath::skip_expr(cursor)?
         } else {
             Path::skip_expr(cursor)?
         };

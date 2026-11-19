@@ -200,6 +200,7 @@ impl Format for UseTree {
             Self::Path(v) => v.format(f),
             Self::Name(v) => v.format(f),
             Self::Rename(v) => v.format(f),
+            Self::Glob(glob) if glob.prefix.is_some() => f.text("::*"),
             Self::Glob(_) => f.text("*"),
             Self::Group(v) => v.format(f),
         }
@@ -220,12 +221,20 @@ impl Format for UsePath {
 
 impl Format for UseName {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        if self.prefix.is_some() {
+            f.text("::")?;
+        }
+
         self.ident.format(f)
     }
 }
 
 impl Format for UseRename {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        if self.prefix.is_some() {
+            f.text("::")?;
+        }
+
         self.ident.format(f)?;
         f.text(" as ")?;
         self.rename.format(f)
@@ -234,6 +243,10 @@ impl Format for UseRename {
 
 impl Format for UseGroup {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        if self.prefix.is_some() {
+            f.text("::")?;
+        }
+
         f.text("{")?;
         self.items.inner.format(f)?;
         f.text("}")

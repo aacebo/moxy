@@ -206,3 +206,57 @@ fn a_plus_after_a_function_return_type_bounds_the_whole_type() {
     let ty: Type = moxy::parse!("Box<dyn Fn(A) -> B + Send>").unwrap();
     assert_eq!(ty.to_token_stream().to_string(), "Box < dyn Fn (A) -> B + Send >");
 }
+
+#[test]
+fn any_path_segment_takes_angle_or_parenthesized_arguments() {
+    for source in [
+        "impl AsyncFn() -> u8",
+        "impl AsyncFnMut(u8) -> u8",
+        "dyn MyTrait(A) -> B",
+        "impl a::MyTrait(A) -> B",
+        "Box<dyn AsyncFn() -> u8>",
+        "Fn<u8>",
+        "a::Fn<'a>",
+        "FnMut<(A,), Output = B>",
+        "Box<Fn(u8)>",
+    ] {
+        let ty: Type = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(ty.to_token_stream().to_string(), lexed.to_string());
+    }
+
+    let item: moxy::ast::Item = moxy::parse!("#[derive(Clone)] struct S;").unwrap();
+    let attr = &item.as_struct().unwrap().attrs[0];
+    assert!(attr.path.is_ident("derive"));
+}
+
+#[test]
+fn trait_bounds_may_stand_in_parentheses() {
+    for (source, bounds) in [
+        ("Box<dyn (Fn() -> u8) + Send>", 2),
+        ("&(dyn (A) + B)", 2),
+        ("dyn (A)", 1),
+        ("impl (A) + B", 2),
+        ("impl ?Sized + (B)", 2),
+        ("dyn (for<'a> A<'a>) + B", 2),
+    ] {
+        let ty: Type = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(ty.to_token_stream().to_string(), lexed.to_string());
+        assert_eq!(
+            ty.to_token_stream().to_string().matches('+').count() + 1,
+            bounds,
+            "`{source}`"
+        );
+    }
+
+    let ty: Type = moxy::parse!("dyn (Fn() -> u8) + Send").unwrap();
+    let Type::TraitObject(object) = &ty else {
+        panic!("expected a trait object");
+    };
+    let moxy::ast::TypeBound::Trait(first) = object.bounds.first().unwrap() else {
+        panic!("expected a trait bound");
+    };
+    assert!(first.paren.is_some());
+    assert_eq!(moxy::fmt!(&ty).unwrap(), "dyn (Fn() -> u8) + Send");
+}

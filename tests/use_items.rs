@@ -55,3 +55,30 @@ fn empty_use_groups_parse() {
         assert_eq!(moxy::fmt!(&item).unwrap(), formatted);
     }
 }
+
+#[test]
+fn use_trees_take_a_leading_path_separator() {
+    for (source, formatted) in [
+        ("use ::serde;", "use ::serde;"),
+        ("use ::core as core2;", "use ::core as core2;"),
+        ("use ::{a, b};", "use ::{a, b};"),
+        ("use ::*;", "use ::*;"),
+        ("use ::a::b;", "use ::a::b;"),
+    ] {
+        let item: moxy::ast::Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(item.to_token_stream().to_string(), lexed.to_string());
+        assert_eq!(moxy::fmt!(&item).unwrap(), formatted);
+    }
+
+    // rustc's parser accepts `::` inside braces too, and rejects `use a::{::b}`
+    // only when it resolves the path
+    for source in ["use {::a::b, ::c::d};", "use a::{::b};"] {
+        let item: moxy::ast::Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(moxy::fmt!(&item).unwrap(), source);
+    }
+
+    let item: moxy::ast::Item = moxy::parse!("use ::serde;").unwrap();
+    let tree = &item.as_use().unwrap().tree;
+    assert!(tree.as_name().unwrap().prefix.is_some());
+}

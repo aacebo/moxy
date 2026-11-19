@@ -58,7 +58,8 @@ impl Parse for Generics {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let lt: Option<Token![<]> = <_ as Parse>::parse(parser)?;
-        let params = if lt.is_some() {
+        // Parameters may be empty, as in `impl<> X {}`
+        let params = if lt.is_some() && !<Token![>]>::peek(parser.cursor()) {
             List::parse_nonempty_until::<Token![>]>(parser)?
         } else {
             List::new()
@@ -81,7 +82,7 @@ impl Parse for Generics {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if <Token![<]>::peek(cursor) {
+        if <Token![<]>::peek(cursor) && !<Token![>]>::peek(cursor.offset(1)) {
             cursor = <Token![<]>::skip(cursor)?;
             cursor = GenericParam::skip(cursor)?;
 
@@ -96,6 +97,8 @@ impl Parse for Generics {
             }
 
             cursor = <Token![>]>::skip(cursor)?;
+        } else if <Token![<]>::peek(cursor) {
+            cursor = <Token![>]>::skip(<Token![<]>::skip(cursor)?)?;
         }
 
         Option::<WhereClause>::skip(cursor)

@@ -91,3 +91,28 @@ fn tuple_struct_where_clauses_follow_the_fields() {
     let item: Item = moxy::parse!("struct S<T> where T: Clone { a: T }").unwrap();
     assert_eq!(item.to_token_stream().to_string(), "struct S < T > where T : Clone {a : T}");
 }
+
+#[test]
+fn parentheses_after_pub_that_do_not_restrict_it_are_the_field_type() {
+    for (source, restricted) in [
+        ("struct S(pub (u8, u8));", false),
+        ("struct S(pub (crate::A));", false),
+        ("struct S(pub ());", false),
+        ("struct S(pub (crate) u8);", true),
+        ("struct S(pub (in a) u8);", true),
+        ("struct S(pub (super) u8);", true),
+    ] {
+        let item: moxy::ast::Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(item.to_token_stream().to_string(), lexed.to_string());
+        let moxy::ast::Fields::Unnamed(fields) = &item.as_struct().unwrap().fields else {
+            panic!("`{source}` has no tuple fields");
+        };
+        let field = fields.fields.inner.first().unwrap();
+        assert_eq!(
+            !matches!(field.vis, moxy::ast::Visibility::Public { .. }),
+            restricted,
+            "`{source}`"
+        );
+    }
+}

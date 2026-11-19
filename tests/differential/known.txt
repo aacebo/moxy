@@ -59,52 +59,13 @@ REJECT e: b"a"suffix
 REJECT e: r#"a"#suffix
 REJECT e: 'a'b
 REJECT e: try!(a)
-REJECT e: a::<>
-REJECT e: a::<>::b
 REJECT e: become f()
-REJECT e: f::<!>()
-REJECT e: a.b::<>()
-REJECT e: a::<>()
-REJECT f: fn min<T:>(v1: T) -> T {}
-REJECT f: fn f<T>() where T: {}
-REJECT f: fn f<T>() where Self:, T: {}
-REJECT f: fn f() where T: ;
-REJECT f: impl<T: Sized<>> From<T> for OsString {}
-REJECT f: impl<> Bound<> {}
-REJECT f: impl<> X {}
 REJECT f: impl ExitStatusError { fn code() -> Option<u8> { NonZeroI32::new(self.0.0) } }
-REJECT f: impl DestroyedState for ! { fn register_dtor<T>(_: &Storage<T, !>) {} }
 REJECT f: type Symbols<'false> = Table<Symbol<'false>>;
 REJECT f: type B = unsafe extern "efiapi" fn(_: Handle, _: ...) -> Status;
 REJECT f: type B = fn(_: ...) -> Status;
-REJECT f: struct SymbolId<const DYNAMIC: bool = false>(usize);
-REJECT f: struct S<const N: usize = { M + 1 }>(u8) where T: U;
-REJECT f: mod helper { type LazyResolve = impl (FnOnce() -> Capture) + Send; }
-REJECT f: type A = impl (FnOnce() -> Capture) + Send + Sync + UnwindSafe;
-REJECT f: type A = impl (B) + C;
-REJECT f: type A = dyn (B) + C;
-REJECT f: type A = dyn (FnOnce() -> C) + Send;
-REJECT f: type A = Box<dyn (FnOnce() -> C) + Send>;
-REJECT f: type A = impl ?Sized + (B);
-REJECT f: fn f() where G: FnOnce<A>, F: FnOnce<A>;
-REJECT f: fn f() { [MaybeUninit::<!>::uninit(); 0].transpose() }
-REJECT f: fn f() { Ok::<B, !>(f(b, item)) }
-REJECT f: fn f() -> Result<!, io::Error> {}
-REJECT f: fn f() -> Result<isize, !> { Ok(666) }
-REJECT f: type A = Result<T, !>;
-REJECT f: type A = Option<!>;
-REJECT f: type A = B<!>;
-REJECT f: type A = B<!, C>;
-REJECT f: type A = B<C, !>;
 REJECT f: fn f() { self.0.0 }
 REJECT f: fn f() { NonZeroI32::new(self.0.0) }
-REJECT f: impl Command { unsafe fn do_exec(&mut self, stdio: ChildPipes, maybe_envp: Option<&CStringArray>) -> Result<!, io::Error> {} }
-REJECT f: impl<A, F> FnOnce<A> for B<F> { type Output = <F as FnOnce<A>>::Output; extern "rust-call" fn call_once(self, args: A) -> Self::Output { <F as FnOnce<A>>::call_once(*self, args) } }
-REJECT f: impl<Args: Tuple, F: FnOnce<Args> + ?Sized, A: Allocator> FnOnce<Args> for Box<F, A> { }
-REJECT f: impl<A: T, F: FnOnce<A> + ?Sized> X for Y {}
-REJECT f: impl<F: FnOnce<A> + ?Sized> X for Y {}
-REJECT f: fn f() { <F as FnOnce<Args>>::call_once(*self, args) }
-REJECT f: fn f() where 'a: 'b, 'b: {}
 REJECT f: impl<T> X<T> { type Item; #[inline] fn next() -> Option<T> {} fn advance_by(self, n: usize) -> Result<(), NonZero<usize>> { rem = if len < n {} else {} } }
 REJECT b: { try!(x) }
 REJECT p: S { box a }
@@ -113,74 +74,28 @@ REJECT p: box x
 REJECT p: box 1..=2
 REJECT p: mut self
 REJECT t: A<B + C>
-REJECT t: A<!>
-REJECT t: A<>
-REJECT t: A::<>
 REJECT t: fn(a: A, va: ...)
-REJECT t: for<> fn()
-REJECT t: dyn (A)
-REJECT t: dyn (A) + B
-REJECT t: impl (A)
-REJECT t: impl (A) + B
 REJECT t: impl const A
-REJECT t: impl AsyncFn()
 REJECT t: 'a + A
 REJECT t: unsafe<'a> &'a A
 REJECT t: for<'a> A<'a>
 REJECT t: (for<'a> A<'a>)
-REJECT t: dyn (for<'a> A<'a>) + B
 REJECT t: A<a + b>
-REJECT b: { <F as FnOnce<Args>>::call_once(*self, args) }
-REJECT b: { <F as FnOnce<Args>>::call_once(a) }
-REJECT t: impl AsyncFn() -> u8
-REJECT t: impl AsyncFnMut(u8) -> u8
-REJECT t: impl MyTrait(A) -> B
-REJECT t: dyn MyTrait(A) -> B
-REJECT t: impl a::MyTrait(A) -> B
-REJECT t: Box<dyn AsyncFn() -> u8>
-REJECT i: fn f<F: AsyncFn(u8) -> u8>(f: F) {}
-REJECT i: fn f<F>() where F: AsyncFnOnce() {}
-REJECT i: fn f<F: MyTrait(u8)>() {}
-REJECT i: struct S<const N: usize = 3>(u8);
-REJECT i: struct S<const N: usize = 3>(pub u8);
-REJECT i: struct S<const B: bool = false>(usize);
-REJECT i: struct S<T = u8, const B: usize = 3>(T);
-REJECT i: struct S<const B: usize = { 3 }>(u8);
-REJECT i: struct S<const B: usize = N>(u8);
-REJECT i: struct S<const B: usize = -1>(u8);
-REJECT i: trait T<const N: usize = 3>: U {}
-REJECT i: trait T<const N: usize = 3> = U;
-REJECT i: type T<const N: usize = 3> = U;
-REJECT i: type T<const N: usize = 3>: U;
-REJECT i: impl<const N: usize = 3> S<N> {}
-REJECT i: fn f<const N: usize = 3>() {}
-REJECT i: fn f<const N: usize = 3>(a: u8) {}
-REJECT i: impl<F: FnOnce<A> + ?Sized> X for Y {}
 REJECT f: const X: u8 = 1 where T: U;
-REJECT f: struct S(pub (u8, u8));
-REJECT f: struct S(pub (super::A));
-REJECT f: struct S(pub (self::A));
-REJECT f: struct S(pub (crate::A));
 REJECT f: trait A { #![a] }
 REJECT f: trait A { pub fn f(); }
 REJECT f: const trait A {}
 REJECT f: trait A<T> = B<T> where T: C;
 REJECT f: trait A = ;
-REJECT f: struct S<T: >(T);
-REJECT f: struct S<>;
 REJECT f: struct S { a: u8 = 1 }
 REJECT f: static X = 1;
 REJECT f: unsafe extern "C" fn f(a: u8, mut args: ...) {}
 REJECT f: fn f(a: u8, _: ...) {}
-REJECT f: fn f<>() {}
 REJECT f: extern "C" { #![a] }
 REJECT f: extern "C" { type T: A; }
 REJECT f: extern "C" { fn f() {} }
 REJECT f: extern r"C" { fn f(); }
 REJECT f: extern r#"C"# fn f() {}
-REJECT f: use ::a;
-REJECT f: use ::{a, b};
-REJECT f: use ::*;
 REJECT f: mod m { #![a] }
 REJECT f: type T<U> = Vec<U> where U: A;
 REJECT f: macro_rules! try { () => {} }
@@ -189,17 +104,11 @@ REJECT f: m! ident {}
 REJECT f: macro m() {}
 REJECT f: pub macro m($a:expr) { $a }
 REJECT f: fn f() { //! inner\n }
-REJECT f: use ::a as b;
-REJECT f: use ::{a::b, c};
 REJECT f: mod m { //! doc\n }
 REJECT f: fn f() { #![a] }
 REJECT f: impl A { #![a] }
 REJECT f: fn f() { loop { #![a] } }
 REJECT f: fn f() { match x { #![a] } }
-REJECT f: struct S(pub (u8));
-REJECT f: struct S(pub ());
-REJECT f: struct S(pub (A, B), pub(crate) C);
-REJECT f: enum E { A(pub (u8, u8)) }
 REJECT f: #!/usr/bin/env -S cargo +nightly -Zscript\nfn main() {}
 REJECT f: #!/usr/local/bin/rust-script.sh\nfn main() {}
 REJECT f: #!/usr/bin/env rust-script\nfn main() {}
@@ -208,33 +117,11 @@ REJECT f: #!/usr/bin/rustc --edition=2021\nfn main() {}
 REJECT f: #!/usr/bin/env run-cargo-script\n//! doc\nfn main() {}
 REJECT f: #!\nfn main() {}
 REJECT f: fn f() { 1f16; 1.0f128; 1f16; 2b; 1px; 1em; 0x1p3; 1_; 1__; }
-REJECT t: Fn<u8>
-REJECT t: a::Fn<'a>
-REJECT t: FnMut<(A,), Output = B>
-REJECT i: struct S(Fn<u8>);
-REJECT i: fn f(x: ast::Fn<'a>) {}
-REJECT b: { let x: Fn<u8> = y; }
-REJECT i: impl<T> Fn<T> {}
-REJECT t: Box<dyn AsyncFnMut(u8)>
-REJECT i: fn f(g: impl AsyncFnOnce(u8) -> u8) {}
-REJECT i: struct S(pub (u8, u8));
-REJECT i: struct S(pub (u32, u32), pub u8);
-REJECT i: use ::serde;
-REJECT i: use ::core as _core;
 REJECT i: mod m { #![allow(x)] }
 REJECT i: fn f() { #![allow(x)] }
-REJECT i: struct S<T: >(T);
-REJECT i: fn f<T>() where T: {}
-REJECT i: type A<const N: usize = 3> = [u8; N];
-REJECT t: Box<dyn (Fn() -> u8) + Send>
-REJECT t: &(dyn (A) + B)
-REJECT t: Vec<!>
-REJECT t: Result<(), !>
-REJECT t: Vec<>
-REJECT e: Vec::<>::new()
-REJECT b: { x.collect::<>() }
 
 # Input syn rejects that moxy accepts
+ACCEPT f: use a::{::b};
 ACCEPT e: a..b = c
 ACCEPT e: &raw const
 ACCEPT e: loop { break 'a: loop {} }
@@ -323,7 +210,6 @@ ACCEPT t: FnOnce(&mut A) -> &B
 ACCEPT t: Fn(A) -> Fn(B) -> C
 ACCEPT t: r#Self
 ACCEPT t: [A;]
-ACCEPT t: A<!0>
 ACCEPT t: F::<A>::Fn::(A) -> B
 ACCEPT f: impl A { type T where Self: Sized = u8; }
 ACCEPT f: trait A { fn f(u8); }
@@ -340,7 +226,6 @@ ACCEPT f: m!{};
 ACCEPT f: m!()
 ACCEPT f: m![]
 ACCEPT f: #[a] #![b] fn f() {}
-ACCEPT f: #[a::<T>] fn f() {}
 ACCEPT f: #[a = ] fn f() {}
 ACCEPT f: fn f() { let x = [#![a] 1]; }
 ACCEPT f: fn f() { ' a' }
@@ -353,3 +238,19 @@ ACCEPT t: Fn(A, B) -> C
 ACCEPT t: Fn(A) -> B + C
 ACCEPT t: a::Fn(A)
 ACCEPT t: FnMut(&mut A) -> B<C>
+
+# Intentional: rustc's parser accepts parenthesized arguments on any path
+# segment and bare trait objects (edition 2015), which syn rejects
+ACCEPT t: Box<Fn(A) -> B>
+ACCEPT t: A<a::b()>
+ACCEPT e: f::<Fn::(A) -> B>()
+
+# Intentional: moxy emits the empty `<>`, `:`, and `where` that the source has,
+# which syn drops
+TOKENS f: fn min<T:>(v1: T) -> T {}
+TOKENS f: impl<> Bound<> {}
+TOKENS f: impl<> X {}
+TOKENS f: struct S<T: >(T);
+TOKENS f: struct S<>;
+TOKENS f: fn f<>() {}
+TOKENS i: struct S<T: >(T);

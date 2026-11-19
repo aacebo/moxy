@@ -13,6 +13,31 @@ pub struct TypePath {
     pub path: Path,
 }
 
+impl TypePath {
+    /// Skips a path in expression or pattern position, where segments take
+    /// arguments only after `::`, so `<T>::f()` ends before the call.
+    pub(crate) fn skip_expr(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::skip_with(cursor, Path::skip_expr)
+    }
+
+    fn skip_with<'a>(cursor: Cursor<'a>, skip_path: fn(Cursor<'a>) -> Option<Cursor<'a>>) -> Option<Cursor<'a>> {
+        if !<Token![<]>::peek(cursor) {
+            return skip_path(cursor);
+        }
+
+        let mut cursor = <Token![<]>::skip(cursor)?;
+        cursor = Type::skip(cursor)?;
+
+        if <Token![as]>::peek(cursor) {
+            cursor = <Token![as]>::skip(cursor)?;
+            cursor = Path::skip(cursor)?;
+        }
+
+        cursor = <Token![>]>::skip(cursor)?;
+        skip_path(cursor)
+    }
+}
+
 impl Parse for TypePath {
     fn peek(cursor: Cursor<'_>) -> bool {
         <Token![<]>::peek(cursor) || Path::peek(cursor)
@@ -35,20 +60,7 @@ impl Parse for TypePath {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        if !<Token![<]>::peek(cursor) {
-            return Path::skip(cursor);
-        }
-
-        let mut cursor = <Token![<]>::skip(cursor)?;
-        cursor = Type::skip(cursor)?;
-
-        if <Token![as]>::peek(cursor) {
-            cursor = <Token![as]>::skip(cursor)?;
-            cursor = Path::skip(cursor)?;
-        }
-
-        cursor = <Token![>]>::skip(cursor)?;
-        Path::skip(cursor)
+        Self::skip_with(cursor, Path::skip)
     }
 }
 

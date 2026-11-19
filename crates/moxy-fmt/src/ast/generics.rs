@@ -143,6 +143,10 @@ impl Format for TypeBound {
 
 impl Format for TraitBound {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        if self.paren.is_some() {
+            f.text("(")?;
+        }
+
         self.polarity.format(f)?;
 
         if let Some(lifetimes) = &self.lifetimes {
@@ -151,7 +155,13 @@ impl Format for TraitBound {
         }
 
         self.modifier.format(f)?;
-        self.path.format(f)
+        self.path.format(f)?;
+
+        if self.paren.is_some() {
+            f.text(")")?;
+        }
+
+        Ok(())
     }
 }
 

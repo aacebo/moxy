@@ -65,6 +65,38 @@ impl Path {
 }
 
 impl Path {
+    /// Parses a path whose segments take no arguments, as the path of an
+    /// attribute: `#[derive(Clone)]` names `derive`, not `derive(Clone)`.
+    pub(crate) fn parse_mod_style(parser: &Parser) -> Result<Self, ParseError> {
+        let colon = <_ as Parse>::parse(parser)?;
+        let mut segments = List::new();
+        segments.push_value(PathSegment {
+            ident: parser.parse_ident_any()?,
+            args: PathArguments::None,
+        });
+
+        while <Token![::]>::skip(parser.cursor()).is_some_and(|cursor| PathSegment::peek(cursor)) {
+            segments.push_punct(<_ as Parse>::parse(parser)?);
+            segments.push_value(PathSegment {
+                ident: parser.parse_ident_any()?,
+                args: PathArguments::None,
+            });
+        }
+
+        Ok(Self { colon, segments })
+    }
+
+    pub(crate) fn skip_mod_style(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Option::<Token![::]>::skip(cursor)?;
+        cursor = PathSegment::peek(cursor).then(|| cursor.offset(1))?;
+
+        while <Token![::]>::skip(cursor).is_some_and(|cursor| PathSegment::peek(cursor)) {
+            cursor = <Token![::]>::skip(cursor)?.offset(1);
+        }
+
+        Some(cursor)
+    }
+
     /// Parses a path in expression position, where generic arguments need the
     /// turbofish (`f::<T>`), so `a < b` stays a comparison.
     pub(crate) fn parse_expr(parser: &Parser) -> Result<Self, ParseError> {

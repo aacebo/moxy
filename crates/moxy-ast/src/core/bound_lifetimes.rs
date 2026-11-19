@@ -21,7 +21,11 @@ impl Parse for BoundLifetimes {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let for_keyword = <_ as Parse>::parse(parser)?;
         let lt = <_ as Parse>::parse(parser)?;
-        let params = List::parse_nonempty(parser)?;
+        let params = if <Token![>]>::peek(parser.cursor()) {
+            List::new()
+        } else {
+            List::parse_nonempty(parser)?
+        };
         let gt = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
@@ -35,6 +39,11 @@ impl Parse for BoundLifetimes {
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         let mut cursor = <Token![for]>::skip(cursor)?;
         cursor = <Token![<]>::skip(cursor)?;
+
+        if <Token![>]>::peek(cursor) {
+            return <Token![>]>::skip(cursor);
+        }
+
         cursor = Lifetime::skip(cursor)?;
 
         while <Token![,]>::peek(cursor) {

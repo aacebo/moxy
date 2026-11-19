@@ -1,5 +1,5 @@
 use crate::{Cursor, Parse, ParseError, Parser};
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
 use crate::{List, TypeBound};
 
@@ -16,6 +16,17 @@ impl Parse for TypeTraitObject {
     fn peek(cursor: Cursor<'_>) -> bool {
         if <Token![dyn]>::peek(cursor) {
             return true;
+        }
+
+        // A function pointer type is no bound, though `fn` reads as a path
+        // segment, and a parenthesized type starts a bare trait object only
+        // after `dyn`
+        if <Token![fn]>::peek(cursor)
+            || <Token![unsafe]>::peek(cursor)
+            || <Token![extern]>::peek(cursor)
+            || cursor.is_delimited(Delim::Paren)
+        {
+            return false;
         }
 
         TypeBound::skip(cursor).is_some_and(|cursor| <Token![+]>::peek(cursor))
