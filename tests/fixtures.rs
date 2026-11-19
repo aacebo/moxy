@@ -345,3 +345,21 @@ fn field_shorthand_fixture_parses_and_round_trips() {
     let reparsed: Item = moxy::parse!((emitted.clone())).unwrap();
     assert_eq!(reparsed.to_token_stream().to_string(), emitted);
 }
+
+#[test]
+fn a_file_may_start_with_a_byte_order_mark_and_a_shebang_line() {
+    for source in [
+        "\u{feff}fn main() {}",
+        "#!/usr/bin/env -S cargo +nightly -Zscript\nfn main() {}",
+        "#!/bin/sh -c 'exec rustc \"$0\"'\nfn main() {}",
+        "#!\nfn main() {}",
+        "\u{feff}#!/usr/bin/env run-cargo-script\n//! doc\nfn main() {}",
+    ] {
+        let file: File = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(file.items.len(), 1, "`{source}`");
+    }
+
+    // `#!` with a `[` after it is an inner attribute
+    let file: File = moxy::parse!("#![allow(a)]\nfn main() {}").unwrap();
+    assert_eq!(file.attrs.len(), 1);
+}

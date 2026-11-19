@@ -145,3 +145,22 @@ fn literals_the_typed_variants_cannot_hold_keep_their_text() {
         assert_eq!(decoded, value);
     }
 }
+
+#[test]
+fn quoted_literals_keep_a_suffix() {
+    for source in ["\"a\"suffix", "'a'suffix", "b\"a\"suffix", "r#\"a\"#suffix", "'a'b"] {
+        let tokens: Vec<_> = source
+            .parse::<TokenStream>()
+            .unwrap_or_else(|error| panic!("`{source}`: {error:?}"))
+            .into_iter()
+            .collect();
+        assert_eq!(tokens.len(), 1, "`{source}`");
+        let moxy_token::TokenTree::Literal(literal) = &tokens[0] else {
+            panic!("`{source}` is not a literal");
+        };
+        assert_eq!(literal.repr(), source);
+    }
+
+    let tokens: Vec<_> = "\"a\" b".parse::<TokenStream>().unwrap().into_iter().collect();
+    assert_eq!(tokens.len(), 2);
+}

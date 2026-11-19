@@ -1,5 +1,5 @@
 use moxy::ast::{Expr, Type};
-use moxy::token::Spanner;
+use moxy::token::{Spanner, ToTokenStream};
 
 #[test]
 fn absolute_generic_paths_preserve_segments_and_arguments() {
@@ -75,4 +75,18 @@ fn qualified_self_paths_render_complete_valid_syntax() {
     assert!(ty.is_path());
     assert!(!ty.span().is_empty());
     assert_eq!(moxy::fmt!(&ty).unwrap(), "<T as Trait>::Assoc");
+}
+
+#[test]
+fn strict_keywords_name_no_path_segment() {
+    for source in ["as", "await", "box", "static", "typeof"] {
+        assert!(moxy::parse!(source as moxy::ast::Expr).is_err(), "`{source}`");
+        assert!(moxy::parse!(source as moxy::ast::Path).is_err(), "`{source}`");
+    }
+
+    for source in ["self::a", "crate::a", "super::a", "Self", "union", "default", "raw"] {
+        let path: moxy::ast::Path = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(path.to_token_stream().to_string(), lexed.to_string());
+    }
 }

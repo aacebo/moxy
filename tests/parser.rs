@@ -23,7 +23,7 @@ fn peek_and_optional_parses_do_not_advance() {
     let tokens = TokenStream::from_str("fn").unwrap();
     let parser = Parser::from_tokens(&tokens);
     assert!(<Token![struct]>::parse(&parser).is_err());
-    assert!(parser.is_empty());
+    assert!(!parser.is_empty());
 }
 
 #[test]
@@ -76,22 +76,22 @@ fn public_parse_rejects_trailing_tokens() {
 
 #[test]
 fn delimited_lists_that_stop_early_are_errors() {
-    for source in [
-        "fn f(x: u8 y: u8) {}",
-        "fn f(x: Vec<u8 u8>) {}",
-        "fn f() { g(a b) }",
-        "fn f() { match x { 1 => a b } }",
-        "fn f() { let s = S { a: 1 b: 2 }; }",
-        "fn f() { [1 2] }",
-        "fn f() { (1 2) }",
-        "fn f() { x.y::<u8 u8>() }",
-        "impl A { fn f() {} @ }",
-        "mod m { fn f() {} @ }",
+    for (source, message) in [
+        ("fn f(x: u8 y: u8) {}", "unexpected trailing input"),
+        ("fn f(x: Vec<u8 u8>) {}", "unexpected trailing input"),
+        ("fn f() { g(a b) }", "expected `,` punctuation"),
+        ("fn f() { match x { 1 => a b } }", "expected `=>` punctuation"),
+        ("fn f() { let s = S { a: 1 b: 2 }; }", "unexpected trailing input"),
+        ("fn f() { [1 2] }", "unexpected trailing input"),
+        ("fn f() { (1 2) }", "unexpected trailing input"),
+        ("fn f() { x.y::<u8 u8>() }", "expected `>` punctuation"),
+        ("impl A { fn f() {} @ }", "unexpected trailing input"),
+        ("mod m { fn f() {} @ }", "unexpected trailing input"),
     ] {
         let error = moxy::parse!(source as moxy::ast::Item)
             .err()
             .unwrap_or_else(|| panic!("`{source}` parsed"));
-        assert_eq!(error.message(), "unexpected trailing input", "`{source}`");
+        assert_eq!(error.message(), message, "`{source}`");
     }
 }
 
@@ -230,4 +230,17 @@ fn input_nested_to_the_depth_limit_parses_on_a_small_stack() {
     });
 
     assert_eq!(parsed, [true; 6]);
+}
+
+#[test]
+fn an_error_inside_a_list_of_items_is_reported_where_it_is() {
+    let source = "mod m {\n    fn f() {}\n    fn g() { let = 1; }\n}";
+    let error = moxy::parse!(source as moxy::ast::File).err().unwrap();
+    assert_eq!(error.span().start().line(), 2);
+    assert_ne!(error.message(), "unexpected trailing input");
+
+    let source = "fn f() {}\nstruct S { a: }";
+    let error = moxy::parse!(source as moxy::ast::File).err().unwrap();
+    assert_eq!(error.span().start().line(), 1);
+    assert_ne!(error.message(), "unexpected trailing input");
 }

@@ -219,6 +219,26 @@ impl From<Lit> for String {
 
 impl Scan for Lit {
     fn scan(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
+        let (end, lit) = Self::scan_unsuffixed(cursor)?;
+
+        // A suffix on a quoted literal, as in `"a"suffix`, which the compiler
+        // lexes as part of the literal; numbers scan their own suffixes
+        if !matches!(lit, Self::Int(_) | Self::Float(_) | Self::Bool(_) | Self::Verbatim(_))
+            && let Some(ch) = end.first()
+            && (ch == '_' || unicode_ident::is_xid_start(ch))
+        {
+            let suffixed = end.advance_by(ch.len_utf8()).skip_while(unicode_ident::is_xid_continue);
+            let len = suffixed.offset() as usize - cursor.offset() as usize;
+            let verbatim = LitVerbatim::new(&cursor.rest()[..len], cursor.span_to(&suffixed));
+            return Ok((suffixed, Self::Verbatim(verbatim)));
+        }
+
+        Ok((end, lit))
+    }
+}
+
+impl Lit {
+    fn scan_unsuffixed(cursor: Cursor<'_>) -> Result<(Cursor<'_>, Self), LexError> {
         if let Ok((end, v)) = LitBool::scan(cursor) {
             return Ok((end, Self::Bool(v)));
         }

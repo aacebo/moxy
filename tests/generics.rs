@@ -58,7 +58,7 @@ fn closed_lists_accept_a_trailing_comma() {
     }
 
     let error = moxy::parse!("use a::{b c};" as Item).err().unwrap();
-    assert_eq!(error.message(), "expected punctuation");
+    assert_eq!(error.message(), "expected `,` punctuation");
 }
 
 #[test]

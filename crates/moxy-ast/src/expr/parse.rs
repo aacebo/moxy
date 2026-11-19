@@ -1,4 +1,4 @@
-use moxy_token::{DelimSpan, Ident, Lit};
+use moxy_token::{DelimSpan, Ident, Lit, TokenTree};
 
 use super::peek;
 use super::*;
@@ -358,7 +358,9 @@ fn dot(parser: &Parser, base: Box<Expr>) -> Result<Box<Expr>, ParseError> {
         let method = parser.cursor().offset(2);
         let args = Option::<AngleArguments>::skip(method).unwrap_or(method);
 
-        if args.is_delimited(Delim::Paren) {
+        // A turbofish makes a method call even when its arguments are invalid,
+        // so their error is the one reported
+        if args.is_delimited(Delim::Paren) || <Token![::]>::peek(method) {
             return Ok(boxed(ExprMethodCall {
                 attrs: Default::default(),
                 receiver: base,
@@ -368,6 +370,28 @@ fn dot(parser: &Parser, base: Box<Expr>) -> Result<Box<Expr>, ParseError> {
                 args: Delimited::parse_paren_with(parser, List::parse_all)?,
             }));
         }
+    }
+
+    // The compiler lexes `0.1` in `x.0.1` as one float literal, which is two
+    // tuple indices
+    if let Some(TokenTree::Literal(Lit::Float(float))) = parser.cursor().offset(1).curr()
+        && let Some((first, inner_dot, second)) = float.split_tuple_index()
+    {
+        let dot = <_ as Parse>::parse(parser)?;
+        parser.advance();
+        let inner = boxed(ExprField {
+            attrs: Default::default(),
+            base,
+            dot,
+            member: Member::Unnamed(first.into()),
+        });
+
+        return Ok(boxed(ExprField {
+            attrs: Default::default(),
+            base: inner,
+            dot: inner_dot,
+            member: Member::Unnamed(second.into()),
+        }));
     }
 
     Ok(boxed(ExprField {
@@ -491,10 +515,7 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<B
         return path_macro_or_struct(parser, attrs, context);
     }
 
-    let remaining = parser.remaining();
-    let tokens = parser.to_token_stream();
-    parser.advance_by(remaining);
-    Ok(Box::new(Expr::Verbatim(tokens)))
+    parser.error("expected expression").into()
 }
 
 fn lit(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {

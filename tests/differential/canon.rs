@@ -312,7 +312,8 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
             x.body
                 .rest
                 .as_ref()
-                .map(|(_, e)| format!(" ..{}", mexpr(e)))
+                .and_then(|(_, e)| e.as_ref())
+                .map(|e| format!(" ..{}", mexpr(e)))
                 .unwrap_or_default()
         ),
         E::Try(x) => format!("{}({}?)", mattrs(&x.attrs), mexpr(&x.expr)),

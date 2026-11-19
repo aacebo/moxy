@@ -82,7 +82,7 @@ pub use expr_unsafe::*;
 pub use expr_while::*;
 pub use expr_yield::*;
 
-use moxy_token::{Delim, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 

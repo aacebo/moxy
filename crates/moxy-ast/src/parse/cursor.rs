@@ -16,8 +16,14 @@ impl<'a> Cursor<'a> {
         self.index >= self.tokens.len()
     }
 
+    /// The span of the current token, or at the end of the input the span of
+    /// its last token, so an error there points into the input.
     pub fn span(self) -> Span {
-        self.tokens.get(self.index).map(TokenTree::span).unwrap_or_default()
+        self.tokens
+            .get(self.index)
+            .or_else(|| self.tokens.iter().last())
+            .map(TokenTree::span)
+            .unwrap_or_default()
     }
 
     pub fn remaining(self) -> usize {

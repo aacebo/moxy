@@ -107,7 +107,10 @@ impl Format for ExprStruct {
             if let Some((_, rest)) = &self.body.inner.rest {
                 f.hard_break()?;
                 f.text("..")?;
-                rest.format(f)?;
+
+                if let Some(rest) = rest {
+                    rest.format(f)?;
+                }
             }
 
             Ok(())

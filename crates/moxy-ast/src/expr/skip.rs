@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Lit};
+use moxy_token::{Ident, Lit, TokenTree};
 
 use super::peek;
 use super::*;
@@ -244,7 +244,7 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     let qualified = <Token![<]>::peek(cursor);
 
     if !qualified && !Path::peek(cursor) {
-        return Some(cursor.offset(cursor.remaining()));
+        return None;
     }
 
     cursor = if qualified {
@@ -313,6 +313,14 @@ fn postfix(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
                     cursor = args.offset(1);
                     continue;
                 }
+            }
+
+            // `0.1` in `x.0.1` is two tuple indices in one float literal
+            if let Some(TokenTree::Literal(Lit::Float(float))) = cursor.curr()
+                && float.split_tuple_index().is_some()
+            {
+                cursor = cursor.offset(1);
+                continue;
             }
 
             cursor = Member::skip(cursor)?;

@@ -154,8 +154,16 @@ impl<T: Parse> Parse for Vec<T> {
         T::peek(cursor)
     }
 
+    // Parses values while one starts here. A value that starts and then fails
+    // to parse is the error, rather than input left after the list
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(parser.parse_while::<T>())
+        let mut items = Vec::new();
+
+        while T::peek(parser.cursor()) {
+            items.push(T::parse(parser)?);
+        }
+
+        Ok(items)
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {

@@ -177,7 +177,19 @@ impl Scan for TokenStream {
             }
 
             if let Ok((next, lit)) = crate::Lit::scan(c) {
-                tokens.push(TokenTree::Literal(lit));
+                // After a field access dot, `0.1` is two tuple indices, as in
+                // `x.0.1`, so the tokens read back as they parse
+                if let crate::Lit::Float(float) = &lit
+                    && after_field_dot(&tokens)
+                    && let Some((first, dot, second)) = float.split_tuple_index()
+                {
+                    tokens.push(TokenTree::Literal(first.into()));
+                    tokens.push(TokenTree::Punct(dot.into()));
+                    tokens.push(TokenTree::Literal(second.into()));
+                } else {
+                    tokens.push(TokenTree::Literal(lit));
+                }
+
                 c = next;
                 continue;
             }
@@ -226,7 +238,7 @@ impl TokenStream {
         SourceMap::with_mut(|sm| {
             let span = sm.push(s);
             let source = sm.find(span).expect("new source missing from source map");
-            let cursor = Cursor::new(source.text(), span.byte_range().start as u32);
+            let cursor = Cursor::new(source.text(), span.byte_range().start as u32).skip_source_start();
             let (rest, stream) = Self::scan(cursor)?;
             let rest = rest.skip_whitespace();
 
@@ -265,6 +277,19 @@ impl serde::Serialize for TokenStream {
         S: serde::Serializer,
     {
         self.0.serialize(s)
+    }
+}
+
+// Whether the last token is a single `.`, not the end of `..`
+fn after_field_dot(tokens: &[TokenTree]) -> bool {
+    match tokens {
+        [
+            ..,
+            TokenTree::Punct(crate::Punct::Dot(first)),
+            TokenTree::Punct(crate::Punct::Dot(_)),
+        ] => first.spacing() != crate::Spacing::Joint,
+        [.., TokenTree::Punct(crate::Punct::Dot(_))] => true,
+        _ => false,
     }
 }
 

@@ -33,8 +33,11 @@ impl Parse for As {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::As(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::As(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", As::TEXT))),
         }
     }
@@ -54,8 +57,11 @@ impl Parse for Async {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Async(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Async(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Async::TEXT))),
         }
     }
@@ -75,8 +81,11 @@ impl Parse for Auto {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Auto(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Auto(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Auto::TEXT))),
         }
     }
@@ -96,8 +105,11 @@ impl Parse for Await {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Await(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Await(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Await::TEXT))),
         }
     }
@@ -117,8 +129,11 @@ impl Parse for Become {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Become(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Become(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Become::TEXT))),
         }
     }
@@ -138,8 +153,11 @@ impl Parse for Box {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Box(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Box(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Box::TEXT))),
         }
     }
@@ -159,8 +177,11 @@ impl Parse for Break {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Break(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Break(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Break::TEXT))),
         }
     }
@@ -180,8 +201,11 @@ impl Parse for Const {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Const(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Const(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Const::TEXT))),
         }
     }
@@ -201,8 +225,11 @@ impl Parse for Continue {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Continue(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Continue(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Continue::TEXT))),
         }
     }
@@ -222,8 +249,11 @@ impl Parse for Crate {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Crate(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Crate(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Crate::TEXT))),
         }
     }
@@ -243,8 +273,11 @@ impl Parse for Default {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Default(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Default(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Default::TEXT))),
         }
     }
@@ -264,8 +297,11 @@ impl Parse for Do {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Do(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Do(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Do::TEXT))),
         }
     }
@@ -285,8 +321,11 @@ impl Parse for Dyn {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Dyn(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Dyn(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Dyn::TEXT))),
         }
     }
@@ -306,8 +345,11 @@ impl Parse for Else {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Else(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Else(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Else::TEXT))),
         }
     }
@@ -327,8 +369,11 @@ impl Parse for Enum {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Enum(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Enum(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Enum::TEXT))),
         }
     }
@@ -348,8 +393,11 @@ impl Parse for Extern {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Extern(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Extern(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Extern::TEXT))),
         }
     }
@@ -369,8 +417,11 @@ impl Parse for Final {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Final(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Final(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Final::TEXT))),
         }
     }
@@ -390,8 +441,11 @@ impl Parse for Fn {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Fn(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Fn(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Fn::TEXT))),
         }
     }
@@ -411,8 +465,11 @@ impl Parse for For {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::For(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::For(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", For::TEXT))),
         }
     }
@@ -432,8 +489,11 @@ impl Parse for If {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::If(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::If(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", If::TEXT))),
         }
     }
@@ -453,8 +513,11 @@ impl Parse for Impl {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Impl(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Impl(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Impl::TEXT))),
         }
     }
@@ -474,8 +537,11 @@ impl Parse for In {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::In(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::In(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", In::TEXT))),
         }
     }
@@ -495,8 +561,11 @@ impl Parse for Let {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Let(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Let(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Let::TEXT))),
         }
     }
@@ -516,8 +585,11 @@ impl Parse for Loop {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Loop(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Loop(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Loop::TEXT))),
         }
     }
@@ -537,8 +609,11 @@ impl Parse for Macro {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Macro(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Macro(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Macro::TEXT))),
         }
     }
@@ -558,8 +633,11 @@ impl Parse for MacroRules {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::MacroRules(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::MacroRules(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", MacroRules::TEXT))),
         }
     }
@@ -579,8 +657,11 @@ impl Parse for Match {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Match(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Match(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Match::TEXT))),
         }
     }
@@ -600,8 +681,11 @@ impl Parse for Mod {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Mod(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Mod(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Mod::TEXT))),
         }
     }
@@ -621,8 +705,11 @@ impl Parse for Move {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Move(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Move(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Move::TEXT))),
         }
     }
@@ -642,8 +729,11 @@ impl Parse for Mut {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Mut(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Mut(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Mut::TEXT))),
         }
     }
@@ -663,8 +753,11 @@ impl Parse for Override {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Override(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Override(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Override::TEXT))),
         }
     }
@@ -684,8 +777,11 @@ impl Parse for Priv {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Priv(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Priv(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Priv::TEXT))),
         }
     }
@@ -705,8 +801,11 @@ impl Parse for Pub {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Pub(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Pub(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Pub::TEXT))),
         }
     }
@@ -726,8 +825,11 @@ impl Parse for Raw {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Raw(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Raw(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Raw::TEXT))),
         }
     }
@@ -747,8 +849,11 @@ impl Parse for Ref {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Ref(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Ref(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Ref::TEXT))),
         }
     }
@@ -768,8 +873,11 @@ impl Parse for Return {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Return(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Return(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Return::TEXT))),
         }
     }
@@ -789,8 +897,11 @@ impl Parse for SelfType {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::SelfType(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::SelfType(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", SelfType::TEXT))),
         }
     }
@@ -810,8 +921,11 @@ impl Parse for SelfValue {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::SelfValue(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::SelfValue(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", SelfValue::TEXT))),
         }
     }
@@ -831,8 +945,11 @@ impl Parse for Static {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Static(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Static(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Static::TEXT))),
         }
     }
@@ -852,8 +969,11 @@ impl Parse for Struct {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Struct(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Struct(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Struct::TEXT))),
         }
     }
@@ -873,8 +993,11 @@ impl Parse for Super {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Super(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Super(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Super::TEXT))),
         }
     }
@@ -894,8 +1017,11 @@ impl Parse for Trait {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Trait(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Trait(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Trait::TEXT))),
         }
     }
@@ -915,8 +1041,11 @@ impl Parse for Try {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Try(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Try(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Try::TEXT))),
         }
     }
@@ -936,8 +1065,11 @@ impl Parse for Type {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Type(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Type(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Type::TEXT))),
         }
     }
@@ -957,8 +1089,11 @@ impl Parse for Typeof {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Typeof(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Typeof(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Typeof::TEXT))),
         }
     }
@@ -978,8 +1113,11 @@ impl Parse for Union {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Union(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Union(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Union::TEXT))),
         }
     }
@@ -999,8 +1137,11 @@ impl Parse for Unsafe {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Unsafe(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Unsafe(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Unsafe::TEXT))),
         }
     }
@@ -1016,8 +1157,11 @@ impl Parse for Safe {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Safe(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Safe(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Safe::TEXT))),
         }
     }
@@ -1037,8 +1181,11 @@ impl Parse for Unsized {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Unsized(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Unsized(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Unsized::TEXT))),
         }
     }
@@ -1058,8 +1205,11 @@ impl Parse for Use {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Use(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Use(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Use::TEXT))),
         }
     }
@@ -1079,8 +1229,11 @@ impl Parse for Virtual {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Virtual(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Virtual(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Virtual::TEXT))),
         }
     }
@@ -1100,8 +1253,11 @@ impl Parse for Where {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Where(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Where(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Where::TEXT))),
         }
     }
@@ -1121,8 +1277,11 @@ impl Parse for While {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::While(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::While(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", While::TEXT))),
         }
     }
@@ -1142,8 +1301,11 @@ impl Parse for Yield {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Keyword::Yield(v) => Ok(v),
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Yield(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
             _ => Err(parser.error(format!("expected `{}` keyword", Yield::TEXT))),
         }
     }

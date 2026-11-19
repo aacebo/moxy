@@ -45,7 +45,9 @@ impl ToTokens for ExprStruct {
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct StructBody {
     pub fields: List<FieldValue, Token![,]>,
-    pub rest: Option<(Token![..], Box<Expr>)>,
+    /// The `..` and the base it takes the other fields from, which a
+    /// destructuring assignment such as `S { a, .. } = s` leaves out.
+    pub rest: Option<(Token![..], Option<Box<Expr>>)>,
 }
 
 impl Parse for StructBody {
@@ -59,7 +61,13 @@ impl Parse for StructBody {
 
         while !parser.is_empty() {
             if <Token![..]>::peek(parser.cursor()) {
-                rest = Some((<_ as Parse>::parse(parser)?, <_ as Parse>::parse(parser)?));
+                let dotdot = <_ as Parse>::parse(parser)?;
+                let base = if parser.is_empty() {
+                    None
+                } else {
+                    Some(<_ as Parse>::parse(parser)?)
+                };
+                rest = Some((dotdot, base));
                 break;
             }
 
@@ -79,7 +87,7 @@ impl Parse for StructBody {
         while !cursor.is_empty() {
             if <Token![..]>::peek(cursor) {
                 cursor = <Token![..]>::skip(cursor)?;
-                return Expr::skip(cursor);
+                return if cursor.is_empty() { Some(cursor) } else { Expr::skip(cursor) };
             }
 
             cursor = FieldValue::skip(cursor)?;

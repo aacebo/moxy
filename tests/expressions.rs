@@ -592,3 +592,58 @@ fn an_absent_operand_ends_before_a_separator() {
     let expression: Expr = moxy::parse!("(yield, 1)").unwrap();
     assert!(expression.is_tuple());
 }
+
+#[test]
+fn a_float_after_a_field_dot_is_two_tuple_indices() {
+    for source in ["a.0.1", "self.0.0", "a.1.0.2", "NonZeroI32::new(self.0.0)"] {
+        let expression: Expr = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(expression.to_token_stream().to_string(), lexed.to_string());
+    }
+
+    let expression: Expr = moxy::parse!("a.0.1").unwrap();
+    let outer = expression.as_field().unwrap();
+    assert_eq!(outer.member.to_token_stream().to_string(), "1");
+    assert_eq!(outer.base.as_field().unwrap().member.to_token_stream().to_string(), "0");
+
+    // A float the compiler gives as one token splits the same way
+    let tokens: moxy::token::TokenStream = [
+        moxy::token::TokenTree::Ident(moxy::token::Ident::new("a")),
+        moxy::token::TokenTree::Punct(moxy::token::Dot::default().into()),
+        moxy::token::TokenTree::Literal(moxy::token::Lit::f64_unsuffixed(0.1)),
+    ]
+    .into_iter()
+    .collect();
+    let expression: Expr = moxy::parse!(tokens).unwrap();
+    assert!(expression.as_field().unwrap().base.is_field());
+
+    // After a range, `0.1` stays a float
+    let expression: Expr = moxy::parse!("a..0.1").unwrap();
+    assert!(expression.as_range().unwrap().end.as_ref().unwrap().is_lit());
+}
+
+#[test]
+fn a_token_that_starts_no_expression_is_an_error() {
+    for source in ["a +", "+ a", "f(,)", "f(a,,b)", "[a;]", "(,)", "&raw const", ";"] {
+        let error = moxy::parse!(source as Expr)
+            .err()
+            .unwrap_or_else(|| panic!("`{source}` parsed"));
+        assert!(!error.message().is_empty(), "`{source}`");
+    }
+
+    for (source, tokens) in [
+        ("return.x", "return . x"),
+        ("return?", "return ?"),
+        ("S { a, .. } = b", "S {a , ..} = b"),
+    ] {
+        let expression: Expr = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(expression.to_token_stream().to_string(), tokens);
+    }
+
+    let expression: Expr = moxy::parse!("return.x").unwrap();
+    assert!(expression.as_field().unwrap().base.as_return().unwrap().expr.is_none());
+
+    let expression: Expr = moxy::parse!("S { a, .. } = b").unwrap();
+    let body = &expression.as_assign().unwrap().left.as_struct().unwrap().body.inner;
+    assert!(body.rest.as_ref().unwrap().1.is_none());
+}

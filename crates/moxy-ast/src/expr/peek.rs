@@ -1,10 +1,55 @@
+use moxy_token::{Keyword, Punct, TokenTree};
+
 use super::*;
 
-// An optional operand, as of `return` or `break`, is absent before a token
-// that ends the enclosing expression: `match a { _ => return, b => b }`
+// Whether an expression can start here. An optional operand, as of `return`
+// or `break`, is absent otherwise: `match a { _ => return, b => b }`, `return.x`
 pub(super) fn expr(cursor: Cursor<'_>, _context: ExprContext) -> bool {
     let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-    !cursor.is_empty() && !<Token![;]>::peek(cursor) && !<Token![,]>::peek(cursor) && !<Token![=>]>::peek(cursor)
+
+    match cursor.curr() {
+        None => false,
+        Some(TokenTree::Literal(_) | TokenTree::Ident(_) | TokenTree::Group(_)) => true,
+        Some(TokenTree::Keyword(keyword)) => matches!(
+            keyword,
+            Keyword::If(_)
+                | Keyword::Match(_)
+                | Keyword::While(_)
+                | Keyword::For(_)
+                | Keyword::Loop(_)
+                | Keyword::Unsafe(_)
+                | Keyword::Const(_)
+                | Keyword::Async(_)
+                | Keyword::Move(_)
+                | Keyword::Static(_)
+                | Keyword::Return(_)
+                | Keyword::Break(_)
+                | Keyword::Continue(_)
+                | Keyword::Yield(_)
+                | Keyword::Let(_)
+                | Keyword::Try(_)
+                | Keyword::Crate(_)
+                | Keyword::SelfValue(_)
+                | Keyword::SelfType(_)
+                | Keyword::Super(_)
+                // Weak keywords, which name variables and paths too
+                | Keyword::Auto(_)
+                | Keyword::Default(_)
+                | Keyword::MacroRules(_)
+                | Keyword::Raw(_)
+                | Keyword::Safe(_)
+                | Keyword::Union(_)
+        ),
+        Some(TokenTree::Punct(punct)) => match punct {
+            Punct::Minus(_) | Punct::Not(_) | Punct::Star(_) | Punct::And(_) | Punct::Or(_) | Punct::Lt(_) => true,
+            Punct::Underscore(_) => true,
+            Punct::Dot(_) => RangeLimits::peek(cursor),
+            Punct::Colon(_) => <Token![::]>::peek(cursor),
+            // A label, as in `'a: loop {}`
+            Punct::Quote(_) => Label::skip(cursor).is_some(),
+            _ => false,
+        },
+    }
 }
 
 // Whether a block-like expression, which ends a match arm without a comma and

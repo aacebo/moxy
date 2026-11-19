@@ -3,15 +3,9 @@
 # only shrinks.
 
 # Different trees
-TREE e: S { ..}
 TREE e: match a { 0...5 => 1 }
 TREE e: || -> u8 { 1 }.x
-TREE e: return.x
-TREE e: return?
 TREE e: a.01
-TREE e: S { a, .. } = b
-TREE e: a.. ..b
-TREE e: S { a: 1, .. }
 TREE b: { #[a] 1..2; }
 TREE b: { {}; -1 }
 TREE p: 1...2
@@ -40,32 +34,18 @@ TOKENS f: fn f() where {}
 TOKENS t: A<T, 'a>
 TOKENS f: trait A: {}
 TOKENS f: enum E { pub A }
-TOKENS f: #!/usr/bin/env rust\n fn f() {}
-TOKENS f: #!/bin/sh\nfn f() {}
-TOKENS f: #!/usr/bin/env rust\n#![allow(a)]\nfn main() {}
 
 # Valid Rust that moxy rejects
-REJECT e: a.0.1
 REJECT e: match a { box x => 1 }
 REJECT e: match a { const { 1 } => 1 }
 REJECT e: 1e
-REJECT e: a.1.0
-REJECT e: a.1.0.2
 REJECT e: a.0x1
 REJECT e: a.0_0
-REJECT e: "a"suffix
-REJECT e: 'a'suffix
-REJECT e: b"a"suffix
-REJECT e: r#"a"#suffix
-REJECT e: 'a'b
 REJECT e: try!(a)
 REJECT e: become f()
-REJECT f: impl ExitStatusError { fn code() -> Option<u8> { NonZeroI32::new(self.0.0) } }
 REJECT f: type Symbols<'false> = Table<Symbol<'false>>;
 REJECT f: type B = unsafe extern "efiapi" fn(_: Handle, _: ...) -> Status;
 REJECT f: type B = fn(_: ...) -> Status;
-REJECT f: fn f() { self.0.0 }
-REJECT f: fn f() { NonZeroI32::new(self.0.0) }
 REJECT f: impl<T> X<T> { type Item; #[inline] fn next() -> Option<T> {} fn advance_by(self, n: usize) -> Result<(), NonZero<usize>> { rem = if len < n {} else {} } }
 REJECT b: { try!(x) }
 REJECT p: S { box a }
@@ -109,13 +89,6 @@ REJECT f: fn f() { #![a] }
 REJECT f: impl A { #![a] }
 REJECT f: fn f() { loop { #![a] } }
 REJECT f: fn f() { match x { #![a] } }
-REJECT f: #!/usr/bin/env -S cargo +nightly -Zscript\nfn main() {}
-REJECT f: #!/usr/local/bin/rust-script.sh\nfn main() {}
-REJECT f: #!/usr/bin/env rust-script\nfn main() {}
-REJECT f: #!/bin/sh -c 'exec rustc "$0"'\nfn main() {}
-REJECT f: #!/usr/bin/rustc --edition=2021\nfn main() {}
-REJECT f: #!/usr/bin/env run-cargo-script\n//! doc\nfn main() {}
-REJECT f: #!\nfn main() {}
 REJECT f: fn f() { 1f16; 1.0f128; 1f16; 2b; 1px; 1em; 0x1p3; 1_; 1__; }
 REJECT i: mod m { #![allow(x)] }
 REJECT i: fn f() { #![allow(x)] }
@@ -123,17 +96,10 @@ REJECT i: fn f() { #![allow(x)] }
 # Input syn rejects that moxy accepts
 ACCEPT f: use a::{::b};
 ACCEPT e: a..b = c
-ACCEPT e: &raw const
-ACCEPT e: loop { break 'a: loop {} }
 ACCEPT e: static || 1
 ACCEPT e: static move || 1
 ACCEPT e: |x: u8| -> u8 x
 ACCEPT e: #![a] x
-ACCEPT e: 1...2
-ACCEPT e: 'ab'
-ACCEPT e: ''
-ACCEPT e: '
-ACCEPT e: 'a
 ACCEPT e: '\x80'
 ACCEPT e: '\xff'
 ACCEPT e: b'\u{1}'
@@ -143,59 +109,23 @@ ACCEPT e: c"\0"
 ACCEPT e: r#self
 ACCEPT e: r#crate
 ACCEPT e: r#_
-ACCEPT e: 'static
-ACCEPT e: f('a' , 'b)
 ACCEPT e: 1 /* unterminated
-ACCEPT e: $crate::m!()
-ACCEPT e: [;]
-ACCEPT e: [a;]
-ACCEPT e: (,)
-ACCEPT e: [,]
-ACCEPT e: f(,)
-ACCEPT e: f(a,,b)
-ACCEPT e: a +
-ACCEPT e: + a
 ACCEPT e: a..=
 ACCEPT e: ..=
-ACCEPT e: ;
-ACCEPT e: Fn(A) -> B
-ACCEPT e: a::Fn(A) -> B
 ACCEPT e: <a::Fn(A) -> B>::c
-ACCEPT e: await
-ACCEPT e: dyn
-ACCEPT e: box
-ACCEPT e: static
 ACCEPT e: abstract
-ACCEPT e: typeof
-ACCEPT e: 'a: 1
-ACCEPT e: 'a: unsafe { 1 }
-ACCEPT e: 'a: async { 1 }
-ACCEPT e: 'a: if x {}
-ACCEPT e: 'a: match x {}
-ACCEPT e: 'a:
 ACCEPT e: a..b = c..d
 ACCEPT e: a .. = b
-ACCEPT e: ....
 ACCEPT b: { let x = S {} else { return }; }
 ACCEPT b: { let a | b = c; }
 ACCEPT b: { let | a = c; }
 ACCEPT b: { let x = 1 }
 ACCEPT b: { let x }
 ACCEPT b: { a b }
-ACCEPT b: { match a {} as u8 }
-ACCEPT b: { if a {} as u8 }
-ACCEPT b: { if a {} + 1 }
-ACCEPT b: { if a { 1 } else { 2 } + 1 }
-ACCEPT b: { if a {} == b }
-ACCEPT b: { if a {} = b }
-ACCEPT b: { m!{} + m!{} }
 ACCEPT b: { let x = static || 1; }
-ACCEPT b: { box x }
-ACCEPT b: { do yeet }
 ACCEPT p: #[a] x
 ACCEPT p: [1.., 2]
 ACCEPT p: [1..]
-ACCEPT p: mut (a, b)
 ACCEPT p: -'a'
 ACCEPT t: &dyn A + B
 ACCEPT t: Fn(A) -> B
@@ -209,7 +139,6 @@ ACCEPT t: Fn::(A) -> B
 ACCEPT t: FnOnce(&mut A) -> &B
 ACCEPT t: Fn(A) -> Fn(B) -> C
 ACCEPT t: r#Self
-ACCEPT t: [A;]
 ACCEPT t: F::<A>::Fn::(A) -> B
 ACCEPT f: impl A { type T where Self: Sized = u8; }
 ACCEPT f: trait A { fn f(u8); }
@@ -228,7 +157,6 @@ ACCEPT f: m![]
 ACCEPT f: #[a] #![b] fn f() {}
 ACCEPT f: #[a = ] fn f() {}
 ACCEPT f: fn f() { let x = [#![a] 1]; }
-ACCEPT f: fn f() { ' a' }
 ACCEPT f: fn f() { 1 .. 2; 1 . 2; 1. 2; 1 .2; }
 ACCEPT t: &'a dyn Fn() -> A + Send
 ACCEPT t: fn() -> dyn A + B
@@ -254,3 +182,12 @@ TOKENS f: struct S<T: >(T);
 TOKENS f: struct S<>;
 TOKENS f: fn f<>() {}
 TOKENS i: struct S<T: >(T);
+
+# Intentional: moxy keeps a shebang of a path and one word as the file's
+# shebang tokens, which syn drops from the tokens
+TOKENS f: #!/usr/bin/env rust\n fn f() {}
+TOKENS f: #!/bin/sh\nfn f() {}
+TOKENS f: #!/usr/bin/env rust\n#![allow(a)]\nfn main() {}
+
+# Valid Rust that moxy rejects: a range as the end of another range
+REJECT e: a.. ..b
