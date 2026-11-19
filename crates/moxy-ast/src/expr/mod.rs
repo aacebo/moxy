@@ -4,7 +4,7 @@ mod expr_async;
 mod expr_binary_chain;
 mod expr_block;
 mod expr_break;
-mod expr_cast;
+mod expr_cast_chain;
 mod expr_closure;
 mod expr_const;
 mod expr_continue;
@@ -49,7 +49,7 @@ pub use expr_async::*;
 pub use expr_binary_chain::*;
 pub use expr_block::*;
 pub use expr_break::*;
-pub use expr_cast::*;
+pub use expr_cast_chain::*;
 pub use expr_closure::*;
 pub use expr_const::*;
 pub use expr_continue::*;
@@ -100,7 +100,7 @@ pub enum Expr {
     BinaryChain(ExprBinaryChain),
     Block(ExprBlock),
     Break(ExprBreak),
-    Cast(ExprCast),
+    CastChain(ExprCastChain),
     Closure(ExprClosure),
     Const(ExprConst),
     Continue(ExprContinue),
@@ -140,7 +140,7 @@ impl Expr {
             Self::BinaryChain(v) => Some(&v.attrs),
             Self::Block(v) => Some(&v.attrs),
             Self::Break(v) => Some(&v.attrs),
-            Self::Cast(v) => Some(&v.attrs),
+            Self::CastChain(v) => Some(&v.attrs),
             Self::Closure(v) => Some(&v.attrs),
             Self::Const(v) => Some(&v.attrs),
             Self::Continue(v) => Some(&v.attrs),
@@ -180,7 +180,7 @@ impl Expr {
             Self::BinaryChain(v) => Some(&mut v.attrs),
             Self::Block(v) => Some(&mut v.attrs),
             Self::Break(v) => Some(&mut v.attrs),
-            Self::Cast(v) => Some(&mut v.attrs),
+            Self::CastChain(v) => Some(&mut v.attrs),
             Self::Closure(v) => Some(&mut v.attrs),
             Self::Const(v) => Some(&mut v.attrs),
             Self::Continue(v) => Some(&mut v.attrs),
@@ -236,8 +236,8 @@ impl Expr {
         matches!(self, Self::Break(_))
     }
 
-    pub fn is_cast(&self) -> bool {
-        matches!(self, Self::Cast(_))
+    pub fn is_cast_chain(&self) -> bool {
+        matches!(self, Self::CastChain(_))
     }
 
     pub fn is_closure(&self) -> bool {
@@ -376,8 +376,8 @@ impl Expr {
         if let Self::Break(v) = self { Some(v) } else { None }
     }
 
-    pub fn as_cast(&self) -> Option<&ExprCast> {
-        if let Self::Cast(v) = self { Some(v) } else { None }
+    pub fn as_cast_chain(&self) -> Option<&ExprCastChain> {
+        if let Self::CastChain(v) = self { Some(v) } else { None }
     }
 
     pub fn as_closure(&self) -> Option<&ExprClosure> {
@@ -502,7 +502,7 @@ impl Spanner for Expr {
             Self::BinaryChain(v) => v.span(),
             Self::Block(v) => v.span(),
             Self::Break(v) => v.span(),
-            Self::Cast(v) => v.span(),
+            Self::CastChain(v) => v.span(),
             Self::Closure(v) => v.span(),
             Self::Const(v) => v.span(),
             Self::Continue(v) => v.span(),
@@ -544,7 +544,7 @@ impl ToTokens for Expr {
             Self::BinaryChain(v) => v.to_tokens(t),
             Self::Block(v) => v.to_tokens(t),
             Self::Break(v) => v.to_tokens(t),
-            Self::Cast(v) => v.to_tokens(t),
+            Self::CastChain(v) => v.to_tokens(t),
             Self::Closure(v) => v.to_tokens(t),
             Self::Const(v) => v.to_tokens(t),
             Self::Continue(v) => v.to_tokens(t),

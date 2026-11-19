@@ -184,7 +184,7 @@ fn expression_public_variants_match_rendered_syntax() {
             [
                 expression.is_reference(),
                 expression.is_unary(),
-                expression.is_cast(),
+                expression.is_cast_chain(),
                 matches!(last_op(&expression), Some(Postfix::Try(_))),
             ],
             std::array::from_fn(|index| index == kind)
@@ -193,7 +193,7 @@ fn expression_public_variants_match_rendered_syntax() {
             [
                 expression.as_reference().is_some(),
                 expression.as_unary().is_some(),
-                expression.as_cast().is_some(),
+                expression.as_cast_chain().is_some(),
                 expression.as_postfix().is_some(),
             ],
             std::array::from_fn(|index| index == kind)
@@ -435,7 +435,7 @@ fn a_cast_type_ends_before_a_binary_plus() {
     assert_eq!(expression.to_token_stream().to_string(), "a as usize + 1");
 
     let expression: Expr = moxy::parse!("x as Box<dyn A + Send>").unwrap();
-    assert!(expression.is_cast());
+    assert!(expression.is_cast_chain());
 }
 
 #[test]
@@ -506,7 +506,10 @@ fn a_cast_type_ends_before_a_comparison() {
         let expression: Expr = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
         let lexed: moxy::token::TokenStream = source.parse().unwrap();
         assert!(expression.is_binary_chain(), "`{source}`");
-        assert!(expression.as_binary_chain().unwrap().operands[0].is_cast(), "`{source}`");
+        assert!(
+            expression.as_binary_chain().unwrap().operands[0].is_cast_chain(),
+            "`{source}`"
+        );
         assert_eq!(expression.to_token_stream().to_string(), lexed.to_string());
     }
 

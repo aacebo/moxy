@@ -26,7 +26,7 @@ impl Format for Expr {
             Self::Assign(v) => v.format(f),
             Self::Range(v) => v.format(f),
             Self::Reference(v) => v.format(f),
-            Self::Cast(v) => v.format(f),
+            Self::CastChain(v) => v.format(f),
             Self::Lit(v) => v.format(f),
             Self::Path(v) => v.format(f),
             Self::Postfix(v) => v.format(f),
@@ -270,12 +270,17 @@ impl Format for ExprUnary {
     }
 }
 
-impl Format for ExprCast {
+impl Format for ExprCastChain {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
         self.expr.format(f)?;
-        f.text(" as ")?;
-        self.ty.format(f)
+
+        for (_, ty) in &self.casts {
+            f.text(" as ")?;
+            ty.format(f)?;
+        }
+
+        Ok(())
     }
 }
 

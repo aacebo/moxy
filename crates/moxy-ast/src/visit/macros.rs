@@ -231,6 +231,20 @@ macro_rules! define_visit {
         define_visit!(@fields mut $v, $node, $($rest)*);
     };
 
+    (@fields ref $v:ident, $node:ident, $f:ident: vec_pair => $vm:ident / $vmm:ident, $($rest:tt)*) => {
+        for (_, x) in &$node.$f {
+            $v.$vm(x);
+        }
+        define_visit!(@fields ref $v, $node, $($rest)*);
+    };
+
+    (@fields mut $v:ident, $node:ident, $f:ident: vec_pair => $vm:ident / $vmm:ident, $($rest:tt)*) => {
+        for (_, x) in &mut $node.$f {
+            $v.$vmm(x);
+        }
+        define_visit!(@fields mut $v, $node, $($rest)*);
+    };
+
     (@fields $m:tt $v:ident, $node:ident, $f:ident: leaf, $($rest:tt)*) => {
         define_visit!(@fields $m $v, $node, $($rest)*);
     };

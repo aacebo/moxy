@@ -22,7 +22,7 @@ define_visit! {
         walk: walk_expr, walk_mut: walk_expr_mut,
         variants {
             Unary(visit_expr_unary / visit_expr_unary_mut),
-            Cast(visit_expr_cast / visit_expr_cast_mut),
+            CastChain(visit_expr_cast_chain / visit_expr_cast_chain_mut),
             BinaryChain(visit_expr_binary_chain / visit_expr_binary_chain_mut),
             Assign(visit_expr_assign / visit_expr_assign_mut),
             Range(visit_expr_range / visit_expr_range_mut),
@@ -77,14 +77,13 @@ define_visit! {
             expr: box => visit_expr / visit_expr_mut,
         }
     }
-    struct ExprCast {
-        visit: visit_expr_cast, visit_mut: visit_expr_cast_mut,
-        walk: walk_expr_cast, walk_mut: walk_expr_cast_mut,
+    struct ExprCastChain {
+        visit: visit_expr_cast_chain, visit_mut: visit_expr_cast_chain_mut,
+        walk: walk_expr_cast_chain, walk_mut: walk_expr_cast_chain_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
             expr: box => visit_expr / visit_expr_mut,
-            as_keyword: skip,
-            ty: box => visit_type / visit_type_mut,
+            casts: vec_pair => visit_type / visit_type_mut,
         }
     }
     struct PostfixTry {

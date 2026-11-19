@@ -24,7 +24,9 @@ fn parenthesize(expression: &Expr) -> String {
             let mutability = if v.mutability.is_some() { "mut " } else { "" };
             format!("(&{mutability}{})", parenthesize(&v.expr))
         }
-        Expr::Cast(v) => format!("({} as {})", parenthesize(&v.expr), compact(&v.ty)),
+        Expr::CastChain(v) => v.casts.iter().fold(parenthesize(&v.expr), |rendered, (_, ty)| {
+            format!("({rendered} as {})", compact(ty))
+        }),
         Expr::Range(v) => {
             let limits = match v.limits {
                 RangeLimits::HalfOpen(_) => "..",

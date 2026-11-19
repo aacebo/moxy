@@ -1,4 +1,4 @@
-use moxy_token::{Chain, DelimSpan, Ident, Lit, TokenTree};
+use moxy_token::{DelimSpan, Ident, Lit, TokenTree};
 
 use super::peek;
 use super::*;
@@ -29,10 +29,7 @@ pub(crate) fn early(parser: &Parser) -> Result<Box<Expr>, ParseError> {
         return assignment(parser, attrs, ExprContext::NORMAL);
     }
 
-    // The block-like expression and what continues it form one chain
-    let mut chain = Chain::begin();
     let mut body = primary(parser, Attributes::default(), ExprContext::NORMAL)?;
-    chain.operand();
 
     if !peek::continues_block_like(parser.cursor()) {
         if let Some(slot) = body.attrs_mut() {
@@ -44,9 +41,8 @@ pub(crate) fn early(parser: &Parser) -> Result<Box<Expr>, ParseError> {
 
     // The block-like expression parsed once and the rest of the expression
     // continues from it, as in `{ x }.len() + 1`
-    let operand = postfix_rest(parser, body, attrs, &mut chain)?;
-    let operand = cast_rest(parser, operand, &mut chain)?;
-    let left = binary_rest(parser, ExprContext::NORMAL, operand, Precedence::Or, &mut chain)?;
+    let operand = cast_rest(parser, postfix_rest(parser, body, attrs)?)?;
+    let left = binary_rest(parser, ExprContext::NORMAL, operand, Precedence::Or)?;
 
     if RangeLimits::peek(parser.cursor()) {
         return range_rest(parser, Default::default(), Some(left), ExprContext::NORMAL);
@@ -251,32 +247,14 @@ pub(super) fn peek_binary(cursor: Cursor<'_>) -> Option<BinOp> {
 }
 
 fn binary(parser: &Parser, attrs: Attributes, context: ExprContext, min: Precedence) -> Result<Box<Expr>, ParseError> {
-    let mut chain = Chain::begin();
     let left = cast(parser, attrs, context)?;
-    chain.operand();
-    binary_rest(parser, context, left, min, &mut chain)
-}
-
-// One more step of a chain, or the depth error when the tree would nest too
-// deeply for its traversals
-fn chain_step(parser: &Parser, chain: &mut Chain) -> Result<(), ParseError> {
-    if chain.step() {
-        Ok(())
-    } else {
-        Err(ParseError::too_deep(parser.span()))
-    }
+    binary_rest(parser, context, left, min)
 }
 
 // Precedence climbing over the operators at least as strong as `min`. The
 // operators of one strength form one chain node and associate to the left;
 // comparisons do not chain
-fn binary_rest(
-    parser: &Parser,
-    context: ExprContext,
-    mut left: Box<Expr>,
-    min: Precedence,
-    chain: &mut Chain,
-) -> Result<Box<Expr>, ParseError> {
+fn binary_rest(parser: &Parser, context: ExprContext, mut left: Box<Expr>, min: Precedence) -> Result<Box<Expr>, ParseError> {
     while let Some(op) = peek_binary(parser.cursor()) {
         let precedence = Precedence::of(&op);
 
@@ -293,7 +271,6 @@ fn binary_rest(
                 Some(stronger) => binary(parser, Default::default(), context, stronger)?,
                 None => cast(parser, Default::default(), context)?,
             };
-            chain.operand();
             operands.push_punct(op);
             operands.push_value(*right);
 
@@ -319,29 +296,26 @@ fn binary_rest(
 }
 
 fn cast(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
-    let mut chain = Chain::begin();
     let expr = unary_with(parser, attrs, context)?;
-    chain.operand();
-    cast_rest(parser, expr, &mut chain)
+    cast_rest(parser, expr)
 }
 
-// The casts that follow an operand
-fn cast_rest(parser: &Parser, mut expr: Box<Expr>, chain: &mut Chain) -> Result<Box<Expr>, ParseError> {
-    while <Token![as]>::peek(parser.cursor()) {
-        chain_step(parser, chain)?;
-        expr = cast_to(parser, expr)?;
-        chain.operand();
+// The casts that follow an operand, held in one chain node
+fn cast_rest(parser: &Parser, expr: Box<Expr>) -> Result<Box<Expr>, ParseError> {
+    if !<Token![as]>::peek(parser.cursor()) {
+        return Ok(expr);
     }
 
-    Ok(expr)
-}
+    let mut casts = Vec::new();
 
-fn cast_to(parser: &Parser, expr: Box<Expr>) -> Result<Box<Expr>, ParseError> {
-    Ok(boxed(ExprCast {
+    while <Token![as]>::peek(parser.cursor()) {
+        casts.push((<_ as Parse>::parse(parser)?, Type::parse_without_plus(parser)?));
+    }
+
+    Ok(boxed(ExprCastChain {
         attrs: Default::default(),
         expr,
-        as_keyword: <_ as Parse>::parse(parser)?,
-        ty: Box::new(Type::parse_without_plus(parser)?),
+        casts,
     }))
 }
 
@@ -404,15 +378,13 @@ fn unary_op(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<
 }
 
 fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
-    let mut chain = Chain::begin();
     let expr = primary(parser, Default::default(), context)?;
-    chain.operand();
-    postfix_rest(parser, expr, attrs, &mut chain)
+    postfix_rest(parser, expr, attrs)
 }
 
 // The postfix operations that follow a primary expression, held in one
 // chain node with the outer attributes, which belong to the whole chain
-fn postfix_rest(parser: &Parser, base: Box<Expr>, attrs: Attributes, _chain: &mut Chain) -> Result<Box<Expr>, ParseError> {
+fn postfix_rest(parser: &Parser, base: Box<Expr>, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
     let mut ops = Vec::new();
 
     loop {

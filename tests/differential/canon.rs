@@ -195,7 +195,13 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
             x.label.as_ref().map(mt).unwrap_or_default(),
             mopt(&x.expr)
         ),
-        E::Cast(x) => format!("{}({} as {})", mattrs(&x.attrs), mexpr(&x.expr), mt(&*x.ty)),
+        E::CastChain(x) => {
+            let casts = x
+                .casts
+                .iter()
+                .fold(mexpr(&x.expr), |rendered, (_, ty)| format!("({rendered} as {})", mt(ty)));
+            format!("{}{casts}", mattrs(&x.attrs))
+        }
         E::Closure(x) => format!(
             "{}closure[{}{}{}{}{}|{}|{}]{}",
             mattrs(&x.attrs),
