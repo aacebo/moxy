@@ -2459,3 +2459,7 @@ t: Fn(A, B) -> C
 t: Fn(A) -> B + C
 t: a::Fn(A)
 t: FnMut(&mut A) -> B<C>
+e: f(&..)
+e: &..b + c
+e: a + ..b
+e: &mut ..

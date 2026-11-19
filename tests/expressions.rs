@@ -707,3 +707,13 @@ fn any_unsuffixed_integer_after_a_field_dot_is_a_tuple_index() {
         assert!(moxy::parse!(source as Expr).is_err(), "`{source}`");
     }
 }
+
+#[test]
+fn the_reserved_keyword_abstract_is_no_identifier() {
+    for source in ["abstract", "abstract + 1", "a.abstract"] {
+        assert!(moxy::parse!(source as Expr).is_err(), "`{source}`");
+    }
+
+    let expression: Expr = moxy::parse!("r#abstract").unwrap();
+    assert_eq!(expression.to_token_stream().to_string(), "r#abstract");
+}

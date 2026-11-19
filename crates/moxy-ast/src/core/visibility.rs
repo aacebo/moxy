@@ -101,6 +101,10 @@ impl Parse for Visibility {
             let in_keyword = <_ as Parse>::parse(&parser)?;
             let path = <_ as Parse>::parse(&parser)?;
 
+            if !parser.is_empty() {
+                return parser.error("unexpected trailing input").into();
+            }
+
             return Ok(Self::Restricted {
                 pub_keyword,
                 path: Delimited::paren(span, (in_keyword, path)),

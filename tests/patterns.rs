@@ -145,9 +145,12 @@ fn half_open_range_patterns_end_before_the_arm() {
 
 #[test]
 fn an_underscore_is_a_wildcard_pattern_and_an_inferred_expression() {
-    for source in ["_", "#[a] _"] {
+    for source in ["_", "(_)"] {
         let pattern: Pattern = moxy::parse!(source).unwrap();
-        assert!(pattern.is_wild(), "`{source}`");
+        assert!(
+            pattern.is_wild() || matches!(&pattern, Pattern::Paren(paren) if paren.content.inner.is_wild()),
+            "`{source}`"
+        );
         let lexed: moxy::token::TokenStream = source.parse().unwrap();
         assert_eq!(pattern.to_token_stream().to_string(), lexed.to_string());
     }
@@ -271,4 +274,22 @@ fn a_binding_subpattern_has_no_top_level_alternation() {
 
     let closure: moxy::ast::Expr = moxy::parse!("|a @ S { b, .. }| x").unwrap();
     assert!(matches!(closure, moxy::ast::Expr::Closure(_)));
+}
+
+#[test]
+fn only_closure_parameters_put_attributes_on_a_pattern() {
+    let closure: moxy::ast::Expr = moxy::parse!("|#[a] x, #[b] (y, _): u8| x").unwrap();
+    assert_eq!(closure.to_token_stream().to_string(), "| # [a] x , # [b] (y , _) : u8 | x");
+
+    for source in [
+        "fn f() { match x { #[a] y => 1 } }",
+        "fn f(#[a] x: u8) {}",
+        "fn f() { let S { #[a] x } = y; }",
+    ] {
+        assert!(moxy::parse!(source as moxy::ast::File).is_ok(), "`{source}`");
+    }
+
+    for source in ["#[a] x", "(#[a] x, y)", "[#[a] x]", "S(#[a] x)"] {
+        assert!(moxy::parse!(source as Pattern).is_err(), "`{source}`");
+    }
 }

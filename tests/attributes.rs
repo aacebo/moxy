@@ -243,3 +243,20 @@ fn an_attribute_value_is_an_expression() {
         assert!(moxy::parse!(source as moxy::ast::File).is_err(), "`{source}`");
     }
 }
+
+#[test]
+fn inner_attributes_start_a_container_before_any_outer_attribute() {
+    for source in ["#![a] fn f() {}", "fn f() { #![a] x }", "mod m { #![a] #[b] fn f() {} }"] {
+        assert!(moxy::parse!(source as moxy::ast::File).is_ok(), "`{source}`");
+    }
+
+    for source in [
+        "#[a] #![b] fn f() {}",
+        "fn f() { let x = [#![a] 1]; }",
+        "fn f() { g(#![a] 1); }",
+    ] {
+        assert!(moxy::parse!(source as moxy::ast::File).is_err(), "`{source}`");
+    }
+
+    assert!(moxy::parse!("#![a] x" as Expr).is_err());
+}

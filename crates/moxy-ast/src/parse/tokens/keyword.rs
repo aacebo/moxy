@@ -23,6 +23,30 @@ impl Parse for Keyword {
     }
 }
 
+impl Parse for Abstract {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        let Some(next) = cursor.curr() else {
+            return false;
+        };
+
+        matches!(next, TokenTree::Keyword(Keyword::Abstract(_)))
+    }
+
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        match parser.curr() {
+            Some(TokenTree::Keyword(Keyword::Abstract(v))) => {
+                parser.advance();
+                Ok(*v)
+            }
+            _ => Err(parser.error(format!("expected `{}` keyword", Abstract::TEXT))),
+        }
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::peek(cursor).then(|| cursor.offset(1))
+    }
+}
+
 impl Parse for As {
     fn peek(cursor: Cursor<'_>) -> bool {
         let Some(next) = cursor.curr() else {

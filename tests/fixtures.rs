@@ -363,4 +363,12 @@ fn a_file_may_start_with_a_byte_order_mark_and_a_shebang_line() {
     // `#!` with a `[` after it is an inner attribute
     let file: File = moxy::parse!("#![allow(a)]\nfn main() {}").unwrap();
     assert_eq!(file.attrs.len(), 1);
+
+    // A shebang is its first line alone, so the next line's tokens are items
+    for source in ["#!/bin/sh\nfoo::m!();", "#!/bin/sh\nm! {}", "#!/usr/bin/env rust\nm! {}"] {
+        let file: File = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(file.items.len(), 1, "`{source}`");
+        let item = file.items[0].to_token_stream().to_string();
+        assert!(item.starts_with("foo") || item.starts_with('m'), "`{source}`: {item}");
+    }
 }

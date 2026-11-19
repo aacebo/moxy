@@ -188,12 +188,66 @@ impl Parse for Attributes {
         Attribute::peek(cursor)
     }
 
+    // As in rustc, an inner attribute follows no outer one: `#[a] #![b]` is an
+    // error
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self(parser.parse_while()))
+        let attrs: Vec<Attribute> = parser.parse_while();
+        let mut outer = false;
+
+        for attr in &attrs {
+            if attr.style.is_inner() && outer {
+                return Err(ParseError::new(
+                    attr.span(),
+                    "an inner attribute is not permitted following an outer attribute",
+                ));
+            }
+
+            outer |= !attr.style.is_inner();
+        }
+
+        Ok(Self(attrs))
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let mut outer = false;
+
         while let Some(next) = Attribute::skip(cursor) {
+            let inner = <Token![!]>::peek(cursor.offset(1));
+
+            if inner && outer {
+                return None;
+            }
+
+            outer |= !inner;
+            cursor = next;
+        }
+
+        Some(cursor)
+    }
+}
+
+impl Attributes {
+    // Parses the attributes of a node that takes no inner attributes, such as
+    // an expression that starts no statement
+    pub(crate) fn parse_outer(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = <Self as Parse>::parse(parser)?;
+
+        if let Some(attr) = attrs.iter().find(|attr| attr.style.is_inner()) {
+            return Err(ParseError::new(
+                attr.span(),
+                "an inner attribute is not permitted in this context",
+            ));
+        }
+
+        Ok(attrs)
+    }
+
+    pub(crate) fn skip_outer(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        while let Some(next) = Attribute::skip(cursor) {
+            if <Token![!]>::peek(cursor.offset(1)) {
+                return None;
+            }
+
             cursor = next;
         }
 

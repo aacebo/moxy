@@ -219,6 +219,7 @@ macro_rules! define_keyword {
 }
 
 define_keyword! {
+    Abstract[is_keyword_abstract, as_keyword_abstract]          => "abstract",
     As[is_keyword_as, as_keyword_as]                            => "as",
     Async[is_keyword_async, as_keyword_async]                   => "async",
     Auto[is_keyword_auto, as_keyword_auto]                      => "auto",

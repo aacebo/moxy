@@ -47,6 +47,12 @@ impl Parse for ItemTrait {
         let trait_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
         let mut generics: Generics = <_ as Parse>::parse(parser)?;
+
+        // Supertraits come before a where clause, never after it
+        if generics.where_clause.is_some() && <Token![:]>::peek(parser.cursor()) {
+            return parser.error("expected `{`").into();
+        }
+
         let (colon_punct, supertraits) = if <Token![:]>::peek(parser.cursor()) {
             let colon_punct = <_ as Parse>::parse(parser)?;
             let supertraits = if !<Token![;]>::peek(parser.cursor()) && TypeBound::peek(parser.cursor()) {
@@ -89,9 +95,14 @@ impl Parse for ItemTrait {
         cursor = Option::<Token![auto]>::skip(cursor)?;
         cursor = <Token![trait]>::skip(cursor)?;
         cursor = Ident::skip(cursor)?;
+        let start = cursor;
         cursor = Generics::skip(cursor)?;
 
         if <Token![:]>::peek(cursor) {
+            if cursor.range(start).iter().any(|token| token.is_keyword_where()) {
+                return None;
+            }
+
             cursor = <Token![:]>::skip(cursor)?;
 
             if TypeBound::peek(cursor) {

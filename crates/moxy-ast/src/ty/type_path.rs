@@ -34,6 +34,11 @@ impl TypePath {
         }
 
         cursor = <Token![>]>::skip(cursor)?;
+
+        if !<Token![::]>::peek(cursor) {
+            return None;
+        }
+
         skip_path(cursor)
     }
 }

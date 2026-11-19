@@ -125,3 +125,10 @@ fn a_field_takes_no_mut() {
         assert!(moxy::parse!(source as Item).is_err(), "`{source}`");
     }
 }
+
+#[test]
+fn a_restricted_visibility_holds_one_path() {
+    let item: Item = moxy::parse!("struct S(pub(in a::b) u8);").unwrap();
+    assert_eq!(item.to_token_stream().to_string(), "struct S (pub (in a :: b) u8) ;");
+    assert!(moxy::parse!("struct S(pub (in a b) u8);" as Item).is_err());
+}

@@ -30,9 +30,6 @@ TREE f: mod m { #![a] #![b] use c; }
 TREE f: mod m { #![a] fn f() {} }
 TREE f: mod m { //! doc\n fn f() {} }
 TREE f: trait A { #![a] fn f(); }
-ACCEPT e: #![a] x
-ACCEPT f: #[a] #![b] fn f() {}
-ACCEPT f: fn f() { let x = [#![a] 1]; }
 
 # Intentional: nightly or unstable syntax, out of scope
 ACCEPT b: { let x = static || 1; }
@@ -128,7 +125,6 @@ TOKENS f: trait A: {}
 # Intentional: moxy keeps a shebang of a path and one word as the file's
 # shebang tokens, which syn drops from the tokens
 TOKENS f: #!/usr/bin/env rust\n fn f() {}
-TOKENS f: #!/bin/sh\nfn f() {}
 TOKENS f: #!/usr/bin/env rust\n#![allow(a)]\nfn main() {}
 
 # Intentional: rustc rejects these after parsing, as moxy does while parsing:
@@ -138,8 +134,6 @@ REJECT f: impl<T> X<T> { type Item; #[inline] fn next() -> Option<T> {} fn advan
 
 # Pending: invalid input that moxy accepts and `mut self` as a pattern, not
 # yet fixed
-ACCEPT e: abstract
-ACCEPT p: #[a] x
 ACCEPT p: -'a'
 ACCEPT p: [1.., 2]
 ACCEPT p: [1..]

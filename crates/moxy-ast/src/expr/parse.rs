@@ -10,7 +10,7 @@ pub(super) fn expr(parser: &Parser, context: ExprContext) -> Result<Expr, ParseE
 // The parse functions return boxed expressions, which every parent node
 // stores, so a nested expression's stack frames hold pointers, not nodes
 fn boxed_expr(parser: &Parser, context: ExprContext) -> Result<Box<Expr>, ParseError> {
-    let attrs = <_ as Parse>::parse(parser)?;
+    let attrs = Attributes::parse_outer(parser)?;
     assignment(parser, attrs, context)
 }
 
@@ -161,8 +161,10 @@ fn range_rest(
     let mut end = None;
 
     // The end may itself be a range without a start, as in `a.. ..b`
-    if peek::nested_range(parser.cursor()) {
-        end = Some(range_rest(parser, Default::default(), None, context)?);
+    if RangeLimits::peek(parser.cursor()) {
+        if peek::nested_range(parser.cursor()) {
+            end = Some(range_rest(parser, Default::default(), None, context)?);
+        }
     } else if !context.is_end(parser.cursor()) && Expr::peek(parser.cursor()) {
         end = Some(binary(parser, Default::default(), context, Precedence::Or)?);
     }
@@ -320,6 +322,11 @@ fn unary_with(parser: &Parser, attrs: Attributes, context: ExprContext) -> Resul
     } else {
         attrs
     };
+
+    // An operand may be a range without a start, as in `f(&..)` and `a + ..b`
+    if RangeLimits::peek(parser.cursor()) {
+        return range_rest(parser, attrs, None, context);
+    }
 
     if <Token![&]>::peek(parser.cursor()) {
         return reference(parser, attrs, context);

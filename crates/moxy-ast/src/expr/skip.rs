@@ -5,7 +5,7 @@ use super::peek;
 use super::*;
 
 pub(super) fn expr(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
-    assignment(Attributes::skip(cursor)?, context)
+    assignment(Attributes::skip_outer(cursor)?, context)
 }
 
 fn optional_expr(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
@@ -36,7 +36,7 @@ pub(crate) fn early_block_like(cursor: Cursor<'_>) -> Option<(Cursor<'_>, bool)>
         return Some((end, true));
     }
 
-    Some((expr(cursor, ExprContext::NORMAL)?, false))
+    Some((assignment(start, ExprContext::NORMAL)?, false))
 }
 
 fn list(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
@@ -358,6 +358,10 @@ fn unary(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
     let _depth = moxy_token::Depth::enter()?;
     let cursor = Attributes::skip(cursor)?;
 
+    if RangeLimits::peek(cursor) {
+        return range(cursor, context).map(|(cursor, _)| cursor);
+    }
+
     if <Token![&]>::peek(cursor) && <Token![raw]>::peek(cursor.offset(1)) && PointerMutability::peek(cursor.offset(2)) {
         return PointerMutability::skip(<Token![raw]>::skip(<Token![&]>::skip(cursor)?)?)
             .and_then(|cursor| unary(cursor, context));
@@ -427,8 +431,12 @@ fn range(mut cursor: Cursor<'_>, context: ExprContext) -> Option<(Cursor<'_>, bo
     let closed = <Token![..=]>::peek(cursor);
     cursor = RangeLimits::skip(cursor)?;
 
-    if peek::nested_range(cursor) {
-        return range(cursor, context);
+    if RangeLimits::peek(cursor) {
+        if peek::nested_range(cursor) {
+            return range(cursor, context);
+        }
+
+        return (!closed).then_some((cursor, true));
     }
 
     if !context.is_end(cursor) && peek::expr(cursor, context) {

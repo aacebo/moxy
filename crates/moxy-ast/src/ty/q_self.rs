@@ -36,6 +36,12 @@ impl QSelf {
         parse_rest: fn(&Parser) -> Result<Path, ParseError>,
     ) -> Result<(Self, Path), ParseError> {
         let (qself, trait_path) = Self::parse_with_trait(parser)?;
+
+        // As in rustc, `::` follows the qualifier: `<T>::f`, never `<T> f`
+        if !<Token![::]>::peek(parser.cursor()) {
+            return parser.error("expected `::` after a qualified path").into();
+        }
+
         let rest = parse_rest(parser)?;
         let path = if let Some(mut p) = trait_path {
             p.extend(rest);

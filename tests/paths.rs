@@ -90,3 +90,16 @@ fn strict_keywords_name_no_path_segment() {
         assert_eq!(path.to_token_stream().to_string(), lexed.to_string());
     }
 }
+
+#[test]
+fn a_path_separator_follows_a_qualifier() {
+    for source in ["<b>::c", "<T as U>::f()", "<[u8]>::len(&x)"] {
+        assert!(moxy::parse!(source as moxy::ast::Expr).is_ok(), "`{source}`");
+    }
+
+    for source in ["<b> c", "<T as U> f"] {
+        assert!(moxy::parse!(source as moxy::ast::Expr).is_err(), "`{source}`");
+    }
+
+    assert!(moxy::parse!("<T> U" as moxy::ast::Type).is_err());
+}

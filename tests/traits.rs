@@ -125,3 +125,28 @@ fn trait_items_keep_a_visibility_as_rustc_parses_them() {
         "trait A {\n\tpub fn f();\n\tpub(crate) const X: u8;\n\tpub type T;\n}"
     );
 }
+
+#[test]
+fn a_trait_alias_is_neither_unsafe_nor_auto() {
+    let item: Item = moxy::parse!("trait A = B;").unwrap();
+    assert!(item.is_trait_alias());
+
+    for source in ["unsafe trait A = B;", "auto trait A = B;"] {
+        assert!(moxy::parse!(source as Item).is_err(), "`{source}`");
+    }
+}
+
+#[test]
+fn supertraits_come_before_a_where_clause() {
+    for source in [
+        "trait A: B where Self: {}",
+        "trait A where Self: C {}",
+        "trait A<T>: B where T: C {}",
+    ] {
+        assert!(moxy::parse!(source as Item).is_ok(), "`{source}`");
+    }
+
+    for source in ["trait A where Self: : B {}", "trait A<T> where T: : B {}"] {
+        assert!(moxy::parse!(source as Item).is_err(), "`{source}`");
+    }
+}

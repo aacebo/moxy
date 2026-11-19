@@ -188,3 +188,15 @@ fn nothing_continues_a_range_at_its_own_level() {
     let range: Expr = moxy::parse!("a.. ..b").unwrap();
     assert_eq!(moxy::fmt!(&range).unwrap(), "a.. ..b");
 }
+
+#[test]
+fn an_operand_may_be_a_range_without_a_start() {
+    assert_shapes(&[
+        ("f(&..)", "(f((&(..))))"),
+        ("&..b", "(&(..b))"),
+        ("&mut ..", "(&mut (..))"),
+        ("a + ..b", "(a + (..b))"),
+        ("&..b + c", "(&(..(b + c)))"),
+        ("-..a", "(-(..a))"),
+    ]);
+}

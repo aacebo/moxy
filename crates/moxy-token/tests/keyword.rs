@@ -15,7 +15,7 @@ fn accept() {
     }
 
     scan! {
-        As => "as", Async => "async", Auto => "auto", Await => "await",
+        Abstract => "abstract", As => "as", Async => "async", Auto => "auto", Await => "await",
         Become => "become", Box => "box", Break => "break", Const => "const",
         Continue => "continue", Crate => "crate", Default => "default", Do => "do",
         Dyn => "dyn", Else => "else", Enum => "enum", Extern => "extern",

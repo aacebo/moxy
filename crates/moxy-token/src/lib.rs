@@ -238,6 +238,7 @@ macro_rules! Token {
     [?]     => { $crate::Question };
 
     // --- keywords ---
+    [abstract]    => { $crate::Abstract };
     [as]          => { $crate::As };
     [async]       => { $crate::Async };
     [auto]        => { $crate::Auto };

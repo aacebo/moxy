@@ -126,8 +126,9 @@ impl<'a> Cursor<'a> {
     /// Skips what precedes the tokens of a source file, as the compiler does:
     /// a byte order mark, and a shebang line such as `#!/usr/bin/env -S cargo`.
     /// A `#!` that a `[` follows starts an inner attribute instead. A shebang
-    /// of a path and at most one word, such as `#!/usr/bin/env rust`, stays as
-    /// tokens, which `File` keeps as its shebang.
+    /// of a path and one word, such as `#!/usr/bin/env rust`, stays as tokens,
+    /// which `File` keeps as its shebang; without the word, as `#!/bin/sh`, the
+    /// line is skipped, since a word on the next line would read as its own.
     pub fn skip_source_start(self) -> Self {
         let mut cursor = self;
 
@@ -209,8 +210,8 @@ impl<'a> Cursor<'a> {
     }
 }
 
-// Whether a shebang line is `#!`, a path of identifiers, and an optional
-// identifier, which lexes as tokens: `#!/usr/bin/env rust`
+// Whether a shebang line is `#!`, a path of identifiers, and an identifier,
+// which lexes as tokens: `#!/usr/bin/env rust`
 fn is_path_shebang(line: &str) -> bool {
     let is_ident = |word: &str| {
         let mut chars = word.chars();
@@ -222,6 +223,6 @@ fn is_path_shebang(line: &str) -> bool {
     let word = words.next();
 
     path.strip_prefix('/').is_some_and(|path| path.split('/').all(is_ident))
-        && word.is_none_or(is_ident)
+        && word.is_some_and(is_ident)
         && words.next().is_none()
 }

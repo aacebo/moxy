@@ -97,6 +97,31 @@ impl Attributed for Pattern {
 }
 
 impl Pattern {
+    // The attributes of a closure parameter, which rustc allows on no other
+    // pattern, go on its pattern
+    pub(crate) fn attrs_mut(&mut self) -> &mut Attributes {
+        match self {
+            Self::Wild(value) => &mut value.attrs,
+            Self::Rest(value) => &mut value.attrs,
+            Self::Ident(value) => &mut value.attrs,
+            Self::Path(value) => &mut value.attrs,
+            Self::Tuple(value) => &mut value.attrs,
+            Self::TupleStruct(value) => &mut value.attrs,
+            Self::Struct(value) => &mut value.attrs,
+            Self::Slice(value) => &mut value.attrs,
+            Self::Reference(value) => &mut value.attrs,
+            Self::Or(value) => &mut value.attrs,
+            Self::Lit(value) => &mut value.attrs,
+            Self::Range(value) => &mut value.attrs,
+            Self::Macro(value) => &mut value.attrs,
+            Self::Type(value) => &mut value.attrs,
+            Self::Group(value) => &mut value.attrs,
+            Self::Paren(value) => &mut value.attrs,
+            Self::Box(value) => &mut value.attrs,
+            Self::Const(value) => &mut value.attrs,
+        }
+    }
+
     pub fn is_wild(&self) -> bool {
         matches!(self, Self::Wild(_))
     }
@@ -326,13 +351,8 @@ impl Parse for Pattern {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let bare = Attributes::skip(parser.cursor()).unwrap_or(parser.cursor());
-        let leading = <Token![|]>::peek(bare);
-        let attrs = if leading {
-            <_ as Parse>::parse(parser)?
-        } else {
-            Attributes::default()
-        };
+        let leading = <Token![|]>::peek(parser.cursor());
+        let attrs = Attributes::default();
 
         let leading_vert = if leading { Some(<_ as Parse>::parse(parser)?) } else { None };
 
@@ -358,10 +378,7 @@ impl Parse for Pattern {
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let bare = Attributes::skip(cursor)?;
-
-        if <Token![|]>::peek(bare) {
-            cursor = bare;
+        if <Token![|]>::peek(cursor) {
             cursor = <Token![|]>::skip(cursor)?;
         }
 

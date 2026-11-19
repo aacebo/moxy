@@ -66,3 +66,10 @@ fn a_type_alias_takes_its_where_clause_before_or_after_the_type() {
     let item: Item = moxy::parse!("type T<U> where U: A;").unwrap();
     assert_eq!(item.to_token_stream().to_string(), "type T < U > where U : A ;");
 }
+
+#[test]
+fn only_a_trait_impl_is_negative() {
+    let item: Item = moxy::parse!("impl !A for B {}").unwrap();
+    assert_eq!(item.to_token_stream().to_string(), "impl ! A for B {}");
+    assert!(moxy::parse!("impl !A {}" as Item).is_err());
+}

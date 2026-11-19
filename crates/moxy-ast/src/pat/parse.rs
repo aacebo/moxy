@@ -3,6 +3,12 @@ use super::*;
 pub(crate) fn single(parser: &Parser) -> Result<Pattern, ParseError> {
     let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
 
+    // As in rustc, a pattern takes no attributes; a parameter, match arm, or
+    // struct pattern field holds them
+    if <Token![#]>::peek(parser.cursor()) {
+        return parser.error("expected pattern").into();
+    }
+
     // One call site for every form keeps one return slot in this frame
     let parse: fn(&Parser) -> Result<Pattern, ParseError> = if PatWild::peek(parser.cursor()) {
         parse_into::<PatWild, Pattern>
