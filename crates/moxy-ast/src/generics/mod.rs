@@ -59,7 +59,7 @@ impl Parse for Generics {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let lt: Option<Token![<]> = <_ as Parse>::parse(parser)?;
         let params = if lt.is_some() {
-            List::parse_nonempty(parser)?
+            List::parse_nonempty_until::<Token![>]>(parser)?
         } else {
             List::new()
         };
@@ -87,6 +87,11 @@ impl Parse for Generics {
 
             while <Token![,]>::peek(cursor) {
                 cursor = <Token![,]>::skip(cursor)?;
+
+                if <Token![>]>::peek(cursor) {
+                    break;
+                }
+
                 cursor = GenericParam::skip(cursor)?;
             }
 

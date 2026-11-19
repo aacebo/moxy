@@ -22,7 +22,7 @@ impl Parse for AngleArguments {
         Ok(Self {
             colon2: <_ as Parse>::parse(parser)?,
             lt_punct: <_ as Parse>::parse(parser)?,
-            args: List::parse_nonempty(parser)?,
+            args: List::parse_nonempty_until::<Token![>]>(parser)?,
             gt_punct: <_ as Parse>::parse(parser)?,
         })
     }
@@ -34,6 +34,11 @@ impl Parse for AngleArguments {
 
         while <Token![,]>::peek(cursor) {
             cursor = <Token![,]>::skip(cursor)?;
+
+            if <Token![>]>::peek(cursor) {
+                break;
+            }
+
             cursor = GenericArgument::skip(cursor)?;
         }
 

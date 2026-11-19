@@ -79,3 +79,18 @@ fn const_generic_default_permutations_parse() {
         let _: Item = moxy::parse!(source as Item).unwrap_or_else(|err| panic!("failed to parse {source:?}: {err}"));
     }
 }
+
+#[test]
+fn closed_lists_accept_a_trailing_comma() {
+    for (source, tokens) in [
+        ("use a::{b, c,};", "use a :: {b , c ,} ;"),
+        ("fn f<T: A,>(x: Foo<A, B,>) {}", "fn f < T : A , > (x : Foo < A , B , >) {}"),
+        ("struct S<T,>(Vec<T,>);", "struct S < T , > (Vec < T , >) ;"),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(item.to_token_stream().to_string(), tokens);
+    }
+
+    let error = moxy::parse!("use a::{b c};" as Item).err().unwrap();
+    assert_eq!(error.message(), "expected punctuation");
+}

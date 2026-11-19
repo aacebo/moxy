@@ -19,7 +19,7 @@ impl Parse for UseGroup {
         let (span, parser) = parser.parse_group_spanned(Delim::Brace)?;
 
         Ok(Self {
-            items: Delimited::brace(span, List::parse_nonempty(&parser)?),
+            items: Delimited::brace(span, List::parse_all(&parser)?),
         })
     }
 
@@ -29,6 +29,11 @@ impl Parse for UseGroup {
 
         while <Token![,]>::peek(inner) {
             inner = <Token![,]>::skip(inner)?;
+
+            if inner.is_empty() {
+                break;
+            }
+
             inner = UseTree::skip(inner)?;
         }
 

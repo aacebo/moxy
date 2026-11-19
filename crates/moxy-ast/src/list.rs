@@ -256,6 +256,33 @@ impl<T: Parse, P: Parse> List<T, P> {
     }
 }
 
+impl<T: Parse, P: Parse> List<T, P> {
+    /// Parses one or more values separated by punctuation, with an optional
+    /// trailing punctuation before the token `E`, which is left in `parser`.
+    ///
+    /// Use this for a list closed by a token, such as generic arguments before
+    /// `>`, where Rust accepts a trailing comma.
+    pub fn parse_nonempty_until<E: Parse>(parser: &Parser) -> Result<Self, ParseError> {
+        let mut punctuated = Self::new();
+
+        loop {
+            punctuated.push_value(<_ as Parse>::parse(parser)?);
+
+            if !P::peek(parser.cursor()) {
+                break;
+            }
+
+            punctuated.push_punct(<_ as Parse>::parse(parser)?);
+
+            if E::peek(parser.cursor()) {
+                break;
+            }
+        }
+
+        Ok(punctuated)
+    }
+}
+
 impl<T: Clone, P: Clone> Clone for List<T, P> {
     fn clone(&self) -> Self {
         Self {
