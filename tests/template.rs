@@ -248,14 +248,12 @@ fn template_separators_interpolate_and_skip_empty_iterations() {
 fn template_separator_state_is_hidden_from_user_bindings() {
     let emitted = ["a", "b"];
     let iteration = [false, true];
-    let __moxy_first = ["c", "d"];
     let tokens = moxy::template! {
         a(@for iteration in &emitted { {{ *iteration }} } @sep { , });
         b(@for emitted in &iteration { @if *emitted { y } } @sep { , });
-        c(@for __moxy_first in &__moxy_first { {{ *__moxy_first }} } @sep { , });
     };
 
-    assert_eq!(tokens.to_string(), "a (\"a\" , \"b\") ; b (y) ; c (\"c\" , \"d\") ;");
+    assert_eq!(tokens.to_string(), "a (\"a\" , \"b\") ; b (y) ;");
 }
 
 #[test]

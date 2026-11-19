@@ -9,7 +9,7 @@ use crate::*;
 pub struct TraitItemConst {
     pub attrs: Attributes,
     /// A visibility, which rustc's parser accepts and the compiler rejects
-    /// later, as in `pub fn f();`.
+    /// later, as in `pub const X: u8;`.
     pub vis: Visibility,
     pub defaultness: Option<Token![default]>,
     pub const_keyword: Token![const],

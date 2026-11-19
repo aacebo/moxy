@@ -38,6 +38,26 @@ fn extern_crate_self_names_the_current_crate() {
 }
 
 #[test]
+fn extern_crate_takes_self_or_a_name_and_skips_as_it_parses() {
+    use moxy::ast::{Parse, Parser};
+
+    for (source, parses) in [
+        ("extern crate self as name;", true),
+        ("extern crate alloc;", true),
+        ("extern crate std as s;", true),
+        ("extern crate fn;", false),
+        ("extern crate super;", false),
+        ("extern crate self;", true),
+    ] {
+        let tokens: moxy::token::TokenStream = source.parse().unwrap();
+        let parser = Parser::from_tokens(&tokens);
+        let skipped = Item::skip(parser.cursor()).is_some_and(|cursor| cursor.is_empty());
+        assert_eq!(moxy::parse!(source as Item).is_ok(), parses, "`{source}`");
+        assert_eq!(skipped, parses, "`{source}`");
+    }
+}
+
+#[test]
 fn crate_only_begins_a_use_path() {
     let error = moxy::parse!("use a::crate;" as Item).err().unwrap();
     assert_eq!(error.message(), "`crate` can only begin a path");

@@ -119,8 +119,8 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
             cursor = <Token![|]>::skip(cursor)?;
         }
 
-        // With a return type the body is a block, as in the parser
-        // With the parser's second level for the block, taken after the type
+        // With a return type the body is a block, as in the parser, which takes
+        // the parser's second level after the type
         if <Token![->]>::peek(cursor) {
             let cursor = ReturnType::skip(cursor)?;
             let _weight = moxy_token::__private::Depth::enter()?;
@@ -369,18 +369,15 @@ fn postfix_rest(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
                 && (after_method.is_delimited(Delim::Paren) || <Token![::]>::peek(after_method))
             {
                 let args = Option::<AngleArguments>::skip(after_method)?;
+                let _depth = moxy_token::__private::Depth::enter()?;
+                let inner = list(args.descend(Delim::Paren)?)?;
 
-                {
-                    let _depth = moxy_token::__private::Depth::enter()?;
-                    let inner = list(args.descend(Delim::Paren)?)?;
-
-                    if !inner.is_empty() {
-                        return None;
-                    }
-
-                    cursor = args.offset(1);
-                    continue;
+                if !inner.is_empty() {
+                    return None;
                 }
+
+                cursor = args.offset(1);
+                continue;
             }
 
             // `0.1` in `x.0.1` is two tuple indices in one float literal, and `0.`

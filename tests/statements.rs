@@ -155,7 +155,7 @@ fn a_block_that_a_postfix_operator_follows_is_an_expression_statement() {
 
 #[test]
 fn nested_block_statements_that_a_method_call_follows_parse_in_linear_time() {
-    // Each level parsed its block twice before, which never ends at this depth
+    // Parsing each block twice per level would never end at this depth
     let depth = 34;
     let source = format!("{}a{}", "{ {".repeat(depth), "}.x }".repeat(depth));
     let start = std::time::Instant::now();

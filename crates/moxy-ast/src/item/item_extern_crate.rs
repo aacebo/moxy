@@ -36,7 +36,11 @@ impl Parse for ItemExternCrate {
         let extern_keyword = <_ as Parse>::parse(parser)?;
         let crate_keyword = <_ as Parse>::parse(parser)?;
         // `extern crate self as name;` names the current crate
-        let ident = parser.parse_ident_any()?;
+        let ident = if <Token![self]>::peek(parser.cursor()) {
+            parser.parse_ident_any()?
+        } else {
+            <_ as Parse>::parse(parser)?
+        };
         let (as_keyword, rename) = if <Token![as]>::peek(parser.cursor()) {
             let as_keyword = <_ as Parse>::parse(parser)?;
             let rename = <_ as Parse>::parse(parser)?;

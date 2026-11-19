@@ -279,8 +279,7 @@ fn impl_and_dyn_take_one_bound_where_plus_does_not_continue_a_type() {
 
 #[test]
 fn nested_function_sugar_in_generic_arguments_parses_in_linear_time() {
-    // Telling a bare trait object from a path skipped each bound before
-    // parsing it, which doubled the work per level
+    // Skipping each bound before parsing it would double the work per level
     let depth = 40;
     let closed = format!("{}u8{}", "A<B() -> ".repeat(depth), ">".repeat(depth));
     let unclosed = "A<B() -> ".repeat(depth);
@@ -376,8 +375,8 @@ fn a_bare_trait_object_may_start_with_a_parenthesized_bound() {
 fn nested_parenthesized_first_bounds_parse_and_skip_in_linear_time() {
     use moxy::ast::{Parse, Parser};
 
-    // Each level read its bound twice, once to tell it from a type, so 22
-    // levels took 170 ms and each more level doubled that
+    // The group is read once, as a bound, so nested first bounds parse and
+    // skip in linear time
     let source = format!("{}u8{}", "(A<".repeat(40), ">) + B".repeat(40));
     let (sender, receiver) = std::sync::mpsc::channel();
     std::thread::Builder::new()

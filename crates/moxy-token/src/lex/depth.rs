@@ -41,15 +41,10 @@ use std::cell::Cell;
 ///
 /// The count is the same on every build and platform, so a source parses or
 /// fails alike everywhere. It is sized for the 2 MiB stack of a spawned thread
-/// or a test in a debug build: input at the limit of each kind parses and runs
-/// every traversal in at most about 1.5 MiB there, on macOS arm64 and Linux
-/// x86_64, which the depth tests check on a 1.5 MiB thread. A release build
-/// takes less, and a coverage build up to about 1.75 MiB. A caller on
-/// a smaller stack, such as a 1 MiB main thread on Windows, should parse on a
+/// or a test in a debug build: the depth tests parse input at the limit of
+/// each kind and run every traversal on a 1.5 MiB thread. A caller on a
+/// smaller stack, such as a 1 MiB main thread on Windows, should parse on a
 /// thread with at least 2 MiB.
-/// rustc grows its stack to accept any depth; syn parses 256 nested
-/// parentheses on an 8 MiB stack and overflows a 2 MiB stack at that depth in
-/// a debug build.
 pub const MAX_DEPTH: usize = 144;
 
 thread_local! {

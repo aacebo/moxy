@@ -182,14 +182,13 @@ fn an_underscore_is_a_wildcard_pattern_and_an_inferred_expression() {
 
 #[test]
 fn deeply_nested_parenthesized_patterns_parse_in_linear_time() {
-    // Each level doubled the work before, which never ends at this depth
+    // Parsing each level twice would never end at this depth
     let depth = moxy::token::MAX_DEPTH - 2;
     let source = format!("{}a{}", "(".repeat(depth), ")".repeat(depth));
     let tuples = format!("{}a{}", "(".repeat(depth), ",)".repeat(depth));
 
-    // A debug build needs a larger stack than a test thread has for this depth
+    // A thread of its own, so the timing excludes other tests
     let (paren, tuple, elapsed) = std::thread::Builder::new()
-        .stack_size(64 << 20)
         .spawn(move || {
             let start = std::time::Instant::now();
             let pattern: Pattern = moxy::parse!(source).unwrap();

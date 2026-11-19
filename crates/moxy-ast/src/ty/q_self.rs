@@ -129,8 +129,7 @@ impl QSelf {
 
 impl ToTokens for QSelf {
     fn to_tokens(&self, tokens: &mut TokenStream) {
-        // Emits just `< ty >`; the `as Trait` portion is rendered by `TypePath`
-        // (it owns the trait segments and the closing `>`/`::` placement).
+        // Emits just `< ty >`; `QSelf::path_to_tokens` emits the `as Trait` part
         self.lt.to_tokens(tokens);
         self.ty.to_tokens(tokens);
         self.gt.to_tokens(tokens);

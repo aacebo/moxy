@@ -324,6 +324,10 @@ impl FromStr for TokenStream {
 impl TokenStream {
     /// Build a token stream from an owned string while moving that allocation
     /// directly into the fallback source map.
+    ///
+    /// The string is lexed as a source file is: a leading byte order mark and
+    /// a shebang line are skipped (as `Cursor::skip_source_start` does), so
+    /// `"#!a b"` gives no tokens, while `"#![a]"` is an inner attribute.
     pub fn from_string(s: String) -> Result<Self, LexError> {
         use crate::source::SourceMap;
 

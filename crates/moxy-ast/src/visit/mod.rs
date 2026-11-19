@@ -1842,8 +1842,6 @@ define_visit! {
 // These nodes have shapes the macro spec can't express: private fields, tuple
 // enum variants, struct-style enum variants, or `Option<tuple>` payloads.
 
-/// `Attributes` is a newtype over `Vec<Attribute>` with a private field; walk it
-/// via its `iter`/`iter_mut` accessors.
 /// `StructBody::rest` is an optional pair whose base is optional too.
 pub fn walk_struct_body<'ast, V: Visit<'ast>>(v: &mut V, node: &'ast StructBody) {
     for field in node.fields.iter() {
@@ -1864,6 +1862,8 @@ pub fn walk_struct_body_mut<V: VisitMut>(v: &mut V, node: &mut StructBody) {
     }
 }
 
+/// `Attributes` is a newtype over `Vec<Attribute>` with a private field; walk it
+/// via its `iter`/`iter_mut` accessors.
 pub fn walk_attributes<'ast, V: Visit<'ast>>(v: &mut V, node: &'ast Attributes) {
     for attr in node {
         v.visit_attribute(attr);
