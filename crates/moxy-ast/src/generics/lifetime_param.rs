@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -63,8 +63,7 @@ impl Parse for LifetimeParam {
 
 impl Spanner for LifetimeParam {
     fn span(&self) -> Span {
-        let end = self.bounds.last().map(|b| b.span()).unwrap_or_else(|| self.lifetime.span());
-        self.attrs.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -22,13 +22,7 @@ impl Attributed for PatIdent {
 
 impl Spanner for PatIdent {
     fn span(&self) -> Span {
-        let end = if let Some((_, sub)) = &self.subpat {
-            sub.span()
-        } else {
-            self.ident.span()
-        };
-
-        self.attrs.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

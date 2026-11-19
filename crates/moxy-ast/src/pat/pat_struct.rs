@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::ty::TypePath;
 use crate::*;
@@ -22,7 +22,7 @@ impl Attributed for PatStruct {
 
 impl Spanner for PatStruct {
     fn span(&self) -> Span {
-        self.attrs.span().join(self.body.span())
+        self.to_token_stream().span()
     }
 }
 

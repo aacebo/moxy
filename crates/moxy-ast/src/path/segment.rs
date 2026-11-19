@@ -83,7 +83,10 @@ impl Parse for PathSegment {
 
 impl Spanner for PathSegment {
     fn span(&self) -> Span {
-        self.ident.span()
+        match &self.args {
+            PathArguments::None => self.ident.span(),
+            args => self.ident.span().join(args.span()),
+        }
     }
 }
 

@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -20,12 +20,7 @@ impl Attributed for PatOr {
 
 impl Spanner for PatOr {
     fn span(&self) -> Span {
-        let cases = match (self.cases.first(), self.cases.last()) {
-            (Some(a), Some(b)) => a.span().join(b.span()),
-            _ => Span::call_site(),
-        };
-
-        self.attrs.span().join(cases)
+        self.to_token_stream().span()
     }
 }
 

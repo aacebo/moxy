@@ -46,7 +46,8 @@ impl Parse for ParenArguments {
 
 impl Spanner for ParenArguments {
     fn span(&self) -> Span {
-        self.params.span().join(self.output.span())
+        let start = self.colon2.map(|colon2| colon2.span()).unwrap_or_else(|| self.params.span());
+        start.join(self.params.span()).join(self.output.span())
     }
 }
 

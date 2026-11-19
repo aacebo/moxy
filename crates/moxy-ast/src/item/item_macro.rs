@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -41,8 +41,7 @@ impl Parse for ItemMacro {
 
 impl Spanner for ItemMacro {
     fn span(&self) -> Span {
-        let end = self.semi_punct.as_ref().map(|s| s.span()).unwrap_or_else(|| self.call.span());
-        self.attrs.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

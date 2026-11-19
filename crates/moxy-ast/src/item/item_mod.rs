@@ -1,4 +1,4 @@
-use moxy_token::{Delim, Ident, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 use crate::*;
 
@@ -78,15 +78,7 @@ impl Parse for ItemMod {
 
 impl Spanner for ItemMod {
     fn span(&self) -> Span {
-        let end = if let Some(c) = &self.content {
-            c.span()
-        } else if let Some(s) = &self.semi_punct {
-            s.span()
-        } else {
-            self.mod_keyword.span()
-        };
-
-        self.attrs.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

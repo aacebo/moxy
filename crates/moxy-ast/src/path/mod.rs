@@ -115,10 +115,15 @@ impl Parse for Path {
 
 impl Spanner for Path {
     fn span(&self) -> Span {
-        match (self.colon, self.segments.last()) {
-            (Some(colon), Some(segment)) => colon.span().join(segment.span()),
-            (Some(colon), None) => colon.span(),
-            (None, Some(segment)) => segment.span(),
+        let first = self
+            .colon
+            .map(|colon| colon.span())
+            .or_else(|| self.segments.first().map(Spanner::span));
+        let last = self.segments.last().map(Spanner::span);
+
+        match (first, last) {
+            (Some(first), Some(last)) => first.join(last),
+            (Some(first), None) => first,
             _ => Span::default(),
         }
     }

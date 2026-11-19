@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -72,13 +72,7 @@ impl Parse for ConstParam {
 
 impl Spanner for ConstParam {
     fn span(&self) -> Span {
-        let end = if let Some(d) = &self.default {
-            d.span()
-        } else {
-            self.ty.span()
-        };
-
-        self.attrs.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

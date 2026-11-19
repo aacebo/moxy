@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -59,7 +59,7 @@ impl Parse for ItemUnion {
 
 impl Spanner for ItemUnion {
     fn span(&self) -> Span {
-        self.attrs.span().join(self.fields.span())
+        self.to_token_stream().span()
     }
 }
 

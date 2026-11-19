@@ -1,4 +1,4 @@
-use moxy_token::{Delim, Group, Ident, LexError, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, Ident, LexError, Span, Spanner, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 use crate::*;
 
@@ -84,8 +84,7 @@ impl Parse for ItemMacroRules {
 
 impl Spanner for ItemMacroRules {
     fn span(&self) -> Span {
-        let end = self.semi.as_ref().map(|s| s.span()).unwrap_or_else(|| self.body.span());
-        self.attrs.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

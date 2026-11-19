@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -76,8 +76,7 @@ impl Parse for ImplItemType {
 
 impl Spanner for ImplItemType {
     fn span(&self) -> Span {
-        let end = self.semi.as_ref().map(|s| s.span()).unwrap_or_else(|| self.ty.span());
-        self.attrs.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

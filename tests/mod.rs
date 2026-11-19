@@ -50,6 +50,9 @@ mod patterns;
 #[cfg(all(feature = "fmt", feature = "derives"))]
 mod statements;
 
+#[cfg(feature = "visit")]
+mod spans;
+
 #[cfg(feature = "fmt")]
 mod structs;
 

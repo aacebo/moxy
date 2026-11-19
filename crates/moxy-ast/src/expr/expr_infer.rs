@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream, Underscore};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream, Underscore};
 
 use crate::*;
 
@@ -25,7 +25,7 @@ impl From<ExprInfer> for Expr {
 
 impl Spanner for ExprInfer {
     fn span(&self) -> Span {
-        self.attrs.span().join(self.underscore.span())
+        self.to_token_stream().span()
     }
 }
 

@@ -1,4 +1,4 @@
-use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Span, Spanner, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 use crate::*;
 
@@ -65,8 +65,7 @@ impl Parse for StmtMacro {
 
 impl Spanner for StmtMacro {
     fn span(&self) -> Span {
-        let end = self.semi.as_ref().map(|s| s.span()).unwrap_or_else(|| self.mac.span());
-        self.attrs.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

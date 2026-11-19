@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -51,7 +51,7 @@ impl Parse for BareFnArg {
 
 impl Spanner for BareFnArg {
     fn span(&self) -> Span {
-        self.attrs.span().join(self.ty.span())
+        self.to_token_stream().span()
     }
 }
 

@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -69,15 +69,7 @@ impl Parse for StmtLocal {
 
 impl Spanner for StmtLocal {
     fn span(&self) -> Span {
-        let end = if let Some(s) = &self.semi {
-            s.span()
-        } else if let Some(init) = &self.init {
-            init.span()
-        } else {
-            self.pat.span()
-        };
-
-        self.attrs.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

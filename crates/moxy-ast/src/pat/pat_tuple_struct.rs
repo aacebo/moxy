@@ -1,4 +1,4 @@
-use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::ty::TypePath;
 use crate::*;
@@ -22,7 +22,7 @@ impl Attributed for PatTupleStruct {
 
 impl Spanner for PatTupleStruct {
     fn span(&self) -> Span {
-        self.attrs.span().join(self.elems.span())
+        self.to_token_stream().span()
     }
 }
 

@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -27,7 +27,7 @@ impl From<ExprMatch> for Expr {
 
 impl Spanner for ExprMatch {
     fn span(&self) -> Span {
-        self.attrs.span().join(self.arms.span())
+        self.to_token_stream().span()
     }
 }
 
@@ -106,8 +106,7 @@ impl Parse for MatchArm {
 
 impl Spanner for MatchArm {
     fn span(&self) -> Span {
-        let end = self.comma.as_ref().map(|c| c.span()).unwrap_or_else(|| self.body.span());
-        self.attrs.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

@@ -70,9 +70,10 @@ impl Scan for Group {
             )));
         }
 
+        let close = c.span();
         let c = c.advance_by(close_ch.len_utf8());
         let mut group = Self::new(delim, inner);
-        group.span = DelimSpan::new(cursor.span(), c.span());
+        group.span = DelimSpan::new(cursor.span(), close);
 
         Ok((c, group))
     }

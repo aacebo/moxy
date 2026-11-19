@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -19,7 +19,7 @@ impl Attributed for PatGroup {
 
 impl Spanner for PatGroup {
     fn span(&self) -> Span {
-        self.attrs.span().join(self.pat.span())
+        self.to_token_stream().span()
     }
 }
 

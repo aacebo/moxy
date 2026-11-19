@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream, Underscore};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream, Underscore};
 
 use crate::*;
 
@@ -19,7 +19,7 @@ impl Attributed for PatWild {
 
 impl Spanner for PatWild {
     fn span(&self) -> Span {
-        self.attrs.span().join(self.token.span())
+        self.to_token_stream().span()
     }
 }
 

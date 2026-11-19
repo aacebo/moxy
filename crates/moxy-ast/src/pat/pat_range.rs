@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 use crate::*;
 
@@ -21,13 +21,7 @@ impl Attributed for PatRange {
 
 impl Spanner for PatRange {
     fn span(&self) -> Span {
-        let end = if let Some(e) = &self.end {
-            e.span()
-        } else {
-            self.limits.span()
-        };
-
-        self.attrs.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

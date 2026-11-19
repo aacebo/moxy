@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::pat::PatIdent;
 use crate::*;
@@ -28,7 +28,7 @@ impl PatField {
 
 impl Spanner for PatField {
     fn span(&self) -> Span {
-        self.attrs.span().join(self.pat.span())
+        self.to_token_stream().span()
     }
 }
 

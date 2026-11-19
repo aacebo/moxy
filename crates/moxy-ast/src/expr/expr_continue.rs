@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -26,13 +26,7 @@ impl From<ExprContinue> for Expr {
 
 impl Spanner for ExprContinue {
     fn span(&self) -> Span {
-        let end = if let Some(l) = &self.label {
-            l.span()
-        } else {
-            self.continue_keyword.span()
-        };
-
-        self.attrs.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

@@ -151,6 +151,16 @@ impl Span {
         }
 
         if let (Self::Fallback(a), Self::Fallback(b)) = (self, other) {
+            // The call-site span has no position, as for an empty attribute
+            // list, and leaves the other span unchanged
+            if *a == fallback::Span::call_site() {
+                return other;
+            }
+
+            if b == fallback::Span::call_site() {
+                return *self;
+            }
+
             return Self::Fallback(a.join(b));
         }
 

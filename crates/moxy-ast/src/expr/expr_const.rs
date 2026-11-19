@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -26,7 +26,7 @@ impl From<ExprConst> for Expr {
 
 impl Spanner for ExprConst {
     fn span(&self) -> Span {
-        self.attrs.span().join(self.block.span())
+        self.to_token_stream().span()
     }
 }
 

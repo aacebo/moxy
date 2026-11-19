@@ -1,4 +1,4 @@
-use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -52,13 +52,7 @@ impl Parse for TraitItemFn {
 
 impl Spanner for TraitItemFn {
     fn span(&self) -> Span {
-        let end = self
-            .body
-            .as_ref()
-            .map(|b| b.span())
-            .or_else(|| self.semi.as_ref().map(|s| s.span()))
-            .unwrap_or_else(|| self.sig.span());
-        self.attrs.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

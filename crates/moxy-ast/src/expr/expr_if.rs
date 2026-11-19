@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -29,13 +29,7 @@ impl From<ExprIf> for Expr {
 
 impl Spanner for ExprIf {
     fn span(&self) -> Span {
-        let end = if let Some(e) = &self.else_branch {
-            e.span()
-        } else {
-            self.then_branch.span()
-        };
-
-        self.attrs.span().join(end)
+        self.to_token_stream().span()
     }
 }
 

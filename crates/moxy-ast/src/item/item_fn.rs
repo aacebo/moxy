@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -61,13 +61,7 @@ impl Parse for ItemFn {
 
 impl Spanner for ItemFn {
     fn span(&self) -> Span {
-        self.attrs.span().join(
-            self.body
-                .as_ref()
-                .map(Spanner::span)
-                .or_else(|| self.semi_punct.map(|v| v.span()))
-                .unwrap_or_else(|| self.sig.span()),
-        )
+        self.to_token_stream().span()
     }
 }
 

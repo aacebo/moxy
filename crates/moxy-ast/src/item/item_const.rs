@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -83,7 +83,7 @@ impl Parse for ItemConst {
 
 impl Spanner for ItemConst {
     fn span(&self) -> Span {
-        self.attrs.span().join(self.semi_punct.span())
+        self.to_token_stream().span()
     }
 }
 

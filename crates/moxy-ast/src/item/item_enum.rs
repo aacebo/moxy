@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -70,7 +70,7 @@ impl Parse for ItemEnum {
 
 impl Spanner for ItemEnum {
     fn span(&self) -> Span {
-        self.attrs.span().join(self.variants.span())
+        self.to_token_stream().span()
     }
 }
 

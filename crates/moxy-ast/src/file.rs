@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -19,9 +19,7 @@ impl Attributed for File {
 
 impl Spanner for File {
     fn span(&self) -> Span {
-        let first = self.shebang.as_ref().map(|v| v.span()).unwrap_or(self.attrs.span());
-        let last = self.items.last().map(|v| v.span()).unwrap_or(self.attrs.span());
-        first.join(last)
+        self.to_token_stream().span()
     }
 }
 

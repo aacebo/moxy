@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -69,13 +69,7 @@ impl Parse for Variant {
 
 impl Spanner for Variant {
     fn span(&self) -> Span {
-        let end = self
-            .discriminant
-            .as_ref()
-            .map(|v| v.span())
-            .or(self.eq_punct.map(|v| v.span()))
-            .unwrap_or(self.fields.span());
-        self.attrs.span().join(end)
+        self.to_token_stream().span()
     }
 }
 
