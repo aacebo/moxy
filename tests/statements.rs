@@ -181,3 +181,48 @@ fn statements_in_blocks_inside_generic_arguments_parse_in_linear_time() {
     );
     assert!(expression.is_block());
 }
+
+#[test]
+fn an_expression_statement_needs_a_semicolon_unless_it_is_block_like_or_last() {
+    for source in [
+        "{ unsafe {} b }",
+        "{ const {} b }",
+        "{ if a {} b }",
+        "{ 'l: loop {} b }",
+        "{ #[a] {} b }",
+        "{ a; b }",
+        "{ a }",
+    ] {
+        assert!(moxy::parse!(source as moxy::ast::StmtBlock).is_ok(), "`{source}`");
+    }
+
+    for source in ["{ a b }", "{ async {} b }", "{ {}.x b }", "{ x? b }"] {
+        let error = moxy::parse!(source as moxy::ast::StmtBlock).err();
+        assert_eq!(
+            error.map(|error| error.message().to_string()).as_deref(),
+            Some("expected `;`"),
+            "`{source}`"
+        );
+    }
+}
+
+#[test]
+fn a_let_statement_ends_with_a_semicolon_and_no_brace_before_else() {
+    for source in [
+        "{ let x = 1; }",
+        "{ let Some(x) = y else { return }; }",
+        "{ let x = f({}) else { return }; }",
+    ] {
+        assert!(moxy::parse!(source as moxy::ast::StmtBlock).is_ok(), "`{source}`");
+    }
+
+    for source in [
+        "{ let x = 1 }",
+        "{ let x }",
+        "{ let x = 1 b }",
+        "{ let x = S {} else { return }; }",
+        "{ let x = if a { b } else { c } else { return }; }",
+    ] {
+        assert!(moxy::parse!(source as moxy::ast::StmtBlock).is_err(), "`{source}`");
+    }
+}

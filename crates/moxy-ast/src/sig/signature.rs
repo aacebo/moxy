@@ -47,6 +47,18 @@ impl Parse for Signature {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        Self::parse_with(parser, true)
+    }
+
+    fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::skip_with(cursor, true)
+    }
+}
+
+impl Signature {
+    // Parses a signature whose parameters may be types alone, as `u8` in
+    // `fn f(u8);`, only with `anonymous`: rustc accepts them only in traits
+    pub(crate) fn parse_with(parser: &Parser, anonymous: bool) -> Result<Self, ParseError> {
         let constness = <_ as Parse>::parse(parser)?;
         let asyncness = <_ as Parse>::parse(parser)?;
         let safety = <_ as Parse>::parse(parser)?;
@@ -64,7 +76,17 @@ impl Parse for Signature {
                     break;
                 }
 
-                inputs.push_value(<_ as Parse>::parse(parser)?);
+                let param: super::FnParam = <_ as Parse>::parse(parser)?;
+
+                // A type that ends the parameter is one without a name;
+                // otherwise the tokens after it report the error
+                let ends = parser.is_empty() || <Token![,]>::peek(parser.cursor());
+
+                if !anonymous && ends && matches!(param, super::FnParam::Type(_)) {
+                    return Err(ParseError::new(param.span(), "expected a parameter name"));
+                }
+
+                inputs.push_value(param);
 
                 if <Token![,]>::peek(parser.cursor()) {
                     inputs.push_punct(<_ as Parse>::parse(parser)?);
@@ -92,7 +114,7 @@ impl Parse for Signature {
         })
     }
 
-    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+    pub(crate) fn skip_with(mut cursor: Cursor<'_>, anonymous: bool) -> Option<Cursor<'_>> {
         cursor = Option::<Token![const]>::skip(cursor)?;
         cursor = Option::<Token![async]>::skip(cursor)?;
         cursor = Option::<Safety>::skip(cursor)?;
@@ -108,7 +130,11 @@ impl Parse for Signature {
                 break;
             }
 
-            inner = super::FnParam::skip(inner)?;
+            inner = if anonymous {
+                super::FnParam::skip(inner)?
+            } else {
+                super::FnParam::skip_named(inner)?
+            };
 
             if inner.is_empty() {
                 break;

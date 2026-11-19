@@ -54,7 +54,7 @@ pub(super) fn expr(cursor: Cursor<'_>, _context: ExprContext) -> bool {
 
 // Whether a block-like expression, which ends a match arm without a comma and
 // a statement without a semicolon, starts here
-pub(super) fn block_like(cursor: Cursor<'_>) -> bool {
+pub(crate) fn block_like(cursor: Cursor<'_>) -> bool {
     let cursor = Label::skip(cursor).unwrap_or(cursor);
 
     cursor.is_delimited(Delim::Brace)

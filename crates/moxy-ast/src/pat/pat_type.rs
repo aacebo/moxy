@@ -33,7 +33,8 @@ impl Parse for PatType {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
             attrs: <_ as Parse>::parse(parser)?,
-            pat: Box::new(<_ as Parse>::parse(parser)?),
+            // As in rustc, a parameter's pattern has no top-level `|`
+            pat: Box::new(super::parse::single(parser)?),
             colon: <_ as Parse>::parse(parser)?,
             ty: <_ as Parse>::parse(parser)?,
         })
@@ -41,7 +42,7 @@ impl Parse for PatType {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        cursor = Pattern::skip(cursor)?;
+        cursor = super::skip::single(cursor)?;
         cursor = <Token![:]>::skip(cursor)?;
         Type::skip(cursor)
     }

@@ -51,8 +51,10 @@ impl Parse for PatIdent {
             by_ref: <_ as Parse>::parse(parser)?,
             mutability: <_ as Parse>::parse(parser)?,
             ident: <_ as Parse>::parse(parser)?,
+            // The subpattern has no top-level `|`: `a @ 1 | a @ 2` is two
+            // alternatives
             subpat: if <Token![@]>::peek(parser.cursor()) {
-                Some((<_ as Parse>::parse(parser)?, <_ as Parse>::parse(parser)?))
+                Some((<_ as Parse>::parse(parser)?, Box::new(super::parse::single(parser)?)))
             } else {
                 None
             },
@@ -67,7 +69,7 @@ impl Parse for PatIdent {
 
         if <Token![@]>::peek(cursor) {
             cursor = <Token![@]>::skip(cursor)?;
-            cursor = Pattern::skip(cursor)?;
+            cursor = super::skip::single(cursor)?;
         }
 
         Some(cursor)

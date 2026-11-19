@@ -232,3 +232,14 @@ fn formatted_attributes_lex_to_their_own_tokens() {
 
     assert!(mismatches.is_empty(), "{}", mismatches.join("\n"));
 }
+
+#[test]
+fn an_attribute_value_is_an_expression() {
+    for source in ["#[a = 1] fn f() {}", "#[a = \"b\"] fn f() {}", "#[a(b = c)] fn f() {}"] {
+        assert!(moxy::parse!(source as moxy::ast::File).is_ok(), "`{source}`");
+    }
+
+    for source in ["#[a = ] fn f() {}", "#[a = ,] fn f() {}"] {
+        assert!(moxy::parse!(source as moxy::ast::File).is_err(), "`{source}`");
+    }
+}

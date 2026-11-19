@@ -116,3 +116,12 @@ fn parentheses_after_pub_that_do_not_restrict_it_are_the_field_type() {
         );
     }
 }
+
+#[test]
+fn a_field_takes_no_mut() {
+    assert!(moxy::parse!("struct S { pub a: u8 }" as Item).is_ok());
+
+    for source in ["struct S { mut a: u8 }", "struct S(mut u8);"] {
+        assert!(moxy::parse!(source as Item).is_err(), "`{source}`");
+    }
+}

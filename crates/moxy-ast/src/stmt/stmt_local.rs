@@ -31,7 +31,8 @@ impl Parse for StmtLocal {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = <_ as Parse>::parse(parser)?;
         let let_keyword = <_ as Parse>::parse(parser)?;
-        let pat = <_ as Parse>::parse(parser)?;
+        // As in rustc, the pattern has no top-level `|`
+        let pat = crate::pat::parse::single(parser)?;
         let ty = if <Token![:]>::peek(parser.cursor()) {
             let colon = <_ as Parse>::parse(parser)?;
             Some((colon, <_ as Parse>::parse(parser)?))
@@ -39,8 +40,10 @@ impl Parse for StmtLocal {
             None
         };
 
-        let init = <_ as Parse>::parse(parser)?;
-        let semi = <_ as Parse>::parse(parser)?;
+        let init: Option<StmtLocalInit> = <_ as Parse>::parse(parser)?;
+
+        // A `let` statement always ends with `;`, even last in a block
+        let semi = Some(<Token![;]>::parse(parser)?);
 
         Ok(Self {
             attrs,
@@ -55,7 +58,7 @@ impl Parse for StmtLocal {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = <Token![let]>::skip(cursor)?;
-        cursor = Pattern::skip(cursor)?;
+        cursor = crate::pat::skip::single(cursor)?;
 
         if <Token![:]>::peek(cursor) {
             cursor = <Token![:]>::skip(cursor)?;
@@ -63,7 +66,7 @@ impl Parse for StmtLocal {
         }
 
         cursor = Option::<StmtLocalInit>::skip(cursor)?;
-        Option::<Token![;]>::skip(cursor)
+        <Token![;]>::skip(cursor)
     }
 }
 
@@ -111,15 +114,19 @@ impl Parse for StmtLocalInit {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self {
-            eq: <_ as Parse>::parse(parser)?,
-            expr: <_ as Parse>::parse(parser)?,
-            diverge: if <Token![else]>::peek(parser.cursor()) {
-                Some((<_ as Parse>::parse(parser)?, Box::new(<_ as Parse>::parse(parser)?)))
-            } else {
-                None
-            },
-        })
+        let eq = <_ as Parse>::parse(parser)?;
+        let expr = <_ as Parse>::parse(parser)?;
+        let diverge = if <Token![else]>::peek(parser.cursor()) {
+            if after_brace(parser.cursor()) {
+                return parser.error("an initializer that ends with `}` cannot take `else`").into();
+            }
+
+            Some((<_ as Parse>::parse(parser)?, Box::new(<_ as Parse>::parse(parser)?)))
+        } else {
+            None
+        };
+
+        Ok(Self { eq, expr, diverge })
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
@@ -127,6 +134,10 @@ impl Parse for StmtLocalInit {
         cursor = Expr::skip(cursor)?;
 
         if <Token![else]>::peek(cursor) {
+            if after_brace(cursor) {
+                return None;
+            }
+
             cursor = <Token![else]>::skip(cursor)?;
             cursor = Expr::skip(cursor)?;
         }
@@ -145,4 +156,11 @@ impl ToTokens for StmtLocalInit {
             expr.to_tokens(tokens);
         }
     }
+}
+
+// Whether the initializer before `else` ends with the `}` of a block, a
+// struct literal, or a brace macro, which rustc rejects as `else` would read
+// as part of it
+fn after_brace(cursor: Cursor<'_>) -> bool {
+    matches!(cursor.prev(), Some(moxy_token::TokenTree::Group(group)) if group.delim == moxy_token::Delim::Brace)
 }

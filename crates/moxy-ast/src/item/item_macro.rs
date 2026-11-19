@@ -27,8 +27,16 @@ impl Parse for ItemMacro {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = <_ as Parse>::parse(parser)?;
-        let call = <_ as Parse>::parse(parser)?;
-        let semi_punct = <_ as Parse>::parse(parser)?;
+        let call: MacroCall = <_ as Parse>::parse(parser)?;
+
+        // As in rustc, a call in braces ends the item, and one in parentheses
+        // or brackets ends with `;`
+        let semi_punct = if call.body.delim.is_brace() {
+            None
+        } else {
+            Some(<Token![;]>::parse(parser)?)
+        };
+
         Ok(Self { attrs, call, semi_punct })
     }
 
@@ -39,7 +47,12 @@ impl Parse for ItemMacro {
 
         cursor = Attributes::skip(cursor)?;
         cursor = MacroCall::skip(cursor)?;
-        Option::<Token![;]>::skip(cursor)
+
+        if matches!(cursor.prev(), Some(moxy_token::TokenTree::Group(group)) if group.delim.is_brace()) {
+            Some(cursor)
+        } else {
+            <Token![;]>::skip(cursor)
+        }
     }
 }
 

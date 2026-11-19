@@ -49,17 +49,29 @@ impl Parse for StmtMacro {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        Ok(Self {
-            attrs: <_ as Parse>::parse(parser)?,
-            mac: <_ as Parse>::parse(parser)?,
-            semi: <_ as Parse>::parse(parser)?,
-        })
+        let attrs = <_ as Parse>::parse(parser)?;
+        let mac: MacroCall = <_ as Parse>::parse(parser)?;
+        let semi: Option<Token![;]> = <_ as Parse>::parse(parser)?;
+
+        // A call in parentheses or brackets ends with `;` unless it ends the
+        // block, as in rustc
+        if semi.is_none() && !mac.body.delim.is_brace() && !parser.is_empty() {
+            return parser.error("expected `;`").into();
+        }
+
+        Ok(Self { attrs, mac, semi })
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = MacroCall::skip(cursor)?;
-        Option::<Token![;]>::skip(cursor)
+
+        if <Token![;]>::peek(cursor) {
+            return <Token![;]>::skip(cursor);
+        }
+
+        let braced = matches!(cursor.prev(), Some(TokenTree::Group(group)) if group.delim == Delim::Brace);
+        (braced || cursor.is_empty()).then_some(cursor)
     }
 }
 

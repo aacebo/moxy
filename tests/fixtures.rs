@@ -315,7 +315,8 @@ fn audited_stable_forms_parse_and_round_trip() {
         assert!(moxy::parse!(emitted as Item).is_ok());
     }
 
-    for source in ["fn f(u8);", "fn f((x, y): (u8, u8));"] {
+    // rustc takes a parameter without a name only in a trait
+    for source in ["trait A { fn f(u8); }", "fn f((x, y): (u8, u8));"] {
         let item: Item = moxy::parse!(source).unwrap();
         let emitted = item.to_token_stream().to_string();
         assert!(moxy::parse!(emitted as Item).is_ok());

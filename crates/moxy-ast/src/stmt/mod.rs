@@ -106,8 +106,16 @@ impl Parse for Stmt {
             |parser| Ok(Self::Item(Box::new(<_ as Parse>::parse(parser)?)))
         } else {
             |parser| {
+                let block_like = crate::expr::peek::block_like(Attributes::skip(parser.cursor()).unwrap_or(parser.cursor()));
                 let expr = crate::expr::parse::early(parser)?;
-                let semi = <_ as Parse>::parse(parser)?;
+                let semi: Option<Token![;]> = <_ as Parse>::parse(parser)?;
+
+                // As in rustc, only a block-like expression that ends the
+                // statement alone, or the last one in a block, needs no `;`
+                if semi.is_none() && !parser.is_empty() && !(block_like && ends_block(&expr)) {
+                    return parser.error("expected `;`").into();
+                }
+
                 Ok(Self::Expr(expr, semi))
             }
         };
@@ -127,9 +135,31 @@ impl Parse for Stmt {
         } else if Item::peek(cursor) && !macro_expr(cursor) {
             Item::skip(cursor)
         } else {
-            Option::<Token![;]>::skip(crate::expr::skip::early(cursor)?)
+            let (cursor, block_like) = crate::expr::skip::early_block_like(cursor)?;
+
+            if <Token![;]>::peek(cursor) {
+                <Token![;]>::skip(cursor)
+            } else {
+                (block_like || cursor.is_empty()).then_some(cursor)
+            }
         }
     }
+}
+
+// Whether an expression is a block-like one, which a statement that starts
+// block-like and is not continued parses to
+fn ends_block(expr: &Expr) -> bool {
+    matches!(
+        expr,
+        Expr::Block(_)
+            | Expr::If(_)
+            | Expr::Match(_)
+            | Expr::Loop(_)
+            | Expr::While(_)
+            | Expr::ForLoop(_)
+            | Expr::Unsafe(_)
+            | Expr::Const(_)
+    )
 }
 
 // Whether a block statement starts here. A method call, field access, or `?`

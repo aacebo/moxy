@@ -90,3 +90,14 @@ fn apply_macro_rules_as_attribute() {
     assert_eq!(double_add(2, 5), 14);
     assert_eq!(add(2, 5), 170);
 }
+
+#[test]
+fn a_macro_call_in_parentheses_or_brackets_ends_with_a_semicolon() {
+    for source in ["m!();", "m![];", "m! {}", "fn f() { m!() }", "fn f() { m!{}; m!(); m![] }"] {
+        assert!(moxy::parse!(source as moxy::ast::File).is_ok(), "`{source}`");
+    }
+
+    for source in ["m!()", "m![]", "m!{};", "fn f() { m!() b }", "fn f() { m![] m!() }"] {
+        assert!(moxy::parse!(source as moxy::ast::File).is_err(), "`{source}`");
+    }
+}

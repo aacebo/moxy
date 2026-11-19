@@ -33,7 +33,7 @@ impl Parse for ImplItemFn {
             attrs: <_ as Parse>::parse(parser)?,
             vis: <_ as Parse>::parse(parser)?,
             defaultness: <_ as Parse>::parse(parser)?,
-            sig: <_ as Parse>::parse(parser)?,
+            sig: Signature::parse_with(parser, false)?,
             body: <_ as Parse>::parse(parser)?,
         })
     }
@@ -42,7 +42,7 @@ impl Parse for ImplItemFn {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
         cursor = Option::<Token![default]>::skip(cursor)?;
-        cursor = Signature::skip(cursor)?;
+        cursor = Signature::skip_with(cursor, false)?;
         StmtBlock::skip(cursor)
     }
 }

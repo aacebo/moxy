@@ -236,3 +236,39 @@ fn reference_patterns_before_an_error_fail_in_linear_time() {
     let pattern: Pattern = moxy::parse!("&1..=2").unwrap();
     assert!(matches!(pattern, Pattern::Reference(_)));
 }
+
+#[test]
+fn let_and_parameter_patterns_have_no_top_level_alternation() {
+    for source in [
+        "fn f() { let (a | b) = c; }",
+        "fn f((a | b): u8) {}",
+        "fn f() { if let a | b = c {} }",
+    ] {
+        assert!(moxy::parse!(source as moxy::ast::File).is_ok(), "`{source}`");
+    }
+
+    for source in ["fn f() { let a | b = c; }", "fn f() { let | a = c; }", "fn f(a | b: u8) {}"] {
+        assert!(moxy::parse!(source as moxy::ast::File).is_err(), "`{source}`");
+    }
+}
+
+#[test]
+fn a_binding_subpattern_has_no_top_level_alternation() {
+    let pattern: Pattern = moxy::parse!("a @ 1 | a @ 2").unwrap();
+    let Pattern::Or(or) = &pattern else {
+        panic!("not an or-pattern: {}", pattern.to_token_stream());
+    };
+    let cases: Vec<String> = or.cases.iter().map(|case| case.to_token_stream().to_string()).collect();
+    assert_eq!(cases, ["a @ 1", "a @ 2"]);
+    assert!(
+        or.cases
+            .iter()
+            .all(|case| matches!(case, Pattern::Ident(ident) if ident.subpat.is_some()))
+    );
+
+    let pattern: Pattern = moxy::parse!("a @ (1 | 2)").unwrap();
+    assert!(matches!(&pattern, Pattern::Ident(ident) if ident.subpat.is_some()));
+
+    let closure: moxy::ast::Expr = moxy::parse!("|a @ S { b, .. }| x").unwrap();
+    assert!(matches!(closure, moxy::ast::Expr::Closure(_)));
+}

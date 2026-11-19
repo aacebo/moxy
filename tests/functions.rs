@@ -151,3 +151,19 @@ fn a_variadic_may_be_named_by_a_pattern() {
         assert_eq!(moxy::fmt!(&item).unwrap().replace(['\n', '\t'], ""), source);
     }
 }
+
+#[test]
+fn only_trait_functions_take_parameters_without_a_name() {
+    for source in [
+        "trait A { fn f(u8); }",
+        "trait A { fn f(&u8) {} }",
+        "fn f(_: u8) {}",
+        "type F = fn(u8);",
+    ] {
+        assert!(moxy::parse!(source as moxy::ast::File).is_ok(), "`{source}`");
+    }
+
+    for source in ["fn f(u8) {}", "impl A { fn f(u8) {} }", "extern \"C\" { fn f(u8); }"] {
+        assert!(moxy::parse!(source as moxy::ast::File).is_err(), "`{source}`");
+    }
+}

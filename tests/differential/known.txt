@@ -54,7 +54,6 @@ REJECT t: unsafe<'a> &'a A
 # anonymous parameters, and `try!` as a macro
 ACCEPT e: <a::Fn(A) -> B>::c
 ACCEPT e: f::<Fn::(A) -> B>()
-ACCEPT f: fn f(u8) {}
 ACCEPT f: trait A { fn f(&u8, mut x: u8); }
 ACCEPT f: trait A { fn f(u8); }
 ACCEPT t: A<a::b()>
@@ -83,13 +82,9 @@ REJECT t: 'a + A
 # rejects while parsing or keeps as tokens
 ACCEPT f: use a::{::b};
 TREE f: trait A { pub fn f(); }
-ACCEPT b: { let a | b = c; }
-ACCEPT b: { let | a = c; }
-ACCEPT f: fn f() { 1 .. 2; 1 . 2; 1. 2; 1 .2; }
 ACCEPT f: impl A { type T where Self: Sized = u8; }
 ACCEPT f: safe fn f() {}
 ACCEPT f: safe static X: u8 = 1;
-ACCEPT f: struct S { mut a: u8 }
 ACCEPT f: unsafe static X: u8 = 1;
 ACCEPT f: use Self::A;
 ACCEPT f: use a::Self;
@@ -144,15 +139,6 @@ REJECT f: impl<T> X<T> { type Item; #[inline] fn next() -> Option<T> {} fn advan
 # Pending: invalid input that moxy accepts and `mut self` as a pattern, not
 # yet fixed
 ACCEPT e: abstract
-ACCEPT b: { a b }
-ACCEPT b: { let x = 1 }
-ACCEPT b: { let x = S {} else { return }; }
-ACCEPT b: { let x }
-ACCEPT f: #[a = ] fn f() {}
-ACCEPT f: fn f(a | b: u8) {}
-ACCEPT f: m!()
-ACCEPT f: m![]
-ACCEPT f: m!{};
 ACCEPT p: #[a] x
 ACCEPT p: -'a'
 ACCEPT p: [1.., 2]

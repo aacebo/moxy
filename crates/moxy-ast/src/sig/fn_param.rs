@@ -70,10 +70,17 @@ impl Parse for FnParam {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        Self::skip_named(cursor).or_else(|| Type::skip(cursor))
+    }
+}
+
+impl FnParam {
+    // Skips a receiver or a parameter with a pattern, not a type alone
+    pub(crate) fn skip_named(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         if Receiver::peek(cursor) {
             Receiver::skip(cursor)
         } else {
-            pat::PatType::skip(cursor).or_else(|| Type::skip(cursor))
+            pat::PatType::skip(cursor)
         }
     }
 }

@@ -21,16 +21,22 @@ pub(crate) fn pattern_bound(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
 }
 
 pub(crate) fn early(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+    early_block_like(cursor).map(|(cursor, _)| cursor)
+}
+
+// Skips as `early` does, and tells whether a block-like expression ends the
+// statement alone, which then needs no semicolon
+pub(crate) fn early_block_like(cursor: Cursor<'_>) -> Option<(Cursor<'_>, bool)> {
     let start = Attributes::skip(cursor)?;
 
     if peek::block_like(start)
         && let Some(end) = primary(start, ExprContext::NORMAL)
         && !peek::continues_block_like(end)
     {
-        return Some(end);
+        return Some((end, true));
     }
 
-    expr(cursor, ExprContext::NORMAL)
+    Some((expr(cursor, ExprContext::NORMAL)?, false))
 }
 
 fn list(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {

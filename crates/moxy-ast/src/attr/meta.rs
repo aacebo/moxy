@@ -146,7 +146,11 @@ impl Parse for MetaContent {
         {
             let eq = <_ as Parse>::parse(parser)?;
             let start = parser.cursor();
-            let end = Expr::skip(parser.cursor()).unwrap_or(parser.cursor());
+            // As in rustc, the value is an expression, as `"a.rs"` in
+            // `#[path = "a.rs"]`
+            let Some(end) = Expr::skip(parser.cursor()) else {
+                return parser.error("expected expression").into();
+            };
 
             parser.seek(&Parser::from_cursor(end));
 
@@ -163,8 +167,7 @@ impl Parse for MetaContent {
         if cursor.is_empty() || <Token![,]>::peek(cursor) {
             Some(cursor)
         } else if <Token![=]>::peek(cursor) && !<Token![==]>::peek(cursor) && !<Token![=>]>::peek(cursor) {
-            let value = <Token![=]>::skip(cursor)?;
-            Some(Expr::skip(value).unwrap_or(value))
+            Expr::skip(<Token![=]>::skip(cursor)?)
         } else if Group::peek(cursor) {
             Group::skip(cursor)
         } else {

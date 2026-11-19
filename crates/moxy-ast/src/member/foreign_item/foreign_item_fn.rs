@@ -31,7 +31,7 @@ impl Parse for ForeignItemFn {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = <_ as Parse>::parse(parser)?;
         let vis = <_ as Parse>::parse(parser)?;
-        let sig = <_ as Parse>::parse(parser)?;
+        let sig = Signature::parse_with(parser, false)?;
         let (body, semi) = if StmtBlock::peek(parser.cursor()) {
             (Some(<_ as Parse>::parse(parser)?), None)
         } else {
@@ -50,7 +50,7 @@ impl Parse for ForeignItemFn {
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = Signature::skip(cursor)?;
+        cursor = Signature::skip_with(cursor, false)?;
 
         if StmtBlock::peek(cursor) {
             StmtBlock::skip(cursor)
