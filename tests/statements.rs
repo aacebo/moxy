@@ -133,3 +133,20 @@ fn a_macro_call_that_an_operator_follows_is_an_expression_statement() {
         assert!(block.stmts.inner[0].is_macro(), "`{source}`");
     }
 }
+
+#[test]
+fn a_block_that_a_postfix_operator_follows_is_an_expression_statement() {
+    for (source, tokens) in [
+        ("{ {}.b }", "{{} . b}"),
+        ("{ {}.b(); }", "{{} . b () ;}"),
+        ("{ {}? }", "{{} ?}"),
+    ] {
+        let block: moxy::ast::StmtBlock = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(block.to_token_stream().to_string(), tokens);
+        assert_eq!(block.stmts.inner.len(), 1, "`{source}`");
+        assert!(block.stmts.inner[0].is_expr(), "`{source}`");
+    }
+
+    let block: moxy::ast::StmtBlock = moxy::parse!("{ {} -1 }").unwrap();
+    assert!(block.stmts.inner[0].is_block());
+}

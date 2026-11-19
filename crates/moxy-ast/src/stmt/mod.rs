@@ -87,7 +87,7 @@ impl Parse for Stmt {
         <Token![;]>::peek(cursor)
             || StmtLocal::peek(cursor)
             || StmtMacro::peek(cursor)
-            || StmtBlock::peek(cursor)
+            || block(cursor)
             || Item::peek(cursor)
             || Expr::peek(cursor)
     }
@@ -105,7 +105,7 @@ impl Parse for Stmt {
             return Ok(Self::Macro(<_ as Parse>::parse(parser)?));
         }
 
-        if StmtBlock::peek(parser.cursor()) {
+        if block(parser.cursor()) {
             return Ok(Self::Block(<_ as Parse>::parse(parser)?));
         }
 
@@ -125,7 +125,7 @@ impl Parse for Stmt {
             StmtLocal::skip(cursor)
         } else if StmtMacro::peek(cursor) {
             StmtMacro::skip(cursor)
-        } else if StmtBlock::peek(cursor) {
+        } else if block(cursor) {
             StmtBlock::skip(cursor)
         } else if Item::peek(cursor) && !macro_expr(cursor) {
             Item::skip(cursor)
@@ -133,6 +133,12 @@ impl Parse for Stmt {
             Option::<Token![;]>::skip(crate::expr::skip::early(cursor)?)
         }
     }
+}
+
+// Whether a block statement starts here. A method call, field access, or `?`
+// after the block continues it as an expression: `{ x }.len();`
+fn block(cursor: Cursor<'_>) -> bool {
+    StmtBlock::peek(cursor) && !crate::expr::peek::continues_block_like(cursor.offset(1))
 }
 
 // Whether a macro call that an operator follows starts an expression

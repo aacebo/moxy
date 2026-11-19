@@ -1,4 +1,4 @@
-use moxy::ast::{Expr, Item, Meta};
+use moxy::ast::{Attributed, Expr, Item, Meta};
 use moxy::token::{Spanner, ToTokenStream};
 
 #[test]
@@ -131,4 +131,18 @@ fn expression_attributes_belong_to_the_operand_that_follows_them() {
 
     let expression: Expr = moxy::parse!("x + #[a] y").unwrap();
     assert_eq!(expression.as_binary().unwrap().right.attrs().unwrap().len(), 1);
+}
+
+#[test]
+fn outer_attributes_at_the_start_of_a_file_belong_to_its_first_item() {
+    let file: moxy::ast::File = moxy::parse!("#![a] #[b] fn f() {} #[c] fn g() {}").unwrap();
+    assert_eq!(file.attrs.len(), 1);
+    assert!(file.attrs[0].style.is_inner());
+    assert_eq!(file.items.len(), 2);
+    assert_eq!(file.items[0].attrs().len(), 1);
+    assert_eq!(file.items[0].to_token_stream().to_string(), "# [b] fn f () {}");
+
+    let file: moxy::ast::File = moxy::parse!("#[macro_use] extern crate a;").unwrap();
+    assert!(file.attrs.is_empty());
+    assert_eq!(file.items[0].attrs().len(), 1);
 }

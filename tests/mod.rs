@@ -1,4 +1,5 @@
 mod ast;
+mod differential;
 mod fixtures;
 mod parser;
 mod precedence;

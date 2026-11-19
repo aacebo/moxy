@@ -1,0 +1,2459 @@
+# Differential corpus: each line is `kind: source`, with kinds e (expression),
+# b (block), p (pattern), t (type), i (item), and f (file). `\n` in a source
+# stands for a line break. moxy and syn must agree on each line: both reject it,
+# or both accept it with the same tree shape and the same emitted tokens.
+# Differences that are known go in known.txt.
+e: a + b * c
+e: a * b + c
+e: a - b - c
+e: a / b / c
+e: a = b = c
+e: a += b += c
+e: a || b && c
+e: a && b || c
+e: a == b + c
+e: a + b == c * d
+e: a | b & c ^ d
+e: a << b + c
+e: a + b << c
+e: a & b == c
+e: a == b & c
+e: a < b << c
+e: a as u8 + b as u8 * c
+e: a * b as u8
+e: -a * b
+e: -a as u8
+e: !a as u8
+e: &a as *const u8
+e: *a as u8
+e: a + -b
+e: a - -b
+e: a & &b
+e: a && &b
+e: a * *b
+e: a..b + c
+e: a + b..c + d
+e: a..b..c
+e: ..a + b
+e: a..
+e: ..
+e: ..=a
+e: a..=b
+e: a = b..c
+e: a = ..
+e: a..b = c
+e: a || b..c || d
+e: a..b == c
+e: a = b + c
+e: a += b + c
+e: a + b += c
+e: a = b += c
+e: a += b = c
+e: a < b == c
+e: a == b == c
+e: a < b < c
+e: a == b && c == d
+e: a == b || c < d && e > f
+e: a + b - c * d / e % f
+e: a ^ b | c & d
+e: a << b >> c
+e: a <= b
+e: a >= b
+e: a != b
+e: a as usize as u8
+e: a as usize < b
+e: a as usize << b
+e: a as usize <= b
+e: (a as usize) < b
+e: a as Vec<u8>
+e: a as fn() -> u8
+e: a as u8 + b
+e: a as u8 - b
+e: a as u8 * b
+e: a as u8 & b
+e: a as u8 | b
+e: a as u8 && b
+e: a as u8 || b
+e: a as u8 == b
+e: a as u8 > b
+e: a as u8 >= b
+e: a as u8 >> b
+e: a as u8..b
+e: a as u8 = b
+e: a as &u8
+e: a as *const u8 as usize
+e: a as dyn Any
+e: a as impl Any
+e: a as (u8)
+e: a as [u8; 2]
+e: a as _
+e: a as !
+e: -a.b
+e: &mut a.b
+e: &a.b.c
+e: !a.b()
+e: *a.b()?
+e: -a?
+e: &a[0]
+e: *a[0]
+e: -a.await
+e: &&a
+e: & &a
+e: &&mut a
+e: &raw const a.b
+e: &raw mut a
+e: &raw
+e: &raw.x
+e: &raw + 1
+e: &raw const
+e: & raw const x
+e: --a
+e: !!a
+e: -!-a
+e: a.b.c
+e: a.0
+e: a.0.1
+e: a.0 .1
+e: a.b().c
+e: a.b::<T>()
+e: a.b::<T>
+e: a.b::<Vec<T>>()
+e: a.b::<{ N }, 3>()
+e: a.await
+e: a.await?
+e: a.await.b
+e: a?.b
+e: a??
+e: a()()
+e: a[0][1]
+e: a()[0]
+e: a[0]()
+e: (a.b)()
+e: a.b(c)(d)
+e: a::<T>()
+e: a::b::<T>::c()
+e: <T as U>::f()
+e: <T>::f
+e: <T as U>::V { a: 1 }
+e: <Vec<T>>::new()
+e: <&T>::f()
+e: <[T]>::f()
+e: <dyn T>::f()
+e: <T as U<V>>::f::<W>()
+e: Vec::<u8>::new()
+e: Vec<u8>::new()
+e: a < b > c
+e: a::<b>(c)
+e: a<b>(c)
+e: (a < b, c > (d))
+e: f(a < b, c > d)
+e: a.b < c
+e: a.b::<c>
+e: x as usize < y
+e: x < y as usize
+e: x << y
+e: x <<= y
+e: x >>= y
+e: a < -b
+e: a<-b
+e: a <- b
+e: a & mut b
+e: a &mut b
+e: S { a: 1 }
+e: S { a }
+e: S { a, b: 2, ..c }
+e: S { ..c }
+e: S { ..}
+e: S { }
+e: S { a: 1, }
+e: S { 0: 1 }
+e: S { #[a] a: 1 }
+e: S::<T> { a: 1 }
+e: a::S { a: 1 }
+e: S { a: 1 }.b
+e: S { a: 1 } + 1
+e: Self { a }
+e: crate::S {}
+e: S { a: S { b } }
+e: S { a: |x| x, b }
+e: S { a: 1, ..Default::default() }
+e: S { r#a: 1 }
+e: S { a: 1 ..}
+e: if a { b }
+e: if a { b } else { c }
+e: if a { b } else if c { d } else { e }
+e: if a == S {} { b }
+e: if a == (S {}) { b }
+e: if S {} == a { b }
+e: if (S {}) == a { b }
+e: if a.b { c }
+e: if let Some(x) = a { b }
+e: if let Some(x) = a && x { b }
+e: if let Some(x) = a && let Some(y) = x { b }
+e: if a && let Some(y) = x && b { b }
+e: if let a | b = c { d }
+e: if let Some(x) = a || b { c }
+e: if let x = a == b { c }
+e: if let x = a..b { c }
+e: if let Some(x) = S { a: 1 } { b }
+e: if let x = if a { b } else { c } { d }
+e: if x { 1 } else { 2 } + 3
+e: if a { b }.c
+e: if !a { b }
+e: if a { b } else { c }.d
+e: if a {} - 1
+e: if f(S {}) { b }
+e: if [S {}].len() { b }
+e: if a { S { b } } else { c }
+e: if a.b::<T>() { c }
+e: if a < b { c }
+e: if a as usize < b { c }
+e: if a { } else if let Some(x) = y { }
+e: if let Some(x) = a else { }
+e: if match a { _ => true } { b }
+e: if a = b { c }
+e: if a..b { c }
+e: if .. { c }
+e: if a.. { c }
+e: if x == y { c } { d }
+e: while a { b }
+e: while let Some(x) = a.next() { b }
+e: while let Some(x) = a && b { c }
+e: 'a: while a { break 'a }
+e: 'a: loop { continue 'a }
+e: 'a: for x in y { }
+e: 'a: { break 'a 1 }
+e: for x in a..b { }
+e: for x in a.. { }
+e: for x in S {} { }
+e: for (a, b) in c { }
+e: for x in y.iter() { }
+e: for x | y in z { }
+e: for &x in y { }
+e: for x in a..=b { }
+e: for x in 0..n { }
+e: for _ in ..n { }
+e: loop { }
+e: loop { break }
+e: loop { break; }
+e: loop { break 1 }
+e: loop { break 'a }
+e: loop { break 'a 1 + 2 }
+e: loop { break 'a: loop {} }
+e: loop { break { 1 } }
+e: loop { break -1 }
+e: loop { break }.x
+e: match a { }
+e: match a { _ => 1 }
+e: match a { _ => 1, }
+e: match a { x if x > 1 => 1, _ => 2 }
+e: match a { x | y => 1 }
+e: match a { | x | y => 1 }
+e: match a { 1..=2 => 1, _ => 2 }
+e: match a { 1.. => 1, _ => 2 }
+e: match a { ..=1 => 1, _ => 2 }
+e: match a { -1 => 1, _ => 2 }
+e: match a { x @ 1..=2 => 1, _ => 2 }
+e: match a { x => { 1 } y => 2 }
+e: match a { x => { 1 }, y => 2 }
+e: match a { x => { 1 }.f(), y => 2 }
+e: match a { x => { 1 } + 1, y => 2 }
+e: match a { x => if b { 1 } else { 2 } y => 2 }
+e: match a { x => if b { 1 } else { 2 }, y => 2 }
+e: match a { x => match b {} y => 2 }
+e: match a { x => unsafe { 1 } y => 2 }
+e: match a { x => async { 1 }, y => 2 }
+e: match a { x => loop {} y => 2 }
+e: match a { x => 'a: loop {} y => 2 }
+e: match a { x => for i in j {} y => 2 }
+e: match a { x => while i {} y => 2 }
+e: match a { x => const { 1 } y => 2 }
+e: match a { x => S {}, y => 2 }
+e: match a { x => {} (y, z) => 2 }
+e: match a { x => {} [y] => 2 }
+e: match a { x => {} &y => 2 }
+e: match a { x => {} -1 => 2 }
+e: match a { x => {} | y => 2 }
+e: match a { x => {} ..=1 => 2 }
+e: match a { x => {}?, y => 2 }
+e: match a { x => {}.await, y => 2 }
+e: match a { x => {} as u8, y => 2 }
+e: match a { x => return, y => 2 }
+e: match a { x => break, y => continue }
+e: match a { x => |y| y, z => 2 }
+e: match a { #[cfg(a)] x => 1, #[b] _ => 2 }
+e: match a { x if let Some(y) = x => 1, _ => 2 }
+e: match a { x if a || b => 1, _ => 2 }
+e: match S {} { _ => 1 }
+e: match (S {}) { _ => 1 }
+e: match a { S { b } => 1 }
+e: match a { S { b: 1, .. } => 1 }
+e: match a { S { .. } => 1 }
+e: match a { S(b, ..) => 1 }
+e: match a { a::B => 1 }
+e: match a { a::B::<T> => 1 }
+e: match a { <T>::B => 1 }
+e: match a { <T as U>::B(x) => 1 }
+e: match a { <T as U>::B { x } => 1 }
+e: match a { m!() => 1 }
+e: match a { m!{} => 1 }
+e: match a { m![] => 1 }
+e: match a { a::m!(x) => 1 }
+e: match a { ref x => 1 }
+e: match a { ref mut x => 1 }
+e: match a { mut x => 1 }
+e: match a { &x => 1 }
+e: match a { &mut x => 1 }
+e: match a { &&x => 1 }
+e: match a { box x => 1 }
+e: match a { const { 1 } => 1 }
+e: match a { 'a' => 1 }
+e: match a { 'a'..='z' => 1 }
+e: match a { "s" => 1 }
+e: match a { b"s" => 1 }
+e: match a { A..=B => 1 }
+e: match a { a::A..=a::B => 1 }
+e: match a { A.. => 1 }
+e: match a { 0..5 => 1 }
+e: match a { 0...5 => 1 }
+e: match a { -1..=-5 => 1 }
+e: match a { [a, .., b] => 1 }
+e: match a { [a, rest @ ..] => 1 }
+e: match a { (a, ..) => 1 }
+e: match a { (a,) => 1 }
+e: match a { (a) => 1 }
+e: match a { () => 1 }
+e: match a { (a | b, c) => 1 }
+e: match a { x @ (a | b) => 1 }
+e: match a { x @ y @ z => 1 }
+e: match a { x @ Some(_) => 1 }
+e: match a { true => 1, false => 2 }
+e: match a { 1 | 2 if b => 1, _ => 2 }
+e: match a { _ if b => 1, _ => 2 }
+e: match a { x => a..b, y => 2 }
+e: match a { x => .., y => 2 }
+e: match a { x => a.., y => 2 }
+e: match a { x => 1 }
+e: match a { r#x => 1 }
+e: match a { union => 1 }
+e: match a { auto => 1 }
+e: match a { default => 1 }
+e: match a { raw => 1 }
+e: match a { safe => 1 }
+e: || 1
+e: |a| a
+e: |a, b| a + b
+e: |a: u8, b| a
+e: |a,| a
+e: || -> u8 { 1 }
+e: |a| -> u8 { a }
+e: move || 1
+e: async || 1
+e: async move || 1
+e: static || 1
+e: static move || 1
+e: const || 1
+e: for<'a> |x: &'a u8| x
+e: for<'a> move |x: &'a u8| -> &'a u8 { x }
+e: |&a| a
+e: |(a, b)| a
+e: |S { a }| a
+e: |mut a| a
+e: |a| a + 1
+e: |a| a..b
+e: |a| a = b
+e: |a| |b| a + b
+e: |_| ()
+e: |a| a as u8
+e: f(|a| a, b)
+e: |a| a,
+e: a + |b| b
+e: a = |b| b
+e: || a + b
+e: || ..
+e: || a..
+e: ||a|| b
+e: a || |b| b
+e: |a| a?.b
+e: |a: Vec<u8>| a
+e: |a: impl Fn() -> u8| a
+e: |a: fn(u8) -> u8, b| a
+e: |a| { a }(1)
+e: || {}.x
+e: || -> u8 { 1 }.x
+e: |#[a] x| x
+e: |x: u8| -> u8 x
+e: |a | b| a
+e: |a: &mut u8| *a = 1
+e: |a| return a
+e: |a| break a
+e: | | 1
+e: move |a| async move { a }
+e: unsafe { 1 }
+e: async { 1 }
+e: async move { 1 }
+e: const { 1 }
+e: try { 1 }
+e: { 1 }
+e: { 1; }
+e: { ; }
+e: { ;; }
+e: { let a = 1; a }
+e: { a; b }
+e: unsafe { a }.b
+e: async { a }.await
+e: const { 1 } + 1
+e: { 1 } + 1
+e: { 1 }.x
+e: { 1 }?
+e: ({ 1 })
+e: [{ 1 }]
+e: #[a] { 1 }
+e: #[a] 1
+e: #[a] x + y
+e: #[a] x.y
+e: #[a] -x
+e: #[a] #[b] x
+e: #[a] (x)
+e: #[a] [x]
+e: #[a] if x {}
+e: #[a] match x {}
+e: #[a] || x
+e: #[a] x as u8
+e: #[a] x = 1
+e: #[a] x..y
+e: #[a] &x
+e: #[a] x?
+e: #[a] x()
+e: #[a] return x
+e: #[a] S { x }
+e: #[a] m!()
+e: #[a] loop {}
+e: #[a] 'l: loop {}
+e: #[a] unsafe {}
+e: #[a] async {}
+e: #[a] x[0]
+e: #[a] x.await
+e: f(#[a] x, #[b] y)
+e: [#[a] x, #[b] y]
+e: (#[a] x, #[b] y)
+e: x + #[a] y
+e: #![a] x
+e: /// doc\n x
+e: return
+e: return a
+e: return a + b
+e: return a..b
+e: return ..
+e: return a = b
+e: return || a
+e: return return
+e: (return)
+e: (return, 1)
+e: [return; 1]
+e: yield
+e: yield a
+e: yield a + b
+e: a + return
+e: a + return b
+e: a || return
+e: a && break
+e: a = return b
+e: -return
+e: break 'a
+e: break 'a 1
+e: break 1
+e: continue 'a
+e: continue
+e: a + break
+e: return.x
+e: return?
+e: (break).x
+e: return { 1 }
+e: return {}.x
+e: break {}.x
+e: 1
+e: 1u8
+e: 1_000
+e: 0x1f
+e: 0b101
+e: 0o17
+e: 1.0
+e: 1.
+e: 1e10
+e: 1E+10
+e: 1.0e-10
+e: 1f32
+e: 1.0f64
+e: 0x1f_u8
+e: 1.foo()
+e: 1.0.foo()
+e: 1..2
+e: 1.0..2.0
+e: 1...2
+e: 1.e10
+e: 0xE+1
+e: 0x1e+1
+e: 1e
+e: 1_f32
+e: 0b12
+e: 0o8
+e: 0x
+e: 1__
+e: 1usize
+e: 1i128
+e: 1u256
+e: 0e0
+e: 0.0e0
+e: 1e_1
+e: 1e+_1
+e: 0x.1
+e: 1.0_f32
+e: 1._0
+e: 1.x
+e: 1.e
+e: 1.e1
+e: 2.max(3)
+e: 2.0.max(3.0)
+e: 1.0.0
+e: a.1.0
+e: a.1.0.2
+e: a.0x1
+e: a.1u8
+e: a.1e1
+e: a.01
+e: a.0_0
+e: 'a'
+e: '\''
+e: '\\'
+e: '\n'
+e: '\x41'
+e: '\u{1F600}'
+e: '\u{0}'
+e: 'ab'
+e: ''
+e: '
+e: 'a
+e: '\u{110000}'
+e: '\u{D800}'
+e: '\x80'
+e: '\xff'
+e: b'a'
+e: b'\xff'
+e: b'\''
+e: b'\u{1}'
+e: b'é'
+e: "a"
+e: "a\"b"
+e: "a\\"
+e: "\u{1F600}"
+e: "a\nb"
+e: "\x7f"
+e: "\x80"
+e: "\q"
+e: "\0"
+e: r"a"
+e: r#"a"b"#
+e: r##"a"#b"##
+e: r#"a
+e: r###"a"##
+e: b"a"
+e: b"\xff"
+e: br"a"
+e: br#"a"#
+e: c"a"
+e: cr"a"
+e: cr#"a"#
+e: c"\xff"
+e: c"\0"
+e: "a"suffix
+e: 1suffix
+e: 'a'suffix
+e: b"a"suffix
+e: r#"a"#suffix
+e: "a" "b"
+e: true
+e: false
+e: r#true
+e: r#a
+e: r#match
+e: r#self
+e: r#crate
+e: r#_
+e: r#
+e: 'a'b
+e: 'static
+e: f('a', 'b')
+e: f::<'a>()
+e: f::<'a, 'b'>()
+e: f::<'static>()
+e: f('a' , 'b)
+e: é
+e: 日本語
+e: _a
+e: a_
+e: __
+e: _
+e: _ = 1
+e: (_, a) = b
+e: [_, a] = b
+e: S { a, .. } = b
+e: 1 /* c */ + /* d */ 2
+e: 1 /* /* nested */ */ + 2
+e: 1 /* unterminated
+e: 1 // line\n + 2
+e: /** doc */ 1
+e: 1 /**/ + 2
+e: 1 /***/ + 2
+e: 1 //// four\n + 2
+e: 1 /*** three */ + 2
+e: m!()
+e: m![]
+e: m!{}
+e: m!{}.x
+e: m!() + 1
+e: m!{} + 1
+e: a::m!()
+e: ::a::m!()
+e: m!(a b c)
+e: m! ()
+e: m ! ()
+e: m!(#)
+e: m!($a)
+e: m!(.. .)
+e: m!{} {}
+e: !m!()
+e: a! = b
+e: a!=b
+e: a !b
+e: try!(a)
+e: r#try!(a)
+e: union!(a)
+e: self::m!()
+e: super::m!()
+e: crate::m!()
+e: $crate::m!()
+e: matches!(a, B | C)
+e: ()
+e: (a)
+e: (a,)
+e: (a, b)
+e: (a, b,)
+e: ((a))
+e: []
+e: [a]
+e: [a,]
+e: [a; 2]
+e: [a; N + 1]
+e: [a, b; 2]
+e: [;]
+e: [a;]
+e: (,)
+e: [,]
+e: f(,)
+e: f(a,,b)
+e: f(a b)
+e: (a b)
+e: [a b]
+e: a b
+e: a.
+e: a.+
+e: a +
+e: + a
+e: a..=
+e: ..=
+e: a?b
+e: a[b
+e: a]
+e: (a
+e: a)
+e: {a
+e: a}
+e: a;
+e: ;
+e: a,
+e: a:b
+e: a::b
+e: ::a
+e: a::
+e: a::<>
+e: a::<>::b
+e: a::<T,>::b
+e: a::<'a, T, 3, { N }, -1, true, "s">::b
+e: a::<T = U>::b
+e: a::<T: U>::b
+e: a::<N = 3>::b
+e: a::<N = { 3 }>::b
+e: Fn(A) -> B
+e: a::Fn(A) -> B
+e: <a::Fn(A) -> B>::c
+e: a::b(c)
+e: a::(b)
+e: self
+e: Self
+e: super::a
+e: crate::a
+e: self::a
+e: a::self
+e: a::super::b
+e: a::crate
+e: a::Self
+e: Self::A
+e: Self::<T>::A
+e: Self { }
+e: Self(a)
+e: let x = 1
+e: let Some(x) = a && b
+e: a && let Some(x) = b
+e: (let x = 1)
+e: let x = 1 + 2
+e: let x = a || b
+e: let x = a..b
+e: let x = a = b
+e: await
+e: a.await()
+e: dyn
+e: async
+e: union
+e: auto
+e: default
+e: macro_rules
+e: raw
+e: safe
+e: gen
+e: try
+e: box x
+e: box
+e: do yeet 1
+e: become f()
+e: static
+e: abstract
+e: typeof
+e: 'a: 1
+e: 'a: { 1 }
+e: 'a: unsafe { 1 }
+e: 'a: async { 1 }
+e: 'a: if x {}
+e: 'a: match x {}
+e: 'a:
+e: f::<{ N }>()
+e: f::<{ N + 1 }, T>()
+e: f::<N>()
+e: f::<-1>()
+e: f::<1 + 1>()
+e: f::<A<B>>()
+e: f::<A<B<C>>>()
+e: f::<A<B>, C>()
+e: f::<A<B<C>>, D>>()
+e: a >> b
+e: a >>= b
+e: A<B<C>>::d
+e: A::<B::<C>>::d
+e: a::<B<C>>= b
+e: a::<B>= b
+e: a::<B>==b
+e: a::<B>>>c
+e: f::<&'a T>()
+e: f::<&'a mut T>()
+e: f::<*const T>()
+e: f::<[T; N]>()
+e: f::<[T]>()
+e: f::<(A, B)>()
+e: f::<()>()
+e: f::<!>()
+e: f::<_>()
+e: f::<fn(A) -> B>()
+e: f::<dyn A + B>()
+e: f::<impl A>()
+e: f::<A::B>()
+e: f::<<A as B>::C>()
+e: f::<A<N = 1>>()
+e: f::<A<T = B>>()
+e: f::<A<T: B>>()
+e: f::<A<T<'a> = B>>()
+e: f::<for<'a> fn(&'a T)>()
+e: f::<dyn for<'a> A<'a>>()
+e: f::<unsafe extern "C" fn()>()
+e: f::<extern fn()>()
+e: f::<m!()>()
+e: f::<a::m![]>()
+e: a.b::<>()
+e: a::<>()
+e: a?.b()?.c
+e: a.b?.c?
+e: a.await?.b.await
+e: &a.b()?
+e: &*a
+e: *&a
+e: &mut *a
+e: &mut **a
+e: &-a
+e: -&a
+e: -*a
+e: !&a
+e: a - -1
+e: a--1
+e: a - - -1
+e: a*-1
+e: a**b
+e: a&&&b
+e: a&&&&b
+e: a&b&c
+e: a|b||c
+e: a||b|c
+e: a|||b
+e: a = b == c
+e: a == b = c
+e: a..b = c..d
+e: a = b..
+e: a..= b
+e: a .. = b
+e: a ..= b ..= c
+e: a..b..
+e: ....
+e: ..a..
+e: a.. ..b
+e: (a..)..b
+e: a..(..b)
+e: ..(..)
+e: a.. ;
+e: a..,
+e: (a.., b)
+e: [a.., b]
+e: [a..; b]
+e: [..]
+e: [a..]
+e: (..)
+e: (.., a)
+e: f(..)
+e: f(.., a)
+e: a[..]
+e: a[..b]
+e: a[b..]
+e: a[b..c]
+e: a[..=b]
+e: {..}
+e: {a..}
+e: S { a: .. }
+e: S { a: b.. }
+e: S { a: b.., ..c }
+e: S { ..a..b }
+e: S { .. .. }
+e: S { a: 1, .. }
+f: fn min<T:>(v1: T) -> T {}
+f: fn f<T>() where T: {}
+f: fn f<T>() where Self:, T: {}
+f: fn f() where T: ;
+f: impl<Idx: PartialOrd<Idx>> RangeFrom<Idx> {}
+f: impl<T: A<B>> C<T> {}
+f: impl<T: A<B>> C {}
+f: impl<T: A<T>> C for D {}
+f: impl<T: Sized<>> From<T> for OsString {}
+f: impl<> Bound<> {}
+f: impl<> X {}
+f: impl<T> Option<T> {}
+f: impl<T> [T] {}
+f: impl<T, const N: usize> [T; N] {}
+f: impl<T> [MaybeUninit<T>] {}
+f: impl<T: ?Sized> *const T {}
+f: impl<T> Cell<T> { fn take() -> T where T: Default {} }
+f: impl<T> Cell<T> { fn get() -> T {} #[stable] fn update(f: ()) {} }
+f: impl<T> Cell<T> { fn replace() { mem::replace } }
+f: impl<B, C> ControlFlow<B, C> {}
+f: impl<R: Try> ControlFlow<R::Output, R> {}
+f: impl<T, F> DropGuard<T, F> where F: FnOnce(T) {}
+f: impl bool { fn ok_or<E>(err: E) -> Result<(), E> {} }
+f: impl str { fn len() -> usize {} }
+f: impl Ordering { fn then_with<F>(f: F) where F: FnOnce() {} }
+f: impl ExitStatusError { fn code() -> Option<u8> { NonZeroI32::new(self.0.0) } }
+f: impl DestroyedState for ! { fn register_dtor<T>(_: &Storage<T, !>) {} }
+f: type Symbols<'data> = Table<Symbol<'data>>;
+f: type Symbols<'false> = Table<Symbol<'false>>;
+f: type B = unsafe extern "efiapi" fn(_: Handle, _: ...) -> Status;
+f: type B = fn(_: ...) -> Status;
+f: type B = fn(Handle, ...) -> Status;
+f: type B = extern "C" fn(a: u8, ...);
+f: struct SymbolId<const DYNAMIC: bool = false>(usize);
+f: struct S<const N: usize = 3>;
+f: struct S<const N: usize = { 3 }>;
+f: struct S<const N: usize = 3, T = u8>;
+f: struct S<const B: bool = true>;
+f: struct S<const C: char = 'a'>;
+f: struct S<const N: i8 = -1>;
+f: struct S<const N: usize = M>;
+f: struct S<const N: usize = { M + 1 }>(u8) where T: U;
+f: mod helper { type LazyResolve = impl (FnOnce() -> Capture) + Send; }
+f: type A = impl (FnOnce() -> Capture) + Send + Sync + UnwindSafe;
+f: type A = impl (B) + C;
+f: type A = dyn (B) + C;
+f: type A = dyn (FnOnce() -> C) + Send;
+f: type A = Box<dyn (FnOnce() -> C) + Send>;
+f: type A = impl ?Sized + (B);
+f: type A = dyn ?Sized;
+f: type A = (dyn B + C);
+f: type A = &(dyn B + C);
+f: type A = &'a (dyn B + C);
+f: type A = &dyn B;
+f: type A = &'a mut dyn B;
+f: fn write_in_place_with_drop<T>(src_end: *const T) -> impl FnMut(InPlaceDrop<T>) -> Result<T> { |a| {} }
+f: fn f() -> impl FnMut(A<T>) -> Result<T> {}
+f: fn f() -> impl FnMut(A) -> B {}
+f: fn f() -> impl Fn() -> T + Destruct where F: FnMut() -> T {}
+f: fn f() -> Result<[T; N], IntoIter<T>> {}
+f: fn f() -> Result<(), NonZero<usize>> {}
+f: fn f<R: Try<Output = T>>(generator: G) -> ControlFlow<R::Residual> {}
+f: fn f() -> ControlFlow<R::Residual> {}
+f: fn f() -> <R as Residual<T>>::TryType {}
+f: fn f() -> ChangeOutputType<Option<T>> where R: Try<Output<Option<T>>> {}
+f: fn f() where R: Try<Output = Option<T>> {}
+f: fn f() where R: Try<Residual: Residual<T>> {}
+f: fn f() where S: Sum<Self::Item> {}
+f: fn f() where Self: Sized, Self::Item: Clone {}
+f: fn f() where F: FnMut() -> K {}
+f: fn f() -> [T; 2] where F: FnMut() -> K {}
+f: fn f() where G: FnOnce<A>, F: FnOnce<A>;
+f: fn f() where T: PartialOrd<U> {}
+f: fn f() where R: RangeBounds<usize> {}
+f: fn f(bounds: RangeTo<usize>) -> ops::Range<usize> where R: RangeBounds<usize> {}
+f: fn f() { while guard.initialized < guard.array_mut.len() {} }
+f: fn f() { while a.b < c.d {} }
+f: fn f() { while a.b < c.d { let Some(x) = iter.next() else {}; } mem::forget(x) }
+f: fn f() { if v2 < v1 {} }
+f: fn f() { if other < self {} }
+f: fn f() { rem = if len < n {} else {}; }
+f: fn f() { if (a).is_le() {} }
+f: fn f() { match () { () => true, () => start < end, () => end } }
+f: fn f() { match x { a => start < end, b => end } }
+f: fn f() { match x { a => s < e, } }
+f: fn f() { match x { a => s < e } }
+f: fn f() { let vda: VecDeque<u8> = () = VecDeque::with_capacity(1); }
+f: fn f() { { [MaybeUninit::<u8>].transpose } }
+f: fn f() { [MaybeUninit::<!>::uninit(); 0].transpose() }
+f: fn f() { match partial_cmp { () => ControlFlow::Break::Break } }
+f: fn f() { match x { Some(o) => ControlFlow::Break(o), } }
+f: fn f() { || { for frame in () {} } }
+f: fn f(capture: Capture) { || { for frame in () {} } }
+f: fn f() { fn some<T>(_: Option<T>, x: T) -> Option<T> where T: A {} }
+f: fn f() -> Option<Self::Item> where Self: Sized { #[inline] fn some<T>(x: T) -> Option<T> {} }
+f: fn f() { Ok::<B, !>(f(b, item)) }
+f: fn f() -> Result<!, io::Error> {}
+f: fn f() -> Result<isize, !> { Ok(666) }
+f: fn f() -> ! {}
+f: fn f(x: !) {}
+f: fn f() { let x: ! = panic!(); }
+f: fn f() { x as ! }
+f: type A = fn() -> !;
+f: type A = Result<T, !>;
+f: type A = (!, !);
+f: type A = [!; 0];
+f: type A = &!;
+f: type A = *const !;
+f: type A = Option<!>;
+f: type A = B<!>;
+f: type A = B<!, C>;
+f: type A = B<C, !>;
+f: fn f() { self.0.0 }
+f: fn f() { NonZeroI32::new(self.0.0) }
+f: fn rust_eh_personality(version: c_int, actions: UnwindAction, _exception_class: u64, exception: *mut UnwindException, unwind_ctx: &mut UnwindContext<'_>) -> UnwindReasonCode {}
+f: fn f() { if a.contains(B::C) { match e { A::N | A::C(_) => U::X, A::T => U::Y, } } else { match e { A::N => U::X, } } }
+f: fn f() { if a { match e { A => 1, } } else { match e { A => 2, } } }
+f: fn f() { if a { 1 } else { 2 } }
+f: fn f() -> u8 { if a { match e { A => 1 } } else { 2 } }
+f: fn f() { let x = match a { Ok(v) => v, Err(_) => return U::F, }; if a {} }
+f: fn f() { let x = match a { Ok(v) => v, Err(_) => return U::F, }; }
+f: fn f() { let x = match a { Ok(v) => v, Err(_) => return, }; }
+f: fn f() { match a { Ok(v) => v, Err(_) => return }; }
+f: impl Command { const_error!(); fn do_fork() {} }
+f: impl Command { m!{} fn do_fork() {} }
+f: impl Command { m!(); }
+f: impl Command { unsafe fn do_exec(&mut self, stdio: ChildPipes, maybe_envp: Option<&CStringArray>) -> Result<!, io::Error> {} }
+f: impl A { fn exec(self, default: Stdio) -> io::Error { if a { return e; } } }
+f: trait A { type TryType: Try; }
+f: trait A { fn f() -> Self; }
+f: trait A { type Output; fn call_once(args: Args) -> Self::Output { FnOnce::call_once } }
+f: impl<A, F> FnOnce<A> for B<F> { type Output = <F as FnOnce<A>>::Output; extern "rust-call" fn call_once(self, args: A) -> Self::Output { <F as FnOnce<A>>::call_once(*self, args) } }
+f: impl<Args: Tuple, F: FnOnce<Args> + ?Sized, A: Allocator> FnOnce<Args> for Box<F, A> { }
+f: impl<A: T, F: FnOnce<A> + ?Sized> X for Y {}
+f: impl<F: FnOnce<A> + ?Sized> X for Y {}
+f: impl<F: G<A> + H> X for Y {}
+f: impl<F: G<A>> X for Y {}
+f: fn f() { <F as FnOnce<Args>>::call_once(*self, args) }
+f: fn f() { <dyn RangeBounds<Idx>>::contains(self, item) }
+f: fn f() { <Self as RangeBounds<Idx>>::contains(self, item) }
+f: impl<T> NonNull<T> { fn get_unchecked_mut<I>(index: I) -> NonNull<I::Output> where I: SliceIndex<[T]> {} }
+f: fn f() where I: SliceIndex<[T]> {}
+f: fn f() -> NonNull<I::Output> {}
+f: fn f() -> NonNull<[T]> {}
+f: fn f(dst_buf: *mut T, end: *const T) -> usize { sink.into_ok() }
+f: impl<T> Pin<T> { fn set(value: Ptr::Target) where Ptr::Target: Sized {} }
+f: fn f() -> Pin<&Ptr::Target> where Ptr: Deref {}
+f: fn f() where Ptr::Target: Sized {}
+f: fn f() where <A as B>::C: Sized {}
+f: fn f() where for<'a> &'a T: Sized {}
+f: fn f() where for<'a> F: Fn(&'a u8) {}
+f: fn f() where F: for<'a> Fn(&'a u8) {}
+f: fn f() where 'a: 'b, 'b: {}
+f: fn f() where T: 'a + ?Sized + for<'b> U<'b> {}
+f: fn f() where (A, B): C {}
+f: fn f() where [T]: C {}
+f: fn f() where &'a T: C {}
+f: fn f() where *const T: C {}
+f: fn f() where fn(): C {}
+f: fn f() where dyn A: C {}
+f: fn f() where T: C, {}
+f: fn f() where {}
+f: fn f() where;
+f: impl<T> X<T> { type Item; #[inline] fn next() -> Option<T> {} fn advance_by(self, n: usize) -> Result<(), NonZero<usize>> { rem = if len < n {} else {} } }
+f: fn f() -> Result<(), NonZero<usize>> { rem = if len < n {} else {} }
+f: fn f() { a = if len < n {} else {} }
+f: fn f() { a = if x {} else {} }
+f: fn f() { if len < n {} else {} }
+f: fn f() { a = if len < n { 1 } else { 2 }; }
+f: fn f() { let a = if len < n { 1 } else { 2 }; }
+f: fn f() { a = match x { _ => 1 } }
+f: fn f() { a = loop {} }
+f: fn f() { a = unsafe {} }
+f: fn f() { a = {} }
+f: fn f() { a += if x {} else {} }
+f: fn f() { return if x {} else {} }
+f: fn f() { a = b; }
+f: fn f() { a = b }
+b: { #[cfg(a)] x += 1; }
+b: { #[cfg(a)] x = 1; }
+b: { #[cfg(a)] x.y(); }
+b: { #[cfg(a)] x + y; }
+b: { #[cfg(a)] *x = 1; }
+b: { #[cfg(a)] -x; }
+b: { #[cfg(a)] &x; }
+b: { #[cfg(a)] let x = 1; }
+b: { #[cfg(a)] { x } }
+b: { #[cfg(a)] if x {} }
+b: { #[cfg(a)] m!(); }
+b: { #[cfg(a)] return; }
+b: { #[cfg(a)] fn f() {} }
+b: { #[allow(unused)] x.y = z; }
+b: { #[a] x? }
+b: { #[a] x.await; }
+b: { #[a] 1..2; }
+b: { #[a] a as u8; }
+b: { let x = #[a] y + z; }
+b: { f(#[a] y + z); }
+b: { let x = match y { Some(v) => v, None => return, }; z }
+b: { match y { Some(v) => v, None => return, } }
+b: { match y { None => return, Some(v) => v } }
+b: { match y { None => break, Some(v) => v } }
+b: { match y { None => continue, Some(v) => v } }
+b: { match y { None => return, } }
+b: { match y { None => return } }
+b: { match y { None => break 'a, Some(v) => v } }
+b: { match y { None => yield, Some(v) => v } }
+b: { f(return, 1) }
+b: { [return, 1] }
+b: { (return, 1) }
+b: { S { a: return, b: 1 } }
+b: { let x = (break, 1); }
+b: { if a { return } else { 1 } }
+b: { a || return }
+b: { let x = if let Some(x) = a && b { 1 } else { 2 }; }
+b: { if let Some(x) = a && let Some(y) = b && x == y {} }
+b: { while let Some(x) = a && b {} }
+b: { let Some(x) = a else { return }; }
+b: { let Some(x) = a else { return; }; x }
+b: { let x = a else { b }; }
+b: { let (a, b): (u8, u8) = c; }
+b: { let x: u8; }
+b: { let x; }
+b: { let mut x = 1; }
+b: { let ref x = 1; }
+b: { let x = 1 else { return }; }
+b: { let x = if a { b } else { c }; }
+b: { let x = a && b else { return }; }
+b: { let x = S {} else { return }; }
+b: { let x: T = a.b else { c }; }
+b: { let _ = a; }
+b: { let _: u8 = a; }
+b: { let a | b = c; }
+b: { let | a = c; }
+b: { let &x = y; }
+b: { let S { a, .. } = b; }
+b: { let [a, .., b] = c; }
+b: { let x = || 1; }
+b: { let x = |a| -> u8 { a }; }
+b: { let x = async { 1 }.await; }
+b: { let x = a..; }
+b: { let x = ..; }
+b: { let x = a..=b; }
+b: { let x = 1 }
+b: { let x }
+b: { a; b; c }
+b: { a b }
+b: { a; ; b }
+b: { ;;; }
+b: { {} {} }
+b: { {} - 1 }
+b: { {} - 1; }
+b: { {}; -1 }
+b: { if a {} - 1 }
+b: { if a {} *b = 1; }
+b: { if a {} &b }
+b: { if a {} (b) }
+b: { if a {} [b] }
+b: { if a {} else {} (b) }
+b: { match a {} (b) }
+b: { match a {} [b] }
+b: { loop {} (b) }
+b: { while a {} (b) }
+b: { for a in b {} (c) }
+b: { unsafe {} (b) }
+b: { unsafe {}.b }
+b: { unsafe {} .b; c }
+b: { const {} (b) }
+b: { async {} (b) }
+b: { async {}.await; }
+b: { 'a: {} (b) }
+b: { 'a: loop {} (b) }
+b: { {}.b }
+b: { {}.b(); }
+b: { {}? }
+b: { if a {}.b() }
+b: { match a {}.b }
+b: { match a {} ? }
+b: { match a {} as u8 }
+b: { if a {} as u8 }
+b: { if a {} + 1 }
+b: { if a { 1 } else { 2 } + 1 }
+b: { if a {} || b }
+b: { if a {} && b }
+b: { if a {} | b }
+b: { if a {} == b }
+b: { if a {} < b }
+b: { if a {} .. b }
+b: { if a {} ..b }
+b: { if a {} = b }
+b: { if a {}; b }
+b: { m!{} (b) }
+b: { m!{} .b }
+b: { m!{} - 1 }
+b: { m!() - 1 }
+b: { m![] - 1 }
+b: { m!{} ? }
+b: { m!{}; }
+b: { m!(); }
+b: { m!() }
+b: { m!{} }
+b: { m! {} m! {} }
+b: { a::m!{} b }
+b: { m!{} + m!{} }
+b: { x = m!{}; }
+b: { fn f() {} f() }
+b: { struct S; S }
+b: { use a::b; b }
+b: { const X: u8 = 1; X }
+b: { static X: u8 = 1; X }
+b: { const { 1 }; }
+b: { const fn f() {} }
+b: { const unsafe fn f() {} }
+b: { unsafe fn f() {} }
+b: { unsafe { f() } }
+b: { unsafe impl A for B {} }
+b: { unsafe extern "C" {} }
+b: { extern "C" fn f() {} }
+b: { extern "C" {} }
+b: { extern crate a; }
+b: { async fn f() {} }
+b: { async move {} }
+b: { async || {} }
+b: { async move || {} }
+b: { union U { a: u8 } }
+b: { union = 1; }
+b: { union.x }
+b: { union(1) }
+b: { auto = 1; }
+b: { auto trait A {} }
+b: { default = 1; }
+b: { default(); }
+b: { macro_rules! m { () => {} } }
+b: { macro_rules! m { () => {} } m!() }
+b: { macro_rules = 1; }
+b: { raw = 1; }
+b: { safe = 1; }
+b: { safe(1) }
+b: { type T = u8; }
+b: { trait A {} }
+b: { impl A {} }
+b: { enum E {} }
+b: { mod m {} }
+b: { pub fn f() {} }
+b: { pub(crate) struct S; }
+b: { static mut X: u8 = 1; }
+b: { static || 1 }
+b: { static move || 1; }
+b: { let x = static || 1; }
+b: { let x = const { 1 }; }
+b: { let x = const || 1; }
+b: { self.x = 1; }
+b: { Self::X }
+b: { crate::x() }
+b: { super::x() }
+b: { ::x() }
+b: { <T>::x() }
+b: { <T as U>::x(); }
+b: { <T as U>::x(*self, args) }
+b: { <T as U<V>>::x(*self) }
+b: { <T as U<V>>::x(&self) }
+b: { T::x(*self) }
+b: { a::<T>::x(*self) }
+b: { <T>::x(-1) }
+b: { <T as U<V>>::x }
+b: { 'a: loop { break 'a; } }
+b: { 'a: { if x { break 'a 1; } 2 } }
+b: { return }
+b: { return; }
+b: { break }
+b: { yield; }
+b: { x.await }
+b: { x?; }
+b: { x? }
+b: { *x = 1; }
+b: { **x = 1; }
+b: { &x; }
+b: { -x; }
+b: { !x; }
+b: { (x); }
+b: { [x]; }
+b: { 1; }
+b: { "a"; }
+b: { x as u8; }
+b: { |x| x; }
+b: { || {} }
+b: { || {}; }
+b: { move || {} }
+b: { .. }
+b: { ..x }
+b: { x.. }
+b: { ..; }
+b: { 1..2 }
+b: { box x }
+b: { try { 1 } }
+b: { try { 1 }? }
+b: { try!(x) }
+b: { gen { 1 } }
+b: { do yeet }
+p: _
+p: x
+p: mut x
+p: ref x
+p: ref mut x
+p: x @ _
+p: x @ 1..=2
+p: x @ (a | b)
+p: ref mut x @ S { .. }
+p: 1
+p: -1
+p: 1.0
+p: -1.0
+p: "a"
+p: 'a'
+p: b'a'
+p: true
+p: 1..=2
+p: 1..2
+p: 1..
+p: ..=2
+p: ..2
+p: -1..=-2
+p: 'a'..='z'
+p: A..=B
+p: A::B..=C::D
+p: <A>::B..=C
+p: A..
+p: 0u8..=255
+p: 1...2
+p: ..
+p: (a, b)
+p: (a,)
+p: (a)
+p: ()
+p: (..)
+p: (a, ..)
+p: (.., a)
+p: (a, .., b)
+p: [a, b]
+p: [a, ..]
+p: [a, rest @ ..]
+p: [a, .., b]
+p: []
+p: [..]
+p: &x
+p: &mut x
+p: &&x
+p: &&mut x
+p: &(a, b)
+p: &[a, b]
+p: &S { a }
+p: &a | &b
+p: &(a | b)
+p: &mut a | b
+p: a | b
+p: | a | b
+p: | a
+p: a | b | c
+p: (a | b, c)
+p: Some(a | b)
+p: Some(_)
+p: Some(..)
+p: Some(x @ 1..=2)
+p: S(a, b)
+p: S()
+p: a::S(a)
+p: a::S::<T>(a)
+p: S { a }
+p: S { a, b }
+p: S { a: b }
+p: S { a: 1, .. }
+p: S { .. }
+p: S {}
+p: S { a, }
+p: S { ref a, mut b, ref mut c }
+p: S { 0: a }
+p: S { #[cfg(a)] a, .. }
+p: S { a: b @ 1..=2, }
+p: S { box a }
+p: a::S { a }
+p: S::<T> { a }
+p: <T as U>::S { a }
+p: <T as U>::S(a)
+p: <T as U>::C
+p: <T>::C
+p: A
+p: a::B
+p: ::a::B
+p: self::A
+p: Self::A
+p: crate::A
+p: A::<T>::B
+p: m!()
+p: m![]
+p: m!{}
+p: a::m!()
+p: m!() | b
+p: const { 1 }
+p: box x
+p: (x): T
+p: x: T
+p: #[a] x
+p: r#x
+p: union
+p: auto
+p: default
+p: x if y
+p: 1 | 2..=3
+p: 1..=2 | 3
+p: ..=2 | 3
+p: 1.. | 3
+p: (1.., 2)
+p: [1.., 2]
+p: [1..]
+p: (1..)
+p: &1..=2
+p: &(1..=2)
+p: box 1..=2
+p: x @ y @ z
+p: mut x @ 1
+p: mut (a, b)
+p: mut self
+p: self
+p: Self
+p: Self(a)
+p: Self { a }
+p: super::A
+p: -x
+p: -'a'
+p: - 1
+p: 1 + 2
+p: A + B
+p: f()
+p: a.b
+p: a[0]
+p: !x
+p: *x
+p: &raw const x
+p: &'a x
+p: 'a
+p: {}
+p: ;
+p: ,
+t: u8
+t: a::B
+t: ::a::B
+t: a::B<T>
+t: a::B::<T>
+t: A<B, C>
+t: A<B<C>>
+t: A<B<C<D>>>
+t: A<'a>
+t: A<'a, T>
+t: A<'static>
+t: A<3>
+t: A<-3>
+t: A<{ 3 }>
+t: A<{ N + 1 }>
+t: A<N>
+t: A<true>
+t: A<"s">
+t: A<'c'>
+t: A<T = U>
+t: A<T = U<V>>
+t: A<T: U>
+t: A<T: U + V>
+t: A<T: 'a>
+t: A<T: ?Sized>
+t: A<T<'a> = U>
+t: A<T<'a>: U>
+t: A<N = 3>
+t: A<N = { 3 }>
+t: A<N = -3>
+t: A<()>
+t: A<(B, C)>
+t: A<[B]>
+t: A<[B; 3]>
+t: A<&B>
+t: A<&'a B>
+t: A<&'a mut B>
+t: A<*const B>
+t: A<*mut B>
+t: A<fn()>
+t: A<fn(B) -> C>
+t: A<dyn B>
+t: A<dyn B + C>
+t: A<dyn B + 'a>
+t: A<impl B>
+t: A<B + C>
+t: A<B::C>
+t: A<<B as C>::D>
+t: A<<B>::D>
+t: A<Self>
+t: A<Self::B>
+t: A<crate::B>
+t: A<super::B>
+t: A<self::B>
+t: A<_>
+t: A<!>
+t: A<m!()>
+t: A<a::m![]>
+t: A<B,>
+t: A<>
+t: A::<>
+t: A<B>::C
+t: A<B>::C<D>
+t: <A as B>::C
+t: <A as B>::C<D>
+t: <A as B<C>>::D
+t: <A>::B
+t: <A as ::b::C>::D
+t: <A as B>::C::D
+t: <<A as B>::C as D>::E
+t: <&A as B>::C
+t: <[A] as B>::C
+t: <(A, B) as C>::D
+t: <dyn A as B>::C
+t: <A as B>
+t: ()
+t: (A)
+t: (A,)
+t: (A, B)
+t: (A, B,)
+t: ((A))
+t: [A]
+t: [A; 3]
+t: [A; N]
+t: [A; N + 1]
+t: [A; { N }]
+t: [A; f(1)]
+t: [[A; 2]; 3]
+t: [A; _]
+t: &A
+t: &mut A
+t: &'a A
+t: &'a mut A
+t: &&A
+t: &&'a mut A
+t: &'static str
+t: &dyn A
+t: &(dyn A + B)
+t: &dyn A + B
+t: &'a (A + B)
+t: &impl A
+t: *const A
+t: *mut A
+t: *const *mut A
+t: *const [A]
+t: *const dyn A
+t: * A
+t: !
+t: _
+t: fn()
+t: fn() -> A
+t: fn(A, B) -> C
+t: fn(a: A, b: B)
+t: fn(_: A)
+t: fn(A,)
+t: fn(A, ...)
+t: fn(a: A, ...)
+t: fn(a: A, va: ...)
+t: fn(...)
+t: unsafe fn()
+t: extern "C" fn()
+t: extern fn()
+t: unsafe extern "C" fn(A) -> B
+t: extern "C-unwind" fn()
+t: for<'a> fn(&'a A)
+t: for<'a, 'b> fn(&'a A, &'b B) -> &'a C
+t: for<> fn()
+t: for<'a> unsafe extern "C" fn(&'a A)
+t: fn(#[a] A)
+t: fn(mut a: A)
+t: fn(&self)
+t: fn() -> impl A
+t: fn() -> fn() -> A
+t: fn(fn(A) -> B) -> fn(C) -> D
+t: fn() -> !
+t: fn() -> (A, B)
+t: safe fn()
+t: async fn()
+t: const fn()
+t: dyn A
+t: dyn A + B
+t: dyn A + 'a
+t: dyn 'a + A
+t: dyn A + B + 'a
+t: dyn for<'a> A<'a>
+t: dyn for<'a> A<'a> + B
+t: dyn ?Sized + A
+t: dyn A<B = C>
+t: dyn Fn(A) -> B
+t: dyn Fn(A) -> B + Send
+t: dyn Fn(A) + Send
+t: dyn FnOnce() -> A + 'a
+t: dyn (A)
+t: dyn (A) + B
+t: dyn (A + B)
+t: dyn ::a::B
+t: dyn a::B<C>
+t: dyn ~const A
+t: dyn const A
+t: dyn [const] A
+t: dyn A +
+t: dyn
+t: dyn + A
+t: dyn*
+t: impl A
+t: impl A + B
+t: impl A + 'a
+t: impl 'a + A
+t: impl ?Sized
+t: impl Fn(A) -> B
+t: impl Fn(A) -> B + 'a
+t: impl for<'a> Fn(&'a A)
+t: impl A<B = impl C>
+t: impl A + use<'a, T>
+t: impl use<> + A
+t: impl A + use<>
+t: impl use<'a, T, Self> + Sized
+t: impl (A)
+t: impl (A) + B
+t: impl ~const A
+t: impl const A
+t: impl async Fn()
+t: impl AsyncFn()
+t: impl
+t: A + B
+t: A + 'a
+t: 'a + A
+t: (A + B)
+t: Fn(A) -> B
+t: Fn(A, B)
+t: Fn()
+t: Fn() -> ()
+t: a::Fn(A) -> B
+t: Fn(A) -> B + Send
+t: Fn(A) -> impl C
+t: Fn::(A) -> B
+t: FnOnce(&mut A) -> &B
+t: Fn(A) -> Fn(B) -> C
+t: Box<dyn Fn(A) -> B>
+t: Box<dyn Fn(A) -> B + Send>
+t: Box<dyn Fn(A) -> B + Send + 'static>
+t: Box<Fn(A) -> B>
+t: Box<dyn A>
+t: Vec<Box<dyn A + Send>>
+t: Option<&'a mut dyn A>
+t: HashMap<K, V, S>
+t: Result<T, Box<dyn Error + Send + Sync>>
+t: m!()
+t: m![]
+t: m!{}
+t: a::m!()
+t: ::a::m!()
+t: m!() + A
+t: Self
+t: Self::A
+t: Self<T>
+t: self::A
+t: super::A
+t: crate::A
+t: $crate::A
+t: r#type
+t: r#Self
+t: union
+t: auto
+t: default
+t: raw
+t: safe
+t: async
+t: await
+t: A::<B>::C::<D>
+t: A::B::<C>
+t: A::<'a, B, 3>
+t: typeof(x)
+t: unsafe<'a> &'a A
+t: A<B = C, D>
+t: A<B, C = D>
+t: A<'a, B = C>
+t: A<T, 'a>
+t: A<B<C>,>
+t: A<B<C,>,>
+t: A<B>>
+t: A<<B>
+t: A<B
+t: A<,>
+t: A<B,,C>
+t: A<B C>
+t: (A B)
+t: [A B]
+t: [A;]
+t: [;3]
+t: &
+t: *const
+t: fn
+t: fn(
+t: A::
+t: ::
+t: A::B::
+t: A<B>::
+t: A.B
+t: A B
+t: A,
+t: A;
+t: 1
+t: "a"
+t: {}
+t: -A
+t: ?Sized
+t: ?A
+t: 'a
+t: for<'a> A<'a>
+t: for<'a> dyn A<'a>
+t: for<'a> &'a A
+t: (for<'a> A<'a>)
+t: dyn (for<'a> A<'a>) + B
+t: dyn for<'a> (A<'a>)
+t: &'a for<'b> fn(&'b A)
+t: [u8; 4]
+t: [u8; N as usize]
+t: [u8; A::B]
+t: [u8; <A as B>::C]
+t: [u8; size_of::<T>()]
+t: [u8; 1 << 3]
+t: [u8; if a { 1 } else { 2 }]
+t: [u8; a > b]
+t: A<{ a > b }>
+t: A<{ a }, { b }>
+t: A<B, { c }, 'd'>
+t: A<-1, 2>
+t: A<!0>
+t: A<1 + 2>
+t: A<a + b>
+t: A<a::b()>
+t: A<B>(C)
+t: A<B>(C) -> D
+b: { matches!(a, B) || c }
+b: { vec![1].len() }
+b: { format!("a") + "b" }
+b: { m!().x }
+b: { m!()?; }
+b: { m!() as u8 }
+b: { m!()(1) }
+b: { m!()[1] }
+b: { m!() = 1; }
+b: { m!() == 1 }
+b: { m!(); -1 }
+b: { m!{}.x }
+b: { m!{}?.y }
+b: { cfg!(a) && b }
+b: { assert!(a); b }
+b: { let x = m!() - 1; }
+b: { a::b!() + 1 }
+b: { x!() .. y }
+b: { <T as U<V>>::x(a) }
+b: { <F as FnOnce<Args>>::call_once(*self, args) }
+b: { <F as FnOnce<Args>>::call_once(a) }
+b: { <F as G<Args>>::call_once(*self, args) }
+b: { <F as G<A>>::c(*s, a) }
+b: { <F as G<A>>::c(*s) }
+b: { <F as G>::c(*s, a) }
+b: { <F as G<A>>::c(s, a) }
+b: { <F as G<A>>::c(-s) }
+b: { <F as G<A>>::c(&s) }
+b: { x = <F as G<A>>::c(*s); }
+b: { (<F as G<A>>::c(*s)) }
+e: <F as G<A>>::c(*s)
+e: <F as G<A> >::c(*s)
+e: <F as G<A>>::c
+e: <F as a::G<A>>::c(*s)
+e: <F as G<A, B>>::c(*s)
+e: <F as G<A<B>>>::c(*s)
+e: <F<X> as G<A>>::c(*s)
+e: <Vec<T>>::c(*s)
+e: <Vec<T> as G>::c(*s)
+t: impl AsyncFn() -> u8
+t: impl AsyncFnMut(u8) -> u8
+t: impl MyTrait(A) -> B
+t: dyn MyTrait(A) -> B
+t: impl a::MyTrait(A) -> B
+t: impl FnMut(A) -> B
+t: impl FnOnce(A)
+t: impl core::ops::Fn(A) -> B
+t: Box<dyn AsyncFn() -> u8>
+t: F::<A>::Fn::(A) -> B
+e: a::Fn::(A)
+e: f::<Fn::(A) -> B>()
+i: fn f<F: AsyncFn(u8) -> u8>(f: F) {}
+i: fn f<F>() where F: AsyncFnOnce() {}
+i: fn f<F: MyTrait(u8)>() {}
+i: struct S<const N: usize = 3>(u8);
+i: struct S<const N: usize = 3>(pub u8);
+i: struct S<const B: bool = false>(usize);
+i: struct S<const B: bool = false>;
+i: struct S<const B: bool = false> { a: u8 }
+i: struct S<const B: bool = false> where T: U { a: u8 }
+i: struct S<const B: usize = 3, T = u8>(T);
+i: struct S<T = u8, const B: usize = 3>(T);
+i: struct S<const B: usize = { 3 }>(u8);
+i: struct S<const B: usize = N>(u8);
+i: struct S<const B: usize = -1>(u8);
+i: enum E<const N: usize = 3> { A }
+i: trait T<const N: usize = 3>: U {}
+i: trait T<const N: usize = 3> = U;
+i: type T<const N: usize = 3> = U;
+i: type T<const N: usize = 3>: U;
+i: impl<const N: usize = 3> S<N> {}
+i: fn f<const N: usize = 3>() {}
+i: fn f<const N: usize = 3>(a: u8) {}
+i: union U<const N: usize = 3> { a: u8 }
+i: impl<F: FnOnce<A> + ?Sized> X for Y {}
+i: impl<F: G<A> + ?Sized> X for Y {}
+i: impl<F: G<A> + ?Sized> X {}
+i: impl<F: G + ?Sized> X for Y {}
+i: impl<F: ?Sized + G<A>> X for Y {}
+i: impl<F: G<A> + 'a> X for Y {}
+i: impl<F: G<A> + H> X for Y {}
+i: impl<F: G<A> + H<B>> X for Y {}
+i: impl<F: G<A>+?Sized> X for Y {}
+i: fn f<F: G<A> + ?Sized>() {}
+i: struct S<F: G<A> + ?Sized>(F);
+i: struct S<F: G<A> + ?Sized> { f: F }
+i: trait T<F: G<A> + ?Sized> {}
+i: impl<F: G<A> + ?Sized, B> X for Y {}
+i: impl<F: G<A> + ?Sized> X<F> for Y<F> {}
+i: impl<F: G<A> + ?Sized> X for Y where F: Z {}
+i: impl<T: A<B>> C<T> {}
+i: impl<T: A<B>> !C for D {}
+i: impl<T> !Send for S<T> {}
+i: impl !Send for S {}
+i: impl<F: ?Sized> X for Y {}
+i: impl<F: A + ?Sized> X for Y {}
+i: impl<F: A<B> + C> X for Y {}
+i: impl<F: A<B> + C + ?Sized> X for Y {}
+i: impl<F: A<B> + ?Sized + C> X for Y {}
+i: impl<F: A<B = C> + ?Sized> X for Y {}
+i: impl<F: Fn(A) -> B + ?Sized> X for Y {}
+i: impl<F: A<B> + ~const C> X for Y {}
+i: impl<F: A<B> + for<'a> C<'a>> X for Y {}
+i: impl<F: A<B> + ?C> X for Y {}
+f: const X<T>: u8 = 1;
+f: const X: u8 = 1 where T: U;
+f: unsafe mod m {}
+f: unsafe mod m;
+f: mod m;
+f: pub(in crate::a) mod m {}
+f: pub(in super) fn f() {}
+f: pub(in self) fn f() {}
+f: pub(in ::a) fn f() {}
+f: pub(crate) fn f() {}
+f: pub(self) fn f() {}
+f: pub(super) fn f() {}
+f: pub (crate) struct S;
+f: struct S(pub (crate) u8);
+f: struct S(pub (u8, u8));
+f: struct S(pub(crate) (u8, u8));
+f: struct S(pub (in a) u8);
+f: struct S(pub (super::A));
+f: struct S(pub (self::A));
+f: struct S(pub (crate::A));
+f: struct S(pub(self)u8);
+f: crate fn f() {}
+f: default impl A for B {}
+f: default unsafe impl A for B {}
+f: impl A for B { default fn f() {} }
+f: impl A for B { default const X: u8 = 1; }
+f: impl A for B { default type T = u8; }
+f: impl A for B { default unsafe fn f() {} }
+f: impl A for B { default async fn f() {} }
+f: impl A for B { pub default fn f() {} }
+f: impl !A for B {}
+f: impl<T> !A for B<T> {}
+f: unsafe impl !A for B {}
+f: impl const A for B {}
+f: impl ~const A for B {}
+f: impl A for B where T: U {}
+f: impl<'a> A<'a> for &'a B {}
+f: impl A for (B, C) {}
+f: impl A for [B] {}
+f: impl A for fn() {}
+f: impl A for dyn B {}
+f: impl A for dyn B + Send {}
+f: impl dyn A {}
+f: impl dyn A + Send {}
+f: impl A for B<C> {}
+f: impl a::A for b::B {}
+f: impl ::a::A for ::b::B {}
+f: impl<T> A for T where for<'a> &'a T: B {}
+f: impl<T: ?Sized> A for T {}
+f: impl<const N: usize> A for [u8; N] {}
+f: impl<T, const N: usize> A<N> for B<T, N> {}
+f: impl<T, const N: usize> A<{ N }> for B<T, { N + 1 }> {}
+f: impl A { #![inner] fn f() {} }
+f: impl A { const X: u8 = 1; type T = u8; fn f() {} m!(); m!{} }
+f: impl A { pub(crate) const fn f() {} }
+f: impl A { pub const unsafe extern "C" fn f() {} }
+f: impl A { async unsafe fn f() {} }
+f: impl A { const async unsafe extern "C" fn f() {} }
+f: impl A { fn f(self) {} }
+f: impl A { fn f(&self) {} }
+f: impl A { fn f(&mut self) {} }
+f: impl A { fn f(&'a self) {} }
+f: impl A { fn f(&'a mut self) {} }
+f: impl A { fn f(mut self) {} }
+f: impl A { fn f(self: Box<Self>) {} }
+f: impl A { fn f(mut self: Box<Self>) {} }
+f: impl A { fn f(self: &Self) {} }
+f: impl A { fn f(self: Pin<&mut Self>, a: u8) {} }
+f: impl A { fn f(#[a] self) {} }
+f: impl A { fn f(#[a] &self, #[b] x: u8) {} }
+f: impl A { fn f(self,) {} }
+f: impl A { fn f(&self, ) {} }
+f: impl A { fn f(self: Self) {} }
+f: impl A { fn f(& self) {} }
+f: impl A { fn f(&'static self) {} }
+f: impl A { type T<'a> = &'a u8 where Self: 'a; }
+f: impl A { type T<U> = Vec<U>; }
+f: impl A { type T = impl B; }
+f: impl A { type T where Self: Sized = u8; }
+f: trait A { type T<'a>: B + 'a where Self: 'a; }
+f: trait A { type T<'a> where Self: 'a; }
+f: trait A { type T: ?Sized; }
+f: trait A { type T = u8; }
+f: trait A { type T: B = u8; }
+f: trait A { const X: u8; }
+f: trait A { const X: u8 = 1; }
+f: trait A { fn f(); }
+f: trait A { fn f() {} }
+f: trait A { fn f(&self) -> u8; }
+f: trait A { fn f(u8); }
+f: trait A { fn f(_: u8); }
+f: trait A { fn f(&u8, mut x: u8); }
+f: trait A { async fn f(); }
+f: trait A { unsafe fn f(); }
+f: trait A { fn f() where Self: Sized; }
+f: trait A { fn f<T>() -> impl B; }
+f: trait A { m!(); }
+f: trait A { m!{} }
+f: trait A { #[a] fn f(); }
+f: trait A { #![a] }
+f: trait A { pub fn f(); }
+f: trait A: B {}
+f: trait A: B + C {}
+f: trait A: 'a {}
+f: trait A: ?Sized {}
+f: trait A: for<'a> B<'a> {}
+f: trait A: B where Self: C {}
+f: trait A<T>: B<T> where T: C {}
+f: trait A: {}
+f: trait A where Self: B {}
+f: unsafe trait A {}
+f: auto trait A {}
+f: unsafe auto trait A {}
+f: pub unsafe auto trait A {}
+f: const trait A {}
+f: trait A = B;
+f: trait A = B + C;
+f: trait A<T> = B<T> where T: C;
+f: trait A = ;
+f: pub trait A = B + 'static;
+f: trait A: ~const B {}
+f: enum E {}
+f: enum E { A, B }
+f: enum E { A, B, }
+f: enum E { A = 1, B = 2 }
+f: enum E { A(u8), B { a: u8 }, C }
+f: enum E { A(u8) = 1, B { a: u8 } = 2 }
+f: enum E { #[a] A, #[b] B }
+f: enum E { pub A }
+f: enum E<T> where T: U { A(T) }
+f: enum E { A = -1 }
+f: enum E { A = 1 << 2, B = X as isize }
+f: enum E { A = { 1 }, }
+f: enum E { A(), B {} }
+f: enum E { A(#[a] u8, pub u8) }
+f: enum E { r#A }
+f: struct S;
+f: struct S {}
+f: struct S();
+f: struct S(u8);
+f: struct S(u8,);
+f: struct S(u8, pub u8, pub(crate) u8);
+f: struct S { a: u8 }
+f: struct S { a: u8, }
+f: struct S { pub a: u8, pub(crate) b: u8 }
+f: struct S { #[a] a: u8 }
+f: struct S<T>(T) where T: U;
+f: struct S<T> where T: U { a: T }
+f: struct S<T> where T: U;
+f: struct S<'a, T: 'a + U, const N: usize>(&'a [T; N]);
+f: struct S<T = u8>(T);
+f: struct S<T: U = u8>(T);
+f: struct S<T: U<V> = u8>(T);
+f: struct S<#[a] T>(T);
+f: struct S<#[a] 'a>(&'a u8);
+f: struct S<#[a] const N: usize>;
+f: struct S<'a: 'b, 'b>(&'a &'b u8);
+f: struct S<'a: 'b + 'c>(u8);
+f: struct S<T: >(T);
+f: struct S<T,>(T);
+f: struct S<>;
+f: struct S<T: for<'a> A<'a>>(T);
+f: struct S<T: ?Sized>(T);
+f: struct S<T: ~const A>(T);
+f: struct S<T: A + ?Sized + 'a>(T);
+f: struct S<T: 'a>(T);
+f: struct S { r#type: u8 }
+f: struct S { a: u8 = 1 }
+f: struct S { mut a: u8 }
+f: struct S { unsafe a: u8 }
+f: struct S { a: u8; }
+f: union U { a: u8, b: u16 }
+f: union U<T> where T: Copy { a: T }
+f: pub union U {}
+f: fn union() {}
+f: fn f(union: u8) {}
+f: static X: u8 = 1;
+f: static mut X: u8 = 1;
+f: pub static X: &'static str = "a";
+f: static X: u8;
+f: unsafe static X: u8 = 1;
+f: safe static X: u8 = 1;
+f: const X: u8 = 1;
+f: const _: () = ();
+f: const X: u8;
+f: const X = 1;
+f: static X = 1;
+f: const X: fn() -> u8 = || 1;
+f: const X: [u8; 2] = [1, 2];
+f: const unsafe fn f() {}
+f: const extern "C" fn f() {}
+f: const async fn f() {}
+f: async unsafe extern "C" fn f() {}
+f: extern "C" fn f() {}
+f: extern fn f() {}
+f: unsafe extern "C" fn f() {}
+f: pub(crate) const unsafe extern "C" fn f() {}
+f: safe fn f() {}
+f: gen fn f() {}
+f: async gen fn f() {}
+f: fn f(a: u8, ...) {}
+f: fn f(...) {}
+f: unsafe extern "C" fn f(a: u8, mut args: ...) {}
+f: fn f(a: u8, _: ...) {}
+f: fn f(#[a] a: u8, #[b] ...) {}
+f: fn f<T>(a: T) -> T where T: U { a }
+f: fn f<'a>(a: &'a u8) -> &'a u8 { a }
+f: fn f<'a: 'b, 'b, T: 'a + U<V>, const N: usize>() {}
+f: fn f() -> impl A + 'a {}
+f: fn f() -> impl A + use<'a, T> {}
+f: fn f() -> Box<dyn A + 'a> {}
+f: fn f(a: impl A + B, b: &dyn C) {}
+f: fn f(a: impl Fn(u8) -> u8) {}
+f: fn f(&(a, b): &(u8, u8)) {}
+f: fn f(S { a, b }: S) {}
+f: fn f([a, b]: [u8; 2]) {}
+f: fn f(mut a: u8, ref b: u8, ref mut c: u8) {}
+f: fn f(_: u8) {}
+f: fn f(a @ 1..=2: u8) {}
+f: fn f(a | b: u8) {}
+f: fn f((a | b): u8) {}
+f: fn f(a: u8,) {}
+f: fn f(a: u8) -> ! { loop {} }
+f: fn f() -> () {}
+f: fn f() where T: U, {}
+f: fn f();
+f: fn f<>() {}
+f: fn f<T,>() {}
+f: fn f<'a,>() {}
+f: fn r#fn() {}
+f: fn f(r#in: u8) {}
+f: fn f(self) {}
+f: fn f(u8) {}
+f: fn f(a: u8 b: u8) {}
+f: extern "C" { fn f(); }
+f: extern "C" { fn f(a: u8, ...); }
+f: extern "C" { fn f(...); }
+f: extern "C" { static X: u8; }
+f: extern "C" { static mut X: u8; }
+f: extern "C" { type T; }
+f: extern "C" { pub fn f(); pub static X: u8; pub type T; }
+f: extern "C" { #[a] fn f(); }
+f: extern "C" { #![a] }
+f: extern "C" { m!(); }
+f: extern "C" { m!{} }
+f: extern "C" { safe fn f(); unsafe fn g(); }
+f: extern "C" { safe static X: u8; unsafe static Y: u8; }
+f: extern "C" { fn f<T>(); }
+f: extern "C" { fn f() -> u8; }
+f: extern "C" { type T: A; }
+f: extern "C" { type T<U>; }
+f: extern "C" { const X: u8; }
+f: extern "C" { fn f() {} }
+f: unsafe extern "C" { fn f(); }
+f: unsafe extern { fn f(); }
+f: extern { fn f(); }
+f: extern "C-unwind" { fn f(); }
+f: extern r"C" { fn f(); }
+f: extern r#"C"# fn f() {}
+f: pub extern "C" { }
+f: extern crate a;
+f: extern crate a as b;
+f: extern crate self as b;
+f: extern crate a as _;
+f: pub extern crate a;
+f: #[macro_use] extern crate a;
+f: extern crate self;
+f: use a;
+f: use a::b;
+f: use a::*;
+f: use a::{b, c};
+f: use a::{b, c,};
+f: use a::{self, b};
+f: use a::{b as c, d::{e, f}};
+f: use a as b;
+f: use a as _;
+f: use ::a;
+f: use ::{a, b};
+f: use {a, b};
+f: use *;
+f: use ::*;
+f: use a::{};
+f: use {};
+f: use a::{*};
+f: use a::{self as b};
+f: use crate::a;
+f: use super::super::a;
+f: use self::a;
+f: use a::r#b;
+f: use r#a::b;
+f: pub use a::b;
+f: pub(crate) use a::b;
+f: use a::b::{self};
+f: use a::{b::{c::{d}}};
+f: use a::b as c;
+f: use a::{b as _, c as _};
+f: use $crate::a;
+f: use a::self;
+f: use a::super::b;
+f: use a::Self;
+f: use Self::A;
+f: use a::{::b};
+f: use a::b::;
+f: use a::;
+f: use;
+f: use a
+f: use a::{b c};
+f: use a as;
+f: use a::* as b;
+f: mod m { fn f() {} }
+f: mod m { #![a] }
+f: #[path = "a.rs"] mod m;
+f: pub(crate) mod m {}
+f: mod r#mod {}
+f: type T = u8;
+f: type T<U> = Vec<U>;
+f: type T<U> where U: A = Vec<U>;
+f: type T<U> = Vec<U> where U: A;
+f: type T;
+f: type T: A;
+f: type T: A = u8;
+f: type T<'a, U: 'a> = &'a U;
+f: pub type T = u8;
+f: type T = impl A;
+f: macro_rules! m { () => {} }
+f: macro_rules! m { () => {}; }
+f: macro_rules! m { ($a:expr) => { $a }; ($($b:tt)*) => {}; }
+f: macro_rules! m ( () => {} );
+f: macro_rules! m [ () => {} ];
+f: macro_rules! m ( () => {} )
+f: #[macro_export] macro_rules! m { () => {} }
+f: macro_rules! r#m { () => {} }
+f: macro_rules! try { () => {} }
+f: macro_rules! union { () => {} }
+f: macro_rules! default { () => {} }
+f: m!();
+f: m!{}
+f: m![];
+f: m!{};
+f: m!()
+f: m![]
+f: a::m!();
+f: ::a::m!();
+f: m! ident ();
+f: m! ident {}
+f: #[a] m!();
+f: pub m!();
+f: macro m() {}
+f: pub macro m($a:expr) { $a }
+f: #![a]
+f: #![a] #![b] fn f() {}
+f: #[a] #![b] fn f() {}
+f: //! inner\n fn f() {}
+f: /// outer\n fn f() {}
+f: /** outer */ fn f() {}
+f: /*! inner */ fn f() {}
+f: /// a\n /// b\n fn f() {}
+f: fn f() { //! inner\n }
+f: fn f() { /// dangling\n }
+f: struct S { /// doc\n a: u8 }
+f: enum E { /// doc\n A }
+f: #!/usr/bin/env rust\n fn f() {}
+f: #!/bin/sh\nfn f() {}
+f: #![a]\n#!/bin/sh
+f: #!\n[a] fn f() {}
+f: #! [a]
+f: \u{feff}fn f() {}
+f: fn f() {}\r\nfn g() {}\r\n
+f: // c\r\nfn f() {}
+f: /// d\r\nfn f() {}
+f: fn é() {}
+f: fn 名前() {}
+f: fn f() { let é = 1; }
+f: struct Ω;
+f: fn f() { '\u{e9}'; "é"; 'é'; }
+f: #[a = 1] fn f() {}
+f: #[a(b, c = 1, d(e))] fn f() {}
+f: #[a::b] fn f() {}
+f: #[a::b(c)] fn f() {}
+f: #[a = "b"] #[c] fn f() {}
+f: #[cfg_attr(a, b)] fn f() {}
+f: #[a {}] fn f() {}
+f: #[a []] fn f() {}
+f: #[a = b::c] fn f() {}
+f: #[a = -1] fn f() {}
+f: #[a = m!()] fn f() {}
+f: #[a = 1 + 2] fn f() {}
+f: #[unsafe(no_mangle)] fn f() {}
+f: #[unsafe(a::b(c))] fn f() {}
+f: #[a(unsafe)] fn f() {}
+f: #[doc = include_str!("a")] fn f() {}
+f: #[] fn f() {}
+f: #[a b] fn f() {}
+f: #[a(] fn f() {}
+f: # [a] fn f() {}
+f: #[::a] fn f() {}
+f: #[crate::a] fn f() {}
+f: #[self::a] fn f() {}
+f: #[r#a] fn f() {}
+f: #[a::<T>] fn f() {}
+f: #[a = ] fn f() {}
+f: #[a(b = )] fn f() {}
+f: #[a(,)] fn f() {}
+f: #[a("b", 1, 'c', true)] fn f() {}
+f: #[derive(A, B,)] struct S;
+f: #[derive()] struct S;
+f: #[a(b(c(d(e))))] struct S;
+f: #[repr(C, align(8))] struct S;
+f: #[cfg(all(a, not(b), any(c = "d")))] struct S;
+f: #[deprecated(since = "1", note = "x")] struct S;
+f: #[link(name = "a", kind = "static")] extern "C" {}
+f: #[must_use = "x"] fn f() {}
+f: #[inline(always)] fn f() {}
+f: #[a(b::c = 1)] fn f() {}
+f: #[a(b::c(d))] fn f() {}
+f: #[a(1 + 2)] fn f() {}
+f: #[a(|x| x)] fn f() {}
+f: #[a(b => c)] fn f() {}
+f: #[a(for<'a> b)] fn f() {}
+f: #[a(#[b] c)] fn f() {}
+f: #[a(pub b)] fn f() {}
+f: #[a(fn)] fn f() {}
+f: #[a(-1)] fn f() {}
+f: #[a(b: c)] fn f() {}
+f: #[a(b = c = d)] fn f() {}
+f: #[a(b = [1, 2])] fn f() {}
+f: #[a(b = (1, 2))] fn f() {}
+f: #[a(b = {1})] fn f() {}
+f: #[a(b = &c)] fn f() {}
+f: #[a(b = c.d)] fn f() {}
+f: #[a(b = c!())] fn f() {}
+f: #[a(b = "c", d = e::f)] fn f() {}
+f: #[a(b = <T>::c)] fn f() {}
+f: #[a(b = Vec<u8>)] fn f() {}
+f: #[a(b = Vec::<u8>::new())] fn f() {}
+f: #[a(type = "b")] fn f() {}
+f: #[a(crate = "b")] fn f() {}
+f: #[a(default)] fn f() {}
+f: #[a(in = 1)] fn f() {}
+f: #[serde(rename = "type", default = "f")] struct S;
+f: #[a(where T: U)] struct S;
+f: use ::std::fmt;
+f: use ::a::b;
+f: use ::a as b;
+f: pub use ::a::{b, c};
+f: use ::{a::b, c};
+f: mod m { #![a] fn f() {} }
+f: mod m { #![a] #![b] use c; }
+f: mod m { //! doc\n fn f() {} }
+f: mod m { //! doc\n }
+f: fn f() { #![a] }
+f: fn f() { #![a] let x = 1; }
+f: fn f() { #![a] x }
+f: fn f() { #![allow(unused)] x; y }
+f: fn f() { //! doc\n x }
+f: impl A { #![a] }
+f: trait A { #![a] fn f(); }
+f: extern "C" { #![a] fn f(); }
+f: fn f() { unsafe { #![a] x } }
+f: fn f() { { #![a] x } }
+f: fn f() { loop { #![a] } }
+f: fn f() { if x { #![a] } }
+f: fn f() { match x { #![a] _ => 1 } }
+f: fn f() { match x { #![a] } }
+f: fn f() { while x { #![a] y; } }
+f: fn f() { for x in y { #![a] z; } }
+f: fn f() { let x = [#![a] 1]; }
+f: struct S(pub (u8));
+f: struct S(pub ());
+f: struct S(pub (A, B), pub(crate) C);
+f: struct S(pub(crate) (A, B));
+f: enum E { A(pub (u8, u8)) }
+f: struct S { pub a: (u8, u8) }
+f: fn f(a: pub u8) {}
+f: #!/usr/bin/env -S cargo +nightly -Zscript\nfn main() {}
+f: #!/usr/local/bin/rust-script.sh\nfn main() {}
+f: #!/usr/bin/env rust-script\nfn main() {}
+f: #!/bin/sh -c 'exec rustc "$0"'\nfn main() {}
+f: #!/usr/bin/rustc --edition=2021\nfn main() {}
+f: #!/usr/bin/env run-cargo-script\n//! doc\nfn main() {}
+f: #!/usr/bin/env rust\n#![allow(a)]\nfn main() {}
+f: #![allow(a)]\nfn main() {}
+f: #!\nfn main() {}
+f: \n\n
+f: // only comment
+f: /* only comment */
+f: //! only inner doc
+f: /// only outer doc
+f: fn f() {} /// trailing doc
+f: fn f() { x /// trailing doc\n }
+f: fn f(/// doc\n a: u8) {}
+f: fn f() { let x = /** doc */ 1; }
+f: fn f() { /** a /* nested */ b */ fn g() {} }
+f: /** a /* nested */ b */ fn g() {}
+f: /*! a /* nested */ b */ fn g() {}
+f: /// a "quoted" \\ back\nfn f() {}
+f: /// a\\nb\nfn f() {}
+f: /** multi\n * line\n */ fn f() {}
+f: ///\nfn f() {}
+f: /**/ fn f() {}
+f: /***/ fn f() {}
+f: /** */ fn f() {}
+f: //// four\nfn f() {}
+f: ///! x\nfn f() {}
+f: /*** x */ fn f() {}
+f: /// é 日本\nfn f() {}
+f: ///\tindented\tdoc  \nfn f() {}
+f: ///     code block\nfn f() {}
+f: fn f() { a /* c */ + /* d */ b }
+f: fn f() { a /* /* n */ */ + b }
+f: fn f() { "/* not comment */" }
+f: fn f() { "// not comment" }
+f: fn f() { '/' }
+f: fn f() { a / b }
+f: fn f() { a /b/ c }
+f: fn f() { a // c\n }
+f: fn f() { a /* c \n */ }
+f: fn f() { '"' }
+f: fn f() { "'" }
+f: fn f() { '\'' }
+f: fn f() { b'"' }
+f: fn f() { "\\" }
+f: fn f() { "a\\"; b }
+f: fn f() { r"\"; b }
+f: fn f() { r#"""#; b }
+f: fn f() { br#"""#; b }
+f: fn f() { cr#"""#; b }
+f: fn f() { r##"a"#"##; b }
+f: fn f() { r"a
+f: fn f() { "a\\\n   b"; c }
+f: fn f() { "a\r\nb"; c }
+f: fn f() { b"\\\n  x"; c }
+f: fn f() { 'a: loop {} }
+f: fn f() { 'a'; 'b: loop {} }
+f: fn f<'a>(x: &'a u8) -> &'a u8 { x }
+f: fn f<'a,'b>() {}
+f: fn f() { x::<'a'>() }
+f: fn f<'r#a>(x: &'r#a u8) {}
+f: fn f<'r#fn>() {}
+f: fn f<'_a, '__, 'a1, 'é>() {}
+f: fn f(x: &'_ u8) {}
+f: fn f() { 'r#a: loop { break 'r#a; } }
+f: fn f() { '_'; }
+f: fn f() { '_: loop {} }
+f: fn f() { 'static: loop {} }
+f: fn f() { ' a' }
+f: fn f() { ' ' }
+f: fn f() { '\t' }
+f: fn f() { '	' }
+f: fn f() { 'é' ; '日' ; '🦀' }
+f: fn f() { '\u{1F980}' }
+f: fn f() { '\u{00_41}' }
+f: fn f() { "\u{00_41}" }
+f: fn f() { '\x7F'; '\0'; '\r'; '\t'; '\"' }
+f: fn f() { b'\x7F'; b'\0'; b'\xFF'; b'\\'; b'\''; b'"' }
+f: fn f() { 1u8; 1i8; 1u16; 1i16; 1u32; 1i32; 1u64; 1i64; 1u128; 1i128; 1usize; 1isize; 1f32; 1f64 }
+f: fn f() { 1_u8; 1__u8; 1_000_000; 0x_ff; 0b_1; 0o_7; 0xFF_u8; 0b1111_0000; 0o777 }
+f: fn f() { 1.0; 1.; 1e1; 1E1; 1e+1; 1e-1; 1.0e1; 1.0E-1; 1_0.0_1e1_0; 1.0f32; 1e1f64; 1.0_f32 }
+f: fn f() { 0xdeadbeef; 0xDEAD_BEEF; 0x1E; 0x1e3; 0xe; 0xE1; 0x1f32; 0x1_f64; 0b1e; }
+f: fn f() { 1.max(2); 1.0.max(2.0); 1..2; 1..=2; 1.. ; 1.e; }
+f: fn f() { 1.foo; 1.0.foo; 1.f32; 1.e1; 1.0.0; }
+f: fn f() { x.0; x.0.1; x.0 .1; x.0. 1; (x.0).1; x.00; x.0x0; x.1e1; x.1_0; }
+f: fn f() { 0; 00; 01; 0.0; 0e0; 0_0; 0u8; 0f32; }
+f: fn f() { 1f16; 1.0f128; 1f16; 2b; 1px; 1em; 0x1p3; 1_; 1__; }
+f: fn f() { 1if; 1else; 1e; 1e+; 1e-x; 1ex; }
+f: fn f() { 0b2; 0o8; 0xg; 0b; 0o; 0x; }
+f: fn f() { 1 .. 2; 1 . 2; 1. 2; 1 .2; }
+f: fn f() { -1; -1.0; -0x1; - 1; --1; }
+f: fn f() { 1+1; 1-1; 1e1-1; 1e-1-1; 0xe+1; 0xE-1; 1E+1+1; }
+f: fn f() { 340282366920938463463374607431768211455; 340282366920938463463374607431768211456; 99999999999999999999999999999999999999999999999999 }
+f: fn f() { 1e400; 1e-400; 0.000000000000000000000000000000000000000000000000000000000000000000000000001 }
+f: fn f() { 0xffffffffffffffffffffffffffffffffffffffffff }
+t: Fn<u8>
+t: a::Fn<'a>
+t: FnMut<(A,), Output = B>
+i: struct S(Fn<u8>);
+i: fn f(x: ast::Fn<'a>) {}
+e: Fn::<u8>::new()
+b: { let x: Fn<u8> = y; }
+i: impl<T> Fn<T> {}
+t: Box<dyn AsyncFnMut(u8)>
+i: fn f(g: impl AsyncFnOnce(u8) -> u8) {}
+i: struct S(pub (u8, u8));
+i: struct S(pub (u32, u32), pub u8);
+i: use ::serde;
+i: use ::core as _core;
+i: mod m { #![allow(x)] }
+i: fn f() { #![allow(x)] }
+i: struct S<T: >(T);
+i: fn f<T>() where T: {}
+i: type A<const N: usize = 3> = [u8; N];
+i: struct S<const N: usize = 3> { a: u8 }
+t: Box<dyn (Fn() -> u8) + Send>
+t: &(dyn (A) + B)
+t: Vec<!>
+t: Result<(), !>
+t: Vec<>
+e: Vec::<>::new()
+b: { x.collect::<>() }
+b: { write!(f, "x")?; Ok(()) }
+b: { let n = vec![1, 2].len(); n }
+b: { matches!(a, B) || matches!(a, C) }
+b: { assert!(x); y!()?.z }
+b: { println!("a"); }
+b: { println!("a") }
+b: { m!{ a } .b() }
+b: { m!{ a } (b) }
+b: { m!{ a } [b] }
+b: { m!{ a } - 1 }
+b: { m!{ a } ? }
+b: { m![a] }
+b: { m!(a); b }
+b: { m!(a).b; c }
+b: { thread_local! { static X: u8 = 1; } X }
+b: { if x { return } y }
+b: { if x { return; } y }
+b: { loop { match x { A => break, B => continue, C => return, _ => {} } } }
+b: { let v = match x { Some(v) => v, None => continue, }; v }
+b: { f(a, return) }
+b: { (a, return) }
+b: { [a, break] }
+b: { x.unwrap_or_else(|| return) }
+b: { let _ = || return; }
+b: { match x { A => return, } }
+b: { match x { A => break 'l, B => 1 } }
+b: { match x { A => break 'l 1, B => 1 } }
+b: { match x { A => return 1, B => 1 } }
+b: { match x { A => yield, B => 1 } }
+b: { S { a: return, b } }
+b: { m(return, ) }
+b: { a = if c { return } else { 1 }; }
+t: impl Fn() -> A + B
+t: dyn Fn() -> A + B
+t: impl Fn() -> impl A + B
+t: impl Fn() -> dyn A + B
+t: impl Fn(A) -> &'a B + C
+t: impl Fn() -> Box<dyn A> + Send
+t: impl Fn() -> (A) + Send
+t: impl FnOnce() -> fn() -> A + Send
+t: &'a dyn Fn() -> A + Send
+t: fn() -> dyn A + B
+t: fn() -> A + B
+t: *const dyn A + B
+t: &impl A + B
+t: Option<impl Fn() -> A + 'a>
+t: impl Iterator<Item = impl Fn() -> A + B> + C
+t: dyn A<B = dyn C + D> + E
+t: impl for<'a> Fn(&'a A) -> &'a B + 'static
+t: <A as B>::C<D>::E
+t: <A as b::c::D<E>>::F::G
+t: <A>::B::C
+t: A::B<C>::D<E, F>
+t: [A; 1 + 2]
+t: [A; N * 2 + 1]
+t: [A; { 1 }]
+t: A<{ 1 + 2 }, B, 3, -4, true, 'c'>
+t: A<B = C>
+t: A<B<C> = D>
+t: A<B: C + D, E = F>
+t: fn(a: A, b: B) -> C
+t: fn(A, ...) -> C
+t: for<'a, 'b> unsafe extern "C" fn(&'a A, &'b B) -> &'a C
+t: &'a mut [A; 2]
+t: ((A, B), [C], !)
+t: A<fn() -> B>
+t: A<fn() -> B, C>
+t: A<fn(B) -> C<D>>
+t: A<dyn B<C>>
+t: A<&'a B<C>>
+t: A<(B<C>, D)>
+t: A<[B<C>; 2]>
+t: A<B<C>>::D
+t: Fn(A, B) -> C
+t: Fn(A) -> B + C
+t: a::Fn(A)
+t: FnMut(&mut A) -> B<C>

@@ -24,6 +24,6 @@ pub(super) fn block_like(cursor: Cursor<'_>) -> bool {
 
 // Whether a block-like expression continues as a method call, field access,
 // or `?` instead of ending
-pub(super) fn continues_block_like(cursor: Cursor<'_>) -> bool {
+pub(crate) fn continues_block_like(cursor: Cursor<'_>) -> bool {
     (<Token![.]>::peek(cursor) && !<Token![..]>::peek(cursor)) || <Token![?]>::peek(cursor)
 }
