@@ -266,6 +266,89 @@ impl Type {
     fn peek_bare_bounds(cursor: Cursor<'_>) -> bool {
         !<Token![dyn]>::peek(cursor) && Path::peek(cursor) && TypeTraitObject::peek(cursor)
     }
+
+    fn parse_never(parser: &Parser) -> Result<Self, ParseError> {
+        Ok(Self::Never(<_ as Parse>::parse(parser)?))
+    }
+
+    fn parse_infer(parser: &Parser) -> Result<Self, ParseError> {
+        let span = parser.span();
+        parser.advance();
+        Ok(Self::Infer(moxy_token::Ident::new("_").with_span(span)))
+    }
+
+    // `[T]` slice or `[T; N]` array, told apart by a `;` inside the brackets
+    fn parse_slice_or_array(parser: &Parser) -> Result<Self, ParseError> {
+        let (bracket_span, inner) = parser.parse_group_spanned(Delim::Bracket)?;
+        let elem = Box::new(<_ as Parse>::parse(&inner)?);
+
+        if <Token![;]>::peek(inner.cursor()) {
+            let semi = <_ as Parse>::parse(&inner)?;
+            let len = <_ as Parse>::parse(&inner)?;
+
+            if !inner.is_empty() {
+                return inner.error("unexpected trailing input").into();
+            }
+
+            return Ok(Self::Array(TypeArray {
+                content: Delimited::bracket(bracket_span, type_array::ArrayInner { elem, semi, len }),
+            }));
+        }
+
+        if !inner.is_empty() {
+            return inner.error("unexpected trailing input").into();
+        }
+
+        let elem = Delimited::bracket(bracket_span, elem);
+        Ok(Self::Slice(TypeSlice { elem }))
+    }
+
+    // One element with no trailing comma is a parenthesized type; anything
+    // else, empty, several, or with a trailing comma, is a tuple
+    fn parse_paren_or_tuple(parser: &Parser) -> Result<Self, ParseError> {
+        let (paren_span, inner) = parser.parse_group_spanned(Delim::Paren)?;
+        let elems: List<Self, Token![,]> = List::parse_all(&inner)?;
+
+        if elems.len() == 1 && !elems.is_trailing() {
+            let content = Delimited::paren(paren_span, Box::new(elems.into_iter().next().unwrap()));
+            Ok(Self::Paren(TypeParen { content }))
+        } else {
+            let elems_del = Delimited::paren(paren_span, elems);
+            Ok(Self::Tuple(TypeTuple { elems: elems_del }))
+        }
+    }
+
+    fn parse_group(parser: &Parser) -> Result<Self, ParseError> {
+        let (span, inner) = parser.parse_group_spanned(Delim::None)?;
+
+        Ok(Self::Group(TypeGroup {
+            span: span.span(),
+            elem: Box::new(<_ as Parse>::parse(&inner)?),
+        }))
+    }
+
+    // A path type, `T`, `std::vec::Vec`, or a qualified `<T as Trait>::Item`,
+    // or a type macro
+    fn parse_path_or_macro(parser: &Parser) -> Result<Self, ParseError> {
+        if <Token![<]>::peek(parser.cursor()) {
+            return Ok(Self::Path(<_ as Parse>::parse(parser)?));
+        }
+
+        let path = <_ as Parse>::parse(parser)?;
+
+        // `!=` after a type ends a cast (`a as u8 != b`), not a type macro
+        if <Token![!]>::peek(parser.cursor()) && !<Token![!=]>::peek(parser.cursor()) {
+            return Ok(Self::Macro(TypeMacro {
+                mac: MacroCall {
+                    path,
+                    bang: <_ as Parse>::parse(parser)?,
+                    body: <_ as Parse>::parse(parser)?,
+                },
+            }));
+        }
+
+        Ok(Self::Path(TypePath { qself: None, path }))
+    }
 }
 
 impl Parse for Type {
@@ -303,123 +386,44 @@ impl Parse for Type {
             return parser.error("expected type").into();
         }
 
-        // `&` reference.
-        if <Token![&]>::peek(parser.cursor()) {
-            return Ok(Self::Reference(<_ as Parse>::parse(parser)?));
-        }
+        let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
 
-        // `*` raw pointer.
-        if <Token![*]>::peek(parser.cursor()) {
-            return Ok(Self::Pointer(<_ as Parse>::parse(parser)?));
-        }
-
-        // Never `!`.
-        if <Token![!]>::peek(parser.cursor()) {
-            return Ok(Self::Never(<_ as Parse>::parse(parser)?));
-        }
-
-        // Infer `_`.
-        if matches!(parser.curr(), Some(tt) if tt.text() == Some("_")) {
-            let span = parser.span();
-            parser.advance();
-            return Ok(Self::Infer(moxy_token::Ident::new("_").with_span(span)));
-        }
-
-        // `[T]` slice or `[T; N]` array — decided by a `;` inside the brackets.
-        // Both share the same `[` token so we disambiguate inline after peeking
-        // inside the group rather than calling `TypeArray::parse` or
-        // `TypeSlice::parse` individually (which would each consume the group).
-        if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Bracket)) {
-            let (bracket_span, inner) = parser.parse_group_spanned(Delim::Bracket)?;
-            let elem = Box::new(<_ as Parse>::parse(&inner)?);
-
-            if <Token![;]>::peek(inner.cursor()) {
-                let semi = <_ as Parse>::parse(&inner)?;
-                let len = <_ as Parse>::parse(&inner)?;
-
-                if !inner.is_empty() {
-                    return inner.error("unexpected trailing input").into();
-                }
-
-                return Ok(Self::Array(TypeArray {
-                    content: Delimited::bracket(bracket_span, type_array::ArrayInner { elem, semi, len }),
-                }));
-            }
-
-            if !inner.is_empty() {
-                return inner.error("unexpected trailing input").into();
-            }
-
-            let elem = Delimited::bracket(bracket_span, elem);
-            return Ok(Self::Slice(TypeSlice { elem }));
-        }
-
-        // `impl Trait`.
-        if <Token![impl]>::peek(parser.cursor()) {
-            return Ok(Self::ImplTrait(<_ as Parse>::parse(parser)?));
-        }
-
-        // `dyn Trait` and the legacy bare multi-bound trait-object form.
-        if TypeTraitObject::peek(parser.cursor()) {
-            return Ok(Self::TraitObject(<_ as Parse>::parse(parser)?));
-        }
-
-        // Bare fn pointer: `fn(...)`, `extern "C" fn(...)`, `unsafe fn(...)`.
-        if <Token![fn]>::peek(parser.cursor())
+        // One call site for every form keeps one return slot in this frame
+        let parse: fn(&Parser) -> Result<Self, ParseError> = if <Token![&]>::peek(parser.cursor()) {
+            parse_into::<TypeReference, Self>
+        } else if <Token![*]>::peek(parser.cursor()) {
+            parse_into::<TypePointer, Self>
+        } else if <Token![!]>::peek(parser.cursor()) {
+            Self::parse_never
+        } else if matches!(parser.curr(), Some(tt) if tt.text() == Some("_")) {
+            Self::parse_infer
+        } else if parser.is_delimited(Delim::Bracket) {
+            Self::parse_slice_or_array
+        } else if <Token![impl]>::peek(parser.cursor()) {
+            parse_into::<TypeImplTrait, Self>
+        } else if TypeTraitObject::peek(parser.cursor()) {
+            // `dyn Trait` and the legacy bare multi-bound trait-object form
+            parse_into::<TypeTraitObject, Self>
+        } else if <Token![fn]>::peek(parser.cursor())
             || <Token![extern]>::peek(parser.cursor())
             || <Token![unsafe]>::peek(parser.cursor())
             || BoundLifetimes::peek(parser.cursor())
         {
-            return Ok(Self::BareFn(<_ as Parse>::parse(parser)?));
-        }
+            parse_into::<TypeBareFn, Self>
+        } else if parser.is_delimited(Delim::Paren) {
+            Self::parse_paren_or_tuple
+        } else if parser.is_delimited(Delim::None) {
+            Self::parse_group
+        } else {
+            Self::parse_path_or_macro
+        };
 
-        // `(...)` — one element with no trailing comma is a parenthesized type;
-        // anything else (empty, multiple, or trailing comma) is a tuple.
-        // Both variants share the same `(` token so we disambiguate inline.
-        if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::Paren)) {
-            let (paren_span, inner) = parser.parse_group_spanned(Delim::Paren)?;
-            let elems: List<Self, Token![,]> = List::parse_all(&inner)?;
-
-            return if elems.len() == 1 && !elems.is_trailing() {
-                let content = Delimited::paren(paren_span, Box::new(elems.into_iter().next().unwrap()));
-                Ok(Self::Paren(TypeParen { content }))
-            } else {
-                let elems_del = Delimited::paren(paren_span, elems);
-                Ok(Self::Tuple(TypeTuple { elems: elems_del }))
-            };
-        }
-
-        if matches!(parser.curr(), Some(tt) if tt.delim() == Some(Delim::None)) {
-            let (span, inner) = parser.parse_group_spanned(Delim::None)?;
-            return Ok(Self::Group(TypeGroup {
-                span: span.span(),
-                elem: Box::new(<_ as Parse>::parse(&inner)?),
-            }));
-        }
-
-        // Otherwise a path type: `T`, `std::vec::Vec`, or a qualified
-        // `<T as Trait>::Item` (which begins with `<`).
-        if <Token![<]>::peek(parser.cursor()) {
-            return Ok(Self::Path(<_ as Parse>::parse(parser)?));
-        }
-
-        let path = <_ as Parse>::parse(parser)?;
-
-        // `!=` after a type ends a cast (`a as u8 != b`), not a type macro
-        if <Token![!]>::peek(parser.cursor()) && !<Token![!=]>::peek(parser.cursor()) {
-            return Ok(Self::Macro(TypeMacro {
-                mac: MacroCall {
-                    path,
-                    bang: <_ as Parse>::parse(parser)?,
-                    body: <_ as Parse>::parse(parser)?,
-                },
-            }));
-        }
-
-        Ok(Self::Path(TypePath { qself: None, path }))
+        parse(parser)
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let _depth = moxy_token::Depth::enter()?;
+
         if <Token![&]>::peek(cursor) {
             return TypeReference::skip(cursor);
         }

@@ -34,6 +34,11 @@ impl Parse for PatTuple {
             return true;
         }
 
+        // `(..)` is a tuple, as is any list with a comma
+        if PatRest::skip(inner).is_some_and(|rest| rest.is_empty()) {
+            return true;
+        }
+
         let Some(next) = Pattern::skip(inner) else {
             return false;
         };

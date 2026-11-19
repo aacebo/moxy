@@ -60,12 +60,9 @@ impl Attributed for MatchArm {
     }
 }
 
-impl Parse for MatchArm {
-    fn peek(cursor: Cursor<'_>) -> bool {
-        Pattern::peek(Attributes::skip(cursor).unwrap_or(cursor))
-    }
-
-    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+impl MatchArm {
+    // The attributes, pattern, guard, and arrow of an arm, with a placeholder body
+    fn parse_head(parser: &Parser) -> Result<Box<Self>, ParseError> {
         let attrs = <_ as Parse>::parse(parser)?;
         let pat = <_ as Parse>::parse(parser)?;
         let (if_keyword, guard) = if <Token![if]>::peek(parser.cursor()) {
@@ -74,19 +71,30 @@ impl Parse for MatchArm {
             (None, None)
         };
 
-        let fat_arrow = <_ as Parse>::parse(parser)?;
-        let body = super::parse::early(parser)?;
-        let comma = <_ as Parse>::parse(parser)?;
-
-        Ok(Self {
+        Ok(Box::new(Self {
             attrs,
             pat,
             if_keyword,
             guard,
-            fat_arrow,
-            body,
-            comma,
-        })
+            fat_arrow: <_ as Parse>::parse(parser)?,
+            body: Expr::Verbatim(TokenStream::new()),
+            comma: None,
+        }))
+    }
+}
+
+impl Parse for MatchArm {
+    fn peek(cursor: Cursor<'_>) -> bool {
+        Pattern::peek(Attributes::skip(cursor).unwrap_or(cursor))
+    }
+
+    // The arm is built before its body parses and boxed, so a nested arm's
+    // stack frame holds a pointer instead of the parts of the arm
+    fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let mut arm = Self::parse_head(parser)?;
+        arm.body = *super::parse::early(parser)?;
+        arm.comma = <_ as Parse>::parse(parser)?;
+        Ok(*arm)
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {

@@ -61,6 +61,8 @@ impl Parse for GenericArgument {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+
         let token = match parser.cursor().curr() {
             None => return Err(ParseError::new(parser.span(), "eof")),
             Some(v) => v.clone(),
@@ -82,76 +84,15 @@ impl Parse for GenericArgument {
         }
 
         if token.is_ident() {
-            let ident = <_ as Parse>::parse(parser)?;
-            let generics: Option<AngleArguments> = <_ as Parse>::parse(parser)?;
-
-            if peek_lone_colon(parser.cursor()) {
-                let colon_punct = <_ as Parse>::parse(parser)?;
-                let bounds = List::parse_nonempty(parser)?;
-
-                return Ok(ConstraintArgument {
-                    ident,
-                    generics,
-                    colon_punct,
-                    bounds,
-                }
-                .into_generic_argument());
-            }
-
-            if <Token![=]>::peek(parser.cursor()) {
-                let eq_punct = <_ as Parse>::parse(parser)?;
-                let is_const = match parser.cursor().curr() {
-                    Some(TokenTree::Literal(_)) => true,
-                    Some(TokenTree::Group(g)) if g.delim.is_brace() => true,
-                    Some(TokenTree::Punct(Punct::Minus(_))) => true,
-                    Some(TokenTree::Punct(Punct::Not(_))) => true,
-                    _ => false,
-                };
-
-                if is_const {
-                    let expr = expr::parse::unary(parser, Default::default())?;
-
-                    return Ok(AssocConstArgument {
-                        ident,
-                        generics,
-                        eq_punct,
-                        expr,
-                    }
-                    .into_generic_argument());
-                }
-
-                let ty = <_ as Parse>::parse(parser)?;
-
-                return Ok(AssocTypeArgument {
-                    ident,
-                    generics,
-                    eq_punct,
-                    ty,
-                }
-                .into_generic_argument());
-            }
-
-            let args = generics.map_or(PathArguments::None, PathArguments::AngleBracketed);
-            let path = Path::parse_rest(parser, PathSegment { ident, args })?;
-            let ty = if <Token![!]>::peek(parser.cursor()) {
-                Type::Macro(TypeMacro {
-                    mac: MacroCall {
-                        path,
-                        bang: <_ as Parse>::parse(parser)?,
-                        body: <_ as Parse>::parse(parser)?,
-                    },
-                })
-            } else {
-                Type::Path(TypePath { qself: None, path })
-            };
-
-            return Ok(Self::Type(ty));
+            return Self::parse_named(parser);
         }
 
         Ok(Self::Type(<_ as Parse>::parse(parser)?))
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let _depth = moxy_token::Depth::enter()?;
+
         if Lifetime::peek(cursor) {
             return Lifetime::skip(cursor);
         }
@@ -211,6 +152,92 @@ impl Parse for GenericArgument {
         }
 
         Type::skip(cursor)
+    }
+}
+
+impl GenericArgument {
+    // An argument that starts with an identifier: a constraint, an associated
+    // type or constant, or a path type. Its own stack frame keeps these forms
+    // out of the frame of every nested argument.
+    fn parse_named(parser: &Parser) -> Result<Self, ParseError> {
+        let ident = <_ as Parse>::parse(parser)?;
+        let generics: Option<AngleArguments> = <_ as Parse>::parse(parser)?;
+
+        if peek_lone_colon(parser.cursor()) {
+            return Self::parse_constraint(parser, ident, generics);
+        }
+
+        if <Token![=]>::peek(parser.cursor()) {
+            return Self::parse_assoc(parser, ident, generics);
+        }
+
+        Self::parse_path(parser, ident, generics)
+    }
+
+    fn parse_constraint(parser: &Parser, ident: Ident, generics: Option<AngleArguments>) -> Result<Self, ParseError> {
+        let colon_punct = <_ as Parse>::parse(parser)?;
+        let bounds = List::parse_nonempty(parser)?;
+
+        Ok(ConstraintArgument {
+            ident,
+            generics,
+            colon_punct,
+            bounds,
+        }
+        .into_generic_argument())
+    }
+
+    // An associated type or constant: `Item = u8`, `N = 3`
+    fn parse_assoc(parser: &Parser, ident: Ident, generics: Option<AngleArguments>) -> Result<Self, ParseError> {
+        let eq_punct = <_ as Parse>::parse(parser)?;
+        let is_const = match parser.cursor().curr() {
+            Some(TokenTree::Literal(_)) => true,
+            Some(TokenTree::Group(g)) if g.delim.is_brace() => true,
+            Some(TokenTree::Punct(Punct::Minus(_))) => true,
+            Some(TokenTree::Punct(Punct::Not(_))) => true,
+            _ => false,
+        };
+
+        if is_const {
+            let expr = expr::parse::unary(parser, Default::default())?;
+
+            return Ok(AssocConstArgument {
+                ident,
+                generics,
+                eq_punct,
+                expr,
+            }
+            .into_generic_argument());
+        }
+
+        let ty = <_ as Parse>::parse(parser)?;
+
+        Ok(AssocTypeArgument {
+            ident,
+            generics,
+            eq_punct,
+            ty,
+        }
+        .into_generic_argument())
+    }
+
+    // A path type or type macro that starts with `ident` and its arguments
+    fn parse_path(parser: &Parser, ident: Ident, generics: Option<AngleArguments>) -> Result<Self, ParseError> {
+        let args = generics.map_or(PathArguments::None, PathArguments::AngleBracketed);
+        let path = Path::parse_rest(parser, PathSegment { ident, args })?;
+        let ty = if <Token![!]>::peek(parser.cursor()) {
+            Type::Macro(TypeMacro {
+                mac: MacroCall {
+                    path,
+                    bang: <_ as Parse>::parse(parser)?,
+                    body: <_ as Parse>::parse(parser)?,
+                },
+            })
+        } else {
+            Type::Path(TypePath { qself: None, path })
+        };
+
+        Ok(Self::Type(ty))
     }
 }
 

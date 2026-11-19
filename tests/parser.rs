@@ -150,3 +150,84 @@ fn diagnostics_from_spanned_errors_keep_both_ends() {
     assert_eq!(emitted[0].span(), error.span());
     assert_eq!(emitted[3].span(), error.end_span());
 }
+
+// Runs `parse` on a thread with the 2 MiB stack that spawned threads and
+// tests get by default, which input at the depth limit must fit in a debug build
+fn on_small_stack<T: Send + 'static>(parse: impl FnOnce() -> T + Send + 'static) -> T {
+    std::thread::Builder::new()
+        .stack_size(2 << 20)
+        .spawn(parse)
+        .unwrap()
+        .join()
+        .unwrap()
+}
+
+#[test]
+fn input_nested_past_the_depth_limit_is_an_error() {
+    let depth = moxy::token::MAX_DEPTH + 1;
+    let message = format!("nesting is deeper than {} levels", moxy::token::MAX_DEPTH);
+
+    for (source, kind) in [
+        (format!("{}a", "!".repeat(depth)), "expression"),
+        (format!("{}a{}", "(".repeat(depth), ")".repeat(depth)), "expression"),
+        (format!("{}a{}", "{".repeat(depth), "}".repeat(depth)), "expression"),
+        (format!("{}a{}", "f(".repeat(depth), ")".repeat(depth)), "expression"),
+        (format!("{}a", "|x| ".repeat(depth)), "expression"),
+        (format!("{}a", "return ".repeat(depth)), "expression"),
+        (format!("{}a", "a = ".repeat(depth)), "expression"),
+        (
+            format!("{}a{}", "match a { _ => ".repeat(depth), " }".repeat(depth)),
+            "expression",
+        ),
+        (format!("if a {{}}{} else {{}}", " else if a {}".repeat(depth)), "expression"),
+        (format!("{}u8", "&".repeat(depth)), "type"),
+        (format!("{}u8{}", "Vec<".repeat(depth), ">".repeat(depth)), "type"),
+        (format!("{}a", "&".repeat(depth)), "pattern"),
+        (format!("{}a{}", "(".repeat(depth), ")".repeat(depth)), "pattern"),
+        (format!("{}{}", "mod m { ".repeat(depth), "}".repeat(depth)), "file"),
+    ] {
+        let label: String = source.chars().take(16).collect();
+        let error = on_small_stack(move || {
+            let error = match kind {
+                "expression" => moxy::parse!(source as moxy::ast::Expr).err(),
+                "type" => moxy::parse!(source as moxy::ast::Type).err(),
+                "pattern" => moxy::parse!(source as moxy::ast::Pattern).err(),
+                _ => moxy::parse!(source as moxy::ast::File).err(),
+            };
+            error.map(|error| error.message().to_string())
+        });
+        assert_eq!(error.as_deref(), Some(message.as_str()), "{kind} {label}");
+    }
+
+    let error = on_small_stack(move || {
+        format!("{}{}", "[".repeat(depth), "]".repeat(depth))
+            .parse::<moxy::token::TokenStream>()
+            .unwrap_err()
+            .to_string()
+    });
+    assert_eq!(error, message);
+}
+
+#[test]
+fn input_nested_to_the_depth_limit_parses_on_a_small_stack() {
+    let depth = moxy::token::MAX_DEPTH - 1;
+
+    let parsed = on_small_stack(move || {
+        let parens = format!("{}a{}", "(".repeat(depth), ")".repeat(depth));
+        let arms = format!("{}a{}", "match a { _ => ".repeat(depth), " }".repeat(depth));
+        let closures = format!("{}a", "|x| ".repeat(depth));
+        let generics = format!("{}u8{}", "Vec<".repeat(depth), ">".repeat(depth));
+        let patterns = format!("{}a{}", "(".repeat(depth), ")".repeat(depth));
+        let modules = format!("{}{}", "mod m { ".repeat(depth), "}".repeat(depth));
+        [
+            moxy::parse!(parens as moxy::ast::Expr).is_ok(),
+            moxy::parse!(arms as moxy::ast::Expr).is_ok(),
+            moxy::parse!(closures as moxy::ast::Expr).is_ok(),
+            moxy::parse!(generics as moxy::ast::Type).is_ok(),
+            moxy::parse!(patterns as moxy::ast::Pattern).is_ok(),
+            moxy::parse!(modules as moxy::ast::File).is_ok(),
+        ]
+    });
+
+    assert_eq!(parsed, [true; 6]);
+}

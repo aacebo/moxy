@@ -108,6 +108,13 @@ pub fn __parse_owned<T: Parse>(source: impl TryIntoTokenStream) -> Result<T, Par
     Ok(value)
 }
 
+// Parses a node and converts it into the enum that holds it. Choosing this
+// function per variant and calling it once keeps a single return slot in the
+// caller's stack frame instead of one per variant.
+pub(crate) fn parse_into<T: Parse, U: From<T>>(parser: &Parser) -> Result<U, ParseError> {
+    Ok(T::parse(parser)?.into())
+}
+
 #[doc(hidden)]
 pub mod __private {
     pub use moxy_token;

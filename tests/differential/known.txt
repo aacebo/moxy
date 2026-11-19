@@ -15,7 +15,6 @@ TREE e: S { a: 1, .. }
 TREE b: { #[a] 1..2; }
 TREE b: { {}; -1 }
 TREE p: 1...2
-TREE p: (..)
 TREE p: &1..=2
 TREE p: self
 TREE f: impl A { #![inner] fn f() {} }

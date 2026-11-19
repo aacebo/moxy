@@ -1,6 +1,8 @@
 use super::*;
 
 pub(crate) fn single(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+    let _depth = moxy_token::Depth::enter()?;
+
     if PatWild::peek(cursor) {
         return PatWild::skip(cursor);
     }
@@ -33,12 +35,10 @@ pub(crate) fn single(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         return PatSlice::skip(cursor);
     }
 
-    if cursor.is_delimited(moxy_token::Delim::Paren) {
-        if PatTuple::peek(cursor) {
-            return PatTuple::skip(cursor);
-        }
-
-        return PatParen::skip(cursor);
+    // A parenthesized pattern skips as a one-element tuple, so nested
+    // parentheses skip in linear time
+    if Attributes::skip(cursor).is_some_and(|cursor| cursor.is_delimited(moxy_token::Delim::Paren)) {
+        return PatTuple::skip(cursor);
     }
 
     if MacroCall::peek(cursor) {

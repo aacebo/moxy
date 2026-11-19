@@ -12,6 +12,11 @@ pub struct ParseError {
 }
 
 impl ParseError {
+    // The error for input nested deeper than the parser reads
+    pub(crate) fn too_deep(span: Span) -> Self {
+        Self::new(span, format!("nesting is deeper than {} levels", moxy_token::MAX_DEPTH))
+    }
+
     pub fn new(span: Span, message: impl std::fmt::Display) -> Self {
         Self {
             span,

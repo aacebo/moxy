@@ -167,8 +167,10 @@ impl Scan for TokenStream {
                 break;
             }
 
-            // Try group first (opening delimiter)
-            if let Ok((next, group)) = crate::Group::scan(c) {
+            // An opening delimiter starts a group, whose error, such as an
+            // unclosed delimiter or one inside it, is the error of the stream
+            if let Some('(' | '[' | '{') = c.first() {
+                let (next, group) = crate::Group::scan(c)?;
                 tokens.push(TokenTree::Group(group));
                 c = next;
                 continue;

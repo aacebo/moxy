@@ -30,6 +30,10 @@ impl Parse for PatParen {
             return false;
         };
 
+        if PatRest::skip(inner).is_some_and(|rest| rest.is_empty()) {
+            return false;
+        }
+
         let Some(inner) = Pattern::skip(inner) else {
             return false;
         };

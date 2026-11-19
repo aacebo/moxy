@@ -158,6 +158,7 @@ fn primary(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
                 return None;
             }
 
+            let _depth = moxy_token::Depth::enter()?;
             cursor = primary(cursor, ExprContext::NORMAL)?;
         }
 
@@ -334,6 +335,7 @@ fn postfix(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
 }
 
 fn unary(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
+    let _depth = moxy_token::Depth::enter()?;
     let cursor = Attributes::skip(cursor)?;
 
     if <Token![&]>::peek(cursor) && <Token![raw]>::peek(cursor.offset(1)) && PointerMutability::peek(cursor.offset(2)) {
@@ -403,6 +405,7 @@ fn assignment(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>
 
     if <Token![=]>::peek(cursor) {
         cursor = <Token![=]>::skip(cursor)?;
+        let _depth = moxy_token::Depth::enter()?;
         cursor = assignment(cursor, context)?;
     }
 

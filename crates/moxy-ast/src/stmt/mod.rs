@@ -93,29 +93,26 @@ impl Parse for Stmt {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if <Token![;]>::peek(parser.cursor()) {
-            return Ok(Self::Empty(<_ as Parse>::parse(parser)?));
-        }
+        // One call site for every form keeps one return slot in this frame
+        let parse: fn(&Parser) -> Result<Self, ParseError> = if <Token![;]>::peek(parser.cursor()) {
+            |parser| Ok(Self::Empty(<_ as Parse>::parse(parser)?))
+        } else if StmtLocal::peek(parser.cursor()) {
+            |parser| Ok(Self::Local(Box::new(<_ as Parse>::parse(parser)?)))
+        } else if StmtMacro::peek(parser.cursor()) {
+            |parser| Ok(Self::Macro(<_ as Parse>::parse(parser)?))
+        } else if block(parser.cursor()) {
+            |parser| Ok(Self::Block(<_ as Parse>::parse(parser)?))
+        } else if Item::peek(parser.cursor()) && !macro_expr(parser.cursor()) {
+            |parser| Ok(Self::Item(Box::new(<_ as Parse>::parse(parser)?)))
+        } else {
+            |parser| {
+                let expr = crate::expr::parse::early(parser)?;
+                let semi = <_ as Parse>::parse(parser)?;
+                Ok(Self::Expr(expr, semi))
+            }
+        };
 
-        if StmtLocal::peek(parser.cursor()) {
-            return Ok(Self::Local(Box::new(<_ as Parse>::parse(parser)?)));
-        }
-
-        if StmtMacro::peek(parser.cursor()) {
-            return Ok(Self::Macro(<_ as Parse>::parse(parser)?));
-        }
-
-        if block(parser.cursor()) {
-            return Ok(Self::Block(<_ as Parse>::parse(parser)?));
-        }
-
-        if Item::peek(parser.cursor()) && !macro_expr(parser.cursor()) {
-            return Ok(Self::Item(<_ as Parse>::parse(parser)?));
-        }
-
-        let expr = crate::expr::parse::early(parser)?;
-        let semi = <_ as Parse>::parse(parser)?;
-        Ok(Self::Expr(Box::new(expr), semi))
+        parse(parser)
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {

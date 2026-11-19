@@ -352,74 +352,51 @@ impl Parse for Item {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        if ItemMacroRules::peek(parser.cursor()) {
-            return Ok(Self::Macro2(<_ as Parse>::parse(parser)?));
-        }
+        let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
 
-        if ItemUse::peek(parser.cursor()) {
-            return Ok(Self::Use(<_ as Parse>::parse(parser)?));
-        }
+        // One call site for every form keeps one return slot in this frame
+        let parse: fn(&Parser) -> Result<Self, ParseError> = if ItemMacroRules::peek(parser.cursor()) {
+            parse_into::<ItemMacroRules, Self>
+        } else if ItemUse::peek(parser.cursor()) {
+            parse_into::<ItemUse, Self>
+        } else if ItemExternCrate::peek(parser.cursor()) {
+            parse_into::<ItemExternCrate, Self>
+        } else if ItemForeignMod::peek(parser.cursor()) {
+            parse_into::<ItemForeignMod, Self>
+        } else if ItemMod::peek(parser.cursor()) {
+            parse_into::<ItemMod, Self>
+        } else if ItemStruct::peek(parser.cursor()) {
+            parse_into::<ItemStruct, Self>
+        } else if ItemEnum::peek(parser.cursor()) {
+            parse_into::<ItemEnum, Self>
+        } else if ItemUnion::peek(parser.cursor()) {
+            parse_into::<ItemUnion, Self>
+        } else if ItemTraitAlias::peek(parser.cursor()) {
+            parse_into::<ItemTraitAlias, Self>
+        } else if ItemTrait::peek(parser.cursor()) {
+            parse_into::<ItemTrait, Self>
+        } else if ItemImpl::peek(parser.cursor()) {
+            parse_into::<ItemImpl, Self>
+        } else if ItemTypeAlias::peek(parser.cursor()) {
+            parse_into::<ItemTypeAlias, Self>
+        } else if ItemConst::peek(parser.cursor()) {
+            parse_into::<ItemConst, Self>
+        } else if ItemStatic::peek(parser.cursor()) {
+            parse_into::<ItemStatic, Self>
+        } else if ItemFn::peek(parser.cursor()) {
+            parse_into::<ItemFn, Self>
+        } else if ItemMacro::peek(parser.cursor()) {
+            parse_into::<ItemMacro, Self>
+        } else {
+            return parser.error("expected item").into();
+        };
 
-        if ItemExternCrate::peek(parser.cursor()) {
-            return Ok(Self::ExternCrate(<_ as Parse>::parse(parser)?));
-        }
-
-        if ItemForeignMod::peek(parser.cursor()) {
-            return Ok(Self::ForeignMod(<_ as Parse>::parse(parser)?));
-        }
-
-        if ItemMod::peek(parser.cursor()) {
-            return Ok(Self::Mod(<_ as Parse>::parse(parser)?));
-        }
-
-        if ItemStruct::peek(parser.cursor()) {
-            return Ok(Self::Struct(<_ as Parse>::parse(parser)?));
-        }
-
-        if ItemEnum::peek(parser.cursor()) {
-            return Ok(Self::Enum(<_ as Parse>::parse(parser)?));
-        }
-
-        if ItemUnion::peek(parser.cursor()) {
-            return Ok(Self::Union(<_ as Parse>::parse(parser)?));
-        }
-
-        if ItemTraitAlias::peek(parser.cursor()) {
-            return Ok(Self::TraitAlias(<_ as Parse>::parse(parser)?));
-        }
-
-        if ItemTrait::peek(parser.cursor()) {
-            return Ok(Self::Trait(<_ as Parse>::parse(parser)?));
-        }
-
-        if ItemImpl::peek(parser.cursor()) {
-            return Ok(Self::Impl(<_ as Parse>::parse(parser)?));
-        }
-
-        if ItemTypeAlias::peek(parser.cursor()) {
-            return Ok(Self::TypeAlias(<_ as Parse>::parse(parser)?));
-        }
-
-        if ItemConst::peek(parser.cursor()) {
-            return Ok(Self::Const(<_ as Parse>::parse(parser)?));
-        }
-
-        if ItemStatic::peek(parser.cursor()) {
-            return Ok(Self::Static(<_ as Parse>::parse(parser)?));
-        }
-
-        if ItemFn::peek(parser.cursor()) {
-            return Ok(Self::Fn(<_ as Parse>::parse(parser)?));
-        }
-
-        if ItemMacro::peek(parser.cursor()) {
-            return Ok(Self::Macro(<_ as Parse>::parse(parser)?));
-        }
-
-        parser.error("expected item").into()
+        parse(parser)
     }
 
     fn skip(cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
+        let _depth = moxy_token::Depth::enter()?;
+
         if ItemMacroRules::peek(cursor) {
             ItemMacroRules::skip(cursor)
         } else if ItemUse::peek(cursor) {

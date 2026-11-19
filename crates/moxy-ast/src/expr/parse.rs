@@ -4,15 +4,25 @@ use super::peek;
 use super::*;
 
 pub(super) fn expr(parser: &Parser, context: ExprContext) -> Result<Expr, ParseError> {
+    Ok(*boxed_expr(parser, context)?)
+}
+
+// The parse functions return boxed expressions, which every parent node
+// stores, so a nested expression's stack frames hold pointers, not nodes
+fn boxed_expr(parser: &Parser, context: ExprContext) -> Result<Box<Expr>, ParseError> {
     let attrs = <_ as Parse>::parse(parser)?;
     assignment(parser, attrs, context)
+}
+
+fn boxed(node: impl Into<Expr>) -> Box<Expr> {
+    Box::new(node.into())
 }
 
 // A match arm body or an expression statement. A block-like expression
 // (`{ .. }`, `if`, `match`, a loop, ..) ends there unless a method call,
 // field access, or `?` continues it, so `a => { x } (b, c) => y` holds two
 // arms and `if a { b } <T>::f()` two statements.
-pub(crate) fn early(parser: &Parser) -> Result<Expr, ParseError> {
+pub(crate) fn early(parser: &Parser) -> Result<Box<Expr>, ParseError> {
     let fork = parser.fork();
     let attrs = <_ as Parse>::parse(&fork)?;
 
@@ -25,7 +35,7 @@ pub(crate) fn early(parser: &Parser) -> Result<Expr, ParseError> {
         }
     }
 
-    expr(parser, ExprContext::NORMAL)
+    boxed_expr(parser, ExprContext::NORMAL)
 }
 
 pub(crate) fn const_generic_default(parser: &Parser) -> Result<Expr, ParseError> {
@@ -34,78 +44,87 @@ pub(crate) fn const_generic_default(parser: &Parser) -> Result<Expr, ParseError>
 
 fn optional_expr(parser: &Parser, context: ExprContext) -> Result<Option<Box<Expr>>, ParseError> {
     if peek::expr(parser.cursor(), context) {
-        Ok(Some(Box::new(expr(parser, context)?)))
+        Ok(Some(boxed_expr(parser, context)?))
     } else {
         Ok(None)
     }
 }
 
-fn assignment(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
+fn assignment(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
     let left = range(parser, attrs, context)?;
 
     if <Token![=]>::peek(parser.cursor()) && !<Token![==]>::peek(parser.cursor()) && !<Token![=>]>::peek(parser.cursor()) {
-        return Ok(ExprAssign {
-            attrs: Default::default(),
-            left: Box::new(left),
-            eq: <_ as Parse>::parse(parser)?,
-            right: Box::new(assignment(parser, Default::default(), context)?),
-        }
-        .into());
+        return assign(parser, left, context);
     }
 
     // Compound assignment is right-associative and binds looser than a range:
     // `x += y + z` adds first, `a += b = c` assigns `c` to `b` first
     if peek_binary(parser.cursor(), context).is_some_and(|op| Precedence::of(&op) == Precedence::Assign) {
-        return Ok(ExprBinary {
-            attrs: Default::default(),
-            left: Box::new(left),
-            op: <_ as Parse>::parse(parser)?,
-            right: Box::new(assignment(parser, Default::default(), context)?),
-        }
-        .into());
+        return compound_assign(parser, left, context);
     }
 
     Ok(left)
 }
 
-fn range(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
+fn assign(parser: &Parser, left: Box<Expr>, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprAssign {
+        attrs: Default::default(),
+        left,
+        eq: <_ as Parse>::parse(parser)?,
+        right: assignment_right(parser, context)?,
+    }))
+}
+
+fn compound_assign(parser: &Parser, left: Box<Expr>, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprBinary {
+        attrs: Default::default(),
+        left,
+        op: <_ as Parse>::parse(parser)?,
+        right: assignment_right(parser, context)?,
+    }))
+}
+
+// The right side of an assignment, which nests one level per operator as
+// assignment associates to the right
+fn assignment_right(parser: &Parser, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+    let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+    assignment(parser, Default::default(), context)
+}
+
+fn range(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
     if RangeLimits::peek(parser.cursor()) {
-        let limits = <_ as Parse>::parse(parser)?;
-        let mut end = None;
-
-        if !context.is_end(parser.cursor()) && Expr::peek(parser.cursor()) {
-            end = Some(Box::new(binary(parser, Default::default(), context, Precedence::Or)?));
-        }
-
-        return Ok(ExprRange {
-            attrs,
-            start: None,
-            limits,
-            end,
-        }
-        .into());
+        return range_rest(parser, attrs, None, context);
     }
 
     let left = binary(parser, attrs, context, Precedence::Or)?;
 
     if RangeLimits::peek(parser.cursor()) {
-        let limits = <_ as Parse>::parse(parser)?;
-        let mut end = None;
-
-        if !context.is_end(parser.cursor()) && Expr::peek(parser.cursor()) {
-            end = Some(Box::new(binary(parser, Default::default(), context, Precedence::Or)?));
-        }
-
-        return Ok(ExprRange {
-            attrs: Default::default(),
-            start: Some(Box::new(left)),
-            limits,
-            end,
-        }
-        .into());
+        return range_rest(parser, Default::default(), Some(left), context);
     }
 
     Ok(left)
+}
+
+// The limits and end of a range, after its start if it has one
+fn range_rest(
+    parser: &Parser,
+    attrs: Attributes,
+    start: Option<Box<Expr>>,
+    context: ExprContext,
+) -> Result<Box<Expr>, ParseError> {
+    let limits = <_ as Parse>::parse(parser)?;
+    let mut end = None;
+
+    if !context.is_end(parser.cursor()) && Expr::peek(parser.cursor()) {
+        end = Some(binary(parser, Default::default(), context, Precedence::Or)?);
+    }
+
+    Ok(boxed(ExprRange {
+        attrs,
+        start,
+        limits,
+        end,
+    }))
 }
 
 // The binding strength of a binary operator, weakest first
@@ -173,14 +192,14 @@ fn peek_binary(cursor: Cursor<'_>, context: ExprContext) -> Option<BinOp> {
     BinOp::parse(&Parser::from_cursor(cursor)).ok()
 }
 
-fn binary(parser: &Parser, attrs: Attributes, context: ExprContext, min: Precedence) -> Result<Expr, ParseError> {
+fn binary(parser: &Parser, attrs: Attributes, context: ExprContext, min: Precedence) -> Result<Box<Expr>, ParseError> {
     let left = cast(parser, attrs, context)?;
     binary_rest(parser, context, left, min)
 }
 
 // Precedence climbing over the operators at least as strong as `min`. Operators
 // of one strength associate to the left; comparisons do not chain
-fn binary_rest(parser: &Parser, context: ExprContext, mut left: Expr, min: Precedence) -> Result<Expr, ParseError> {
+fn binary_rest(parser: &Parser, context: ExprContext, mut left: Box<Expr>, min: Precedence) -> Result<Box<Expr>, ParseError> {
     while let Some(op) = peek_binary(parser.cursor(), context) {
         let precedence = Precedence::of(&op);
 
@@ -195,13 +214,12 @@ fn binary_rest(parser: &Parser, context: ExprContext, mut left: Expr, min: Prece
             right = binary_rest(parser, context, right, stronger)?;
         }
 
-        left = ExprBinary {
+        left = boxed(ExprBinary {
             attrs: Default::default(),
-            left: Box::new(left),
+            left,
             op,
-            right: Box::new(right),
-        }
-        .into();
+            right,
+        });
 
         if precedence == Precedence::Compare
             && let Some(next) = peek_binary(parser.cursor(), context)
@@ -214,29 +232,33 @@ fn binary_rest(parser: &Parser, context: ExprContext, mut left: Expr, min: Prece
     Ok(left)
 }
 
-fn cast(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
+fn cast(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
     let mut expr = unary_with(parser, attrs, context)?;
 
     while <Token![as]>::peek(parser.cursor()) {
-        expr = ExprCast {
-            attrs: Default::default(),
-            expr: Box::new(expr),
-            as_keyword: <_ as Parse>::parse(parser)?,
-            ty: Box::new(Type::parse_without_plus(parser)?),
-        }
-        .into();
+        expr = cast_to(parser, expr)?;
     }
 
     Ok(expr)
 }
 
+fn cast_to(parser: &Parser, expr: Box<Expr>) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprCast {
+        attrs: Default::default(),
+        expr,
+        as_keyword: <_ as Parse>::parse(parser)?,
+        ty: Box::new(Type::parse_without_plus(parser)?),
+    }))
+}
+
 pub(crate) fn unary(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseError> {
-    unary_with(parser, attrs, ExprContext::PATTERN_BOUND)
+    Ok(*unary_with(parser, attrs, ExprContext::PATTERN_BOUND)?)
 }
 
 // Outer attributes belong to the operand of a binary operator or cast: the
 // unary expression, or the whole chain of postfix operators, that follows them
-fn unary_with(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
+fn unary_with(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+    let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
     let attrs = if attrs.is_empty() {
         <_ as Parse>::parse(parser)?
     } else {
@@ -244,121 +266,62 @@ fn unary_with(parser: &Parser, attrs: Attributes, context: ExprContext) -> Resul
     };
 
     if <Token![&]>::peek(parser.cursor()) {
-        if <Token![raw]>::peek(parser.cursor().offset(1)) && PointerMutability::peek(parser.cursor().offset(2)) {
-            return Ok(ExprRawAddr {
-                attrs,
-                and: <_ as Parse>::parse(parser)?,
-                raw: <_ as Parse>::parse(parser)?,
-                mutability: <_ as Parse>::parse(parser)?,
-                expr: Box::new(unary_with(parser, Default::default(), context)?),
-            }
-            .into());
-        }
-
-        return Ok(ExprReference {
-            attrs,
-            and: <_ as Parse>::parse(parser)?,
-            mutability: <_ as Parse>::parse(parser)?,
-            expr: Box::new(unary_with(parser, Default::default(), context)?),
-        }
-        .into());
+        return reference(parser, attrs, context);
     }
 
     if UnOp::peek(parser.cursor()) {
-        return Ok(ExprUnary {
-            attrs,
-            op: <_ as Parse>::parse(parser)?,
-            expr: Box::new(unary_with(parser, Default::default(), context)?),
-        }
-        .into());
+        return unary_op(parser, attrs, context);
     }
 
     postfix(parser, attrs, context)
 }
 
-fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
+// `&x`, `&mut x`, or `&raw const x`
+fn reference(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+    if <Token![raw]>::peek(parser.cursor().offset(1)) && PointerMutability::peek(parser.cursor().offset(2)) {
+        return Ok(boxed(ExprRawAddr {
+            attrs,
+            and: <_ as Parse>::parse(parser)?,
+            raw: <_ as Parse>::parse(parser)?,
+            mutability: <_ as Parse>::parse(parser)?,
+            expr: unary_with(parser, Default::default(), context)?,
+        }));
+    }
+
+    Ok(boxed(ExprReference {
+        attrs,
+        and: <_ as Parse>::parse(parser)?,
+        mutability: <_ as Parse>::parse(parser)?,
+        expr: unary_with(parser, Default::default(), context)?,
+    }))
+}
+
+fn unary_op(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprUnary {
+        attrs,
+        op: <_ as Parse>::parse(parser)?,
+        expr: unary_with(parser, Default::default(), context)?,
+    }))
+}
+
+fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
     let mut expr = primary(parser, Default::default(), context)?;
 
     loop {
-        if parser.is_delimited(Delim::Paren) {
-            expr = ExprCall {
-                attrs: Default::default(),
-                func: Box::new(expr),
-                args: Delimited::parse_paren_with(parser, List::parse_all)?,
-            }
-            .into();
-
-            continue;
-        }
-
-        if parser.is_delimited(Delim::Bracket) {
-            expr = ExprIndex {
-                attrs: Default::default(),
-                base: Box::new(expr),
-                index: Delimited::parse_bracket_with(parser, |inner| Ok(Box::new(<_ as Parse>::parse(inner)?)))?,
-            }
-            .into();
-
-            continue;
-        }
-
-        if <Token![.]>::peek(parser.cursor()) && !<Token![..]>::peek(parser.cursor()) && !<Token![..=]>::peek(parser.cursor()) {
-            if <Token![await]>::peek(parser.cursor().offset(1)) {
-                expr = ExprAwait {
-                    attrs: Default::default(),
-                    base: Box::new(expr),
-                    dot: <_ as Parse>::parse(parser)?,
-                    await_keyword: <_ as Parse>::parse(parser)?,
-                }
-                .into();
-            } else if Ident::peek(parser.cursor().offset(1)) {
-                let method = parser.cursor().offset(2);
-                let args = Option::<AngleArguments>::skip(method).unwrap_or(method);
-
-                if !args.is_delimited(Delim::Paren) {
-                    expr = ExprField {
-                        attrs: Default::default(),
-                        base: Box::new(expr),
-                        dot: <_ as Parse>::parse(parser)?,
-                        member: <_ as Parse>::parse(parser)?,
-                    }
-                    .into();
-                } else {
-                    expr = ExprMethodCall {
-                        attrs: Default::default(),
-                        receiver: Box::new(expr),
-                        dot: <_ as Parse>::parse(parser)?,
-                        method: <_ as Parse>::parse(parser)?,
-                        turbofish: <_ as Parse>::parse(parser)?,
-                        args: Delimited::parse_paren_with(parser, List::parse_all)?,
-                    }
-                    .into();
-                }
-            } else {
-                expr = ExprField {
-                    attrs: Default::default(),
-                    base: Box::new(expr),
-                    dot: <_ as Parse>::parse(parser)?,
-                    member: <_ as Parse>::parse(parser)?,
-                }
-                .into();
-            }
-
-            continue;
-        }
-
-        if <Token![?]>::peek(parser.cursor()) {
-            expr = ExprTry {
-                attrs: Default::default(),
-                expr: Box::new(expr),
-                question_punct: <_ as Parse>::parse(parser)?,
-            }
-            .into();
-
-            continue;
-        }
-
-        break;
+        expr = if parser.is_delimited(Delim::Paren) {
+            call(parser, expr)?
+        } else if parser.is_delimited(Delim::Bracket) {
+            index(parser, expr)?
+        } else if <Token![.]>::peek(parser.cursor())
+            && !<Token![..]>::peek(parser.cursor())
+            && !<Token![..=]>::peek(parser.cursor())
+        {
+            dot(parser, expr)?
+        } else if <Token![?]>::peek(parser.cursor()) {
+            try_expr(parser, expr)?
+        } else {
+            break;
+        };
     }
 
     if let Some(slot) = expr.attrs_mut() {
@@ -368,7 +331,68 @@ fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     Ok(expr)
 }
 
-fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
+fn call(parser: &Parser, func: Box<Expr>) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprCall {
+        attrs: Default::default(),
+        func,
+        args: Delimited::parse_paren_with(parser, List::parse_all)?,
+    }))
+}
+
+fn index(parser: &Parser, base: Box<Expr>) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprIndex {
+        attrs: Default::default(),
+        base,
+        index: Delimited::parse_bracket_with(parser, |inner| boxed_expr(inner, ExprContext::NORMAL))?,
+    }))
+}
+
+// `.await`, a method call, or a field access
+fn dot(parser: &Parser, base: Box<Expr>) -> Result<Box<Expr>, ParseError> {
+    if <Token![await]>::peek(parser.cursor().offset(1)) {
+        return Ok(boxed(ExprAwait {
+            attrs: Default::default(),
+            base,
+            dot: <_ as Parse>::parse(parser)?,
+            await_keyword: <_ as Parse>::parse(parser)?,
+        }));
+    }
+
+    if Ident::peek(parser.cursor().offset(1)) {
+        let method = parser.cursor().offset(2);
+        let args = Option::<AngleArguments>::skip(method).unwrap_or(method);
+
+        if args.is_delimited(Delim::Paren) {
+            return Ok(boxed(ExprMethodCall {
+                attrs: Default::default(),
+                receiver: base,
+                dot: <_ as Parse>::parse(parser)?,
+                method: <_ as Parse>::parse(parser)?,
+                turbofish: <_ as Parse>::parse(parser)?,
+                args: Delimited::parse_paren_with(parser, List::parse_all)?,
+            }));
+        }
+    }
+
+    Ok(boxed(ExprField {
+        attrs: Default::default(),
+        base,
+        dot: <_ as Parse>::parse(parser)?,
+        member: <_ as Parse>::parse(parser)?,
+    }))
+}
+
+fn try_expr(parser: &Parser, expr: Box<Expr>) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprTry {
+        attrs: Default::default(),
+        expr,
+        question_punct: <_ as Parse>::parse(parser)?,
+    }))
+}
+
+// Each form parses in its own function, so a nested expression's stack frame
+// holds only the form being parsed
+fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
     let mut closure_cursor = parser.cursor();
     closure_cursor = BoundLifetimes::skip(closure_cursor).unwrap_or(closure_cursor);
     closure_cursor = Option::<Token![const]>::skip(closure_cursor).unwrap_or(closure_cursor);
@@ -381,19 +405,11 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     }
 
     if Lit::peek(parser.cursor()) {
-        return Ok(ExprLit {
-            attrs,
-            lit: <_ as Parse>::parse(parser)?,
-        }
-        .into());
+        return lit(parser, attrs);
     }
 
     if <Token![_]>::peek(parser.cursor()) {
-        return Ok(ExprInfer {
-            attrs,
-            underscore: <_ as Parse>::parse(parser)?,
-        }
-        .into());
+        return infer(parser, attrs);
     }
 
     if parser.is_delimited(Delim::Paren) {
@@ -405,366 +421,416 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
     }
 
     if parser.is_delimited(Delim::Brace) {
-        return Ok(ExprBlock {
-            attrs,
-            label: None,
-            block: <_ as Parse>::parse(parser)?,
-        }
-        .into());
+        return block(parser, attrs);
     }
 
     if parser.is_delimited(Delim::None) {
-        let inner = parser.parse_group(Delim::None)?;
-        return Ok(ExprGroup {
-            attrs,
-            expr: Box::new(<_ as Parse>::parse(&inner)?),
-        }
-        .into());
+        return group(parser, attrs);
     }
 
-    // The scrutinee binds tighter than `&&` and `||`, which chain conditions:
-    // `if let Some(x) = a && b {}` tests `a` against the pattern, then `b`
     if <Token![let]>::peek(parser.cursor()) {
-        return Ok(ExprLet {
-            attrs,
-            let_keyword: <_ as Parse>::parse(parser)?,
-            pat: <_ as Parse>::parse(parser)?,
-            eq: <_ as Parse>::parse(parser)?,
-            expr: Box::new(binary(parser, Attributes::default(), context, Precedence::Compare)?),
-        }
-        .into());
+        return let_expr(parser, attrs, context);
     }
 
     if <Token![if]>::peek(parser.cursor()) {
-        let if_keyword = <_ as Parse>::parse(parser)?;
-        let cond = Box::new(expr(parser, ExprContext::EARLY)?);
-        let then_branch = <_ as Parse>::parse(parser)?;
-        let (else_keyword, else_branch) = if <Token![else]>::peek(parser.cursor()) {
-            let else_keyword = <_ as Parse>::parse(parser)?;
-
-            // `else` takes a block or another `if`, which ends the expression:
-            // `if a { 1 } else { 2 } [x]` does not index the else block
-            if !parser.is_delimited(Delim::Brace) && !<Token![if]>::peek(parser.cursor()) {
-                return parser.error("expected `{` or `if` after `else`").into();
-            }
-
-            (
-                Some(else_keyword),
-                Some(Box::new(primary(parser, Attributes::default(), ExprContext::NORMAL)?)),
-            )
-        } else {
-            (None, None)
-        };
-
-        return Ok(ExprIf {
-            attrs,
-            if_keyword,
-            cond,
-            then_branch,
-            else_keyword,
-            else_branch,
-        }
-        .into());
+        return if_expr(parser, attrs);
     }
 
     let label_cursor = Label::skip(parser.cursor());
+    let labeled = |keyword: fn(Cursor<'_>) -> bool| keyword(parser.cursor()) || label_cursor.is_some_and(keyword);
 
-    if <Token![while]>::peek(parser.cursor()) || label_cursor.is_some_and(|cursor| <Token![while]>::peek(cursor)) {
-        return Ok(ExprWhile {
-            attrs,
-            label: <_ as Parse>::parse(parser)?,
-            while_keyword: <_ as Parse>::parse(parser)?,
-            cond: Box::new(expr(parser, ExprContext::EARLY)?),
-            body: <_ as Parse>::parse(parser)?,
-        }
-        .into());
+    if labeled(<Token![while]>::peek) {
+        return while_loop(parser, attrs);
     }
 
-    if <Token![for]>::peek(parser.cursor()) || label_cursor.is_some_and(|cursor| <Token![for]>::peek(cursor)) {
-        return Ok(ExprForLoop {
-            attrs,
-            label: <_ as Parse>::parse(parser)?,
-            for_keyword: <_ as Parse>::parse(parser)?,
-            pat: <_ as Parse>::parse(parser)?,
-            in_keyword: <_ as Parse>::parse(parser)?,
-            expr: Box::new(expr(parser, ExprContext::EARLY)?),
-            body: <_ as Parse>::parse(parser)?,
-        }
-        .into());
+    if labeled(<Token![for]>::peek) {
+        return for_loop(parser, attrs);
     }
 
-    if <Token![loop]>::peek(parser.cursor()) || label_cursor.is_some_and(|cursor| <Token![loop]>::peek(cursor)) {
-        return Ok(ExprLoop {
-            attrs,
-            label: <_ as Parse>::parse(parser)?,
-            loop_keyword: <_ as Parse>::parse(parser)?,
-            body: <_ as Parse>::parse(parser)?,
-        }
-        .into());
+    if labeled(<Token![loop]>::peek) {
+        return loop_expr(parser, attrs);
     }
 
-    if let Some(cursor) = label_cursor
-        && cursor.is_delimited(Delim::Brace)
-    {
-        return Ok(ExprBlock {
-            attrs,
-            label: <_ as Parse>::parse(parser)?,
-            block: <_ as Parse>::parse(parser)?,
-        }
-        .into());
+    if label_cursor.is_some_and(|cursor| cursor.is_delimited(Delim::Brace)) {
+        return labeled_block(parser, attrs);
     }
 
     if <Token![match]>::peek(parser.cursor()) {
-        let match_keyword = <_ as Parse>::parse(parser)?;
-        let expr = Box::new(expr(parser, ExprContext::EARLY)?);
-        let (span, arms) = parser.parse_group_spanned(Delim::Brace)?;
-
-        return Ok(ExprMatch {
-            attrs,
-            match_keyword,
-            expr,
-            arms: Delimited::brace(span, arms.parse_until_empty()?),
-        }
-        .into());
+        return match_expr(parser, attrs);
     }
 
     if <Token![unsafe]>::peek(parser.cursor()) {
-        return Ok(ExprUnsafe {
-            attrs,
-            unsafe_keyword: <_ as Parse>::parse(parser)?,
-            block: <_ as Parse>::parse(parser)?,
-        }
-        .into());
+        return unsafe_block(parser, attrs);
     }
 
     if <Token![const]>::peek(parser.cursor()) {
-        return Ok(ExprConst {
-            attrs,
-            const_keyword: <_ as Parse>::parse(parser)?,
-            block: <_ as Parse>::parse(parser)?,
-        }
-        .into());
+        return const_block(parser, attrs);
     }
 
     if <Token![async]>::peek(parser.cursor()) {
-        return Ok(ExprAsync {
-            attrs,
-            async_keyword: <_ as Parse>::parse(parser)?,
-            move_keyword: <_ as Parse>::parse(parser)?,
-            block: <_ as Parse>::parse(parser)?,
-        }
-        .into());
+        return async_block(parser, attrs);
     }
 
     if <Token![try]>::peek(parser.cursor()) {
-        return Ok(ExprTryBlock {
-            attrs,
-            try_keyword: <_ as Parse>::parse(parser)?,
-            block: <_ as Parse>::parse(parser)?,
-        }
-        .into());
+        return try_block(parser, attrs);
     }
 
     if <Token![return]>::peek(parser.cursor()) {
-        return Ok(ExprReturn {
-            attrs,
-            return_keyword: <_ as Parse>::parse(parser)?,
-            expr: optional_expr(parser, context)?,
-        }
-        .into());
+        return return_expr(parser, attrs, context);
     }
 
     if <Token![break]>::peek(parser.cursor()) {
-        return Ok(ExprBreak {
-            attrs,
-            break_keyword: <_ as Parse>::parse(parser)?,
-            label: <_ as Parse>::parse(parser)?,
-            expr: optional_expr(parser, context)?,
-        }
-        .into());
+        return break_expr(parser, attrs, context);
     }
 
     if <Token![continue]>::peek(parser.cursor()) {
-        return Ok(ExprContinue {
-            attrs,
-            continue_keyword: <_ as Parse>::parse(parser)?,
-            label: <_ as Parse>::parse(parser)?,
-        }
-        .into());
+        return continue_expr(parser, attrs);
     }
 
     if <Token![yield]>::peek(parser.cursor()) {
-        return Ok(ExprYield {
-            attrs,
-            yield_keyword: <_ as Parse>::parse(parser)?,
-            expr: optional_expr(parser, context)?,
-        }
-        .into());
+        return yield_expr(parser, attrs, context);
     }
 
     if <Token![<]>::peek(parser.cursor()) || Path::peek(parser.cursor()) {
-        let (qself, path) = if <Token![<]>::peek(parser.cursor()) {
-            let (qself, path) = QSelf::parse_qualified(parser)?;
-            (Some(qself), path)
-        } else {
-            (None, Path::parse_expr(parser)?)
-        };
-
-        if qself.is_none() && <Token![!]>::peek(parser.cursor()) && !<Token![!=]>::peek(parser.cursor()) {
-            let mac = MacroCall {
-                path,
-                bang: <_ as Parse>::parse(parser)?,
-                body: <_ as Parse>::parse(parser)?,
-            };
-
-            return Ok(ExprMacro { attrs, mac }.into());
-        }
-
-        if context.allow_struct && parser.is_delimited(Delim::Brace) {
-            return Ok(ExprStruct {
-                attrs,
-                qself,
-                path,
-                body: Delimited::parse_brace(parser)?,
-            }
-            .into());
-        }
-
-        return Ok(ExprPath { attrs, qself, path }.into());
+        return path_macro_or_struct(parser, attrs, context);
     }
 
     let remaining = parser.remaining();
     let tokens = parser.to_token_stream();
     parser.advance_by(remaining);
-    Ok(Expr::Verbatim(tokens))
+    Ok(Box::new(Expr::Verbatim(tokens)))
 }
 
-pub(crate) fn paren_or_tuple(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseError> {
+fn lit(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprLit {
+        attrs,
+        lit: <_ as Parse>::parse(parser)?,
+    }))
+}
+
+fn infer(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprInfer {
+        attrs,
+        underscore: <_ as Parse>::parse(parser)?,
+    }))
+}
+
+fn block(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprBlock {
+        attrs,
+        label: None,
+        block: <_ as Parse>::parse(parser)?,
+    }))
+}
+
+fn group(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
+    let inner = parser.parse_group(Delim::None)?;
+
+    Ok(boxed(ExprGroup {
+        attrs,
+        expr: boxed_expr(&inner, ExprContext::NORMAL)?,
+    }))
+}
+
+// The scrutinee binds tighter than `&&` and `||`, which chain conditions:
+// `if let Some(x) = a && b {}` tests `a` against the pattern, then `b`
+fn let_expr(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprLet {
+        attrs,
+        let_keyword: <_ as Parse>::parse(parser)?,
+        pat: <_ as Parse>::parse(parser)?,
+        eq: <_ as Parse>::parse(parser)?,
+        expr: binary(parser, Attributes::default(), context, Precedence::Compare)?,
+    }))
+}
+
+fn if_expr(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
+    let if_keyword = <_ as Parse>::parse(parser)?;
+    let cond = boxed_expr(parser, ExprContext::EARLY)?;
+    let then_branch = <_ as Parse>::parse(parser)?;
+    let (else_keyword, else_branch) = if <Token![else]>::peek(parser.cursor()) {
+        let else_keyword = <_ as Parse>::parse(parser)?;
+
+        // `else` takes a block or another `if`, which ends the expression:
+        // `if a { 1 } else { 2 } [x]` does not index the else block
+        if !parser.is_delimited(Delim::Brace) && !<Token![if]>::peek(parser.cursor()) {
+            return parser.error("expected `{` or `if` after `else`").into();
+        }
+
+        // An `else if` chain nests one level per branch
+        let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+        let else_branch = primary(parser, Attributes::default(), ExprContext::NORMAL)?;
+        (Some(else_keyword), Some(else_branch))
+    } else {
+        (None, None)
+    };
+
+    Ok(boxed(ExprIf {
+        attrs,
+        if_keyword,
+        cond,
+        then_branch,
+        else_keyword,
+        else_branch,
+    }))
+}
+
+fn while_loop(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprWhile {
+        attrs,
+        label: <_ as Parse>::parse(parser)?,
+        while_keyword: <_ as Parse>::parse(parser)?,
+        cond: boxed_expr(parser, ExprContext::EARLY)?,
+        body: <_ as Parse>::parse(parser)?,
+    }))
+}
+
+fn for_loop(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprForLoop {
+        attrs,
+        label: <_ as Parse>::parse(parser)?,
+        for_keyword: <_ as Parse>::parse(parser)?,
+        pat: <_ as Parse>::parse(parser)?,
+        in_keyword: <_ as Parse>::parse(parser)?,
+        expr: boxed_expr(parser, ExprContext::EARLY)?,
+        body: <_ as Parse>::parse(parser)?,
+    }))
+}
+
+fn loop_expr(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprLoop {
+        attrs,
+        label: <_ as Parse>::parse(parser)?,
+        loop_keyword: <_ as Parse>::parse(parser)?,
+        body: <_ as Parse>::parse(parser)?,
+    }))
+}
+
+fn labeled_block(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprBlock {
+        attrs,
+        label: <_ as Parse>::parse(parser)?,
+        block: <_ as Parse>::parse(parser)?,
+    }))
+}
+
+fn match_expr(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
+    let match_keyword = <_ as Parse>::parse(parser)?;
+    let expr = boxed_expr(parser, ExprContext::EARLY)?;
+    let (span, arms) = parser.parse_group_spanned(Delim::Brace)?;
+
+    Ok(boxed(ExprMatch {
+        attrs,
+        match_keyword,
+        expr,
+        arms: Delimited::brace(span, arms.parse_until_empty()?),
+    }))
+}
+
+fn unsafe_block(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprUnsafe {
+        attrs,
+        unsafe_keyword: <_ as Parse>::parse(parser)?,
+        block: <_ as Parse>::parse(parser)?,
+    }))
+}
+
+fn const_block(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprConst {
+        attrs,
+        const_keyword: <_ as Parse>::parse(parser)?,
+        block: <_ as Parse>::parse(parser)?,
+    }))
+}
+
+fn async_block(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprAsync {
+        attrs,
+        async_keyword: <_ as Parse>::parse(parser)?,
+        move_keyword: <_ as Parse>::parse(parser)?,
+        block: <_ as Parse>::parse(parser)?,
+    }))
+}
+
+fn try_block(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprTryBlock {
+        attrs,
+        try_keyword: <_ as Parse>::parse(parser)?,
+        block: <_ as Parse>::parse(parser)?,
+    }))
+}
+
+fn return_expr(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprReturn {
+        attrs,
+        return_keyword: <_ as Parse>::parse(parser)?,
+        expr: optional_expr(parser, context)?,
+    }))
+}
+
+fn break_expr(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprBreak {
+        attrs,
+        break_keyword: <_ as Parse>::parse(parser)?,
+        label: <_ as Parse>::parse(parser)?,
+        expr: optional_expr(parser, context)?,
+    }))
+}
+
+fn continue_expr(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprContinue {
+        attrs,
+        continue_keyword: <_ as Parse>::parse(parser)?,
+        label: <_ as Parse>::parse(parser)?,
+    }))
+}
+
+fn yield_expr(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+    Ok(boxed(ExprYield {
+        attrs,
+        yield_keyword: <_ as Parse>::parse(parser)?,
+        expr: optional_expr(parser, context)?,
+    }))
+}
+
+fn path_macro_or_struct(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+    let (qself, path) = if <Token![<]>::peek(parser.cursor()) {
+        let (qself, path) = QSelf::parse_qualified(parser)?;
+        (Some(qself), path)
+    } else {
+        (None, Path::parse_expr(parser)?)
+    };
+
+    if qself.is_none() && <Token![!]>::peek(parser.cursor()) && !<Token![!=]>::peek(parser.cursor()) {
+        let mac = MacroCall {
+            path,
+            bang: <_ as Parse>::parse(parser)?,
+            body: <_ as Parse>::parse(parser)?,
+        };
+
+        return Ok(boxed(ExprMacro { attrs, mac }));
+    }
+
+    if context.allow_struct && parser.is_delimited(Delim::Brace) {
+        return Ok(boxed(ExprStruct {
+            attrs,
+            qself,
+            path,
+            body: Delimited::parse_brace(parser)?,
+        }));
+    }
+
+    Ok(boxed(ExprPath { attrs, qself, path }))
+}
+
+pub(crate) fn paren_or_tuple(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
     let (span, parser) = parser.parse_group_spanned(Delim::Paren)?;
     let expr = paren_or_tuple_content(&parser, span, attrs)?;
     parser.ensure_empty()?;
     Ok(expr)
 }
 
-fn paren_or_tuple_content(parser: &Parser, span: DelimSpan, attrs: Attributes) -> Result<Expr, ParseError> {
+fn paren_or_tuple_content(parser: &Parser, span: DelimSpan, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
     if parser.is_empty() {
-        return Ok(ExprTuple {
+        return Ok(boxed(ExprTuple {
             attrs,
             elems: Delimited::paren(span, Default::default()),
-        }
-        .into());
+        }));
     }
 
-    let first = <_ as Parse>::parse(parser)?;
+    let first = boxed_expr(parser, ExprContext::NORMAL)?;
 
     if <Token![,]>::peek(parser.cursor()) {
-        let mut elems = List::new();
-        elems.push_value(first);
-
-        while <Token![,]>::peek(parser.cursor()) {
-            elems.push_punct(<_ as Parse>::parse(parser)?);
-
-            if !parser.is_empty() {
-                elems.push_value(<_ as Parse>::parse(parser)?);
-            }
-        }
-
-        return Ok(ExprTuple {
-            attrs,
-            elems: Delimited::paren(span, elems),
-        }
-        .into());
+        return tuple(parser, span, attrs, first);
     }
 
-    Ok(ExprParen {
+    Ok(boxed(ExprParen {
         attrs,
-        content: Delimited::paren(span, Box::new(first)),
-    }
-    .into())
+        content: Delimited::paren(span, first),
+    }))
 }
 
-pub(crate) fn array_or_repeat(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseError> {
+fn tuple(parser: &Parser, span: DelimSpan, attrs: Attributes, first: Box<Expr>) -> Result<Box<Expr>, ParseError> {
+    let mut elems = List::new();
+    elems.push_value(*first);
+
+    while <Token![,]>::peek(parser.cursor()) {
+        elems.push_punct(<_ as Parse>::parse(parser)?);
+
+        if !parser.is_empty() {
+            elems.push_value(*boxed_expr(parser, ExprContext::NORMAL)?);
+        }
+    }
+
+    Ok(boxed(ExprTuple {
+        attrs,
+        elems: Delimited::paren(span, elems),
+    }))
+}
+
+pub(crate) fn array_or_repeat(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
     let (span, parser) = parser.parse_group_spanned(Delim::Bracket)?;
     let expr = array_or_repeat_content(&parser, span, attrs)?;
     parser.ensure_empty()?;
     Ok(expr)
 }
 
-fn array_or_repeat_content(parser: &Parser, span: DelimSpan, attrs: Attributes) -> Result<Expr, ParseError> {
+fn array_or_repeat_content(parser: &Parser, span: DelimSpan, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
     if parser.is_empty() {
-        return Ok(ExprArray {
+        return Ok(boxed(ExprArray {
             attrs,
             elems: Delimited::bracket(span, Default::default()),
-        }
-        .into());
+        }));
     }
 
-    let first = <_ as Parse>::parse(parser)?;
+    let first = boxed_expr(parser, ExprContext::NORMAL)?;
 
     if <Token![;]>::peek(parser.cursor()) {
-        return Ok(ExprRepeat {
+        return Ok(boxed(ExprRepeat {
             attrs,
             content: Delimited::bracket(
                 span,
                 RepeatInner {
-                    elem: Box::new(first),
+                    elem: first,
                     semi: <_ as Parse>::parse(parser)?,
-                    len: Box::new(<_ as Parse>::parse(parser)?),
+                    len: boxed_expr(parser, ExprContext::NORMAL)?,
                 },
             ),
-        }
-        .into());
+        }));
     }
 
+    array(parser, span, attrs, first)
+}
+
+fn array(parser: &Parser, span: DelimSpan, attrs: Attributes, first: Box<Expr>) -> Result<Box<Expr>, ParseError> {
     let mut elems = List::new();
-    elems.push_value(first);
+    elems.push_value(*first);
 
     while <Token![,]>::peek(parser.cursor()) {
         elems.push_punct(<_ as Parse>::parse(parser)?);
 
         if !parser.is_empty() {
-            elems.push_value(<_ as Parse>::parse(parser)?);
+            elems.push_value(*boxed_expr(parser, ExprContext::NORMAL)?);
         }
     }
 
-    Ok(ExprArray {
+    Ok(boxed(ExprArray {
         attrs,
         elems: Delimited::bracket(span, elems),
-    }
-    .into())
+    }))
 }
 
-fn closure(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
+fn closure(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
     let lifetimes = <_ as Parse>::parse(parser)?;
     let constness = <_ as Parse>::parse(parser)?;
     let movability = <_ as Parse>::parse(parser)?;
     let asyncness = <_ as Parse>::parse(parser)?;
     let capture = <_ as Parse>::parse(parser)?;
-    let (pipes, inputs) = if <Token![||]>::peek(parser.cursor()) {
-        let oror = <_ as Parse>::parse(parser)?;
-        (ClosurePipes::Empty(oror), List::new())
-    } else {
-        let open = <_ as Parse>::parse(parser)?;
-        let mut params = List::new();
-
-        while !<Token![|]>::peek(parser.cursor()) && !parser.is_empty() {
-            params.push_value(<_ as Parse>::parse(parser)?);
-
-            if <Token![,]>::peek(parser.cursor()) {
-                params.push_punct(<_ as Parse>::parse(parser)?);
-            } else {
-                break;
-            }
-        }
-
-        let close = <_ as Parse>::parse(parser)?;
-        (ClosurePipes::Params(open, close), params)
-    };
-
+    let (pipes, inputs) = closure_params(parser)?;
     let output = <_ as Parse>::parse(parser)?;
-    let body = Box::new(expr(parser, context)?);
+    let body = boxed_expr(parser, context)?;
 
-    Ok(ExprClosure {
+    Ok(boxed(ExprClosure {
         attrs,
         lifetimes,
         constness,
@@ -775,6 +841,30 @@ fn closure(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
         inputs,
         output,
         body,
+    }))
+}
+
+// The pipes and parameters of a closure, in their own stack frame, which the
+// closure body does not hold while it parses
+fn closure_params(parser: &Parser) -> Result<(ClosurePipes, List<ClosureParam, Token![,]>), ParseError> {
+    if <Token![||]>::peek(parser.cursor()) {
+        let oror = <_ as Parse>::parse(parser)?;
+        return Ok((ClosurePipes::Empty(oror), List::new()));
     }
-    .into())
+
+    let open = <_ as Parse>::parse(parser)?;
+    let mut params = List::new();
+
+    while !<Token![|]>::peek(parser.cursor()) && !parser.is_empty() {
+        params.push_value(<_ as Parse>::parse(parser)?);
+
+        if <Token![,]>::peek(parser.cursor()) {
+            params.push_punct(<_ as Parse>::parse(parser)?);
+        } else {
+            break;
+        }
+    }
+
+    let close = <_ as Parse>::parse(parser)?;
+    Ok((ClosurePipes::Params(open, close), params))
 }
