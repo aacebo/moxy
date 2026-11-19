@@ -1722,20 +1722,19 @@ define_visit! {
         visit: visit_use_tree, visit_mut: visit_use_tree_mut,
         walk: walk_use_tree, walk_mut: walk_use_tree_mut,
         variants {
-            Path(visit_use_path / visit_use_path_mut),
+            PathChain(visit_use_path_chain / visit_use_path_chain_mut),
             Name(visit_use_name / visit_use_name_mut),
             Rename(visit_use_rename / visit_use_rename_mut),
             Glob(visit_use_glob / visit_use_glob_mut),
             Group(visit_use_group / visit_use_group_mut),
         }
     }
-    struct UsePath {
-        visit: visit_use_path, visit_mut: visit_use_path_mut,
-        walk: walk_use_path, walk_mut: walk_use_path_mut,
+    struct UsePathChain {
+        visit: visit_use_path_chain, visit_mut: visit_use_path_chain_mut,
+        walk: walk_use_path_chain, walk_mut: walk_use_path_chain_mut,
         fields {
             prefix: skip,
-            ident: skip,
-            path_sep: skip,
+            segments: skip,
             tree: box => visit_use_tree / visit_use_tree_mut,
         }
     }

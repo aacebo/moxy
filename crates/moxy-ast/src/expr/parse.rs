@@ -42,7 +42,7 @@ pub(crate) fn early(parser: &Parser) -> Result<Box<Expr>, ParseError> {
     // The block-like expression parsed once and the rest of the expression
     // continues from it, as in `{ x }.len() + 1`
     let operand = cast_rest(parser, postfix_rest(parser, body, attrs)?)?;
-    let left = binary_rest(parser, ExprContext::NORMAL, operand, Precedence::Or)?;
+    let left = binary_rest(parser, ExprContext::NORMAL, operand, Precedence::Or, false)?;
 
     if RangeLimits::peek(parser.cursor()) {
         return range_rest(parser, Default::default(), Some(left), ExprContext::NORMAL);
@@ -139,7 +139,7 @@ fn range(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box
         return range_rest(parser, attrs, None, context);
     }
 
-    let left = binary(parser, attrs, context, Precedence::Or)?;
+    let left = binary(parser, attrs, context, Precedence::Or, false)?;
 
     if RangeLimits::peek(parser.cursor()) {
         return range_rest(parser, Default::default(), Some(left), context);
@@ -166,7 +166,7 @@ fn range_rest(
             end = Some(range_rest(parser, Default::default(), None, context)?);
         }
     } else if !context.is_end(parser.cursor()) && Expr::peek(parser.cursor()) {
-        end = Some(binary(parser, Default::default(), context, Precedence::Or)?);
+        end = Some(binary(parser, Default::default(), context, Precedence::Or, false)?);
     }
 
     if end.is_none() && matches!(limits, RangeLimits::Closed(_)) {
@@ -246,15 +246,27 @@ pub(super) fn peek_binary(cursor: Cursor<'_>) -> Option<BinOp> {
     BinOp::parse(&Parser::from_cursor(cursor)).ok()
 }
 
-fn binary(parser: &Parser, attrs: Attributes, context: ExprContext, min: Precedence) -> Result<Box<Expr>, ParseError> {
+fn binary(
+    parser: &Parser,
+    attrs: Attributes,
+    context: ExprContext,
+    min: Precedence,
+    nested: bool,
+) -> Result<Box<Expr>, ParseError> {
     let left = cast(parser, attrs, context)?;
-    binary_rest(parser, context, left, min)
+    binary_rest(parser, context, left, min, nested)
 }
 
 // Precedence climbing over the operators at least as strong as `min`. The
 // operators of one strength form one chain node and associate to the left;
 // comparisons do not chain
-fn binary_rest(parser: &Parser, context: ExprContext, mut left: Box<Expr>, min: Precedence) -> Result<Box<Expr>, ParseError> {
+fn binary_rest(
+    parser: &Parser,
+    context: ExprContext,
+    mut left: Box<Expr>,
+    min: Precedence,
+    nested: bool,
+) -> Result<Box<Expr>, ParseError> {
     while let Some(op) = peek_binary(parser.cursor()) {
         let precedence = Precedence::of(&op);
 
@@ -262,13 +274,19 @@ fn binary_rest(parser: &Parser, context: ExprContext, mut left: Box<Expr>, min: 
             break;
         }
 
+        // A chain inside an operand of a weaker chain nests a level, which the
+        // depth counts; the steps of one chain do not nest
+        let _depth = match nested {
+            true => Some(moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?),
+            false => None,
+        };
         let mut operands = List::new();
         operands.push_value(*left);
 
         while peek_binary(parser.cursor()).is_some_and(|op| Precedence::of(&op) == precedence) {
             let op: BinOp = <_ as Parse>::parse(parser)?;
             let right = match precedence.next() {
-                Some(stronger) => binary(parser, Default::default(), context, stronger)?,
+                Some(stronger) => binary(parser, Default::default(), context, stronger, true)?,
                 None => cast(parser, Default::default(), context)?,
             };
             operands.push_punct(op);
@@ -625,7 +643,7 @@ fn let_expr(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<
         let_keyword: <_ as Parse>::parse(parser)?,
         pat: <_ as Parse>::parse(parser)?,
         eq: <_ as Parse>::parse(parser)?,
-        expr: binary(parser, Attributes::default(), context, Precedence::Compare)?,
+        expr: binary(parser, Attributes::default(), context, Precedence::Compare, false)?,
     }))
 }
 

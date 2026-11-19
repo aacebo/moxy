@@ -919,6 +919,33 @@ impl<T: Clone, P: Clone> Clone for IntoPairs<T, P> {
     }
 }
 
+// The values and the separators between them in order, `[a, +, b]`, for a list
+// whose separators vary and so carry meaning
+#[cfg(feature = "serde")]
+pub(crate) fn serialize_with_separators<T: serde::Serialize, P: serde::Serialize, S: serde::Serializer>(
+    list: &List<T, P>,
+    s: S,
+) -> Result<S::Ok, S::Error> {
+    use serde::ser::SerializeSeq;
+    let len = list
+        .pairs()
+        .map(|pair| if matches!(pair, Pair::List(..)) { 2 } else { 1 })
+        .sum();
+    let mut seq = s.serialize_seq(Some(len))?;
+
+    for pair in list.pairs() {
+        match pair {
+            Pair::List(value, separator) => {
+                seq.serialize_element(value)?;
+                seq.serialize_element(separator)?;
+            }
+            Pair::End(value) => seq.serialize_element(value)?,
+        }
+    }
+
+    seq.end()
+}
+
 #[cfg(feature = "serde")]
 impl<T: serde::Serialize, P> serde::Serialize for List<T, P> {
     fn serialize<S: serde::Serializer>(&self, s: S) -> Result<S::Ok, S::Error> {

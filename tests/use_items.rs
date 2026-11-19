@@ -6,7 +6,7 @@ fn grouped_use_items_preserve_renames_globs_and_self_imports() {
     let item: Item = moxy::parse!("use std::{fmt as formatting,io::*};").unwrap();
     let use_item = item.as_use().unwrap();
     assert!(use_item.vis.is_inherited());
-    assert!(use_item.tree.is_path());
+    assert!(use_item.tree.is_path_chain());
     assert_eq!(moxy::fmt!(&item).unwrap(), "use std::{fmt as formatting, io::*};");
 }
 

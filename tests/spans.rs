@@ -119,9 +119,9 @@ impl<'ast> Visit<'ast> for SpanCheck {
         walk_use_tree(self, node);
     }
 
-    fn visit_use_path(&mut self, node: &'ast UsePath) {
+    fn visit_use_path_chain(&mut self, node: &'ast UsePathChain) {
         self.check("use path", node);
-        walk_use_path(self, node);
+        walk_use_path_chain(self, node);
     }
 
     fn visit_trait_bound(&mut self, node: &'ast TraitBound) {

@@ -176,6 +176,47 @@ fn skip_and_peek_agree_with_parse() {
     assert!(failures.is_empty(), "{}", failures.join("\n"));
 }
 
+// Serialization keeps what tells two trees apart: two corpus sources that
+// serialize alike have the same tree, rendered with every operator
+#[cfg(feature = "serde")]
+#[test]
+fn sources_that_serialize_alike_have_the_same_tree() {
+    fn serialized<T: m::Parse + serde::Serialize>(source: &str) -> Option<String> {
+        let node: T = moxy::parse!(source).ok()?;
+        Some(serde_json::to_string(&node).unwrap())
+    }
+
+    let mut seen = std::collections::BTreeMap::new();
+    let mut collisions = Vec::new();
+
+    for line in entries(CORPUS) {
+        let (kind, source) = line.split_once(": ").unwrap();
+        let source = source.replace("\\n", "\n");
+        let json = match kind {
+            "e" => serialized::<m::Expr>(&source),
+            "b" => serialized::<m::StmtBlock>(&source),
+            "p" => serialized::<m::Pattern>(&source),
+            "t" => serialized::<m::Type>(&source),
+            "i" => serialized::<m::Item>(&source),
+            "f" => serialized::<m::File>(&source),
+            _ => panic!("unknown kind `{kind}`"),
+        };
+
+        if let Some(json) = json {
+            // A trailing separator is no part of the tree
+            let tree = moxy_render(kind, &source).unwrap().0.replace(",}", "}");
+
+            if let Some((other, other_tree)) = seen.insert((kind, json), (line, tree.clone()))
+                && other_tree != tree
+            {
+                collisions.push(format!("{other}\n{line}"));
+            }
+        }
+    }
+
+    assert!(collisions.is_empty(), "{}", collisions.join("\n\n"));
+}
+
 // Two parses of one source at different positions compare equal, so tree
 // equality depends on no span
 #[test]

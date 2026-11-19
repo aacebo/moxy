@@ -1,13 +1,13 @@
 mod use_glob;
 mod use_group;
 mod use_name;
-mod use_path;
+mod use_path_chain;
 mod use_rename;
 
 pub use use_glob::*;
 pub use use_group::*;
 pub use use_name::*;
-pub use use_path::*;
+pub use use_path_chain::*;
 pub use use_rename::*;
 
 use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
@@ -19,7 +19,7 @@ use crate::*;
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub enum UseTree {
-    Path(UsePath),
+    PathChain(UsePathChain),
     Name(UseName),
     Rename(UseRename),
     Glob(UseGlob),
@@ -27,8 +27,8 @@ pub enum UseTree {
 }
 
 impl UseTree {
-    pub fn is_path(&self) -> bool {
-        matches!(self, Self::Path(_))
+    pub fn is_path_chain(&self) -> bool {
+        matches!(self, Self::PathChain(_))
     }
 
     pub fn is_name(&self) -> bool {
@@ -47,8 +47,8 @@ impl UseTree {
         matches!(self, Self::Group(_))
     }
 
-    pub fn as_path(&self) -> Option<&UsePath> {
-        if let Self::Path(v) = self { Some(v) } else { None }
+    pub fn as_path_chain(&self) -> Option<&UsePathChain> {
+        if let Self::PathChain(v) = self { Some(v) } else { None }
     }
 
     pub fn as_name(&self) -> Option<&UseName> {
@@ -71,7 +71,7 @@ impl UseTree {
 impl Spanner for UseTree {
     fn span(&self) -> Span {
         match self {
-            Self::Path(v) => v.span(),
+            Self::PathChain(v) => v.span(),
             Self::Name(v) => v.span(),
             Self::Rename(v) => v.span(),
             Self::Glob(v) => v.span(),
@@ -84,12 +84,12 @@ impl Parse for UseTree {
     fn peek(cursor: Cursor<'_>) -> bool {
         UseGlob::peek(cursor)
             || UseGroup::peek(cursor)
-            || UsePath::peek(cursor)
+            || UsePathChain::peek(cursor)
             || UseRename::peek(cursor)
             || UseName::peek(cursor)
     }
 
-    // Each segment of a path nests the tree one level, as in `a::b::c`
+    // A brace group nests the trees inside it one level, as in `a::{b::{c}}`
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
 
@@ -101,8 +101,8 @@ impl Parse for UseTree {
             return Ok(Self::Group(<_ as Parse>::parse(parser)?));
         }
 
-        if UsePath::peek(parser.cursor()) {
-            return Ok(Self::Path(<_ as Parse>::parse(parser)?));
+        if UsePathChain::peek(parser.cursor()) {
+            return Ok(Self::PathChain(<_ as Parse>::parse(parser)?));
         }
 
         if UseRename::peek(parser.cursor()) {
@@ -119,8 +119,8 @@ impl Parse for UseTree {
             UseGlob::skip(cursor)
         } else if UseGroup::peek(cursor) {
             UseGroup::skip(cursor)
-        } else if UsePath::peek(cursor) {
-            UsePath::skip(cursor)
+        } else if UsePathChain::peek(cursor) {
+            UsePathChain::skip(cursor)
         } else if UseRename::peek(cursor) {
             UseRename::skip(cursor)
         } else {
@@ -132,7 +132,7 @@ impl Parse for UseTree {
 impl ToTokens for UseTree {
     fn to_tokens(&self, t: &mut TokenStream) {
         match self {
-            Self::Path(v) => v.to_tokens(t),
+            Self::PathChain(v) => v.to_tokens(t),
             Self::Name(v) => v.to_tokens(t),
             Self::Rename(v) => v.to_tokens(t),
             Self::Glob(v) => v.to_tokens(t),

@@ -430,7 +430,15 @@ fn binary_rest(mut cursor: Cursor<'_>, context: ExprContext, min: Precedence) ->
 
         cursor = cast(BinOp::skip(cursor)?, context)?;
 
-        if let Some(stronger) = precedence.next() {
+        // A chain of stronger operators in this operand nests a level, as it
+        // does in parsing
+        if let Some(stronger) = precedence.next()
+            && peek_binary(cursor).is_some_and(|op| {
+                let next = Precedence::of(&op);
+                next >= stronger && next != Precedence::Assign
+            })
+        {
+            let _depth = moxy_token::Depth::enter()?;
             cursor = binary_rest(cursor, context, stronger)?;
         }
 

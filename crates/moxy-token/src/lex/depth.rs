@@ -4,9 +4,10 @@ use std::cell::Cell;
 /// is an error instead of a stack overflow.
 ///
 /// Lexing counts each delimited group as one level. Parsing counts each nested
-/// operand, group, block, pattern, type, generic argument, module, assignment,
-/// `else if` branch, or use path segment as one level, and charges the forms
-/// whose parse takes more stack more levels:
+/// operand, group, block, pattern, type, generic argument, module, or
+/// assignment as one level, and each chain of binary operators whose operands
+/// hold a chain of stronger operators as one more, as in `a || b && c`. It
+/// charges the forms whose parse takes more stack more levels:
 ///
 /// - Two levels: a struct literal or struct pattern, a closure with a return
 ///   type, a function pointer type, parenthesized path arguments as in
@@ -15,9 +16,9 @@ use std::cell::Cell;
 ///   associated type bound (`A<B: C>`), and a member of an impl, trait, or
 ///   extern block.
 ///
-/// Chains of binary operators, postfix operations, casts, `else if`
-/// branches, and use path segments are held flat, so they count as one
-/// level however long they are.
+/// The steps of one chain of binary operators, postfix operations, casts,
+/// `else if` branches, or use path segments are held flat, so a chain counts
+/// as one level however long it is.
 ///
 /// A level takes up to about 12 KiB of stack in a debug build and less in a
 /// release build, so input at the limit parses and traverses in under 1.9 MiB

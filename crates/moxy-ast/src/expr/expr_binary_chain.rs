@@ -17,6 +17,7 @@ use crate::*;
 pub struct ExprBinaryChain {
     pub attrs: Attributes,
     /// Two or more operands with an operator between each two.
+    #[cfg_attr(feature = "serde", serde(serialize_with = "crate::list::serialize_with_separators"))]
     pub operands: List<Expr, BinOp>,
 }
 

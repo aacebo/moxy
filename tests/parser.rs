@@ -387,6 +387,16 @@ fn deep_trees_of_every_kind_parse_and_traverse_or_report_the_depth() {
     // Each kind with the depth it must reach
     let kinds = [
         (
+            "operator ladders in parentheses",
+            14,
+            deepest::<Expr>(|n| format!("{}0{}", "(0||0&&0==0|0^0&0<<0+0*".repeat(n), ")".repeat(n)), expr),
+        ),
+        (
+            "operator ladders in closures",
+            14,
+            deepest::<Expr>(|n| format!("{}0", "|| 0||0&&0==0|0^0&0<<0+0*".repeat(n)), expr),
+        ),
+        (
             "parentheses",
             140,
             deepest::<Expr>(|n| format!("{}a{}", "(".repeat(n), ")".repeat(n)), expr),
@@ -460,11 +470,6 @@ fn deep_trees_of_every_kind_parse_and_traverse_or_report_the_depth() {
             "functions",
             45,
             deepest::<File>(|n| format!("{}{}", "fn f() { ".repeat(n), "}".repeat(n)), file),
-        ),
-        (
-            "use paths",
-            140,
-            deepest::<File>(|n| format!("use {}a;", "a::".repeat(n)), file),
         ),
     ];
 
@@ -589,4 +594,79 @@ fn receivers_and_trait_aliases_with_blocks_in_their_types_parse_in_linear_time()
     assert!(item.is_trait_alias());
     let item: moxy::ast::Item = moxy::parse!("unsafe trait A<T>: B {}").unwrap();
     assert!(item.is_trait());
+}
+
+#[test]
+fn chains_of_any_length_parse_and_traverse_on_a_small_stack() {
+    use moxy::ast::{Expr, File, Visit, VisitMut};
+    use moxy::token::{ToTokenStream, TokenStream};
+
+    struct WalkMut;
+
+    impl VisitMut for WalkMut {}
+
+    // The steps of the one chain at the top of each tree
+    fn steps(expression: &Expr) -> usize {
+        match expression {
+            Expr::BinaryChain(chain) => chain.operands.len() - 1,
+            Expr::Postfix(chain) => chain.ops.len(),
+            Expr::CastChain(chain) => chain.casts.len(),
+            Expr::IfChain(chain) => chain.else_ifs.len(),
+            _ => 0,
+        }
+    }
+
+    let steps_wanted = 100_000;
+
+    for (source, wanted) in [
+        (format!("a{}", " + a".repeat(steps_wanted)), steps_wanted),
+        (format!("a{}", ".b()".repeat(steps_wanted)), steps_wanted),
+        (format!("a{}", "?".repeat(steps_wanted)), steps_wanted),
+        (format!("a{}", " as T".repeat(steps_wanted)), steps_wanted),
+        (
+            format!("if a {{}}{} else {{}}", " else if a {}".repeat(steps_wanted)),
+            steps_wanted,
+        ),
+        // A sum of method chains that end in casts
+        (format!("a{}", " + a.b()? as T".repeat(steps_wanted / 4)), steps_wanted / 4),
+    ] {
+        let checked = on_small_stack(move || {
+            let lexed: TokenStream = source.parse().unwrap();
+            let mut node: Expr = moxy::parse!(source).unwrap();
+            assert_eq!(steps(&node), wanted);
+            assert_eq!(node.to_token_stream().to_string(), lexed.to_string());
+            WalkMut.visit_expr_mut(&mut node);
+            let formatted = moxy::fmt!(&node).unwrap();
+            let again: Expr = moxy::parse!(formatted).unwrap();
+            assert!(again == node);
+            traverse(node, |node| Walk.visit_expr(node));
+            true
+        });
+        assert!(checked);
+    }
+
+    let source = format!("use {}a;", "a::".repeat(steps_wanted));
+    let checked = on_small_stack(move || {
+        let lexed: TokenStream = source.parse().unwrap();
+        let node: File = moxy::parse!(source).unwrap();
+        let path = node.items[0].as_use().unwrap().tree.as_path_chain().unwrap();
+        assert_eq!(path.segments.len(), steps_wanted);
+        assert_eq!(node.to_token_stream().to_string(), lexed.to_string());
+        traverse(node, |node| node.items.iter().for_each(|item| Walk.visit_item(item)));
+        true
+    });
+    assert!(checked);
+}
+
+#[test]
+fn a_chain_of_atoms_costs_no_level_of_its_own() {
+    // `(1 + 1)` costs what its parentheses cost; a chain nests a level only
+    // inside an operand of a weaker chain
+    let parens = |n: usize| format!("{}1{}", "(1 + ".repeat(n), ")".repeat(n));
+    let depth = moxy::token::MAX_DEPTH - 1;
+    assert!(moxy::parse!((parens(depth)) as moxy::ast::Expr).is_ok());
+
+    let message = format!("nesting is deeper than {} levels", moxy::token::MAX_DEPTH);
+    let error = moxy::parse!((parens(depth + 1)) as moxy::ast::Expr).err().unwrap();
+    assert_eq!(error.message(), message);
 }

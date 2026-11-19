@@ -197,7 +197,7 @@ impl Format for Field {
 impl Format for UseTree {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
-            Self::Path(v) => v.format(f),
+            Self::PathChain(v) => v.format(f),
             Self::Name(v) => v.format(f),
             Self::Rename(v) => v.format(f),
             Self::Glob(glob) if glob.prefix.is_some() => f.text("::*"),
@@ -207,14 +207,17 @@ impl Format for UseTree {
     }
 }
 
-impl Format for UsePath {
+impl Format for UsePathChain {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         if self.prefix.is_some() {
             f.text("::")?;
         }
 
-        self.ident.format(f)?;
-        f.text("::")?;
+        for segment in self.segments.iter() {
+            segment.format(f)?;
+            f.text("::")?;
+        }
+
         self.tree.format(f)
     }
 }

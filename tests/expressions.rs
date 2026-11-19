@@ -760,3 +760,64 @@ fn postfix_kinds(expression: &Expr) -> [bool; 5] {
         matches!(op, Some(Postfix::Await(_))),
     ]
 }
+
+#[cfg(feature = "serde")]
+#[test]
+fn chain_nodes_serialize_every_step_and_operator() {
+    use serde_json::json;
+
+    let path = |name: &str| json!({"Path": {"attrs": [], "qself": null, "path": {"colon": null, "segments": [{"ident": name, "args": "None"}]}}});
+    let ty =
+        |name: &str| json!({"Path": {"qself": null, "path": {"colon": null, "segments": [{"ident": name, "args": "None"}]}}});
+    let block = json!({"inner_attrs": [], "stmts": {"style": "brace", "inner": []}});
+
+    for (source, expected) in [
+        (
+            "a - b / c",
+            json!({"BinaryChain": {"attrs": [], "operands": [
+                path("a"),
+                {"Sub": "-"},
+                {"BinaryChain": {"attrs": [], "operands": [path("b"), {"Div": "/"}, path("c")]}},
+            ]}}),
+        ),
+        (
+            "a.b(c)[d]?",
+            json!({"Postfix": {"attrs": [], "base": path("a"), "ops": [
+                {"MethodCall": {"dot": ".", "method": "b", "turbofish": null, "args": {"style": "paren", "inner": [path("c")]}}},
+                {"Index": {"index": {"style": "bracket", "inner": path("d")}}},
+                {"Try": {"question_punct": "?"}},
+            ]}}),
+        ),
+        (
+            "a as T as U",
+            json!({"CastChain": {"attrs": [], "expr": path("a"), "casts": [["as", ty("T")], ["as", ty("U")]]}}),
+        ),
+        (
+            "if a {} else if b {} else {}",
+            json!({"IfChain": {
+                "attrs": [],
+                "if_keyword": "if",
+                "cond": path("a"),
+                "then_branch": block,
+                "else_ifs": [{"else_keyword": "else", "if_keyword": "if", "cond": path("b"), "then_branch": block}],
+                "else_keyword": "else",
+                "else_branch": block,
+            }}),
+        ),
+    ] {
+        let expression: Expr = moxy::parse!(source).unwrap();
+        assert_eq!(serde_json::to_value(&expression).unwrap(), expected, "{source}");
+    }
+
+    let item: moxy::ast::Item = moxy::parse!("use a::b::c;").unwrap();
+    assert_eq!(
+        serde_json::to_value(&item).unwrap(),
+        json!({"Use": {
+            "attrs": [],
+            "vis": "Inherited",
+            "use_keyword": "use",
+            "tree": {"PathChain": {"prefix": null, "segments": ["a", "b"], "tree": {"Name": {"prefix": null, "ident": "c"}}}},
+            "semi_punct": ";",
+        }})
+    );
+}
