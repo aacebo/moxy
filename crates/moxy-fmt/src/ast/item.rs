@@ -553,8 +553,14 @@ impl Format for ItemTraitAlias {
         f.text("trait ")?;
         self.ident.format(f)?;
         self.generics.format(f)?;
-        f.text(" = ")?;
-        self.bounds.format(f)?;
+        f.text(" =")?;
+
+        if !self.bounds.is_empty() {
+            f.text(" ")?;
+            self.bounds.format(f)?;
+        }
+
+        self.generics.where_clause.format(f)?;
         f.text(";")
     }
 }

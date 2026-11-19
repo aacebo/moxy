@@ -293,3 +293,20 @@ fn only_closure_parameters_put_attributes_on_a_pattern() {
         assert!(moxy::parse!(source as Pattern).is_err(), "`{source}`");
     }
 }
+
+#[test]
+fn box_before_a_shorthand_field_binding_boxes_its_pattern() {
+    use moxy::token::ToTokenStream;
+
+    for source in ["Outer { box i, j: box Inner(box &x) }", "S { box ref mut a }"] {
+        let pattern: Pattern = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(pattern.to_token_stream().to_string(), lexed.to_string(), "`{source}`");
+    }
+
+    let pattern: Pattern = moxy::parse!("S { box ref mut a }").unwrap();
+    let Pattern::Struct(structure) = &pattern else { panic!() };
+    let field = &structure.body.inner.fields[0];
+    assert!(field.is_shorthand() && field.pat.is_box());
+    assert!(moxy::parse!("S { box a: b }" as Pattern).is_err());
+}

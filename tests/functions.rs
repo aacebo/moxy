@@ -167,3 +167,23 @@ fn only_trait_functions_take_parameters_without_a_name() {
         assert!(moxy::parse!(source as moxy::ast::File).is_err(), "`{source}`");
     }
 }
+
+#[test]
+fn a_variadic_takes_a_trailing_comma() {
+    use moxy::token::ToTokenStream;
+
+    for source in [
+        "extern \"C\" { fn a(_: *mut u8, ...,); }",
+        "extern \"C\" { fn c(_: *mut u8, #[cfg(never)] [w, t, f]: ...,); }",
+        "type F = unsafe extern \"C\" fn(u8, ...,);",
+    ] {
+        let item: moxy::ast::Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(item.to_token_stream().to_string(), lexed.to_string(), "`{source}`");
+        let formatted = moxy::fmt!(&item).unwrap();
+        assert!(moxy::parse!(formatted as moxy::ast::Item).is_ok(), "`{formatted}`");
+    }
+
+    // As in syn, nothing follows the variadic but its comma
+    assert!(moxy::parse!("extern \"C\" { fn f(a: u8, ..., b: u8); }" as moxy::ast::Item).is_err());
+}

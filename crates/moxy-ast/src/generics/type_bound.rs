@@ -58,6 +58,24 @@ impl TypeBound {
         Some(cursor)
     }
 
+    // The bounds after `impl` or `dyn`, which rustc's parser also accepts
+    // without any, as in `&dyn` and `fn f(_: impl)`, rejecting them later
+    pub(crate) fn parse_bounds_of_keyword(parser: &Parser) -> Result<crate::List<Self, Token![+]>, ParseError> {
+        if Self::peek(parser.cursor()) {
+            Self::parse_bounds(parser)
+        } else {
+            Ok(crate::List::new())
+        }
+    }
+
+    pub(crate) fn skip_bounds_of_keyword(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if Self::peek(cursor) {
+            Self::skip_bounds(cursor)
+        } else {
+            Some(cursor)
+        }
+    }
+
     pub fn parse_bounds(parser: &Parser) -> Result<crate::List<Self, Token![+]>, ParseError> {
         let mut bounds = crate::List::new();
         bounds.push_value(<_ as Parse>::parse(parser)?);

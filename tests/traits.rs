@@ -150,3 +150,21 @@ fn supertraits_come_before_a_where_clause() {
         assert!(moxy::parse!(source as Item).is_err(), "`{source}`");
     }
 }
+
+#[test]
+fn a_trait_alias_takes_a_where_clause_after_its_bounds() {
+    use moxy::token::ToTokenStream;
+
+    for source in ["trait A<T> = B<T> where T: C;", "trait A = where Self: B;", "trait A = ;"] {
+        let item: moxy::ast::Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(item.to_token_stream().to_string(), lexed.to_string(), "`{source}`");
+        let formatted = moxy::fmt!(&item).unwrap();
+        let again: moxy::ast::Item = moxy::parse!(formatted).unwrap_or_else(|error| panic!("`{formatted}`: {error}"));
+        assert_eq!(again.to_token_stream().to_string(), lexed.to_string(), "`{formatted}`");
+    }
+
+    let item: moxy::ast::Item = moxy::parse!("trait A<T> = B<T> where T: C;").unwrap();
+    assert!(item.as_trait_alias().unwrap().generics.where_clause.is_some());
+    assert!(moxy::parse!("trait A<T> where T: C = B<T>;" as moxy::ast::Item).is_err());
+}

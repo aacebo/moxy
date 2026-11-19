@@ -990,3 +990,17 @@ fn chains_split_off_their_last_step_as_expressions() {
     let built = ExprPostfix::new(moxy::parse!("y" as Expr).unwrap(), last.clone());
     assert_eq!(built.to_token_stream().to_string(), "y . b ()");
 }
+
+#[test]
+fn a_path_keyword_names_a_field_or_method_after_a_dot() {
+    // As rustc's parser reads them; the compiler rejects them later
+    for source in ["x.self", "x.Self", "x.super", "x.crate", "x.self()", "x.Self::<u8>()"] {
+        let expression: Expr = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(expression.to_token_stream().to_string(), lexed.to_string(), "`{source}`");
+    }
+
+    for source in ["x.fn", "S { self: 1 }"] {
+        assert!(moxy::parse!(source as Expr).is_err(), "`{source}`");
+    }
+}

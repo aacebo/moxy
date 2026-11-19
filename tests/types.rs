@@ -330,3 +330,71 @@ fn a_bare_trait_object_may_start_with_a_lifetime() {
     assert_eq!(ty.to_token_stream().to_string(), "A < 'a , T >");
     assert!(moxy::parse!("'a" as Type).is_err());
 }
+
+#[test]
+fn impl_and_dyn_without_bounds_parse_as_rustc_parses_them() {
+    use moxy::token::ToTokenStream;
+
+    // rustc's parser accepts them and the compiler rejects them later
+    for source in ["fn f(_: impl) {}", "fn f(_: &dyn) {}", "fn f(_: &impl, _: Box<dyn>) {}"] {
+        let item: moxy::ast::Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(item.to_token_stream().to_string(), lexed.to_string());
+        let formatted = moxy::fmt!(&item).unwrap();
+        let again: moxy::ast::Item = moxy::parse!(formatted).unwrap_or_else(|error| panic!("`{formatted}`: {error}"));
+        assert_eq!(again.to_token_stream().to_string(), lexed.to_string(), "`{formatted}`");
+    }
+
+    let ty: Type = moxy::parse!("impl").unwrap();
+    assert!(ty.as_impl_trait().unwrap().bounds.is_empty());
+}
+
+#[test]
+fn a_bare_trait_object_may_start_with_a_parenthesized_bound() {
+    use moxy::token::ToTokenStream;
+
+    // As rustc's parser reads them, where `+` may follow the type
+    for source in [
+        "Box<(Copy) + (?Sized)>",
+        "Box<(?Sized) + Copy>",
+        "Box<(for<'a> A<'a>) + Copy>",
+    ] {
+        let ty: Type = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(ty.to_token_stream().to_string(), lexed.to_string(), "`{source}`");
+    }
+
+    let ty: Type = moxy::parse!("(?Sized) + Copy").unwrap();
+    assert_eq!(ty.as_trait_object().unwrap().bounds.len(), 2);
+
+    // After `&`, parentheses hold a type, and `+` cannot follow it
+    assert!(moxy::parse!("&(A) + B" as Type).is_err());
+    assert!(moxy::parse!("(u8)" as Type).unwrap().is_paren());
+}
+
+#[test]
+fn nested_parenthesized_first_bounds_parse_and_skip_in_linear_time() {
+    use moxy::ast::{Parse, Parser};
+
+    // Each level read its bound twice, once to tell it from a type, so 22
+    // levels took 170 ms and each more level doubled that
+    let source = format!("{}u8{}", "(A<".repeat(40), ">) + B".repeat(40));
+    let (sender, receiver) = std::sync::mpsc::channel();
+    std::thread::Builder::new()
+        .stack_size(64 << 20)
+        .spawn(move || {
+            let tokens: moxy::token::TokenStream = source.parse().unwrap();
+            let skipped = Type::skip(Parser::from_tokens(&tokens).cursor()).is_some_and(|cursor| cursor.is_empty());
+            let parsed = moxy::parse!(tokens as Type).is_ok_and(|ty| ty.is_trait_object());
+            sender.send((skipped, parsed)).unwrap();
+        })
+        .unwrap();
+    let outcome = receiver
+        .recv_timeout(std::time::Duration::from_secs(10))
+        .expect("took longer than 10 seconds");
+    assert_eq!(outcome, (true, true));
+
+    // `TypeTraitObject` peeks such a type as `Type` parses it
+    let tokens: moxy::token::TokenStream = "(A) + B".parse().unwrap();
+    assert!(moxy::ast::TypeTraitObject::peek(Parser::from_tokens(&tokens).cursor()));
+}

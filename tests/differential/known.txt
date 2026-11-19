@@ -11,9 +11,6 @@ REJECT e: become f()
 REJECT f: const X: u8 = 1 where T: U;
 REJECT f: const trait A {}
 REJECT f: struct S { a: u8 = 1 }
-REJECT f: trait A = ;
-REJECT f: trait A<T> = B<T> where T: C;
-REJECT p: S { box a }
 REJECT t: impl const A
 REJECT t: unsafe<'a> &'a A
 
@@ -63,6 +60,8 @@ ACCEPT f: use Self::A;
 ACCEPT f: use a::Self;
 ACCEPT f: use a::{::b};
 ACCEPT p: -'a'
+ACCEPT t: dyn
+ACCEPT t: impl
 ACCEPT p: [1.., 2]
 ACCEPT p: [1..]
 TREE f: trait A { pub fn f(); }

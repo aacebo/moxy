@@ -458,13 +458,22 @@ fn postfix_rest(parser: &Parser, base: Box<Expr>, attrs: Attributes) -> Result<B
 // one even when its arguments are invalid, so their error is reported
 fn peek_method_call(cursor: Cursor<'_>) -> bool {
     let method = cursor.offset(2);
-    Ident::peek(cursor.offset(1)) && (method.is_delimited(Delim::Paren) || <Token![::]>::peek(method))
+    peek_member_name(cursor.offset(1)) && (method.is_delimited(Delim::Paren) || <Token![::]>::peek(method))
+}
+
+// A name after a field dot: an identifier, or, as rustc's parser reads it, one
+// of the path keywords `self`, `Self`, `super`, and `crate`, as in `x.self`
+pub(super) fn peek_member_name(cursor: Cursor<'_>) -> bool {
+    Ident::peek(cursor)
+        || cursor.curr().is_some_and(|token| {
+            token.is_keyword_self_value() || token.is_keyword_self_type() || token.is_keyword_super() || token.is_keyword_crate()
+        })
 }
 
 fn method_call(parser: &Parser) -> Result<Postfix, ParseError> {
     Ok(Postfix::MethodCall(PostfixMethodCall {
         dot: <_ as Parse>::parse(parser)?,
-        method: <_ as Parse>::parse(parser)?,
+        method: parser.parse_ident_any()?,
         turbofish: <_ as Parse>::parse(parser)?,
         args: Delimited::parse_paren_with(parser, List::parse_all)?,
     }))
@@ -523,10 +532,14 @@ fn dot(parser: &Parser, ops: &mut Vec<Postfix>) -> Result<(), ParseError> {
         return Ok(());
     }
 
-    ops.push(Postfix::Field(PostfixField {
-        dot: <_ as Parse>::parse(parser)?,
-        member: <_ as Parse>::parse(parser)?,
-    }));
+    let dot = <_ as Parse>::parse(parser)?;
+    let member = if peek_member_name(parser.cursor()) {
+        Member::Named(parser.parse_ident_any()?)
+    } else {
+        <_ as Parse>::parse(parser)?
+    };
+
+    ops.push(Postfix::Field(PostfixField { dot, member }));
     Ok(())
 }
 

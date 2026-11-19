@@ -11,6 +11,7 @@ pub struct ItemTraitAlias {
     pub vis: Visibility,
     pub trait_keyword: Token![trait],
     pub ident: Ident,
+    /// The generics, with the where clause that follows the bounds.
     pub generics: Generics,
     pub eq_punct: Token![=],
     pub bounds: List<TypeBound, Token![+]>,
@@ -95,9 +96,12 @@ impl ToTokens for ItemTraitAlias {
         self.vis.to_tokens(t);
         self.trait_keyword.to_tokens(t);
         self.ident.to_tokens(t);
-        self.generics.to_tokens(t);
+        self.generics.lt.to_tokens(t);
+        self.generics.params.to_tokens(t);
+        self.generics.gt.to_tokens(t);
         self.eq_punct.to_tokens(t);
         self.bounds.to_tokens(t);
+        self.generics.where_clause.to_tokens(t);
         self.semi_punct.to_tokens(t);
     }
 }

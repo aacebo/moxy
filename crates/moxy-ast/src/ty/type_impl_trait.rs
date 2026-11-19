@@ -19,13 +19,13 @@ impl Parse for TypeImplTrait {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let impl_keyword = <_ as Parse>::parse(parser)?;
-        let bounds = TypeBound::parse_bounds(parser)?;
+        let bounds = TypeBound::parse_bounds_of_keyword(parser)?;
         Ok(Self { impl_keyword, bounds })
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         let cursor = <Token![impl]>::skip(cursor)?;
-        TypeBound::skip_bounds(cursor)
+        TypeBound::skip_bounds_of_keyword(cursor)
     }
 }
 

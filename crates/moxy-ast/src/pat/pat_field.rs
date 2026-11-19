@@ -35,14 +35,17 @@ impl Spanner for PatField {
 impl Parse for PatField {
     fn peek(cursor: Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-        Member::peek(cursor) || PatIdent::peek(cursor)
+        Member::peek(cursor) || PatIdent::peek(cursor) || <Token![box]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = <_ as Parse>::parse(parser)?;
+        // `box` before a shorthand binding boxes its pattern, as in
+        // `Outer { box i }`, which rustc's parser accepts
+        let boxed = <Option<Token![box]> as Parse>::parse(parser)?;
         let by_ref = <Option<Token![ref]> as Parse>::parse(parser)?;
         let mutability = <Option<Token![mut]> as Parse>::parse(parser)?;
-        let modified = by_ref.is_some() || mutability.is_some();
+        let modified = boxed.is_some() || by_ref.is_some() || mutability.is_some();
         let member = if modified {
             Member::Named(<_ as Parse>::parse(parser)?)
         } else {
@@ -60,16 +63,23 @@ impl Parse for PatField {
                 return parser.error("tuple index needs a pattern").into();
             };
 
-            (
-                None,
-                Pattern::Ident(PatIdent {
+            let binding = Pattern::Ident(PatIdent {
+                attrs: Attributes::default(),
+                by_ref,
+                mutability,
+                ident: ident.clone(),
+                subpat: None,
+            });
+            let pat = match boxed {
+                Some(keyword) => Pattern::Box(PatBox {
                     attrs: Attributes::default(),
-                    by_ref,
-                    mutability,
-                    ident: ident.clone(),
-                    subpat: None,
+                    keyword,
+                    pattern: Box::new(binding),
                 }),
-            )
+                None => binding,
+            };
+
+            (None, pat)
         };
 
         Ok(Self {
@@ -82,7 +92,9 @@ impl Parse for PatField {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
-        let modified = <Token![ref]>::peek(cursor) || <Token![mut]>::peek(cursor);
+        let boxed = <Token![box]>::peek(cursor);
+        cursor = Option::<Token![box]>::skip(cursor)?;
+        let modified = boxed || <Token![ref]>::peek(cursor) || <Token![mut]>::peek(cursor);
         cursor = Option::<Token![ref]>::skip(cursor)?;
         cursor = Option::<Token![mut]>::skip(cursor)?;
         let shorthand = Ident::peek(cursor);

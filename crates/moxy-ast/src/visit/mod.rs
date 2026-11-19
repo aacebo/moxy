@@ -1452,6 +1452,7 @@ define_visit! {
             pat: opt_box => visit_pattern / visit_pattern_mut,
             colon: skip,
             dots: skip,
+            comma: skip,
         }
     }
 

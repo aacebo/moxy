@@ -73,9 +73,11 @@ impl ItemTrait {
                 vis,
                 trait_keyword,
                 ident,
-                generics,
                 eq_punct: <_ as Parse>::parse(parser)?,
-                bounds: TypeBound::parse_bounds(parser)?,
+                // As in rustc's parser, the bounds may be empty, and a where
+                // clause follows them rather than the generics
+                bounds: TypeBound::parse_bounds_of_keyword(parser)?,
+                generics: alias_generics(parser, generics)?,
                 semi_punct: <_ as Parse>::parse(parser)?,
             })));
         }
@@ -143,8 +145,13 @@ impl ItemTrait {
                 return None;
             }
 
+            if cursor.range(start).iter().any(|token| token.is_keyword_where()) {
+                return None;
+            }
+
             cursor = <Token![=]>::skip(cursor)?;
-            cursor = TypeBound::skip_bounds(cursor)?;
+            cursor = TypeBound::skip_bounds_of_keyword(cursor)?;
+            cursor = Option::<WhereClause>::skip(cursor)?;
             return Some((<Token![;]>::skip(cursor)?, true));
         }
 
@@ -207,4 +214,18 @@ impl ItemTrait {
     pub fn into_item(self) -> super::Item {
         super::Item::from(self)
     }
+}
+
+// A trait alias's generics with the where clause after its bounds, as in
+// `trait A<T> = B<T> where T: C;`; rustc's parser rejects one before the `=`
+fn alias_generics(parser: &Parser, mut generics: Generics) -> Result<Generics, ParseError> {
+    if let Some(clause) = &generics.where_clause {
+        return Err(ParseError::new(
+            clause.span(),
+            "a trait alias takes its where clause after its bounds",
+        ));
+    }
+
+    generics.where_clause = <_ as Parse>::parse(parser)?;
+    Ok(generics)
 }

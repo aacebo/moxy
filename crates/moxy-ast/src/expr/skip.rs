@@ -1,4 +1,4 @@
-use moxy_token::{Ident, Lit, TokenTree};
+use moxy_token::{Lit, TokenTree};
 
 use super::parse::{Precedence, peek_binary};
 use super::peek;
@@ -330,8 +330,8 @@ fn postfix_rest(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
             }
 
             // Arguments or a turbofish make a method call, as in the parser
-            if Ident::peek(cursor)
-                && let Some(after_method) = Ident::skip(cursor)
+            if super::parse::peek_member_name(cursor)
+                && let after_method = cursor.offset(1)
                 && (after_method.is_delimited(Delim::Paren) || <Token![::]>::peek(after_method))
             {
                 let args = Option::<AngleArguments>::skip(after_method)?;
@@ -365,6 +365,11 @@ fn postfix_rest(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
             if let Some(TokenTree::Literal(Lit::Float(float))) = cursor.curr()
                 && float.is_member()
             {
+                cursor = cursor.offset(1);
+                continue;
+            }
+
+            if super::parse::peek_member_name(cursor) {
                 cursor = cursor.offset(1);
                 continue;
             }

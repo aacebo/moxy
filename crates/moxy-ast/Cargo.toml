@@ -12,7 +12,7 @@ categories.workspace = true
 include.workspace = true
 
 [lib]
-doctest = false
+doctest = true
 
 [lints]
 workspace = true
