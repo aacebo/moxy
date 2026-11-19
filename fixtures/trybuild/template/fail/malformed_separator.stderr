@@ -1,0 +1,13 @@
+error: macro expansion ignores `;` and any tokens following
+ --> fixtures/trybuild/template/fail/malformed_separator.rs:3:65
+  |
+3 |     let _ = moxy::template! { f(@for arg in &args { {{ arg }} } @sep) };
+  |             ----------------------------------------------------^------ caused by the macro expansion here
+  |
+  = note: the usage of `moxy::template!` is likely invalid in expression context
+
+error: expected template directive
+ --> fixtures/trybuild/template/fail/malformed_separator.rs:3:65
+  |
+3 |     let _ = moxy::template! { f(@for arg in &args { {{ arg }} } @sep) };
+  |                                                                 ^

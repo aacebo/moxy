@@ -202,3 +202,64 @@ fn malformed_template_compiler_contract_is_rejected() {
     let cases = trybuild::TestCases::new();
     cases.compile_fail("fixtures/trybuild/template/fail/malformed_template.rs");
 }
+
+#[test]
+fn template_for_loops_emit_a_separator_between_iterations() {
+    let args = [moxy::ident!("first"), moxy::ident!("second"), moxy::ident!("third")];
+    let empty: [moxy::token::Ident; 0] = [];
+    let rows = [vec!["a", "b"], vec![], vec!["c"]];
+    let tokens = moxy::template! {
+        call(@for arg in &args { {{ arg }} } @sep { , });
+        none(@for arg in &empty { {{ arg }} } @sep { , });
+        nested(@for row in &rows { [@for value in row { {{ *value }} } @sep { + }] } @sep { ; });
+    };
+
+    assert_eq!(
+        tokens.to_string(),
+        "call (first , second , third) ; none () ; nested ([\"a\" + \"b\"] ; [] ; [\"c\"]) ;"
+    );
+}
+
+#[test]
+fn template_separators_interpolate_and_skip_empty_iterations() {
+    let joiner = moxy::ident!("then");
+    let values = [None, Some("a"), None, None, Some("c"), None];
+    let flags = [true, false, true];
+    let numbers = [(1, "one"), (2, "two"), (3, "three"), (4, "four")];
+    let tokens = moxy::template! {
+        chain(@for value in &values { @if let Some(value) = value { {{ *value }} } } @sep { {{ joiner }} });
+        flags(@for f in &flags { @if *f { x } } @sep { , });
+        odd(@for (n, name) in &numbers {
+            @match (n % 2) {
+                0 => {},
+                _ => { {{ *name }} },
+            }
+        } @sep { , });
+        none(@for f in &flags { @if !*f { x } @else {} } @sep { , });
+    };
+
+    assert_eq!(
+        tokens.to_string(),
+        "chain (\"a\" then \"c\") ; flags (x , x) ; odd (\"one\" , \"three\") ; none (x) ;"
+    );
+}
+
+#[test]
+fn template_separator_state_is_hidden_from_user_bindings() {
+    let emitted = ["a", "b"];
+    let iteration = [false, true];
+    let __moxy_first = ["c", "d"];
+    let tokens = moxy::template! {
+        a(@for iteration in &emitted { {{ *iteration }} } @sep { , });
+        b(@for emitted in &iteration { @if *emitted { y } } @sep { , });
+        c(@for __moxy_first in &__moxy_first { {{ *__moxy_first }} } @sep { , });
+    };
+
+    assert_eq!(tokens.to_string(), "a (\"a\" , \"b\") ; b (y) ; c (\"c\" , \"d\") ;");
+}
+
+#[test]
+fn malformed_template_separator_is_rejected() {
+    let cases = trybuild::TestCases::new();
+    cases.compile_fail("fixtures/trybuild/template/fail/malformed_separator.rs");
+}

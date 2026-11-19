@@ -1,4 +1,4 @@
-use moxy::ast::{Crate, File, ItemStruct, Visit, walk_item_struct};
+use moxy::ast::{Crate, File, Item, ItemStruct, Lifetime, Visit, VisitMut, walk_item_struct};
 use moxy::token::{Spanner, ToTokenStream};
 
 #[test]
@@ -96,4 +96,52 @@ fn parse_files_returns_independent_files_and_errors() {
     assert!(files.iter().all(|file| !file.items.is_empty()));
     assert_eq!(files.iter().map(|file| file.items.len()).sum::<usize>(), 5);
     assert!(moxy::parse_files!("fixtures/does-not-exist/*.rs").is_empty());
+}
+
+#[test]
+fn visitors_reach_every_lifetime() {
+    struct Lifetimes(Vec<String>);
+
+    impl<'ast> Visit<'ast> for Lifetimes {
+        fn visit_lifetime(&mut self, node: &'ast Lifetime) {
+            self.0.push(node.to_token_stream().to_string());
+        }
+    }
+
+    struct Named(usize);
+
+    impl VisitMut for Named {
+        fn visit_lifetime_mut(&mut self, node: &mut Lifetime) {
+            if node.to_token_stream().to_string() == "'_" {
+                let name = format!("'p{}", self.0);
+                *node = moxy::parse!(name).unwrap();
+                self.0 += 1;
+            }
+        }
+    }
+
+    let item: Item = moxy::parse!(
+        "fn f<'a: 'b, 'b>(x: &'a str, y: Cow<'_, str>, z: &'_ dyn Trait + 'b) -> impl Sized + use<'a, T> where 'b: 'a, T: for<'c> Fn(&'c u8) { 'outer: loop { break 'outer; continue 'outer; } }"
+    )
+    .unwrap();
+    let mut lifetimes = Lifetimes(Vec::new());
+    lifetimes.visit_item(&item);
+    // Generic parameters, the where clause (part of the generics), the inputs, the `use` bound of
+    // the output, the loop label, and the `break` and `continue` targets
+    assert_eq!(
+        lifetimes.0,
+        [
+            "'a", "'b", "'b", "'b", "'a", "'c", "'c", "'a", "'_", "'_", "'b", "'a", "'outer", "'outer", "'outer"
+        ]
+    );
+
+    let mut item = item;
+    let mut named = Named(0);
+    named.visit_item_mut(&mut item);
+    assert_eq!(named.0, 2);
+    assert!(
+        item.to_token_stream()
+            .to_string()
+            .contains("y : Cow < 'p0 , str > , z : & 'p1 dyn Trait + 'b")
+    );
 }

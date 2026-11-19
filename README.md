@@ -146,6 +146,21 @@ let tokens = moxy::template! {
 };
 ```
 
+`@sep { ... }` after an `@for` body emits its tokens between iterations, so
+a list needs no trailing separator. It goes only between iterations whose
+bodies emit tokens, so an iteration that an `@if` or `@match` leaves empty
+adds no separator:
+
+```rust
+let args = [moxy::ident!("first"), moxy::ident!("second")];
+
+let tokens = moxy::template! {
+    call(@for arg in &args { {{ arg }} } @sep { , })
+};
+
+assert_eq!(tokens.to_string(), "call (first , second)");
+```
+
 Interpolations can also use a Rust statement block when their final expression
 is the value to emit:
 

@@ -37,6 +37,11 @@ use moxy_ast::{Parse, Parser};
 ///   `@match (expr) { pat => { … }, … }` run as real control flow, appending to
 ///   the output as they execute. Parentheses around `@for` and `@if` headers
 ///   remain supported, and conditions may use `if let` bindings.
+/// - `@for pattern in iter { … } @sep { … }` emits the `@sep` tokens between
+///   iterations, as `quote!`'s `#(#items),*` does: `f(@for arg in args { {{ arg }} } @sep { , })`.
+///   The separator goes only between iterations whose bodies emit tokens, so
+///   one that an `@if` or `@match` leaves empty adds none, and it may
+///   interpolate like the body.
 ///
 /// # Example
 ///

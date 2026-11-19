@@ -186,7 +186,7 @@ define_visit! {
         walk: walk_expr_block, walk_mut: walk_expr_block_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
-            label: skip,
+            label: opt => visit_label / visit_label_mut,
             block => visit_stmt_block / visit_stmt_block_mut,
         }
     }
@@ -207,7 +207,7 @@ define_visit! {
         walk: walk_expr_while, walk_mut: walk_expr_while_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
-            label: skip,
+            label: opt => visit_label / visit_label_mut,
             while_keyword: skip,
             cond: box => visit_expr / visit_expr_mut,
             body => visit_stmt_block / visit_stmt_block_mut,
@@ -218,7 +218,7 @@ define_visit! {
         walk: walk_expr_for_loop, walk_mut: walk_expr_for_loop_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
-            label: skip,
+            label: opt => visit_label / visit_label_mut,
             for_keyword: skip,
             pat: box => visit_pattern / visit_pattern_mut,
             in_keyword: skip,
@@ -231,7 +231,7 @@ define_visit! {
         walk: walk_expr_loop, walk_mut: walk_expr_loop_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
-            label: skip,
+            label: opt => visit_label / visit_label_mut,
             loop_keyword: skip,
             body => visit_stmt_block / visit_stmt_block_mut,
         }
@@ -313,7 +313,7 @@ define_visit! {
         fields {
             attrs => visit_attributes / visit_attributes_mut,
             break_keyword: skip,
-            label: skip,
+            label: opt => visit_lifetime / visit_lifetime_mut,
             expr: opt_box => visit_expr / visit_expr_mut,
         }
     }
@@ -323,7 +323,7 @@ define_visit! {
         fields {
             attrs => visit_attributes / visit_attributes_mut,
             continue_keyword: skip,
-            label: skip,
+            label: opt => visit_lifetime / visit_lifetime_mut,
         }
     }
     struct ExprYield {
@@ -789,7 +789,7 @@ define_visit! {
         walk: walk_type_reference, walk_mut: walk_type_reference_mut,
         fields {
             and: skip,
-            lifetime: skip,
+            lifetime: opt => visit_lifetime / visit_lifetime_mut,
             mutability: leaf,
             elem: box => visit_type / visit_type_mut,
         }
@@ -1378,7 +1378,7 @@ define_visit! {
         fields {
             attrs => visit_attributes / visit_attributes_mut,
             reference: skip,
-            lifetime: skip,
+            lifetime: opt => visit_lifetime / visit_lifetime_mut,
             mutability: leaf,
             self_keyword: skip,
             ty: opt_pair => visit_type / visit_type_mut,
@@ -1429,9 +1429,9 @@ define_visit! {
         walk: walk_lifetime_param, walk_mut: walk_lifetime_param_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
-            lifetime: skip,
+            lifetime => visit_lifetime / visit_lifetime_mut,
             colon_punct: skip,
-            bounds: skip,
+            bounds: punct => visit_lifetime / visit_lifetime_mut,
         }
     }
     struct TypeParam {
@@ -1479,9 +1479,9 @@ define_visit! {
         visit: visit_lifetime_predicate, visit_mut: visit_lifetime_predicate_mut,
         walk: walk_lifetime_predicate, walk_mut: walk_lifetime_predicate_mut,
         fields {
-            lifetime: skip,
+            lifetime => visit_lifetime / visit_lifetime_mut,
             colon_punct: skip,
-            bounds: skip,
+            bounds: punct => visit_lifetime / visit_lifetime_mut,
         }
     }
     struct TypePredicate {
@@ -1499,7 +1499,7 @@ define_visit! {
         walk: walk_type_bound, walk_mut: walk_type_bound_mut,
         variants {
             Trait(visit_trait_bound / visit_trait_bound_mut),
-            Lifetime(skip),
+            Lifetime(visit_lifetime / visit_lifetime_mut),
             Use(visit_use_bound / visit_use_bound_mut),
         }
     }
@@ -1527,8 +1527,16 @@ define_visit! {
         fields {
             use_keyword: skip,
             lt_punct: skip,
-            lifetimes: skip,
+            params: punct => visit_use_bound_param / visit_use_bound_param_mut,
             gt_punct: skip,
+        }
+    }
+    enum UseBoundParam {
+        visit: visit_use_bound_param, visit_mut: visit_use_bound_param_mut,
+        walk: walk_use_bound_param, walk_mut: walk_use_bound_param_mut,
+        variants {
+            Ident(skip),
+            Lifetime(visit_lifetime / visit_lifetime_mut),
         }
     }
     struct BoundLifetimes {
@@ -1537,8 +1545,24 @@ define_visit! {
         fields {
             for_keyword: skip,
             lt: skip,
-            params: skip,
+            params: punct => visit_lifetime / visit_lifetime_mut,
             gt: skip,
+        }
+    }
+    struct Label {
+        visit: visit_label, visit_mut: visit_label_mut,
+        walk: walk_label, walk_mut: walk_label_mut,
+        fields {
+            name => visit_lifetime / visit_lifetime_mut,
+            colon: skip,
+        }
+    }
+    struct Lifetime {
+        visit: visit_lifetime, visit_mut: visit_lifetime_mut,
+        walk: walk_lifetime, walk_mut: walk_lifetime_mut,
+        fields {
+            quote: skip,
+            ident: skip,
         }
     }
 
@@ -1565,7 +1589,7 @@ define_visit! {
         visit: visit_generic_argument, visit_mut: visit_generic_argument_mut,
         walk: walk_generic_argument, walk_mut: walk_generic_argument_mut,
         variants {
-            Lifetime(skip),
+            Lifetime(visit_lifetime / visit_lifetime_mut),
             Type(visit_type / visit_type_mut),
             Const(visit_expr / visit_expr_mut),
             AssocType(visit_assoc_type_argument / visit_assoc_type_argument_mut),
