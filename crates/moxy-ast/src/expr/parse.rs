@@ -43,11 +43,10 @@ pub(crate) fn early(parser: &Parser) -> Result<Box<Expr>, ParseError> {
     // continues from it, as in `{ x }.len() + 1`
     let operand = cast_rest(parser, postfix_rest(parser, body, attrs)?)?;
     let left = binary_rest(parser, ExprContext::NORMAL, operand, Precedence::Or)?;
-    let left = if RangeLimits::peek(parser.cursor()) {
-        range_rest(parser, Default::default(), Some(left), ExprContext::NORMAL)?
-    } else {
-        left
-    };
+
+    if RangeLimits::peek(parser.cursor()) {
+        return range_rest(parser, Default::default(), Some(left), ExprContext::NORMAL);
+    }
 
     assignment_rest(parser, left, ExprContext::NORMAL)
 }
@@ -60,8 +59,15 @@ fn optional_expr(parser: &Parser, context: ExprContext) -> Result<Option<Box<Exp
     }
 }
 
+// As in rustc, nothing continues a range at its own level: `a..b = c` is an
+// error, while `a = b..c = d` assigns `d` to `a = b..c`
 fn assignment(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
     let left = range(parser, attrs, context)?;
+
+    if matches!(*left, Expr::Range(_)) {
+        return Ok(left);
+    }
+
     assignment_rest(parser, left, context)
 }
 
@@ -81,21 +87,46 @@ fn assignment_rest(parser: &Parser, left: Box<Expr>, context: ExprContext) -> Re
 }
 
 fn assign(parser: &Parser, left: Box<Expr>, context: ExprContext) -> Result<Box<Expr>, ParseError> {
-    Ok(boxed(ExprAssign {
+    let eq = <_ as Parse>::parse(parser)?;
+    let right = assignment_right(parser, context)?;
+    let ranged = matches!(*right, Expr::Range(_));
+    let assignment = boxed(ExprAssign {
         attrs: Default::default(),
         left,
-        eq: <_ as Parse>::parse(parser)?,
-        right: assignment_right(parser, context)?,
-    }))
+        eq,
+        right,
+    });
+
+    continue_after_range(parser, assignment, ranged, context)
 }
 
 fn compound_assign(parser: &Parser, left: Box<Expr>, context: ExprContext) -> Result<Box<Expr>, ParseError> {
-    Ok(boxed(ExprBinary {
+    let op = <_ as Parse>::parse(parser)?;
+    let right = assignment_right(parser, context)?;
+    let ranged = matches!(*right, Expr::Range(_));
+    let assignment = boxed(ExprBinary {
         attrs: Default::default(),
         left,
-        op: <_ as Parse>::parse(parser)?,
-        right: assignment_right(parser, context)?,
-    }))
+        op,
+        right,
+    });
+
+    continue_after_range(parser, assignment, ranged, context)
+}
+
+// A range that ends the right side of an assignment ends that side alone, so
+// an assignment after it takes the whole assignment as its left side
+fn continue_after_range(
+    parser: &Parser,
+    assignment: Box<Expr>,
+    ranged: bool,
+    context: ExprContext,
+) -> Result<Box<Expr>, ParseError> {
+    if ranged {
+        assignment_rest(parser, assignment, context)
+    } else {
+        Ok(assignment)
+    }
 }
 
 // The right side of an assignment, which nests one level per operator as
@@ -129,7 +160,10 @@ fn range_rest(
     let limits = <_ as Parse>::parse(parser)?;
     let mut end = None;
 
-    if !context.is_end(parser.cursor()) && Expr::peek(parser.cursor()) {
+    // The end may itself be a range without a start, as in `a.. ..b`
+    if peek::nested_range(parser.cursor()) {
+        end = Some(range_rest(parser, Default::default(), None, context)?);
+    } else if !context.is_end(parser.cursor()) && Expr::peek(parser.cursor()) {
         end = Some(binary(parser, Default::default(), context, Precedence::Or)?);
     }
 
@@ -402,8 +436,8 @@ fn dot(parser: &Parser, base: Box<Expr>) -> Result<Box<Expr>, ParseError> {
         }
     }
 
-    // The compiler lexes `0.1` in `x.0.1` as one float literal, which is two
-    // tuple indices
+    // The compiler lexes `0.1` in `x.0.1` and `0.` in `x.0. 1` as one float
+    // literal, which holds two tuple indices or one and the next dot
     if let Some(TokenTree::Literal(Lit::Float(float))) = parser.cursor().offset(1).curr()
         && let Some((first, inner_dot, second)) = float.split_tuple_index()
     {
@@ -416,11 +450,17 @@ fn dot(parser: &Parser, base: Box<Expr>) -> Result<Box<Expr>, ParseError> {
             member: Member::Unnamed(first.into()),
         });
 
+        // After `0.`, as in `x.0. 1`, the second index is the next token
+        let member = match second {
+            Some(second) => Member::Unnamed(second.into()),
+            None => <_ as Parse>::parse(parser)?,
+        };
+
         return Ok(boxed(ExprField {
             attrs: Default::default(),
             base: inner,
             dot: inner_dot,
-            member: Member::Unnamed(second.into()),
+            member,
         }));
     }
 

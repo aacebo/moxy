@@ -62,3 +62,35 @@ fn abi_strings_format_and_emit_as_written() {
         );
     }
 }
+
+#[test]
+fn foreign_functions_may_have_a_body_as_rustc_parses_them() {
+    let item: Item = moxy::parse!("extern \"C\" { fn f() { 1 } fn g(); }").unwrap();
+    let emitted = moxy::token::ToTokenStream::to_token_stream(&item).to_string();
+    assert_eq!(emitted, "extern \"C\" {fn f () {1} fn g () ;}");
+    assert_eq!(
+        moxy::fmt!(&item).unwrap(),
+        "extern \"C\" {\n\tfn f() {\n\t\t1\n\t}\n\t\n\tfn g();\n}"
+    );
+}
+
+#[test]
+fn foreign_types_may_have_bounds_and_a_default_as_rustc_parses_them() {
+    for (source, emitted, formatted) in [
+        (
+            "extern \"C\" { type T: A + B where Self: C; }",
+            "extern \"C\" {type T : A + B where Self : C ;}",
+            "extern \"C\" {\n\ttype T: A + B\n\twhere\n\tSelf: C;\n}",
+        ),
+        (
+            "extern \"C\" { type T<U> = u8; }",
+            "extern \"C\" {type T < U > = u8 ;}",
+            "extern \"C\" {\n\ttype T<U> = u8;\n}",
+        ),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let tokens = moxy::token::ToTokenStream::to_token_stream(&item).to_string();
+        assert_eq!(tokens, emitted);
+        assert_eq!(moxy::fmt!(&item).unwrap(), formatted);
+    }
+}

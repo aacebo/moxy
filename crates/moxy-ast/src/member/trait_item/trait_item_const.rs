@@ -8,6 +8,9 @@ use crate::*;
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct TraitItemConst {
     pub attrs: Attributes,
+    /// A visibility, which rustc's parser accepts and the compiler rejects
+    /// later, as in `pub fn f();`.
+    pub vis: Visibility,
     pub const_keyword: Token![const],
     pub ident: Ident,
     pub generics: Generics,
@@ -26,12 +29,14 @@ impl Attributed for TraitItemConst {
 impl Parse for TraitItemConst {
     fn peek(cursor: Cursor<'_>) -> bool {
         Attributes::skip(cursor)
+            .and_then(|cursor| Visibility::skip(cursor))
             .map(|cursor| <Token![const]>::peek(cursor) && Ident::peek(cursor.offset(1)))
             .unwrap_or(false)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
         let const_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
         let generics = <_ as Parse>::parse(parser)?;
@@ -48,6 +53,7 @@ impl Parse for TraitItemConst {
 
         Ok(Self {
             attrs,
+            vis,
             const_keyword,
             ident,
             generics,
@@ -60,6 +66,7 @@ impl Parse for TraitItemConst {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
+        cursor = Visibility::skip(cursor)?;
         cursor = <Token![const]>::skip(cursor)?;
         cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
@@ -84,6 +91,7 @@ impl Spanner for TraitItemConst {
 impl ToTokens for TraitItemConst {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
+        self.vis.to_tokens(t);
         self.const_keyword.to_tokens(t);
         self.ident.to_tokens(t);
         self.generics.to_tokens(t);

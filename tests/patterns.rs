@@ -51,13 +51,14 @@ fn typed_patterns_preserve_their_type_syntax() {
 }
 
 #[test]
-fn invalid_tuple_indices_are_rejected_as_member_patterns() {
-    assert!(moxy::parse!("0" as moxy::ast::Member).is_ok());
-
-    for source in ["0u8", "0x1", "1_0", "4294967296"] {
-        let result = moxy::parse!(source as moxy::ast::Member);
-        debug_assert!(result.is_err(), "accepted invalid tuple index {source} => {result:#?}");
+fn suffixed_tuple_indices_are_rejected_as_member_patterns() {
+    // As in rustc's parser, any unsuffixed integer is a tuple index
+    for source in ["0", "0x1", "1_0", "4294967296"] {
+        assert!(moxy::parse!(source as moxy::ast::Member).is_ok(), "`{source}`");
     }
+
+    let result = moxy::parse!("0u8" as moxy::ast::Member);
+    assert!(result.is_err(), "accepted a suffixed tuple index => {result:#?}");
 }
 
 #[test]

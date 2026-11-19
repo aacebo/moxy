@@ -161,3 +161,30 @@ fn let_chains_end_the_scrutinee_before_a_logical_operator() {
         ("while let Some(x) = a && b {}", "(while ((let Some(x) = a) && b) {..})"),
     ]);
 }
+
+#[test]
+fn nothing_continues_a_range_at_its_own_level() {
+    assert_shapes(&[
+        ("a.. ..b", "(a..(..b))"),
+        ("a .. ..=b", "(a..(..=b))"),
+        ("a = b..c = d", "((a = (b..c)) = d)"),
+        ("a += b..c = d", "((a += (b..c)) = d)"),
+        ("a = b = c..d = e", "(a = ((b = (c..d)) = e))"),
+    ]);
+
+    for source in [
+        "a..b = c",
+        "a .. = b",
+        "a..b = c..d",
+        "a..b..c",
+        "..a..b",
+        "a..=b..c",
+        "....",
+        "a....b",
+    ] {
+        assert!(moxy::parse!(source as Expr).is_err(), "`{source}`");
+    }
+
+    let range: Expr = moxy::parse!("a.. ..b").unwrap();
+    assert_eq!(moxy::fmt!(&range).unwrap(), "a.. ..b");
+}

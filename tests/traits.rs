@@ -112,3 +112,16 @@ fn parenthesized_macro_items_need_a_semicolon() {
         assert_eq!(item.to_token_stream().to_string().matches('!').count(), 2);
     }
 }
+
+#[test]
+fn trait_items_keep_a_visibility_as_rustc_parses_them() {
+    let item: Item = moxy::parse!("trait A { pub fn f(); pub(crate) const X: u8; pub type T; }").unwrap();
+    assert_eq!(
+        item.to_token_stream().to_string(),
+        "trait A {pub fn f () ; pub (crate) const X : u8 ; pub type T ;}"
+    );
+    assert_eq!(
+        moxy::fmt!(&item).unwrap(),
+        "trait A {\n\tpub fn f();\n\tpub(crate) const X: u8;\n\tpub type T;\n}"
+    );
+}

@@ -58,31 +58,27 @@ impl Spanner for Member {
     }
 }
 
+// As in rustc's parser, any integer literal without a suffix is a tuple
+// index, as `0x1` in `a.0x1`; the compiler checks its value later
+fn is_tuple_index(lit: &Lit) -> bool {
+    lit.as_int().is_some_and(|int| int.suffix() == moxy_token::IntSuffix::None)
+}
+
 impl Parse for Member {
     fn peek(cursor: Cursor<'_>) -> bool {
         if Ident::peek(cursor) {
             return true;
         }
 
-        let Some(moxy_token::TokenTree::Literal(Lit::Int(value))) = cursor.curr() else {
-            return false;
-        };
-
-        value.repr().chars().all(char::is_numeric) && value.value() <= 4294967295
+        matches!(cursor.curr(), Some(moxy_token::TokenTree::Literal(lit)) if is_tuple_index(lit))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if Lit::peek(parser.cursor()) {
             let lit: Lit = <_ as Parse>::parse(parser)?;
 
-            if let Some(i) = lit.as_int() {
-                if !i.repr().chars().all(char::is_numeric) {
-                    parser.error("expected tuple index").into()
-                } else if i.value() > 4294967295 {
-                    parser.error("tuple index exceeds max size 4294967295").into()
-                } else {
-                    Ok(Self::Unnamed(lit))
-                }
+            if is_tuple_index(&lit) {
+                Ok(Self::Unnamed(lit))
             } else {
                 parser.error("expected tuple index").into()
             }

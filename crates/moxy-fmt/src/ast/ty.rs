@@ -108,13 +108,13 @@ impl Format for TypeBareFn {
         f.text("fn(")?;
         self.params.inner.inputs.format(f)?;
 
-        if self.params.inner.variadic.is_some() {
+        if let Some(variadic) = &self.params.inner.variadic {
             // A trailing comma before `...` is already in the inputs
             if !self.params.inner.inputs.is_empty() && !self.params.inner.inputs.is_trailing() {
                 f.text(", ")?;
             }
 
-            f.text("...")?;
+            variadic.format(f)?;
         }
 
         f.text(")")?;

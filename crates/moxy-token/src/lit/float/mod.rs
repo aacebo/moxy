@@ -74,25 +74,32 @@ impl LitFloat {
 }
 
 impl LitFloat {
-    /// Splits a float of two digit runs, as in `x.0.1`, into the two tuple
-    /// indices and the dot between them, each with its part of the span. The
-    /// compiler lexes `0.1` there as one float literal.
+    /// Splits a float of a digit run, a dot, and an optional digit run, as in
+    /// `x.0.1` and `x.0. 1`, into a tuple index, the dot, and the second tuple
+    /// index if there is one, each with its part of the span. The compiler
+    /// lexes `0.1` and `0.` there as one float literal.
     #[doc(hidden)]
-    pub fn split_tuple_index(&self) -> Option<(crate::LitInt, crate::Dot, crate::LitInt)> {
+    pub fn split_tuple_index(&self) -> Option<(crate::LitInt, crate::Dot, Option<crate::LitInt>)> {
         let repr = self.repr();
         let (head, tail) = repr.split_once('.')?;
         let digits = |text: &str| !text.is_empty() && text.bytes().all(|byte| byte.is_ascii_digit());
 
-        if !digits(head) || !digits(tail) {
+        if !digits(head) || !(tail.is_empty() || digits(tail)) {
             return None;
         }
 
         let (head_span, rest) = self.span().split(head.len());
         let (dot_span, tail_span) = rest.split(1);
         let mut first: crate::LitInt = head.parse().ok()?;
-        let mut second: crate::LitInt = tail.parse().ok()?;
         first.set_span(head_span);
-        second.set_span(tail_span);
+        let second = if tail.is_empty() {
+            None
+        } else {
+            let mut second: crate::LitInt = tail.parse().ok()?;
+            second.set_span(tail_span);
+            Some(second)
+        };
+
         Some((first, crate::Dot::new(dot_span), second))
     }
 }

@@ -323,6 +323,11 @@ impl Format for ExprRange {
         self.limits.format(f)?;
 
         if let Some(end) = &self.end {
+            // `a.. ..b` written together would lex as `...`
+            if matches!(&**end, Expr::Range(range) if range.start.is_none()) {
+                f.text(" ")?;
+            }
+
             end.format(f)?;
         }
 

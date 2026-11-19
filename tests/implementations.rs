@@ -54,3 +54,15 @@ fn associated_type_where_clauses_follow_the_type() {
         assert_eq!(moxy::fmt!(&item).unwrap(), formatted);
     }
 }
+
+#[test]
+fn a_type_alias_takes_its_where_clause_before_or_after_the_type() {
+    for source in ["type T<U> = Vec<U> where U: A;", "type T<U> where U: A = Vec<U>;"] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(item.to_token_stream().to_string(), "type T < U > = Vec < U > where U : A ;");
+        assert_eq!(moxy::fmt!(&item).unwrap(), "type T<U> = Vec<U>\nwhere\nU: A;");
+    }
+
+    let item: Item = moxy::parse!("type T<U> where U: A;").unwrap();
+    assert_eq!(item.to_token_stream().to_string(), "type T < U > where U : A ;");
+}

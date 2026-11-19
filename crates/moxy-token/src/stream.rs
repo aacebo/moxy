@@ -195,14 +195,18 @@ impl Scan for TokenStream {
 
             if let Some((next, lit)) = literal {
                 // After a field access dot, `0.1` is two tuple indices, as in
-                // `x.0.1`, so the tokens read back as they parse
+                // `x.0.1`, and `0.` a tuple index and a dot, as in `x.0. 1`, so
+                // the tokens read back as they parse
                 if let crate::Lit::Float(float) = &lit
                     && after_field_dot(&tokens)
                     && let Some((first, dot, second)) = float.split_tuple_index()
                 {
                     tokens.push(TokenTree::Literal(first.into()));
                     tokens.push(TokenTree::Punct(dot.into()));
-                    tokens.push(TokenTree::Literal(second.into()));
+
+                    if let Some(second) = second {
+                        tokens.push(TokenTree::Literal(second.into()));
+                    }
                 } else {
                     tokens.push(TokenTree::Literal(lit));
                 }

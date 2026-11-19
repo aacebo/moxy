@@ -12,6 +12,11 @@ pub struct ForeignItemType {
     pub type_keyword: Token![type],
     pub ident: Ident,
     pub generics: Generics,
+    /// Bounds and a default, which rustc's parser accepts and the compiler
+    /// rejects later, as in `type T: A;`.
+    pub colon: Option<Token![:]>,
+    pub bounds: List<TypeBound, Token![+]>,
+    pub default: Option<(Token![=], Type)>,
     pub semi: Option<Token![;]>,
 }
 
@@ -29,12 +34,22 @@ impl Parse for ForeignItemType {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let type_keyword = <_ as Parse>::parse(parser)?;
+        let ident = <_ as Parse>::parse(parser)?;
+        let mut generics = <_ as Parse>::parse(parser)?;
+        let (colon, bounds, default) = super::super::parse_type_rest(parser, &mut generics)?;
+
         Ok(Self {
-            attrs: <_ as Parse>::parse(parser)?,
-            vis: <_ as Parse>::parse(parser)?,
-            type_keyword: <_ as Parse>::parse(parser)?,
-            ident: <_ as Parse>::parse(parser)?,
-            generics: <_ as Parse>::parse(parser)?,
+            attrs,
+            vis,
+            type_keyword,
+            ident,
+            generics,
+            colon,
+            bounds,
+            default,
             semi: <_ as Parse>::parse(parser)?,
         })
     }
@@ -45,6 +60,7 @@ impl Parse for ForeignItemType {
         cursor = <Token![type]>::skip(cursor)?;
         cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
+        cursor = super::super::skip_type_rest(cursor)?;
         Option::<Token![;]>::skip(cursor)
     }
 }
@@ -61,7 +77,7 @@ impl ToTokens for ForeignItemType {
         self.vis.to_tokens(t);
         self.type_keyword.to_tokens(t);
         self.ident.to_tokens(t);
-        self.generics.to_tokens(t);
+        super::super::type_rest_to_tokens(&self.generics, &self.colon, &self.bounds, &self.default, t);
         self.semi.to_tokens(t);
     }
 }

@@ -685,3 +685,25 @@ fn a_closure_with_a_return_type_takes_a_block_and_an_inclusive_range_an_end() {
         assert_eq!(error.message(), message, "`{source}`");
     }
 }
+
+#[test]
+fn any_unsuffixed_integer_after_a_field_dot_is_a_tuple_index() {
+    for (source, emitted) in [
+        ("a.0_0", "a . 0_0"),
+        ("a.0x1", "a . 0x1"),
+        ("a.99999999999", "a . 99999999999"),
+        ("x.0. 1", "x . 0 . 1"),
+        ("x.0.1", "x . 0 . 1"),
+    ] {
+        let expression: Expr = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert!(
+            matches!(&expression, Expr::Field(field) if field.member.is_unnamed()),
+            "`{source}`"
+        );
+        assert_eq!(expression.to_token_stream().to_string(), emitted);
+    }
+
+    for source in ["x.0u8", "x.0."] {
+        assert!(moxy::parse!(source as Expr).is_err(), "`{source}`");
+    }
+}

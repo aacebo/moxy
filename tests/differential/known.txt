@@ -46,7 +46,6 @@ REJECT f: m! ident {}
 REJECT f: macro m() {}
 REJECT f: pub macro m($a:expr) { $a }
 REJECT f: struct S { a: u8 = 1 }
-REJECT f: unsafe extern "C" fn f(a: u8, mut args: ...) {}
 REJECT p: S { box a }
 REJECT t: impl const A
 REJECT t: unsafe<'a> &'a A
@@ -81,13 +80,11 @@ REJECT f: macro_rules! try { () => {} }
 REJECT t: 'a + A
 
 # Intentional: rustc's parser accepts these and rejects them later, which syn
-# rejects while parsing
+# rejects while parsing or keeps as tokens
 ACCEPT f: use a::{::b};
+TREE f: trait A { pub fn f(); }
 ACCEPT b: { let a | b = c; }
 ACCEPT b: { let | a = c; }
-ACCEPT e: a .. = b
-ACCEPT e: a..b = c
-ACCEPT e: a..b = c..d
 ACCEPT f: fn f() { 1 .. 2; 1 . 2; 1. 2; 1 .2; }
 ACCEPT f: impl A { type T where Self: Sized = u8; }
 ACCEPT f: safe fn f() {}
@@ -96,20 +93,20 @@ ACCEPT f: struct S { mut a: u8 }
 ACCEPT f: unsafe static X: u8 = 1;
 ACCEPT f: use Self::A;
 ACCEPT f: use a::Self;
-REJECT f: extern "C" { fn f() {} }
-REJECT f: extern "C" { type T: A; }
 REJECT f: static X = 1;
 REJECT f: trait A = ;
-REJECT f: trait A { pub fn f(); }
 REJECT f: trait A<T> = B<T> where T: C;
-REJECT f: type T<U> = Vec<U> where U: A;
+
+# Intentional: a type alias's where clause before `=`, the older place, emits
+# after the type, where Rust prefers it, as for associated types
+TOKENS f: type T<U> where U: A = Vec<U>;
 
 # Intentional: moxy keeps tokens as written where syn normalizes them: the
 # obsolete `...` range, a leading zero in a tuple index, generic parameter order
-REJECT e: a.0_0
-REJECT e: a.0x1
 TOKENS t: A<T, 'a>
 TREE e: a.01
+TREE e: a.0_0
+TREE e: a.0x1
 TREE e: match a { 0...5 => 1 }
 TREE p: 1...2
 
@@ -139,21 +136,14 @@ TOKENS f: #!/usr/bin/env rust\n fn f() {}
 TOKENS f: #!/bin/sh\nfn f() {}
 TOKENS f: #!/usr/bin/env rust\n#![allow(a)]\nfn main() {}
 
-# Valid Rust that moxy rejects: a range as the end of another range
-REJECT e: a.. ..b
-
 # Intentional: rustc rejects these after parsing, as moxy does while parsing:
 # a keyword as a lifetime name and an associated type without a type in an impl
 REJECT f: type Symbols<'false> = Table<Symbol<'false>>;
 REJECT f: impl<T> X<T> { type Item; #[inline] fn next() -> Option<T> {} fn advance_by(self, n: usize) -> Result<(), NonZero<usize>> { rem = if len < n {} else {} } }
 
-# Pending: invalid input that moxy accepts, a named variadic parameter, and
-# `mut self` as a pattern, not yet fixed
+# Pending: invalid input that moxy accepts and `mut self` as a pattern, not
+# yet fixed
 ACCEPT e: abstract
-REJECT f: fn f(a: u8, _: ...) {}
-REJECT f: type B = fn(_: ...) -> Status;
-REJECT f: type B = unsafe extern "efiapi" fn(_: Handle, _: ...) -> Status;
-REJECT t: fn(a: A, va: ...)
 ACCEPT b: { a b }
 ACCEPT b: { let x = 1 }
 ACCEPT b: { let x = S {} else { return }; }

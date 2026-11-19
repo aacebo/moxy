@@ -128,3 +128,26 @@ fn an_abi_keeps_the_value_of_its_string() {
         assert_eq!(item.to_token_stream().to_string(), emitted);
     }
 }
+
+#[test]
+fn a_variadic_may_be_named_by_a_pattern() {
+    for (source, emitted) in [
+        (
+            "unsafe extern \"C\" fn f(a: u8, mut args: ...) {}",
+            "unsafe extern \"C\" fn f (a : u8 , mut args : ...) {}",
+        ),
+        (
+            "unsafe extern \"C\" fn f(a: u8, _: ...) {}",
+            "unsafe extern \"C\" fn f (a : u8 , _ : ...) {}",
+        ),
+        (
+            "type B = unsafe extern \"C\" fn(_: u8, va: ...);",
+            "type B = unsafe extern \"C\" fn (_ : u8 , va : ...) ;",
+        ),
+        ("extern \"C\" {fn f(a: u8, ...);}", "extern \"C\" {fn f (a : u8 , ...) ;}"),
+    ] {
+        let item: moxy::ast::Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(item.to_token_stream().to_string(), emitted);
+        assert_eq!(moxy::fmt!(&item).unwrap().replace(['\n', '\t'], ""), source);
+    }
+}

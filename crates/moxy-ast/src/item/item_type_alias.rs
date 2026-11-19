@@ -13,6 +13,8 @@ pub struct ItemTypeAlias {
     pub ident: Ident,
     pub generics: Generics,
     pub bounds: List<TypeBound, Token![+]>,
+    /// The where clause, written before `=` or after the type; it emits after
+    /// the type when there is one, where Rust prefers it.
     pub where_clause: Option<WhereClause>,
     pub eq_punct: Option<Token![=]>,
     pub ty: Option<Type>,
@@ -45,7 +47,7 @@ impl Parse for ItemTypeAlias {
             List::new()
         };
 
-        let where_clause = generics
+        let mut where_clause = generics
             .where_clause
             .take()
             .or_else(|| <_ as Parse>::parse(parser).ok().flatten());
@@ -55,6 +57,10 @@ impl Parse for ItemTypeAlias {
         } else {
             None
         };
+
+        if ty.is_some() && where_clause.is_none() {
+            where_clause = <_ as Parse>::parse(parser)?;
+        }
 
         let semi_punct = <_ as Parse>::parse(parser)?;
 
@@ -88,11 +94,16 @@ impl Parse for ItemTypeAlias {
             }
         }
 
+        let before = WhereClause::peek(cursor);
         cursor = Option::<WhereClause>::skip(cursor)?;
 
         if <Token![=]>::peek(cursor) {
             cursor = <Token![=]>::skip(cursor)?;
             cursor = Type::skip(cursor)?;
+
+            if !before {
+                cursor = Option::<WhereClause>::skip(cursor)?;
+            }
         }
 
         <Token![;]>::skip(cursor)
@@ -118,9 +129,17 @@ impl ToTokens for ItemTypeAlias {
             self.bounds.to_tokens(t);
         }
 
-        self.where_clause.to_tokens(t);
+        if self.ty.is_none() {
+            self.where_clause.to_tokens(t);
+        }
+
         self.eq_punct.to_tokens(t);
         self.ty.to_tokens(t);
+
+        if self.ty.is_some() {
+            self.where_clause.to_tokens(t);
+        }
+
         self.semi_punct.to_tokens(t);
     }
 }

@@ -1,4 +1,4 @@
-use moxy_token::{Keyword, Punct, TokenTree};
+use moxy_token::{Keyword, Punct, Spacing, TokenTree};
 
 use super::*;
 
@@ -71,4 +71,11 @@ pub(super) fn block_like(cursor: Cursor<'_>) -> bool {
 // or `?` instead of ending
 pub(crate) fn continues_block_like(cursor: Cursor<'_>) -> bool {
     (<Token![.]>::peek(cursor) && !<Token![..]>::peek(cursor)) || <Token![?]>::peek(cursor)
+}
+
+// Whether a range without a start begins here, after the limits of another
+// range and apart from them: `a.. ..b`, while `a....b` lexes in rustc as `...`
+pub(super) fn nested_range(cursor: Cursor<'_>) -> bool {
+    let joined = matches!(cursor.prev(), Some(TokenTree::Punct(punct)) if punct.spacing() == Spacing::Joint);
+    RangeLimits::peek(cursor) && !joined
 }

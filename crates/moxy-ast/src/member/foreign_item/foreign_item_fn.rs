@@ -10,6 +10,8 @@ pub struct ForeignItemFn {
     pub attrs: Attributes,
     pub vis: Visibility,
     pub sig: Signature,
+    /// A body, which rustc's parser accepts and the compiler rejects later.
+    pub body: Option<StmtBlock>,
     pub semi: Option<Token![;]>,
 }
 
@@ -27,11 +29,21 @@ impl Parse for ForeignItemFn {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let sig = <_ as Parse>::parse(parser)?;
+        let (body, semi) = if StmtBlock::peek(parser.cursor()) {
+            (Some(<_ as Parse>::parse(parser)?), None)
+        } else {
+            (None, <_ as Parse>::parse(parser)?)
+        };
+
         Ok(Self {
-            attrs: <_ as Parse>::parse(parser)?,
-            vis: <_ as Parse>::parse(parser)?,
-            sig: <_ as Parse>::parse(parser)?,
-            semi: <_ as Parse>::parse(parser)?,
+            attrs,
+            vis,
+            sig,
+            body,
+            semi,
         })
     }
 
@@ -39,7 +51,12 @@ impl Parse for ForeignItemFn {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
         cursor = Signature::skip(cursor)?;
-        Option::<Token![;]>::skip(cursor)
+
+        if StmtBlock::peek(cursor) {
+            StmtBlock::skip(cursor)
+        } else {
+            Option::<Token![;]>::skip(cursor)
+        }
     }
 }
 
@@ -54,6 +71,7 @@ impl ToTokens for ForeignItemFn {
         self.attrs.to_tokens(t);
         self.vis.to_tokens(t);
         self.sig.to_tokens(t);
+        self.body.to_tokens(t);
         self.semi.to_tokens(t);
     }
 }

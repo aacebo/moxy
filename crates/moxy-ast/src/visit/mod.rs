@@ -1127,6 +1127,7 @@ define_visit! {
             attrs => visit_attributes / visit_attributes_mut,
             vis => visit_visibility / visit_visibility_mut,
             sig => visit_signature / visit_signature_mut,
+            body: opt => visit_stmt_block / visit_stmt_block_mut,
             semi: skip,
         }
     }
@@ -1154,6 +1155,9 @@ define_visit! {
             type_keyword: skip,
             ident: skip,
             generics => visit_generics / visit_generics_mut,
+            colon: skip,
+            bounds: punct => visit_type_bound / visit_type_bound_mut,
+            default: opt_pair => visit_type / visit_type_mut,
             semi: skip,
         }
     }
@@ -1243,6 +1247,7 @@ define_visit! {
         walk: walk_trait_item_fn, walk_mut: walk_trait_item_fn_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
+            vis => visit_visibility / visit_visibility_mut,
             sig => visit_signature / visit_signature_mut,
             body: opt => visit_stmt_block / visit_stmt_block_mut,
             semi: skip,
@@ -1253,6 +1258,7 @@ define_visit! {
         walk: walk_trait_item_const, walk_mut: walk_trait_item_const_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
+            vis => visit_visibility / visit_visibility_mut,
             const_keyword: skip,
             ident: skip,
             generics => visit_generics / visit_generics_mut,
@@ -1267,6 +1273,7 @@ define_visit! {
         walk: walk_trait_item_type, walk_mut: walk_trait_item_type_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
+            vis => visit_visibility / visit_visibility_mut,
             type_keyword: skip,
             ident: skip,
             generics => visit_generics / visit_generics_mut,
@@ -1394,7 +1401,8 @@ define_visit! {
         walk: walk_variadic, walk_mut: walk_variadic_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
-            name: skip,
+            pat: opt_box => visit_pattern / visit_pattern_mut,
+            colon: skip,
             dots: skip,
         }
     }
