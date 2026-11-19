@@ -49,6 +49,35 @@ impl Parse for PatRange {
             Some(expr::parse::unary(parser, Attributes::default())?)
         };
 
+        Self::parse_rest(parser, attrs, start)
+    }
+
+    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        cursor = Attributes::skip(cursor)?;
+        let has_start = !PatRangeLimits::peek(cursor);
+
+        if has_start {
+            cursor = expr::skip::pattern_bound(cursor)?;
+        }
+
+        Self::skip_rest(cursor, has_start)
+    }
+}
+
+impl PatRange {
+    /// Whether a range without a start begins here: `..=b`, `...b`, or `..b`,
+    /// which `..` alone, a rest pattern, is not.
+    pub(crate) fn peek_without_start(cursor: Cursor<'_>) -> bool {
+        if <Token![..=]>::peek(cursor) {
+            return true;
+        }
+
+        let after = <Token![...]>::skip(cursor).or_else(|| <Token![..]>::skip(cursor));
+        after.is_some_and(Self::peek_end)
+    }
+
+    // The limits and end of a range after its start, if it has one
+    pub(crate) fn parse_rest(parser: &Parser, attrs: Attributes, start: Option<Expr>) -> Result<Self, ParseError> {
         let limits = <_ as Parse>::parse(parser)?;
         let end = if Self::peek_end(parser.cursor()) {
             Some(expr::parse::unary(parser, Attributes::default())?)
@@ -68,14 +97,7 @@ impl Parse for PatRange {
         })
     }
 
-    fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        cursor = Attributes::skip(cursor)?;
-        let has_start = !PatRangeLimits::peek(cursor);
-
-        if has_start {
-            cursor = expr::skip::pattern_bound(cursor)?;
-        }
-
+    pub(crate) fn skip_rest(mut cursor: Cursor<'_>, has_start: bool) -> Option<Cursor<'_>> {
         let closed = <Token![..=]>::peek(cursor);
         cursor = PatRangeLimits::skip(cursor)?;
 
@@ -85,9 +107,7 @@ impl Parse for PatRange {
 
         expr::skip::pattern_bound(cursor)
     }
-}
 
-impl PatRange {
     // A range bound is a literal, a negated literal, or a path, so any other
     // token, such as the `=>` or `if` of a match arm, ends a half-open `a..`
     fn peek_end(cursor: Cursor<'_>) -> bool {

@@ -13,8 +13,10 @@ pub struct ImplItemType {
     pub type_keyword: Token![type],
     pub ident: Ident,
     pub generics: Generics,
-    pub eq: Token![=],
-    pub ty: Type,
+    /// The `=` and type, or none before `;`, which rustc's parser accepts and
+    /// the compiler rejects later.
+    pub eq: Option<Token![=]>,
+    pub ty: Option<Type>,
     /// A where clause after the type; one before `=` is in `generics`.
     pub where_clause_after: Option<WhereClause>,
     pub semi: Option<Token![;]>,
@@ -41,11 +43,15 @@ impl Parse for ImplItemType {
         let type_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
         let generics: Generics = <_ as Parse>::parse(parser)?;
-        let eq = <_ as Parse>::parse(parser)?;
-        let ty = <_ as Parse>::parse(parser)?;
+        let eq: Option<Token![=]> = <_ as Parse>::parse(parser)?;
+        let ty = if eq.is_some() {
+            Some(<_ as Parse>::parse(parser)?)
+        } else {
+            None
+        };
 
         // A where clause can also follow the type, where Rust prefers it
-        let where_clause_after = <_ as Parse>::parse(parser)?;
+        let where_clause_after = if ty.is_some() { <_ as Parse>::parse(parser)? } else { None };
 
         Ok(Self {
             attrs,
@@ -68,9 +74,12 @@ impl Parse for ImplItemType {
         cursor = <Token![type]>::skip(cursor)?;
         cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
-        cursor = <Token![=]>::skip(cursor)?;
-        cursor = Type::skip(cursor)?;
-        cursor = Option::<WhereClause>::skip(cursor)?;
+        if <Token![=]>::peek(cursor) {
+            cursor = <Token![=]>::skip(cursor)?;
+            cursor = Type::skip(cursor)?;
+            cursor = Option::<WhereClause>::skip(cursor)?;
+        }
+
         Option::<Token![;]>::skip(cursor)
     }
 }

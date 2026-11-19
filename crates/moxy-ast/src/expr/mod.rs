@@ -2,7 +2,7 @@ mod expr_array;
 mod expr_assign;
 mod expr_async;
 mod expr_await;
-mod expr_binary;
+mod expr_binary_chain;
 mod expr_block;
 mod expr_break;
 mod expr_call;
@@ -46,7 +46,7 @@ pub use expr_array::*;
 pub use expr_assign::*;
 pub use expr_async::*;
 pub use expr_await::*;
-pub use expr_binary::*;
+pub use expr_binary_chain::*;
 pub use expr_block::*;
 pub use expr_break::*;
 pub use expr_call::*;
@@ -96,7 +96,7 @@ pub enum Expr {
     Assign(ExprAssign),
     Async(ExprAsync),
     Await(ExprAwait),
-    Binary(ExprBinary),
+    BinaryChain(ExprBinaryChain),
     Block(ExprBlock),
     Break(ExprBreak),
     Call(ExprCall),
@@ -141,7 +141,7 @@ impl Expr {
             Self::Assign(v) => Some(&v.attrs),
             Self::Async(v) => Some(&v.attrs),
             Self::Await(v) => Some(&v.attrs),
-            Self::Binary(v) => Some(&v.attrs),
+            Self::BinaryChain(v) => Some(&v.attrs),
             Self::Block(v) => Some(&v.attrs),
             Self::Break(v) => Some(&v.attrs),
             Self::Call(v) => Some(&v.attrs),
@@ -186,7 +186,7 @@ impl Expr {
             Self::Assign(v) => Some(&mut v.attrs),
             Self::Async(v) => Some(&mut v.attrs),
             Self::Await(v) => Some(&mut v.attrs),
-            Self::Binary(v) => Some(&mut v.attrs),
+            Self::BinaryChain(v) => Some(&mut v.attrs),
             Self::Block(v) => Some(&mut v.attrs),
             Self::Break(v) => Some(&mut v.attrs),
             Self::Call(v) => Some(&mut v.attrs),
@@ -241,8 +241,8 @@ impl Expr {
         matches!(self, Self::Await(_))
     }
 
-    pub fn is_binary(&self) -> bool {
-        matches!(self, Self::Binary(_))
+    pub fn is_binary_chain(&self) -> bool {
+        matches!(self, Self::BinaryChain(_))
     }
 
     pub fn is_block(&self) -> bool {
@@ -401,8 +401,8 @@ impl Expr {
         if let Self::Await(v) = self { Some(v) } else { None }
     }
 
-    pub fn as_binary(&self) -> Option<&ExprBinary> {
-        if let Self::Binary(v) = self { Some(v) } else { None }
+    pub fn as_binary_chain(&self) -> Option<&ExprBinaryChain> {
+        if let Self::BinaryChain(v) = self { Some(v) } else { None }
     }
 
     pub fn as_block(&self) -> Option<&ExprBlock> {
@@ -553,7 +553,7 @@ impl Spanner for Expr {
             Self::Assign(v) => v.span(),
             Self::Async(v) => v.span(),
             Self::Await(v) => v.span(),
-            Self::Binary(v) => v.span(),
+            Self::BinaryChain(v) => v.span(),
             Self::Block(v) => v.span(),
             Self::Break(v) => v.span(),
             Self::Call(v) => v.span(),
@@ -600,7 +600,7 @@ impl ToTokens for Expr {
             Self::Assign(v) => v.to_tokens(t),
             Self::Async(v) => v.to_tokens(t),
             Self::Await(v) => v.to_tokens(t),
-            Self::Binary(v) => v.to_tokens(t),
+            Self::BinaryChain(v) => v.to_tokens(t),
             Self::Block(v) => v.to_tokens(t),
             Self::Break(v) => v.to_tokens(t),
             Self::Call(v) => v.to_tokens(t),

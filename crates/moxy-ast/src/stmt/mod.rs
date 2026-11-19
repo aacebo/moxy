@@ -153,7 +153,7 @@ impl Parse for Stmt {
 
 // Whether an expression is a block-like one, which a statement that starts
 // block-like and is not continued parses to
-fn ends_block(expr: &Expr) -> bool {
+pub(crate) fn ends_block(expr: &Expr) -> bool {
     matches!(
         expr,
         Expr::Block(_)

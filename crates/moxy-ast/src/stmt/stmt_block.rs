@@ -19,6 +19,9 @@ impl Parse for StmtBlock {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        // A block nests its statements one level, which the lexer's count of
+        // groups does not cover once parsing recurses through other forms
+        let _depth = moxy_token::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let mut inner_attrs = Attributes::default();
         let stmts = Delimited::parse_brace_with(parser, |parser| {
             inner_attrs = Attributes::parse_inner(parser)?;
@@ -29,6 +32,7 @@ impl Parse for StmtBlock {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        let _depth = moxy_token::Depth::enter()?;
         let mut inner = Attributes::skip_inner(cursor.descend(moxy_token::Delim::Brace)?)?;
 
         while !inner.is_empty() {

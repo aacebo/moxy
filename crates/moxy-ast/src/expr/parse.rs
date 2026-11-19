@@ -108,12 +108,7 @@ fn compound_assign(parser: &Parser, left: Box<Expr>, context: ExprContext) -> Re
     let op = <_ as Parse>::parse(parser)?;
     let right = assignment_right(parser, context)?;
     let ranged = matches!(*right, Expr::Range(_));
-    let assignment = boxed(ExprBinary {
-        attrs: Default::default(),
-        left,
-        op,
-        right,
-    });
+    let assignment = boxed(ExprBinaryChain::new(*left, op, *right));
 
     continue_after_range(parser, assignment, ranged, context)
 }
@@ -272,8 +267,9 @@ fn chain_step(parser: &Parser, chain: &mut Chain) -> Result<(), ParseError> {
     }
 }
 
-// Precedence climbing over the operators at least as strong as `min`. Operators
-// of one strength associate to the left; comparisons do not chain
+// Precedence climbing over the operators at least as strong as `min`. The
+// operators of one strength form one chain node and associate to the left;
+// comparisons do not chain
 fn binary_rest(
     parser: &Parser,
     context: ExprContext,
@@ -288,19 +284,27 @@ fn binary_rest(
             break;
         }
 
-        chain_step(parser, chain)?;
-        let op: BinOp = <_ as Parse>::parse(parser)?;
-        let right = match precedence.next() {
-            Some(stronger) => binary(parser, Default::default(), context, stronger)?,
-            None => cast(parser, Default::default(), context)?,
-        };
-        chain.operand();
+        let mut operands = List::new();
+        operands.push_value(*left);
 
-        left = boxed(ExprBinary {
+        while peek_binary(parser.cursor()).is_some_and(|op| Precedence::of(&op) == precedence) {
+            let op: BinOp = <_ as Parse>::parse(parser)?;
+            let right = match precedence.next() {
+                Some(stronger) => binary(parser, Default::default(), context, stronger)?,
+                None => cast(parser, Default::default(), context)?,
+            };
+            chain.operand();
+            operands.push_punct(op);
+            operands.push_value(*right);
+
+            if precedence == Precedence::Compare {
+                break;
+            }
+        }
+
+        left = boxed(ExprBinaryChain {
             attrs: Default::default(),
-            left,
-            op,
-            right,
+            operands,
         });
 
         if precedence == Precedence::Compare

@@ -287,9 +287,9 @@ fn macro_rules_fragments_keep_their_invisible_groups() {
     let tokens = scaled!(1 + 2);
     let statement: moxy::ast::Stmt = moxy::parse!(tokens).unwrap();
     let local = statement.as_local().unwrap();
-    let product = local.init.as_ref().unwrap().expr.as_binary().unwrap();
-    assert!(product.left.is_group());
-    assert_eq!(product.left.to_token_stream().to_string(), "1 + 2");
+    let product = local.init.as_ref().unwrap().expr.as_binary_chain().unwrap();
+    assert!(product.operands[0].is_group());
+    assert_eq!(product.operands[0].to_token_stream().to_string(), "1 + 2");
 
     let tokens = referenced!(dyn A + B);
     let groups = |tokens: &TokenStream| {

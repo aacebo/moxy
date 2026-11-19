@@ -246,7 +246,7 @@ fn every_node_spans_exactly_its_tokens() {
 #[test]
 fn a_group_closes_at_its_closing_delimiter() {
     let expression: Expr = moxy::parse!("zz + (a * b)").unwrap();
-    let paren = expression.as_binary().unwrap().right.as_paren().unwrap();
+    let paren = expression.as_binary_chain().unwrap().operands[1].as_paren().unwrap();
     let (open, close) = (paren.content.open().byte_range(), paren.content.close().byte_range());
     assert_eq!(close.start - open.start, "(a * b".len());
     assert_eq!(close.len(), 1);

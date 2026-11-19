@@ -9,7 +9,7 @@ fn binary_operator_precedence_is_preserved_in_rendered_expressions() {
         ("flags & mask | extra ^ removed", "flags & mask | extra ^ removed"),
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        assert!(expression.is_binary());
+        assert!(expression.is_binary_chain());
         assert!(!expression.span().is_empty());
         assert_eq!(moxy::fmt!(&expression).unwrap(), expected);
     }

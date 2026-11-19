@@ -23,8 +23,20 @@ impl Attributed for Receiver {
 }
 
 impl Parse for Receiver {
+    // The tokens up to `self` tell a receiver; its type, if any, is read only
+    // by the parse
     fn peek(cursor: Cursor<'_>) -> bool {
-        Self::skip(cursor).is_some()
+        let Some(mut cursor) = Attributes::skip(cursor) else {
+            return false;
+        };
+
+        if <Token![&]>::peek(cursor) {
+            cursor = cursor.offset(1);
+            cursor = Option::<Lifetime>::skip(cursor).unwrap_or(cursor);
+        }
+
+        cursor = Option::<Token![mut]>::skip(cursor).unwrap_or(cursor);
+        <Token![self]>::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {

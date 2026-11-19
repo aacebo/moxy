@@ -30,9 +30,8 @@ impl Parse for TraitRef {
 
 impl Spanner for TraitRef {
     fn span(&self) -> Span {
-        let start = self.polarity.as_ref().map_or_else(|| self.path.span(), Spanner::span);
-
-        start.join(self.path.span())
+        let path = self.path.span();
+        self.polarity.as_ref().map_or(path, |polarity| polarity.span().join(path))
     }
 }
 

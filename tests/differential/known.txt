@@ -65,7 +65,6 @@ ACCEPT f: use a::{::b};
 ACCEPT p: -'a'
 ACCEPT p: [1.., 2]
 ACCEPT p: [1..]
-REJECT f: impl<T> X<T> { type Item; #[inline] fn next() -> Option<T> {} fn advance_by(self, n: usize) -> Result<(), NonZero<usize>> { rem = if len < n {} else {} } }
 TREE f: trait A { pub fn f(); }
 
 # Intentional: rustc rejects these while parsing, as moxy does, and syn accepts

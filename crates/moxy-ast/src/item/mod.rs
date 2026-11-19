@@ -341,7 +341,6 @@ impl Parse for Item {
             || ItemStruct::peek(cursor)
             || ItemEnum::peek(cursor)
             || ItemUnion::peek(cursor)
-            || ItemTraitAlias::peek(cursor)
             || ItemTrait::peek(cursor)
             || ItemImpl::peek(cursor)
             || ItemTypeAlias::peek(cursor)
@@ -371,10 +370,8 @@ impl Parse for Item {
             parse_into::<ItemEnum, Self>
         } else if ItemUnion::peek(parser.cursor()) {
             parse_into::<ItemUnion, Self>
-        } else if ItemTraitAlias::peek(parser.cursor()) {
-            parse_into::<ItemTraitAlias, Self>
         } else if ItemTrait::peek(parser.cursor()) {
-            parse_into::<ItemTrait, Self>
+            ItemTrait::parse_or_alias
         } else if ItemImpl::peek(parser.cursor()) {
             parse_into::<ItemImpl, Self>
         } else if ItemTypeAlias::peek(parser.cursor()) {
@@ -413,10 +410,8 @@ impl Parse for Item {
             ItemEnum::skip(cursor)
         } else if ItemUnion::peek(cursor) {
             ItemUnion::skip(cursor)
-        } else if ItemTraitAlias::peek(cursor) {
-            ItemTraitAlias::skip(cursor)
         } else if ItemTrait::peek(cursor) {
-            ItemTrait::skip(cursor)
+            ItemTrait::skip_or_alias(cursor).map(|(cursor, _)| cursor)
         } else if ItemImpl::peek(cursor) {
             ItemImpl::skip(cursor)
         } else if ItemTypeAlias::peek(cursor) {

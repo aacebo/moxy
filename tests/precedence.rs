@@ -4,7 +4,20 @@ use moxy::token::{ToTokenStream, TokenStream};
 // The expression with every operation in parentheses, so two parses compare by shape
 fn parenthesize(expression: &Expr) -> String {
     match expression {
-        Expr::Binary(v) => format!("({} {} {})", parenthesize(&v.left), compact(&v.op), parenthesize(&v.right)),
+        // A chain stands for its operations nested to the left
+        Expr::BinaryChain(v) => {
+            let mut pairs = v.operands.pairs();
+            let first = pairs.next().unwrap();
+            let mut rendered = parenthesize(first.value());
+            let mut op = first.punct().map(compact);
+
+            for pair in pairs {
+                rendered = format!("({rendered} {} {})", op.unwrap(), parenthesize(pair.value()));
+                op = pair.punct().map(compact);
+            }
+
+            rendered
+        }
         Expr::Assign(v) => format!("({} = {})", parenthesize(&v.left), parenthesize(&v.right)),
         Expr::Unary(v) => format!("({}{})", compact(&v.op), parenthesize(&v.expr)),
         Expr::Reference(v) => {

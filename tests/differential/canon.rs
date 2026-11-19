@@ -169,11 +169,21 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
             mblock(&x.block)
         ),
         E::Await(x) => format!("{}({}.await)", mattrs(&x.attrs), mexpr(&x.base)),
-        E::Binary(x) => format!(
-            "{}{}",
-            mattrs(&x.attrs),
-            grp(format!("{} {} {}", mexpr(&x.left), mt(&x.op), mexpr(&x.right)))
-        ),
+        // A chain renders as the left-nested operations it stands for, the
+        // outermost one with the chain's attributes
+        E::BinaryChain(x) => {
+            let mut pairs = x.operands.pairs();
+            let first = pairs.next().unwrap();
+            let mut rendered = mexpr(first.value());
+            let mut op = first.punct().map(mt);
+
+            for pair in pairs {
+                rendered = grp(format!("{rendered} {} {}", op.unwrap(), mexpr(pair.value())));
+                op = pair.punct().map(mt);
+            }
+
+            format!("{}{rendered}", mattrs(&x.attrs))
+        }
         E::Block(x) => format!(
             "{}{}{}",
             mattrs_with(&x.attrs, &x.block.inner_attrs),
@@ -1057,10 +1067,10 @@ pub(super) fn mitem(i: &m::Item) -> String {
                 .map(|it| match it {
                     m::ImplItem::Fn(f) => format!(
                         "{}{}{} {}",
-                        mattrs_with(&f.attrs, &f.body.inner_attrs),
+                        mattrs_with(&f.attrs, &f.body.as_ref().map(|b| b.inner_attrs.clone()).unwrap_or_default()),
                         mt(&f.vis),
                         msig(&f.sig),
-                        mblock(&f.body)
+                        mbody(&f.body)
                     ),
                     other => format!("tokens<{}>", mt(other)),
                 })

@@ -7,7 +7,7 @@ impl Format for Expr {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         match self {
             Self::Unary(v) => v.format(f),
-            Self::Binary(v) => v.format(f),
+            Self::BinaryChain(v) => v.format(f),
             Self::Block(v) => v.format(f),
             Self::Infer(v) => v.format(f),
             Self::Return(v) => v.format(f),
@@ -292,14 +292,21 @@ impl Format for ExprTry {
     }
 }
 
-impl Format for ExprBinary {
+impl Format for ExprBinaryChain {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
-        self.left.format(f)?;
-        f.text(" ")?;
-        self.op.format(f)?;
-        f.text(" ")?;
-        self.right.format(f)
+
+        for pair in self.operands.pairs() {
+            pair.value().format(f)?;
+
+            if let Some(op) = pair.punct() {
+                f.text(" ")?;
+                op.format(f)?;
+                f.text(" ")?;
+            }
+        }
+
+        Ok(())
     }
 }
 

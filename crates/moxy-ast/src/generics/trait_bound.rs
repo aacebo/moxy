@@ -70,19 +70,22 @@ impl TraitBound {
 }
 
 impl Spanner for TraitBound {
+    // The path spans once, so nested bounds span in linear time
     fn span(&self) -> Span {
+        if let Some(paren) = self.paren {
+            return paren.span();
+        }
+
+        let path = self.path.span();
         let start = self
             .polarity
             .as_ref()
             .map(Spanner::span)
             .or_else(|| self.lifetimes.as_ref().map(Spanner::span))
             .or_else(|| self.modifier.as_ref().map(Spanner::span))
-            .unwrap_or_else(|| self.path.span());
+            .unwrap_or(path);
 
-        match self.paren {
-            Some(paren) => paren.span(),
-            None => start.join(self.path.span()),
-        }
+        start.join(path)
     }
 }
 

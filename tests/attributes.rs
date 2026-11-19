@@ -121,16 +121,16 @@ fn expression_attributes_belong_to_the_operand_that_follows_them() {
     assert!(call.receiver.attrs().unwrap().is_empty());
 
     let expression: Expr = moxy::parse!("#[a] x + y").unwrap();
-    let binary = expression.as_binary().unwrap();
+    let binary = expression.as_binary_chain().unwrap();
     assert!(binary.attrs.is_empty());
-    assert_eq!(binary.left.attrs().unwrap().len(), 1);
-    assert!(binary.right.attrs().unwrap().is_empty());
+    assert_eq!(binary.operands[0].attrs().unwrap().len(), 1);
+    assert!(binary.operands[1].attrs().unwrap().is_empty());
 
     let expression: Expr = moxy::parse!("#[a] -x").unwrap();
     assert_eq!(expression.as_unary().unwrap().attrs.len(), 1);
 
     let expression: Expr = moxy::parse!("x + #[a] y").unwrap();
-    assert_eq!(expression.as_binary().unwrap().right.attrs().unwrap().len(), 1);
+    assert_eq!(expression.as_binary_chain().unwrap().operands[1].attrs().unwrap().len(), 1);
 }
 
 #[test]

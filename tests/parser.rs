@@ -80,7 +80,7 @@ fn delimited_lists_that_stop_early_are_errors() {
         ("fn f(x: u8 y: u8) {}", "unexpected trailing input"),
         ("fn f(x: Vec<u8 u8>) {}", "unexpected trailing input"),
         ("fn f() { g(a b) }", "expected `,` punctuation"),
-        ("fn f() { match x { 1 => a b } }", "expected `=>` punctuation"),
+        ("fn f() { match x { 1 => a b } }", "expected `,` after a match arm"),
         ("fn f() { let s = S { a: 1 b: 2 }; }", "unexpected trailing input"),
         ("fn f() { [1 2] }", "unexpected trailing input"),
         ("fn f() { (1 2) }", "unexpected trailing input"),
@@ -512,4 +512,82 @@ fn assignments_after_ranges_count_against_the_depth() {
         traverse_on_small_stack::<moxy::ast::Expr>(format!("a{}", " = b..".repeat(50))),
         None
     );
+}
+
+#[test]
+fn blocks_count_against_the_same_depth_as_other_nesting() {
+    // Blocks counted only against the lexer's own limit, so blocks and
+    // closures together nested past the stack
+    let message = format!("nesting is deeper than {} levels", moxy::token::MAX_DEPTH);
+    let source = format!("{}{}a{}", "if a { ".repeat(140), "|x| ".repeat(141), " }".repeat(140));
+    assert_eq!(traverse_on_small_stack::<moxy::ast::Expr>(source), Some(message));
+
+    let source = format!("{}{}a{}", "if a { ".repeat(60), "|x| ".repeat(60), " }".repeat(60));
+    assert_eq!(traverse_on_small_stack::<moxy::ast::Expr>(source), None);
+}
+
+#[test]
+fn patterns_with_blocks_in_their_bounds_and_paths_parse_in_linear_time() {
+    // A range peek skipped a bound's block and each path form skipped the
+    // path again, which doubled the work per level
+    let depth = 32;
+    let consts = format!("fn f() {{ {}1{} }}", "let const { ".repeat(depth), " } = 1;".repeat(depth));
+    let turbofish = format!(
+        "fn f() {{ let A::<{}0{}>::B = 1; }}",
+        "{ let A::<".repeat(depth),
+        ">::B = 1; 0 }".repeat(depth)
+    );
+    let ranges = format!(
+        "fn f() {{ match x {{ {}0{} => 1 }} }}",
+        "A::<{ match x { 1..=2 => ".repeat(8),
+        " } }>::B..=C".repeat(8)
+    );
+
+    for (label, source) in [
+        ("const patterns", consts),
+        ("turbofish patterns", turbofish),
+        ("ranges", ranges),
+    ] {
+        within_limit(label, move || moxy::parse!(source as moxy::ast::File).is_ok());
+    }
+
+    for source in [
+        "1..=2",
+        "-1..",
+        "A::B..=C",
+        "<T>::A..",
+        "const { 1 }..=2",
+        "a..=b",
+        "..=b",
+        "..b",
+    ] {
+        let pattern: moxy::ast::Pattern = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert!(matches!(pattern, moxy::ast::Pattern::Range(_)), "`{source}`");
+    }
+
+    for source in ["ref a..=b", "S(x)..=b", "m!().."] {
+        assert!(moxy::parse!(source as moxy::ast::Pattern).is_err(), "`{source}`");
+    }
+}
+
+#[test]
+fn receivers_and_trait_aliases_with_blocks_in_their_types_parse_in_linear_time() {
+    // The receiver peek skipped the receiver's type and the alias peek the
+    // trait's generics before each parsed them again
+    let depth = 18;
+    let receivers = format!(
+        "{}u8{}",
+        "impl A { fn f(self: [u8; { ".repeat(depth),
+        "; 1 }]) {} }".repeat(depth)
+    );
+    let aliases = format!("{}u8{}", "trait A<T = [u8; { ".repeat(depth), "; 1 }]> = B;".repeat(depth));
+
+    for (label, source) in [("receivers", receivers), ("trait aliases", aliases)] {
+        within_limit(label, move || moxy::parse!(source as moxy::ast::File).is_ok());
+    }
+
+    let item: moxy::ast::Item = moxy::parse!("trait A<T> = B<T> + C;").unwrap();
+    assert!(item.is_trait_alias());
+    let item: moxy::ast::Item = moxy::parse!("unsafe trait A<T>: B {}").unwrap();
+    assert!(item.is_trait());
 }

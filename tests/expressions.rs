@@ -9,7 +9,7 @@ fn binary_and_unary_operators_complete_the_expression_pipeline() {
     ] {
         let source = format!("(left) {operator} (right)");
         let expression: Expr = moxy::parse!(source).unwrap();
-        assert!(expression.is_binary());
+        assert!(expression.is_binary_chain());
         assert_eq!(moxy::fmt!(&expression).unwrap(), source);
     }
 
@@ -215,12 +215,12 @@ fn expression_public_variants_match_rendered_syntax() {
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
         assert_eq!(
-            [expression.is_binary(), expression.is_assign(), expression.is_range(),],
+            [expression.is_binary_chain(), expression.is_assign(), expression.is_range(),],
             std::array::from_fn(|index| index == kind)
         );
         assert_eq!(
             [
-                expression.as_binary().is_some(),
+                expression.as_binary_chain().is_some(),
                 expression.as_assign().is_some(),
                 expression.as_range().is_some(),
             ],
@@ -413,7 +413,7 @@ fn a_less_than_after_a_path_is_a_comparison() {
     }
 
     let expression: Expr = moxy::parse!("if n < 2.0 { return 1; }").unwrap();
-    assert!(expression.as_if().unwrap().cond.is_binary());
+    assert!(expression.as_if().unwrap().cond.is_binary_chain());
 }
 
 #[test]
@@ -454,7 +454,7 @@ fn else_branches_end_at_their_block() {
 #[test]
 fn a_cast_type_ends_before_a_binary_plus() {
     let expression: Expr = moxy::parse!("a as usize + 1").unwrap();
-    assert!(expression.is_binary());
+    assert!(expression.is_binary_chain());
     assert_eq!(expression.to_token_stream().to_string(), "a as usize + 1");
 
     let expression: Expr = moxy::parse!("x as Box<dyn A + Send>").unwrap();
@@ -519,7 +519,7 @@ fn comparisons_do_not_chain() {
 
     for source in ["a < b && c > d", "a + b < c * d", "a == b || c != d"] {
         let expression: Expr = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
-        assert!(expression.is_binary());
+        assert!(expression.is_binary_chain());
     }
 }
 
@@ -528,8 +528,8 @@ fn a_cast_type_ends_before_a_comparison() {
     for source in ["a as u8 != b", "x.len() as u64 <= max", "a as i64 >= b", "a as &u8 + 1"] {
         let expression: Expr = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
         let lexed: moxy::token::TokenStream = source.parse().unwrap();
-        assert!(expression.is_binary(), "`{source}`");
-        assert!(expression.as_binary().unwrap().left.is_cast(), "`{source}`");
+        assert!(expression.is_binary_chain(), "`{source}`");
+        assert!(expression.as_binary_chain().unwrap().operands[0].is_cast(), "`{source}`");
         assert_eq!(expression.to_token_stream().to_string(), lexed.to_string());
     }
 
@@ -728,4 +728,24 @@ fn an_optional_operand_ends_at_the_body_of_a_condition() {
 
     let expression: Expr = moxy::parse!("return {}").unwrap();
     assert!(matches!(expression, Expr::Return(value) if value.expr.is_some()));
+}
+
+#[test]
+fn a_match_arm_ends_with_a_comma_unless_its_body_is_block_like() {
+    for source in [
+        "match a { b => {} d => e }",
+        "match a { b => c, d => e }",
+        "match a { b => c }",
+        "match a { b => if x {} else {} c => d }",
+    ] {
+        assert!(moxy::parse!(source as Expr).is_ok(), "`{source}`");
+    }
+
+    for source in [
+        "match a { b => c d => e }",
+        "match a { b => x? d => e }",
+        "match a { b => {}.x d => e }",
+    ] {
+        assert!(moxy::parse!(source as Expr).is_err(), "`{source}`");
+    }
 }

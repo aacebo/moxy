@@ -329,25 +329,10 @@ impl Spanner for Pattern {
 }
 
 impl Parse for Pattern {
+    // A pattern starts here when its first tokens start one of its forms; no
+    // form is read to the end
     fn peek(cursor: Cursor<'_>) -> bool {
-        let cursor = Attributes::skip(cursor).unwrap_or(cursor);
-
-        <Token![|]>::peek(cursor)
-            || PatWild::peek(cursor)
-            || PatRange::peek(cursor)
-            || PatRest::peek(cursor)
-            || PatBox::peek(cursor)
-            || PatConst::peek(cursor)
-            || PatReference::peek(cursor)
-            || PatGroup::peek(cursor)
-            || PatSlice::peek(cursor)
-            || cursor.is_delimited(moxy_token::Delim::Paren)
-            || MacroCall::peek(cursor)
-            || PatTupleStruct::peek(cursor)
-            || PatStruct::peek(cursor)
-            || PatIdent::peek(cursor)
-            || PatPath::peek(cursor)
-            || PatLit::peek(cursor)
+        <Token![|]>::peek(cursor) || !matches!(Form::of_start(cursor), Form::None)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
@@ -414,6 +399,82 @@ impl ToTokens for Pattern {
             Self::Paren(v) => v.to_tokens(t),
             Self::Box(v) => v.to_tokens(t),
             Self::Const(v) => v.to_tokens(t),
+        }
+    }
+}
+
+// The form of a single pattern, told from its first tokens, or for a pattern
+// that starts with a path, from the token after the path
+#[derive(Clone, Copy)]
+pub(crate) enum Form {
+    Wild,
+    RangeWithoutStart,
+    Rest,
+    Box,
+    Const,
+    Reference,
+    Group,
+    Slice,
+    ParenOrTuple,
+    Ident,
+    Macro,
+    TupleStruct,
+    Struct,
+    Path,
+    Lit,
+    None,
+}
+
+impl Form {
+    pub(crate) fn of(cursor: Cursor<'_>) -> Self {
+        match Self::of_start(cursor) {
+            Self::Path => match Self::path_end(cursor) {
+                Some(after) if after.is_delimited(moxy_token::Delim::Paren) => Self::TupleStruct,
+                Some(after) if after.is_delimited(moxy_token::Delim::Brace) => Self::Struct,
+                _ => Self::Path,
+            },
+            form => form,
+        }
+    }
+
+    // The form as far as the first tokens tell it; a path is `Path` here
+    pub(crate) fn of_start(cursor: Cursor<'_>) -> Self {
+        if PatWild::peek(cursor) {
+            Self::Wild
+        } else if PatRange::peek_without_start(cursor) {
+            Self::RangeWithoutStart
+        } else if PatRest::peek(cursor) {
+            Self::Rest
+        } else if PatBox::peek(cursor) {
+            Self::Box
+        } else if PatConst::peek(cursor) {
+            Self::Const
+        } else if PatReference::peek(cursor) {
+            Self::Reference
+        } else if cursor.is_delimited(moxy_token::Delim::None) {
+            Self::Group
+        } else if cursor.is_delimited(moxy_token::Delim::Bracket) {
+            Self::Slice
+        } else if cursor.is_delimited(moxy_token::Delim::Paren) {
+            Self::ParenOrTuple
+        } else if MacroCall::peek(cursor) {
+            Self::Macro
+        } else if PatIdent::peek(cursor) {
+            Self::Ident
+        } else if <Token![<]>::peek(cursor) || Path::peek(cursor) {
+            Self::Path
+        } else if PatLit::peek(cursor) {
+            Self::Lit
+        } else {
+            Self::None
+        }
+    }
+
+    pub(crate) fn path_end(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if <Token![<]>::peek(cursor) {
+            TypePath::skip_expr(cursor)
+        } else {
+            Path::skip_expr(cursor)
         }
     }
 }

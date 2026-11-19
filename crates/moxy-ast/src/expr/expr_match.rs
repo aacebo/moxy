@@ -97,8 +97,16 @@ impl Parse for MatchArm {
     // stack frame holds a pointer instead of the parts of the arm
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let mut arm = Self::parse_head(parser)?;
+        let block_like = super::peek::block_like(Attributes::skip(parser.cursor()).unwrap_or(parser.cursor()));
         arm.body = *super::parse::early(parser)?;
         arm.comma = <_ as Parse>::parse(parser)?;
+
+        // As in rustc, a comma ends an arm unless a block-like body or the end
+        // of the arms does
+        if arm.comma.is_none() && !parser.is_empty() && !(block_like && crate::stmt::ends_block(&arm.body)) {
+            return parser.error("expected `,` after a match arm").into();
+        }
+
         Ok(*arm)
     }
 
@@ -112,8 +120,13 @@ impl Parse for MatchArm {
         }
 
         cursor = <Token![=>]>::skip(cursor)?;
-        cursor = super::skip::early(cursor)?;
-        Option::<Token![,]>::skip(cursor)
+        let (cursor, block_like) = super::skip::early_block_like(cursor)?;
+
+        if <Token![,]>::peek(cursor) {
+            return <Token![,]>::skip(cursor);
+        }
+
+        (block_like || cursor.is_empty()).then_some(cursor)
     }
 }
 

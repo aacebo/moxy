@@ -82,3 +82,31 @@ fn only_a_trait_impl_is_negative() {
     assert_eq!(item.to_token_stream().to_string(), "impl ! A for B {}");
     assert!(moxy::parse!("impl !A {}" as Item).is_err());
 }
+
+#[test]
+fn impl_types_and_functions_may_lack_a_type_or_body_as_rustc_parses_them() {
+    for source in [
+        "impl X { type Item; }",
+        "impl A { fn f(); }",
+        "impl A { fn f() {} type T = u8; }",
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(item.to_token_stream().to_string(), lexed.to_string(), "`{source}`");
+        let formatted = moxy::fmt!(&item).unwrap();
+        assert!(moxy::parse!(formatted as Item).is_ok(), "`{source}`");
+    }
+}
+
+#[test]
+fn a_colon_without_bounds_formats() {
+    for (source, formatted) in [
+        ("type T:;", "type T:;"),
+        ("trait A { type T:; }", "trait A {\n\ttype T:;\n}"),
+        ("extern \"C\" { type T:; }", "extern \"C\" {\n\ttype T:;\n}"),
+        ("type T: A = u8;", "type T: A = u8;"),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(moxy::fmt!(&item).unwrap(), formatted, "`{source}`");
+    }
+}

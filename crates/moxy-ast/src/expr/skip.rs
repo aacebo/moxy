@@ -20,12 +20,9 @@ pub(crate) fn pattern_bound(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     unary(cursor, ExprContext::NORMAL)
 }
 
-pub(crate) fn early(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-    early_block_like(cursor).map(|(cursor, _)| cursor)
-}
-
-// Skips as `early` does, and tells whether a block-like expression ends the
-// statement alone, which then needs no semicolon
+// Skips a statement or arm body as the parser's `early` reads it, and tells
+// whether a block-like expression ends it alone, which then needs no
+// semicolon or comma
 pub(crate) fn early_block_like(cursor: Cursor<'_>) -> Option<(Cursor<'_>, bool)> {
     let start = Attributes::skip(cursor)?;
 

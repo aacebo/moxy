@@ -618,9 +618,13 @@ impl Format for ItemTypeAlias {
         self.ident.format(f)?;
         self.generics.format(f)?;
 
-        if !self.bounds.is_empty() {
-            f.text(": ")?;
-            self.bounds.format(f)?;
+        if self.colon.is_some() {
+            f.text(":")?;
+
+            if !self.bounds.is_empty() {
+                f.text(" ")?;
+                self.bounds.format(f)?;
+            }
         }
 
         self.where_clause.format(f)?;
@@ -783,8 +787,14 @@ impl Format for ImplItemFn {
         }
 
         self.sig.format(f)?;
-        f.text(" ")?;
-        self.body.format(f)
+
+        match &self.body {
+            Some(body) => {
+                f.text(" ")?;
+                body.format(f)
+            }
+            None => f.text(";"),
+        }
     }
 }
 
@@ -833,8 +843,12 @@ impl Format for ImplItemType {
         self.ident.format(f)?;
         self.generics.format(f)?;
         self.generics.where_clause.format(f)?;
-        f.text(" = ")?;
-        self.ty.format(f)?;
+
+        if let Some(ty) = &self.ty {
+            f.text(" = ")?;
+            ty.format(f)?;
+        }
+
         self.where_clause_after.format(f)?;
         f.text(";")
     }
@@ -926,9 +940,13 @@ impl Format for TraitItemType {
         self.ident.format(f)?;
         self.generics.format(f)?;
 
-        if !self.bounds.is_empty() {
-            f.text(": ")?;
-            self.bounds.format(f)?;
+        if self.colon.is_some() {
+            f.text(":")?;
+
+            if !self.bounds.is_empty() {
+                f.text(" ")?;
+                self.bounds.format(f)?;
+            }
         }
 
         self.generics.where_clause.format(f)?;
@@ -1031,9 +1049,13 @@ impl Format for ForeignItemType {
         self.ident.format(f)?;
         self.generics.format(f)?;
 
-        if !self.bounds.is_empty() {
-            f.text(": ")?;
-            self.bounds.format(f)?;
+        if self.colon.is_some() {
+            f.text(":")?;
+
+            if !self.bounds.is_empty() {
+                f.text(" ")?;
+                self.bounds.format(f)?;
+            }
         }
 
         self.generics.where_clause.format(f)?;

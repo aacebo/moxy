@@ -11,7 +11,10 @@ pub struct ImplItemFn {
     pub vis: Visibility,
     pub defaultness: Option<Token![default]>,
     pub sig: Signature,
-    pub body: StmtBlock,
+    /// The body, or none before a `;`, which rustc's parser accepts and the
+    /// compiler rejects later.
+    pub body: Option<StmtBlock>,
+    pub semi: Option<Token![;]>,
 }
 
 impl Attributed for ImplItemFn {
@@ -29,12 +32,23 @@ impl Parse for ImplItemFn {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let attrs = <_ as Parse>::parse(parser)?;
+        let vis = <_ as Parse>::parse(parser)?;
+        let defaultness = <_ as Parse>::parse(parser)?;
+        let sig = Signature::parse_with(parser, false)?;
+        let (body, semi) = if StmtBlock::peek(parser.cursor()) {
+            (Some(<_ as Parse>::parse(parser)?), None)
+        } else {
+            (None, Some(<Token![;]>::parse(parser)?))
+        };
+
         Ok(Self {
-            attrs: <_ as Parse>::parse(parser)?,
-            vis: <_ as Parse>::parse(parser)?,
-            defaultness: <_ as Parse>::parse(parser)?,
-            sig: Signature::parse_with(parser, false)?,
-            body: <_ as Parse>::parse(parser)?,
+            attrs,
+            vis,
+            defaultness,
+            sig,
+            body,
+            semi,
         })
     }
 
@@ -43,7 +57,12 @@ impl Parse for ImplItemFn {
         cursor = Visibility::skip(cursor)?;
         cursor = Option::<Token![default]>::skip(cursor)?;
         cursor = Signature::skip_with(cursor, false)?;
-        StmtBlock::skip(cursor)
+
+        if StmtBlock::peek(cursor) {
+            StmtBlock::skip(cursor)
+        } else {
+            <Token![;]>::skip(cursor)
+        }
     }
 }
 
@@ -60,5 +79,6 @@ impl ToTokens for ImplItemFn {
         self.defaultness.to_tokens(t);
         self.sig.to_tokens(t);
         self.body.to_tokens(t);
+        self.semi.to_tokens(t);
     }
 }
