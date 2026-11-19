@@ -40,3 +40,28 @@ fn reject() {
         assert!(!token.is_literal());
     }
 }
+
+#[test]
+fn string_line_continuations_skip_the_newline_and_indentation() {
+    let tokens: TokenStream = "\"first \\\n    second\" 'x' b\"one \\\r\n\ttwo\" c\"a \\\n b\""
+        .parse()
+        .unwrap();
+    let literals: Vec<moxy_token::Lit> = tokens
+        .iter()
+        .map(|token| token.as_literal().expect("expected a literal").clone())
+        .collect();
+
+    assert_eq!(literals.len(), 4);
+    let moxy_token::Lit::Str(text) = &literals[0] else {
+        panic!("expected a string");
+    };
+    assert_eq!(text.value(), "first second");
+    let moxy_token::Lit::ByteStr(bytes) = &literals[2] else {
+        panic!("expected a byte string");
+    };
+    assert_eq!(bytes.value(), b"one two");
+    let moxy_token::Lit::CStr(c_text) = &literals[3] else {
+        panic!("expected a C string");
+    };
+    assert_eq!(c_text.value(), b"a b");
+}
