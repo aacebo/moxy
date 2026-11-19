@@ -23,15 +23,9 @@ define_visit! {
         variants {
             Unary(visit_expr_unary / visit_expr_unary_mut),
             Cast(visit_expr_cast / visit_expr_cast_mut),
-            Try(visit_expr_try / visit_expr_try_mut),
             BinaryChain(visit_expr_binary_chain / visit_expr_binary_chain_mut),
             Assign(visit_expr_assign / visit_expr_assign_mut),
             Range(visit_expr_range / visit_expr_range_mut),
-            Call(visit_expr_call / visit_expr_call_mut),
-            MethodCall(visit_expr_method_call / visit_expr_method_call_mut),
-            Field(visit_expr_field / visit_expr_field_mut),
-            Index(visit_expr_index / visit_expr_index_mut),
-            Await(visit_expr_await / visit_expr_await_mut),
             Block(visit_expr_block / visit_expr_block_mut),
             If(visit_expr_if / visit_expr_if_mut),
             While(visit_expr_while / visit_expr_while_mut),
@@ -48,6 +42,7 @@ define_visit! {
             Yield(visit_expr_yield / visit_expr_yield_mut),
             Lit(visit_expr_lit / visit_expr_lit_mut),
             Path(visit_expr_path / visit_expr_path_mut),
+            Postfix(visit_expr_postfix / visit_expr_postfix_mut),
             Struct(visit_expr_struct / visit_expr_struct_mut),
             Closure(visit_expr_closure / visit_expr_closure_mut),
             Tuple(visit_expr_tuple / visit_expr_tuple_mut),
@@ -92,13 +87,32 @@ define_visit! {
             ty: box => visit_type / visit_type_mut,
         }
     }
-    struct ExprTry {
-        visit: visit_expr_try, visit_mut: visit_expr_try_mut,
-        walk: walk_expr_try, walk_mut: walk_expr_try_mut,
+    struct PostfixTry {
+        visit: visit_postfix_try, visit_mut: visit_postfix_try_mut,
+        walk: walk_postfix_try, walk_mut: walk_postfix_try_mut,
+        fields {
+            question_punct: skip,
+        }
+    }
+    struct ExprPostfix {
+        visit: visit_expr_postfix, visit_mut: visit_expr_postfix_mut,
+        walk: walk_expr_postfix, walk_mut: walk_expr_postfix_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
-            expr: box => visit_expr / visit_expr_mut,
-            question_punct: skip,
+            base: box => visit_expr / visit_expr_mut,
+            ops: vec => visit_postfix / visit_postfix_mut,
+        }
+    }
+    enum Postfix {
+        visit: visit_postfix, visit_mut: visit_postfix_mut,
+        walk: walk_postfix, walk_mut: walk_postfix_mut,
+        variants {
+            Call(visit_postfix_call / visit_postfix_call_mut),
+            MethodCall(visit_postfix_method_call / visit_postfix_method_call_mut),
+            Field(visit_postfix_field / visit_postfix_field_mut),
+            Index(visit_postfix_index / visit_postfix_index_mut),
+            Try(visit_postfix_try / visit_postfix_try_mut),
+            Await(visit_postfix_await / visit_postfix_await_mut),
         }
     }
     struct ExprBinaryChain {
@@ -129,52 +143,42 @@ define_visit! {
             end: opt_box => visit_expr / visit_expr_mut,
         }
     }
-    struct ExprCall {
-        visit: visit_expr_call, visit_mut: visit_expr_call_mut,
-        walk: walk_expr_call, walk_mut: walk_expr_call_mut,
+    struct PostfixCall {
+        visit: visit_postfix_call, visit_mut: visit_postfix_call_mut,
+        walk: walk_postfix_call, walk_mut: walk_postfix_call_mut,
         fields {
-            attrs => visit_attributes / visit_attributes_mut,
-            func: box => visit_expr / visit_expr_mut,
             args: seq_punct => visit_expr / visit_expr_mut,
         }
     }
-    struct ExprMethodCall {
-        visit: visit_expr_method_call, visit_mut: visit_expr_method_call_mut,
-        walk: walk_expr_method_call, walk_mut: walk_expr_method_call_mut,
+    struct PostfixMethodCall {
+        visit: visit_postfix_method_call, visit_mut: visit_postfix_method_call_mut,
+        walk: walk_postfix_method_call, walk_mut: walk_postfix_method_call_mut,
         fields {
-            attrs => visit_attributes / visit_attributes_mut,
-            receiver: box => visit_expr / visit_expr_mut,
             dot: skip,
             method: skip,
             turbofish: opt => visit_angle_arguments / visit_angle_arguments_mut,
             args: seq_punct => visit_expr / visit_expr_mut,
         }
     }
-    struct ExprField {
-        visit: visit_expr_field, visit_mut: visit_expr_field_mut,
-        walk: walk_expr_field, walk_mut: walk_expr_field_mut,
+    struct PostfixField {
+        visit: visit_postfix_field, visit_mut: visit_postfix_field_mut,
+        walk: walk_postfix_field, walk_mut: walk_postfix_field_mut,
         fields {
-            attrs => visit_attributes / visit_attributes_mut,
-            base: box => visit_expr / visit_expr_mut,
             dot: skip,
             member: skip,
         }
     }
-    struct ExprIndex {
-        visit: visit_expr_index, visit_mut: visit_expr_index_mut,
-        walk: walk_expr_index, walk_mut: walk_expr_index_mut,
+    struct PostfixIndex {
+        visit: visit_postfix_index, visit_mut: visit_postfix_index_mut,
+        walk: walk_postfix_index, walk_mut: walk_postfix_index_mut,
         fields {
-            attrs => visit_attributes / visit_attributes_mut,
-            base: box => visit_expr / visit_expr_mut,
             index: delim => visit_expr / visit_expr_mut,
         }
     }
-    struct ExprAwait {
-        visit: visit_expr_await, visit_mut: visit_expr_await_mut,
-        walk: walk_expr_await, walk_mut: walk_expr_await_mut,
+    struct PostfixAwait {
+        visit: visit_postfix_await, visit_mut: visit_postfix_await_mut,
+        walk: walk_postfix_await, walk_mut: walk_postfix_await_mut,
         fields {
-            attrs => visit_attributes / visit_attributes_mut,
-            base: box => visit_expr / visit_expr_mut,
             dot: skip,
             await_keyword: skip,
         }

@@ -168,7 +168,6 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
             if x.move_keyword.is_some() { " move" } else { "" },
             mblock(&x.block)
         ),
-        E::Await(x) => format!("{}({}.await)", mattrs(&x.attrs), mexpr(&x.base)),
         // A chain renders as the left-nested operations it stands for, the
         // outermost one with the chain's attributes
         E::BinaryChain(x) => {
@@ -196,12 +195,6 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
             x.label.as_ref().map(mt).unwrap_or_default(),
             mopt(&x.expr)
         ),
-        E::Call(x) => format!(
-            "{}call({}; {})",
-            mattrs(&x.attrs),
-            mexpr(&x.func),
-            x.args.iter().map(mexpr).collect::<Vec<_>>().join(",")
-        ),
         E::Cast(x) => format!("{}({} as {})", mattrs(&x.attrs), mexpr(&x.expr), mt(&*x.ty)),
         E::Closure(x) => format!(
             "{}closure[{}{}{}{}{}|{}|{}]{}",
@@ -228,7 +221,6 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
             mattrs(&x.attrs),
             x.label.as_ref().map(mt).unwrap_or_default()
         ),
-        E::Field(x) => format!("{}({}.{})", mattrs(&x.attrs), mexpr(&x.base), mt(&x.member)),
         E::ForLoop(x) => format!(
             "{}{}for {} in {} {}",
             mattrs_with(&x.attrs, &x.body.inner_attrs),
@@ -248,7 +240,6 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
                 .map(|e| format!(" else {}", mexpr(e)))
                 .unwrap_or_default()
         ),
-        E::Index(x) => format!("{}idx({}; {})", mattrs(&x.attrs), mexpr(&x.base), mexpr(&x.index)),
         E::Infer(x) => format!("{}_", mattrs(&x.attrs)),
         E::Let(x) => format!(
             "{}{}",
@@ -279,14 +270,31 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
                 .collect::<Vec<_>>()
                 .join(", ")
         ),
-        E::MethodCall(x) => format!(
-            "{}mc({}.{}{}; {})",
-            mattrs(&x.attrs),
-            mexpr(&x.receiver),
-            mt(&x.method),
-            x.turbofish.as_ref().map(mt).unwrap_or_default(),
-            x.args.iter().map(mexpr).collect::<Vec<_>>().join(",")
-        ),
+        // A chain renders as the nested operations it stands for, the outermost
+        // one with the chain's attributes
+        E::Postfix(x) => {
+            let mut rendered = mexpr(&x.base);
+
+            for op in &x.ops {
+                rendered = match op {
+                    m::Postfix::Call(c) => {
+                        format!("call({rendered}; {})", c.args.iter().map(mexpr).collect::<Vec<_>>().join(","))
+                    }
+                    m::Postfix::MethodCall(c) => format!(
+                        "mc({rendered}.{}{}; {})",
+                        mt(&c.method),
+                        c.turbofish.as_ref().map(mt).unwrap_or_default(),
+                        c.args.iter().map(mexpr).collect::<Vec<_>>().join(",")
+                    ),
+                    m::Postfix::Field(f) => format!("({rendered}.{})", mt(&f.member)),
+                    m::Postfix::Index(i) => format!("idx({rendered}; {})", mexpr(&i.index)),
+                    m::Postfix::Try(_) => format!("({rendered}?)"),
+                    m::Postfix::Await(_) => format!("({rendered}.await)"),
+                };
+            }
+
+            format!("{}{rendered}", mattrs(&x.attrs))
+        }
         E::Paren(x) => format!("{}paren({})", mattrs(&x.attrs), mexpr(&x.content)),
         E::Path(x) => format!("{}path<{}>", mattrs(&x.attrs), mt(x).trim_start_matches(&mt(&x.attrs))),
         E::Range(x) => format!(
@@ -332,7 +340,6 @@ pub(super) fn mexpr(e: &m::Expr) -> String {
                 .map(|e| format!(" ..{}", mexpr(e)))
                 .unwrap_or_default()
         ),
-        E::Try(x) => format!("{}({}?)", mattrs(&x.attrs), mexpr(&x.expr)),
         E::TryBlock(x) => format!("{}try{}", mattrs_with(&x.attrs, &x.block.inner_attrs), mblock(&x.block)),
         E::Tuple(x) => format!(
             "{}tup({})",

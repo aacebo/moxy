@@ -2,44 +2,35 @@ use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
-/// A method call expression: `receiver.method(args)`, `x.collect::<Vec<_>>()`.
+/// A method call on the expression before it: `.method(args)` in
+/// `receiver.method(args)`, `.collect::<Vec<_>>()`.
 #[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
-pub struct ExprMethodCall {
-    pub attrs: Attributes,
-    pub receiver: Box<Expr>,
+pub struct PostfixMethodCall {
     pub dot: Token![.],
     pub method: Ident,
     pub turbofish: Option<AngleArguments>,
     pub args: Delimited<List<Expr, Token![,]>>,
 }
 
-impl Attributed for ExprMethodCall {
-    fn attrs(&self) -> &[Attribute] {
-        &self.attrs
-    }
-}
-
-impl From<ExprMethodCall> for Expr {
-    fn from(value: ExprMethodCall) -> Self {
-        Self::MethodCall(value)
-    }
-}
-
-impl Spanner for ExprMethodCall {
+impl Spanner for PostfixMethodCall {
     fn span(&self) -> Span {
         self.to_token_stream().span()
     }
 }
 
-impl ToTokens for ExprMethodCall {
+impl ToTokens for PostfixMethodCall {
     fn to_tokens(&self, t: &mut TokenStream) {
-        self.attrs.to_tokens(t);
-        self.receiver.to_tokens(t);
         self.dot.to_tokens(t);
         self.method.to_tokens(t);
         self.turbofish.to_tokens(t);
         self.args.to_tokens(t);
+    }
+}
+
+impl From<PostfixMethodCall> for Postfix {
+    fn from(value: PostfixMethodCall) -> Self {
+        Self::MethodCall(value)
     }
 }

@@ -2,40 +2,31 @@ use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
-/// A field access expression: `x.field`, `tuple.0`.
+/// A field access on the expression before it: `.field` in `x.field`, `.0` in
+/// `tuple.0`.
 #[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
-pub struct ExprField {
-    pub attrs: Attributes,
-    pub base: Box<Expr>,
+pub struct PostfixField {
     pub dot: Token![.],
     pub member: Member,
 }
 
-impl Attributed for ExprField {
-    fn attrs(&self) -> &[Attribute] {
-        &self.attrs
-    }
-}
-
-impl From<ExprField> for Expr {
-    fn from(value: ExprField) -> Self {
-        Self::Field(value)
-    }
-}
-
-impl Spanner for ExprField {
+impl Spanner for PostfixField {
     fn span(&self) -> Span {
         self.to_token_stream().span()
     }
 }
 
-impl ToTokens for ExprField {
+impl ToTokens for PostfixField {
     fn to_tokens(&self, t: &mut TokenStream) {
-        self.attrs.to_tokens(t);
-        self.base.to_tokens(t);
         self.dot.to_tokens(t);
         self.member.to_tokens(t);
+    }
+}
+
+impl From<PostfixField> for Postfix {
+    fn from(value: PostfixField) -> Self {
+        Self::Field(value)
     }
 }

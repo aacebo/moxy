@@ -1,4 +1,4 @@
-use moxy::ast::{Expr, Type};
+use moxy::ast::{Expr, Postfix, Type};
 use moxy::token::{Spanner, ToTokenStream};
 
 #[test]
@@ -143,13 +143,7 @@ fn postfix_expression_families_complete_the_pipeline() {
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
         assert_eq!(
-            [
-                expression.is_call(),
-                expression.is_method_call(),
-                expression.is_field(),
-                expression.is_index(),
-                expression.is_await(),
-            ],
+            postfix_kinds(&expression),
             std::array::from_fn(|index| index == expected_kind)
         );
         assert!(!expression.span().is_empty());
@@ -164,7 +158,7 @@ fn expression_syntax_has_concrete_serde_tags_and_exact_output() {
     for (source, variant, expected) in [
         ("-value", "Unary", "-value"),
         ("target = value", "Assign", "target = value"),
-        ("function(a)", "Call", "function(a)"),
+        ("function(a)", "Postfix", "function(a)"),
         ("if ready { yes() }", "If", "if ready {\n\tyes()\n}"),
         ("return value", "Return", "return value"),
         ("[a, b]", "Array", "[a, b]"),
@@ -191,7 +185,7 @@ fn expression_public_variants_match_rendered_syntax() {
                 expression.is_reference(),
                 expression.is_unary(),
                 expression.is_cast(),
-                expression.is_try(),
+                matches!(last_op(&expression), Some(Postfix::Try(_))),
             ],
             std::array::from_fn(|index| index == kind)
         );
@@ -200,7 +194,7 @@ fn expression_public_variants_match_rendered_syntax() {
                 expression.as_reference().is_some(),
                 expression.as_unary().is_some(),
                 expression.as_cast().is_some(),
-                expression.as_try().is_some(),
+                expression.as_postfix().is_some(),
             ],
             std::array::from_fn(|index| index == kind)
         );
@@ -238,26 +232,7 @@ fn expression_public_variants_match_rendered_syntax() {
         ("future.await", "future.await", 4),
     ] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        assert_eq!(
-            [
-                expression.is_call(),
-                expression.is_method_call(),
-                expression.is_field(),
-                expression.is_index(),
-                expression.is_await(),
-            ],
-            std::array::from_fn(|index| index == kind)
-        );
-        assert_eq!(
-            [
-                expression.as_call().is_some(),
-                expression.as_method_call().is_some(),
-                expression.as_field().is_some(),
-                expression.as_index().is_some(),
-                expression.as_await().is_some(),
-            ],
-            std::array::from_fn(|index| index == kind)
-        );
+        assert_eq!(postfix_kinds(&expression), std::array::from_fn(|index| index == kind));
         assert!(expression.attrs().unwrap().is_empty());
         assert_eq!(moxy::fmt!(&expression).unwrap(), expected);
     }
@@ -429,8 +404,8 @@ fn block_bodied_match_arms_end_without_a_comma() {
     // A method call, field access, or `?` continues the block
     let expression: Expr = moxy::parse!("match x { a => { y }.len(), b => { z }?, }").unwrap();
     let arms = &expression.as_match().unwrap().arms.inner;
-    assert!(arms[0].body.is_method_call());
-    assert!(arms[1].body.is_try());
+    assert!(matches!(last_op(&arms[0].body), Some(Postfix::MethodCall(_))));
+    assert!(matches!(last_op(&arms[1].body), Some(Postfix::Try(_))));
 
     let expression: Expr = moxy::parse!("match x { (1, _) => const { 1 } (_, _) => 3 }").unwrap();
     assert_eq!(expression.as_match().unwrap().arms.inner.len(), 2);
@@ -444,7 +419,9 @@ fn else_branches_end_at_their_block() {
 
     // The index applies to the whole `if`, not to the else block
     let expression: Expr = moxy::parse!("if a { 1 } else { 2 }[0]").unwrap();
-    let base = &expression.as_index().unwrap().base;
+    let chain = expression.as_postfix().unwrap();
+    assert!(matches!(chain.ops[..], [Postfix::Index(_)]));
+    let base = &chain.base;
     assert!(base.as_if().unwrap().else_branch.as_ref().unwrap().is_block());
 
     let error = moxy::parse!("if a { 1 } else 2" as Expr).err().unwrap();
@@ -585,7 +562,10 @@ fn an_absent_operand_ends_before_a_separator() {
     assert!(arms[0].body.as_return().unwrap().expr.is_none());
 
     let expression: Expr = moxy::parse!("f(return, 1)").unwrap();
-    let args = &expression.as_call().unwrap().args.inner;
+    let Some(Postfix::Call(call)) = last_op(&expression) else {
+        panic!("expected a call");
+    };
+    let args = &call.args.inner;
     assert_eq!(args.len(), 2);
     assert!(args.iter().next().unwrap().as_return().unwrap().expr.is_none());
 
@@ -602,9 +582,17 @@ fn a_float_after_a_field_dot_is_two_tuple_indices() {
     }
 
     let expression: Expr = moxy::parse!("a.0.1").unwrap();
-    let outer = expression.as_field().unwrap();
-    assert_eq!(outer.member.to_token_stream().to_string(), "1");
-    assert_eq!(outer.base.as_field().unwrap().member.to_token_stream().to_string(), "0");
+    let members: Vec<String> = expression
+        .as_postfix()
+        .unwrap()
+        .ops
+        .iter()
+        .map(|op| match op {
+            Postfix::Field(field) => field.member.to_token_stream().to_string(),
+            _ => panic!("expected a field access"),
+        })
+        .collect();
+    assert_eq!(members, ["0", "1"]);
 
     // A float the compiler gives as one token splits the same way
     let tokens: moxy::token::TokenStream = [
@@ -615,7 +603,10 @@ fn a_float_after_a_field_dot_is_two_tuple_indices() {
     .into_iter()
     .collect();
     let expression: Expr = moxy::parse!(tokens).unwrap();
-    assert!(expression.as_field().unwrap().base.is_field());
+    assert!(matches!(
+        expression.as_postfix().unwrap().ops[..],
+        [Postfix::Field(_), Postfix::Field(_)]
+    ));
 
     // After a range, `0.1` stays a float
     let expression: Expr = moxy::parse!("a..0.1").unwrap();
@@ -641,7 +632,7 @@ fn a_token_that_starts_no_expression_is_an_error() {
     }
 
     let expression: Expr = moxy::parse!("return.x").unwrap();
-    assert!(expression.as_field().unwrap().base.as_return().unwrap().expr.is_none());
+    assert!(expression.as_postfix().unwrap().base.as_return().unwrap().expr.is_none());
 
     let expression: Expr = moxy::parse!("S { a, .. } = b").unwrap();
     let body = &expression.as_assign().unwrap().left.as_struct().unwrap().body.inner;
@@ -672,7 +663,7 @@ fn skipping_an_expression_ends_where_parsing_it_ends() {
 #[test]
 fn a_closure_with_a_return_type_takes_a_block_and_an_inclusive_range_an_end() {
     let expression: Expr = moxy::parse!("|| -> u8 { 1 }.x").unwrap();
-    assert!(expression.as_field().unwrap().base.is_closure());
+    assert!(expression.as_postfix().unwrap().base.is_closure());
 
     for (source, message) in [
         ("|x: u8| -> u8 x", "expected a block after the closure's return type"),
@@ -697,7 +688,7 @@ fn any_unsuffixed_integer_after_a_field_dot_is_a_tuple_index() {
     ] {
         let expression: Expr = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
         assert!(
-            matches!(&expression, Expr::Field(field) if field.member.is_unnamed()),
+            matches!(last_op(&expression), Some(Postfix::Field(field)) if field.member.is_unnamed()),
             "`{source}`"
         );
         assert_eq!(expression.to_token_stream().to_string(), emitted);
@@ -748,4 +739,21 @@ fn a_match_arm_ends_with_a_comma_unless_its_body_is_block_like() {
     ] {
         assert!(moxy::parse!(source as Expr).is_err(), "`{source}`");
     }
+}
+
+// The last postfix operation of an expression that is a postfix chain
+fn last_op(expression: &Expr) -> Option<&Postfix> {
+    expression.as_postfix().and_then(|chain| chain.ops.last())
+}
+
+// Which of a call, method call, field access, index, and await ends a chain
+fn postfix_kinds(expression: &Expr) -> [bool; 5] {
+    let op = last_op(expression);
+    [
+        matches!(op, Some(Postfix::Call(_))),
+        matches!(op, Some(Postfix::MethodCall(_))),
+        matches!(op, Some(Postfix::Field(_))),
+        matches!(op, Some(Postfix::Index(_))),
+        matches!(op, Some(Postfix::Await(_))),
+    ]
 }

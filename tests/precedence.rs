@@ -1,4 +1,4 @@
-use moxy::ast::{ClosurePipes, Expr, RangeLimits};
+use moxy::ast::{ClosurePipes, Expr, Postfix, RangeLimits};
 use moxy::token::{ToTokenStream, TokenStream};
 
 // The expression with every operation in parentheses, so two parses compare by shape
@@ -34,12 +34,23 @@ fn parenthesize(expression: &Expr) -> String {
             let end = v.end.as_deref().map(parenthesize).unwrap_or_default();
             format!("({start}{limits}{end})")
         }
-        Expr::MethodCall(v) => format!("({}.{}({}))", parenthesize(&v.receiver), v.method, list(v.args.inner.iter())),
-        Expr::Field(v) => format!("({}.{})", parenthesize(&v.base), compact(&v.member)),
-        Expr::Call(v) => format!("({}({}))", parenthesize(&v.func), list(v.args.inner.iter())),
-        Expr::Index(v) => format!("({}[{}])", parenthesize(&v.base), parenthesize(&v.index.inner)),
-        Expr::Try(v) => format!("({}?)", parenthesize(&v.expr)),
-        Expr::Await(v) => format!("({}.await)", parenthesize(&v.base)),
+        // A chain stands for its operations nested to the left
+        Expr::Postfix(v) => {
+            let mut rendered = parenthesize(&v.base);
+
+            for op in &v.ops {
+                rendered = match op {
+                    Postfix::MethodCall(c) => format!("({rendered}.{}({}))", c.method, list(c.args.inner.iter())),
+                    Postfix::Field(f) => format!("({rendered}.{})", compact(&f.member)),
+                    Postfix::Call(c) => format!("({rendered}({}))", list(c.args.inner.iter())),
+                    Postfix::Index(i) => format!("({rendered}[{}])", parenthesize(&i.index.inner)),
+                    Postfix::Try(_) => format!("({rendered}?)"),
+                    Postfix::Await(_) => format!("({rendered}.await)"),
+                };
+            }
+
+            rendered
+        }
         Expr::Paren(v) => format!("({})", parenthesize(&v.content.inner)),
         Expr::Let(v) => format!("(let {} = {})", compact(&v.pat), parenthesize(&v.expr)),
         Expr::Closure(v) => {

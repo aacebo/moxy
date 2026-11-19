@@ -122,7 +122,9 @@ fn a_macro_call_that_an_operator_follows_is_an_expression_statement() {
     let moxy::ast::Stmt::Expr(expression, Some(_)) = &block.stmts.inner[0] else {
         panic!("expected an expression statement");
     };
-    assert!(expression.as_try().unwrap().expr.is_macro());
+    let chain = expression.as_postfix().unwrap();
+    assert!(chain.base.is_macro());
+    assert!(matches!(chain.ops[..], [moxy::ast::Postfix::Try(_)]));
 
     let block: moxy::ast::StmtBlock = moxy::parse!("{ matches!(a, B) || c }").unwrap();
     assert_eq!(block.stmts.inner.len(), 1);

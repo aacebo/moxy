@@ -63,7 +63,7 @@ fn self_relative_paths_preserve_ast_structure_and_formatting() {
 fn turbofish_paths_render_complete_valid_syntax() {
     for source in ["function::<T>(a, b)", "object.method::<T>(a, b)"] {
         let expression: Expr = moxy::parse!(source).unwrap();
-        assert!(expression.is_call() || expression.is_method_call());
+        assert!(expression.is_postfix());
         assert!(!expression.span().is_empty());
         assert_eq!(moxy::fmt!(&expression).unwrap(), source);
     }

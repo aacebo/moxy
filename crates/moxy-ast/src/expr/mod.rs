@@ -1,42 +1,43 @@
 mod expr_array;
 mod expr_assign;
 mod expr_async;
-mod expr_await;
 mod expr_binary_chain;
 mod expr_block;
 mod expr_break;
-mod expr_call;
 mod expr_cast;
 mod expr_closure;
 mod expr_const;
 mod expr_continue;
-mod expr_field;
 mod expr_for_loop;
 mod expr_group;
 mod expr_if;
-mod expr_index;
 mod expr_infer;
 mod expr_let;
 mod expr_lit;
 mod expr_loop;
 mod expr_macro;
 mod expr_match;
-mod expr_method_call;
 mod expr_paren;
 mod expr_path;
+mod expr_postfix;
 mod expr_range;
 mod expr_raw_addr;
 mod expr_reference;
 mod expr_repeat;
 mod expr_return;
 mod expr_struct;
-mod expr_try;
 mod expr_try_block;
 mod expr_tuple;
 mod expr_unary;
 mod expr_unsafe;
 mod expr_while;
 mod expr_yield;
+mod postfix_await;
+mod postfix_call;
+mod postfix_field;
+mod postfix_index;
+mod postfix_method_call;
+mod postfix_try;
 
 pub(crate) mod parse;
 pub(crate) mod peek;
@@ -45,42 +46,43 @@ pub(crate) mod skip;
 pub use expr_array::*;
 pub use expr_assign::*;
 pub use expr_async::*;
-pub use expr_await::*;
 pub use expr_binary_chain::*;
 pub use expr_block::*;
 pub use expr_break::*;
-pub use expr_call::*;
 pub use expr_cast::*;
 pub use expr_closure::*;
 pub use expr_const::*;
 pub use expr_continue::*;
-pub use expr_field::*;
 pub use expr_for_loop::*;
 pub use expr_group::*;
 pub use expr_if::*;
-pub use expr_index::*;
 pub use expr_infer::*;
 pub use expr_let::*;
 pub use expr_lit::*;
 pub use expr_loop::*;
 pub use expr_macro::*;
 pub use expr_match::*;
-pub use expr_method_call::*;
 pub use expr_paren::*;
 pub use expr_path::*;
+pub use expr_postfix::*;
 pub use expr_range::*;
 pub use expr_raw_addr::*;
 pub use expr_reference::*;
 pub use expr_repeat::*;
 pub use expr_return::*;
 pub use expr_struct::*;
-pub use expr_try::*;
 pub use expr_try_block::*;
 pub use expr_tuple::*;
 pub use expr_unary::*;
 pub use expr_unsafe::*;
 pub use expr_while::*;
 pub use expr_yield::*;
+pub use postfix_await::*;
+pub use postfix_call::*;
+pub use postfix_field::*;
+pub use postfix_index::*;
+pub use postfix_method_call::*;
+pub use postfix_try::*;
 
 use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 
@@ -95,36 +97,31 @@ pub enum Expr {
     Array(ExprArray),
     Assign(ExprAssign),
     Async(ExprAsync),
-    Await(ExprAwait),
     BinaryChain(ExprBinaryChain),
     Block(ExprBlock),
     Break(ExprBreak),
-    Call(ExprCall),
     Cast(ExprCast),
     Closure(ExprClosure),
     Const(ExprConst),
     Continue(ExprContinue),
-    Field(ExprField),
     ForLoop(ExprForLoop),
     Group(ExprGroup),
     If(ExprIf),
-    Index(ExprIndex),
     Infer(ExprInfer),
     Let(ExprLet),
     Lit(ExprLit),
     Loop(ExprLoop),
     Macro(ExprMacro),
     Match(ExprMatch),
-    MethodCall(ExprMethodCall),
     Paren(ExprParen),
     Path(ExprPath),
+    Postfix(ExprPostfix),
     Range(ExprRange),
     RawAddr(ExprRawAddr),
     Reference(ExprReference),
     Repeat(ExprRepeat),
     Return(ExprReturn),
     Struct(ExprStruct),
-    Try(ExprTry),
     TryBlock(ExprTryBlock),
     Tuple(ExprTuple),
     Unary(ExprUnary),
@@ -140,36 +137,31 @@ impl Expr {
             Self::Array(v) => Some(&v.attrs),
             Self::Assign(v) => Some(&v.attrs),
             Self::Async(v) => Some(&v.attrs),
-            Self::Await(v) => Some(&v.attrs),
             Self::BinaryChain(v) => Some(&v.attrs),
             Self::Block(v) => Some(&v.attrs),
             Self::Break(v) => Some(&v.attrs),
-            Self::Call(v) => Some(&v.attrs),
             Self::Cast(v) => Some(&v.attrs),
             Self::Closure(v) => Some(&v.attrs),
             Self::Const(v) => Some(&v.attrs),
             Self::Continue(v) => Some(&v.attrs),
-            Self::Field(v) => Some(&v.attrs),
             Self::ForLoop(v) => Some(&v.attrs),
             Self::Group(v) => Some(&v.attrs),
             Self::If(v) => Some(&v.attrs),
-            Self::Index(v) => Some(&v.attrs),
             Self::Infer(v) => Some(&v.attrs),
             Self::Let(v) => Some(&v.attrs),
             Self::Lit(v) => Some(&v.attrs),
             Self::Loop(v) => Some(&v.attrs),
             Self::Macro(v) => Some(&v.attrs),
             Self::Match(v) => Some(&v.attrs),
-            Self::MethodCall(v) => Some(&v.attrs),
             Self::Paren(v) => Some(&v.attrs),
             Self::Path(v) => Some(&v.attrs),
+            Self::Postfix(v) => Some(&v.attrs),
             Self::Range(v) => Some(&v.attrs),
             Self::RawAddr(v) => Some(&v.attrs),
             Self::Reference(v) => Some(&v.attrs),
             Self::Repeat(v) => Some(&v.attrs),
             Self::Return(v) => Some(&v.attrs),
             Self::Struct(v) => Some(&v.attrs),
-            Self::Try(v) => Some(&v.attrs),
             Self::TryBlock(v) => Some(&v.attrs),
             Self::Tuple(v) => Some(&v.attrs),
             Self::Unary(v) => Some(&v.attrs),
@@ -185,36 +177,31 @@ impl Expr {
             Self::Array(v) => Some(&mut v.attrs),
             Self::Assign(v) => Some(&mut v.attrs),
             Self::Async(v) => Some(&mut v.attrs),
-            Self::Await(v) => Some(&mut v.attrs),
             Self::BinaryChain(v) => Some(&mut v.attrs),
             Self::Block(v) => Some(&mut v.attrs),
             Self::Break(v) => Some(&mut v.attrs),
-            Self::Call(v) => Some(&mut v.attrs),
             Self::Cast(v) => Some(&mut v.attrs),
             Self::Closure(v) => Some(&mut v.attrs),
             Self::Const(v) => Some(&mut v.attrs),
             Self::Continue(v) => Some(&mut v.attrs),
-            Self::Field(v) => Some(&mut v.attrs),
             Self::ForLoop(v) => Some(&mut v.attrs),
             Self::Group(v) => Some(&mut v.attrs),
             Self::If(v) => Some(&mut v.attrs),
-            Self::Index(v) => Some(&mut v.attrs),
             Self::Infer(v) => Some(&mut v.attrs),
             Self::Let(v) => Some(&mut v.attrs),
             Self::Lit(v) => Some(&mut v.attrs),
             Self::Loop(v) => Some(&mut v.attrs),
             Self::Macro(v) => Some(&mut v.attrs),
             Self::Match(v) => Some(&mut v.attrs),
-            Self::MethodCall(v) => Some(&mut v.attrs),
             Self::Paren(v) => Some(&mut v.attrs),
             Self::Path(v) => Some(&mut v.attrs),
+            Self::Postfix(v) => Some(&mut v.attrs),
             Self::Range(v) => Some(&mut v.attrs),
             Self::RawAddr(v) => Some(&mut v.attrs),
             Self::Reference(v) => Some(&mut v.attrs),
             Self::Repeat(v) => Some(&mut v.attrs),
             Self::Return(v) => Some(&mut v.attrs),
             Self::Struct(v) => Some(&mut v.attrs),
-            Self::Try(v) => Some(&mut v.attrs),
             Self::TryBlock(v) => Some(&mut v.attrs),
             Self::Tuple(v) => Some(&mut v.attrs),
             Self::Unary(v) => Some(&mut v.attrs),
@@ -237,10 +224,6 @@ impl Expr {
         matches!(self, Self::Async(_))
     }
 
-    pub fn is_await(&self) -> bool {
-        matches!(self, Self::Await(_))
-    }
-
     pub fn is_binary_chain(&self) -> bool {
         matches!(self, Self::BinaryChain(_))
     }
@@ -251,10 +234,6 @@ impl Expr {
 
     pub fn is_break(&self) -> bool {
         matches!(self, Self::Break(_))
-    }
-
-    pub fn is_call(&self) -> bool {
-        matches!(self, Self::Call(_))
     }
 
     pub fn is_cast(&self) -> bool {
@@ -273,10 +252,6 @@ impl Expr {
         matches!(self, Self::Continue(_))
     }
 
-    pub fn is_field(&self) -> bool {
-        matches!(self, Self::Field(_))
-    }
-
     pub fn is_for_loop(&self) -> bool {
         matches!(self, Self::ForLoop(_))
     }
@@ -287,10 +262,6 @@ impl Expr {
 
     pub fn is_if(&self) -> bool {
         matches!(self, Self::If(_))
-    }
-
-    pub fn is_index(&self) -> bool {
-        matches!(self, Self::Index(_))
     }
 
     pub fn is_infer(&self) -> bool {
@@ -317,16 +288,16 @@ impl Expr {
         matches!(self, Self::Match(_))
     }
 
-    pub fn is_method_call(&self) -> bool {
-        matches!(self, Self::MethodCall(_))
-    }
-
     pub fn is_paren(&self) -> bool {
         matches!(self, Self::Paren(_))
     }
 
     pub fn is_path(&self) -> bool {
         matches!(self, Self::Path(_))
+    }
+
+    pub fn is_postfix(&self) -> bool {
+        matches!(self, Self::Postfix(_))
     }
 
     pub fn is_range(&self) -> bool {
@@ -351,10 +322,6 @@ impl Expr {
 
     pub fn is_struct(&self) -> bool {
         matches!(self, Self::Struct(_))
-    }
-
-    pub fn is_try(&self) -> bool {
-        matches!(self, Self::Try(_))
     }
 
     pub fn is_try_block(&self) -> bool {
@@ -397,10 +364,6 @@ impl Expr {
         if let Self::Async(v) = self { Some(v) } else { None }
     }
 
-    pub fn as_await(&self) -> Option<&ExprAwait> {
-        if let Self::Await(v) = self { Some(v) } else { None }
-    }
-
     pub fn as_binary_chain(&self) -> Option<&ExprBinaryChain> {
         if let Self::BinaryChain(v) = self { Some(v) } else { None }
     }
@@ -411,10 +374,6 @@ impl Expr {
 
     pub fn as_break(&self) -> Option<&ExprBreak> {
         if let Self::Break(v) = self { Some(v) } else { None }
-    }
-
-    pub fn as_call(&self) -> Option<&ExprCall> {
-        if let Self::Call(v) = self { Some(v) } else { None }
     }
 
     pub fn as_cast(&self) -> Option<&ExprCast> {
@@ -433,10 +392,6 @@ impl Expr {
         if let Self::Continue(v) = self { Some(v) } else { None }
     }
 
-    pub fn as_field(&self) -> Option<&ExprField> {
-        if let Self::Field(v) = self { Some(v) } else { None }
-    }
-
     pub fn as_for_loop(&self) -> Option<&ExprForLoop> {
         if let Self::ForLoop(v) = self { Some(v) } else { None }
     }
@@ -447,10 +402,6 @@ impl Expr {
 
     pub fn as_if(&self) -> Option<&ExprIf> {
         if let Self::If(v) = self { Some(v) } else { None }
-    }
-
-    pub fn as_index(&self) -> Option<&ExprIndex> {
-        if let Self::Index(v) = self { Some(v) } else { None }
     }
 
     pub fn as_infer(&self) -> Option<&ExprInfer> {
@@ -477,16 +428,16 @@ impl Expr {
         if let Self::Match(v) = self { Some(v) } else { None }
     }
 
-    pub fn as_method_call(&self) -> Option<&ExprMethodCall> {
-        if let Self::MethodCall(v) = self { Some(v) } else { None }
-    }
-
     pub fn as_paren(&self) -> Option<&ExprParen> {
         if let Self::Paren(v) = self { Some(v) } else { None }
     }
 
     pub fn as_path(&self) -> Option<&ExprPath> {
         if let Self::Path(v) = self { Some(v) } else { None }
+    }
+
+    pub fn as_postfix(&self) -> Option<&ExprPostfix> {
+        if let Self::Postfix(v) = self { Some(v) } else { None }
     }
 
     pub fn as_range(&self) -> Option<&ExprRange> {
@@ -511,10 +462,6 @@ impl Expr {
 
     pub fn as_struct(&self) -> Option<&ExprStruct> {
         if let Self::Struct(v) = self { Some(v) } else { None }
-    }
-
-    pub fn as_try(&self) -> Option<&ExprTry> {
-        if let Self::Try(v) = self { Some(v) } else { None }
     }
 
     pub fn as_try_block(&self) -> Option<&ExprTryBlock> {
@@ -552,36 +499,31 @@ impl Spanner for Expr {
             Self::Array(v) => v.span(),
             Self::Assign(v) => v.span(),
             Self::Async(v) => v.span(),
-            Self::Await(v) => v.span(),
             Self::BinaryChain(v) => v.span(),
             Self::Block(v) => v.span(),
             Self::Break(v) => v.span(),
-            Self::Call(v) => v.span(),
             Self::Cast(v) => v.span(),
             Self::Closure(v) => v.span(),
             Self::Const(v) => v.span(),
             Self::Continue(v) => v.span(),
-            Self::Field(v) => v.span(),
             Self::ForLoop(v) => v.span(),
             Self::Group(v) => v.span(),
             Self::If(v) => v.span(),
-            Self::Index(v) => v.span(),
             Self::Infer(v) => v.span(),
             Self::Let(v) => v.span(),
             Self::Lit(v) => v.span(),
             Self::Loop(v) => v.span(),
             Self::Macro(v) => v.span(),
             Self::Match(v) => v.span(),
-            Self::MethodCall(v) => v.span(),
             Self::Paren(v) => v.span(),
             Self::Path(v) => v.span(),
+            Self::Postfix(v) => v.span(),
             Self::Range(v) => v.span(),
             Self::RawAddr(v) => v.span(),
             Self::Reference(v) => v.span(),
             Self::Repeat(v) => v.span(),
             Self::Return(v) => v.span(),
             Self::Struct(v) => v.span(),
-            Self::Try(v) => v.span(),
             Self::TryBlock(v) => v.span(),
             Self::Tuple(v) => v.span(),
             Self::Unary(v) => v.span(),
@@ -599,36 +541,31 @@ impl ToTokens for Expr {
             Self::Array(v) => v.to_tokens(t),
             Self::Assign(v) => v.to_tokens(t),
             Self::Async(v) => v.to_tokens(t),
-            Self::Await(v) => v.to_tokens(t),
             Self::BinaryChain(v) => v.to_tokens(t),
             Self::Block(v) => v.to_tokens(t),
             Self::Break(v) => v.to_tokens(t),
-            Self::Call(v) => v.to_tokens(t),
             Self::Cast(v) => v.to_tokens(t),
             Self::Closure(v) => v.to_tokens(t),
             Self::Const(v) => v.to_tokens(t),
             Self::Continue(v) => v.to_tokens(t),
-            Self::Field(v) => v.to_tokens(t),
             Self::ForLoop(v) => v.to_tokens(t),
             Self::Group(v) => v.to_tokens(t),
             Self::If(v) => v.to_tokens(t),
-            Self::Index(v) => v.to_tokens(t),
             Self::Infer(v) => v.to_tokens(t),
             Self::Let(v) => v.to_tokens(t),
             Self::Lit(v) => v.to_tokens(t),
             Self::Loop(v) => v.to_tokens(t),
             Self::Macro(v) => v.to_tokens(t),
             Self::Match(v) => v.to_tokens(t),
-            Self::MethodCall(v) => v.to_tokens(t),
             Self::Paren(v) => v.to_tokens(t),
             Self::Path(v) => v.to_tokens(t),
+            Self::Postfix(v) => v.to_tokens(t),
             Self::Range(v) => v.to_tokens(t),
             Self::RawAddr(v) => v.to_tokens(t),
             Self::Reference(v) => v.to_tokens(t),
             Self::Repeat(v) => v.to_tokens(t),
             Self::Return(v) => v.to_tokens(t),
             Self::Struct(v) => v.to_tokens(t),
-            Self::Try(v) => v.to_tokens(t),
             Self::TryBlock(v) => v.to_tokens(t),
             Self::Tuple(v) => v.to_tokens(t),
             Self::Unary(v) => v.to_tokens(t),

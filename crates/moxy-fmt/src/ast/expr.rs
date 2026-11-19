@@ -14,11 +14,6 @@ impl Format for Expr {
             Self::Break(v) => v.format(f),
             Self::Continue(v) => v.format(f),
             Self::Yield(v) => v.format(f),
-            Self::Call(v) => v.format(f),
-            Self::MethodCall(v) => v.format(f),
-            Self::Field(v) => v.format(f),
-            Self::Index(v) => v.format(f),
-            Self::Await(v) => v.format(f),
             Self::If(v) => v.format(f),
             Self::While(v) => v.format(f),
             Self::ForLoop(v) => v.format(f),
@@ -32,9 +27,9 @@ impl Format for Expr {
             Self::Range(v) => v.format(f),
             Self::Reference(v) => v.format(f),
             Self::Cast(v) => v.format(f),
-            Self::Try(v) => v.format(f),
             Self::Lit(v) => v.format(f),
             Self::Path(v) => v.format(f),
+            Self::Postfix(v) => v.format(f),
             Self::Struct(v) => v.format(f),
             Self::Closure(v) => v.format(f),
             Self::Tuple(v) => v.format(f),
@@ -284,10 +279,8 @@ impl Format for ExprCast {
     }
 }
 
-impl Format for ExprTry {
+impl Format for PostfixTry {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
-        self.expr.format(f)?;
         f.text("?")
     }
 }
@@ -342,20 +335,42 @@ impl Format for ExprRange {
     }
 }
 
-impl Format for ExprCall {
+impl Format for ExprPostfix {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
-        self.func.format(f)?;
+        self.base.format(f)?;
+
+        for op in &self.ops {
+            op.format(f)?;
+        }
+
+        Ok(())
+    }
+}
+
+impl Format for Postfix {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        match self {
+            Self::Call(v) => v.format(f),
+            Self::MethodCall(v) => v.format(f),
+            Self::Field(v) => v.format(f),
+            Self::Index(v) => v.format(f),
+            Self::Try(v) => v.format(f),
+            Self::Await(v) => v.format(f),
+        }
+    }
+}
+
+impl Format for PostfixCall {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("(")?;
         self.args.inner.format(f)?;
         f.text(")")
     }
 }
 
-impl Format for ExprMethodCall {
+impl Format for PostfixMethodCall {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
-        self.receiver.format(f)?;
         f.text(".")?;
         self.method.format(f)?;
 
@@ -369,29 +384,23 @@ impl Format for ExprMethodCall {
     }
 }
 
-impl Format for ExprField {
+impl Format for PostfixField {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
-        self.base.format(f)?;
         f.text(".")?;
         self.member.format(f)
     }
 }
 
-impl Format for ExprIndex {
+impl Format for PostfixIndex {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
-        self.base.format(f)?;
         f.text("[")?;
         self.index.inner.format(f)?;
         f.text("]")
     }
 }
 
-impl Format for ExprAwait {
+impl Format for PostfixAwait {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
-        self.base.format(f)?;
         f.text(".await")
     }
 }

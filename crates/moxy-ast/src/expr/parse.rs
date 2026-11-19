@@ -410,35 +410,40 @@ fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<B
     postfix_rest(parser, expr, attrs, &mut chain)
 }
 
-// The postfix operators that follow a primary expression, and the outer
-// attributes, which belong to the whole chain
-fn postfix_rest(parser: &Parser, mut expr: Box<Expr>, attrs: Attributes, chain: &mut Chain) -> Result<Box<Expr>, ParseError> {
+// The postfix operations that follow a primary expression, held in one
+// chain node with the outer attributes, which belong to the whole chain
+fn postfix_rest(parser: &Parser, base: Box<Expr>, attrs: Attributes, _chain: &mut Chain) -> Result<Box<Expr>, ParseError> {
+    let mut ops = Vec::new();
+
     loop {
-        let postfix = parser.is_delimited(Delim::Paren)
-            || parser.is_delimited(Delim::Bracket)
-            || (<Token![.]>::peek(parser.cursor()) && !RangeLimits::peek(parser.cursor()))
-            || <Token![?]>::peek(parser.cursor());
-
-        if postfix {
-            chain_step(parser, chain)?;
-        }
-
-        expr = if parser.is_delimited(Delim::Paren) {
-            call(parser, expr)?
+        if parser.is_delimited(Delim::Paren) {
+            ops.push(Postfix::Call(PostfixCall {
+                args: Delimited::parse_paren_with(parser, List::parse_all)?,
+            }));
         } else if parser.is_delimited(Delim::Bracket) {
-            index(parser, expr)?
-        } else if <Token![.]>::peek(parser.cursor())
-            && !<Token![..]>::peek(parser.cursor())
-            && !<Token![..=]>::peek(parser.cursor())
-        {
-            dot(parser, expr)?
+            ops.push(Postfix::Index(PostfixIndex {
+                index: Delimited::parse_bracket_with(parser, |inner| boxed_expr(inner, ExprContext::NORMAL))?,
+            }));
+        } else if <Token![.]>::peek(parser.cursor()) && !RangeLimits::peek(parser.cursor()) {
+            dot(parser, &mut ops)?;
         } else if <Token![?]>::peek(parser.cursor()) {
-            try_expr(parser, expr)?
+            ops.push(Postfix::Try(PostfixTry {
+                question_punct: <_ as Parse>::parse(parser)?,
+            }));
         } else {
             break;
-        };
-        chain.operand();
+        }
     }
+
+    let mut expr = if ops.is_empty() {
+        base
+    } else {
+        boxed(ExprPostfix {
+            attrs: Default::default(),
+            base,
+            ops,
+        })
+    };
 
     if let Some(slot) = expr.attrs_mut() {
         *slot = attrs;
@@ -447,31 +452,15 @@ fn postfix_rest(parser: &Parser, mut expr: Box<Expr>, attrs: Attributes, chain: 
     Ok(expr)
 }
 
-fn call(parser: &Parser, func: Box<Expr>) -> Result<Box<Expr>, ParseError> {
-    Ok(boxed(ExprCall {
-        attrs: Default::default(),
-        func,
-        args: Delimited::parse_paren_with(parser, List::parse_all)?,
-    }))
-}
-
-fn index(parser: &Parser, base: Box<Expr>) -> Result<Box<Expr>, ParseError> {
-    Ok(boxed(ExprIndex {
-        attrs: Default::default(),
-        base,
-        index: Delimited::parse_bracket_with(parser, |inner| boxed_expr(inner, ExprContext::NORMAL))?,
-    }))
-}
-
-// `.await`, a method call, or a field access
-fn dot(parser: &Parser, base: Box<Expr>) -> Result<Box<Expr>, ParseError> {
+// `.await`, a method call, or a field access, or two field accesses where the
+// compiler lexes `0.1` in `x.0.1` as one float literal
+fn dot(parser: &Parser, ops: &mut Vec<Postfix>) -> Result<(), ParseError> {
     if <Token![await]>::peek(parser.cursor().offset(1)) {
-        return Ok(boxed(ExprAwait {
-            attrs: Default::default(),
-            base,
+        ops.push(Postfix::Await(PostfixAwait {
             dot: <_ as Parse>::parse(parser)?,
             await_keyword: <_ as Parse>::parse(parser)?,
         }));
+        return Ok(());
     }
 
     if Ident::peek(parser.cursor().offset(1)) {
@@ -480,59 +469,41 @@ fn dot(parser: &Parser, base: Box<Expr>) -> Result<Box<Expr>, ParseError> {
         let method = parser.cursor().offset(2);
 
         if method.is_delimited(Delim::Paren) || <Token![::]>::peek(method) {
-            return Ok(boxed(ExprMethodCall {
-                attrs: Default::default(),
-                receiver: base,
+            ops.push(Postfix::MethodCall(PostfixMethodCall {
                 dot: <_ as Parse>::parse(parser)?,
                 method: <_ as Parse>::parse(parser)?,
                 turbofish: <_ as Parse>::parse(parser)?,
                 args: Delimited::parse_paren_with(parser, List::parse_all)?,
             }));
+            return Ok(());
         }
     }
 
-    // The compiler lexes `0.1` in `x.0.1` and `0.` in `x.0. 1` as one float
-    // literal, which holds two tuple indices or one and the next dot
+    // `0.` in `x.0. 1` holds one index and the dot before the next
     if let Some(TokenTree::Literal(Lit::Float(float))) = parser.cursor().offset(1).curr()
         && let Some((first, inner_dot, second)) = float.split_tuple_index()
     {
         let dot = <_ as Parse>::parse(parser)?;
         parser.advance();
-        let inner = boxed(ExprField {
-            attrs: Default::default(),
-            base,
+        ops.push(Postfix::Field(PostfixField {
             dot,
             member: Member::Unnamed(first.into()),
-        });
+        }));
 
-        // After `0.`, as in `x.0. 1`, the second index is the next token
         let member = match second {
             Some(second) => Member::Unnamed(second.into()),
             None => <_ as Parse>::parse(parser)?,
         };
 
-        return Ok(boxed(ExprField {
-            attrs: Default::default(),
-            base: inner,
-            dot: inner_dot,
-            member,
-        }));
+        ops.push(Postfix::Field(PostfixField { dot: inner_dot, member }));
+        return Ok(());
     }
 
-    Ok(boxed(ExprField {
-        attrs: Default::default(),
-        base,
+    ops.push(Postfix::Field(PostfixField {
         dot: <_ as Parse>::parse(parser)?,
         member: <_ as Parse>::parse(parser)?,
-    }))
-}
-
-fn try_expr(parser: &Parser, expr: Box<Expr>) -> Result<Box<Expr>, ParseError> {
-    Ok(boxed(ExprTry {
-        attrs: Default::default(),
-        expr,
-        question_punct: <_ as Parse>::parse(parser)?,
-    }))
+    }));
+    Ok(())
 }
 
 // Each form parses in its own function, so a nested expression's stack frame

@@ -116,9 +116,9 @@ fn expression_attributes_belong_to_the_operand_that_follows_them() {
     }
 
     let expression: Expr = moxy::parse!("#[a] x.y()").unwrap();
-    let call = expression.as_method_call().unwrap();
-    assert_eq!(call.attrs.len(), 1);
-    assert!(call.receiver.attrs().unwrap().is_empty());
+    let chain = expression.as_postfix().unwrap();
+    assert_eq!(chain.attrs.len(), 1);
+    assert!(chain.base.attrs().unwrap().is_empty());
 
     let expression: Expr = moxy::parse!("#[a] x + y").unwrap();
     let binary = expression.as_binary_chain().unwrap();
