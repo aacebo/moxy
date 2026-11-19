@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream, Underscore};
 
 use crate::*;
 
@@ -32,6 +32,7 @@ impl Spanner for ExprInfer {
 impl ToTokens for ExprInfer {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
-        self.underscore.to_tokens(t);
+        // An identifier, as the lexer and the compiler give `_`
+        Ident::new(Underscore::TEXT).with_span(self.underscore.span()).to_tokens(t);
     }
 }

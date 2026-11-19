@@ -1,5 +1,6 @@
 use crate::{
-    Delim, DelimSpan, Group, Ident, Keyword, LexError, Lit, Spacing, Span, ToTokens, TokenStream, TokenTree, TryIntoTokenStream,
+    Delim, DelimSpan, Group, Ident, Keyword, LexError, Lit, Punct, Spacing, Span, ToTokens, TokenStream, TokenTree,
+    TryIntoTokenStream,
 };
 
 // --- Span ---
@@ -223,6 +224,11 @@ impl ToTokens<proc_macro2::TokenStream> for TokenTree {
                 out.extend([proc_macro2::TokenTree::Ident(id)])
             }
             Self::Literal(v) => out.extend([proc_macro2::TokenTree::Literal(v.clone().into())]),
+            // The compiler takes `_` only as an identifier
+            Self::Punct(Punct::Underscore(op)) => {
+                let id = proc_macro2::Ident::new(op.as_str(), op.span().into());
+                out.extend([proc_macro2::TokenTree::Ident(id)])
+            }
             Self::Punct(op) => {
                 let text = op.as_str();
                 let span: proc_macro2::Span = op.span().into();

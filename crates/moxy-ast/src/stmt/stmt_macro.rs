@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::*;
 
@@ -19,10 +19,33 @@ impl Attributed for StmtMacro {
 }
 
 impl Parse for StmtMacro {
+    // As rustc decides, a macro call that a postfix or infix operator follows
+    // is an expression statement: `vec![1].len()`, `matches!(a, B) || c`. A
+    // braced call ends the statement unless a method call, field access, or
+    // `?` follows it.
     fn peek(cursor: Cursor<'_>) -> bool {
-        Attributes::skip(cursor)
-            .map(|cursor| MacroCall::peek(cursor))
-            .unwrap_or(false)
+        let Some(start) = Attributes::skip(cursor) else {
+            return false;
+        };
+
+        if !MacroCall::peek(start) {
+            return false;
+        }
+
+        let Some(end) = MacroCall::skip(start) else {
+            return true;
+        };
+
+        let braced = matches!(end.prev(), Some(TokenTree::Group(group)) if group.delim == Delim::Brace);
+        let postfix = (<Token![.]>::peek(end) && !RangeLimits::peek(end)) || <Token![?]>::peek(end);
+
+        if braced {
+            return !postfix;
+        }
+
+        let call = end.is_delimited(Delim::Paren) || end.is_delimited(Delim::Bracket);
+        let infix = BinOp::peek(end) || <Token![=]>::peek(end) || <Token![as]>::peek(end) || RangeLimits::peek(end);
+        !postfix && !call && !infix
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {

@@ -109,7 +109,7 @@ impl Parse for Stmt {
             return Ok(Self::Block(<_ as Parse>::parse(parser)?));
         }
 
-        if Item::peek(parser.cursor()) {
+        if Item::peek(parser.cursor()) && !macro_expr(parser.cursor()) {
             return Ok(Self::Item(<_ as Parse>::parse(parser)?));
         }
 
@@ -127,12 +127,18 @@ impl Parse for Stmt {
             StmtMacro::skip(cursor)
         } else if StmtBlock::peek(cursor) {
             StmtBlock::skip(cursor)
-        } else if Item::peek(cursor) {
+        } else if Item::peek(cursor) && !macro_expr(cursor) {
             Item::skip(cursor)
         } else {
             Option::<Token![;]>::skip(crate::expr::skip::early(cursor)?)
         }
     }
+}
+
+// Whether a macro call that an operator follows starts an expression
+// statement, which `StmtMacro::peek` leaves to the expression parser
+fn macro_expr(cursor: Cursor<'_>) -> bool {
+    Attributes::skip(cursor).is_some_and(|start| MacroCall::peek(start)) && !StmtMacro::peek(cursor)
 }
 
 impl ToTokens for Stmt {

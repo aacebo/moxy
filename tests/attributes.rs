@@ -1,5 +1,5 @@
-use moxy::ast::{Item, Meta};
-use moxy::token::Spanner;
+use moxy::ast::{Expr, Item, Meta};
+use moxy::token::{Spanner, ToTokenStream};
 
 #[test]
 fn outer_attributes_are_attached_to_the_declaration_and_rendered() {
@@ -98,4 +98,37 @@ fn metadata_rejects_scalar_overflow_and_invalid_literal_shapes() {
 
     let value: Meta = moxy::parse!("value = true && false").unwrap();
     assert!(value.parse::<bool>().is_err());
+}
+
+#[test]
+fn expression_attributes_belong_to_the_operand_that_follows_them() {
+    for (source, tokens) in [
+        ("#[a] x.y()", "# [a] x . y ()"),
+        ("#[a] x + y", "# [a] x + y"),
+        ("#[a] -x", "# [a] - x"),
+        ("#[a] x = 1", "# [a] x = 1"),
+        ("#[a] x..y", "# [a] x .. y"),
+        ("#[a] &x", "# [a] & x"),
+        ("x + #[a] y", "x + # [a] y"),
+    ] {
+        let expression: Expr = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(expression.to_token_stream().to_string(), tokens);
+    }
+
+    let expression: Expr = moxy::parse!("#[a] x.y()").unwrap();
+    let call = expression.as_method_call().unwrap();
+    assert_eq!(call.attrs.len(), 1);
+    assert!(call.receiver.attrs().unwrap().is_empty());
+
+    let expression: Expr = moxy::parse!("#[a] x + y").unwrap();
+    let binary = expression.as_binary().unwrap();
+    assert!(binary.attrs.is_empty());
+    assert_eq!(binary.left.attrs().unwrap().len(), 1);
+    assert!(binary.right.attrs().unwrap().is_empty());
+
+    let expression: Expr = moxy::parse!("#[a] -x").unwrap();
+    assert_eq!(expression.as_unary().unwrap().attrs.len(), 1);
+
+    let expression: Expr = moxy::parse!("x + #[a] y").unwrap();
+    assert_eq!(expression.as_binary().unwrap().right.attrs().unwrap().len(), 1);
 }

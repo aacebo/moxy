@@ -93,10 +93,14 @@ impl ToTokens for ItemConst {
         self.vis.to_tokens(t);
         self.const_keyword.to_tokens(t);
         self.ident.to_tokens(t);
+        self.generics.lt.to_tokens(t);
+        self.generics.params.to_tokens(t);
+        self.generics.gt.to_tokens(t);
         self.colon_punct.to_tokens(t);
         self.ty.to_tokens(t);
         self.eq_punct.to_tokens(t);
         self.expr.to_tokens(t);
+        self.generics.where_clause.to_tokens(t);
         self.semi_punct.to_tokens(t);
     }
 }

@@ -485,19 +485,27 @@ impl Parse for Quote {
     }
 }
 
+// The lexer and the compiler give `_` as an identifier, which this token
+// also accepts
 impl Parse for Underscore {
     fn peek(cursor: Cursor<'_>) -> bool {
-        let Some(next) = cursor.curr() else {
-            return false;
-        };
-
-        matches!(next, TokenTree::Punct(Punct::Underscore(_)))
+        match cursor.curr() {
+            Some(TokenTree::Punct(Punct::Underscore(_))) => true,
+            Some(TokenTree::Ident(ident)) => ident.text() == Underscore::TEXT,
+            _ => false,
+        }
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Punct::Underscore(value) => Ok(value),
-            _ => Err(parser.error(format!("expected `{}` punctuation", Underscore::TEXT))),
+        match parser.curr() {
+            Some(TokenTree::Ident(ident)) if ident.text() == Underscore::TEXT => {
+                parser.advance();
+                Ok(Underscore::new(ident.span()))
+            }
+            _ => match <_ as Parse>::parse(parser)? {
+                Punct::Underscore(value) => Ok(value),
+                _ => Err(parser.error(format!("expected `{}` punctuation", Underscore::TEXT))),
+            },
         }
     }
 

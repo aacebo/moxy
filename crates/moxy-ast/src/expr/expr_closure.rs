@@ -40,6 +40,7 @@ impl Spanner for ExprClosure {
 impl ToTokens for ExprClosure {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
+        self.lifetimes.to_tokens(t);
         self.constness.to_tokens(t);
         self.movability.to_tokens(t);
         self.asyncness.to_tokens(t);

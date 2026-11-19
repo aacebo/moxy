@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream, Underscore};
 
 use crate::*;
 
@@ -44,6 +44,7 @@ impl Parse for PatWild {
 impl ToTokens for PatWild {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
-        self.token.to_tokens(t);
+        // An identifier, as the lexer and the compiler give `_`
+        Ident::new(Underscore::TEXT).with_span(self.token.span()).to_tokens(t);
     }
 }

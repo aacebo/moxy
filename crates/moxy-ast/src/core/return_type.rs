@@ -25,6 +25,27 @@ impl ReturnType {
     }
 }
 
+impl ReturnType {
+    /// Parses a return type that `+` does not continue, as in `Fn(A) -> B + Send`
+    /// and `fn() -> B + Send`, where the bound applies to the whole type.
+    pub(crate) fn parse_without_plus(parser: &Parser) -> Result<Self, ParseError> {
+        if <Token![->]>::peek(parser.cursor()) {
+            let arrow = <_ as Parse>::parse(parser)?;
+            Ok(Self::Type(arrow, Box::new(Type::parse_without_plus(parser)?)))
+        } else {
+            Ok(Self::Default)
+        }
+    }
+
+    pub(crate) fn skip_without_plus(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if <Token![->]>::peek(cursor) {
+            Type::skip_without_plus(<Token![->]>::skip(cursor)?)
+        } else {
+            Some(cursor)
+        }
+    }
+}
+
 impl Parse for ReturnType {
     fn peek(_cursor: Cursor<'_>) -> bool {
         true

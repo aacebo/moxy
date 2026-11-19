@@ -1,4 +1,6 @@
-use crate::{Delim, Group, Ident, Keyword, LexError, Lit, Spacing, Span, ToTokens, TokenStream, TokenTree, TryIntoTokenStream};
+use crate::{
+    Delim, Group, Ident, Keyword, LexError, Lit, Punct, Spacing, Span, ToTokens, TokenStream, TokenTree, TryIntoTokenStream,
+};
 
 // --- Span (fallback) ---
 
@@ -246,6 +248,11 @@ impl ToTokens<proc_macro::TokenStream> for TokenTree {
                 out.extend(vec![proc_macro::TokenTree::Ident(id)])
             }
             Self::Literal(v) => out.extend(vec![proc_macro::TokenTree::Literal(v.clone().into())]),
+            // The compiler takes `_` only as an identifier
+            Self::Punct(Punct::Underscore(op)) => {
+                let id = proc_macro::Ident::new(op.as_str(), op.span().into());
+                out.extend(vec![proc_macro::TokenTree::Ident(id)])
+            }
             Self::Punct(op) => {
                 let text = op.as_str();
                 let span: proc_macro::Span = op.span().into();

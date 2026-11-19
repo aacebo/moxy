@@ -141,3 +141,37 @@ fn half_open_range_patterns_end_before_the_arm() {
     assert!(range.start.is_some());
     assert!(range.end.is_none());
 }
+
+#[test]
+fn an_underscore_is_a_wildcard_pattern_and_an_inferred_expression() {
+    for source in ["_", "#[a] _"] {
+        let pattern: Pattern = moxy::parse!(source).unwrap();
+        assert!(pattern.is_wild(), "`{source}`");
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(pattern.to_token_stream().to_string(), lexed.to_string());
+    }
+
+    let pattern: Pattern = moxy::parse!("(_, a)").unwrap();
+    let Pattern::Tuple(tuple) = &pattern else {
+        panic!("expected a tuple pattern");
+    };
+    assert!(tuple.elems.inner.first().unwrap().is_wild());
+
+    let expression: moxy::ast::Expr = moxy::parse!("match a { _ => 1 }").unwrap();
+    assert!(expression.as_match().unwrap().arms.inner[0].pat.is_wild());
+
+    let expression: moxy::ast::Expr = moxy::parse!("_ = f()").unwrap();
+    assert!(expression.as_assign().unwrap().left.is_infer());
+
+    // A wildcard emits the identifier `_` that the compiler accepts
+    #[cfg(feature = "proc-macro2")]
+    {
+        let pattern: Pattern = moxy::parse!("_").unwrap();
+        let emitted: proc_macro2::TokenStream = pattern.to_token_stream().into();
+        assert_eq!(emitted.to_string(), "_");
+        assert!(matches!(emitted.into_iter().next(), Some(proc_macro2::TokenTree::Ident(_))));
+
+        let emitted: proc_macro2::TokenStream = moxy::token::Underscore::default().to_token_stream().into();
+        assert_eq!(emitted.to_string(), "_");
+    }
+}

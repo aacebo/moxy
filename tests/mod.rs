@@ -1,6 +1,7 @@
 mod ast;
 mod fixtures;
 mod parser;
+mod precedence;
 mod round_trip;
 
 #[cfg(all(feature = "fmt", feature = "derives"))]

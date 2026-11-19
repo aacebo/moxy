@@ -41,14 +41,26 @@ fn optional_expr(parser: &Parser, context: ExprContext) -> Result<Option<Box<Exp
 }
 
 fn assignment(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
-    let left = range(parser, attrs.clone(), context)?;
+    let left = range(parser, attrs, context)?;
 
     if <Token![=]>::peek(parser.cursor()) && !<Token![==]>::peek(parser.cursor()) && !<Token![=>]>::peek(parser.cursor()) {
         return Ok(ExprAssign {
-            attrs: attrs.clone(),
+            attrs: Default::default(),
             left: Box::new(left),
             eq: <_ as Parse>::parse(parser)?,
-            right: Box::new(assignment(parser, attrs, context)?),
+            right: Box::new(assignment(parser, Default::default(), context)?),
+        }
+        .into());
+    }
+
+    // Compound assignment is right-associative and binds looser than a range:
+    // `x += y + z` adds first, `a += b = c` assigns `c` to `b` first
+    if peek_binary(parser.cursor(), context).is_some_and(|op| Precedence::of(&op) == Precedence::Assign) {
+        return Ok(ExprBinary {
+            attrs: Default::default(),
+            left: Box::new(left),
+            op: <_ as Parse>::parse(parser)?,
+            right: Box::new(assignment(parser, Default::default(), context)?),
         }
         .into());
     }
@@ -62,11 +74,11 @@ fn range(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Exp
         let mut end = None;
 
         if !context.is_end(parser.cursor()) && Expr::peek(parser.cursor()) {
-            end = Some(Box::new(binary(parser, attrs.clone(), context)?));
+            end = Some(Box::new(binary(parser, Default::default(), context, Precedence::Or)?));
         }
 
         return Ok(ExprRange {
-            attrs: Default::default(),
+            attrs,
             start: None,
             limits,
             end,
@@ -74,14 +86,14 @@ fn range(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Exp
         .into());
     }
 
-    let left = binary(parser, attrs.clone(), context)?;
+    let left = binary(parser, attrs, context, Precedence::Or)?;
 
     if RangeLimits::peek(parser.cursor()) {
         let limits = <_ as Parse>::parse(parser)?;
         let mut end = None;
 
         if !context.is_end(parser.cursor()) && Expr::peek(parser.cursor()) {
-            end = Some(Box::new(binary(parser, attrs.clone(), context)?));
+            end = Some(Box::new(binary(parser, Default::default(), context, Precedence::Or)?));
         }
 
         return Ok(ExprRange {
@@ -96,32 +108,107 @@ fn range(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Exp
     Ok(left)
 }
 
-fn binary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
-    let mut left = cast(parser, attrs.clone(), context)?;
-    // Comparisons bind tighter than `&&` and `||` and looser than the other operators, and do
-    // not chain: between two logical operators there is at most one
-    let mut compared = false;
+// The binding strength of a binary operator, weakest first
+#[derive(Copy, Clone, PartialEq, Eq, PartialOrd, Ord)]
+enum Precedence {
+    Assign,
+    Or,
+    And,
+    Compare,
+    BitOr,
+    BitXor,
+    BitAnd,
+    Shift,
+    Sum,
+    Product,
+}
 
-    while BinOp::peek(parser.cursor()) && !context.is_end_before_infix(parser.cursor()) {
+impl Precedence {
+    fn of(op: &BinOp) -> Self {
+        match op {
+            BinOp::ShlAssign(_)
+            | BinOp::ShrAssign(_)
+            | BinOp::AddAssign(_)
+            | BinOp::SubAssign(_)
+            | BinOp::MulAssign(_)
+            | BinOp::DivAssign(_)
+            | BinOp::RemAssign(_)
+            | BinOp::BitXorAssign(_)
+            | BinOp::BitAndAssign(_)
+            | BinOp::BitOrAssign(_) => Self::Assign,
+            BinOp::Or(_) => Self::Or,
+            BinOp::And(_) => Self::And,
+            BinOp::Eq(_) | BinOp::Ne(_) | BinOp::Lt(_) | BinOp::Le(_) | BinOp::Gt(_) | BinOp::Ge(_) => Self::Compare,
+            BinOp::BitOr(_) => Self::BitOr,
+            BinOp::BitXor(_) => Self::BitXor,
+            BinOp::BitAnd(_) => Self::BitAnd,
+            BinOp::Shl(_) | BinOp::Shr(_) => Self::Shift,
+            BinOp::Add(_) | BinOp::Sub(_) => Self::Sum,
+            BinOp::Mul(_) | BinOp::Div(_) | BinOp::Rem(_) => Self::Product,
+        }
+    }
+
+    fn next(self) -> Option<Self> {
+        match self {
+            Self::Assign => Some(Self::Or),
+            Self::Or => Some(Self::And),
+            Self::And => Some(Self::Compare),
+            Self::Compare => Some(Self::BitOr),
+            Self::BitOr => Some(Self::BitXor),
+            Self::BitXor => Some(Self::BitAnd),
+            Self::BitAnd => Some(Self::Shift),
+            Self::Shift => Some(Self::Sum),
+            Self::Sum => Some(Self::Product),
+            Self::Product => None,
+        }
+    }
+}
+
+// The binary operator that continues the expression here, if any
+fn peek_binary(cursor: Cursor<'_>, context: ExprContext) -> Option<BinOp> {
+    if !BinOp::peek(cursor) || context.is_end_before_infix(cursor) {
+        return None;
+    }
+
+    BinOp::parse(&Parser::from_cursor(cursor)).ok()
+}
+
+fn binary(parser: &Parser, attrs: Attributes, context: ExprContext, min: Precedence) -> Result<Expr, ParseError> {
+    let left = cast(parser, attrs, context)?;
+    binary_rest(parser, context, left, min)
+}
+
+// Precedence climbing over the operators at least as strong as `min`. Operators
+// of one strength associate to the left; comparisons do not chain
+fn binary_rest(parser: &Parser, context: ExprContext, mut left: Expr, min: Precedence) -> Result<Expr, ParseError> {
+    while let Some(op) = peek_binary(parser.cursor(), context) {
+        let precedence = Precedence::of(&op);
+
+        if precedence < min || precedence == Precedence::Assign {
+            break;
+        }
+
         let op: BinOp = <_ as Parse>::parse(parser)?;
+        let mut right = cast(parser, Default::default(), context)?;
 
-        if op.is_comparison() {
-            if compared {
-                return Err(ParseError::new(op.span(), "comparison operators cannot be chained"));
-            }
-
-            compared = true;
-        } else if matches!(op, BinOp::And(_) | BinOp::Or(_)) {
-            compared = false;
+        if let Some(stronger) = precedence.next() {
+            right = binary_rest(parser, context, right, stronger)?;
         }
 
         left = ExprBinary {
-            attrs: attrs.clone(),
+            attrs: Default::default(),
             left: Box::new(left),
             op,
-            right: Box::new(cast(parser, attrs.clone(), context)?),
+            right: Box::new(right),
         }
         .into();
+
+        if precedence == Precedence::Compare
+            && let Some(next) = peek_binary(parser.cursor(), context)
+            && next.is_comparison()
+        {
+            return Err(ParseError::new(next.span(), "comparison operators cannot be chained"));
+        }
     }
 
     Ok(left)
@@ -147,33 +234,41 @@ pub(crate) fn unary(parser: &Parser, attrs: Attributes) -> Result<Expr, ParseErr
     unary_with(parser, attrs, ExprContext::PATTERN_BOUND)
 }
 
+// Outer attributes belong to the operand of a binary operator or cast: the
+// unary expression, or the whole chain of postfix operators, that follows them
 fn unary_with(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
+    let attrs = if attrs.is_empty() {
+        <_ as Parse>::parse(parser)?
+    } else {
+        attrs
+    };
+
     if <Token![&]>::peek(parser.cursor()) {
         if <Token![raw]>::peek(parser.cursor().offset(1)) && PointerMutability::peek(parser.cursor().offset(2)) {
             return Ok(ExprRawAddr {
-                attrs: Default::default(),
+                attrs,
                 and: <_ as Parse>::parse(parser)?,
                 raw: <_ as Parse>::parse(parser)?,
                 mutability: <_ as Parse>::parse(parser)?,
-                expr: Box::new(unary_with(parser, attrs, context)?),
+                expr: Box::new(unary_with(parser, Default::default(), context)?),
             }
             .into());
         }
 
         return Ok(ExprReference {
-            attrs: Default::default(),
+            attrs,
             and: <_ as Parse>::parse(parser)?,
             mutability: <_ as Parse>::parse(parser)?,
-            expr: Box::new(unary_with(parser, attrs, context)?),
+            expr: Box::new(unary_with(parser, Default::default(), context)?),
         }
         .into());
     }
 
     if UnOp::peek(parser.cursor()) {
         return Ok(ExprUnary {
-            attrs: Default::default(),
+            attrs,
             op: <_ as Parse>::parse(parser)?,
-            expr: Box::new(unary_with(parser, attrs, context)?),
+            expr: Box::new(unary_with(parser, Default::default(), context)?),
         }
         .into());
     }
@@ -182,7 +277,7 @@ fn unary_with(parser: &Parser, attrs: Attributes, context: ExprContext) -> Resul
 }
 
 fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Expr, ParseError> {
-    let mut expr = primary(parser, attrs, context)?;
+    let mut expr = primary(parser, Default::default(), context)?;
 
     loop {
         if parser.is_delimited(Delim::Paren) {
@@ -266,6 +361,10 @@ fn postfix(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
         break;
     }
 
+    if let Some(slot) = expr.attrs_mut() {
+        *slot = attrs;
+    }
+
     Ok(expr)
 }
 
@@ -323,13 +422,15 @@ fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<E
         .into());
     }
 
+    // The scrutinee binds tighter than `&&` and `||`, which chain conditions:
+    // `if let Some(x) = a && b {}` tests `a` against the pattern, then `b`
     if <Token![let]>::peek(parser.cursor()) {
         return Ok(ExprLet {
             attrs,
             let_keyword: <_ as Parse>::parse(parser)?,
             pat: <_ as Parse>::parse(parser)?,
             eq: <_ as Parse>::parse(parser)?,
-            expr: Box::new(expr(parser, context)?),
+            expr: Box::new(binary(parser, Attributes::default(), context, Precedence::Compare)?),
         }
         .into());
     }

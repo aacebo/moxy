@@ -182,3 +182,27 @@ fn qualified_paths_keep_the_leading_colons_of_their_trait() {
     let ty: Type = moxy::parse!("<T as ::a::B>::C").unwrap();
     assert_eq!(moxy::fmt!(&ty).unwrap(), "<T as ::a::B>::C");
 }
+
+#[test]
+fn a_plus_after_a_function_return_type_bounds_the_whole_type() {
+    for (source, bounds) in [
+        ("dyn Fn(A) -> B + Send", 2),
+        ("dyn FnMut() -> &'a u8 + Send + 'a", 3),
+        ("dyn Fn(A) -> B", 1),
+        ("impl Fn(A) -> B + Send", 2),
+    ] {
+        let ty: Type = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(ty.to_token_stream().to_string(), lexed.to_string());
+
+        let count = match &ty {
+            Type::TraitObject(object) => object.bounds.len(),
+            Type::ImplTrait(object) => object.bounds.len(),
+            other => panic!("`{source}` parsed as {}", other.to_token_stream()),
+        };
+        assert_eq!(count, bounds, "`{source}`");
+    }
+
+    let ty: Type = moxy::parse!("Box<dyn Fn(A) -> B + Send>").unwrap();
+    assert_eq!(ty.to_token_stream().to_string(), "Box < dyn Fn (A) -> B + Send >");
+}

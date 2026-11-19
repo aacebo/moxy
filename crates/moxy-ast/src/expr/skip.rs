@@ -334,6 +334,8 @@ fn postfix(mut cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
 }
 
 fn unary(cursor: Cursor<'_>, context: ExprContext) -> Option<Cursor<'_>> {
+    let cursor = Attributes::skip(cursor)?;
+
     if <Token![&]>::peek(cursor) && <Token![raw]>::peek(cursor.offset(1)) && PointerMutability::peek(cursor.offset(2)) {
         return PointerMutability::skip(<Token![raw]>::skip(<Token![&]>::skip(cursor)?)?)
             .and_then(|cursor| unary(cursor, context));

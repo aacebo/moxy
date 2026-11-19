@@ -101,3 +101,35 @@ fn macro_rules_definitions_in_parentheses_or_brackets_end_with_a_semicolon() {
         "expected `;` after a `macro_rules!` body in parentheses or brackets"
     );
 }
+
+#[test]
+fn a_macro_call_that_an_operator_follows_is_an_expression_statement() {
+    for (source, tokens) in [
+        ("{ write!(f, \"x\")?; Ok(()) }", "{write ! (f , \"x\") ? ; Ok (())}"),
+        ("{ matches!(a, B) || c }", "{matches ! (a , B) || c}"),
+        ("{ vec![1].len() }", "{vec ! [1] . len ()}"),
+        ("{ cfg!(a) && b }", "{cfg ! (a) && b}"),
+        ("{ m! {}.f(); }", "{m ! {} . f () ;}"),
+    ] {
+        let block: moxy::ast::StmtBlock = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(block.to_token_stream().to_string(), tokens);
+        let stmts = &block.stmts.inner;
+        assert!(stmts[0].is_expr(), "`{source}`");
+    }
+
+    let block: moxy::ast::StmtBlock = moxy::parse!("{ write!(f, \"x\")?; Ok(()) }").unwrap();
+    assert_eq!(block.stmts.inner.len(), 2);
+    let moxy::ast::Stmt::Expr(expression, Some(_)) = &block.stmts.inner[0] else {
+        panic!("expected an expression statement");
+    };
+    assert!(expression.as_try().unwrap().expr.is_macro());
+
+    let block: moxy::ast::StmtBlock = moxy::parse!("{ matches!(a, B) || c }").unwrap();
+    assert_eq!(block.stmts.inner.len(), 1);
+
+    // A braced call ends the statement; a call followed by `;` or nothing stays a macro statement
+    for source in ["{ m! {} - 1 }", "{ m!(); n!() }"] {
+        let block: moxy::ast::StmtBlock = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert!(block.stmts.inner[0].is_macro(), "`{source}`");
+    }
+}

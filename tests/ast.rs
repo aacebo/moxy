@@ -138,3 +138,17 @@ fn field_shorthand_preserves_bindings_and_tokens() {
         assert!(moxy::parse!(source as Pattern).is_err(), "{source}");
     }
 }
+
+#[test]
+fn every_parsed_field_is_emitted_again() {
+    fn round_trip<T: moxy::ast::Parse + moxy::token::ToTokenStream>(source: &str) {
+        let node: T = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let lexed: moxy::token::TokenStream = source.parse().unwrap();
+        assert_eq!(node.to_token_stream().to_string(), lexed.to_string(), "`{source}`");
+    }
+
+    round_trip::<moxy::ast::Expr>("for<'a> |x: &'a u8| x");
+    round_trip::<moxy::ast::Item>("const X<T>: u8 = 1;");
+    round_trip::<moxy::ast::Item>("unsafe mod m {}");
+    round_trip::<moxy::ast::Type>("Fn::(A) -> B");
+}

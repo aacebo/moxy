@@ -57,7 +57,7 @@ impl Parse for TypeBareFn {
             Ok(BareFnParams { inputs, variadic })
         })?;
 
-        let output = <_ as Parse>::parse(parser)?;
+        let output = ReturnType::parse_without_plus(parser)?;
 
         Ok(Self {
             lifetimes,
@@ -95,7 +95,7 @@ impl Parse for TypeBareFn {
             return None;
         }
 
-        ReturnType::skip(cursor.offset(1))
+        ReturnType::skip_without_plus(cursor.offset(1))
     }
 }
 

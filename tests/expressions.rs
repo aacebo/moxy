@@ -559,3 +559,36 @@ fn an_open_range_ends_before_a_loop_or_branch_body() {
     let expression: Expr = moxy::parse!("0..{ 5 }").unwrap();
     assert!(expression.as_range().unwrap().end.is_some());
 }
+
+#[test]
+fn an_absent_operand_ends_before_a_separator() {
+    for (source, tokens) in [
+        (
+            "match y { None => return, Some(v) => v }",
+            "match y {None => return , Some (v) => v}",
+        ),
+        (
+            "loop { match a { _ => break, b => continue } }",
+            "loop {match a {_ => break , b => continue}}",
+        ),
+        ("f(return, 1)", "f (return , 1)"),
+        ("S { a: return, b }", "S {a : return , b}"),
+        ("(yield, 1)", "(yield , 1)"),
+    ] {
+        let expression: Expr = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(expression.to_token_stream().to_string(), tokens);
+    }
+
+    let expression: Expr = moxy::parse!("match y { None => return, Some(v) => v }").unwrap();
+    let arms = &expression.as_match().unwrap().arms.inner;
+    assert_eq!(arms.len(), 2);
+    assert!(arms[0].body.as_return().unwrap().expr.is_none());
+
+    let expression: Expr = moxy::parse!("f(return, 1)").unwrap();
+    let args = &expression.as_call().unwrap().args.inner;
+    assert_eq!(args.len(), 2);
+    assert!(args.iter().next().unwrap().as_return().unwrap().expr.is_none());
+
+    let expression: Expr = moxy::parse!("(yield, 1)").unwrap();
+    assert!(expression.is_tuple());
+}

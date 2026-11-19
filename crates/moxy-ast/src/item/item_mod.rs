@@ -94,6 +94,7 @@ impl ToTokens for ItemMod {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.vis.to_tokens(t);
+        self.unsafety.to_tokens(t);
         self.mod_keyword.to_tokens(t);
         self.ident.to_tokens(t);
 
