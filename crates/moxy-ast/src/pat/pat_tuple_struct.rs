@@ -92,8 +92,7 @@ impl Parse for PatTupleStruct {
 impl ToTokens for PatTupleStruct {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
-        self.qself.to_tokens(t);
-        self.path.to_tokens(t);
+        QSelf::path_to_tokens(self.qself.as_ref(), &self.path, t);
         self.elems.to_tokens(t);
     }
 }

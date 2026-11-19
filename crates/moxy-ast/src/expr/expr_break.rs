@@ -9,7 +9,7 @@ use crate::*;
 pub struct ExprBreak {
     pub attrs: Attributes,
     pub break_keyword: Token![break],
-    pub label: Option<Label>,
+    pub label: Option<Lifetime>,
     pub expr: Option<Box<Expr>>,
 }
 

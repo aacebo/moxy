@@ -1,4 +1,4 @@
-use moxy_token::{Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Punct, Spacing, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::{Cursor, Parse, ParseError, Parser};
 
@@ -6,17 +6,28 @@ macro_rules! define_punct {
     ($($name:ident($len:literal) => [ $($field:tt : $punct:ident),+ ]),+ $(,)?) => {
         $(
             #[doc = concat!("A compound Rust punctuation AST token represented by `", stringify!($name), "`.")]
-            #[derive(Debug, Default, Copy, Clone, PartialEq, Eq, Hash)]
+            #[derive(Debug, Copy, Clone, PartialEq, Eq, Hash)]
             pub struct $name($(pub moxy_token::$punct),*);
 
             impl $name {
+                /// Returns the token with every character joined to the next, so it emits
+                /// as one token, such as `::` rather than `: :`.
                 pub fn new(span: Span) -> Self {
-                    Self($(moxy_token::$punct::new(span)),*)
+                    let mut token = Self($(moxy_token::$punct::new(span).with_spacing(Spacing::Joint)),*);
+                    let Self(.., last) = &mut token;
+                    last.set_spacing(Spacing::Alone);
+                    token
                 }
 
                 pub fn span(&self) -> Span {
                     let Self(first, .., last) = self;
                     first.span().join(last.span())
+                }
+            }
+
+            impl Default for $name {
+                fn default() -> Self {
+                    Self::new(Span::default())
                 }
             }
 

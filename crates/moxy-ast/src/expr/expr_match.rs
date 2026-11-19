@@ -75,7 +75,7 @@ impl Parse for MatchArm {
         };
 
         let fat_arrow = <_ as Parse>::parse(parser)?;
-        let body = super::parse::arm_body(parser)?;
+        let body = super::parse::early(parser)?;
         let comma = <_ as Parse>::parse(parser)?;
 
         Ok(Self {
@@ -99,7 +99,7 @@ impl Parse for MatchArm {
         }
 
         cursor = <Token![=>]>::skip(cursor)?;
-        cursor = super::skip::arm_body(cursor)?;
+        cursor = super::skip::early(cursor)?;
         Option::<Token![,]>::skip(cursor)
     }
 }

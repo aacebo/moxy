@@ -59,3 +59,22 @@ fn keywords_followed_by_a_negation_are_expressions_not_macro_calls() {
         "fn f() {\n\tif !ready {\n\t\twait();\n\t}\n\tdone()\n}"
     );
 }
+
+#[test]
+fn macro_rules_definitions_are_statements() {
+    let item: moxy::ast::Item = moxy::parse!("fn f() { macro_rules! scan { ($x:ident) => { $x }; } g() }").unwrap();
+    let statements = &item.as_fn().unwrap().body.as_ref().unwrap().stmts.inner;
+    assert_eq!(statements.len(), 2);
+    assert!(statements[0].as_item().is_some());
+}
+
+#[test]
+fn block_like_expression_statements_end_at_their_block() {
+    let item: moxy::ast::Item = moxy::parse!("fn f() { if a { b; } <T>::g(c) }").unwrap();
+    let statements = &item.as_fn().unwrap().body.as_ref().unwrap().stmts.inner;
+    assert_eq!(statements.len(), 2);
+
+    // A method call continues the block-like expression
+    let item: moxy::ast::Item = moxy::parse!("fn f() { if a { b } else { c }.len(); }").unwrap();
+    assert_eq!(item.as_fn().unwrap().body.as_ref().unwrap().stmts.inner.len(), 1);
+}

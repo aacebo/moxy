@@ -157,6 +157,10 @@ impl Format for PatOr {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
 
+        if self.leading_vert.is_some() {
+            f.text("| ")?;
+        }
+
         for pair in self.cases.pairs() {
             match pair {
                 moxy_ast::Pair::List(pat, _) => {
@@ -176,6 +180,11 @@ impl Format for PatOr {
 impl Format for PatLit {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.attrs.format(f)?;
+
+        if self.minus.is_some() {
+            f.text("-")?;
+        }
+
         self.lit.format(f)
     }
 }

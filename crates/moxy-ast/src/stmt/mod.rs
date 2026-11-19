@@ -113,7 +113,7 @@ impl Parse for Stmt {
             return Ok(Self::Item(<_ as Parse>::parse(parser)?));
         }
 
-        let expr = <_ as Parse>::parse(parser)?;
+        let expr = crate::expr::parse::early(parser)?;
         let semi = <_ as Parse>::parse(parser)?;
         Ok(Self::Expr(Box::new(expr), semi))
     }
@@ -130,7 +130,7 @@ impl Parse for Stmt {
         } else if Item::peek(cursor) {
             Item::skip(cursor)
         } else {
-            Option::<Token![;]>::skip(Expr::skip(cursor)?)
+            Option::<Token![;]>::skip(crate::expr::skip::early(cursor)?)
         }
     }
 }

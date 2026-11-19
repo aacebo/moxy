@@ -67,6 +67,42 @@ impl Spanner for QSelf {
     }
 }
 
+impl QSelf {
+    /// Emits `path` qualified by `qself`, `<ty as Trait>::rest` where the first
+    /// `position` segments of `path` belong to the trait, or `path` alone when
+    /// it has no qualifier. Every node that holds a `QSelf` beside its path
+    /// emits through this.
+    pub fn path_to_tokens(qself: Option<&Self>, path: &Path, tokens: &mut TokenStream) {
+        let Some(qself) = qself else {
+            path.to_tokens(tokens);
+            return;
+        };
+
+        qself.lt.to_tokens(tokens);
+        qself.ty.to_tokens(tokens);
+        let segments: Vec<&PathSegment> = path.iter().collect();
+
+        if let Some(as_keyword) = &qself.as_keyword {
+            as_keyword.to_tokens(tokens);
+
+            for (index, segment) in segments[..qself.position].iter().enumerate() {
+                if index > 0 {
+                    <Token![::]>::default().to_tokens(tokens);
+                }
+
+                segment.to_tokens(tokens);
+            }
+        }
+
+        qself.gt.to_tokens(tokens);
+
+        for segment in &segments[qself.position..] {
+            <Token![::]>::default().to_tokens(tokens);
+            segment.to_tokens(tokens);
+        }
+    }
+}
+
 impl ToTokens for QSelf {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         // Emits just `< ty >`; the `as Trait` portion is rendered by `TypePath`

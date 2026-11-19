@@ -472,3 +472,38 @@ fn closure_parameters_take_reference_patterns() {
         assert_eq!(expression.to_token_stream().to_string(), tokens);
     }
 }
+
+#[test]
+fn qualified_paths_keep_their_qualifier_in_expressions_and_patterns() {
+    for (source, tokens) in [
+        ("<T as a::U>::f(x)", "< T as a :: U > :: f (x)"),
+        ("<Vec<u8>>::new()", "< Vec < u8 >> :: new ()"),
+        ("<T as U>::C { x: 1 }", "< T as U > :: C {x : 1}"),
+        (
+            "match x { <T as U>::A => 1, <T as U>::B { x } => 2, <T as U>::C(y) => 3 }",
+            "match x {< T as U > :: A => 1 , < T as U > :: B {x} => 2 , < T as U > :: C (y) => 3}",
+        ),
+    ] {
+        let expression: Expr = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(expression.to_token_stream().to_string(), tokens);
+    }
+}
+
+#[test]
+fn raw_borrows_keep_the_raw_keyword() {
+    for (source, tokens) in [("&raw const x", "& raw const x"), ("&raw mut x", "& raw mut x")] {
+        let expression: Expr = moxy::parse!(source).unwrap();
+        assert!(expression.is_raw_addr());
+        assert_eq!(expression.to_token_stream().to_string(), tokens);
+    }
+}
+
+#[test]
+fn break_keeps_its_label() {
+    let expression: Expr = moxy::parse!("'a: loop { break 'a; }").unwrap();
+    let Some(moxy::ast::Stmt::Expr(statement, _)) = expression.as_loop().unwrap().body.stmts.inner.first() else {
+        panic!("expected an expression statement");
+    };
+    let label = statement.as_break().unwrap().label.as_ref().unwrap();
+    assert_eq!(label.to_token_stream().to_string(), "'a");
+}

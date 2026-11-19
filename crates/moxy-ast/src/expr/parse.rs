@@ -8,10 +8,11 @@ pub(super) fn expr(parser: &Parser, context: ExprContext) -> Result<Expr, ParseE
     assignment(parser, attrs, context)
 }
 
-// A match arm body. A block-like body (`{ .. }`, `if`, `match`, a loop, ..)
-// ends the arm unless a method call, field access, or `?` continues it, so
-// `a => { x } (b, c) => y` holds two arms rather than a call on the block.
-pub(crate) fn arm_body(parser: &Parser) -> Result<Expr, ParseError> {
+// A match arm body or an expression statement. A block-like expression
+// (`{ .. }`, `if`, `match`, a loop, ..) ends there unless a method call,
+// field access, or `?` continues it, so `a => { x } (b, c) => y` holds two
+// arms and `if a { b } <T>::f()` two statements.
+pub(crate) fn early(parser: &Parser) -> Result<Expr, ParseError> {
     let fork = parser.fork();
     let attrs = <_ as Parse>::parse(&fork)?;
 

@@ -155,3 +155,12 @@ fn unnamed_fields_and_bare_fn_arguments_accept_multi_segment_paths() {
         assert_eq!(ty.to_token_stream().to_string(), tokens);
     }
 }
+
+#[test]
+fn qualified_paths_emit_joined_path_separators() {
+    let ty: Type = moxy::parse!("Option<<Self as Trait>::Item>").unwrap();
+    assert_eq!(ty.to_token_stream().to_string(), "Option << Self as Trait > :: Item >");
+
+    let built = moxy::ast::ColonColon::default().to_token_stream();
+    assert_eq!(built.to_string(), "::");
+}

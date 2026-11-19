@@ -1,4 +1,4 @@
-use moxy_token::{Delim, Group, Span, Spanner, ToTokens, TokenStream};
+use moxy_token::{Delim, Group, Span, Spanner, ToTokens, TokenStream, TokenTree};
 
 use crate::*;
 
@@ -51,7 +51,8 @@ impl Parse for MacroCall {
             return false;
         };
 
-        <Token![!]>::peek(cursor)
+        // `macro_rules! name { .. }` defines a macro rather than calling one
+        <Token![!]>::skip(cursor).is_some_and(|cursor| matches!(cursor.curr(), Some(TokenTree::Group(_))))
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {

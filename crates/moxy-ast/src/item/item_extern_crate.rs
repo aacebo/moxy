@@ -35,7 +35,8 @@ impl Parse for ItemExternCrate {
         let vis = <_ as Parse>::parse(parser)?;
         let extern_keyword = <_ as Parse>::parse(parser)?;
         let crate_keyword = <_ as Parse>::parse(parser)?;
-        let ident = <_ as Parse>::parse(parser)?;
+        // `extern crate self as name;` names the current crate
+        let ident = parser.parse_ident_any()?;
         let (as_keyword, rename) = if <Token![as]>::peek(parser.cursor()) {
             let as_keyword = <_ as Parse>::parse(parser)?;
             let rename = <_ as Parse>::parse(parser)?;
@@ -63,7 +64,11 @@ impl Parse for ItemExternCrate {
         cursor = Visibility::skip(cursor)?;
         cursor = <Token![extern]>::skip(cursor)?;
         cursor = <Token![crate]>::skip(cursor)?;
-        cursor = Ident::skip(cursor)?;
+        cursor = if <Token![self]>::peek(cursor) {
+            <Token![self]>::skip(cursor)?
+        } else {
+            Ident::skip(cursor)?
+        };
 
         if <Token![as]>::peek(cursor) {
             cursor = <Token![as]>::skip(cursor)?;

@@ -23,7 +23,7 @@ pub(crate) fn pattern_bound(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     expr(cursor, ExprContext::PATTERN_BOUND)
 }
 
-pub(crate) fn arm_body(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+pub(crate) fn early(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
     let start = Attributes::skip(cursor)?;
 
     if peek::block_like(start)

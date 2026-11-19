@@ -622,6 +622,7 @@ define_visit! {
         walk: walk_pat_or, walk_mut: walk_pat_or_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
+            leading_vert: skip,
             cases: punct => visit_pattern / visit_pattern_mut,
         }
     }
@@ -630,6 +631,7 @@ define_visit! {
         walk: walk_pat_lit, walk_mut: walk_pat_lit_mut,
         fields {
             attrs => visit_attributes / visit_attributes_mut,
+            minus: skip,
             lit: skip,
         }
     }

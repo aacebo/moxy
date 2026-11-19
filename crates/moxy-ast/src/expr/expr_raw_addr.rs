@@ -36,6 +36,7 @@ impl ToTokens for ExprRawAddr {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
         self.and.to_tokens(t);
+        self.raw.to_tokens(t);
         self.mutability.to_tokens(t);
         self.expr.to_tokens(t);
     }

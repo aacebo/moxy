@@ -2,12 +2,13 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 
 use crate::*;
 
-/// An or-pattern, e.g. `A | B | C`.
+/// An or-pattern, e.g. `A | B | C`, with an optional leading `|`.
 #[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct PatOr {
     pub attrs: Attributes,
+    pub leading_vert: Option<Token![|]>,
     pub cases: List<Pattern, Token![|]>,
 }
 
@@ -62,6 +63,7 @@ impl Parse for PatOr {
 impl ToTokens for PatOr {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
+        self.leading_vert.to_tokens(t);
         self.cases.to_tokens(t);
     }
 }

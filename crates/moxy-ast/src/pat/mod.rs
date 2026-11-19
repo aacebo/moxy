@@ -334,9 +334,7 @@ impl Parse for Pattern {
             Attributes::default()
         };
 
-        if leading {
-            let _: Token![|] = <_ as Parse>::parse(parser)?;
-        }
+        let leading_vert = if leading { Some(<_ as Parse>::parse(parser)?) } else { None };
 
         let first = parse::single(parser)?;
 
@@ -352,7 +350,11 @@ impl Parse for Pattern {
             cases.push_value(parse::single(parser)?);
         }
 
-        Ok(Self::Or(PatOr { attrs, cases }))
+        Ok(Self::Or(PatOr {
+            attrs,
+            leading_vert,
+            cases,
+        }))
     }
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {

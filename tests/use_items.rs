@@ -29,3 +29,9 @@ fn use_paths_accept_path_keywords() {
         assert_eq!(moxy::fmt!(&item).unwrap(), expected);
     }
 }
+
+#[test]
+fn extern_crate_self_names_the_current_crate() {
+    let item: Item = moxy::parse!("extern crate self as name;").unwrap();
+    assert_eq!(moxy::fmt!(&item).unwrap(), "extern crate self as name;");
+}

@@ -59,3 +59,21 @@ fn invalid_tuple_indices_are_rejected_as_member_patterns() {
         debug_assert!(result.is_err(), "accepted invalid tuple index {source} => {result:#?}");
     }
 }
+
+#[test]
+fn or_patterns_keep_a_leading_vert() {
+    let expression: moxy::ast::Expr = moxy::parse!("match x { | 1 | 2 => {} }").unwrap();
+    assert_eq!(
+        moxy::token::ToTokenStream::to_token_stream(&expression).to_string(),
+        "match x {| 1 | 2 => {}}"
+    );
+}
+
+#[test]
+fn negative_literals_are_patterns() {
+    let expression: moxy::ast::Expr = moxy::parse!("match x { -1 => {} (-2, -2.5) => {} }").unwrap();
+    assert_eq!(
+        moxy::token::ToTokenStream::to_token_stream(&expression).to_string(),
+        "match x {- 1 => {} (- 2 , - 2.5) => {}}"
+    );
+}

@@ -5,8 +5,8 @@ pub(super) fn expr(cursor: Cursor<'_>, _context: ExprContext) -> bool {
     !cursor.is_empty() && !<Token![;]>::peek(cursor)
 }
 
-// Whether a block-like expression, which ends a match arm without a comma,
-// starts here
+// Whether a block-like expression, which ends a match arm without a comma and
+// a statement without a semicolon, starts here
 pub(super) fn block_like(cursor: Cursor<'_>) -> bool {
     let cursor = Label::skip(cursor).unwrap_or(cursor);
 

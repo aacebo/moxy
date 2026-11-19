@@ -34,7 +34,7 @@ impl Spanner for ExprStruct {
 impl ToTokens for ExprStruct {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
-        self.path.to_tokens(t);
+        QSelf::path_to_tokens(self.qself.as_ref(), &self.path, t);
         self.body.to_tokens(t);
     }
 }
