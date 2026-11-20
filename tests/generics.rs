@@ -62,6 +62,13 @@ fn literal_const_generic_arguments_parse_in_implementations() {
 }
 
 #[test]
+fn associated_const_generic_arguments_parse() {
+    let item: Item = moxy::parse!("impl<P> Builder<P, COUNT = 0> {}").unwrap();
+
+    assert_eq!(moxy::fmt!(&item).unwrap(), "impl<P> Builder<P, COUNT = 0> {}");
+}
+
+#[test]
 fn const_generic_default_permutations_parse() {
     for source in [
         "pub struct Unit<const N: usize = 0>;",

@@ -59,10 +59,7 @@ impl Variant {
                         key = name;
                     }
                     MetaRule::Default(value) => {
-                        let span = value.as_ref().map(Spanner::span).unwrap_or_else(|| match &attr.content {
-                            moxy::ast::MetaContent::List(group) => group.span.close(),
-                            _ => unreachable!(),
-                        });
+                        let span = value.as_ref().map(Spanner::span).unwrap_or_else(|| group.span.close());
 
                         return Err(moxy::ast::ParseError::new(
                             span,
