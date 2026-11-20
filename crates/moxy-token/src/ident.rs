@@ -42,8 +42,8 @@ use crate::{Span, TokenTree};
 /// Panics if the concatenated text is not a valid identifier.
 #[macro_export]
 macro_rules! ident {
-    ($x:ident) => { $crate::Ident::lex(stringify!($x).to_string()).expect("invalid syntax") };
-    ($x:expr)  => { $crate::Ident::lex($x).expect("invalid syntax") };
+    ($x:ident) => { $crate::Ident::lex(stringify!($x).to_string()).expect("invalid identifier") };
+    ($x:expr)  => { $crate::Ident::lex($x).expect("invalid identifier") };
     ($head:ident, $($tail:tt)+) => {{
         let mut __ident = stringify!($head).to_string();
         ident!(@accum __ident, $($tail)+)
@@ -62,11 +62,11 @@ macro_rules! ident {
     }};
     (@accum $acc:ident, $last:ident) => {{
         $acc += stringify!($last);
-        $crate::Ident::lex($acc).expect("invalid syntax")
+        $crate::Ident::lex($acc).expect("invalid identifier")
     }};
     (@accum $acc:ident, $last:expr) => {{
         $acc += &$last.to_string();
-        $crate::Ident::lex($acc).expect("invalid syntax")
+        $crate::Ident::lex($acc).expect("invalid identifier")
     }};
 }
 

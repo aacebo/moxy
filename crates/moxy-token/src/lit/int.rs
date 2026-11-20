@@ -348,7 +348,7 @@ impl std::str::FromStr for Radix {
             "0o" | "0O" => Ok(Self::Octal),
             "0x" | "0X" => Ok(Self::Hex),
             "" => Ok(Self::Decimal),
-            v => Err(format!("expected integer literal radix, received {v}")),
+            v => Err(format!("expected integer literal radix, found `{v}`")),
         }
     }
 }
@@ -431,7 +431,7 @@ impl std::str::FromStr for IntSuffix {
             "u64" => Ok(Self::U64),
             "u128" => Ok(Self::U128),
             "usize" => Ok(Self::USize),
-            v => Err(format!("expected integer literal suffix, received {v}")),
+            v => Err(format!("expected integer literal suffix, found `{v}`")),
         }
     }
 }
@@ -485,10 +485,22 @@ fn scan(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
         }
 
         // As in rustc, even in macro input: `1e` and `1em` are errors
-        cur = digits(cur, |ch| ch.is_ascii_digit()).map_err(|e| e.message("expected at least one digit in exponent"))?;
+        cur = digits(cur, |ch| ch.is_ascii_digit()).map_err(|e| e.message(exponent_without_digits(cur)))?;
     }
 
     Ok(suffix(cur))
+}
+
+// The message for an exponent whose digits are missing where `cursor` is, as
+// in `1e` or `1em`, which names what follows instead
+pub(super) fn exponent_without_digits(cursor: Cursor<'_>) -> String {
+    match cursor.skip_while(|ch| ch == '_').first() {
+        Some(ch) => format!(
+            "expected at least one digit in exponent, found {}",
+            crate::__private::quoted(&ch.to_string())
+        ),
+        None => "expected at least one digit in exponent, found end of input".to_owned(),
+    }
 }
 
 fn digits(c: Cursor<'_>, pred: fn(char) -> bool) -> Result<Cursor<'_>, LexError> {

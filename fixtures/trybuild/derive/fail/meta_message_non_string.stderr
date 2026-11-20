@@ -1,4 +1,4 @@
-error: expected string literal
+error: expected string literal, found `true`
  --> fixtures/trybuild/derive/fail/meta_message_non_string.rs:3:22
   |
 3 |     #[meta(message = true)]

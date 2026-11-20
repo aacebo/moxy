@@ -86,7 +86,7 @@ impl PatRange {
         };
 
         if start.is_none() && end.is_none() && matches!(limits, PatRangeLimits::HalfOpen(_)) {
-            return parser.error("expected range pattern").into();
+            return parser.expected("range pattern").into();
         }
 
         Ok(Self {

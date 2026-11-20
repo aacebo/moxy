@@ -614,7 +614,7 @@ fn dot(parser: &Parser, ops: &mut Vec<Postfix>) -> Result<(), ParseError> {
 // One call site for every form keeps one return slot in this frame, which
 // each nested expression recurses through
 fn primary(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
-    let form: Form = primary_form(parser).ok_or_else(|| parser.error("expected expression"))?;
+    let form: Form = primary_form(parser).ok_or_else(|| parser.expected("expression"))?;
     form(parser, attrs, context)
 }
 
@@ -819,7 +819,7 @@ fn else_branches(parser: &Parser) -> Result<(Vec<ElseIf>, Option<Token![else]>, 
     let else_keyword = <_ as Parse>::parse(parser)?;
 
     if !parser.is_delimited(Delim::Brace) {
-        return parser.error("expected `{` or `if` after `else`").into();
+        return parser.expected("`{` or `if` after `else`").into();
     }
 
     // The final block takes a second level: an `if` nested in it takes more
@@ -1112,7 +1112,7 @@ fn closure(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<B
     // `|| -> u8 { 1 }.x` the field belongs to the closure
     let body = if output.is_type() {
         if !parser.is_delimited(Delim::Brace) {
-            return parser.error("expected a block after the closure's return type").into();
+            return parser.expected("block after the closure's return type").into();
         }
 
         block(parser, Attributes::default())?

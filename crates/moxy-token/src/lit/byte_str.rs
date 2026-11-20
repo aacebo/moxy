@@ -115,7 +115,7 @@ fn scan_cooked<'a>(c: Cursor<'a>, open: &str) -> Result<Cursor<'a>, LexError> {
 
     loop {
         match c.first() {
-            None => return c.error().into(),
+            None => return c.error().message("unterminated byte string literal").into(),
             Some('"') => return Ok(c.advance()),
             Some('\\') => c = escape(c.advance())?,
             Some(ch) if !ch.is_ascii() => return c.error().message("non-ASCII character in byte string literal").into(),
@@ -149,7 +149,7 @@ fn scan_raw<'a>(start: Cursor<'a>, open: &str) -> Result<Cursor<'a>, LexError> {
 
     loop {
         if cur.is_empty() {
-            return start.error().into();
+            return start.error().message("unterminated raw byte string literal").into();
         }
 
         if cur.starts_with(&closing) {

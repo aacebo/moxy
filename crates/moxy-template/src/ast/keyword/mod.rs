@@ -36,7 +36,10 @@ impl Parse for TmplKeyword {
             return Ok(Self::Match(<_ as Parse>::parse(parser)?));
         }
 
-        parser.error("expected template directive").into()
+        // The parser is at the `@`, so the error names the token after it
+        let after = parser.fork();
+        after.offset(1);
+        Err(after.expected("`if`, `for`, or `match` after `@`"))
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
@@ -79,7 +82,7 @@ pub(super) fn parse_unparenthesized_expr(parser: &Parser) -> Result<TokenStream,
         }
 
         let Some(token) = parser.advance() else {
-            return parser.error("expected template directive body").into();
+            return parser.expected("template directive body").into();
         };
 
         expr.extend_one(token.clone());

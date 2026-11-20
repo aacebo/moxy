@@ -33,15 +33,25 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
     }
 
     if !item.vis.is_public() {
-        return item.vis.span().error("proc macros must be pub").emit();
+        return item.vis.span().error("proc macros must be `pub`").emit();
     }
 
     if item.sig.params.inputs.len() != 1 {
-        return item.sig.params.span().error("proc macro derive signature invalid").emit();
+        return item
+            .sig
+            .params
+            .span()
+            .error("expected function with one parameter and a return type")
+            .emit();
     }
 
     let moxy::ast::ReturnType::Type(_, _) = &item.sig.output else {
-        return item.sig.output.span().error("proc macro derive signature invalid").emit();
+        return item
+            .sig
+            .output
+            .span()
+            .error("expected function with one parameter and a return type")
+            .emit();
     };
 
     item.sig.ident = match moxy::parse!("__call__") {

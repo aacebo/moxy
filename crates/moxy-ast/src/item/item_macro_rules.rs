@@ -56,7 +56,7 @@ impl Parse for ItemMacroRules {
             Some(<_ as Parse>::parse(parser)?)
         } else {
             return parser
-                .error("expected `;` after a `macro_rules!` body in parentheses or brackets")
+                .expected("`;` after a `macro_rules!` body in parentheses or brackets")
                 .into();
         };
 

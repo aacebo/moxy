@@ -12,7 +12,7 @@ pub struct Field {
 impl Field {
     pub fn parse(field: &moxy::ast::Field, index: usize) -> Result<Self, moxy::ast::ParseError> {
         let Some(member) = field.ident.clone() else {
-            return Err(moxy::ast::ParseError::new(field.span(), "`meta` requires named fields"));
+            return Err(moxy::ast::ParseError::new(field.span(), "`FromMeta` requires named fields"));
         };
 
         let mut key = LitStr::new(member.text(), member.span());
@@ -28,11 +28,7 @@ impl Field {
                 continue;
             }
 
-            let moxy::ast::MetaContent::List(group) = &attr.content else {
-                return Err(moxy::ast::ParseError::new(attr.span(), "expected `#[meta(...)]`"));
-            };
-
-            let parser = moxy::ast::Parser::from_tokens(&group.tokens);
+            let parser = moxy::ast::Parser::from_group(rules_group(attr)?);
             let rules = List::<MetaRule, moxy::ast::Token![,]>::parse_all(&parser)?;
 
             for rule in rules {

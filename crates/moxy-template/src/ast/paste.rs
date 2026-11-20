@@ -70,10 +70,10 @@ impl Parse for PasteNode {
                 Ok(Self::Group(delim, <_ as Parse>::parse(&body)?))
             }
             Some(_) => {
-                let token = parser.advance().ok_or_else(|| parser.error("expected paste node"))?.clone();
+                let token = parser.advance().ok_or_else(|| parser.expected("tokens to paste"))?.clone();
                 Ok(Self::Verbatim(token))
             }
-            None => parser.error("expected paste node").into(),
+            None => parser.expected("tokens to paste").into(),
         }
     }
 
@@ -104,7 +104,10 @@ impl PasteNode {
 
                 match Ident::lex(&text) {
                     Ok(id) => Ok(TokenStream::from(vec![id.with_span(*span).into_token_tree()])),
-                    Err(e) => Err(e.into()),
+                    Err(_) => Err(ParseError::new(
+                        *span,
+                        format!("expected identifier, found {}", moxy_token::__private::quoted(&text)),
+                    )),
                 }
             }
         }

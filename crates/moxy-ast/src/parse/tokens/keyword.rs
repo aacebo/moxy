@@ -12,9 +12,12 @@ impl Parse for Keyword {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.advance() {
-            Some(TokenTree::Keyword(v)) => Ok(*v),
-            _ => Err(parser.error("expected keyword")),
+        match parser.curr() {
+            Some(TokenTree::Keyword(v)) => {
+                parser.advance();
+                Ok(*v)
+            }
+            _ => Err(parser.expected("keyword")),
         }
     }
 
@@ -38,7 +41,7 @@ impl Parse for Abstract {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Abstract::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Abstract::TEXT))),
         }
     }
 
@@ -62,7 +65,7 @@ impl Parse for As {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", As::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", As::TEXT))),
         }
     }
 
@@ -86,7 +89,7 @@ impl Parse for Async {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Async::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Async::TEXT))),
         }
     }
 
@@ -110,7 +113,7 @@ impl Parse for Auto {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Auto::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Auto::TEXT))),
         }
     }
 
@@ -134,7 +137,7 @@ impl Parse for Await {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Await::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Await::TEXT))),
         }
     }
 
@@ -158,7 +161,7 @@ impl Parse for Become {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Become::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Become::TEXT))),
         }
     }
 
@@ -182,7 +185,7 @@ impl Parse for Box {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Box::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Box::TEXT))),
         }
     }
 
@@ -206,7 +209,7 @@ impl Parse for Break {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Break::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Break::TEXT))),
         }
     }
 
@@ -230,7 +233,7 @@ impl Parse for Const {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Const::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Const::TEXT))),
         }
     }
 
@@ -254,7 +257,7 @@ impl Parse for Continue {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Continue::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Continue::TEXT))),
         }
     }
 
@@ -278,7 +281,7 @@ impl Parse for Crate {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Crate::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Crate::TEXT))),
         }
     }
 
@@ -302,7 +305,7 @@ impl Parse for Default {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Default::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Default::TEXT))),
         }
     }
 
@@ -326,7 +329,7 @@ impl Parse for Do {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Do::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Do::TEXT))),
         }
     }
 
@@ -350,7 +353,7 @@ impl Parse for Dyn {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Dyn::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Dyn::TEXT))),
         }
     }
 
@@ -374,7 +377,7 @@ impl Parse for Else {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Else::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Else::TEXT))),
         }
     }
 
@@ -398,7 +401,7 @@ impl Parse for Enum {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Enum::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Enum::TEXT))),
         }
     }
 
@@ -422,7 +425,7 @@ impl Parse for Extern {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Extern::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Extern::TEXT))),
         }
     }
 
@@ -446,7 +449,7 @@ impl Parse for Final {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Final::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Final::TEXT))),
         }
     }
 
@@ -470,7 +473,7 @@ impl Parse for Fn {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Fn::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Fn::TEXT))),
         }
     }
 
@@ -494,7 +497,7 @@ impl Parse for For {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", For::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", For::TEXT))),
         }
     }
 
@@ -518,7 +521,7 @@ impl Parse for If {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", If::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", If::TEXT))),
         }
     }
 
@@ -542,7 +545,7 @@ impl Parse for Impl {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Impl::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Impl::TEXT))),
         }
     }
 
@@ -566,7 +569,7 @@ impl Parse for In {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", In::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", In::TEXT))),
         }
     }
 
@@ -590,7 +593,7 @@ impl Parse for Let {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Let::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Let::TEXT))),
         }
     }
 
@@ -614,7 +617,7 @@ impl Parse for Loop {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Loop::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Loop::TEXT))),
         }
     }
 
@@ -638,7 +641,7 @@ impl Parse for Macro {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Macro::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Macro::TEXT))),
         }
     }
 
@@ -662,7 +665,7 @@ impl Parse for MacroRules {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", MacroRules::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", MacroRules::TEXT))),
         }
     }
 
@@ -686,7 +689,7 @@ impl Parse for Match {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Match::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Match::TEXT))),
         }
     }
 
@@ -710,7 +713,7 @@ impl Parse for Mod {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Mod::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Mod::TEXT))),
         }
     }
 
@@ -734,7 +737,7 @@ impl Parse for Move {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Move::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Move::TEXT))),
         }
     }
 
@@ -758,7 +761,7 @@ impl Parse for Mut {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Mut::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Mut::TEXT))),
         }
     }
 
@@ -782,7 +785,7 @@ impl Parse for Override {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Override::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Override::TEXT))),
         }
     }
 
@@ -806,7 +809,7 @@ impl Parse for Priv {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Priv::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Priv::TEXT))),
         }
     }
 
@@ -830,7 +833,7 @@ impl Parse for Pub {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Pub::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Pub::TEXT))),
         }
     }
 
@@ -854,7 +857,7 @@ impl Parse for Raw {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Raw::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Raw::TEXT))),
         }
     }
 
@@ -878,7 +881,7 @@ impl Parse for Ref {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Ref::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Ref::TEXT))),
         }
     }
 
@@ -902,7 +905,7 @@ impl Parse for Return {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Return::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Return::TEXT))),
         }
     }
 
@@ -926,7 +929,7 @@ impl Parse for SelfType {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", SelfType::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", SelfType::TEXT))),
         }
     }
 
@@ -950,7 +953,7 @@ impl Parse for SelfValue {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", SelfValue::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", SelfValue::TEXT))),
         }
     }
 
@@ -974,7 +977,7 @@ impl Parse for Static {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Static::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Static::TEXT))),
         }
     }
 
@@ -998,7 +1001,7 @@ impl Parse for Struct {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Struct::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Struct::TEXT))),
         }
     }
 
@@ -1022,7 +1025,7 @@ impl Parse for Super {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Super::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Super::TEXT))),
         }
     }
 
@@ -1046,7 +1049,7 @@ impl Parse for Trait {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Trait::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Trait::TEXT))),
         }
     }
 
@@ -1070,7 +1073,7 @@ impl Parse for Try {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Try::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Try::TEXT))),
         }
     }
 
@@ -1094,7 +1097,7 @@ impl Parse for Type {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Type::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Type::TEXT))),
         }
     }
 
@@ -1118,7 +1121,7 @@ impl Parse for Typeof {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Typeof::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Typeof::TEXT))),
         }
     }
 
@@ -1142,7 +1145,7 @@ impl Parse for Union {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Union::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Union::TEXT))),
         }
     }
 
@@ -1166,7 +1169,7 @@ impl Parse for Unsafe {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Unsafe::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Unsafe::TEXT))),
         }
     }
 
@@ -1186,7 +1189,7 @@ impl Parse for Safe {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Safe::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Safe::TEXT))),
         }
     }
 
@@ -1210,7 +1213,7 @@ impl Parse for Unsized {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Unsized::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Unsized::TEXT))),
         }
     }
 
@@ -1234,7 +1237,7 @@ impl Parse for Use {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Use::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Use::TEXT))),
         }
     }
 
@@ -1258,7 +1261,7 @@ impl Parse for Virtual {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Virtual::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Virtual::TEXT))),
         }
     }
 
@@ -1282,7 +1285,7 @@ impl Parse for Where {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Where::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Where::TEXT))),
         }
     }
 
@@ -1306,7 +1309,7 @@ impl Parse for While {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", While::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", While::TEXT))),
         }
     }
 
@@ -1330,7 +1333,7 @@ impl Parse for Yield {
                 parser.advance();
                 Ok(*v)
             }
-            _ => Err(parser.error(format!("expected `{}` keyword", Yield::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Yield::TEXT))),
         }
     }
 

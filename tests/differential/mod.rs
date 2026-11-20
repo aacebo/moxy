@@ -34,13 +34,13 @@ fn moxy_render(kind: &str, source: &str) -> Rendering {
     // A file is read as the text of a source file, as `syn::parse_file` reads
     // one
     if kind == "f" {
-        let file = m::File::from_source_file(source.to_owned()).map_err(|error| format!("{error:?}"))?;
+        let file = m::File::from_source_file(source.to_owned()).map_err(|error| error.message().to_string())?;
         let items = file.items.iter().map(mitem).collect::<Vec<_>>().join("\n");
         let tree = format!("file{}\n{items}", mattrs(&file.attrs));
         return Ok((tree, strip(&file.to_token_stream().to_string())));
     }
 
-    let tokens = TokenStream::from_string(source.to_owned()).map_err(|error| format!("{error:?}"))?;
+    let tokens = TokenStream::from_string(source.to_owned()).map_err(|error| error.to_string())?;
 
     match kind {
         "e" => go::<m::Expr>(&tokens, mexpr),
@@ -136,6 +136,89 @@ fn corpus() {
         unexpected.join("\n"),
         stale.join("\n"),
     );
+}
+
+// The style of every error message: lowercase with no closing period, code in
+// backticks (double ones with spaces around code that holds a backtick), no
+// type names (an acronym such as `ASCII` is fine), no article after
+// any "expected", and an "expected" message names what it found: code, or one
+// of the forms `end of input`, `end of group`, `empty group`, `trait alias`,
+// `no value` (a meta with no value after its name), and `no rules`
+pub(crate) fn follows_style(message: &str) -> bool {
+    // The prose of a message, without its quoted code
+    let mut prose = String::new();
+    let mut rest = message;
+
+    while let Some(start) = rest.find('`') {
+        prose.push_str(&rest[..start]);
+        let (close, skip) = if rest[start..].starts_with("`` ") {
+            (" ``", 3)
+        } else {
+            ("`", 1)
+        };
+        let Some(end) = rest[start + skip..].find(close) else {
+            return false;
+        };
+        rest = &rest[start + skip + end + close.len()..];
+    }
+
+    prose.push_str(rest);
+
+    let quoted = |found: &str| {
+        (found.starts_with("`` ") && found.ends_with(" ``"))
+            || (found.len() > 1 && found.starts_with('`') && found.ends_with('`'))
+    };
+    let found = message.split_once(", found ").is_none_or(|(_, found)| {
+        quoted(found)
+            || [
+                "end of input",
+                "end of group",
+                "empty group",
+                "trait alias",
+                "no value",
+                "no rules",
+            ]
+            .contains(&found)
+    });
+
+    message.starts_with(|ch: char| ch.is_lowercase() || ch == '`')
+        && !message.ends_with('.')
+        && !prose.contains('"')
+        && !prose.contains("received")
+        && !prose.to_lowercase().contains("eof")
+        && message
+            .split("expected ")
+            .skip(1)
+            .all(|rest| !["a ", "an ", "the "].iter().any(|article| rest.starts_with(article)))
+        && (!message.starts_with("expected ") || message.contains(", found "))
+        && prose
+            .split(|ch: char| !ch.is_alphanumeric())
+            .all(|word| !word.contains(char::is_lowercase) || !word.contains(char::is_uppercase))
+        && found
+}
+
+// Every message moxy gives for a corpus source it rejects follows the style
+// of `follows_style`
+#[test]
+fn error_messages_follow_one_style() {
+    let mut messages = 0;
+    let mut outliers = Vec::new();
+
+    for line in entries(CORPUS) {
+        let (kind, source) = line.split_once(": ").unwrap();
+        let source = source.replace("\\n", "\n");
+
+        if let Ok(Err(message)) = catch_unwind(AssertUnwindSafe(|| moxy_render(kind, &source))) {
+            messages += 1;
+
+            if !follows_style(&message) {
+                outliers.push(format!("{line}: {message}"));
+            }
+        }
+    }
+
+    assert!(messages > 100, "{messages} messages");
+    assert!(outliers.is_empty(), "{}", outliers.join("\n"));
 }
 
 // At every token of every corpus line, `skip` ends where `parse` ends, or both

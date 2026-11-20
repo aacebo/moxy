@@ -422,7 +422,7 @@ impl Type {
             let len = <_ as Parse>::parse(&inner)?;
 
             if !inner.is_empty() {
-                return inner.error("unexpected trailing input").into();
+                return inner.unexpected().into();
             }
 
             return Ok(Self::Array(TypeArray {
@@ -431,7 +431,7 @@ impl Type {
         }
 
         if !inner.is_empty() {
-            return inner.error("unexpected trailing input").into();
+            return inner.unexpected().into();
         }
 
         let elem = Delimited::bracket(bracket_span, elem);
@@ -525,7 +525,7 @@ impl Parse for Type {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         if !Self::peek(parser.cursor()) {
-            return parser.error("expected type").into();
+            return parser.expected("type").into();
         }
 
         let _depth = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;

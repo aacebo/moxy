@@ -82,7 +82,10 @@ impl Parse for Member {
             if is_tuple_index(&lit) {
                 Ok(Self::Unnamed(lit))
             } else {
-                parser.error("expected tuple index").into()
+                Err(ParseError::new(
+                    lit.span(),
+                    format!("expected tuple index, found {}", quoted(&lit.to_string())),
+                ))
             }
         } else {
             Ok(Self::Named(<_ as Parse>::parse(parser)?))

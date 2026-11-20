@@ -45,21 +45,31 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
             {
                 ident.clone()
             } else {
-                return moxy::ast::ParseError::new(expr.span(), "name can be a string literal or identifier").to_compile_error();
+                return moxy::ast::ParseError::expected(&expr, "string literal or identifier").to_compile_error();
             };
         }
     }
 
     if !item.vis.is_public() {
-        return item.vis.span().error("proc macros must be pub").emit();
+        return item.vis.span().error("proc macros must be `pub`").emit();
     }
 
     if item.sig.params.inputs.len() != 1 {
-        return item.sig.params.span().error("proc macro function signature invalid").emit();
+        return item
+            .sig
+            .params
+            .span()
+            .error("expected function with one parameter and a return type")
+            .emit();
     }
 
     let moxy::ast::ReturnType::Type(_, _) = &item.sig.output else {
-        return item.sig.output.span().error("proc macro function signature invalid").emit();
+        return item
+            .sig
+            .output
+            .span()
+            .error("expected function with one parameter and a return type")
+            .emit();
     };
 
     item.sig.ident = match moxy::parse!("__call__") {

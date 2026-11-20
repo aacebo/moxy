@@ -10,7 +10,7 @@ pub(crate) fn single(parser: &Parser) -> Result<Pattern, ParseError> {
     // As in rustc, a pattern takes no attributes; a parameter, match arm, or
     // struct pattern field holds them
     if <Token![#]>::peek(parser.cursor()) {
-        return parser.error("expected pattern").into();
+        return parser.expected("pattern").into();
     }
 
     // One call site for every form keeps one return slot in this frame
@@ -30,7 +30,7 @@ pub(crate) fn single(parser: &Parser) -> Result<Pattern, ParseError> {
         super::Form::Struct => parse_into::<PatStruct, Pattern>,
         super::Form::Path => bound::<PatPath>,
         super::Form::Lit => bound::<PatLit>,
-        super::Form::None => return parser.error("expected pattern").into(),
+        super::Form::None => return parser.expected("pattern").into(),
     };
 
     parse(parser)
@@ -78,7 +78,12 @@ fn bound<T: Parse + Into<Pattern>>(parser: &Parser) -> Result<Pattern, ParseErro
             const_keyword: constant.keyword,
             block: constant.block,
         }),
-        _ => return parser.error("expected a range bound").into(),
+        other => {
+            return Err(ParseError::new(
+                other.span(),
+                format!("expected range bound, found {}", found_node(&other)),
+            ));
+        }
     };
 
     Ok(Pattern::Range(Box::new(PatRange::parse_rest(

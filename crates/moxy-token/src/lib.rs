@@ -326,4 +326,39 @@ macro_rules! Token {
 #[doc(hidden)]
 pub mod __private {
     pub use crate::lex::depth::{Depth, Subtree, Watch};
+
+    pub fn short_token_text(tokens: &crate::TokenStream) -> Option<String> {
+        use std::fmt::{self, Write};
+
+        struct Preview(String);
+
+        impl Write for Preview {
+            fn write_str(&mut self, text: &str) -> fmt::Result {
+                if text.len() > 80 - self.0.len() || text.chars().any(char::is_control) {
+                    return Err(fmt::Error);
+                }
+
+                self.0.push_str(text);
+                Ok(())
+            }
+        }
+
+        if !(1..=7).contains(&tokens.len()) || tokens.iter().any(crate::TokenTree::is_group) {
+            return None;
+        }
+
+        let mut preview = Preview(String::new());
+        write!(preview, "{tokens}").ok()?;
+        Some(preview.0)
+    }
+
+    /// Code as an error message quotes it: in backticks, or in double ones with
+    /// spaces when it holds a backtick, as a string literal can.
+    pub fn quoted(code: &str) -> String {
+        if code.contains('`') {
+            format!("`` {code} ``")
+        } else {
+            format!("`{code}`")
+        }
+    }
 }

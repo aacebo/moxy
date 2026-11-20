@@ -230,8 +230,16 @@ impl Scan for TokenStream {
                 continue;
             }
 
+            // A literal that reports no error of its own is malformed as a whole
             let literal = if starts_literal {
-                Some(crate::Lit::scan(c)?)
+                let invalid = |error: LexError| {
+                    if error.is_reject() {
+                        LexError::new(error.span()).message("invalid literal")
+                    } else {
+                        error
+                    }
+                };
+                Some(crate::Lit::scan(c).map_err(invalid)?)
             } else {
                 crate::Lit::scan(c).ok()
             };
@@ -306,7 +314,7 @@ impl Scan for TokenStream {
 
             return Err(c
                 .error()
-                .message(format!("unexpected character '{}'", c.first().unwrap_or('\0'))));
+                .message(format!("unexpected character `{}`", c.first().unwrap_or('\0'))));
         }
 
         Ok((c, Self(tokens)))

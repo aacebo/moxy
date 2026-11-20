@@ -116,22 +116,11 @@ pub fn __parse_owned<T: Parse>(source: impl TryIntoTokenStream) -> Result<T, Par
         let value = T::parse(&parser)?;
 
         if !parser.is_empty() {
-            return Err(parser.error("unexpected trailing input"));
+            return Err(parser.unexpected());
         }
 
         Ok(value)
     })?
-}
-
-/// Parse the text of a source file, lexed by
-/// [`TokenStream::from_source_file`](moxy_token::TokenStream::from_source_file),
-/// which skips a byte order mark and a shebang line.
-///
-/// This is public only so [`parse_file!`](crate::parse_file) and
-/// [`parse_files!`](crate::parse_files) can call it from downstream crates.
-#[doc(hidden)]
-pub fn __parse_source_file<T: Parse>(text: String) -> Result<T, ParseError> {
-    __parse_owned(&moxy_token::TokenStream::from_source_file(text)?)
 }
 
 // Parses a node and converts it into the enum that holds it. Choosing this

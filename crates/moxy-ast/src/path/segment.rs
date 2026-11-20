@@ -64,7 +64,7 @@ impl PathSegment {
 impl PathSegment {
     fn parse_name(parser: &Parser) -> Result<Ident, ParseError> {
         if !Self::peek_name(parser.cursor()) {
-            return parser.error("expected identifier").into();
+            return parser.expected("identifier").into();
         }
 
         parser.parse_ident_any()

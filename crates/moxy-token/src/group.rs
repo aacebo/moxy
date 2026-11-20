@@ -13,11 +13,14 @@ pub struct Group {
 impl Group {
     #[inline]
     pub fn new(delim: Delim, stream: TokenStream) -> Self {
-        let content_span = stream.span();
-        let span = if content_span.is_empty() {
-            DelimSpan::new(Span::call_site(), Span::call_site())
-        } else {
-            DelimSpan::new(content_span, content_span)
+        // A group built in code has no delimiters in a source. Around tokens
+        // with source positions it opens at the first and closes at the last;
+        // around tokens with compiler spans, which have no position here, it
+        // takes the call site, as proc_macro's groups do, so the compiler
+        // treats it as macro output
+        let span = match (stream.first(), stream.last()) {
+            (Some(first), Some(last)) if !stream.span().is_empty() => DelimSpan::new(first.span(), last.span()),
+            _ => DelimSpan::new(Span::call_site(), Span::call_site()),
         };
 
         Self {
@@ -57,19 +60,17 @@ impl Scan for Group {
         drop(depth);
         let close_ch = c
             .first()
-            .ok_or_else(|| cursor.error().message(format!("unclosed delimiter '{}'", delim.open())))?;
+            .ok_or_else(|| cursor.error().message(format!("unclosed delimiter `{}`", delim.open())))?;
 
         let close_delim = Delim::from_close(close_ch).ok_or_else(|| {
             c.error()
-                .message(format!("expected '{}', found '{}'", delim.close(), close_ch))
+                .message(format!("expected `{}`, found `{}`", delim.close(), close_ch))
         })?;
 
         if delim != close_delim {
-            return Err(c.error().message(format!(
-                "mismatched delimiter: expected '{}', found '{}'",
-                delim.close(),
-                close_ch,
-            )));
+            return Err(c
+                .error()
+                .message(format!("expected `{}`, found `{}`", delim.close(), close_ch,)));
         }
 
         let close = c.span();

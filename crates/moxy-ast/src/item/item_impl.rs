@@ -1,4 +1,4 @@
-use moxy_token::{LexError, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
+use moxy_token::{Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -30,7 +30,10 @@ impl ItemImpl {
     fn type_to_trait_ref(ty: Type, polarity: Option<Token![!]>) -> Result<TraitRef, ParseError> {
         match ty {
             Type::Path(tp) => Ok(TraitRef { polarity, path: tp.path }),
-            _ => Err(LexError::new(Span::default()).message("expected trait path").into()),
+            ty => Err(ParseError::new(
+                ty.span(),
+                format!("expected trait path, found {}", found_node(&ty)),
+            )),
         }
     }
 

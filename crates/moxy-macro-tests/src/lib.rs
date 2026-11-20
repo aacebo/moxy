@@ -51,7 +51,7 @@ pub fn derive_range(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     let args = match item.parse_meta::<RangeArgs>("range") {
         Ok(Some(args)) => args,
         Ok(None) => {
-            return moxy::ast::ParseError::new(item.ident.span(), "expected a range attribute")
+            return moxy::ast::ParseError::new(item.ident.span(), "expected `#[range(...)]` attribute")
                 .to_compile_error()
                 .into();
         }
@@ -96,4 +96,11 @@ pub fn lexed_sources(_tokens: moxy::token::TokenStream) -> Result<moxy::token::T
     let count = moxy::token::source::SourceMap::with(|map| map.len());
     let count = moxy::token::Lit::usize_unsuffixed(count);
     Ok(moxy::template! { {{ &count }} })
+}
+
+// Wraps its input expression in parentheses that the template builds
+#[proc_macro]
+pub fn parenthesized(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let tokens: moxy::token::TokenStream = input.into();
+    moxy::template! { ({{ &tokens }}) }.into()
 }

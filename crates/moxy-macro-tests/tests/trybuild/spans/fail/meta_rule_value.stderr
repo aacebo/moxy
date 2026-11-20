@@ -1,0 +1,23 @@
+error: expected `#[meta(...)]` with parenthesized rules, found `= 1`
+ --> tests/trybuild/spans/fail/meta_rule_value.rs:3:12
+  |
+3 |     #[meta = 1]
+  |            ^^^
+
+error: expected `#[meta(...)]` with parenthesized rules, found no value
+ --> tests/trybuild/spans/fail/meta_rule_value.rs:9:6
+  |
+9 |     #[meta]
+  |      ^^^^^^
+
+error: expected `#[meta(...)]` with parenthesized rules, found `=`
+  --> tests/trybuild/spans/fail/meta_rule_value.rs:15:12
+   |
+15 |     #[meta = 1 + "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"]
+   |            ^
+
+error: attribute value must be a literal
+  --> tests/trybuild/spans/fail/meta_rule_value.rs:15:14
+   |
+15 |     #[meta = 1 + "abcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyzabcdefghijklmnopqrstuvwxyz"]
+   |              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

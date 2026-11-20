@@ -78,7 +78,7 @@ fn closures_loops_and_jumps_render_exact_rust() {
 #[test]
 fn malformed_expressions_report_syntax_errors() {
     let result: Result<Expr, _> = moxy::parse!("if ready");
-    assert_eq!(result.unwrap_err().message(), "expected `brace` delimiter");
+    assert_eq!(result.unwrap_err().message(), "expected `{`, found end of input");
 }
 
 #[test]
@@ -425,7 +425,7 @@ fn else_branches_end_at_their_block() {
     assert!(base.as_if_chain().unwrap().else_branch.is_some());
 
     let error = moxy::parse!("if a { 1 } else 2" as Expr).err().unwrap();
-    assert_eq!(error.message(), "expected `{` or `if` after `else`");
+    assert_eq!(error.message(), "expected `{` or `if` after `else`, found `2`");
 }
 
 #[test]
@@ -669,7 +669,7 @@ fn a_closure_with_a_return_type_takes_a_block_and_an_inclusive_range_an_end() {
     assert!(expression.as_postfix().unwrap().base.is_closure());
 
     for (source, message) in [
-        ("|x: u8| -> u8 x", "expected a block after the closure's return type"),
+        ("|x: u8| -> u8 x", "expected block after the closure's return type, found `x`"),
         ("a..=", "an inclusive range needs an end"),
         ("..=", "an inclusive range needs an end"),
     ] {
@@ -1195,7 +1195,7 @@ fn every_tree_of_the_parse_fixtures_serializes_with_announced_lengths() {
             let path = entry.unwrap().path();
             let source = std::fs::read_to_string(&path).unwrap();
 
-            match moxy::parse!(source as moxy::ast::File) {
+            match moxy::ast::File::from_source_file(source) {
                 Ok(file) => {
                     let serialized = file.serialize(length_check::Check).map_err(|error| error.to_string());
                     assert_eq!(serialized, Ok(()), "{}", path.display());

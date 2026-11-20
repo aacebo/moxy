@@ -77,7 +77,7 @@ macro_rules! define_punct {
 
                 fn parse(parser: &Parser) -> Result<Self, ParseError> {
                     if !Self::peek(parser.cursor()) {
-                        return Err(parser.error(format!("expected `{}` punctuation", Self::default())));
+                        return Err(parser.expected(format_args!("`{}`", Self::default())));
                     }
 
                     Ok(Self($(moxy_token::$punct::parse(parser)?),*))

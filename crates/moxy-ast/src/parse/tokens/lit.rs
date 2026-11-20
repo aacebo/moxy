@@ -12,9 +12,12 @@ impl Parse for Lit {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.advance() {
-            Some(TokenTree::Literal(v)) => Ok(v.clone()),
-            _ => Err(parser.error("expected literal")),
+        match parser.curr() {
+            Some(TokenTree::Literal(v)) => {
+                parser.advance();
+                Ok(v.clone())
+            }
+            _ => Err(parser.expected("literal")),
         }
     }
 
@@ -29,9 +32,13 @@ impl Parse for LitF32 {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Lit::Float(LitFloat::F32(value)) => Ok(value),
-            _ => Err(parser.error("expected `f32` literal")),
+        match parser.curr() {
+            Some(TokenTree::Literal(Lit::Float(LitFloat::F32(value)))) => {
+                let value = value.clone();
+                parser.advance();
+                Ok(value)
+            }
+            _ => Err(parser.expected("`f32` literal")),
         }
     }
 
@@ -46,9 +53,13 @@ impl Parse for LitF64 {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Lit::Float(LitFloat::F64(value)) => Ok(value),
-            _ => Err(parser.error("expected `f64` literal")),
+        match parser.curr() {
+            Some(TokenTree::Literal(Lit::Float(LitFloat::F64(value)))) => {
+                let value = value.clone();
+                parser.advance();
+                Ok(value)
+            }
+            _ => Err(parser.expected("`f64` literal")),
         }
     }
 
@@ -63,9 +74,13 @@ impl Parse for LitInt {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Lit::Int(value) => Ok(value),
-            _ => Err(parser.error("expected integer literal")),
+        match parser.curr() {
+            Some(TokenTree::Literal(Lit::Int(value))) => {
+                let value = value.clone();
+                parser.advance();
+                Ok(value)
+            }
+            _ => Err(parser.expected("integer literal")),
         }
     }
 
@@ -80,9 +95,13 @@ impl Parse for LitFloat {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Lit::Float(value) => Ok(value),
-            _ => Err(parser.error("expected float literal")),
+        match parser.curr() {
+            Some(TokenTree::Literal(Lit::Float(value))) => {
+                let value = value.clone();
+                parser.advance();
+                Ok(value)
+            }
+            _ => Err(parser.expected("float literal")),
         }
     }
 
@@ -97,9 +116,13 @@ impl Parse for LitStr {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Lit::Str(value) => Ok(value),
-            _ => Err(parser.error("expected string literal")),
+        match parser.curr() {
+            Some(TokenTree::Literal(Lit::Str(value))) => {
+                let value = value.clone();
+                parser.advance();
+                Ok(value)
+            }
+            _ => Err(parser.expected("string literal")),
         }
     }
 
@@ -114,9 +137,13 @@ impl Parse for LitByteStr {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Lit::ByteStr(value) => Ok(value),
-            _ => Err(parser.error("expected byte string literal")),
+        match parser.curr() {
+            Some(TokenTree::Literal(Lit::ByteStr(value))) => {
+                let value = value.clone();
+                parser.advance();
+                Ok(value)
+            }
+            _ => Err(parser.expected("byte string literal")),
         }
     }
 
@@ -131,9 +158,13 @@ impl Parse for LitCStr {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Lit::CStr(value) => Ok(value),
-            _ => Err(parser.error("expected C string literal")),
+        match parser.curr() {
+            Some(TokenTree::Literal(Lit::CStr(value))) => {
+                let value = value.clone();
+                parser.advance();
+                Ok(value)
+            }
+            _ => Err(parser.expected("C string literal")),
         }
     }
 
@@ -148,9 +179,13 @@ impl Parse for LitChar {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Lit::Char(value) => Ok(value),
-            _ => Err(parser.error("expected character literal")),
+        match parser.curr() {
+            Some(TokenTree::Literal(Lit::Char(value))) => {
+                let value = value.clone();
+                parser.advance();
+                Ok(value)
+            }
+            _ => Err(parser.expected("character literal")),
         }
     }
 
@@ -165,9 +200,13 @@ impl Parse for LitByte {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Lit::Byte(value) => Ok(value),
-            _ => Err(parser.error("expected byte literal")),
+        match parser.curr() {
+            Some(TokenTree::Literal(Lit::Byte(value))) => {
+                let value = value.clone();
+                parser.advance();
+                Ok(value)
+            }
+            _ => Err(parser.expected("byte literal")),
         }
     }
 
@@ -182,9 +221,13 @@ impl Parse for LitBool {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Lit::Bool(value) => Ok(value),
-            _ => Err(parser.error("expected boolean literal")),
+        match parser.curr() {
+            Some(TokenTree::Literal(Lit::Bool(value))) => {
+                let value = value.clone();
+                parser.advance();
+                Ok(value)
+            }
+            _ => Err(parser.expected("boolean literal")),
         }
     }
 
@@ -213,9 +256,13 @@ impl Parse for LitVerbatim {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match <_ as Parse>::parse(parser)? {
-            Lit::Verbatim(value) => Ok(value),
-            _ => Err(parser.error("expected verbatim literal")),
+        match parser.curr() {
+            Some(TokenTree::Literal(Lit::Verbatim(value))) => {
+                let value = value.clone();
+                parser.advance();
+                Ok(value)
+            }
+            _ => Err(parser.expected("verbatim literal")),
         }
     }
 

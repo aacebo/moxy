@@ -32,9 +32,7 @@ impl Parse for TraitItemMacro {
 
         // Only a brace-delimited macro item ends without a semicolon
         if semi.is_none() && !mac.body.delim.is_brace() {
-            return parser
-                .error("expected `;` after a macro item in parentheses or brackets")
-                .into();
+            return parser.expected("`;` after a macro item in parentheses or brackets").into();
         }
 
         Ok(Self { attrs, mac, semi })

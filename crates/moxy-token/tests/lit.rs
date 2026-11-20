@@ -182,10 +182,10 @@ fn invalid_tokens_are_lex_errors() {
         ("b\"\\u{1}\"", "unicode escape in byte string literal"),
         ("c\"\\0\"", "nul character in C string literal"),
         ("c\"a\\x00\"", "nul character in C string literal"),
-        ("1e", "expected at least one digit in exponent"),
-        ("1em", "expected at least one digit in exponent"),
-        ("1.0e", "expected at least one digit in exponent"),
-        ("1e+", "expected at least one digit in exponent"),
+        ("1e", "expected at least one digit in exponent, found end of input"),
+        ("1em", "expected at least one digit in exponent, found `m`"),
+        ("1.0e", "expected at least one digit in exponent, found end of input"),
+        ("1e+", "expected at least one digit in exponent, found end of input"),
     ] {
         let error = source
             .parse::<TokenStream>()

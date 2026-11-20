@@ -12,9 +12,12 @@ impl Parse for Punct {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.advance() {
-            Some(TokenTree::Punct(v)) => Ok(*v),
-            _ => Err(parser.error("expected punctuation")),
+        match parser.curr() {
+            Some(TokenTree::Punct(v)) => {
+                parser.advance();
+                Ok(*v)
+            }
+            _ => Err(parser.expected("punctuation")),
         }
     }
 
@@ -38,7 +41,7 @@ impl Parse for And {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", And::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", And::TEXT))),
         }
     }
 
@@ -62,7 +65,7 @@ impl Parse for Or {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Or::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Or::TEXT))),
         }
     }
 
@@ -86,7 +89,7 @@ impl Parse for Not {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Not::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Not::TEXT))),
         }
     }
 
@@ -110,7 +113,7 @@ impl Parse for Tilde {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Tilde::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Tilde::TEXT))),
         }
     }
 
@@ -134,7 +137,7 @@ impl Parse for Plus {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Plus::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Plus::TEXT))),
         }
     }
 
@@ -158,7 +161,7 @@ impl Parse for Minus {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Minus::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Minus::TEXT))),
         }
     }
 
@@ -182,7 +185,7 @@ impl Parse for Star {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Star::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Star::TEXT))),
         }
     }
 
@@ -206,7 +209,7 @@ impl Parse for Slash {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Slash::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Slash::TEXT))),
         }
     }
 
@@ -230,7 +233,7 @@ impl Parse for Percent {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Percent::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Percent::TEXT))),
         }
     }
 
@@ -254,7 +257,7 @@ impl Parse for Caret {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Caret::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Caret::TEXT))),
         }
     }
 
@@ -278,7 +281,7 @@ impl Parse for Eq {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Eq::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Eq::TEXT))),
         }
     }
 
@@ -302,7 +305,7 @@ impl Parse for Lt {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Lt::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Lt::TEXT))),
         }
     }
 
@@ -326,7 +329,7 @@ impl Parse for Gt {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Gt::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Gt::TEXT))),
         }
     }
 
@@ -350,7 +353,7 @@ impl Parse for At {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", At::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", At::TEXT))),
         }
     }
 
@@ -374,7 +377,7 @@ impl Parse for Dot {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Dot::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Dot::TEXT))),
         }
     }
 
@@ -398,7 +401,7 @@ impl Parse for Comma {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Comma::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Comma::TEXT))),
         }
     }
 
@@ -422,7 +425,7 @@ impl Parse for Semi {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Semi::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Semi::TEXT))),
         }
     }
 
@@ -446,7 +449,7 @@ impl Parse for Colon {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Colon::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Colon::TEXT))),
         }
     }
 
@@ -470,7 +473,7 @@ impl Parse for Pound {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Pound::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Pound::TEXT))),
         }
     }
 
@@ -494,7 +497,7 @@ impl Parse for Dollar {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Dollar::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Dollar::TEXT))),
         }
     }
 
@@ -518,7 +521,7 @@ impl Parse for Question {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Question::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Question::TEXT))),
         }
     }
 
@@ -542,7 +545,7 @@ impl Parse for Quote {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Quote::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Quote::TEXT))),
         }
     }
 
@@ -572,7 +575,7 @@ impl Parse for Underscore {
                 parser.advance();
                 Ok(*value)
             }
-            _ => Err(parser.error(format!("expected `{}` punctuation", Underscore::TEXT))),
+            _ => Err(parser.expected(format_args!("`{}`", Underscore::TEXT))),
         }
     }
 

@@ -56,7 +56,7 @@ impl Parse for StmtMacro {
         // A call in parentheses or brackets ends with `;` unless it ends the
         // block, as in rustc
         if semi.is_none() && !mac.body.delim.is_brace() && !parser.is_empty() {
-            return parser.error("expected `;`").into();
+            return parser.expected("`;`").into();
         }
 
         Ok(Self { attrs, mac, semi })

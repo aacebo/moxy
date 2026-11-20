@@ -37,7 +37,7 @@ fn item_expression_block_and_macro_statements_have_distinct_shapes() {
 #[test]
 fn malformed_local_syntax_returns_a_specific_parse_failure() {
     let result: Result<Stmt, _> = moxy::parse!("let = 1;");
-    assert_eq!(result.unwrap_err().message(), "expected pattern");
+    assert_eq!(result.unwrap_err().message(), "expected pattern, found `=`");
 }
 
 #[test]
@@ -98,7 +98,7 @@ fn macro_rules_definitions_in_parentheses_or_brackets_end_with_a_semicolon() {
     let error = moxy::parse!("macro_rules! m ( () => {} )" as moxy::ast::Item).err().unwrap();
     assert_eq!(
         error.message(),
-        "expected `;` after a `macro_rules!` body in parentheses or brackets"
+        "expected `;` after a `macro_rules!` body in parentheses or brackets, found end of input"
     );
 }
 
@@ -202,7 +202,7 @@ fn an_expression_statement_needs_a_semicolon_unless_it_is_block_like_or_last() {
         let error = moxy::parse!(source as moxy::ast::StmtBlock).err();
         assert_eq!(
             error.map(|error| error.message().to_string()).as_deref(),
-            Some("expected `;`"),
+            Some("expected `;`, found `b`"),
             "`{source}`"
         );
     }

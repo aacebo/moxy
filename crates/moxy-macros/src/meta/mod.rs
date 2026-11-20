@@ -36,7 +36,7 @@ pub fn expand(tokens: TokenStream) -> TokenStream {
         moxy::ast::Declaration::Struct(target) => (&target.ident, &target.generics, structs::expand(target)),
         moxy::ast::Declaration::Enum(target) => (&target.ident, &target.generics, enums::expand(target)),
         moxy::ast::Declaration::Union(target) => {
-            return target.span().error("`Meta` cannot be derived for unions").emit();
+            return target.span().error("`FromMeta` cannot be derived for unions").emit();
         }
     };
 
@@ -66,13 +66,41 @@ pub fn expand(tokens: TokenStream) -> TokenStream {
         impl {{ impl_generics }} ::moxy::ast::FromMeta for {{ ident }} {{ type_generics }} {{ where_clause }} {
             fn from_meta(meta: &::moxy::ast::Meta) -> Result<Self, ::moxy::ast::ParseError> {
                 let parser = match &meta.content {
-                    ::moxy::ast::MetaContent::List(group) => &::moxy::ast::Parser::from_tokens(&group.tokens),
-                    _ => return Err(::moxy::ast::ParseError::new(
-                        ::moxy::token::Spanner::span(&meta.path),
-                        "expected parenthesized meta arguments",
-                    )),
+                    ::moxy::ast::MetaContent::List(group) => &::moxy::ast::Parser::from_group(group),
+                    ::moxy::ast::MetaContent::Expr { eq, .. } => {
+                        return Err(::moxy::ast::ParseError::expected(eq, "parenthesized meta arguments"));
+                    }
+                    ::moxy::ast::MetaContent::Unit => {
+                        return Err(::moxy::ast::ParseError::new_spanned(
+                            &meta.path,
+                            "expected parenthesized meta arguments, found no value",
+                        ));
+                    }
                 };
                 {{ body }}
+            }
+        }
+    }
+}
+
+fn rules_group(attr: &moxy::ast::Attribute) -> Result<&moxy_token::Group, moxy::ast::ParseError> {
+    let expected = "`#[meta(...)]` with parenthesized rules";
+
+    match &attr.content {
+        moxy::ast::MetaContent::List(group) => Ok(group),
+        moxy::ast::MetaContent::Unit => Err(moxy::ast::ParseError::new(
+            attr.span(),
+            format!("expected {expected}, found no value"),
+        )),
+        moxy::ast::MetaContent::Expr { eq, expr } => {
+            if let Some(value) = moxy_token::__private::short_token_text(expr) {
+                let found = moxy_token::__private::quoted(&format!("{eq} {value}"));
+                Err(moxy::ast::ParseError::new_spanned(
+                    &attr.content,
+                    format!("expected {expected}, found {found}"),
+                ))
+            } else {
+                Err(moxy::ast::ParseError::expected(eq, expected))
             }
         }
     }
@@ -103,7 +131,8 @@ impl moxy::ast::Parse for MetaRule {
     fn parse(parser: &moxy::ast::Parser) -> Result<Self, moxy::ast::ParseError> {
         let meta = <moxy::ast::Meta as moxy::ast::Parse>::parse(parser)?;
         let Some(ident) = meta.path.as_ident() else {
-            return parser.error("expected a meta rule name").into();
+            let path = moxy::token::ToTokenStream::to_token_stream(&meta.path);
+            return moxy::ast::ParseError::new(meta.path.span(), format!("expected meta rule name, found `{path}`")).into();
         };
 
         match ident.text() {

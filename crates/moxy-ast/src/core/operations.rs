@@ -262,7 +262,7 @@ impl Parse for BinOp {
             return Ok(Self::Gt(<_ as Parse>::parse(parser)?));
         }
 
-        Err(parser.error("expected binary operation"))
+        Err(parser.expected("binary operator"))
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
@@ -465,7 +465,7 @@ impl Parse for UnOp {
             return Ok(Self::Neg(<_ as Parse>::parse(parser)?));
         }
 
-        Err(parser.error("expected `UnOp`"))
+        Err(parser.expected("unary operator"))
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {

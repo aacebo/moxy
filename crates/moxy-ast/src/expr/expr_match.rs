@@ -104,7 +104,7 @@ impl Parse for MatchArm {
         // As in rustc, a comma ends an arm unless a block-like body or the end
         // of the arms does
         if arm.comma.is_none() && !parser.is_empty() && !(block_like && crate::stmt::ends_block(&arm.body)) {
-            return parser.error("expected `,` after a match arm").into();
+            return parser.expected("`,` after a match arm").into();
         }
 
         Ok(*arm)

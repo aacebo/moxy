@@ -12,9 +12,12 @@ impl Parse for Group {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        match parser.advance() {
-            Some(TokenTree::Group(v)) => Ok(v.clone()),
-            _ => Err(parser.error("expected group")),
+        match parser.curr() {
+            Some(TokenTree::Group(v)) => {
+                parser.advance();
+                Ok(v.clone())
+            }
+            _ => Err(parser.expected("delimited group")),
         }
     }
 

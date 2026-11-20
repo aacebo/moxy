@@ -109,8 +109,10 @@ impl Spanner for StmtLocalInit {
 }
 
 impl Parse for StmtLocalInit {
+    // The `=` alone starts an initializer, so `let x = ;` reports the
+    // missing expression
     fn peek(cursor: Cursor<'_>) -> bool {
-        <Token![=]>::peek(cursor) && Expr::peek(cursor.offset(1))
+        <Token![=]>::peek(cursor)
     }
 
     // An initializer, whose `let` holds a pattern and a type as well, takes

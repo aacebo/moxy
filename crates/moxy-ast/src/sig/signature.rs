@@ -77,7 +77,11 @@ impl Signature {
                 let ends = parser.is_empty() || <Token![,]>::peek(parser.cursor());
 
                 if !anonymous && ends && matches!(param, super::FnParam::Type(_)) {
-                    return Err(ParseError::new(param.span(), "expected a parameter name"));
+                    let found = found_node(&param);
+                    return Err(ParseError::new(
+                        param.span(),
+                        format!("expected parameter name, found {found}"),
+                    ));
                 }
 
                 inputs.push_value(param);

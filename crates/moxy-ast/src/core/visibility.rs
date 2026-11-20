@@ -102,7 +102,7 @@ impl Parse for Visibility {
             let path = <_ as Parse>::parse(&parser)?;
 
             if !parser.is_empty() {
-                return parser.error("unexpected trailing input").into();
+                return parser.unexpected().into();
             }
 
             return Ok(Self::Restricted {

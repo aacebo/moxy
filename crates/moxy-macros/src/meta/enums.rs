@@ -21,14 +21,11 @@ pub fn expand(target: &moxy::ast::ItemEnum) -> TokenStream {
         let entry = <::moxy::ast::Meta as ::moxy::ast::Parse>::parse(parser)?;
 
         if !parser.is_empty() {
-            return Err(parser.error("expected exactly one enum meta variant"));
+            return Err(parser.expected("end of arguments after one enum meta variant"));
         }
 
         let Some(name) = entry.path.as_ident() else {
-            return Err(::moxy::ast::ParseError::new(
-                ::moxy::token::Spanner::span(&entry),
-                "expected a simple enum variant name",
-            ));
+            return Err(::moxy::ast::ParseError::expected(&entry.path, "simple enum variant name"));
         };
 
         @for variant in &variants {
@@ -87,7 +84,7 @@ fn expand_named(ident: &Ident, fields: &[fields::Field], message: Option<&LitStr
             ) }});
         };
 
-        let parser = ::moxy::ast::Parser::from_tokens(&group.tokens);
+        let parser = ::moxy::ast::Parser::from_group(group);
         let entries = ::moxy::ast::List::<
             ::moxy::ast::Meta,
             ::moxy::ast::Token![,],
@@ -99,10 +96,7 @@ fn expand_named(ident: &Ident, fields: &[fields::Field], message: Option<&LitStr
 
         for entry in entries {
             let Some(name) = entry.path.as_ident() else {
-                return Err(::moxy::ast::ParseError::new(
-                    ::moxy::token::Spanner::span(&entry),
-                    "expected a simple meta argument name",
-                ));
+                return Err(::moxy::ast::ParseError::expected(&entry.path, "simple meta argument name"));
             };
 
             @for (field in fields) {

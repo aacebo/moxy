@@ -39,7 +39,7 @@ impl QSelf {
 
         // As in rustc, `::` follows the qualifier: `<T>::f`, never `<T> f`
         if !<Token![::]>::peek(parser.cursor()) {
-            return parser.error("expected `::` after a qualified path").into();
+            return parser.expected("`::` after a qualified path").into();
         }
 
         let rest = parse_rest(parser)?;

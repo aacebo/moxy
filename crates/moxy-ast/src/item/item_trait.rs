@@ -39,7 +39,7 @@ impl Parse for ItemTrait {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         match Self::parse_or_alias(parser)? {
             super::Item::Trait(item) => Ok(*item),
-            _ => parser.error("expected trait").into(),
+            other => Err(ParseError::new(other.span(), "expected trait, found trait alias")),
         }
     }
 
@@ -84,7 +84,7 @@ impl ItemTrait {
 
         // Supertraits come before a where clause, never after it
         if generics.where_clause.is_some() && <Token![:]>::peek(parser.cursor()) {
-            return parser.error("expected `{`").into();
+            return parser.expected("`{`").into();
         }
 
         let (colon_punct, supertraits) = if <Token![:]>::peek(parser.cursor()) {

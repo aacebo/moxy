@@ -436,7 +436,7 @@ fn only_the_text_of_a_file_holds_a_shebang() {
         let read: File = moxy::parse_file!(path).unwrap();
         fs::remove_file(&path).unwrap();
 
-        assert_eq!(tokens.as_deref(), Some("unexpected trailing input"), "`{source}`");
+        assert_eq!(tokens.as_deref(), Some("unexpected `#`"), "`{source}`");
         assert_eq!(file.shebang.as_deref(), Some(shebang));
         assert_eq!(file.items.len(), 1);
         assert_eq!(file.items[0].to_token_stream().to_string(), item);

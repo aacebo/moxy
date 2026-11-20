@@ -74,19 +74,124 @@ fn public_parse_rejects_trailing_tokens() {
     assert!(moxy::parse!("fn value" as Token![fn]).is_err());
 }
 
+// Nodes that parse a whole form before they reject it name the form they found
+#[test]
+fn a_rejected_form_is_named() {
+    use moxy::ast::{FromMeta, ItemTrait, Meta, PatOr};
+
+    let or = moxy::parse!("a @ b" as PatOr).err().unwrap();
+    let alias = moxy::parse!("trait A = B;" as ItemTrait).err().unwrap();
+    let meta: Meta = moxy::parse!("a = 1").unwrap();
+    let flag = bool::from_meta(&meta).err().unwrap();
+
+    assert_eq!(or.message(), "expected or-pattern, found `a`");
+    assert_eq!(alias.message(), "expected trait, found trait alias");
+    assert_eq!(flag.message(), "expected boolean literal, found `1`");
+}
+
+// An error at the end of a group points at the delimiter that closes it, an
+// empty group included, and the error inside attribute arguments names it
+#[test]
+fn an_error_at_the_end_of_a_group_points_at_its_closing_delimiter() {
+    use moxy::ast::Meta;
+
+    let closing = |source: &str| {
+        let error = moxy::parse!(source as moxy::ast::File).err().unwrap();
+        (error.message().to_string(), error.span().start().column())
+    };
+    let meta: Meta = moxy::parse!("a(b =)").unwrap();
+    let nested = meta.for_each(|_| Ok(())).err().unwrap();
+
+    assert_eq!(closing("struct S { a: }"), ("expected type, found `}`".to_owned(), 14));
+    assert_eq!(closing("type T = [];"), ("expected type, found `]`".to_owned(), 10));
+    assert_eq!(nested.message(), "expected expression, found `)`");
+}
+
+// A group without delimiters, which a stream from the compiler can hold, is
+// quoted by its first token
+#[test]
+fn an_error_quotes_a_group_without_delimiters_by_its_first_token() {
+    use moxy::token::Group;
+
+    let inner: TokenStream = "; ;".parse().unwrap();
+    let tokens = TokenStream::from_iter([TokenTree::Group(Group::new(Delim::None, inner))]);
+    let error = moxy::parse!(tokens as moxy::token::Ident).err().unwrap();
+    assert_eq!(error.message(), "expected identifier, found `; ...`");
+
+    let tokens = TokenStream::from_iter([TokenTree::Group(Group::new(Delim::None, TokenStream::new()))]);
+    let empty = moxy::parse!(tokens as moxy::token::Ident).err().unwrap();
+    let inner: TokenStream = "a".parse().unwrap();
+    let tokens = TokenStream::from_iter([TokenTree::Group(Group::new(Delim::None, inner))]);
+    let parser = moxy::ast::Parser::from_tokens(&tokens);
+    let group = parser.parse_group(Delim::None).unwrap();
+    group.advance();
+    let end = group.expected("identifier");
+    let none = TokenStream::new();
+
+    assert_eq!(empty.message(), "expected identifier, found empty group");
+    assert_eq!(end.message(), "expected identifier, found end of group");
+    assert_eq!(
+        moxy::ast::Parser::from_tokens(&none)
+            .parse_group(Delim::None)
+            .err()
+            .unwrap()
+            .message(),
+        "expected group without delimiters, found end of input"
+    );
+}
+
+// A message names what was expected and what was found, with code in
+// backticks, in the lexer and the parser alike
+#[test]
+fn error_messages_name_what_was_expected_and_found() {
+    for (source, message) in [
+        ("\"abc", "unterminated string literal"),
+        ("r\"abc", "unterminated raw string literal"),
+        ("0x", "invalid literal"),
+        ("(]", "expected `)`, found `]`"),
+        ("fn f(", "unclosed delimiter `(`"),
+        ("fn f() {})", "unexpected closing delimiter `)`"),
+        ("fn f() { € }", "unexpected character `€`"),
+        ("struct S<T", "expected `>`, found end of input"),
+        ("fn f() -> {}", "expected type, found `{}`"),
+        ("fn f() { a b }", "expected `;`, found `b`"),
+        ("$", "unexpected `$`"),
+        (
+            "trait A { m!() }",
+            "expected `;` after a macro item in parentheses or brackets, found `}`",
+        ),
+        ("fn f() { x. }", "expected identifier, found `}`"),
+        ("struct S { a: }", "expected type, found `}`"),
+        ("fn f() { let x = ; }", "expected expression, found `;`"),
+        ("fn f() -> \"a`b\" {}", "expected type, found `` \"a`b\" ``"),
+        ("impl &A for B {}", "expected trait path, found `&`"),
+        ("fn f(&u8) {}", "expected parameter name, found `&`"),
+        ("type T = [];", "expected type, found `]`"),
+        ("fn f() { 1e`; }", "expected at least one digit in exponent, found `` ` ``"),
+        ("fn f() { x.1u8; }", "expected tuple index, found `1u8`"),
+        ("fn f(u8) {}", "expected parameter name, found `u8`"),
+    ] {
+        let error = moxy::parse!(source as moxy::ast::File)
+            .err()
+            .unwrap_or_else(|| panic!("`{source}` parsed"));
+        assert_eq!(error.message(), message, "`{source}`");
+        assert!(super::differential::follows_style(message), "`{message}`");
+    }
+}
+
 #[test]
 fn delimited_lists_that_stop_early_are_errors() {
     for (source, message) in [
-        ("fn f(x: u8 y: u8) {}", "unexpected trailing input"),
-        ("fn f(x: Vec<u8 u8>) {}", "expected `>` punctuation"),
-        ("fn f() { g(a b) }", "expected `,` punctuation"),
-        ("fn f() { match x { 1 => a b } }", "expected `,` after a match arm"),
-        ("fn f() { let s = S { a: 1 b: 2 }; }", "unexpected trailing input"),
-        ("fn f() { [1 2] }", "unexpected trailing input"),
-        ("fn f() { (1 2) }", "unexpected trailing input"),
-        ("fn f() { x.y::<u8 u8>() }", "expected `>` punctuation"),
-        ("impl A { fn f() {} @ }", "unexpected trailing input"),
-        ("mod m { fn f() {} @ }", "unexpected trailing input"),
+        ("fn f(x: u8 y: u8) {}", "unexpected `y`"),
+        ("fn f(x: Vec<u8 u8>) {}", "expected `>`, found `u8`"),
+        ("fn f() { g(a b) }", "expected `,`, found `b`"),
+        ("fn f() { match x { 1 => a b } }", "expected `,` after a match arm, found `b`"),
+        ("fn f() { let s = S { a: 1 b: 2 }; }", "unexpected `b`"),
+        ("fn f() { [1 2] }", "unexpected `2`"),
+        ("fn f() { (1 2) }", "unexpected `2`"),
+        ("fn f() { x.y::<u8 u8>() }", "expected `>`, found `u8`"),
+        ("impl A { fn f() {} @ }", "unexpected `@`"),
+        ("mod m { fn f() {} @ }", "unexpected `@`"),
     ] {
         let error = moxy::parse!(source as moxy::ast::Item)
             .err()
@@ -678,12 +783,12 @@ fn an_error_inside_a_list_of_items_is_reported_where_it_is() {
     let source = "mod m {\n    fn f() {}\n    fn g() { let = 1; }\n}";
     let error = moxy::parse!(source as moxy::ast::File).err().unwrap();
     assert_eq!(error.span().start().line(), 2);
-    assert_ne!(error.message(), "unexpected trailing input");
+    assert_eq!(error.message(), "expected pattern, found `=`");
 
     let source = "fn f() {}\nstruct S { a: }";
     let error = moxy::parse!(source as moxy::ast::File).err().unwrap();
     assert_eq!(error.span().start().line(), 1);
-    assert_ne!(error.message(), "unexpected trailing input");
+    assert_eq!(error.message(), "expected type, found `}`");
 }
 
 // Runs `parse` on a worker thread and fails if it takes longer than a limit
@@ -1325,10 +1430,10 @@ fn converting_tokens_past_the_depth_limit_without_an_error_panics() {
 fn an_error_quotes_a_group_by_its_delimiters() {
     // A message that printed the whole group printed every macro body it met
     let error = moxy::parse!("{ a b c }" as moxy::token::Ident).err().unwrap();
-    assert_eq!(error.message(), "expected ident, received \"{ ... }\"");
+    assert_eq!(error.message(), "expected identifier, found `{ ... }`");
 
     let error = moxy::parse!("()" as moxy::token::Ident).err().unwrap();
-    assert_eq!(error.message(), "expected ident, received \"()\"");
+    assert_eq!(error.message(), "expected identifier, found `()`");
 }
 
 #[test]

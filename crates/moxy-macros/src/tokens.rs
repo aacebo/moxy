@@ -36,7 +36,11 @@ pub fn expand(tokens: TokenStream) -> TokenStream {
     }
 
     let Some(tpl_meta) = tpl_meta_list.first() else {
-        return object.attrs().span().error("template required").emit();
+        return object
+            .attrs()
+            .span()
+            .error("expected `#[moxy(template { ... })]` attribute")
+            .emit();
     };
 
     let content = match &tpl_meta.content {

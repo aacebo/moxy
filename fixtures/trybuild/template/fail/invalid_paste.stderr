@@ -1,9 +1,5 @@
-error: string could not be parsed
- --> fixtures/trybuild/template/fail/invalid_paste.rs:1:1
+error: expected identifier, found `123`
+ --> fixtures/trybuild/template/fail/invalid_paste.rs:2:8
   |
-1 | / moxy::paste! {
-2 | |     fn {{ 123 }}() {}
-3 | | }
-  | |_^
-  |
-  = note: this error originates in the macro `moxy::paste` (in Nightly builds, run with -Z macro-backtrace for more info)
+2 |     fn {{ 123 }}() {}
+  |        ^^^^^^^^^

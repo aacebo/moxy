@@ -1,4 +1,4 @@
-error: expected parenthesized meta arguments
+error: expected parenthesized meta arguments, found no value
  --> tests/trybuild/spans/fail/meta_bare.rs:2:3
   |
 2 | #[range]

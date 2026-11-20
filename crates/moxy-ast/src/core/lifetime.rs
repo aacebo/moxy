@@ -80,7 +80,7 @@ impl Parse for LifetimeName {
             });
         }
 
-        parser.error("expected lifetime name").into()
+        parser.expected("lifetime name").into()
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {

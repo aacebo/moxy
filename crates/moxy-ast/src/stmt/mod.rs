@@ -118,7 +118,7 @@ impl Parse for Stmt {
                 // As in rustc, only a block-like expression that ends the
                 // statement alone, or the last one in a block, needs no `;`
                 if semi.is_none() && !parser.is_empty() && !(block_like && ends_block(&expr)) {
-                    return parser.error("expected `;`").into();
+                    return parser.expected("`;`").into();
                 }
 
                 Ok(Self::Expr(expr, semi))

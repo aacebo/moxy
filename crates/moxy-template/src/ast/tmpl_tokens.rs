@@ -43,7 +43,7 @@ impl Parse for TmplTokens {
         }
 
         if tokens.is_empty() {
-            return parser.error("expected template tokens").into();
+            return parser.expected("template tokens").into();
         }
 
         Ok(Self { span, tokens })

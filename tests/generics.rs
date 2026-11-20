@@ -58,7 +58,7 @@ fn closed_lists_accept_a_trailing_comma() {
     }
 
     let error = moxy::parse!("use a::{b c};" as Item).err().unwrap();
-    assert_eq!(error.message(), "expected `,` punctuation");
+    assert_eq!(error.message(), "expected `,`, found `c`");
 }
 
 #[test]
@@ -152,7 +152,7 @@ fn associated_items_take_parenthesized_arguments() {
     }
 
     // Only one segment without angle arguments takes them, as in rustc
-    for source in ["A<Item<B>(T): Clone>", "A<a::Item(T): Clone>"] {
+    for source in ["A<Item<B>(T): Clone>", "A<a::Item(T): Clone>", "A<f(..): Send>"] {
         assert!(moxy::parse!(source as Type).is_err(), "`{source}`");
     }
 }

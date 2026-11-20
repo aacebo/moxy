@@ -45,12 +45,8 @@ impl Parse for ItemDeclMacro {
         };
 
         if !parser.is_delimited(Delim::Brace) {
-            let expected = if params.is_some() {
-                "expected `{`"
-            } else {
-                "expected `(` or `{`"
-            };
-            return parser.error(expected).into();
+            let expected = if params.is_some() { "`{`" } else { "`(` or `{`" };
+            return parser.expected(expected).into();
         }
 
         Ok(Self {

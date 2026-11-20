@@ -60,7 +60,7 @@ impl Parse for GenericArgument {
         let _depth = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
 
         let Some(token) = parser.cursor().curr() else {
-            return Err(ParseError::new(parser.span(), "eof"));
+            return Err(parser.expected("generic argument"));
         };
 
         // One call site for every form keeps one return slot in this frame,

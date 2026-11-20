@@ -286,7 +286,7 @@ pub(crate) fn scan_number(c: Cursor<'_>) -> Result<Cursor<'_>, LexError> {
         }
 
         // As in rustc, even in macro input: `1e` and `1em` are errors
-        cur = digits(cur, |ch| ch.is_ascii_digit()).map_err(|e| e.message("expected at least one digit in exponent"))?;
+        cur = digits(cur, |ch| ch.is_ascii_digit()).map_err(|e| e.message(super::int::exponent_without_digits(cur)))?;
     }
 
     Ok(suffix(cur))

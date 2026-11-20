@@ -425,7 +425,7 @@ impl Parse for Item {
         } else if ItemMacro::peek(parser.cursor()) {
             parse_into::<ItemMacro, Self>
         } else {
-            return parser.error("expected item").into();
+            return parser.expected("item").into();
         };
 
         parse(parser)

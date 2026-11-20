@@ -1,13 +1,13 @@
 error: macro expansion ignores `;` and any tokens following
- --> fixtures/trybuild/template/fail/malformed_template.rs:2:31
+ --> fixtures/trybuild/template/fail/malformed_template.rs:2:32
   |
 2 |     let _ = moxy::template! { @invalid };
-  |             ------------------^--------- caused by the macro expansion here
+  |             -------------------^^^^^^^-- caused by the macro expansion here
   |
   = note: the usage of `moxy::template!` is likely invalid in expression context
 
-error: expected template directive
- --> fixtures/trybuild/template/fail/malformed_template.rs:2:31
+error: expected `if`, `for`, or `match` after `@`, found `invalid`
+ --> fixtures/trybuild/template/fail/malformed_template.rs:2:32
   |
 2 |     let _ = moxy::template! { @invalid };
-  |                               ^
+  |                                ^^^^^^^

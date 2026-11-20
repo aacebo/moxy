@@ -7,7 +7,7 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
     let list = match Paths::parse_nonempty(&parser) {
         Err(err) => return err.to_compile_error(),
         Ok(v) if parser.is_empty() => v,
-        Ok(_) => return parser.error("expected comma-separated macro paths").to_compile_error(),
+        Ok(_) => return parser.expected("comma-separated macro paths").to_compile_error(),
     };
 
     let mut paths = list.into_iter();
