@@ -23,6 +23,7 @@ mod ast;
 
 use ast::{Paste, Template};
 use moxy_ast::{Parse, Parser};
+use moxy_token::source::SourceMap;
 
 /// Build a `moxy::token::TokenStream` at runtime from a template, in the style
 /// of `quote!`.
@@ -58,6 +59,7 @@ use moxy_ast::{Parse, Parser};
 /// A malformed template produces a span-targeted compile error.
 #[proc_macro]
 pub fn template(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let _sources = SourceMap::scope();
     let tokens = match input(tokens) {
         Ok(tokens) => tokens,
         Err(error) => return error,
@@ -91,6 +93,7 @@ pub fn template(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 /// span-targeted compile error.
 #[proc_macro]
 pub fn paste(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let _sources = SourceMap::scope();
     let tokens = match input(tokens) {
         Ok(tokens) => tokens,
         Err(error) => return error,

@@ -5,9 +5,13 @@
 
 use libfuzzer_sys::fuzz_target;
 use moxy::ast::File;
+use moxy::token::source::SourceMap;
 use moxy::token::{ToTokenStream, TokenStream};
 
 fuzz_target!(|text: &str| {
+    // Each input releases the sources it lexed, so memory stays flat
+    let _sources = SourceMap::scope();
+
     let Ok(tokens) = TokenStream::from_source_file(text.to_owned()) else {
         return;
     };

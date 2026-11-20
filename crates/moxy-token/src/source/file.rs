@@ -1,13 +1,12 @@
-use std::cell::RefCell;
-use std::collections::BTreeMap;
 use std::path::PathBuf;
 
 use super::Location;
 use crate::span::fallback::Span;
 
-/// Primarily used to map spans (0 based character index ranges)
-/// to bytes.
 /// Source text with a stable identifier for span resolution.
+///
+/// Positions count bytes, as the lexer's cursor does, from the start of the
+/// source map's position space.
 #[derive(Debug)]
 pub struct Source {
     /// the filepath if this source belongs to a file
@@ -17,43 +16,32 @@ pub struct Source {
     /// raw source text
     text: String,
 
-    /// file-wide lo..hi in proc-macro2 space
+    /// the positions the text takes in the source map
     span: Span,
 
-    /// line start offsets, in char units
+    /// line start offsets, in bytes
     lines: Vec<usize>,
-
-    /// Cache mapping character indices to UTF-8 byte offsets for efficient span slicing
-    char_to_byte: RefCell<BTreeMap<usize, usize>>,
 }
 
 impl Source {
-    pub(crate) fn new(start: usize, src: impl Into<String>) -> Self {
+    pub(crate) fn new(generation: std::num::NonZeroU32, start: usize, src: impl Into<String>) -> Self {
         let text = src.into();
-        let mut lines = vec![0];
-        let mut total = 0usize;
-
-        for ch in text.chars() {
-            total += 1;
-
-            if ch == '\n' {
-                lines.push(total);
-            }
-        }
+        let lines = std::iter::once(0)
+            .chain(text.match_indices('\n').map(|(i, _)| i + 1))
+            .collect();
 
         Self {
             path: None,
+            span: Span::in_generation(generation, start as u32, (start + text.len()) as u32),
             text,
-            span: Span::new(start as u32, (start + total) as u32),
             lines,
-            char_to_byte: RefCell::new(BTreeMap::new()),
         }
     }
 
     pub fn from_file(path: impl Into<PathBuf>) -> std::io::Result<Self> {
         let path = path.into();
         let src = std::fs::read_to_string(&path)?;
-        let mut src = Self::new(0, src);
+        let mut src = Self::new(Span::NO_SOURCE, 0, src);
 
         src.path = Some(path);
         Ok(src)
@@ -82,46 +70,31 @@ impl Source {
         self.text[self.range(span)].to_owned()
     }
 
-    /// Resolves a global character index within this file into a 0-based `Location`.
+    /// Resolves a position within this file into a 0-based `Location`: the
+    /// byte index in the text, the line, and the column in characters.
     pub fn location(&self, i: usize) -> Location {
-        let index = i - self.span.byte_range().start;
+        let index = self.byte(i);
+        let line = match self.lines.binary_search(&index) {
+            Err(next) => next - 1,
+            Ok(line) => line,
+        };
+        let line_start = self.lines[line];
+        let column = self.text.get(line_start..index).map_or(index - line_start, |text| {
+            // A byte order mark starts the text and takes no column
+            let text = if line == 0 {
+                text.strip_prefix('\u{feff}').unwrap_or(text)
+            } else {
+                text
+            };
+            text.chars().count()
+        });
 
-        match self.lines.binary_search(&index) {
-            Err(next) => Location::new(index, next - 1, index - self.lines[next - 1]),
-            Ok(line) => Location::new(index, line, 0),
-        }
+        Location::new(index, line, column)
     }
 
-    /// Returns the UTF-8 byte index corresponding to a global character index.
+    /// Returns the byte index in the text of a position within this file.
     pub fn byte(&self, i: usize) -> usize {
-        let index = i - self.span.byte_range().start;
-        let mut cache = self.char_to_byte.borrow_mut();
-
-        if let Some(byte_index) = cache.get(&index) {
-            return *byte_index;
-        }
-
-        let (ci, bi) = cache
-            .range(..=index)
-            .next_back()
-            .map(|(&char_index, &byte_index)| (char_index, byte_index))
-            .unwrap_or((0, 0));
-
-        let mut char_index = ci;
-        let mut byte_index = bi;
-
-        for ch in self.text[bi..].chars() {
-            if char_index == index {
-                cache.insert(index, byte_index);
-                return byte_index;
-            }
-
-            char_index += 1;
-            byte_index += ch.len_utf8();
-        }
-
-        cache.insert(index, byte_index);
-        byte_index
+        i - self.span.byte_range().start
     }
 }
 
@@ -132,7 +105,6 @@ impl Default for Source {
             text: String::default(),
             span: Span::default(),
             lines: vec![0],
-            char_to_byte: RefCell::new(BTreeMap::default()),
         }
     }
 }

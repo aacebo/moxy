@@ -60,6 +60,8 @@ pub fn expand(attr: TokenStream, item: TokenStream) -> TokenStream {
         pub fn {{ name.map(|v| v.to_snake_case()) }}(tokens: ::proc_macro::TokenStream) -> ::proc_macro::TokenStream {
             {{ &item }}
 
+            let _sources = ::moxy::token::source::SourceMap::scope();
+
             let value = match ::moxy::parse!(tokens) {
                 Ok(v) => v,
                 Err(err) => return err.to_compile_error().into(),

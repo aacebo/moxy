@@ -1,5 +1,5 @@
-/// 0 indexed char based location
-/// A byte, line, and column location within a source file.
+/// A 0-based location within a source: a byte index, a line, and a column
+/// in characters.
 #[derive(Debug, Copy, Clone, PartialOrd, Ord, PartialEq, Eq, Hash)]
 pub struct Location {
     index: usize,

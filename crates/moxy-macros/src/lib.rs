@@ -54,6 +54,7 @@ mod tokens;
 use moxy_ast::parse;
 use moxy_fmt::fmt;
 use moxy_template::template;
+use moxy_token::source::SourceMap;
 
 /// Derives [`moxy::token::ToTokens`] from a token template.
 ///
@@ -92,6 +93,8 @@ use moxy_template::template;
 /// span-targeted compiler error.
 #[proc_macro_derive(ToTokens, attributes(moxy))]
 pub fn derive_tokens(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let _sources = SourceMap::scope();
+
     match input(tokens) {
         Ok(tokens) => tokens::expand(tokens).into(),
         Err(error) => error,
@@ -131,6 +134,8 @@ pub fn derive_tokens(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream
 /// ```
 #[proc_macro_derive(FromMeta, attributes(meta))]
 pub fn derive_meta(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let _sources = SourceMap::scope();
+
     match input(tokens) {
         Ok(tokens) => meta::expand(tokens).into(),
         Err(error) => error,
@@ -164,6 +169,8 @@ pub fn derive_meta(tokens: proc_macro::TokenStream) -> proc_macro::TokenStream {
 /// ```
 #[proc_macro_attribute]
 pub fn function(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let _sources = SourceMap::scope();
+
     match (input(attr), input(item)) {
         (Ok(attr), Ok(item)) => function::expand(attr, item).into(),
         (Err(error), _) | (_, Err(error)) => error,
@@ -200,6 +207,8 @@ pub fn function(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) ->
 /// ```
 #[proc_macro_attribute]
 pub fn attribute(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let _sources = SourceMap::scope();
+
     match (input(attr), input(item)) {
         (Ok(attr), Ok(item)) => attribute::expand(attr, item).into(),
         (Err(error), _) | (_, Err(error)) => error,
@@ -238,6 +247,8 @@ pub fn attribute(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -
 /// return a `Result` whose error can produce a compile error.
 #[proc_macro_attribute]
 pub fn derive(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let _sources = SourceMap::scope();
+
     match (input(attr), input(item)) {
         (Ok(attr), Ok(item)) => derive::expand(attr, item).into(),
         (Err(error), _) | (_, Err(error)) => error,
@@ -286,6 +297,8 @@ pub fn derive(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> p
 /// ```
 #[proc_macro_attribute]
 pub fn apply(attr: proc_macro::TokenStream, item: proc_macro::TokenStream) -> proc_macro::TokenStream {
+    let _sources = SourceMap::scope();
+
     match (input(attr), input(item)) {
         (Ok(attr), Ok(item)) => apply::expand(attr, item).into(),
         (Err(error), _) | (_, Err(error)) => error,

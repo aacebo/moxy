@@ -10,11 +10,22 @@ use super::LexError;
 pub struct Cursor<'a> {
     rest: &'a str,
     offset: u32,
+    generation: std::num::NonZeroU32,
 }
 
 impl<'a> Cursor<'a> {
+    /// A cursor whose spans are in no source of the source map.
     pub fn new(src: &'a str, offset: u32) -> Self {
-        Self { rest: src, offset }
+        Self::at(src, fallback::Span::new(offset, offset))
+    }
+
+    // A cursor at the start of `span`, whose spans take its generation
+    pub(crate) fn at(src: &'a str, span: fallback::Span) -> Self {
+        Self {
+            rest: src,
+            offset: span.byte_range().start as u32,
+            generation: span.generation(),
+        }
     }
 
     pub fn rest(&self) -> &'a str {
@@ -37,13 +48,16 @@ impl<'a> Cursor<'a> {
         self.rest.starts_with(s)
     }
 
+    /// The span of the character at the cursor, which is empty at the end of
+    /// the input.
     pub fn span(&self) -> Span {
-        fallback::Span::new(self.offset, self.offset + 1).into()
+        let width = self.first().map_or(0, char::len_utf8) as u32;
+        fallback::Span::in_generation(self.generation, self.offset, self.offset + width).into()
     }
 
     /// Create a fallback::Span from this cursor to another.
     pub fn span_to(&self, end: &Cursor<'_>) -> Span {
-        fallback::Span::new(self.offset, end.offset).into()
+        fallback::Span::in_generation(self.generation, self.offset, end.offset).into()
     }
 
     /// Get a slice of text from the current cursor to the provided end.
@@ -57,16 +71,17 @@ impl<'a> Cursor<'a> {
         LexError::new(self.span())
     }
 
-    /// Advance by 1 byte, counting characters for the offset.
+    /// Advance by 1 byte, which the offset counts.
     pub fn advance(&self) -> Self {
         self.advance_by(1)
     }
 
-    /// Advance by `n` bytes, counting characters for the offset.
+    /// Advance by `n` bytes, which the offset counts.
     pub fn advance_by(&self, n: usize) -> Self {
         Self {
             rest: &self.rest[n..],
             offset: self.offset + n as u32,
+            generation: self.generation,
         }
     }
 

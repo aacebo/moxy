@@ -86,3 +86,14 @@ pub fn echo_item(
 ) -> Result<moxy::token::TokenStream, moxy::ast::ParseError> {
     Ok(tokens)
 }
+
+// The sources on the expanding thread's map once it has lexed a string, as a
+// literal: the macro releases them after each expansion, so every expansion
+// gives the same count
+#[moxy::function(name = "lexed_sources")]
+pub fn lexed_sources(_tokens: moxy::token::TokenStream) -> Result<moxy::token::TokenStream, moxy::ast::ParseError> {
+    let _: moxy::ast::Expr = moxy::parse!("a + b")?;
+    let count = moxy::token::source::SourceMap::with(|map| map.len());
+    let count = moxy::token::Lit::usize_unsuffixed(count);
+    Ok(moxy::template! { {{ &count }} })
+}

@@ -129,7 +129,8 @@ fn needs_tokens(token: &TokenTree) -> bool {
 }
 
 // The literal tokens are lexed once per thread and copied on each expansion;
-// their spans point into the thread's source map, so the copy stays valid
+// their spans point into the thread's source map and find no source once a
+// `SourceScope` around their first expansion releases it
 fn emit_text(tokens: &TokenStream, out: &mut TokenStream) {
     if tokens.is_empty() {
         return;
