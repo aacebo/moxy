@@ -52,6 +52,6 @@ impl ToTokens for TypeReference {
         self.and.to_tokens(tokens);
         self.lifetime.to_tokens(tokens);
         self.mutability.to_tokens(tokens);
-        self.elem.to_tokens(tokens);
+        self.elem.to_tokens_without_plus(tokens);
     }
 }

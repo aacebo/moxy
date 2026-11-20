@@ -1,4 +1,4 @@
-use moxy_token::{Span, Spanner, ToTokens};
+use moxy_token::{Delim, DelimSpan, Group, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
 use crate::*;
 
@@ -45,7 +45,14 @@ impl Spanner for TypeGroup {
 }
 
 impl ToTokens for TypeGroup {
-    fn to_tokens(&self, tokens: &mut moxy_token::TokenStream) {
-        self.elem.to_tokens(tokens);
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        tokens.extend_one(
+            Group {
+                delim: Delim::None,
+                span: DelimSpan::with_whole(self.span, self.span, self.span),
+                tokens: self.elem.to_token_stream(),
+            }
+            .into_token_tree(),
+        );
     }
 }

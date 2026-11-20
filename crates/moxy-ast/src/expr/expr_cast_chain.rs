@@ -42,7 +42,7 @@ impl ToTokens for ExprCastChain {
 
         for (as_keyword, ty) in &self.casts {
             as_keyword.to_tokens(t);
-            ty.to_tokens(t);
+            ty.to_tokens_without_plus(t);
         }
     }
 }

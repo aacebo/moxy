@@ -119,7 +119,7 @@ impl ToTokens for TypeBareFn {
         self.abi.to_tokens(t);
         self.fn_keyword.to_tokens(t);
         self.params.to_tokens(t);
-        self.output.to_tokens(t);
+        self.output.to_tokens_without_plus(t);
     }
 }
 

@@ -19,6 +19,19 @@ fn round_tripped_groups_keep_their_whole_span() {
 }
 
 #[test]
+fn a_round_tripped_type_fragment_keeps_its_trait_bounds() {
+    macro_rules! borrow_type {
+        ($ty:ty) => {
+            moxy_macro_tests::round_trip_type!(&'static $ty)
+        };
+    }
+
+    let value: borrow_type!(dyn std::fmt::Debug + Send) = &42_u32;
+
+    assert_eq!(format!("{value:?}"), "42");
+}
+
+#[test]
 fn macro_input_nested_past_the_depth_limit_is_a_compile_error() {
     let cases = trybuild::TestCases::new();
     cases.pass("tests/trybuild/spans/pass/depth_*.rs");

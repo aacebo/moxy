@@ -2,6 +2,21 @@ use moxy::ast::Type;
 use moxy::token::ToTokenStream;
 
 #[test]
+fn a_type_keeps_its_invisible_groups_when_emitted() {
+    use moxy::token::{Delim, Group, TokenStream};
+
+    let ty: TokenStream = "dyn Debug + Send".parse().unwrap();
+    let mut inner = TokenStream::new();
+    inner.extend_one(Group::new(Delim::None, ty).into_token_tree());
+    let mut tokens = TokenStream::new();
+    tokens.extend_one(Group::new(Delim::None, inner).into_token_tree());
+
+    let ty: Type = moxy::parse!(tokens).unwrap();
+
+    assert_eq!(ty.to_token_stream(), tokens);
+}
+
+#[test]
 fn reference_pointer_array_slice_tuple_and_path_types_render_exactly() {
     for (source, expected, kind) in [
         ("&'a mut Vec<u8>", "&'a mut Vec<u8>", "reference"),

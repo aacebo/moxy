@@ -40,6 +40,6 @@ impl ToTokens for TypePointer {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.star.to_tokens(tokens);
         self.mutability.to_tokens(tokens);
-        self.elem.to_tokens(tokens);
+        self.elem.to_tokens_without_plus(tokens);
     }
 }

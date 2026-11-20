@@ -44,6 +44,13 @@ impl ReturnType {
             Some(cursor)
         }
     }
+
+    pub(crate) fn to_tokens_without_plus(&self, tokens: &mut TokenStream) {
+        if let Self::Type(arrow, ty) = self {
+            arrow.to_tokens(tokens);
+            ty.to_tokens_without_plus(tokens);
+        }
+    }
 }
 
 impl Parse for ReturnType {

@@ -26,7 +26,7 @@ pub use type_slice::*;
 pub use type_trait_object::*;
 pub use type_tuple::*;
 
-use moxy_token::{Delim, Group, Ident, Keyword, Punct, Span, Spanner, ToTokens, TokenStream, TokenTree};
+use moxy_token::{Delim, Group, Ident, Keyword, Punct, Span, Spanner, ToTokenStream, ToTokens, TokenStream, TokenTree};
 
 use crate::*;
 
@@ -69,6 +69,27 @@ clone_in_small_frames!(Type {
 });
 
 impl Type {
+    pub(crate) fn to_tokens_without_plus(&self, tokens: &mut TokenStream) {
+        let mut ty = self;
+        while let Self::Group(group) = ty {
+            ty = &group.elem;
+        }
+
+        let bounds = match ty {
+            Self::TraitObject(object) => Some(&object.bounds),
+            Self::ImplTrait(opaque) => Some(&opaque.bounds),
+            _ => None,
+        };
+
+        // Rust treats a reconstructed invisible delimiter as transparent, so
+        // `&$ty` with `dyn Trait + Send` needs visible parentheses on emission.
+        if bounds.is_some_and(|bounds| bounds.len() > 1 || bounds.is_trailing()) {
+            tokens.extend_one(Group::new(Delim::Paren, self.to_token_stream()).into_token_tree());
+        } else {
+            self.to_tokens(tokens);
+        }
+    }
+
     pub fn is_never(&self) -> bool {
         matches!(self, Self::Never(_))
     }
@@ -667,8 +688,7 @@ impl ToTokens for Type {
             Self::Macro(value) => value.to_tokens(tokens),
             Self::Never(not) => not.to_tokens(tokens),
             Self::Infer(id) => id.to_tokens(tokens),
-            // `Group` is only produced via the proc-macro bridge, never `from_str`.
-            Self::Group(_) => {}
+            Self::Group(value) => value.to_tokens(tokens),
         }
     }
 }

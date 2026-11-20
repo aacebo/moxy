@@ -31,6 +31,14 @@ pub fn round_trip(input: proc_macro::TokenStream) -> proc_macro::TokenStream {
     tokens.into()
 }
 
+#[moxy::function(name = "round_trip_type")]
+pub fn round_trip_type(tokens: moxy::token::TokenStream) -> Result<moxy::token::TokenStream, moxy::ast::ParseError> {
+    use moxy::token::ToTokenStream;
+
+    let ty = moxy::parse!(tokens as moxy::ast::Type)?;
+    Ok(ty.to_token_stream())
+}
+
 #[derive(moxy::FromMeta)]
 struct RangeArgs {
     #[meta(default)]

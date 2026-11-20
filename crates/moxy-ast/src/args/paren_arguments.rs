@@ -60,6 +60,6 @@ impl ToTokens for ParenArguments {
     fn to_tokens(&self, tokens: &mut TokenStream) {
         self.colon2.to_tokens(tokens);
         self.params.to_tokens(tokens);
-        self.output.to_tokens(tokens);
+        self.output.to_tokens_without_plus(tokens);
     }
 }
