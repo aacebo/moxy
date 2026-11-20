@@ -700,6 +700,7 @@ impl ExprContext {
                 || <Token![,]>::peek(cursor.offset(1))
                 || <Token![;]>::peek(cursor.offset(1))
                 || <Token![where]>::peek(cursor.offset(1))
+                || cursor.offset(1).is_delimited(Delim::Paren)
                 || cursor.offset(1).is_delimited(Delim::Brace))
     }
 }

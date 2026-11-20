@@ -15,9 +15,14 @@ pub struct Variant {
 
 impl Variant {
     pub fn parse(variant: &moxy::ast::Variant) -> Result<Self, moxy::ast::ParseError> {
-        if variant.discriminant.is_some() {
+        if let Some(discriminant) = &variant.discriminant {
+            let span = match discriminant {
+                moxy::ast::Expr::Lit(expr) => expr.lit.span(),
+                _ => discriminant.span(),
+            };
+
             return Err(moxy::ast::ParseError::new(
-                variant.span(),
+                span,
                 "`Meta` enum variants cannot have discriminants",
             ));
         }
@@ -54,8 +59,10 @@ impl Variant {
                         key = name;
                     }
                     MetaRule::Default(value) => {
+                        let span = value.as_ref().map(Spanner::span).unwrap_or_else(|| group.span.close());
+
                         return Err(moxy::ast::ParseError::new(
-                            value.as_ref().map(Spanner::span).unwrap_or(attr.span()),
+                            span,
                             "`default` is not supported on enum variants",
                         ));
                     }
@@ -77,7 +84,7 @@ impl Variant {
 
                 if values.len() != 1 {
                     return Err(moxy::ast::ParseError::new(
-                        variant.fields.span(),
+                        fields.fields.close(),
                         "`Meta` tuple variants must contain exactly one field",
                     ));
                 }

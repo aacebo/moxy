@@ -552,6 +552,10 @@ impl Format for ItemImpl {
 
         self.self_ty.format(f)?;
 
+        if let Some(where_clause) = &self.generics.where_clause {
+            where_clause.format(f)?;
+        }
+
         f.text(" {")?;
         f.indent(|f| {
             for (i, item) in self.items.inner.iter().enumerate() {

@@ -1825,7 +1825,7 @@
                     "tests/ui/parser/"
                 ]
             },
-            "parse_root": "item",
+            "parse_root": "crate",
             "support_expectation": "moxy_accepts",
             "fixture_directory": "fixtures/grammar/generics/const-default"
         },

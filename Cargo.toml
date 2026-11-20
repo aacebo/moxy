@@ -8,7 +8,6 @@ version = "0.5.6"
 edition = "2024"
 license = "MIT"
 documentation = "https://docs.rs/moxy"
-homepage = "https://www.github.com/aacebo/moxy"
 repository = "https://www.github.com/aacebo/moxy"
 keywords = ["macro", "framework", "proc", "rust"]
 categories = ["development-tools::procedural-macro-helpers", "rust-patterns", "no-std"]
@@ -30,7 +29,6 @@ large_enum_variant = "allow"
 suspicious_else_formatting = "allow"
 
 [workspace.dependencies]
-moxy = { path = ".", version = "0.5.6" }
 moxy-ast = { path = "crates/moxy-ast", version = "0.5.6" }
 moxy-build = { path = "crates/moxy-build", version = "0.5.6" }
 moxy-macros = { path = "crates/moxy-macros", version = "0.5.6" }
@@ -53,7 +51,6 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 documentation.workspace = true
-homepage.workspace = true
 repository.workspace = true
 keywords.workspace = true
 categories.workspace = true

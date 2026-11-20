@@ -20,14 +20,16 @@ on:
 
 jobs:
   test:
-    name: Test (${{ matrix.toolchain }})
+    name: Test (${{ matrix.name }})
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
       matrix:
-        toolchain:
-          - stable
-          - nightly
+        include:
+          - name: stable
+            toolchain: 1.98.0
+          - name: nightly
+            toolchain: nightly-2026-08-19
     steps:
       - name: Checkout
         uses: actions/checkout@v5
@@ -53,7 +55,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.98.0
         with:
           components: clippy
 
@@ -71,7 +73,7 @@ jobs:
         uses: actions/checkout@v5
 
       - name: Install Rust
-        uses: dtolnay/rust-toolchain@stable
+        uses: dtolnay/rust-toolchain@1.98.0
 
       - name: Cache Cargo
         uses: Swatinem/rust-cache@v2
