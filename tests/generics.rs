@@ -113,6 +113,50 @@ fn generic_lists_and_bounds_may_be_empty() {
     ));
 }
 
+// rustc's parser accepts parenthesized arguments on an associated item's name,
+// as in `Item(T): Clone`, and rejects them later; return type notation, as in
+// `f(..): Send`, is unstable and stays an error
+#[test]
+fn associated_items_take_parenthesized_arguments() {
+    use moxy::ast::{GenericArgument, Parse, Parser, PathArguments, Type};
+
+    for (source, tokens, formatted) in [
+        ("A<Item(T): Clone>", "A < Item (T) : Clone >", "A<Item(T): Clone>"),
+        (
+            "A<Item(T) -> U: Clone + Send>",
+            "A < Item (T) -> U : Clone + Send >",
+            "A<Item(T) -> U: Clone + Send>",
+        ),
+        ("A<Item::(T): Clone>", "A < Item :: (T) : Clone >", "A<Item(T): Clone>"),
+        ("A<Item(T) = u8>", "A < Item (T) = u8 >", "A<Item(T) = u8>"),
+        ("A<Item(T) = 3>", "A < Item (T) = 3 >", "A<Item(T) = 3>"),
+    ] {
+        let ty: Type = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let stream: moxy::token::TokenStream = source.parse().unwrap();
+        let skipped = Type::skip(Parser::from_tokens(&stream).cursor());
+        let Type::Path(path) = &ty else { panic!("`{source}`") };
+        let PathArguments::AngleBracketed(args) = &path.path[0].args else {
+            panic!("`{source}`")
+        };
+        let parenthesized = match &args.args[0] {
+            GenericArgument::Constraint(v) => &v.args,
+            GenericArgument::AssocType(v) => &v.args,
+            GenericArgument::AssocConst(v) => &v.args,
+            _ => panic!("`{source}`"),
+        };
+
+        assert!(matches!(parenthesized, PathArguments::Parenthesized(_)), "`{source}`");
+        assert!(skipped.is_some_and(|cursor| cursor.is_empty()), "`{source}`");
+        assert_eq!(ty.to_token_stream().to_string(), tokens);
+        assert_eq!(moxy::fmt!(&ty).unwrap(), formatted);
+    }
+
+    // Only one segment without angle arguments takes them, as in rustc
+    for source in ["A<Item<B>(T): Clone>", "A<a::Item(T): Clone>"] {
+        assert!(moxy::parse!(source as Type).is_err(), "`{source}`");
+    }
+}
+
 #[test]
 fn a_variadic_function_pointer_formats_one_separator() {
     for (source, formatted) in [

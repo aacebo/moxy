@@ -827,8 +827,15 @@ define_visit! {
         visit: visit_bare_fn_params, visit_mut: visit_bare_fn_params_mut,
         walk: walk_bare_fn_params, walk_mut: walk_bare_fn_params_mut,
         fields {
-            inputs: punct => visit_bare_fn_arg / visit_bare_fn_arg_mut,
-            variadic: opt => visit_variadic / visit_variadic_mut,
+            inputs: punct => visit_bare_fn_param / visit_bare_fn_param_mut,
+        }
+    }
+    enum BareFnParam {
+        visit: visit_bare_fn_param, visit_mut: visit_bare_fn_param_mut,
+        walk: walk_bare_fn_param, walk_mut: walk_bare_fn_param_mut,
+        variants {
+            Arg(visit_bare_fn_arg / visit_bare_fn_arg_mut),
+            Variadic(visit_variadic / visit_variadic_mut),
         }
     }
     struct TypeImplTrait {
@@ -1411,7 +1418,6 @@ define_visit! {
         walk: walk_fn_params, walk_mut: walk_fn_params_mut,
         fields {
             inputs: punct => visit_fn_param / visit_fn_param_mut,
-            variadic: opt => visit_variadic / visit_variadic_mut,
         }
     }
     enum FnParam {
@@ -1421,6 +1427,7 @@ define_visit! {
             Receiver(visit_receiver / visit_receiver_mut),
             Typed(visit_pat_type / visit_pat_type_mut),
             Type(visit_type / visit_type_mut),
+            Variadic(visit_variadic / visit_variadic_mut),
         }
     }
     struct Receiver {
@@ -1452,7 +1459,6 @@ define_visit! {
             pat: opt_box => visit_pattern / visit_pattern_mut,
             colon: skip,
             dots: skip,
-            comma: skip,
         }
     }
 
@@ -1656,7 +1662,7 @@ define_visit! {
         walk: walk_assoc_type_argument, walk_mut: walk_assoc_type_argument_mut,
         fields {
             ident: skip,
-            generics: opt => visit_angle_arguments / visit_angle_arguments_mut,
+            args => visit_path_arguments / visit_path_arguments_mut,
             eq_punct: skip,
             ty => visit_type / visit_type_mut,
         }
@@ -1666,7 +1672,7 @@ define_visit! {
         walk: walk_assoc_const_argument, walk_mut: walk_assoc_const_argument_mut,
         fields {
             ident: skip,
-            generics: opt => visit_angle_arguments / visit_angle_arguments_mut,
+            args => visit_path_arguments / visit_path_arguments_mut,
             eq_punct: skip,
             expr => visit_expr / visit_expr_mut,
         }
@@ -1676,7 +1682,7 @@ define_visit! {
         walk: walk_constraint_argument, walk_mut: walk_constraint_argument_mut,
         fields {
             ident: skip,
-            generics: opt => visit_angle_arguments / visit_angle_arguments_mut,
+            args => visit_path_arguments / visit_path_arguments_mut,
             colon_punct: skip,
             bounds: punct => visit_type_bound / visit_type_bound_mut,
         }

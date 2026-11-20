@@ -66,6 +66,19 @@ ACCEPT p: [1.., 2]
 ACCEPT p: [1..]
 TREE f: trait A { pub fn f(); }
 
+# Intentional: rustc's parser accepts parenthesized arguments on an associated
+# item's name and a variadic before another parameter, and rejects them later;
+# syn rejects them
+ACCEPT f: extern "C" { fn f(..., ...); }
+ACCEPT f: extern "C" { fn f(a: u8, ..., b: u8); }
+ACCEPT f: fn f(a: u8, x: ..., b: u8) {}
+ACCEPT t: A<Item(T) -> U: Clone>
+ACCEPT t: A<Item(T) = u8>
+ACCEPT t: A<Item(T): Clone>
+ACCEPT t: A<Item::(T): Clone>
+ACCEPT t: fn(..., ...,)
+ACCEPT t: fn(u8, ..., u8)
+
 # Intentional: rustc rejects these while parsing, as moxy does, and syn accepts
 # them: an obsolete macro call with an identifier, a static without a type, a
 # keyword as a lifetime name, and `mut self` as a pattern
@@ -74,10 +87,6 @@ REJECT f: m! ident {}
 REJECT f: static X = 1;
 REJECT f: type Symbols<'false> = Table<Symbol<'false>>;
 REJECT p: mut self
-
-# Intentional: rustc rejects `crate` after the first segment of a use path when
-# it resolves the path; moxy rejects it while parsing
-REJECT f: use a::crate;
 
 # Intentional: rustc's lexer rejects an exponent without digits, even in macro
 # input, which syn accepts as a suffix

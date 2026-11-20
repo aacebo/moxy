@@ -683,12 +683,7 @@ fn margs(a: &m::PathArguments) -> String {
                     m::GenericArgument::Lifetime(l) => mt(l),
                     m::GenericArgument::Type(t) => mtype(t),
                     m::GenericArgument::Const(e) => format!("const:{}", mexpr(e)),
-                    m::GenericArgument::AssocType(a) => format!(
-                        "{}{}={}",
-                        mt(&a.ident),
-                        a.generics.as_ref().map(mt).unwrap_or_default(),
-                        mtype(&a.ty)
-                    ),
+                    m::GenericArgument::AssocType(a) => format!("{}{}={}", mt(&a.ident), mt(&a.args), mtype(&a.ty)),
                     m::GenericArgument::AssocConst(a) => format!("{}=const:{}", mt(&a.ident), mexpr(&a.expr)),
                     m::GenericArgument::Constraint(c) => format!("{}:{}", mt(&c.ident), mbounds(&c.bounds)),
                 })
@@ -739,8 +734,20 @@ pub(super) fn mtype(t: &m::Type) -> String {
             x.lifetimes.as_ref().map(mt).unwrap_or_default(),
             if x.unsafety.is_some() { "unsafe " } else { "" },
             x.abi.as_ref().map(mt).unwrap_or_default(),
-            x.params.inputs.iter().map(|a| mtype(&a.ty)).collect::<Vec<_>>().join(","),
-            if x.params.variadic.is_some() { ",..." } else { "" },
+            x.params
+                .inputs
+                .iter()
+                .filter_map(|p| match p {
+                    m::BareFnParam::Arg(a) => Some(mtype(&a.ty)),
+                    m::BareFnParam::Variadic(_) => None,
+                })
+                .collect::<Vec<_>>()
+                .join(","),
+            if x.params.inputs.iter().any(|p| matches!(p, m::BareFnParam::Variadic(_))) {
+                ",..."
+            } else {
+                ""
+            },
             mret(&x.output)
         ),
         T::ImplTrait(x) => format!("impl({})", mbounds(&x.bounds)),
@@ -978,10 +985,12 @@ fn msig(s: &m::Signature) -> String {
         .inner
         .inputs
         .iter()
-        .map(|p| match p {
-            m::FnParam::Receiver(r) => format!("self<{}>", mt(r)),
-            m::FnParam::Typed(t) => format!("{}:{}", mpat(&t.pat), mtype(&t.ty)),
-            m::FnParam::Type(t) => format!("type<{}>", mtype(t)),
+        .filter_map(|p| match p {
+            m::FnParam::Receiver(r) => Some(format!("self<{}>", mt(r))),
+            m::FnParam::Typed(t) => Some(format!("{}:{}", mpat(&t.pat), mtype(&t.ty))),
+            m::FnParam::Type(t) => Some(format!("type<{}>", mtype(t))),
+            // Rendered after the inputs, as syn holds a variadic
+            m::FnParam::Variadic(_) => None,
         })
         .collect::<Vec<_>>()
         .join(",");
@@ -994,7 +1003,11 @@ fn msig(s: &m::Signature) -> String {
         mt(&s.ident),
         mgenerics(&s.generics),
         inputs,
-        if s.params.inner.variadic.is_some() { ",..." } else { "" },
+        if s.params.inner.inputs.iter().any(|p| matches!(p, m::FnParam::Variadic(_))) {
+            ",..."
+        } else {
+            ""
+        },
         mret(&s.output)
     )
 }

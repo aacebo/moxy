@@ -32,11 +32,6 @@ impl Parse for UsePathChain {
             segments.push_value(parser.parse_ident_any()?);
             segments.push_punct(<_ as Parse>::parse(parser)?);
 
-            // `crate` names the crate root, so only the first segment can be it
-            if parser.curr().is_some_and(|token| token.is_keyword_crate()) {
-                return parser.error("`crate` can only begin a path").into();
-            }
-
             if !(super::peek_segment(parser.cursor()) && <Token![::]>::peek(parser.cursor().offset(1))) {
                 break;
             }
@@ -55,10 +50,6 @@ impl Parse for UsePathChain {
         loop {
             cursor = super::skip_segment(cursor)?;
             cursor = <Token![::]>::skip(cursor)?;
-
-            if cursor.curr().is_some_and(|token| token.is_keyword_crate()) {
-                return None;
-            }
 
             if !(super::peek_segment(cursor) && <Token![::]>::peek(cursor.offset(1))) {
                 break;

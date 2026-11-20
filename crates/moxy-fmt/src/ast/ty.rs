@@ -106,19 +106,32 @@ impl Format for TypeBareFn {
         }
 
         f.text("fn(")?;
-        self.params.inner.inputs.format(f)?;
 
-        if let Some(variadic) = &self.params.inner.variadic {
-            // A trailing comma before `...` is already in the inputs
-            if !self.params.inner.inputs.is_empty() && !self.params.inner.inputs.is_trailing() {
-                f.text(", ")?;
+        // A trailing comma is dropped, as after a variadic in `fn(u8, ...,)`
+        f.group(|f| {
+            for (i, param) in self.params.inner.inputs.iter().enumerate() {
+                if i > 0 {
+                    f.text(",")?;
+                    f.space()?;
+                }
+
+                param.format(f)?;
             }
 
-            variadic.format(f)?;
-        }
+            Ok(())
+        })?;
 
         f.text(")")?;
         self.output.format(f)
+    }
+}
+
+impl Format for BareFnParam {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        match self {
+            Self::Arg(v) => v.format(f),
+            Self::Variadic(v) => v.format(f),
+        }
     }
 }
 

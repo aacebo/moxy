@@ -1,5 +1,6 @@
 mod abi;
 mod bare_fn_arg;
+mod bare_fn_param;
 mod fn_param;
 mod receiver;
 mod signature;
@@ -7,6 +8,7 @@ mod variadic;
 
 pub use abi::*;
 pub use bare_fn_arg::*;
+pub use bare_fn_param::*;
 pub use fn_param::*;
 pub use receiver::*;
 pub use signature::*;

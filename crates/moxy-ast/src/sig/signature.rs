@@ -1,6 +1,6 @@
 use moxy_token::{Ident, Span, Spanner, ToTokenStream, ToTokens, TokenStream};
 
-use super::{Abi, FnParams, Variadic};
+use super::{Abi, FnParams};
 use crate::*;
 
 /// A function signature.
@@ -68,14 +68,8 @@ impl Signature {
         let mut generics: Generics = <_ as Parse>::parse(parser)?;
         let params = Delimited::parse_paren_with(parser, |parser| {
             let mut inputs = List::new();
-            let mut variadic = None;
 
             while !parser.is_empty() {
-                if Variadic::peek(parser.cursor()) {
-                    variadic = Some(<_ as Parse>::parse(parser)?);
-                    break;
-                }
-
                 let param: super::FnParam = <_ as Parse>::parse(parser)?;
 
                 // A type that ends the parameter is one without a name;
@@ -95,7 +89,7 @@ impl Signature {
                 }
             }
 
-            Ok(FnParams { inputs, variadic })
+            Ok(FnParams { inputs })
         })?;
 
         let output = <_ as Parse>::parse(parser)?;
@@ -125,11 +119,6 @@ impl Signature {
         let mut inner = cursor.descend(moxy_token::Delim::Paren)?;
 
         while !inner.is_empty() {
-            if Variadic::peek(inner) {
-                inner = Variadic::skip(inner)?;
-                break;
-            }
-
             inner = if anonymous {
                 super::FnParam::skip(inner)?
             } else {

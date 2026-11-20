@@ -34,21 +34,13 @@ impl Format for Signature {
         self.generics.format(f)?;
         f.text("(")?;
         f.group(|f| {
-            for pair in self.params.inner.inputs.pairs() {
-                match pair {
-                    moxy_ast::Pair::List(param, _) => {
-                        param.format(f)?;
-                        f.text(",")?;
-                        f.text(" ")?;
-                    }
-                    moxy_ast::Pair::End(param) => {
-                        param.format(f)?;
-                    }
+            // A trailing comma is dropped, as after a variadic in `fn f(a: u8, ...,);`
+            for (i, param) in self.params.inner.inputs.iter().enumerate() {
+                if i > 0 {
+                    f.text(", ")?;
                 }
-            }
 
-            if let Some(variadic) = &self.params.inner.variadic {
-                variadic.format(f)?;
+                param.format(f)?;
             }
 
             Ok(())
@@ -71,6 +63,7 @@ impl Format for FnParam {
             Self::Receiver(v) => v.format(f),
             Self::Typed(v) => v.format(f),
             Self::Type(v) => v.format(f),
+            Self::Variadic(v) => v.format(f),
         }
     }
 }

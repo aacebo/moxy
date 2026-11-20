@@ -39,14 +39,8 @@ impl Parse for TypeBareFn {
         let fn_keyword = <_ as Parse>::parse(parser)?;
         let params = Delimited::parse_paren_with(parser, |inner| {
             let mut inputs = List::new();
-            let mut variadic = None;
 
             while !inner.is_empty() {
-                if Variadic::peek(inner.cursor()) {
-                    variadic = Some(<_ as Parse>::parse(inner)?);
-                    break;
-                }
-
                 inputs.push_value(<_ as Parse>::parse(inner)?);
 
                 if <Token![,]>::peek(inner.cursor()) {
@@ -56,7 +50,7 @@ impl Parse for TypeBareFn {
                 }
             }
 
-            Ok(BareFnParams { inputs, variadic })
+            Ok(BareFnParams { inputs })
         })?;
 
         let output = ReturnType::parse_without_plus(parser)?;
@@ -80,12 +74,7 @@ impl Parse for TypeBareFn {
         let mut inner = cursor.descend(moxy_token::Delim::Paren)?;
 
         while !inner.is_empty() {
-            if Variadic::peek(inner) {
-                inner = Variadic::skip(inner)?;
-                break;
-            }
-
-            inner = BareFnArg::skip(inner)?;
+            inner = BareFnParam::skip(inner)?;
 
             if <Token![,]>::peek(inner) {
                 inner = <Token![,]>::skip(inner)?;
@@ -139,13 +128,11 @@ impl ToTokens for TypeBareFn {
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct BareFnParams {
-    pub inputs: List<BareFnArg, Token![,]>,
-    pub variadic: Option<Variadic>,
+    pub inputs: List<BareFnParam, Token![,]>,
 }
 
 impl ToTokens for BareFnParams {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.inputs.to_tokens(t);
-        self.variadic.to_tokens(t);
     }
 }

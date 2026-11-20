@@ -407,9 +407,10 @@ fn trait_objects_and_variadics_skip_as_they_parse() {
         skip(Parser::from_tokens(&tokens).cursor()).map(|cursor| cursor.remaining())
     };
 
-    // A variadic skips its trailing comma, a trait object its parenthesized
-    // first bound, and `as` a parenthesized type without the `+` after it
-    assert_eq!(skips_all("_: ...,", Variadic::skip), Some(0));
+    // A variadic leaves its trailing comma to the parameter list, a trait
+    // object skips its parenthesized first bound, and `as` a parenthesized
+    // type without the `+` after it
+    assert_eq!(skips_all("_: ...,", Variadic::skip), Some(1));
     assert_eq!(skips_all("Box<(?Sized) + Copy>", Type::skip), Some(0));
     assert_eq!(skips_all("(A) + B", Type::skip), Some(0));
     assert_eq!(skips_all("x as (A) + b", Expr::skip), Some(0));

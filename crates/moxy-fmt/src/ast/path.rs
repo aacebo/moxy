@@ -145,10 +145,7 @@ impl Format for AssocTypeArgument {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.ident.format(f)?;
 
-        if let Some(generics) = &self.generics {
-            generics.format(f)?;
-        }
-
+        self.args.format(f)?;
         f.text(" = ")?;
         self.ty.format(f)
     }
@@ -158,10 +155,7 @@ impl Format for AssocConstArgument {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.ident.format(f)?;
 
-        if let Some(generics) = &self.generics {
-            generics.format(f)?;
-        }
-
+        self.args.format(f)?;
         f.text(" = ")?;
         self.expr.format(f)
     }
@@ -171,10 +165,7 @@ impl Format for ConstraintArgument {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         self.ident.format(f)?;
 
-        if let Some(generics) = &self.generics {
-            generics.format(f)?;
-        }
-
+        self.args.format(f)?;
         f.text(": ")?;
         self.bounds.format(f)
     }

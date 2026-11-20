@@ -97,10 +97,14 @@ impl Parse for GenericArgument {
             cursor = Ident::skip(cursor)?;
 
             if ParenArguments::peek(cursor) {
-                return Path::skip_rest(ParenArguments::skip(cursor)?);
-            }
+                cursor = ParenArguments::skip(cursor)?;
 
-            cursor = Option::<AngleArguments>::skip(cursor)?;
+                if !peek_assoc_rest(cursor) {
+                    return Path::skip_rest(cursor);
+                }
+            } else {
+                cursor = Option::<AngleArguments>::skip(cursor)?;
+            }
 
             // The parser's extra levels for a constraint and a binding
             if peek_lone_colon(cursor) {
@@ -153,32 +157,40 @@ impl GenericArgument {
         }
 
         let generics: Option<AngleArguments> = <_ as Parse>::parse(parser)?;
-        Self::parse_named_rest(parser, ident, generics)
+        let args = generics.map_or(PathArguments::None, PathArguments::AngleBracketed);
+        Self::parse_named_rest(parser, ident, args)
     }
 
     fn parse_paren_path(parser: &Parser, ident: Ident) -> Result<Self, ParseError> {
         let args = PathArguments::Parenthesized(<_ as Parse>::parse(parser)?);
+
+        // An associated item with parenthesized arguments, as in
+        // `Item(T): Clone`
+        if peek_assoc_rest(parser.cursor()) {
+            return Self::parse_named_rest(parser, ident, args);
+        }
+
         let path = Path::parse_rest(parser, PathSegment { ident, args })?;
         Ok(Self::Type(Type::Path(TypePath { qself: None, path })))
     }
 
     // The form after a named argument's name and generic arguments, in its own
     // frame, which the nested generic arguments do not hold
-    fn parse_named_rest(parser: &Parser, ident: Ident, generics: Option<AngleArguments>) -> Result<Self, ParseError> {
+    fn parse_named_rest(parser: &Parser, ident: Ident, args: PathArguments) -> Result<Self, ParseError> {
         if peek_lone_colon(parser.cursor()) {
-            return Self::parse_constraint(parser, ident, generics);
+            return Self::parse_constraint(parser, ident, args);
         }
 
         if <Token![=]>::peek(parser.cursor()) {
-            return Self::parse_assoc(parser, ident, generics);
+            return Self::parse_assoc(parser, ident, args);
         }
 
-        Self::parse_path(parser, ident, generics)
+        Self::parse_path(parser, ident, args)
     }
 
     // An associated type bound takes three levels of stack, as in
     // `A<B: A<B: C>>`
-    fn parse_constraint(parser: &Parser, ident: Ident, generics: Option<AngleArguments>) -> Result<Self, ParseError> {
+    fn parse_constraint(parser: &Parser, ident: Ident, args: PathArguments) -> Result<Self, ParseError> {
         let _weight =
             moxy_token::__private::Depth::enter_by(CONSTRAINT_EXTRA_LEVELS).ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let colon_punct = <_ as Parse>::parse(parser)?;
@@ -186,7 +198,7 @@ impl GenericArgument {
 
         Ok(ConstraintArgument {
             ident,
-            generics,
+            args,
             colon_punct,
             bounds,
         }
@@ -194,7 +206,7 @@ impl GenericArgument {
     }
 
     // An associated type or constant: `Item = u8`, `N = 3`
-    fn parse_assoc(parser: &Parser, ident: Ident, generics: Option<AngleArguments>) -> Result<Self, ParseError> {
+    fn parse_assoc(parser: &Parser, ident: Ident, args: PathArguments) -> Result<Self, ParseError> {
         // Another level of stack, as in `A<B = A<B = u8>>`
         let _weight = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let eq_punct = <_ as Parse>::parse(parser)?;
@@ -205,7 +217,7 @@ impl GenericArgument {
 
             return Ok(AssocConstArgument {
                 ident,
-                generics,
+                args,
                 eq_punct,
                 expr,
             }
@@ -216,7 +228,7 @@ impl GenericArgument {
 
         Ok(AssocTypeArgument {
             ident,
-            generics,
+            args,
             eq_punct,
             ty,
         }
@@ -224,8 +236,7 @@ impl GenericArgument {
     }
 
     // A path type or type macro that starts with `ident` and its arguments
-    fn parse_path(parser: &Parser, ident: Ident, generics: Option<AngleArguments>) -> Result<Self, ParseError> {
-        let args = generics.map_or(PathArguments::None, PathArguments::AngleBracketed);
+    fn parse_path(parser: &Parser, ident: Ident, args: PathArguments) -> Result<Self, ParseError> {
         let path = Path::parse_rest(parser, PathSegment { ident, args })?;
         let ty = if <Token![+]>::peek(parser.cursor()) {
             Type::parse_bare_trait_object(parser, path)?
@@ -266,6 +277,12 @@ fn starts_const(cursor: Cursor<'_>) -> bool {
         Some(TokenTree::Group(group)) => group.delim.is_brace(),
         _ => false,
     }
+}
+
+// Whether a constraint or a binding follows an associated item's name and
+// arguments
+fn peek_assoc_rest(cursor: Cursor<'_>) -> bool {
+    peek_lone_colon(cursor) || <Token![=]>::peek(cursor)
 }
 
 // The levels an associated type bound takes beyond its own, in parsing and in

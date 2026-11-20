@@ -31,7 +31,10 @@ fn unsafe_extern_variadic_functions_render_exactly() {
     let function = item.as_fn().unwrap();
     assert!(function.sig.safety.is_some());
     assert!(function.sig.abi.is_some());
-    assert!(function.sig.params.inner.variadic.is_some());
+    assert!(matches!(
+        function.sig.params.inner.inputs.last(),
+        Some(moxy::ast::FnParam::Variadic(_))
+    ));
     assert_eq!(
         moxy::fmt!(&item).unwrap(),
         "pub unsafe extern \"C\" fn log(format: *const u8, ...) -> i32 {\n\t0\n}"
@@ -183,9 +186,39 @@ fn a_variadic_takes_a_trailing_comma() {
         let formatted = moxy::fmt!(&item).unwrap();
         assert!(moxy::parse!(formatted as moxy::ast::Item).is_ok(), "`{formatted}`");
     }
+}
 
-    // As in syn, nothing follows the variadic but its comma
-    assert!(moxy::parse!("extern \"C\" { fn f(a: u8, ..., b: u8); }" as moxy::ast::Item).is_err());
+// rustc's parser accepts a variadic in any parameter position and rejects one
+// before another parameter later
+#[test]
+fn parameters_may_follow_a_variadic() {
+    use moxy::ast::{Item, Parse, Parser};
+    use moxy::token::{ToTokenStream, TokenStream};
+
+    for (source, tokens) in [
+        (
+            "extern \"C\" { fn f(a: u8, ..., b: u8); }",
+            "extern \"C\" {fn f (a : u8 , ... , b : u8) ;}",
+        ),
+        ("extern \"C\" { fn f(..., ...); }", "extern \"C\" {fn f (... , ...) ;}"),
+        ("fn f(a: u8, x: ..., b: u8) {}", "fn f (a : u8 , x : ... , b : u8) {}"),
+        ("type F = fn(u8, ..., u8);", "type F = fn (u8 , ... , u8) ;"),
+        (
+            "type F = fn(a: u8, x: ..., b: u8);",
+            "type F = fn (a : u8 , x : ... , b : u8) ;",
+        ),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let stream: TokenStream = source.parse().unwrap();
+        let skipped = Item::skip(Parser::from_tokens(&stream).cursor());
+
+        assert!(skipped.is_some_and(|cursor| cursor.is_empty()), "`{source}`");
+        assert_eq!(item.to_token_stream().to_string(), tokens);
+        assert_eq!(
+            moxy::fmt!(&item).unwrap().replace(['\n', '\t'], ""),
+            source.replace("{ ", "{").replace("; }", ";}")
+        );
+    }
 }
 
 #[test]
@@ -201,6 +234,9 @@ fn a_variadic_pattern_may_hold_generic_arguments() {
     let item: moxy::ast::Item = moxy::parse!("extern \"C\" { fn f(S::<A, B>(x): ...); }").unwrap();
     let moxy::ast::Item::ForeignMod(block) = &item else { panic!() };
     let function = block.items[0].as_fn().unwrap();
-    let variadic = function.sig.params.inner.variadic.as_ref().unwrap();
-    assert!(function.sig.params.inner.inputs.is_empty() && variadic.pat.is_some());
+    let inputs = &function.sig.params.inner.inputs;
+    let Some(moxy::ast::FnParam::Variadic(variadic)) = inputs.first() else {
+        panic!()
+    };
+    assert!(inputs.len() == 1 && variadic.pat.is_some());
 }

@@ -12,8 +12,6 @@ pub struct Variadic {
     pub pat: Option<Box<Pattern>>,
     pub colon: Option<Token![:]>,
     pub dots: Token![...],
-    /// A trailing comma after the dots, as in `fn f(a: u8, ...,);`.
-    pub comma: Option<Token![,]>,
 }
 
 impl Attributed for Variadic {
@@ -81,7 +79,6 @@ impl Parse for Variadic {
             pat,
             colon,
             dots: <_ as Parse>::parse(parser)?,
-            comma: <_ as Parse>::parse(parser)?,
         })
     }
 
@@ -92,8 +89,7 @@ impl Parse for Variadic {
             cursor = <Token![:]>::skip(cursor)?;
         }
 
-        cursor = <Token![...]>::skip(cursor)?;
-        Option::<Token![,]>::skip(cursor)
+        <Token![...]>::skip(cursor)
     }
 }
 
@@ -109,6 +105,5 @@ impl ToTokens for Variadic {
         self.pat.to_tokens(t);
         self.colon.to_tokens(t);
         self.dots.to_tokens(t);
-        self.comma.to_tokens(t);
     }
 }

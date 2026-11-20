@@ -1,6 +1,6 @@
 use moxy_token::{Ident, Span, Spanner, ToTokens, TokenStream};
 
-use crate::{AngleArguments, Cursor, GenericArgument, Parse, ParseError, Parser, Token, Type};
+use crate::{Cursor, GenericArgument, Parse, ParseError, Parser, PathArguments, Token, Type};
 
 /// An associated type binding (`Item = T`).
 #[derive(Clone)]
@@ -8,7 +8,8 @@ use crate::{AngleArguments, Cursor, GenericArgument, Parse, ParseError, Parser, 
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct AssocTypeArgument {
     pub ident: Ident,
-    pub generics: Option<AngleArguments>,
+    /// The arguments after the name: `<T>` in `Item<T> = U` or `(T)` in `Item(T) = U`.
+    pub args: PathArguments,
     pub eq_punct: Token![=],
     pub ty: Type,
 }
@@ -29,7 +30,7 @@ impl Parse for AssocTypeArgument {
             return false;
         };
 
-        let Some(cursor) = Option::<AngleArguments>::skip(cursor) else {
+        let Some(cursor) = PathArguments::skip(cursor) else {
             return false;
         };
 
@@ -43,7 +44,7 @@ impl Parse for AssocTypeArgument {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
             ident: <_ as Parse>::parse(parser)?,
-            generics: <_ as Parse>::parse(parser)?,
+            args: <_ as Parse>::parse(parser)?,
             eq_punct: <_ as Parse>::parse(parser)?,
             ty: <_ as Parse>::parse(parser)?,
         })
@@ -51,7 +52,7 @@ impl Parse for AssocTypeArgument {
 
     fn skip(mut cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         cursor = Ident::skip(cursor)?;
-        cursor = Option::<AngleArguments>::skip(cursor)?;
+        cursor = PathArguments::skip(cursor)?;
         cursor = <Token![=]>::skip(cursor)?;
         Type::skip(cursor)
     }
@@ -66,7 +67,7 @@ impl Spanner for AssocTypeArgument {
 impl ToTokens for AssocTypeArgument {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.ident.to_tokens(t);
-        self.generics.to_tokens(t);
+        self.args.to_tokens(t);
         self.eq_punct.to_tokens(t);
         self.ty.to_tokens(t);
     }

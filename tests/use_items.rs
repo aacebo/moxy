@@ -57,10 +57,27 @@ fn extern_crate_takes_self_or_a_name_and_skips_as_it_parses() {
     }
 }
 
+// rustc's parser accepts `crate` in any segment of a use path and rejects it
+// later, when it resolves the path
 #[test]
-fn crate_only_begins_a_use_path() {
-    let error = moxy::parse!("use a::crate;" as Item).err().unwrap();
-    assert_eq!(error.message(), "`crate` can only begin a path");
+fn crate_in_later_use_path_segment_parses() {
+    use moxy::ast::{Parse, Parser};
+
+    for (source, tokens) in [
+        ("use a::crate;", "use a :: crate ;"),
+        ("use a::crate::b;", "use a :: crate :: b ;"),
+        ("use a::crate as b;", "use a :: crate as b ;"),
+        ("use a::{b::crate};", "use a :: {b :: crate} ;"),
+        ("use crate::crate;", "use crate :: crate ;"),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let stream: moxy::token::TokenStream = source.parse().unwrap();
+        let skipped = Item::skip(Parser::from_tokens(&stream).cursor());
+
+        assert!(skipped.is_some_and(|cursor| cursor.is_empty()), "`{source}`");
+        assert_eq!(item.to_token_stream().to_string(), tokens);
+        assert_eq!(moxy::fmt!(&item).unwrap(), source);
+    }
 }
 
 #[test]
