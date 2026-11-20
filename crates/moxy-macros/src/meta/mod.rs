@@ -36,7 +36,12 @@ pub fn expand(tokens: TokenStream) -> TokenStream {
         moxy::ast::Declaration::Struct(target) => (&target.ident, &target.generics, structs::expand(target)),
         moxy::ast::Declaration::Enum(target) => (&target.ident, &target.generics, enums::expand(target)),
         moxy::ast::Declaration::Union(target) => {
-            return target.span().error("`Meta` cannot be derived for unions").emit();
+            return target
+                .fields
+                .fields
+                .close()
+                .error("`Meta` cannot be derived for unions")
+                .emit();
         }
     };
 
