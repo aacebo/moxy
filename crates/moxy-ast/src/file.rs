@@ -38,13 +38,19 @@ impl ToTokens for File {
 
 impl Parse for File {
     fn peek(cursor: Cursor<'_>) -> bool {
-        Shebang::peek(cursor) || Item::peek(cursor)
+        Shebang::peek(cursor) || peek_inner_attr(cursor) || Item::peek(cursor)
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
+        let shebang = <_ as Parse>::parse(parser)?;
+        let mut attrs = Attributes::default();
+        while peek_inner_attr(parser.cursor()) {
+            attrs.push(Attribute::parse(parser)?);
+        }
+
         Ok(Self {
-            shebang: <_ as Parse>::parse(parser)?,
-            attrs: <_ as Parse>::parse(parser)?,
+            shebang,
+            attrs,
             items: <_ as Parse>::parse(parser)?,
         })
     }
@@ -54,12 +60,20 @@ impl Parse for File {
             cursor = Shebang::skip(cursor)?;
         }
 
+        while peek_inner_attr(cursor) {
+            cursor = Attribute::skip(cursor)?;
+        }
+
         while let Some(next) = Item::skip(cursor) {
             cursor = next;
         }
 
         Some(cursor)
     }
+}
+
+fn peek_inner_attr(cursor: Cursor<'_>) -> bool {
+    AttrStyle::peek(cursor) && <Token![!]>::peek(cursor.offset(1))
 }
 
 #[derive(Clone)]
