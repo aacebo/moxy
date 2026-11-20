@@ -28,14 +28,14 @@ fn round_trip() {
 
     for path in &paths {
         let source = std::fs::read_to_string(path).unwrap_or_else(|error| panic!("{}: {error}", path.display()));
-        let Ok(lexed) = source.parse::<TokenStream>() else {
+        let Ok(lexed) = TokenStream::from_source_file(source) else {
             unlexed += 1;
             continue;
         };
 
         files += 1;
 
-        match moxy::parse!(source as File) {
+        match moxy::parse!((&lexed) as File) {
             Err(error) => failures.push(format!(
                 "{}:{}: does not parse: {}",
                 path.display(),

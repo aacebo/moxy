@@ -67,9 +67,9 @@ fn visitors_traverse_real_crate_syntax_before_exact_rendering() {
 #[test]
 fn files_preserve_shebangs_and_inner_attributes() {
     let source = "#!/usr/bin/env rustx\n#![allow(dead_code)]\nstruct Entry;";
-    let file: File = moxy::parse!(source).unwrap();
+    let file = File::from_source_file(source.to_owned()).unwrap();
 
-    assert_eq!(file.shebang.as_ref().unwrap().ident.clone().unwrap().text(), "rustx");
+    assert_eq!(file.shebang.as_deref(), Some("#!/usr/bin/env rustx"));
     assert_eq!(file.attrs.len(), 1);
     assert_eq!(file.items.len(), 1);
     assert!(!file.span().is_empty());
@@ -171,4 +171,36 @@ fn visitors_reach_the_fields_and_base_of_a_struct_literal() {
 
     moxy::ast::VisitMut::visit_expr_mut(&mut Rename, &mut expression);
     assert_eq!(expression.to_token_stream().to_string(), "S {a : renamed , b , .. renamed}");
+}
+
+// The formatter writes a shebang only when it reads back as one: a single
+// line that starts with `#!` and no inner attribute
+#[test]
+fn a_shebang_that_would_read_back_otherwise_fails_to_format() {
+    for (shebang, formats) in [
+        ("#!/bin/sh", true),
+        ("#!", true),
+        ("/bin/sh", false),
+        ("#![a]", false),
+        ("#! [a]", false),
+        ("#!/bin/sh\nfn g() {}", false),
+    ] {
+        let mut file: File = moxy::parse!("fn f() {}").unwrap();
+        file.shebang = Some(shebang.to_owned());
+        assert_eq!(moxy::fmt!(&file).is_ok(), formats, "`{shebang}`");
+    }
+}
+
+// A file that starts with an inner attribute has no shebang, and formats and
+// compares as the same text parsed from tokens
+#[test]
+fn a_file_starting_with_an_inner_attribute_has_no_shebang() {
+    for source in ["#![a]\nfn f() {}", "#! [a]\nfn f() {}"] {
+        let file = File::from_source_file(source.to_owned()).unwrap();
+        let tokens: File = moxy::parse!(source).unwrap();
+
+        assert_eq!(file.shebang, None, "`{source}`");
+        assert_eq!(moxy::fmt!(&file).unwrap(), "#![a]\nfn f() {}", "`{source}`");
+        assert!(file == tokens, "`{source}`");
+    }
 }

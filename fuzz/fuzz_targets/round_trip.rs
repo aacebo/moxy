@@ -8,7 +8,11 @@ use moxy::ast::File;
 use moxy::token::{ToTokenStream, TokenStream};
 
 fuzz_target!(|text: &str| {
-    let Ok(file) = moxy::parse!(text as File) else {
+    let Ok(tokens) = TokenStream::from_source_file(text.to_owned()) else {
+        return;
+    };
+
+    let Ok(file) = moxy::parse!(tokens as File) else {
         return;
     };
 

@@ -43,7 +43,8 @@ struct InvalidFileFixture {
 fn bench_file_pair(c: &mut Criterion, fixture: FileFixture) {
     let source = fixture.source;
     // A file holds its leading inner attributes, which no item takes
-    let moxy_items = moxy::parse!(source as moxy::ast::File).expect(fixture.name).items;
+    let tokens = moxy::token::TokenStream::from_source_file(source.to_owned()).expect(fixture.name);
+    let moxy_items = moxy::parse!(tokens as moxy::ast::File).expect(fixture.name).items;
     let syn_file = syn::parse_file(source).expect(fixture.name);
 
     assert_eq!(
@@ -65,7 +66,8 @@ fn bench_file_pair(c: &mut Criterion, fixture: FileFixture) {
     group.bench_function("moxy", |b| {
         b.iter(|| {
             let source = black_box(fixture.source);
-            let file: moxy::ast::File = moxy::parse!(source).unwrap();
+            let tokens = moxy::token::TokenStream::from_source_file(source.to_owned()).unwrap();
+            let file: moxy::ast::File = moxy::parse!(tokens).unwrap();
             black_box(file)
         })
     });

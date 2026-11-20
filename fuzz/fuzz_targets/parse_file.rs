@@ -5,9 +5,14 @@
 
 use libfuzzer_sys::fuzz_target;
 use moxy::ast::File;
+use moxy::token::TokenStream;
 
 fuzz_target!(|text: &str| {
-    if let Ok(file) = moxy::parse!(text as File) {
+    let Ok(tokens) = TokenStream::from_source_file(text.to_owned()) else {
+        return;
+    };
+
+    if let Ok(file) = moxy::parse!(tokens as File) {
         let _ = moxy::fmt!(&file);
     }
 });

@@ -121,8 +121,3 @@ TOKENS f: struct S<>;
 TOKENS f: struct S<T: >(T);
 TOKENS f: trait A: {}
 TOKENS i: struct S<T: >(T);
-
-# Intentional: moxy keeps a shebang of a path and one word as the file's
-# shebang tokens; syn drops the line
-TOKENS f: #!/usr/bin/env rust\n fn f() {}
-TOKENS f: #!/usr/bin/env rust\n#![allow(a)]\nfn main() {}

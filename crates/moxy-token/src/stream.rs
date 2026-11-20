@@ -325,16 +325,34 @@ impl TokenStream {
     /// Build a token stream from an owned string while moving that allocation
     /// directly into the fallback source map.
     ///
-    /// The string is lexed as a source file is: a leading byte order mark and
-    /// a shebang line are skipped (as `Cursor::skip_source_start` does), so
-    /// `"#!a b"` gives no tokens, while `"#![a]"` is an inner attribute.
+    /// A leading byte order mark is skipped, as the compiler and
+    /// `proc_macro2` skip it from any string they lex, and every other
+    /// character lexes as tokens: `"#!a b"` gives `# ! a b`. The text of a
+    /// source file, which may start with a shebang line, lexes with
+    /// [`TokenStream::from_source_file`].
     pub fn from_string(s: String) -> Result<Self, LexError> {
+        Self::scan_owned(s, |cursor| cursor.skip_byte_order_mark())
+    }
+
+    /// Build a token stream from the text of a source file, as the compiler
+    /// reads one: a leading byte order mark and a shebang line are skipped.
+    ///
+    /// A shebang line is a first line that starts with `#!` and no inner
+    /// attribute, as `#!/usr/bin/env -S cargo` but not `#![allow(dead_code)]`.
+    /// It gives no tokens, so a `File` parsed from the stream has no shebang.
+    pub fn from_source_file(text: String) -> Result<Self, LexError> {
+        Self::scan_owned(text, |cursor| cursor.skip_source_start())
+    }
+
+    // Lexes a whole string pushed to the source map, from where `start`
+    // leaves the cursor
+    fn scan_owned(s: String, start: fn(Cursor<'_>) -> Cursor<'_>) -> Result<Self, LexError> {
         use crate::source::SourceMap;
 
         SourceMap::with_mut(|sm| {
             let span = sm.push(s);
             let source = sm.find(span).expect("new source missing from source map");
-            let cursor = Cursor::new(source.text(), span.byte_range().start as u32).skip_source_start();
+            let cursor = start(Cursor::new(source.text(), span.byte_range().start as u32));
             let (rest, stream) = Self::scan(cursor)?;
             let rest = rest.skip_whitespace();
 

@@ -123,26 +123,25 @@ impl<'a> Cursor<'a> {
         self
     }
 
-    /// Skips what precedes the tokens of a source file, as the compiler does:
-    /// a byte order mark, and a shebang line such as `#!/usr/bin/env -S cargo`.
-    /// A `#!` that a `[` follows starts an inner attribute instead. A shebang
-    /// of a path and one word, such as `#!/usr/bin/env rust`, stays as tokens,
-    /// which `File` keeps as its shebang; without the word, as `#!/bin/sh`, the
-    /// line is skipped, since a word on the next line would read as its own.
-    pub fn skip_source_start(self) -> Self {
-        let mut cursor = self;
-
-        if cursor.starts_with("\u{feff}") {
-            cursor = cursor.advance_by('\u{feff}'.len_utf8());
+    // Skips a leading byte order mark, which the compiler drops from every
+    // source string, including one a procedural macro lexes
+    pub(crate) fn skip_byte_order_mark(self) -> Self {
+        if self.starts_with("\u{feff}") {
+            self.advance_by('\u{feff}'.len_utf8())
+        } else {
+            self
         }
+    }
+
+    /// Skips what precedes the tokens of a source file, as the compiler does: a
+    /// byte order mark, and a shebang line such as `#!/usr/bin/env -S cargo`,
+    /// up to its line break. A `#!` that a `[` follows starts an inner
+    /// attribute instead.
+    pub fn skip_source_start(self) -> Self {
+        let cursor = self.skip_byte_order_mark();
 
         if cursor.starts_with("#!") && !cursor.advance_by(2).skip_whitespace().starts_with("[") {
-            let end = cursor.skip_while(|ch| ch != '\n');
-            let line = cursor.slice_to(end);
-
-            if !is_path_shebang(line) {
-                cursor = end;
-            }
+            return cursor.skip_while(|ch| ch != '\n');
         }
 
         cursor
@@ -208,21 +207,4 @@ impl<'a> Cursor<'a> {
 
         None
     }
-}
-
-// Whether a shebang line is `#!`, a path of identifiers, and an identifier,
-// which lexes as tokens: `#!/usr/bin/env rust`
-fn is_path_shebang(line: &str) -> bool {
-    let is_ident = |word: &str| {
-        let mut chars = word.chars();
-        chars.next().is_some_and(|ch| ch == '_' || unicode_ident::is_xid_start(ch)) && chars.all(unicode_ident::is_xid_continue)
-    };
-
-    let mut words = line.trim_end()["#!".len()..].split(' ');
-    let path = words.next().unwrap_or_default();
-    let word = words.next();
-
-    path.strip_prefix('/').is_some_and(|path| path.split('/').all(is_ident))
-        && word.is_some_and(is_ident)
-        && words.next().is_none()
 }

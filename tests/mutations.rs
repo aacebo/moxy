@@ -37,7 +37,13 @@ fn mutations(source: &str) -> Vec<String> {
 // Lexes and parses one source in every way a caller would, and emits and
 // formats what parses
 fn exercise(source: &str) {
-    let Ok(tokens) = source.parse::<TokenStream>() else {
+    // As the text of a file, and as a string, which lexes a leading `#!`
+    if let Ok(file) = File::from_source_file(source.to_owned()) {
+        let _ = file.to_token_stream().to_string();
+        let _ = moxy::fmt!(&file);
+    }
+
+    let Ok(tokens) = TokenStream::from_string(source.to_owned()) else {
         return;
     };
 

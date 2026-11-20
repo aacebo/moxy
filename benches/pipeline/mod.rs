@@ -41,7 +41,8 @@ impl<'ast> Visit<'ast> for FieldNames {
 
 pub fn run(c: &mut Criterion) {
     let source = large_source();
-    let file: moxy::ast::File = moxy::parse!((source.clone())).expect("the large source parses");
+    let tokens = moxy::token::TokenStream::from_source_file(source.clone()).expect("the large source lexes");
+    let file: moxy::ast::File = moxy::parse!(tokens).expect("the large source parses");
     let syn_file = syn::parse_file(&source).expect("syn parses the large source");
 
     let mut group = c.benchmark_group("pipeline/lex");
@@ -61,7 +62,8 @@ pub fn run(c: &mut Criterion) {
     group.bench_function("moxy", |b| {
         b.iter(|| {
             let source = black_box(source.as_str());
-            let file: moxy::ast::File = moxy::parse!(source).unwrap();
+            let tokens = moxy::token::TokenStream::from_source_file(source.to_owned()).unwrap();
+            let file: moxy::ast::File = moxy::parse!(tokens).unwrap();
             file
         })
     });

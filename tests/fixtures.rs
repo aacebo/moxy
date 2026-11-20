@@ -25,48 +25,53 @@ const INVALID_MACRO: &str = include_str!("../fixtures/parse/invalid/macro.rs");
 const INVALID_LARGE_FILE_TAIL: &str = include_str!("../fixtures/parse/invalid/large_file_tail.rs");
 const INVALID_MALFORMED_DECLARATION: &str = include_str!("../fixtures/parse/invalid/malformed_declaration.rs");
 
+// The tokens of a fixture, which is the text of a source file
+fn file_tokens(text: &str) -> moxy::token::TokenStream {
+    moxy::token::TokenStream::from_source_file(text.to_owned()).unwrap()
+}
+
 #[test]
 fn attributes_derives_fixture_parses_as_items() {
-    let items: Vec<Item> = moxy::parse!(ATTRIBUTES_DERIVES).unwrap();
+    let items: Vec<Item> = moxy::parse!((file_tokens(ATTRIBUTES_DERIVES))).unwrap();
     assert_eq!(items.len(), 9);
 }
 
 #[test]
 fn mixed_items_fixture_parses_as_items() {
-    let items: Vec<Item> = moxy::parse!(MIXED_ITEMS).unwrap();
+    let items: Vec<Item> = moxy::parse!((file_tokens(MIXED_ITEMS))).unwrap();
     assert_eq!(items.len(), 6);
 }
 
 #[test]
 fn large_items_fixture_parses_as_items() {
-    let items: Vec<Item> = moxy::parse!(LARGE_ITEMS).unwrap();
+    let items: Vec<Item> = moxy::parse!((file_tokens(LARGE_ITEMS))).unwrap();
     assert_eq!(items.len(), 25);
 }
 
 #[test]
 fn macro_heavy_fixture_parses_as_items() {
-    let items: Vec<Item> = moxy::parse!(MACRO_HEAVY).unwrap();
+    let items: Vec<Item> = moxy::parse!((file_tokens(MACRO_HEAVY))).unwrap();
     assert_eq!(items.len(), 13);
 }
 
 #[test]
 fn declaration_heavy_fixture_parses_as_items() {
     let _: syn::File = syn::parse_file(DECLARATION_HEAVY).unwrap();
-    let items: Vec<Item> = moxy::parse!(DECLARATION_HEAVY).unwrap();
+    let items: Vec<Item> = moxy::parse!((file_tokens(DECLARATION_HEAVY))).unwrap();
     assert_eq!(items.len(), 3);
 }
 
 #[test]
 fn pattern_heavy_fixture_parses_as_items() {
     let _: syn::File = syn::parse_file(PATTERN_HEAVY).unwrap();
-    let items: Vec<Item> = moxy::parse!(PATTERN_HEAVY).unwrap();
+    let items: Vec<Item> = moxy::parse!((file_tokens(PATTERN_HEAVY))).unwrap();
     assert_eq!(items.len(), 1);
 }
 
 #[test]
 fn macro_diagnostics_fixture_parses_as_items() {
     let _: syn::File = syn::parse_file(META_DIAGNOSTICS).unwrap();
-    let items: Vec<Item> = moxy::parse!(META_DIAGNOSTICS).unwrap();
+    let items: Vec<Item> = moxy::parse!((file_tokens(META_DIAGNOSTICS))).unwrap();
     assert_eq!(items.len(), 6);
 }
 
@@ -177,7 +182,8 @@ struct GrammarUpstream {
 
 fn parse_moxy(root: &str, source: &str) -> bool {
     match root {
-        "crate" => moxy::parse!(source as File).is_ok(),
+        // A crate root is the text of a source file
+        "crate" => File::from_source_file(source.to_owned()).is_ok(),
         "item" => moxy::parse!(source as Item).is_ok(),
         "expr" => moxy::parse!(source as Expr).is_ok(),
         "type" => moxy::parse!(source as Type).is_ok(),
@@ -349,6 +355,11 @@ fn field_shorthand_fixture_parses_and_round_trips() {
 
 #[test]
 fn a_file_may_start_with_a_byte_order_mark_and_a_shebang_line() {
+    let parse_file = |source: &str| {
+        let tokens = moxy::token::TokenStream::from_source_file(source.to_owned()).unwrap();
+        moxy::parse!(tokens as File).unwrap_or_else(|error| panic!("`{source}`: {error}"))
+    };
+
     for source in [
         "\u{feff}fn main() {}",
         "#!/usr/bin/env -S cargo +nightly -Zscript\nfn main() {}",
@@ -356,19 +367,80 @@ fn a_file_may_start_with_a_byte_order_mark_and_a_shebang_line() {
         "#!\nfn main() {}",
         "\u{feff}#!/usr/bin/env run-cargo-script\n//! doc\nfn main() {}",
     ] {
-        let file: File = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
-        assert_eq!(file.items.len(), 1, "`{source}`");
+        assert_eq!(parse_file(source).items.len(), 1, "`{source}`");
     }
 
     // `#!` with a `[` after it is an inner attribute
-    let file: File = moxy::parse!("#![allow(a)]\nfn main() {}").unwrap();
-    assert_eq!(file.attrs.len(), 1);
+    assert_eq!(parse_file("#![allow(a)]\nfn main() {}").attrs.len(), 1);
 
     // A shebang is its first line alone, so the next line's tokens are items
     for source in ["#!/bin/sh\nfoo::m!();", "#!/bin/sh\nm! {}", "#!/usr/bin/env rust\nm! {}"] {
-        let file: File = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        let file = parse_file(source);
         assert_eq!(file.items.len(), 1, "`{source}`");
         let item = file.items[0].to_token_stream().to_string();
+        assert!(file.shebang.is_none(), "`{source}`");
         assert!(item.starts_with("foo") || item.starts_with('m'), "`{source}`: {item}");
+    }
+}
+
+// The text of a source file skips a shebang line; any other string lexes `#!`
+// as tokens, as `proc_macro2` does. Both skip a byte order mark.
+#[test]
+fn only_source_file_text_skips_a_shebang_line() {
+    use moxy::token::TokenStream;
+
+    for (source, file, tokens) in [
+        (
+            "#!/usr/bin/env x\nfn f() {}",
+            "fn f () {}",
+            "# ! / usr / bin / env x fn f () {}",
+        ),
+        ("#![a]", "# ! [a]", "# ! [a]"),
+        ("#!a b", "", "# ! a b"),
+        ("\u{feff}fn f() {}", "fn f () {}", "fn f () {}"),
+        ("\u{feff}#!a b\nc", "c", "# ! a b c"),
+    ] {
+        let from_file = TokenStream::from_source_file(source.to_owned()).unwrap();
+        let from_string = TokenStream::from_string(source.to_owned()).unwrap();
+        let parsed: TokenStream = source.parse().unwrap();
+
+        assert_eq!(from_file.to_string(), file, "`{source}`");
+        assert_eq!(from_string.to_string(), tokens, "`{source}`");
+        assert_eq!(parsed.to_string(), tokens, "`{source}`");
+    }
+}
+
+// Only the text of a file says where a shebang line ends, so tokens, which hold
+// no line breaks, never give one: `#!` there is an inner attribute or an error
+#[test]
+fn only_the_text_of_a_file_holds_a_shebang() {
+    let path = std::env::temp_dir().join(format!("moxy-shebang-{}.rs", std::process::id()));
+
+    for (source, shebang, item, formatted) in [
+        (
+            "#!/bin/sh\nfoo::m!();",
+            "#!/bin/sh",
+            "foo :: m ! () ;",
+            "#!/bin/sh\nfoo::m!();",
+        ),
+        (
+            "#!/usr/bin/env -S cargo\r\nfn main() {}",
+            "#!/usr/bin/env -S cargo",
+            "fn main () {}",
+            "#!/usr/bin/env -S cargo\nfn main() {}",
+        ),
+    ] {
+        let tokens = moxy::parse!(source as File).err().map(|error| error.message().to_string());
+        let file = File::from_source_file(source.to_owned()).unwrap();
+        fs::write(&path, source).unwrap();
+        let read: File = moxy::parse_file!(path).unwrap();
+        fs::remove_file(&path).unwrap();
+
+        assert_eq!(tokens.as_deref(), Some("unexpected trailing input"), "`{source}`");
+        assert_eq!(file.shebang.as_deref(), Some(shebang));
+        assert_eq!(file.items.len(), 1);
+        assert_eq!(file.items[0].to_token_stream().to_string(), item);
+        assert_eq!(moxy::fmt!(&file).unwrap(), formatted);
+        assert!(read == file, "`{source}`");
     }
 }

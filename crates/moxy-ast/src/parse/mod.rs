@@ -18,6 +18,11 @@ use moxy_token::TryIntoTokenStream;
 ///
 /// The type can be given explicitly with `as T` or inferred from context.
 ///
+/// A string lexes as tokens, with
+/// [`TokenStream::from_string`](moxy_token::TokenStream::from_string), so a
+/// leading `#!` line is tokens and no shebang. Parse the text of a source file
+/// with [`File::from_source_file`](crate::File::from_source_file) instead.
+///
 /// # Example
 /// ```ignore
 /// use moxy::ast::*;
@@ -34,6 +39,9 @@ macro_rules! parse {
 
 /// Parse a rust source file into `moxy::ast::File`.
 ///
+/// The file is read with [`File::from_source_file`](crate::File::from_source_file),
+/// which skips a byte order mark and keeps a shebang line in `File::shebang`.
+///
 /// # Example
 /// ```ignore
 /// use moxy::ast::*;
@@ -46,7 +54,7 @@ macro_rules! parse_file {
         let path = ::std::path::Path::new(&$path);
 
         match ::std::fs::read_to_string(path) {
-            Ok(source) => $crate::__parse_owned(source),
+            Ok(source) => $crate::File::from_source_file(source),
             Err(error) => Err($crate::ParseError::new(
                 $crate::__private::moxy_token::Span::call_site(),
                 format!("could not read source file `{}`: {}", path.display(), error),
@@ -55,9 +63,15 @@ macro_rules! parse_file {
     }};
 }
 
-/// Parse source file(s) into a typed AST node, returning `Result<T, ParseError>`.
+/// Parse every source file that matches the glob patterns, relative to the
+/// calling crate's manifest directory, into a `Vec<File>`.
 ///
-/// The type can be given explicitly with `as T` or inferred from context.
+/// Each file is read with [`File::from_source_file`](crate::File::from_source_file),
+/// which skips a byte order mark and keeps a shebang line in `File::shebang`.
+///
+/// # Panics
+///
+/// Panics when a pattern is not valid or a file cannot be read or parsed.
 ///
 /// # Example
 /// ```ignore
@@ -82,7 +96,7 @@ macro_rules! parse_files {
         for path in paths {
             let source = ::std::fs::read_to_string(&path)
                 .expect(&format!("file `{}` not found", path.display()));
-            let file: $crate::File = $crate::__parse_owned(source)
+            let file: $crate::File = $crate::File::from_source_file(source)
                 .expect("expected valid rust file");
             files.push(file);
         }
@@ -107,6 +121,17 @@ pub fn __parse_owned<T: Parse>(source: impl TryIntoTokenStream) -> Result<T, Par
 
         Ok(value)
     })?
+}
+
+/// Parse the text of a source file, lexed by
+/// [`TokenStream::from_source_file`](moxy_token::TokenStream::from_source_file),
+/// which skips a byte order mark and a shebang line.
+///
+/// This is public only so [`parse_file!`](crate::parse_file) and
+/// [`parse_files!`](crate::parse_files) can call it from downstream crates.
+#[doc(hidden)]
+pub fn __parse_source_file<T: Parse>(text: String) -> Result<T, ParseError> {
+    __parse_owned(&moxy_token::TokenStream::from_source_file(text)?)
 }
 
 // Parses a node and converts it into the enum that holds it. Choosing this
