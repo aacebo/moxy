@@ -1,4 +1,5 @@
-use moxy::ast::Item;
+use moxy::ast::{Item, Parse, Parser};
+use moxy::token::TokenStream;
 
 #[test]
 fn inherent_implementations_preserve_members_and_render_layout() {
@@ -31,4 +32,15 @@ fn implementations_preserve_where_clauses_when_formatted() {
         moxy::fmt!(&item).unwrap(),
         "impl<T> Example<T>\nwhere\nT: Copy {\n\tfn value(&self) -> T {\n\t\tself.0\n\t}\n}"
     );
+}
+
+#[test]
+fn inherent_impls_reject_polarity() {
+    let source = "impl !Record {}";
+    let tokens: TokenStream = source.parse().unwrap();
+    let parser = Parser::from_tokens(&tokens);
+
+    let error = moxy::parse!(source as Item).err().unwrap();
+    assert_eq!(error.message(), "an inherent impl cannot be negative");
+    assert!(Item::skip(parser.cursor()).is_none());
 }

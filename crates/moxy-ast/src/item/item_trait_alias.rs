@@ -27,8 +27,6 @@ impl Parse for ItemTraitAlias {
     fn peek(cursor: crate::Cursor<'_>) -> bool {
         let cursor = Attributes::skip(cursor).unwrap_or(cursor);
         let cursor = Visibility::skip(cursor).unwrap_or(cursor);
-        let cursor = Option::<Token![unsafe]>::skip(cursor).unwrap_or(cursor);
-        let cursor = Option::<Token![auto]>::skip(cursor).unwrap_or(cursor);
         let Some(cursor) = <Token![trait]>::skip(cursor) else {
             return false;
         };
@@ -47,13 +45,6 @@ impl Parse for ItemTraitAlias {
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         let attrs = <_ as Parse>::parse(parser)?;
         let vis = <_ as Parse>::parse(parser)?;
-        let _unsafety: Option<Token![unsafe]> = <_ as Parse>::parse(parser)?;
-
-        // skip optional `auto`
-        if <Token![auto]>::peek(parser.cursor()) {
-            let _: Token![auto] = <_ as Parse>::parse(parser)?;
-        }
-
         let trait_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
         let generics = <_ as Parse>::parse(parser)?;
@@ -76,8 +67,6 @@ impl Parse for ItemTraitAlias {
     fn skip(mut cursor: crate::Cursor<'_>) -> Option<crate::Cursor<'_>> {
         cursor = Attributes::skip(cursor)?;
         cursor = Visibility::skip(cursor)?;
-        cursor = Option::<Token![unsafe]>::skip(cursor)?;
-        cursor = Option::<Token![auto]>::skip(cursor)?;
         cursor = <Token![trait]>::skip(cursor)?;
         cursor = Ident::skip(cursor)?;
         cursor = Generics::skip(cursor)?;

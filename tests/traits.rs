@@ -1,4 +1,5 @@
-use moxy::ast::Item;
+use moxy::ast::{Item, Parse, Parser};
+use moxy::token::TokenStream;
 
 #[test]
 fn traits_preserve_supertraits_and_every_member_family() {
@@ -38,4 +39,15 @@ fn trait_aliases_render_bounds_with_canonical_spacing() {
     assert_eq!(alias.ident.text(), "Portable");
     assert_eq!(alias.bounds.len(), 3);
     assert_eq!(moxy::fmt!(&item).unwrap(), "pub trait Portable = Clone + Send + 'static;");
+}
+
+#[test]
+fn trait_aliases_reject_unsafe_and_auto() {
+    for source in ["unsafe trait A = B;", "auto trait A = B;"] {
+        let tokens: TokenStream = source.parse().unwrap();
+        let parser = Parser::from_tokens(&tokens);
+
+        assert!(moxy::parse!(source as Item).is_err(), "{source}");
+        assert!(Item::skip(parser.cursor()).is_none(), "{source}");
+    }
 }

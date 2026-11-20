@@ -51,7 +51,7 @@ impl Parse for ItemImpl {
         let unsafety = <_ as Parse>::parse(parser)?;
         let impl_keyword = <_ as Parse>::parse(parser)?;
         let mut generics: Generics = <_ as Parse>::parse(parser)?;
-        let polarity = <_ as Parse>::parse(parser)?;
+        let polarity: Option<Token![!]> = <_ as Parse>::parse(parser)?;
 
         let first = <_ as Parse>::parse(parser)?;
         let (for_keyword, trait_ref, self_ty) = if <Token![for]>::peek(parser.cursor()) {
@@ -59,6 +59,10 @@ impl Parse for ItemImpl {
             let self_ty = <_ as Parse>::parse(parser)?;
             (Some(for_keyword), Some(Self::type_to_trait_ref(first, polarity)?), self_ty)
         } else {
+            if let Some(bang) = polarity {
+                return Err(ParseError::new(bang.span(), "an inherent impl cannot be negative"));
+            }
+
             (None, None, first)
         };
 
@@ -84,12 +88,15 @@ impl Parse for ItemImpl {
         cursor = Option::<Token![unsafe]>::skip(cursor)?;
         cursor = <Token![impl]>::skip(cursor)?;
         cursor = Generics::skip(cursor)?;
+        let negative = <Token![!]>::peek(cursor);
         cursor = Option::<Token![!]>::skip(cursor)?;
         cursor = Type::skip(cursor)?;
 
         if <Token![for]>::peek(cursor) {
             cursor = <Token![for]>::skip(cursor)?;
             cursor = Type::skip(cursor)?;
+        } else if negative {
+            return None;
         }
 
         cursor = Option::<crate::WhereClause>::skip(cursor)?;
