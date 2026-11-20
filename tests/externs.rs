@@ -1,4 +1,5 @@
-use moxy::ast::Item;
+use moxy::ast::{Item, Parse, Parser};
+use moxy::token::TokenStream;
 
 #[test]
 fn extern_crate_aliases_are_parsed_and_rendered() {
@@ -7,6 +8,32 @@ fn extern_crate_aliases_are_parsed_and_rendered() {
     assert_eq!(external.ident.text(), "core");
     assert_eq!(external.rename.as_ref().unwrap().text(), "rust_core");
     assert_eq!(moxy::fmt!(&item).unwrap(), "extern crate core as rust_core;");
+}
+
+#[test]
+fn extern_crate_self_can_be_renamed() {
+    let source = "extern crate self as local;";
+    let tokens: TokenStream = source.parse().unwrap();
+    let parser = Parser::from_tokens(&tokens);
+
+    let item: Item = moxy::parse!(source).unwrap();
+    let external = item.as_extern_crate().unwrap();
+
+    assert_eq!(external.ident.text(), "self");
+    assert_eq!(external.rename.as_ref().unwrap().text(), "local");
+    assert_eq!(moxy::fmt!(&item).unwrap(), source);
+    assert!(Item::skip(parser.cursor()).unwrap().is_empty());
+}
+
+#[test]
+fn extern_crate_rejects_other_keywords() {
+    for source in ["extern crate fn;", "extern crate super;"] {
+        let tokens: TokenStream = source.parse().unwrap();
+        let parser = Parser::from_tokens(&tokens);
+
+        assert!(moxy::parse!(source as Item).is_err(), "{source}");
+        assert!(Item::skip(parser.cursor()).is_none(), "{source}");
+    }
 }
 
 #[test]
