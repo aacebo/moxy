@@ -14,6 +14,22 @@ impl Format for Attributes {
     }
 }
 
+// The attributes of a parameter, a generic parameter, a tuple field, an
+// expression, or a pattern, which stay on its line with a space after each, as
+// in `fn f(#[a] x: u8)`
+pub(crate) fn inline_attrs(attrs: &Attributes, f: &mut Formatter) -> Result<(), FmtError> {
+    if std::mem::take(&mut f.stmt_expr_attrs) {
+        return attrs.format(f);
+    }
+
+    for attr in attrs.iter() {
+        attr.format(f)?;
+        f.text(" ")?;
+    }
+
+    Ok(())
+}
+
 // The inner attributes that open a body, each on its own line
 pub(crate) fn inner_attrs(attrs: &Attributes, f: &mut Formatter) -> Result<(), FmtError> {
     for attr in attrs.iter() {
@@ -60,6 +76,7 @@ impl Format for MetaContent {
                     _ => (),
                 };
 
+                f.check_tokens(&v.tokens)?;
                 v.tokens.format(f)?;
 
                 match v.delim {
@@ -80,6 +97,7 @@ impl Format for MetaContent {
 
 impl Format for TokenStream {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        f.check_tokens(self)?;
         let mut previous: Option<String> = None;
 
         for token in self.iter() {

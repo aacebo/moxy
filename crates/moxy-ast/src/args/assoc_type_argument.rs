@@ -15,6 +15,16 @@ pub struct AssocTypeArgument {
 }
 
 impl AssocTypeArgument {
+    /// The nested nodes an associated binding counts as against
+    /// [`MAX_NESTED_NODES`](moxy_token::MAX_NESTED_NODES), half a level each
+    /// of the levels its parse takes: the binding as a generic argument, one
+    /// level, and its type, one more level, as in `A<B = A<B = u8>>`.
+    pub const NESTED_NODES: usize = 2;
+
+    /// The nested nodes the type of an associated binding counts as beyond
+    /// [`AssocTypeArgument::NESTED_NODES`].
+    pub const TYPE_NESTED_NODES: usize = 2 * crate::args::ASSOC_EXTRA_LEVELS;
+
     pub fn to_generic_argument(&self) -> GenericArgument {
         GenericArgument::AssocType(Box::new(self.clone()))
     }

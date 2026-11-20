@@ -5,7 +5,7 @@ use crate::{FmtError, Format, Formatter};
 
 impl Format for Pattern {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
+        f.nest(|f| match self {
             Self::Wild(v) => v.format(f),
             Self::Rest(v) => v.format(f),
             Self::Ident(v) => v.format(f),
@@ -25,13 +25,13 @@ impl Format for Pattern {
             Self::Box(v) => v.format(f),
             Self::Const(v) => v.format(f),
             _ => Err(FmtError::unsupported("unsupported pattern variant")),
-        }
+        })
     }
 }
 
 impl Format for PatIdent {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
 
         if self.by_ref.is_some() {
             f.text("ref ")?;
@@ -56,23 +56,30 @@ impl Format for PatIdent {
 
 impl Format for PatPath {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         format_qualified_path(self.qself.as_ref(), &self.path, f)
     }
 }
 
 impl Format for PatTuple {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         f.text("(")?;
         self.elems.inner.format(f)?;
+
+        // A tuple of one element keeps its comma, as in `(a,)`, except a lone
+        // rest pattern, as in `(..)`
+        if self.elems.inner.len() == 1 && !self.elems.inner.first().is_some_and(Pattern::is_rest) {
+            f.text(",")?;
+        }
+
         f.text(")")
     }
 }
 
 impl Format for PatTupleStruct {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         format_qualified_path(self.qself.as_ref(), &self.path, f)?;
         f.text("(")?;
         self.elems.inner.format(f)?;
@@ -82,7 +89,7 @@ impl Format for PatTupleStruct {
 
 impl Format for PatStruct {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         format_qualified_path(self.qself.as_ref(), &self.path, f)?;
         f.text(" {")?;
         f.indent(|f| {
@@ -133,7 +140,7 @@ impl Format for PatField {
 
 impl Format for PatSlice {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         f.text("[")?;
         self.elems.inner.format(f)?;
         f.text("]")
@@ -142,7 +149,7 @@ impl Format for PatSlice {
 
 impl Format for PatReference {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         f.text("&")?;
         self.mutability.format(f)?;
 
@@ -156,7 +163,7 @@ impl Format for PatReference {
 
 impl Format for PatOr {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
 
         if self.leading_vert.is_some() {
             f.text("| ")?;
@@ -180,7 +187,7 @@ impl Format for PatOr {
 
 impl Format for PatLit {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
 
         if self.minus.is_some() {
             f.text("-")?;
@@ -192,7 +199,7 @@ impl Format for PatLit {
 
 impl Format for PatRange {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
 
         if let Some(start) = &self.start {
             start.format(f)?;
@@ -210,7 +217,7 @@ impl Format for PatRange {
 
 impl Format for PatType {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         self.pat.format(f)?;
         f.text(": ")?;
         self.ty.format(f)
@@ -219,14 +226,14 @@ impl Format for PatType {
 
 impl Format for PatGroup {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         self.pat.format(f)
     }
 }
 
 impl Format for PatParen {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         f.text("(")?;
         self.content.inner.format(f)?;
         f.text(")")
@@ -235,7 +242,7 @@ impl Format for PatParen {
 
 impl Format for PatBox {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         self.keyword.format(f)?;
         f.space()?;
         self.pattern.format(f)
@@ -244,7 +251,7 @@ impl Format for PatBox {
 
 impl Format for PatConst {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         self.keyword.format(f)?;
         f.space()?;
         self.block.format(f)
@@ -253,21 +260,21 @@ impl Format for PatConst {
 
 impl Format for PatWild {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         self.token.format(f)
     }
 }
 
 impl Format for PatRest {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         self.token.format(f)
     }
 }
 
 impl Format for PatMacro {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         self.call.format(f)
     }
 }

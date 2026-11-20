@@ -33,7 +33,7 @@ impl Parse for ClosureParam {
     }
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs = <Attributes as Parse>::parse(parser)?;
+        let attrs = Attributes::parse_below(parser)?;
         let mut pat = Box::new(pat::parse::single(parser)?);
         *pat.attrs_mut() = attrs;
 
@@ -49,7 +49,7 @@ impl Parse for ClosureParam {
     }
 
     fn skip(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
-        let mut cursor = pat::skip::single(Attributes::skip(cursor)?)?;
+        let mut cursor = pat::skip::single(Attributes::skip_below(cursor)?)?;
 
         if <Token![:]>::peek(cursor) {
             cursor = <Token![:]>::skip(cursor)?;

@@ -13,7 +13,6 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// An item inside an `impl` block.
-#[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[non_exhaustive]
@@ -23,6 +22,8 @@ pub enum ImplItem {
     Type(ImplItemType),
     Macro(ImplItemMacro),
 }
+
+clone_in_small_frames!(ImplItem { Fn, Const, Type, Macro });
 
 impl Attributed for ImplItem {
     fn attrs(&self) -> &[Attribute] {

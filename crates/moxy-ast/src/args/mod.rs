@@ -114,7 +114,7 @@ impl Parse for GenericArgument {
             }
 
             if <Token![=]>::peek(cursor) {
-                let _weight = moxy_token::__private::Depth::enter()?;
+                let _weight = moxy_token::__private::Depth::enter_by(ASSOC_EXTRA_LEVELS)?;
                 cursor = <Token![=]>::skip(cursor)?;
 
                 let is_const = starts_const(cursor);
@@ -208,7 +208,8 @@ impl GenericArgument {
     // An associated type or constant: `Item = u8`, `N = 3`
     fn parse_assoc(parser: &Parser, ident: Ident, args: PathArguments) -> Result<Self, ParseError> {
         // Another level of stack, as in `A<B = A<B = u8>>`
-        let _weight = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+        let _weight =
+            moxy_token::__private::Depth::enter_by(ASSOC_EXTRA_LEVELS).ok_or_else(|| ParseError::too_deep(parser.span()))?;
         let eq_punct = <_ as Parse>::parse(parser)?;
         let is_const = starts_const(parser.cursor());
 
@@ -287,4 +288,8 @@ fn peek_assoc_rest(cursor: Cursor<'_>) -> bool {
 
 // The levels an associated type bound takes beyond its own, in parsing and in
 // skipping, as in `A<B: A<B: C>>`
-const CONSTRAINT_EXTRA_LEVELS: usize = 2;
+pub(crate) const CONSTRAINT_EXTRA_LEVELS: usize = 2;
+
+// The level an associated type or constant binding takes beyond its own, in
+// parsing and in skipping, as in `A<B = A<B = u8>>`
+pub(crate) const ASSOC_EXTRA_LEVELS: usize = 1;

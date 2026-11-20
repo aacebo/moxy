@@ -89,7 +89,6 @@ use moxy_token::{Delim, Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// A Rust expression. The primary recursive node covering all expression forms.
-#[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[non_exhaustive]
@@ -130,6 +129,44 @@ pub enum Expr {
     While(ExprWhile),
     Yield(ExprYield),
 }
+
+clone_in_small_frames!(Expr {
+    Array,
+    Assign,
+    Async,
+    BinaryChain,
+    Block,
+    Break,
+    CastChain,
+    Closure,
+    Const,
+    Continue,
+    ForLoop,
+    Group,
+    IfChain,
+    Infer,
+    Let,
+    Lit,
+    Loop,
+    Macro,
+    Match,
+    Paren,
+    Path,
+    Postfix,
+    Range,
+    RawAddr,
+    Reference,
+    Repeat,
+    Return,
+    Struct,
+    TryBlock,
+    Tuple,
+    Unary,
+    Unsafe,
+    Verbatim,
+    While,
+    Yield
+});
 
 impl Expr {
     pub fn attrs(&self) -> Option<&Attributes> {

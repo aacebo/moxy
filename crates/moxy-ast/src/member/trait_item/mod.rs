@@ -13,7 +13,6 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// An item inside a `trait` definition.
-#[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[non_exhaustive]
@@ -23,6 +22,8 @@ pub enum TraitItem {
     Type(TraitItemType),
     Macro(TraitItemMacro),
 }
+
+clone_in_small_frames!(TraitItem { Fn, Const, Type, Macro });
 
 impl Attributed for TraitItem {
     fn attrs(&self) -> &[Attribute] {

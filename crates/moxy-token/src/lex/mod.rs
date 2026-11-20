@@ -3,7 +3,7 @@ pub(crate) mod depth;
 mod error;
 
 pub use cursor::*;
-pub use depth::MAX_DEPTH;
+pub use depth::{MAX_DEPTH, MAX_NESTED_NODES};
 pub use error::*;
 
 /// Parses one token value from the beginning of a lexer cursor.

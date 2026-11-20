@@ -29,15 +29,14 @@ impl Format for WhereClause {
         f.hard_break()?;
         f.text("where")?;
 
-        for pair in self.predicates.pairs() {
+        // A comma separates the predicates and follows none, as in other lists
+        for (i, pred) in self.predicates.iter().enumerate() {
+            if i > 0 {
+                f.text(",")?;
+            }
+
             f.hard_break()?;
-            f.indent(|f| match pair {
-                moxy_ast::Pair::List(pred, _) => {
-                    pred.format(f)?;
-                    f.text(",")
-                }
-                moxy_ast::Pair::End(pred) => pred.format(f),
-            })?;
+            f.indent(|f| pred.format(f))?;
         }
 
         Ok(())
@@ -86,7 +85,7 @@ impl Format for GenericParam {
 
 impl Format for LifetimeParam {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        inline_attrs(&self.attrs, f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         self.lifetime.format(f)?;
 
         if !self.bounds.is_empty() {
@@ -100,7 +99,7 @@ impl Format for LifetimeParam {
 
 impl Format for TypeParam {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        inline_attrs(&self.attrs, f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         self.ident.format(f)?;
 
         if !self.bounds.is_empty() {
@@ -119,7 +118,7 @@ impl Format for TypeParam {
 
 impl Format for ConstParam {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        inline_attrs(&self.attrs, f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
         f.text("const ")?;
         self.ident.format(f)?;
         f.text(": ")?;
@@ -190,14 +189,4 @@ impl Format for UseBoundParam {
             Self::Lifetime(v) => v.format(f),
         }
     }
-}
-
-// The attributes of a generic parameter, on its line: `#[a] T`
-fn inline_attrs(attrs: &Attributes, f: &mut Formatter) -> Result<(), FmtError> {
-    for attr in attrs.iter() {
-        attr.format(f)?;
-        f.text(" ")?;
-    }
-
-    Ok(())
 }

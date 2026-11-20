@@ -191,7 +191,24 @@ impl Parse for Attributes {
     // Outer attributes; an inner attribute here is an error, as rustc reports
     // it, since only the start of a file or of a body holds inner ones
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
-        let attrs: Vec<Attribute> = parser.parse_while();
+        let mut attrs = Vec::new();
+
+        while Attribute::peek(parser.cursor()) {
+            let fork = parser.fork();
+            let watch = moxy_token::__private::Watch::start();
+
+            match Attribute::parse(&fork) {
+                Ok(attr) => {
+                    parser.seek(&fork);
+                    attrs.push(attr);
+                }
+                // Arguments nested past the depth limit fail however the
+                // tokens after them read, so the error is the input's
+                Err(error) if watch.exceeded() => return Err(error),
+                Err(_) => break,
+            }
+        }
+
         let mut outer = false;
 
         for attr in &attrs {
@@ -225,6 +242,27 @@ impl Parse for Attributes {
 }
 
 impl Attributes {
+    // The outer attributes of a node that has not entered its level yet, as an
+    // expression's before its parse: read a level below, as the node holds
+    // them, so their arguments count from the node's level
+    pub(crate) fn parse_below(parser: &Parser) -> Result<Self, ParseError> {
+        if !Attribute::peek(parser.cursor()) {
+            return Ok(Self::default());
+        }
+
+        let _depth = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
+        <_ as Parse>::parse(parser)
+    }
+
+    pub(crate) fn skip_below(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
+        if !Attribute::peek(cursor) {
+            return Some(cursor);
+        }
+
+        let _depth = moxy_token::__private::Depth::enter()?;
+        Self::skip(cursor)
+    }
+
     // The inner attributes that open a file or a body, as `#![a]` in
     // `mod m { #![a] }`
     pub(crate) fn parse_inner(parser: &Parser) -> Result<Self, ParseError> {

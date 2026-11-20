@@ -39,7 +39,7 @@ impl Parse for ItemDeclMacro {
         let macro_keyword = <_ as Parse>::parse(parser)?;
         let ident = <_ as Parse>::parse(parser)?;
         let params = if parser.is_delimited(Delim::Paren) {
-            Some(group(parser))
+            Some(<_ as Parse>::parse(parser)?)
         } else {
             None
         };
@@ -55,7 +55,7 @@ impl Parse for ItemDeclMacro {
             macro_keyword,
             ident,
             params,
-            body: group(parser),
+            body: <_ as Parse>::parse(parser)?,
         })
     }
 
@@ -66,21 +66,15 @@ impl Parse for ItemDeclMacro {
         cursor = Ident::skip(cursor)?;
 
         if cursor.is_delimited(Delim::Paren) {
-            cursor = cursor.offset(1);
+            cursor = Group::skip(cursor)?;
         }
 
-        cursor.is_delimited(Delim::Brace).then(|| cursor.offset(1))
-    }
-}
+        if !cursor.is_delimited(Delim::Brace) {
+            return None;
+        }
 
-// The group at the parser, which the caller has checked is there
-fn group(parser: &Parser) -> Group {
-    let Some(TokenTree::Group(group)) = parser.curr() else {
-        unreachable!("the caller checked for a group");
-    };
-    let group = group.clone();
-    parser.advance();
-    group
+        Group::skip(cursor)
+    }
 }
 
 impl Spanner for ItemDeclMacro {

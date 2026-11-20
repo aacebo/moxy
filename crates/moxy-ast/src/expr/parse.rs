@@ -10,7 +10,7 @@ pub(super) fn expr(parser: &Parser, context: ExprContext) -> Result<Expr, ParseE
 // The parse functions return boxed expressions, which every parent node
 // stores, so a nested expression's stack frames hold pointers, not nodes
 fn boxed_expr(parser: &Parser, context: ExprContext) -> Result<Box<Expr>, ParseError> {
-    let attrs = <_ as Parse>::parse(parser)?;
+    let attrs = Attributes::parse_below(parser)?;
     assignment(parser, attrs, context)
 }
 
@@ -23,12 +23,16 @@ fn boxed(node: impl Into<Expr>) -> Box<Expr> {
 // field access, or `?` continues it, so `a => { x } (b, c) => y` holds two
 // arms and `if a { b } <T>::f()` two statements.
 pub(crate) fn early(parser: &Parser) -> Result<Box<Expr>, ParseError> {
-    let attrs = <_ as Parse>::parse(parser)?;
+    let attrs = Attributes::parse_below(parser)?;
 
     if !peek::block_like(parser.cursor()) {
         return assignment(parser, attrs, ExprContext::NORMAL);
     }
 
+    // A block-like expression takes the level of the block or match around it,
+    // so as the root of a statement or arm parsed alone it takes one here
+    let root = moxy_token::__private::Depth::is_outermost();
+    let _root = if root { moxy_token::__private::Depth::enter() } else { None };
     let subtree = moxy_token::__private::Depth::subtree();
     let mut body = primary(parser, Attributes::default(), ExprContext::NORMAL)?;
     let part = subtree.height();
@@ -64,13 +68,45 @@ fn block_like_rest(
     }
 
     let operand = cast_rest(parser, operand)?;
-    let left = binary_rest(parser, ExprContext::NORMAL, operand, Precedence::Or, false)?;
+    let left = binary_rest(parser, ExprContext::NORMAL, operand, Precedence::Or, false, subtree)?;
+
+    if !wraps_chained_left(parser, &left, subtree) {
+        return too_deep(parser);
+    }
 
     if RangeLimits::peek(parser.cursor()) {
         return range_rest(parser, Default::default(), Some(left), ExprContext::NORMAL);
     }
 
-    assignment_rest(parser, left, ExprContext::NORMAL)
+    assignment_rest(parser, left, ExprContext::NORMAL, subtree)
+}
+
+// Counts a level for a range or assignment that wraps a chain of binary
+// operators on its left, as in `a + b..` or `a + b = c`: the chain is no
+// longer the top of its operand, so walking the tree nests through both.
+// False when that takes the tree past the depth limit.
+fn wraps_chained_left(parser: &Parser, left: &Expr, subtree: &moxy_token::__private::Subtree) -> bool {
+    let wrapped =
+        matches!(left, Expr::BinaryChain(_)) && (RangeLimits::peek(parser.cursor()) || peek_assignment(parser.cursor()));
+    !wrapped || wraps(subtree)
+}
+
+// Counts a level for a node that wraps the subtree read so far, or false when
+// that takes the tree past the depth limit. Callers report the error with
+// `too_deep`, so the recursive frames they sit in hold no error.
+fn wraps(subtree: &moxy_token::__private::Subtree) -> bool {
+    subtree.wrap(subtree.height()).is_some()
+}
+
+#[cold]
+fn too_deep(parser: &Parser) -> Result<Box<Expr>, ParseError> {
+    Err(ParseError::too_deep(parser.span()))
+}
+
+// Whether an assignment or a compound assignment follows
+pub(super) fn peek_assignment(cursor: Cursor<'_>) -> bool {
+    (<Token![=]>::peek(cursor) && !<Token![==]>::peek(cursor) && !<Token![=>]>::peek(cursor))
+        || peek_binary(cursor).is_some_and(|op| Precedence::of(&op) == Precedence::Assign)
 }
 
 fn optional_expr(parser: &Parser, context: ExprContext) -> Result<Option<Box<Expr>>, ParseError> {
@@ -84,31 +120,47 @@ fn optional_expr(parser: &Parser, context: ExprContext) -> Result<Option<Box<Exp
 // As in rustc, nothing continues a range at its own level: `a..b = c` is an
 // error, while `a = b..c = d` assigns `d` to `a = b..c`
 fn assignment(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
-    let left = range(parser, attrs, context)?;
+    let subtree = moxy_token::__private::Depth::subtree();
+    let left = range(parser, attrs, context, &subtree)?;
 
     if matches!(*left, Expr::Range(_)) {
         return Ok(left);
     }
 
-    assignment_rest(parser, left, context)
+    if !wraps_chained_left(parser, &left, &subtree) {
+        return too_deep(parser);
+    }
+
+    assignment_rest(parser, left, context, &subtree)
 }
 
-// An assignment whose left side has parsed, or the left side alone
-fn assignment_rest(parser: &Parser, left: Box<Expr>, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+// An assignment whose left side has parsed, or the left side alone.
+// `subtree` measures from before the left side.
+fn assignment_rest(
+    parser: &Parser,
+    left: Box<Expr>,
+    context: ExprContext,
+    subtree: &moxy_token::__private::Subtree,
+) -> Result<Box<Expr>, ParseError> {
     if <Token![=]>::peek(parser.cursor()) && !<Token![==]>::peek(parser.cursor()) && !<Token![=>]>::peek(parser.cursor()) {
-        return assign(parser, left, context);
+        return assign(parser, left, context, subtree);
     }
 
     // Compound assignment is right-associative and binds looser than a range:
     // `x += y + z` adds first, `a += b = c` assigns `c` to `b` first
     if peek_binary(parser.cursor()).is_some_and(|op| Precedence::of(&op) == Precedence::Assign) {
-        return compound_assign(parser, left, context);
+        return compound_assign(parser, left, context, subtree);
     }
 
     Ok(left)
 }
 
-fn assign(parser: &Parser, left: Box<Expr>, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+fn assign(
+    parser: &Parser,
+    left: Box<Expr>,
+    context: ExprContext,
+    subtree: &moxy_token::__private::Subtree,
+) -> Result<Box<Expr>, ParseError> {
     let eq = <_ as Parse>::parse(parser)?;
     let right = assignment_right(parser, context)?;
     let ranged = matches!(*right, Expr::Range(_));
@@ -119,16 +171,21 @@ fn assign(parser: &Parser, left: Box<Expr>, context: ExprContext) -> Result<Box<
         right,
     });
 
-    continue_after_range(parser, assignment, ranged, context)
+    continue_after_range(parser, assignment, ranged, context, subtree)
 }
 
-fn compound_assign(parser: &Parser, left: Box<Expr>, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+fn compound_assign(
+    parser: &Parser,
+    left: Box<Expr>,
+    context: ExprContext,
+    subtree: &moxy_token::__private::Subtree,
+) -> Result<Box<Expr>, ParseError> {
     let op = <_ as Parse>::parse(parser)?;
     let right = assignment_right(parser, context)?;
     let ranged = matches!(*right, Expr::Range(_));
     let assignment = boxed(ExprBinaryChain::new(*left, op, *right));
 
-    continue_after_range(parser, assignment, ranged, context)
+    continue_after_range(parser, assignment, ranged, context, subtree)
 }
 
 // A range that ends the right side of an assignment ends that side alone, so
@@ -138,15 +195,24 @@ fn continue_after_range(
     assignment: Box<Expr>,
     ranged: bool,
     context: ExprContext,
+    subtree: &moxy_token::__private::Subtree,
 ) -> Result<Box<Expr>, ParseError> {
-    if ranged {
-        // The assignment that follows nests the tree one level, as in
-        // `a = b.. = c`
-        let _depth = moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?;
-        assignment_rest(parser, assignment, context)
-    } else {
-        Ok(assignment)
+    if !ranged || !peek_assignment(parser.cursor()) {
+        return Ok(assignment);
     }
+
+    // The assignment that follows takes this one as its left side, which
+    // walking the tree nests through, as in `a = b.. = c`, and its parse
+    // recurses a level
+    let Some(_depth) = moxy_token::__private::Depth::enter() else {
+        return too_deep(parser);
+    };
+
+    if !wraps(subtree) {
+        return too_deep(parser);
+    }
+
+    assignment_rest(parser, assignment, context, subtree)
 }
 
 // The right side of an assignment, which nests one level per operator as
@@ -156,7 +222,12 @@ fn assignment_right(parser: &Parser, context: ExprContext) -> Result<Box<Expr>, 
     assignment(parser, Default::default(), context)
 }
 
-fn range(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+fn range(
+    parser: &Parser,
+    attrs: Attributes,
+    context: ExprContext,
+    subtree: &moxy_token::__private::Subtree,
+) -> Result<Box<Expr>, ParseError> {
     if RangeLimits::peek(parser.cursor()) {
         return range_rest(parser, attrs, None, context);
     }
@@ -164,6 +235,10 @@ fn range(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box
     let left = binary(parser, attrs, context, Precedence::Or, false)?;
 
     if RangeLimits::peek(parser.cursor()) {
+        if !wraps_chained_left(parser, &left, subtree) {
+            return too_deep(parser);
+        }
+
         return range_rest(parser, Default::default(), Some(left), context);
     }
 
@@ -188,6 +263,11 @@ fn range_rest(
             end = Some(range_rest(parser, Default::default(), None, context)?);
         }
     } else if !context.is_end(parser.cursor()) && Expr::peek(parser.cursor()) {
+        // The end nests below the range, as a chain of binary operators does
+        // in `..a + b`
+        let Some(_depth) = moxy_token::__private::Depth::enter() else {
+            return too_deep(parser);
+        };
         end = Some(binary(parser, Default::default(), context, Precedence::Or, false)?);
     }
 
@@ -275,8 +355,9 @@ fn binary(
     min: Precedence,
     nested: bool,
 ) -> Result<Box<Expr>, ParseError> {
+    let subtree = moxy_token::__private::Depth::subtree();
     let left = cast(parser, attrs, context)?;
-    binary_rest(parser, context, left, min, nested)
+    binary_rest(parser, context, left, min, nested, &subtree)
 }
 
 // Counts a level for a node that wraps the subtree read before it, as a chain
@@ -288,58 +369,100 @@ fn wrap(parser: &Parser, subtree: &moxy_token::__private::Subtree, part: usize) 
 
 // Precedence climbing over the operators at least as strong as `min`. The
 // operators of one strength form one chain node and associate to the left;
-// comparisons do not chain
+// comparisons do not chain. `subtree` measures from before the first operand.
 fn binary_rest(
     parser: &Parser,
     context: ExprContext,
     mut left: Box<Expr>,
     min: Precedence,
     nested: bool,
+    subtree: &moxy_token::__private::Subtree,
 ) -> Result<Box<Expr>, ParseError> {
-    while let Some(op) = peek_binary(parser.cursor()) {
-        let precedence = Precedence::of(&op);
+    let mut chained = false;
 
-        if precedence < min || precedence == Precedence::Assign {
-            break;
+    // The frame of this function stays on the stack while each operand
+    // parses, so the operands and operators move through small functions of
+    // their own rather than through temporaries here
+    while let Some(precedence) = chain_precedence(parser, min) {
+        // A chain that takes the chain before it as its first operand wraps
+        // it, as `+` wraps `a * b` in `a * b + c`
+        if chained && !wraps(subtree) {
+            return too_deep(parser);
         }
+
+        chained = true;
 
         // A chain inside an operand of a weaker chain nests a level, which the
         // depth counts; the steps of one chain do not nest
-        let _depth = match nested {
-            true => Some(moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?),
-            false => None,
-        };
-        let mut operands = List::new();
-        operands.push_value(*left);
+        let depth = if nested { moxy_token::__private::Depth::enter() } else { None };
 
-        while peek_binary(parser.cursor()).is_some_and(|op| Precedence::of(&op) == precedence) {
-            let op: BinOp = <_ as Parse>::parse(parser)?;
+        if nested && depth.is_none() {
+            return too_deep(parser);
+        }
+
+        let mut operands = chain_start(left);
+
+        while continues_chain(parser, precedence) {
+            let op = <BinOp as Parse>::parse(parser)?;
             let right = match precedence.next() {
                 Some(stronger) => binary(parser, Default::default(), context, stronger, true)?,
                 None => cast(parser, Default::default(), context)?,
             };
-            operands.push_punct(op);
-            operands.push_value(*right);
+            chain_push(&mut operands, op, right);
 
             if precedence == Precedence::Compare {
                 break;
             }
         }
 
-        left = boxed(ExprBinaryChain {
-            attrs: Default::default(),
-            operands,
-        });
+        left = chain_end(operands);
 
         if precedence == Precedence::Compare
-            && let Some(next) = peek_binary(parser.cursor())
-            && next.is_comparison()
+            && let Some(error) = chained_comparison(parser)
         {
-            return Err(ParseError::new(next.span(), "comparison operators cannot be chained"));
+            return Err(error);
         }
     }
 
     Ok(left)
+}
+
+// The strength of the binary operator here, if one continues an expression
+// whose operators are at least as strong as `min`
+fn chain_precedence(parser: &Parser, min: Precedence) -> Option<Precedence> {
+    let precedence = Precedence::of(&peek_binary(parser.cursor())?);
+    (precedence >= min && precedence != Precedence::Assign).then_some(precedence)
+}
+
+// Whether an operator of `precedence` continues the chain here
+fn continues_chain(parser: &Parser, precedence: Precedence) -> bool {
+    peek_binary(parser.cursor()).is_some_and(|op| Precedence::of(&op) == precedence)
+}
+
+fn chain_start(first: Box<Expr>) -> List<Expr, BinOp> {
+    let mut operands = List::new();
+    operands.push_value(*first);
+    operands
+}
+
+fn chain_push(operands: &mut List<Expr, BinOp>, op: BinOp, operand: Box<Expr>) {
+    operands.push_punct(op);
+    operands.push_value(*operand);
+}
+
+fn chain_end(operands: List<Expr, BinOp>) -> Box<Expr> {
+    boxed(ExprBinaryChain {
+        attrs: Default::default(),
+        operands,
+    })
+}
+
+// The error for a comparison that follows a comparison, which does not chain
+#[cold]
+fn chained_comparison(parser: &Parser) -> Option<ParseError> {
+    let next = peek_binary(parser.cursor())?;
+    next.is_comparison()
+        .then(|| ParseError::new(next.span(), "comparison operators cannot be chained"))
 }
 
 fn cast(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
@@ -1094,31 +1217,46 @@ fn array(parser: &Parser, span: DelimSpan, attrs: Attributes, first: Box<Expr>) 
 }
 
 fn closure(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<Box<Expr>, ParseError> {
+    let mut closure = closure_head(parser, attrs)?;
+    let Expr::Closure(head) = &mut *closure else {
+        unreachable!("the head is a closure");
+    };
+
+    // A closure with a return type and a block takes another level of stack
+    let with_type = head.output.is_type();
+    let weight = if with_type {
+        moxy_token::__private::Depth::enter()
+    } else {
+        None
+    };
+
+    if with_type && weight.is_none() {
+        return too_deep(parser);
+    }
+
+    // With a return type the body is a block, which ends the closure: in
+    // `|| -> u8 { 1 }.x` the field belongs to the closure
+    head.body = if !with_type {
+        boxed_expr(parser, context)?
+    } else if parser.is_delimited(Delim::Brace) {
+        block(parser, Attributes::default())?
+    } else {
+        return parser.expected("block after the closure's return type").into();
+    };
+
+    Ok(closure)
+}
+
+// A closure up to its body, in a frame of its own, which the body does not
+// hold while it parses; the body is left empty
+fn closure_head(parser: &Parser, attrs: Attributes) -> Result<Box<Expr>, ParseError> {
     let lifetimes = <_ as Parse>::parse(parser)?;
     let constness = <_ as Parse>::parse(parser)?;
     let movability = <_ as Parse>::parse(parser)?;
     let asyncness = <_ as Parse>::parse(parser)?;
     let capture = <_ as Parse>::parse(parser)?;
     let (pipes, inputs) = closure_params(parser)?;
-    let output: ReturnType = <_ as Parse>::parse(parser)?;
-    // A closure with a return type and a block takes another level of stack
-    let _weight = if output.is_type() {
-        Some(moxy_token::__private::Depth::enter().ok_or_else(|| ParseError::too_deep(parser.span()))?)
-    } else {
-        None
-    };
-
-    // With a return type the body is a block, which ends the closure: in
-    // `|| -> u8 { 1 }.x` the field belongs to the closure
-    let body = if output.is_type() {
-        if !parser.is_delimited(Delim::Brace) {
-            return parser.expected("block after the closure's return type").into();
-        }
-
-        block(parser, Attributes::default())?
-    } else {
-        boxed_expr(parser, context)?
-    };
+    let output = <_ as Parse>::parse(parser)?;
 
     Ok(boxed(ExprClosure {
         attrs,
@@ -1130,7 +1268,7 @@ fn closure(parser: &Parser, attrs: Attributes, context: ExprContext) -> Result<B
         pipes,
         inputs,
         output,
-        body,
+        body: Box::new(Expr::Verbatim(TokenStream::new())),
     }))
 }
 

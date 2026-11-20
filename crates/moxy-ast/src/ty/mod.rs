@@ -31,7 +31,6 @@ use moxy_token::{Delim, Group, Ident, Keyword, Punct, Span, Spanner, ToTokens, T
 use crate::*;
 
 /// A Rust type expression. Covers all positions where a type can appear in source code.
-#[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[non_exhaustive]
@@ -51,6 +50,23 @@ pub enum Type {
     Group(TypeGroup),
     Macro(TypeMacro),
 }
+
+clone_in_small_frames!(Type {
+    Never,
+    Infer,
+    Path,
+    Tuple,
+    Array,
+    Slice,
+    Reference,
+    Pointer,
+    BareFn,
+    ImplTrait,
+    TraitObject,
+    Paren,
+    Group,
+    Macro
+});
 
 impl Type {
     pub fn is_never(&self) -> bool {

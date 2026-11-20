@@ -456,3 +456,66 @@ fn collect_rust_files(dir: &Path, paths: &mut Vec<PathBuf>) {
         }
     }
 }
+
+// Formatting is idempotent: the text formatted from a corpus source that
+// parses parses again, and formats to the same text
+#[test]
+fn formatting_every_parsed_corpus_source_is_idempotent() {
+    fn tokens<T: m::Parse>(source: &str) -> Option<T> {
+        moxy::parse!(source).ok()
+    }
+
+    // A file is read as the text of a source file
+    fn file(source: &str) -> Option<m::File> {
+        m::File::from_source_file(source.to_owned()).ok()
+    }
+
+    fn again<T: moxy::fmt::Format>(source: &str, read: fn(&str) -> Option<T>) -> Option<Result<(), String>> {
+        let node: T = read(source)?;
+        let first = match moxy::fmt!(&node) {
+            Ok(first) => first,
+            Err(error) => return Some(Err(format!("fails to format: {error}"))),
+        };
+        let Some(reparsed) = read(&first) else {
+            return Some(Err(format!("formats to `{first}`, which fails to parse")));
+        };
+        let second = moxy::fmt!(&reparsed).map_err(|error| error.to_string());
+
+        Some(match second {
+            Ok(second) if second == first => Ok(()),
+            second => Err(format!("formats to `{first}`, then to `{second:?}`")),
+        })
+    }
+
+    let mut failures = Vec::new();
+    let mut checked = 0;
+
+    for line in entries(CORPUS) {
+        let (kind, source) = line.split_once(": ").unwrap();
+        let source = source.replace("\\n", "\n");
+        let outcome = match kind {
+            "e" => again(&source, tokens::<m::Expr>),
+            "b" => again(&source, tokens::<m::StmtBlock>),
+            "p" => again(&source, tokens::<m::Pattern>),
+            "t" => again(&source, tokens::<m::Type>),
+            "i" => again(&source, tokens::<m::Item>),
+            "f" => again(&source, file),
+            _ => panic!("unknown kind `{kind}`"),
+        };
+
+        match outcome {
+            Some(Ok(())) => checked += 1,
+            Some(Err(failure)) => failures.push(format!("{line}: {failure}")),
+            None => {}
+        }
+    }
+
+    assert!(checked > 1_000, "{checked} sources");
+    assert!(
+        failures.is_empty(),
+        "{} of {}:\n{}",
+        failures.len(),
+        checked + failures.len(),
+        failures.join("\n")
+    );
+}

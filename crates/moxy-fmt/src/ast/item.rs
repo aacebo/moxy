@@ -34,7 +34,7 @@ impl Format for Signature {
         self.generics.format(f)?;
         f.text("(")?;
         f.group(|f| {
-            // A trailing comma is dropped, as after a variadic in `fn f(a: u8, ...,);`
+            // No comma follows the last parameter
             for (i, param) in self.params.inner.inputs.iter().enumerate() {
                 if i > 0 {
                     f.text(", ")?;
@@ -70,7 +70,7 @@ impl Format for FnParam {
 
 impl Format for Receiver {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
 
         if self.reference.is_some() {
             f.text("&")?;
@@ -106,7 +106,7 @@ impl Format for Receiver {
 
 impl Format for Variadic {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        super::attr::inline_attrs(&self.attrs, f)?;
 
         if let Some(pat) = &self.pat {
             pat.format(f)?;
@@ -169,7 +169,13 @@ impl Format for FieldsUnnamed {
 
 impl Format for Field {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.attrs.format(f)?;
+        // A tuple field keeps its attributes on its line, as in `S(#[a] u8)`
+        if self.ident.is_some() {
+            self.attrs.format(f)?;
+        } else {
+            super::attr::inline_attrs(&self.attrs, f)?;
+        }
+
         self.vis.format(f)?;
 
         if !matches!(self.vis, moxy_ast::Visibility::Inherited) {
@@ -202,16 +208,18 @@ impl Format for UseTree {
 
 impl Format for UsePathChain {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        if self.prefix.is_some() {
-            f.text("::")?;
-        }
+        f.nest(|f| {
+            if self.prefix.is_some() {
+                f.text("::")?;
+            }
 
-        for segment in self.segments.iter() {
-            segment.format(f)?;
-            f.text("::")?;
-        }
+            for segment in self.segments.iter() {
+                segment.format(f)?;
+                f.text("::")?;
+            }
 
-        self.tree.format(f)
+            self.tree.format(f)
+        })
     }
 }
 
@@ -239,13 +247,15 @@ impl Format for UseRename {
 
 impl Format for UseGroup {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        if self.prefix.is_some() {
-            f.text("::")?;
-        }
+        f.nest(|f| {
+            if self.prefix.is_some() {
+                f.text("::")?;
+            }
 
-        f.text("{")?;
-        self.items.inner.format(f)?;
-        f.text("}")
+            f.text("{")?;
+            self.items.inner.format(f)?;
+            f.text("}")
+        })
     }
 }
 
@@ -253,7 +263,7 @@ impl Format for UseGroup {
 
 impl Format for Item {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
+        f.nest(|f| match self {
             Self::Use(v) => v.format(f),
             Self::ExternCrate(v) => v.format(f),
             Self::Mod(v) => v.format(f),
@@ -272,7 +282,7 @@ impl Format for Item {
             Self::DeclMacro(v) => v.format(f),
             Self::ForeignMod(v) => v.format(f),
             _ => Err(FmtError::unsupported("unsupported item variant")),
-        }
+        })
     }
 }
 
@@ -720,6 +730,7 @@ impl Format for ItemMacroRules {
         f.text("macro_rules! ")?;
         self.ident.format(f)?;
         f.text(" { ")?;
+        f.check_tokens(&self.body.tokens)?;
         f.text(&self.body.tokens)?;
         f.text(" }")
     }
@@ -739,11 +750,13 @@ impl Format for ItemDeclMacro {
 
         if let Some(params) = &self.params {
             f.text("(")?;
+            f.check_tokens(&params.tokens)?;
             f.text(&params.tokens)?;
             f.text(")")?;
         }
 
         f.text(" { ")?;
+        f.check_tokens(&self.body.tokens)?;
         f.text(&self.body.tokens)?;
         f.text(" }")
     }

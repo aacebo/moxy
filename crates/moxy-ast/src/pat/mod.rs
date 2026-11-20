@@ -46,7 +46,6 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// A Rust pattern (in `let`, `match`, function params, etc.).
-#[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[non_exhaustive]
@@ -70,6 +69,27 @@ pub enum Pattern {
     Box(PatBox),
     Const(PatConst),
 }
+
+clone_in_small_frames!(Pattern {
+    Wild,
+    Rest,
+    Ident,
+    Path,
+    Tuple,
+    TupleStruct,
+    Struct,
+    Slice,
+    Reference,
+    Or,
+    Lit,
+    Range,
+    Macro,
+    Type,
+    Group,
+    Paren,
+    Box,
+    Const
+});
 
 impl Attributed for Pattern {
     fn attrs(&self) -> &[Attribute] {

@@ -13,7 +13,6 @@ use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 use crate::*;
 
 /// An item inside an `extern` block.
-#[derive(Clone)]
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 #[non_exhaustive]
@@ -23,6 +22,8 @@ pub enum ForeignItem {
     Type(ForeignItemType),
     Macro(ForeignItemMacro),
 }
+
+clone_in_small_frames!(ForeignItem { Fn, Static, Type, Macro });
 
 impl Attributed for ForeignItem {
     fn attrs(&self) -> &[Attribute] {

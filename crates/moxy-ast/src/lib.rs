@@ -31,6 +31,27 @@
 //! and const defaults while preserving bounds; [`TypeGenerics`] emits only
 //! generic arguments.
 
+// `Clone` for a recursive enum of one-field variants, cloning each variant in
+// a frame of its own: a derived `clone` holds a slot for every variant's node
+// in a debug build, several kilobytes, and every level of a deep tree holds
+// that frame while its children clone
+macro_rules! clone_in_small_frames {
+    ($ty:ident { $($variant:ident),* $(,)? }) => {
+        impl Clone for $ty {
+            fn clone(&self) -> Self {
+                match self {
+                    $(Self::$variant(node) => crate::clone_variant(node, Self::$variant),)*
+                }
+            }
+        }
+    };
+}
+
+#[inline(never)]
+fn clone_variant<T: Clone, U>(node: &T, variant: fn(T) -> U) -> U {
+    variant(node.clone())
+}
+
 mod _crate;
 mod args;
 mod attr;

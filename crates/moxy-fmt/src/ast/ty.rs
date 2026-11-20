@@ -5,7 +5,7 @@ use crate::{FmtError, Format, Formatter};
 
 impl Format for Type {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        match self {
+        f.nest(|f| match self {
             Self::Never(_) => f.text("!"),
             Self::Infer(_) => f.text("_"),
             Self::Path(v) => v.format(f),
@@ -21,7 +21,7 @@ impl Format for Type {
             Self::Group(v) => v.elem.format(f),
             Self::Macro(v) => v.format(f),
             _ => Err(FmtError::unsupported("unsupported type variant")),
-        }
+        })
     }
 }
 
@@ -35,6 +35,12 @@ impl Format for TypeTuple {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
         f.text("(")?;
         self.elems.inner.format(f)?;
+
+        // A tuple of one element keeps its comma, as in `(a,)`
+        if self.elems.inner.len() == 1 {
+            f.text(",")?;
+        }
+
         f.text(")")
     }
 }
@@ -107,7 +113,7 @@ impl Format for TypeBareFn {
 
         f.text("fn(")?;
 
-        // A trailing comma is dropped, as after a variadic in `fn(u8, ...,)`
+        // No comma follows the last parameter
         f.group(|f| {
             for (i, param) in self.params.inner.inputs.iter().enumerate() {
                 if i > 0 {
@@ -137,6 +143,8 @@ impl Format for BareFnParam {
 
 impl Format for BareFnArg {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        super::attr::inline_attrs(&self.attrs, f)?;
+
         if let Some((name, _)) = &self.name {
             name.format(f)?;
             f.text(": ")?;

@@ -309,3 +309,22 @@ fn box_before_a_shorthand_field_binding_boxes_its_pattern() {
     assert!(field.is_shorthand() && field.pat.is_box());
     assert!(moxy::parse!("S { box a: b }" as Pattern).is_err());
 }
+
+// A tuple of one element needs its comma, as `peek` requires, in a direct
+// parse and skip as well; `(..)` is a tuple without one
+#[test]
+fn a_one_element_tuple_parses_only_with_its_comma() {
+    use moxy::ast::{Parse, Parser, PatTuple, TypeTuple};
+
+    let skips = |source: &str| {
+        let tokens: moxy::token::TokenStream = source.parse().unwrap();
+        PatTuple::skip(Parser::from_tokens(&tokens).cursor()).is_some()
+    };
+
+    assert!(moxy::parse!("(a)" as PatTuple).is_err());
+    assert!(moxy::parse!("(u8)" as TypeTuple).is_err());
+    assert!(!skips("(a)"));
+    assert!(moxy::parse!("(a,)" as PatTuple).is_ok() && moxy::parse!("(..)" as PatTuple).is_ok());
+    assert!(moxy::parse!("(u8,)" as TypeTuple).is_ok() && moxy::parse!("()" as TypeTuple).is_ok());
+    assert!(skips("(a,)") && skips("(..)") && skips("()"));
+}

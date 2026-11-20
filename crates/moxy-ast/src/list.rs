@@ -959,3 +959,16 @@ impl<T: serde::Serialize, P> serde::Serialize for List<T, P> {
         seq.end()
     }
 }
+
+impl<T: ToTokens> List<T, Token![,]> {
+    // The elements of a tuple, with the comma a tuple of one element needs, as
+    // in `(a,)`, where the list does not end with one, as a list built in code
+    // may not
+    pub(crate) fn tuple_to_tokens(&self, tokens: &mut TokenStream) {
+        self.to_tokens(tokens);
+
+        if self.len() == 1 && !self.is_trailing() {
+            <Token![,]>::default().to_tokens(tokens);
+        }
+    }
+}

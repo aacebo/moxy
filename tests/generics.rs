@@ -261,3 +261,118 @@ fn a_const_parameter_default_is_a_block_a_literal_or_a_name() {
         assert!(moxy::parse!(source as moxy::ast::Item).is_err(), "`{source}`");
     }
 }
+
+// A list's formatting writes no separator after its last element, except the
+// comma a one-element tuple needs
+#[test]
+fn formatted_lists_drop_a_trailing_separator() {
+    for (source, formatted) in [
+        ("type U = Box<dyn Fn(A,)>;", "type U = Box<dyn Fn(A)>;"),
+        ("type V = A<B,>;", "type V = A<B>;"),
+        ("struct S<T,>(T,);", "struct S<T>(T);"),
+        ("use a::{b, c,};", "use a::{b, c};"),
+        ("fn g<'a: 'a +>() {}", "fn g<'a: 'a>() {}"),
+        ("type T = (u8,);", "type T = (u8,);"),
+        (
+            "fn f() { let (b,) = (a,); g(a, b,); }",
+            "fn f() {\n\tlet (b,) = (a,);\n\tg(a, b);\n}",
+        ),
+        ("fn f() { let (..) = a; }", "fn f() {\n\tlet (..) = a;\n}"),
+        ("type F = fn(#[a] u8);", "type F = fn(#[a] u8);"),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(moxy::fmt!(&item).unwrap(), formatted, "`{source}`");
+    }
+}
+
+// A tuple of one element keeps its comma, however it was built, and a
+// parameter's attributes stay on its line with a space after them
+#[test]
+fn built_one_element_tuples_keep_their_comma() {
+    use moxy::ast::{Expr, Pattern, Type};
+    use moxy::token::ToTokenStream;
+
+    let mut expr: Expr = moxy::parse!("(a,)").unwrap();
+    let Expr::Tuple(tuple) = &mut expr else { panic!() };
+    tuple.elems.inner.pop_punct();
+    let mut ty: Type = moxy::parse!("(u8,)").unwrap();
+    let Type::Tuple(tuple) = &mut ty else { panic!() };
+    tuple.elems.inner.pop_punct();
+    let mut pattern: Pattern = moxy::parse!("(a,)").unwrap();
+    let Pattern::Tuple(tuple) = &mut pattern else { panic!() };
+    tuple.elems.inner.pop_punct();
+    let rest: Pattern = moxy::parse!("(..)").unwrap();
+
+    assert_eq!(
+        [
+            moxy::fmt!(&expr).unwrap(),
+            moxy::fmt!(&ty).unwrap(),
+            moxy::fmt!(&pattern).unwrap(),
+            moxy::fmt!(&rest).unwrap()
+        ],
+        ["(a,)", "(u8,)", "(a,)", "(..)"]
+    );
+    assert_eq!(
+        [
+            expr.to_token_stream().to_string(),
+            ty.to_token_stream().to_string(),
+            pattern.to_token_stream().to_string()
+        ],
+        ["(a ,)", "(u8 ,)", "(a ,)"]
+    );
+}
+
+#[test]
+fn where_clauses_and_parameter_attributes_format_as_other_lists() {
+    for (source, formatted) in [
+        ("fn f() where T: A, {}", "fn f()\nwhere\nT: A {}"),
+        ("struct S where T: A, U: B, ;", "struct S\nwhere\nT: A,\nU: B;"),
+        ("fn f(#[b] self, #[a] x: u8) {}", "fn f(#[b] self, #[a] x: u8) {}"),
+        ("type F = fn(#[a] u8, #[b] ...);", "type F = fn(#[a] u8, #[b] ...);"),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(moxy::fmt!(&item).unwrap(), formatted, "`{source}`");
+    }
+}
+
+// The attributes of a tuple field, an expression, and a pattern stay on its
+// line with a space after them
+#[test]
+fn field_expression_and_pattern_attributes_stay_on_their_line() {
+    for (source, formatted) in [
+        ("struct S(#[a] u8);", "struct S(#[a] u8);"),
+        ("fn f() { g(#[a] x); }", "fn f() {\n\tg(#[a] x);\n}"),
+        ("fn f() { |#[a] x| x; }", "fn f() {\n\t|#[a] x| x;\n}"),
+        ("fn f() { (#[a] x, y); }", "fn f() {\n\t(#[a] x, y);\n}"),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(moxy::fmt!(&item).unwrap(), formatted, "`{source}`");
+    }
+}
+
+// As rustfmt does: an attribute of a match arm, a struct literal or pattern
+// field, or a statement takes its own line, and one of an element that is
+// itself inline, as a call argument, stays on its line
+#[test]
+fn attributes_take_their_own_line_where_rustfmt_puts_them() {
+    for (source, formatted) in [
+        (
+            "fn f() { match x { #[a] 1 => {} } }",
+            "fn f() {\n\tmatch x {\n\t\t#[a]\n\t\t1 => {},\n\t}\n}",
+        ),
+        ("fn f() { S { #[a] f: 1 }; }", "fn f() {\n\tS {\n\t\t#[a]\n\t\tf: 1,\n\t};\n}"),
+        (
+            "fn f() { let S { #[a] f } = x; }",
+            "fn f() {\n\tlet S {\n\t\t#[a]\n\t\tf,\n\t} = x;\n}",
+        ),
+        ("fn f() { #[allow(x)] foo(); }", "fn f() {\n\t#[allow(x)]\n\tfoo();\n}"),
+        ("fn f() { g(#[a] x); }", "fn f() {\n\tg(#[a] x);\n}"),
+        (
+            "fn f() { #[a] if x { #[b] g(#[c] y); } }",
+            "fn f() {\n\t#[a]\n\tif x {\n\t\t#[b]\n\t\tg(#[c] y);\n\t}\n}",
+        ),
+    ] {
+        let item: Item = moxy::parse!(source).unwrap_or_else(|error| panic!("`{source}`: {error}"));
+        assert_eq!(moxy::fmt!(&item).unwrap(), formatted, "`{source}`");
+    }
+}

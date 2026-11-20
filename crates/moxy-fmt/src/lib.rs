@@ -30,12 +30,17 @@ pub use node::*;
 
 use std::fmt::Write;
 
+use moxy_token::{MAX_NESTED_NODES, TokenStream};
+
 /// Format a value that implements [`Format`] into a `String`.
 ///
 /// Accepts an optional [`FmtConfig`] as a second argument. When omitted,
 /// [`FmtConfig::default`] is used.
 ///
-/// Returns `Result<String, FmtError>`.
+/// Returns `Result<String, FmtError>`. A tree that nests more than
+/// [`MAX_NESTED_NODES`] nodes, as a tree built in code can, is an error
+/// instead of a stack overflow. The parser is tested, not proven, to return
+/// trees within that limit, as its docs say.
 ///
 /// The intended pipeline is `template!` → `parse!` → `fmt!`: generate tokens,
 /// parse them into an AST node, then format it.
@@ -96,6 +101,10 @@ pub struct Formatter {
     output: String,
     depth: usize,
     column: usize,
+    // The nodes that nest around the node being formatted, counted as
+    // `MAX_NESTED_NODES` counts them
+    nodes: usize,
+    stmt_expr_attrs: bool,
 }
 
 impl Formatter {
@@ -106,6 +115,8 @@ impl Formatter {
             output: String::new(),
             depth: 0,
             column: 0,
+            nodes: 0,
+            stmt_expr_attrs: false,
         }
     }
 
@@ -165,6 +176,40 @@ impl Formatter {
 }
 
 impl Formatter {
+    // Formats a node nested in the ones around it, or reports a tree nested
+    // past `MAX_NESTED_NODES`, as a tree built in code can be, as its
+    // `nests_past_max_depth` counts it
+    pub(crate) fn nest(&mut self, format: impl FnOnce(&mut Self) -> Result<(), FmtError>) -> Result<(), FmtError> {
+        self.nest_by(1, format)
+    }
+
+    // Formats a node that counts as `nodes` nested nodes, as `nest` does
+    pub(crate) fn nest_by(
+        &mut self,
+        nodes: usize,
+        format: impl FnOnce(&mut Self) -> Result<(), FmtError>,
+    ) -> Result<(), FmtError> {
+        if self.nodes + nodes > MAX_NESTED_NODES {
+            return Err(too_deep());
+        }
+
+        self.nodes += nodes;
+        let formatted = format(self);
+        self.nodes -= nodes;
+        formatted
+    }
+
+    // Reports unparsed tokens, as a macro body, whose groups nest past the
+    // nodes left, before their text, which recurses once per group, is
+    // written: each group takes a level of the parser, so two nodes
+    pub(crate) fn check_tokens(&self, tokens: &TokenStream) -> Result<(), FmtError> {
+        if tokens.nests_deeper_than((MAX_NESTED_NODES - self.nodes) / 2) {
+            return Err(too_deep());
+        }
+
+        Ok(())
+    }
+
     pub fn write<T: Format>(&mut self, value: &T) -> Result<(), FmtError> {
         value.format(self)?;
         let nodes: Vec<_> = std::mem::take(&mut self.buffer);
@@ -257,11 +302,20 @@ impl Formatter {
 
 impl<T: Format, P: std::fmt::Display> Format for moxy_ast::List<T, P> {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        // No separator follows the last element; a one-element tuple writes
+        // its comma itself
         f.group(|f| {
-            for pair in self.pairs() {
+            let mut pairs = self.pairs().peekable();
+
+            while let Some(pair) = pairs.next() {
                 match pair {
                     moxy_ast::Pair::List(t, p) => {
                         t.format(f)?;
+
+                        if pairs.peek().is_none() {
+                            break;
+                        }
+
                         let sep = p.to_string();
 
                         if sep.trim() == "+" {
@@ -309,4 +363,8 @@ impl std::fmt::Display for Mode {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         write!(f, "{}", self.as_str())
     }
+}
+
+fn too_deep() -> FmtError {
+    FmtError::unsupported(format!("the tree nests more than {MAX_NESTED_NODES} nodes deep"))
 }

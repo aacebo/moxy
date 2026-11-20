@@ -289,6 +289,7 @@ const NESTED: &[(&str, char, &str, &str, &str, &str, &str, bool)] = &[
     ("yield", 'e', "", "yield ", "x", "", "", false),
     ("closure", 'e', "", "|| ", "x", "", "", false),
     ("closure param", 'e', "", "|x| ", "x", "", "", false),
+    ("closure in an operand", 'e', "", "|| 0 + ", "x", "", "", false),
     ("move closure", 'e', "", "move || ", "x", "", "", false),
     ("async closure", 'e', "", "async || ", "x", "", "", false),
     ("static closure", 'e', "", "static || ", "x", "", "", false),
@@ -301,6 +302,33 @@ const NESTED: &[(&str, char, &str, &str, &str, &str, &str, bool)] = &[
     ("cast unary", 'e', "", "-", "x as T", "", "", false),
     ("turbofish", 'e', "a::<", "Vec<", "u8", ">", ">()", false),
     ("paren", 'e', "", "(", "x", ")", "", false),
+    (
+        "left operator ladder",
+        'e',
+        "",
+        "(",
+        "0",
+        ")*0+0<<0&0^0|0==0&&0||0",
+        "",
+        false,
+    ),
+    ("left chain", 'e', "", "(", "0", ")*0+0", "", false),
+    ("assigned chain", 'e', "", "(", "a", ")+0 = 0", "", false),
+    ("compound assigned chain", 'e', "", "(", "a", ")+0 += 0", "", false),
+    ("range start chain", 'e', "", "(", "0", ")+0..", "", false),
+    ("range end chain", 'e', "", "(..0+", "0", ")", "", false),
+    ("assignment after a range", 'e', "", "(", "a", ") = 0.. = 0", "", false),
+    (
+        "block-like statement chain",
+        'b',
+        "",
+        "{ { ",
+        "x",
+        " }.a*0+0 = 0 }",
+        "",
+        false,
+    ),
+    ("let scrutinee chain", 'e', "", "if let a = (", "0", ")*0+0 {}", "", false),
     ("tuple", 'e', "", "(", "x", ",)", "", false),
     ("array", 'e', "", "[", "x", "]", "", false),
     ("repeat value", 'e', "", "[", "x", "; 1]", "", false),
@@ -364,6 +392,8 @@ const NESTED: &[(&str, char, &str, &str, &str, &str, &str, bool)] = &[
     ("box dyn generics", 't', "", "Box<dyn A<", "u8", ">>", "", false),
     ("assoc type", 't', "", "A<B = ", "u8", ">", "", false),
     ("assoc bound", 't', "", "A<B: ", "C", ">", "", false),
+    ("assoc binding arguments", 't', "X<", "B<", "C", "> = u8", ">", false),
+    ("assoc bound arguments", 't', "X<", "B<", "C", ">: D", ">", false),
     ("qself", 't', "", "<", "T", " as A>::B", "", false),
     ("type turbofish", 't', "", "A::<", "u8", ">", "", false),
     ("impl generics", 't', "", "impl A<", "u8", ">", "", false),
@@ -903,6 +933,7 @@ where
     T: moxy::token::ToTokenStream + moxy::token::Spanner + Clone + PartialEq + std::fmt::Debug,
     T: moxy::fmt::Format + serde::Serialize + Walked,
 {
+    assert!(!node.nests_past_max_depth());
     let _ = node.to_token_stream();
     let _ = node.span();
     let mut copy = node.clone();
@@ -920,10 +951,12 @@ struct Walk;
 
 impl moxy::ast::VisitMut for Walk {}
 
-// A tree that both visitors walk from its root
+// A tree that both visitors walk from its root, and that the depth check
+// measures
 trait Walked {
     fn walk(&self);
     fn walk_mut(&mut self);
+    fn nests_past_max_depth(&self) -> bool;
 }
 
 macro_rules! walked {
@@ -936,6 +969,10 @@ macro_rules! walked {
             fn walk_mut(&mut self) {
                 moxy::ast::VisitMut::$visit_mut(&mut Walk, self);
             }
+
+            fn nests_past_max_depth(&self) -> bool {
+                <$ty>::nests_past_max_depth(self)
+            }
         })*
     };
 }
@@ -945,6 +982,7 @@ walked! {
     moxy::ast::Type => visit_type, visit_type_mut;
     moxy::ast::Pattern => visit_pattern, visit_pattern_mut;
     moxy::ast::StmtBlock => visit_stmt_block, visit_stmt_block_mut;
+    moxy::ast::Stmt => visit_stmt, visit_stmt_mut;
 }
 
 impl Walked for moxy::ast::File {
@@ -958,6 +996,10 @@ impl Walked for moxy::ast::File {
         self.items
             .iter_mut()
             .for_each(|item| moxy::ast::VisitMut::visit_item_mut(&mut Walk, item));
+    }
+
+    fn nests_past_max_depth(&self) -> bool {
+        moxy::ast::File::nests_past_max_depth(self)
     }
 }
 
@@ -1052,6 +1094,26 @@ fn deep_trees_of_every_kind_parse_and_traverse_or_report_the_depth() {
             "operator ladders in parentheses",
             (MAX_DEPTH - 1) / 9,
             deepest::<Expr>(|n| format!("{}0{}", "(0||0&&0==0|0^0&0<<0+0*".repeat(n), ")".repeat(n))),
+        ),
+        (
+            "left operator ladders in parentheses",
+            (MAX_DEPTH - 1) / 9,
+            deepest::<Expr>(|n| format!("{}0{}", "(".repeat(n), ")*0+0<<0&0^0|0==0&&0||0".repeat(n))),
+        ),
+        (
+            "assignments after ranges in parentheses",
+            (MAX_DEPTH - 1) / 2,
+            deepest::<Expr>(|n| format!("{}a{}", "(".repeat(n), ") = 0.. = 0".repeat(n))),
+        ),
+        (
+            "associated bindings nested through their arguments",
+            MAX_DEPTH - 3,
+            deepest::<Type>(|n| format!("X<{}C{}>", "B<".repeat(n), "> = u8".repeat(n))),
+        ),
+        (
+            "associated type bounds nested through their arguments",
+            MAX_DEPTH - 3,
+            deepest::<Type>(|n| format!("X<{}C{}>", "B<".repeat(n), ">: D".repeat(n))),
         ),
         (
             "operator ladders in closures",
@@ -1447,4 +1509,963 @@ fn parsing_a_token_stream_borrows_it() {
 
     let expression: moxy::ast::Expr = moxy::parse!(tokens).unwrap();
     assert!(expression.is_binary_chain());
+}
+
+// A tree built in code: `seed` wrapped `n` times in a copy of the form of
+// `template`, whose child `place` returns, built without recursion
+fn built<T: Parse + Clone>(template: &str, seed: &str, n: usize, place: fn(&mut T) -> &mut T) -> T {
+    let template: T = moxy::parse!(template).unwrap();
+    let seed: T = moxy::parse!(seed).unwrap();
+
+    (0..n).fold(seed, |node, _| {
+        let mut outer = template.clone();
+        *place(&mut outer) = node;
+        outer
+    })
+}
+
+fn negated(expr: &mut moxy::ast::Expr) -> &mut moxy::ast::Expr {
+    let moxy::ast::Expr::Unary(unary) = expr else { panic!() };
+    &mut unary.expr
+}
+
+fn referenced(ty: &mut moxy::ast::Type) -> &mut moxy::ast::Type {
+    let moxy::ast::Type::Reference(reference) = ty else { panic!() };
+    &mut reference.elem
+}
+
+fn referenced_pattern(pattern: &mut moxy::ast::Pattern) -> &mut moxy::ast::Pattern {
+    let moxy::ast::Pattern::Reference(reference) = pattern else {
+        panic!()
+    };
+    &mut reference.pat
+}
+
+fn inner_block(block: &mut moxy::ast::StmtBlock) -> &mut moxy::ast::StmtBlock {
+    let moxy::ast::Stmt::Block(inner) = &mut block.stmts.inner[0] else {
+        panic!()
+    };
+    inner
+}
+
+#[test]
+fn a_tree_built_past_the_depth_limit_is_reported() {
+    use moxy::ast::{Expr, Pattern, StmtBlock, Type};
+
+    let message = format!("the tree nests more than {} nodes deep", moxy::token::MAX_NESTED_NODES);
+    let (reported, formatted) = on_small_stack(move || {
+        let n = 100_000;
+        let expr = built::<Expr>("-x", "x", n, negated);
+        let ty = built::<Type>("&u8", "u8", n, referenced);
+        let pattern = built::<Pattern>("&x", "x", n, referenced_pattern);
+        let block = built::<StmtBlock>("{ {} }", "{ x }", n, inner_block);
+        let reported = [
+            expr.nests_past_max_depth(),
+            ty.nests_past_max_depth(),
+            pattern.nests_past_max_depth(),
+            block.nests_past_max_depth(),
+        ];
+        let formatted = moxy::fmt!(&expr).map_err(|error| error.to_string());
+
+        // Dropping them would recurse once per level
+        std::mem::forget((expr, ty, pattern, block));
+        (reported, formatted)
+    });
+
+    assert_eq!(reported, [true; 4]);
+    assert_eq!(formatted, Err(message));
+}
+
+// A tree counts half a level for each expression, type, pattern, item, block,
+// and token group nested in another, so it holds twice `MAX_DEPTH` of them at
+// the limit, and every traversal of it runs on a small stack
+#[test]
+fn a_tree_built_to_the_depth_limit_runs_every_traversal() {
+    use moxy::ast::{Expr, Pattern, StmtBlock, Type};
+
+    let nodes = 2 * moxy::token::MAX_DEPTH;
+    let limits = on_small_stack(move || {
+        // The seed is one node, or two for a block that holds an expression
+        let expr = |n| built::<Expr>("-x", "x", n, negated);
+        let ty = |n| built::<Type>("&u8", "u8", n, referenced);
+        let pattern = |n| built::<Pattern>("&x", "x", n, referenced_pattern);
+        let block = |n| built::<StmtBlock>("{ {} }", "{ x }", n, inner_block);
+        let limits = [
+            (expr(nodes - 1).nests_past_max_depth(), expr(nodes).nests_past_max_depth()),
+            (ty(nodes - 1).nests_past_max_depth(), ty(nodes).nests_past_max_depth()),
+            (
+                pattern(nodes - 1).nests_past_max_depth(),
+                pattern(nodes).nests_past_max_depth(),
+            ),
+            (
+                block(nodes - 2).nests_past_max_depth(),
+                block(nodes - 1).nests_past_max_depth(),
+            ),
+        ];
+
+        // Formatting counts the same nodes, so one past the limit fails
+        let formatted = [
+            moxy::fmt!(&expr(nodes)).is_err(),
+            moxy::fmt!(&ty(nodes)).is_err(),
+            moxy::fmt!(&pattern(nodes)).is_err(),
+            moxy::fmt!(&block(nodes - 1)).is_err(),
+        ];
+
+        traverse(expr(nodes - 1));
+        traverse(ty(nodes - 1));
+        traverse(pattern(nodes - 1));
+        traverse(block(nodes - 2));
+        (limits, formatted)
+    });
+
+    assert_eq!(limits, ([(false, true); 4], [true; 4]));
+}
+
+#[test]
+fn a_token_stream_built_past_the_depth_limit_is_reported() {
+    use moxy::token::Group;
+
+    let depth = moxy::token::MAX_DEPTH;
+    let lexed: TokenStream = "[[x]]".parse().unwrap();
+    let built = on_small_stack(move || {
+        let nested = |n: usize| {
+            (0..n).fold(TokenStream::new(), |stream, _| {
+                TokenStream::from_iter([TokenTree::Group(Group::new(Delim::Bracket, stream))])
+            })
+        };
+
+        [
+            nested(depth).nests_deeper_than(depth),
+            nested(depth + 1).nests_deeper_than(depth),
+            nested(100_000).nests_deeper_than(depth),
+        ]
+    });
+
+    assert_eq!((lexed.nests_deeper_than(1), lexed.nests_deeper_than(2)), (true, false));
+    assert_eq!(built, [false, true, true]);
+}
+
+fn grouped(tree: &mut moxy::ast::UseTree) -> &mut moxy::ast::UseTree {
+    let moxy::ast::UseTree::PathChain(chain) = tree else {
+        panic!()
+    };
+    let moxy::ast::UseTree::Group(group) = &mut *chain.tree else {
+        panic!()
+    };
+    group.items.inner.first_mut().unwrap()
+}
+
+fn bounded(path: &mut moxy::ast::Path) -> &mut moxy::ast::Path {
+    let moxy::ast::PathArguments::AngleBracketed(args) = &mut path[0].args else {
+        panic!()
+    };
+    let Some(moxy::ast::GenericArgument::Constraint(constraint)) = args.args.first_mut() else {
+        panic!()
+    };
+    let Some(moxy::ast::TypeBound::Trait(bound)) = constraint.bounds.first_mut() else {
+        panic!()
+    };
+    &mut bound.path
+}
+
+fn chained(tree: &mut moxy::ast::UseTree) -> &mut moxy::ast::UseTree {
+    let moxy::ast::UseTree::PathChain(chain) = tree else {
+        panic!()
+    };
+    &mut chain.tree
+}
+
+fn bound_args(args: &mut moxy::ast::PathArguments) -> &mut moxy::ast::PathArguments {
+    let moxy::ast::PathArguments::AngleBracketed(angle) = args else {
+        panic!()
+    };
+    let Some(moxy::ast::GenericArgument::AssocType(binding)) = angle.args.first_mut() else {
+        panic!()
+    };
+    &mut binding.args
+}
+
+// A file of one use item whose tree is built `n` deep
+fn built_use(n: usize, place: fn(&mut moxy::ast::UseTree) -> &mut moxy::ast::UseTree, template: &str) -> moxy::ast::File {
+    let mut file: moxy::ast::File = moxy::parse!("use x;").unwrap();
+    let moxy::ast::Item::Use(use_item) = &mut file.items[0] else {
+        panic!()
+    };
+    use_item.tree = built(template, "b", n, place);
+    file
+}
+
+// A type whose path is built `n` deep through associated type bounds, or
+// through the arguments of associated bindings
+fn built_bounds(n: usize) -> moxy::ast::Type {
+    let mut ty: moxy::ast::Type = moxy::parse!("X").unwrap();
+    let moxy::ast::Type::Path(path) = &mut ty else { panic!() };
+    path.path = built("A<B: C>", "C", n, bounded);
+    ty
+}
+
+fn built_bindings(n: usize) -> moxy::ast::Type {
+    let mut ty: moxy::ast::Type = moxy::parse!("X").unwrap();
+    let moxy::ast::Type::Path(path) = &mut ty else { panic!() };
+    path.path[0].args = built("<B<C> = u8>", "<C>", n, bound_args);
+    ty
+}
+
+// Use groups, use path chains, associated type bounds, and associated
+// bindings nest without an expression, type, or pattern between their levels,
+// so the check and the formatter count them
+#[test]
+fn use_trees_and_associated_arguments_built_deep_are_reported() {
+    let reported = on_small_stack(move || {
+        [400, 100_000].map(|n| {
+            let groups = built_use(n, grouped, "a::{b}");
+            let chains = built_use(n, chained, "a::b");
+            let (bounds, bindings) = (built_bounds(n), built_bindings(n));
+            let reported = [
+                (groups.nests_past_max_depth(), moxy::fmt!(&groups).is_err()),
+                (chains.nests_past_max_depth(), moxy::fmt!(&chains).is_err()),
+                (bounds.nests_past_max_depth(), moxy::fmt!(&bounds).is_err()),
+                (bindings.nests_past_max_depth(), moxy::fmt!(&bindings).is_err()),
+            ];
+            std::mem::forget((groups, chains, bounds, bindings));
+            reported
+        })
+    });
+
+    assert_eq!(reported, [[(true, true); 4]; 2]);
+}
+
+// The deepest use trees and associated arguments that the check accepts run
+// every traversal on a small stack
+#[test]
+fn use_trees_and_associated_arguments_built_to_the_limit_run_every_traversal() {
+    let limits = on_small_stack(move || {
+        let deepest = |past: &dyn Fn(usize) -> bool| (1..).find(|&n| past(n + 1)).unwrap();
+        let groups = deepest(&|n| built_use(n, grouped, "a::{b}").nests_past_max_depth());
+        let chains = deepest(&|n| built_use(n, chained, "a::b").nests_past_max_depth());
+        let bounds = deepest(&|n| built_bounds(n).nests_past_max_depth());
+        let bindings = deepest(&|n| built_bindings(n).nests_past_max_depth());
+        traverse(built_use(groups, grouped, "a::{b}"));
+        traverse(built_use(chains, chained, "a::b"));
+        traverse(built_bounds(bounds));
+        traverse(built_bindings(bindings));
+        [groups, chains, bounds, bindings]
+    });
+
+    // Of the 288 nodes, the item or the type takes one. A level of groups
+    // takes two (its chain and its group), a chain one, a bound six (two for
+    // the argument and four around its bounds), and a binding nested through
+    // its arguments two, with three more for the innermost binding's `u8` (two
+    // around a binding's value and one for the type)
+    assert_eq!(limits, [143, 287, 47, 142]);
+}
+
+// The formatter checks a macro body's groups before it reads them, so a body
+// built 100,000 groups deep is an error instead of a stack overflow
+#[test]
+fn a_macro_body_built_deep_formats_to_an_error() {
+    use moxy::token::Group;
+
+    let formatted = on_small_stack(|| {
+        let mut expr: moxy::ast::Expr = moxy::parse!("m!()").unwrap();
+        let moxy::ast::Expr::Macro(mac) = &mut expr else { panic!() };
+        mac.mac.body.tokens = (0..100_000).fold(TokenStream::new(), |stream, _| {
+            TokenStream::from_iter([TokenTree::Group(Group::new(Delim::Bracket, stream))])
+        });
+        let formatted = moxy::fmt!(&expr).map_err(|error| error.to_string());
+        drop(expr);
+        formatted
+    });
+
+    assert_eq!(
+        formatted,
+        Err(format!(
+            "the tree nests more than {} nodes deep",
+            moxy::token::MAX_NESTED_NODES
+        ))
+    );
+}
+
+// A macro body or attribute arguments, which a traversal walks as deep as
+// their groups nest, take a level of the parser per group, so an expression
+// nested to the limit around them parses only while the whole tree fits, and
+// what parses passes the depth check and formats
+#[test]
+fn a_macro_body_inside_a_deep_expression_counts_its_groups() {
+    use moxy::ast::Expr;
+
+    let message = format!("nesting is deeper than {} levels", moxy::token::MAX_DEPTH);
+    let outcomes = on_small_stack(|| {
+        [
+            format!("{}m!()*0{}", "(".repeat(143), ") = 0".repeat(143)),
+            format!("{}m!((()))", "|| 0 + ".repeat(140)),
+            format!("{}m!((()))", "|| 0 + ".repeat(142)),
+            format!("{}#[a((b))] 0{}", "(".repeat(140), ") = 0".repeat(140)),
+            format!("{}#[a((((b))))] x", "-".repeat(142)),
+        ]
+        .map(|source| match moxy::parse!(source as Expr) {
+            Ok(expr) => {
+                let outcome = Ok((expr.nests_past_max_depth(), moxy::fmt!(&expr).is_ok()));
+                traverse(expr);
+                outcome
+            }
+            Err(error) => Err(error.message().to_string()),
+        })
+    });
+
+    assert_eq!(
+        outcomes,
+        [
+            Ok((false, true)),
+            Ok((false, true)),
+            Err(message.clone()),
+            Ok((false, true)),
+            Err(message)
+        ]
+    );
+}
+
+// A built tree whose nodes and macro body groups fill the limit together runs
+// every traversal on a small stack; one more group fails the check
+#[test]
+fn a_built_tree_and_its_macro_body_share_the_node_limit() {
+    use moxy::ast::Expr;
+    use moxy::token::Group;
+
+    let tree = |groups: usize| {
+        let mut seed: Expr = moxy::parse!("m!()").unwrap();
+        let Expr::Macro(mac) = &mut seed else { panic!() };
+        mac.mac.body.tokens = (0..groups).fold(TokenStream::new(), |stream, _| {
+            TokenStream::from_iter([TokenTree::Group(Group::new(Delim::Bracket, stream))])
+        });
+        let template: Expr = moxy::parse!("-x").unwrap();
+        (0..143).fold(seed, |expr, _| {
+            let mut outer = template.clone();
+            *negated(&mut outer) = expr;
+            outer
+        })
+    };
+
+    // 144 expressions take 144 nodes, and each group two of the 144 left
+    let checked = on_small_stack(move || {
+        let past = tree(73).nests_past_max_depth();
+        let at = tree(72);
+        let checked = (at.nests_past_max_depth(), past);
+        traverse(at);
+        checked
+    });
+
+    assert_eq!(checked, (false, true));
+}
+
+// Leaves that add nodes or token groups without parser levels of their own
+const LEAVES: &[(char, &str)] = &[
+    ('e', "x"),
+    ('e', "m!([[[x]]])"),
+    ('e', "#[a((b))] x"),
+    ('e', "#[a((b))] x + 0"),
+    ('e', "#[a((b))] .."),
+    ('e', "#[a((b))] ..x"),
+    ('e', "0*0+0<<0&0^0|0==0&&0||0"),
+    ('e', "a = 0.. = 0.. = 0"),
+    ('t', "u8"),
+    ('t', "m!([[[u8]]])"),
+    ('t', "A<B<C> = u8, D: E>"),
+    ('p', "x"),
+    ('p', "m!([[[x]]])"),
+    ('p', "1..=2"),
+];
+
+// A leaf that only one kind reads, which tells the kind of the centre of an
+// outer construct, as a pattern for "closure pattern"
+const CENTRE_PROBES: &[(char, &str)] = &[('e', "1 + 1"), ('t', "&'a u8"), ('p', "ref x")];
+
+// Text after each level of an outer expression that makes the level wrap more
+// nodes, as an assignment wraps its left side
+const SUFFIXES: &[&str] = &["", " = 0", "*0+0", " = 0.. = 0"];
+
+// Every construct is an outer this many times, each with the next inner of
+// its centre's kind in turn, so every construct is also an inner about as
+// often
+const INNERS_PER_OUTER: usize = 1;
+
+// The construct that fills a tree to the node limit around or inside another:
+// a closure and a binary chain per level, two nodes for each level the parser
+// takes, the most a construct holds
+const FILLER: &str = "closure in an operand";
+
+// The constructs nested in one another: one nested `outer` levels, with
+// `suffix` after each, around another nested `inner` levels around a leaf
+fn composed(outer: usize, inner: usize, levels: (usize, usize), leaf: &str, suffix: &str) -> String {
+    let (_, _, before, open, _, close, after, _) = NESTED[inner];
+    let core = format!("{before}{}{leaf}{}{after}", open.repeat(levels.1), close.repeat(levels.1));
+    let (_, _, before, open, _, close, after, _) = NESTED[outer];
+    format!(
+        "{before}{}{core}{}{after}",
+        open.repeat(levels.0),
+        format!("{close}{suffix}").repeat(levels.0)
+    )
+}
+
+// The roots a pair of a kind is parsed as: an expression, outside the half
+// nesting, also as a statement, where a block-like root takes its own level.
+// The filler compositions parse statements of a block as well.
+fn roots(kind: char, half: bool) -> &'static [char] {
+    match kind {
+        'e' if half => &['e'],
+        'e' => &['e', 's'],
+        't' => &['t'],
+        _ => &['p'],
+    }
+}
+
+// The kind of a construct's centre, which a leaf that only that kind reads
+// fills, or `None` when no probe does
+fn centre_kind(case: usize, parses: &dyn Fn(char, String) -> bool) -> Option<char> {
+    let (_, kind, before, open, _, close, after, _) = NESTED[case];
+    CENTRE_PROBES
+        .iter()
+        .find(|(_, probe)| parses(kind, format!("{before}{open}{probe}{close}{after}")))
+        .map(|(centre, _)| *centre)
+}
+
+// Parses a source as `root` and, if it parses, checks its depth and formats
+// it, every traversal running when `traverse_all` is set; `None` when it does
+// not parse. It runs on the caller's stack.
+fn parsed_tree_holds(root: char, source: String, traverse_all: bool) -> Option<bool> {
+    fn holds<T>(node: T, traverse_all: bool) -> bool
+    where
+        T: moxy::token::ToTokenStream + moxy::token::Spanner + Clone + PartialEq + std::fmt::Debug,
+        T: moxy::fmt::Format + serde::Serialize + Walked + 'static,
+    {
+        let holds = !node.nests_past_max_depth() && moxy::fmt!(&node).is_ok();
+
+        if holds && traverse_all {
+            traverse(node);
+        }
+
+        holds
+    }
+
+    match root {
+        'e' => moxy::parse!(source as moxy::ast::Expr)
+            .ok()
+            .map(|node| holds(node, traverse_all)),
+        's' => moxy::parse!(source as moxy::ast::Stmt)
+            .ok()
+            .map(|node| holds(node, traverse_all)),
+        'b' => moxy::parse!((format!("{{ {source} }}")) as moxy::ast::StmtBlock)
+            .ok()
+            .map(|node| holds(node, traverse_all)),
+        't' => moxy::parse!(source as moxy::ast::Type)
+            .ok()
+            .map(|node| holds(node, traverse_all)),
+        _ => moxy::parse!(source as moxy::ast::Pattern)
+            .ok()
+            .map(|node| holds(node, traverse_all)),
+    }
+}
+
+// The deepest `n` in `[low, high)` for which `parses` holds, by bisection,
+// given that it holds at `low`
+fn deepest_in(mut low: usize, mut high: usize, mut parses: impl FnMut(usize) -> bool) -> usize {
+    while high - low > 1 {
+        let middle = (low + high) / 2;
+
+        if parses(middle) {
+            low = middle;
+        } else {
+            high = middle;
+        }
+    }
+
+    low
+}
+
+// Whatever parses passes the depth check and formats, for constructs nested
+// in one another around leaves that add nodes without levels: the depth check
+// and the parser count the same tree. An expression is parsed as an
+// expression, a statement, and the statement of a block.
+#[test]
+fn composed_constructs_that_parse_pass_the_depth_check() {
+    on_small_stack(compose);
+}
+
+// The compositions of `composed_constructs_that_parse_pass_the_depth_check`,
+// run on one small stack, whose frames here take a few kilobytes
+fn compose() {
+    let failures = std::cell::RefCell::new(Vec::new());
+
+    // Whether a source parses as `root`; a tree that parses and fails the
+    // depth check or formatting is a failure
+    let parses = |root: char, source: String| match parsed_tree_holds(root, source.clone(), false) {
+        Some(false) => {
+            failures.borrow_mut().push(format!("{root}: {source}"));
+            true
+        }
+        outcome => outcome.is_some(),
+    };
+    let composable: Vec<usize> = (0..NESTED.len()).filter(|&case| !NESTED[case].7).collect();
+    let limits: std::collections::HashMap<usize, usize> = composable
+        .iter()
+        .map(|&case| (case, deepest_in(1, 300, |n| parses(NESTED[case].1, nested(case, n)))))
+        .collect();
+    // Files and blocks hold their centre in an item or a statement, which the
+    // leaves do not fill
+    let centres: std::collections::HashMap<usize, char> = composable
+        .iter()
+        .filter(|&&case| matches!(NESTED[case].1, 'e' | 't' | 'p'))
+        .filter_map(|&case| centre_kind(case, &parses).map(|centre| (case, centre)))
+        .collect();
+    let (mut checked, mut unfitting, mut dropped) = (0, 0, Vec::new());
+
+    // Checks every tree that parses as `root` on the way to the deepest `n` in
+    // `[low, high)` at which `source(n)` parses, which the caller has seen
+    // parse at `low`, and runs every traversal on that deepest tree
+    let sweep = |root: char, low: usize, high: usize, source: &dyn Fn(usize) -> String| {
+        let deepest = deepest_in(low, high, |n| parses(root, source(n)));
+
+        match parsed_tree_holds(root, source(deepest), true) {
+            Some(true) => {}
+            Some(false) => failures.borrow_mut().push(format!("{root}: {}", source(deepest))),
+            None => failures
+                .borrow_mut()
+                .push(format!("{root} does not parse at the low bound: {}", source(deepest))),
+        }
+    };
+
+    // Each type and pattern construct alone around every leaf of its centre's
+    // kind, as deep as it parses: where the leaf's own nodes meet the limit.
+    // Expression constructs meet it inside the filler below.
+    for (&case, &centre) in centres.iter().filter(|(case, _)| NESTED[**case].1 != 'e') {
+        let (_, kind, before, open, _, close, after, _) = NESTED[case];
+
+        for &(_, leaf) in LEAVES.iter().filter(|(leaf_kind, _)| *leaf_kind == centre) {
+            let source = |n: usize| format!("{before}{}{leaf}{}{after}", open.repeat(n), close.repeat(n));
+
+            // A leaf that the centre does not take, as an assignment in the
+            // end of a range
+            if !parses(kind, source(1)) {
+                unfitting += 1;
+                continue;
+            }
+
+            checked += 1;
+            sweep(kind, 1, limits[&case] + 2, &source);
+        }
+    }
+
+    // Each expression construct one level inside the filler, around every leaf
+    // of its centre's kind, and one level around it as a statement, with the
+    // filler as deep as it parses: where an off-by-one in either count shows
+    let filler = composable.iter().copied().find(|&case| NESTED[case].0 == FILLER).unwrap();
+
+    for (&case, &centre) in centres.iter().filter(|(case, _)| NESTED[**case].1 == 'e') {
+        for &(_, leaf) in LEAVES.iter().filter(|(leaf_kind, _)| *leaf_kind == centre) {
+            if !parses('e', composed(filler, case, (1, 1), leaf, "")) {
+                unfitting += 1;
+                continue;
+            }
+
+            checked += 1;
+            sweep('e', 1, limits[&filler] + 1, &|n| composed(filler, case, (n, 1), leaf, ""));
+        }
+
+        if centre != 'e' {
+            continue;
+        }
+
+        // As a statement, where a block-like root takes its own level, and as
+        // the statement of a block, with and without a binary chain before the
+        // filler, so the nodes meet the limit at either parity
+        let (_, _, before, open, _, close, after, _) = NESTED[case];
+        let filler_open = NESTED[filler].3;
+
+        for (root, prefix) in [('s', ""), ('s', "0 + "), ('b', ""), ('b', "0 + ")] {
+            let source = |n: usize| format!("{before}{open}{prefix}{}x{close}{after}", filler_open.repeat(n));
+
+            if !parses(root, source(1)) {
+                unfitting += 1;
+                continue;
+            }
+
+            checked += 1;
+            sweep(root, 1, limits[&filler] + 1, &source);
+        }
+    }
+
+    let mut turns = std::collections::HashMap::<char, usize>::new();
+
+    // Pairs of constructs, the outer nested 1 level, half its limit, or one
+    // short of it, with a suffix after each level, around an inner nested as
+    // deep as it parses
+    for &outer in &composable {
+        let kind = NESTED[outer].1;
+        let Some(&centre) = centres.get(&outer) else {
+            continue;
+        };
+        let inners: Vec<usize> = composable
+            .iter()
+            .copied()
+            .filter(|case| NESTED[*case].1 == centre && centres.contains_key(case))
+            .collect();
+
+        for _ in 0..INNERS_PER_OUTER {
+            let turn = turns.entry(centre).or_default();
+            let inner = inners[*turn % inners.len()];
+            let leaves: Vec<&str> = LEAVES
+                .iter()
+                .filter(|(k, _)| *k == centres[&inner])
+                .map(|(_, leaf)| *leaf)
+                .collect();
+            let leaf = leaves[*turn / inners.len() % leaves.len()];
+            let chosen = if kind == 'e' { SUFFIXES[*turn % SUFFIXES.len()] } else { "" };
+            *turn += 1;
+
+            let half = limits[&outer] / 2;
+
+            for target in [1, half, limits[&outer].saturating_sub(1).max(1)] {
+                for &root in roots(kind, target == half && half > 1) {
+                    let reads = |suffix: &str| parses(root, composed(outer, inner, (1, 0), leaf, suffix));
+
+                    // A suffix the grammar rejects after the construct, as an
+                    // assignment after a range or `*0+0` after a block-like
+                    // statement, gives way to none
+                    let suffix = if reads(chosen) {
+                        chosen
+                    } else if reads("") {
+                        unfitting += 1;
+                        ""
+                    } else {
+                        dropped.push(format!(
+                            "{} in {} as {root}: does not parse around `{leaf}`",
+                            NESTED[inner].0, NESTED[outer].0
+                        ));
+                        continue;
+                    };
+
+                    // The outer, as deep as it parses up to the target around
+                    // the bare inner, then the inner as deep as it parses
+                    let levels = deepest_in(1, target + 1, |n| parses(root, composed(outer, inner, (n, 0), leaf, suffix)));
+
+                    checked += 1;
+                    sweep(root, 0, limits[&inner] + 1, &|n| {
+                        composed(outer, inner, (levels, n), leaf, suffix)
+                    });
+                }
+            }
+        }
+    }
+
+    eprintln!(
+        "{checked} compositions, {unfitting} leaves or suffixes that do not fit, {} constructs with a centre",
+        centres.len()
+    );
+    assert!(checked > 900, "{checked} compositions parsed");
+    let failures = failures.into_inner();
+    assert!(
+        failures.is_empty(),
+        "parsed but failed the depth check or formatting:\n{}",
+        failures.join("\n")
+    );
+    // `static` begins an item at the start of a statement, so a static
+    // closure is no statement
+    assert!(
+        dropped.iter().all(|drop| drop.contains("in static closure as ")),
+        "dropped:\n{}",
+        dropped.join("\n")
+    );
+    assert_eq!(dropped.len(), 2, "dropped:\n{}", dropped.join("\n"));
+}
+
+fn first_operand(expr: &mut moxy::ast::Expr) -> &mut moxy::ast::Expr {
+    let moxy::ast::Expr::BinaryChain(chain) = expr else { panic!() };
+    chain.operands.first_mut().unwrap()
+}
+
+fn tuple_element(expr: &mut moxy::ast::Expr) -> &mut moxy::ast::Expr {
+    let moxy::ast::Expr::Tuple(tuple) = expr else { panic!() };
+    tuple.elems.inner.first_mut().unwrap()
+}
+
+fn call_argument(expr: &mut moxy::ast::Expr) -> &mut moxy::ast::Expr {
+    let moxy::ast::Expr::Postfix(postfix) = expr else { panic!() };
+    let moxy::ast::Postfix::Call(call) = &mut postfix.ops[0] else {
+        panic!()
+    };
+    call.args.inner.first_mut().unwrap()
+}
+
+fn tuple_struct_element(pattern: &mut moxy::ast::Pattern) -> &mut moxy::ast::Pattern {
+    let moxy::ast::Pattern::TupleStruct(tuple) = pattern else {
+        panic!()
+    };
+    tuple.elems.inner.first_mut().unwrap()
+}
+
+fn tuple_type_element(ty: &mut moxy::ast::Type) -> &mut moxy::ast::Type {
+    let moxy::ast::Type::Tuple(tuple) = ty else { panic!() };
+    tuple.elems.inner.first_mut().unwrap()
+}
+
+// Trees built to the node limit through nodes that hold their children in
+// lists run every traversal on a small stack
+#[test]
+fn trees_of_list_nodes_built_to_the_limit_run_every_traversal() {
+    use moxy::ast::{Expr, Pattern, Type};
+
+    let n = moxy::token::MAX_NESTED_NODES - 1;
+
+    on_small_stack(move || {
+        traverse(built::<Expr>("x+0", "x", n, first_operand));
+        traverse(built::<Expr>("(x,)", "x", n, tuple_element));
+        traverse(built::<Expr>("f(x)", "x", n, call_argument));
+        traverse(built::<Pattern>("S(x)", "x", n, tuple_struct_element));
+        traverse(built::<Type>("(u8,)", "u8", n, tuple_type_element));
+    });
+}
+
+// Attributes read before their expression or closure parameter has entered its
+// level count from that level, and a block-like statement or match arm parsed
+// as the root takes the level its block or match would give it, so each tree
+// here parses one level short of the limit and is a depth error at it, where
+// its nodes would pass 288.
+//
+// A range without a start takes no level, so `#[a] ..` under closures stops one
+// level earlier than a bare `..`: the depth check counts the range as a node,
+// and without the attribute's level its argument groups would take
+// `(#[a((b))] ..)*0+0`, a composition leaf, past 288 nodes.
+#[test]
+fn attributes_and_block_like_roots_take_their_levels() {
+    use moxy::ast::{Expr, Stmt};
+
+    let message = format!("nesting is deeper than {} levels", moxy::token::MAX_DEPTH);
+
+    // Each row one level short of the limit at `0` and at it at `1`
+    let errors = on_small_stack(|| {
+        [0, 1].map(|past| {
+            let exprs = [
+                format!("{}|| #[a((b))] x + 0", "|| 0 + ".repeat(141 + past)),
+                format!(
+                    "0 + {}|#[a{}b{}] x| x",
+                    "|| 0 + ".repeat(99),
+                    "(".repeat(44 + past),
+                    ")".repeat(44 + past)
+                ),
+                format!("{}#[a] ..", "|| ".repeat(143 + past)),
+            ]
+            .map(|source| moxy::parse!(source as Expr).err().map(|error| error.message().to_string()));
+            let stmts = [
+                format!("if 0 + {}x {{}}", "|| 0 + ".repeat(142 + past)),
+                format!("while 0 + {}x {{}}", "|| 0 + ".repeat(142 + past)),
+                format!("match 0 + {}x {{}}", "|| 0 + ".repeat(142 + past)),
+                format!("for a in 0 + {}x {{}}", "|| 0 + ".repeat(142 + past)),
+                format!("{}if 0 + x {{}}{}", "unsafe { ".repeat(142 + past), " }".repeat(142 + past)),
+            ]
+            .map(|source| moxy::parse!(source as Stmt).err().map(|error| error.message().to_string()));
+            (exprs, stmts)
+        })
+    });
+
+    assert_eq!(
+        errors,
+        [
+            ([(); 3].map(|_| None), [(); 5].map(|_| None)),
+            ([(); 3].map(|_| Some(message.clone())), [(); 5].map(|_| Some(message.clone())))
+        ]
+    );
+}
+
+fn item_body(block: &mut moxy::ast::StmtBlock) -> &mut moxy::ast::StmtBlock {
+    let moxy::ast::Stmt::Item(item) = &mut block.stmts.inner[0] else {
+        panic!()
+    };
+    let moxy::ast::Item::Fn(function) = &mut **item else {
+        panic!()
+    };
+    function.body.as_mut().unwrap()
+}
+
+fn impl_member_body(block: &mut moxy::ast::StmtBlock) -> &mut moxy::ast::StmtBlock {
+    let moxy::ast::Stmt::Item(item) = &mut block.stmts.inner[0] else {
+        panic!()
+    };
+    let moxy::ast::Item::Impl(item) = &mut **item else { panic!() };
+    let moxy::ast::ImplItem::Fn(function) = &mut item.items.inner[0] else {
+        panic!()
+    };
+    function.body.as_mut().unwrap()
+}
+
+fn trait_member_body(block: &mut moxy::ast::StmtBlock) -> &mut moxy::ast::StmtBlock {
+    let moxy::ast::Stmt::Item(item) = &mut block.stmts.inner[0] else {
+        panic!()
+    };
+    let moxy::ast::Item::Trait(item) = &mut **item else { panic!() };
+    let moxy::ast::TraitItem::Fn(function) = &mut item.items.inner[0] else {
+        panic!()
+    };
+    function.body.as_mut().unwrap()
+}
+
+fn module_content(item: &mut moxy::ast::Item) -> &mut moxy::ast::Item {
+    let moxy::ast::Item::Mod(module) = item else { panic!() };
+    &mut module.content.as_mut().unwrap().items.inner[0]
+}
+
+// A block holding modules nested `n` deep
+fn built_modules(n: usize) -> moxy::ast::StmtBlock {
+    let mut block: moxy::ast::StmtBlock = moxy::parse!("{ mod m {} }").unwrap();
+    let moxy::ast::Stmt::Item(item) = &mut block.stmts.inner[0] else {
+        panic!()
+    };
+    **item = built("mod m { mod m {} }", "mod m {}", n, module_content);
+    block
+}
+
+fn arm_body(expr: &mut moxy::ast::Expr) -> &mut moxy::ast::Expr {
+    let moxy::ast::Expr::Match(expr) = expr else { panic!() };
+    &mut expr.arms.inner[0].body
+}
+
+fn field_value(expr: &mut moxy::ast::Expr) -> &mut moxy::ast::Expr {
+    let moxy::ast::Expr::Struct(expr) = expr else { panic!() };
+    &mut expr.body.inner.fields.first_mut().unwrap().expr
+}
+
+fn typed_closure_body(expr: &mut moxy::ast::Expr) -> &mut moxy::ast::Expr {
+    let moxy::ast::Expr::Closure(closure) = expr else { panic!() };
+    let moxy::ast::Expr::Block(block) = &mut *closure.body else {
+        panic!()
+    };
+    let moxy::ast::Stmt::Expr(expr, _) = &mut block.block.stmts.inner[0] else {
+        panic!()
+    };
+    expr
+}
+
+// Heavy forms, whose parse takes more levels than the nodes the depth check
+// counts for them, built to the node limit run every traversal on a small
+// stack
+#[test]
+fn heavy_forms_built_to_the_limit_run_every_traversal() {
+    use moxy::ast::{Expr, StmtBlock};
+
+    let limits = on_small_stack(|| {
+        let deepest = |past: &dyn Fn(usize) -> bool| (1..).find(|&n| past(n + 1)).unwrap();
+        let items = |n| built::<StmtBlock>("{ fn f() {} }", "{}", n, item_body);
+        let members = |n| built::<StmtBlock>("{ impl A { fn f() {} } }", "{}", n, impl_member_body);
+        let trait_members = |n| built::<StmtBlock>("{ trait A { fn f() {} } }", "{}", n, trait_member_body);
+        let arms = |n| built::<Expr>("match x { _ => y }", "y", n, arm_body);
+        let fields = |n| built::<Expr>("S { a: x }", "x", n, field_value);
+        let closures = |n| built::<Expr>("|| -> u8 { x }", "x", n, typed_closure_body);
+        let limits = [
+            deepest(&|n| items(n).nests_past_max_depth()),
+            deepest(&|n| members(n).nests_past_max_depth()),
+            deepest(&|n| trait_members(n).nests_past_max_depth()),
+            deepest(&|n| built_modules(n).nests_past_max_depth()),
+            deepest(&|n| arms(n).nests_past_max_depth()),
+            deepest(&|n| fields(n).nests_past_max_depth()),
+            deepest(&|n| closures(n).nests_past_max_depth()),
+        ];
+
+        traverse(items(limits[0]));
+        traverse(members(limits[1]));
+        traverse(trait_members(limits[2]));
+        traverse(built_modules(limits[3]));
+        traverse(arms(limits[4]));
+        traverse(fields(limits[5]));
+        traverse(closures(limits[6]));
+        limits
+    });
+
+    // A block and an item per level take two of the 288 nodes, a module, an
+    // arm body, or a field value one, and a typed closure three (the closure,
+    // its block expression, and its block). The modules sit in a block.
+    assert_eq!(limits, [143, 143, 143, 286, 287, 287, 95]);
+}
+
+// A message names what follows where it can: no value after a meta's name, the
+// value a `FromMeta` literal rejects, a path whole when it is short, and an
+// empty group
+#[test]
+fn messages_name_what_follows() {
+    use moxy::ast::{FromMeta, Meta, ParseError};
+    use moxy::token::{Cursor, Group, LitBool, Scan};
+
+    let unit: Meta = moxy::parse!("name").unwrap();
+    let sum: Meta = moxy::parse!("a = 1 + 2").unwrap();
+    let path_value: Meta = moxy::parse!("a = A::B").unwrap();
+    let long_source = format!("a = 1 + \"{}\"", "x".repeat(128));
+    let long_value: Meta = moxy::parse!(long_source).unwrap();
+    let attr = moxy::parse!("#[a = 1 +]" as moxy::ast::Attribute).err().unwrap();
+    let path: moxy::ast::Path = moxy::parse!("a::b").unwrap();
+    let field: TokenStream = "a: b".parse().unwrap();
+    let empty = TokenStream::from_iter([TokenTree::Group(Group::new(Delim::None, TokenStream::new()))]);
+    let word = LitBool::scan(Cursor::new("x", 0)).err().unwrap();
+    let raw = LitBool::scan(Cursor::new("r#true", 0)).err().unwrap();
+
+    assert_eq!(
+        u8::from_meta(&unit).err().unwrap().message(),
+        "expected integer literal, found no value"
+    );
+    assert_eq!(
+        u8::from_meta(&sum).err().unwrap().message(),
+        "expected integer literal, found `1 + 2`"
+    );
+    assert_eq!(
+        u8::from_meta(&path_value).err().unwrap().message(),
+        "expected integer literal, found `A::B`"
+    );
+    assert_eq!(
+        u8::from_meta(&long_value).err().unwrap().message(),
+        "expected integer literal, found `1`"
+    );
+    assert_eq!(attr.message(), "expected expression, found `]`");
+    assert_eq!(
+        unit.for_each(|_| Ok(())).err().unwrap().message(),
+        "expected delimited list, as in `name(...)`, found no value"
+    );
+    assert_eq!(
+        ParseError::expected(&path, "identifier").message(),
+        "expected identifier, found `a::b`"
+    );
+    assert_eq!(
+        ParseError::expected(&empty, "identifier").message(),
+        "expected identifier, found empty group"
+    );
+    assert_eq!(
+        ParseError::expected(&field, "identifier").message(),
+        "expected identifier, found `a`"
+    );
+    assert_eq!(word.to_string(), "expected boolean literal, found `x`");
+    assert_eq!(raw.to_string(), "expected boolean literal, found `r#true`");
+
+    for message in [
+        "expected integer literal, found no value",
+        "expected delimited list, as in `name(...)`, found no value",
+        "expected identifier, found `a::b`",
+    ] {
+        assert!(super::differential::follows_style(message), "`{message}`");
+    }
+
+    for message in ["expected the end, found `a`", "unexpected `a`, expected an item, found `a`"] {
+        assert!(!super::differential::follows_style(message), "`{message}`");
+    }
+}
+
+// The end of a group built in code is its last token, where an error at the end
+// of its tokens points
+#[test]
+fn a_built_group_closes_at_its_last_token() {
+    use moxy::token::Group;
+
+    let tokens: TokenStream = "a b".parse().unwrap();
+    let last = tokens.iter().last().unwrap().span();
+    let group = Group::new(Delim::Brace, tokens);
+    let parser = moxy::ast::Parser::from_group(&group);
+    parser.advance();
+    parser.advance();
+
+    assert_eq!(parser.expected("`c`").span().byte_range(), last.byte_range());
 }

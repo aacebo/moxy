@@ -20,7 +20,7 @@ pub(crate) fn single(cursor: Cursor<'_>) -> Option<Cursor<'_>> {
         super::Form::Slice => return PatSlice::skip(cursor),
         // A parenthesized pattern skips as a one-element tuple, so nested
         // parentheses skip in linear time
-        super::Form::ParenOrTuple => return PatTuple::skip(cursor),
+        super::Form::ParenOrTuple => return PatTuple::skip_paren_or_tuple(cursor),
         super::Form::Macro => return PatMacro::skip(cursor),
         super::Form::None => return None,
         super::Form::Const => PatConst::skip(cursor)?,

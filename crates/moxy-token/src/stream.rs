@@ -58,6 +58,61 @@ impl TokenStream {
     pub fn to_vec(mut self) -> Vec<TokenTree> {
         std::mem::take(&mut self.0)
     }
+
+    /// Whether the stream's groups nest deeper than `levels`, as `[[x]]` nests
+    /// two. Every group counts, including one without delimiters, which only a
+    /// stream from the compiler or proc_macro2 holds; converting such a stream
+    /// counts it the same way. With [`MAX_DEPTH`](crate::MAX_DEPTH) it tells
+    /// whether lexing the stream's text, or converting it, would refuse it, for
+    /// a stream built in code. The check does not recurse, so it runs on a
+    /// stream nested any depth.
+    pub fn nests_deeper_than(&self, levels: usize) -> bool {
+        let mut open = vec![self.0.iter()];
+
+        while let Some(trees) = open.last_mut() {
+            match trees.next() {
+                Some(TokenTree::Group(group)) => {
+                    if open.len() > levels {
+                        return true;
+                    }
+
+                    open.push(group.tokens.0.iter());
+                }
+                Some(_) => {}
+                None => {
+                    open.pop();
+                }
+            }
+        }
+
+        false
+    }
+
+    // How deep the stream's groups nest, found without recursion
+    pub(crate) fn nesting(&self) -> usize {
+        // Most bodies, as `Debug, Clone` in `derive(...)`, hold no group
+        if !self.0.iter().any(|tree| matches!(tree, TokenTree::Group(_))) {
+            return 0;
+        }
+
+        let mut open = vec![self.0.iter()];
+        let mut deepest = 0;
+
+        while let Some(trees) = open.last_mut() {
+            match trees.next() {
+                Some(TokenTree::Group(group)) => {
+                    deepest = deepest.max(open.len());
+                    open.push(group.tokens.0.iter());
+                }
+                Some(_) => {}
+                None => {
+                    open.pop();
+                }
+            }
+        }
+
+        deepest
+    }
 }
 
 impl std::ops::Deref for TokenStream {
@@ -335,8 +390,9 @@ impl TokenStream {
     ///
     /// A leading byte order mark is skipped, as the compiler and
     /// `proc_macro2` skip it from any string they lex, and every other
-    /// character lexes as tokens: `"#!a b"` gives `# ! a b`. The text of a
-    /// source file, which may start with a shebang line, lexes with
+    /// character lexes as tokens: `"#!a b"` gives `# ! a b`, and a `File`
+    /// parsed from such tokens has no shebang. The text of a source file, which
+    /// may start with a shebang line, lexes with
     /// [`TokenStream::from_source_file`].
     pub fn from_string(s: String) -> Result<Self, LexError> {
         Self::scan_owned(s, |cursor| cursor.skip_byte_order_mark())
@@ -347,7 +403,8 @@ impl TokenStream {
     ///
     /// A shebang line is a first line that starts with `#!` and no inner
     /// attribute, as `#!/usr/bin/env -S cargo` but not `#![allow(dead_code)]`.
-    /// It gives no tokens, so a `File` parsed from the stream has no shebang.
+    /// It gives no tokens, so a `File` parsed from the stream has no shebang;
+    /// `File::from_source_file` in `moxy_ast` keeps the line's text.
     pub fn from_source_file(text: String) -> Result<Self, LexError> {
         Self::scan_owned(text, |cursor| cursor.skip_source_start())
     }

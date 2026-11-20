@@ -8,6 +8,7 @@
 
 #[macro_use]
 mod macros;
+mod depth;
 
 use crate::*;
 

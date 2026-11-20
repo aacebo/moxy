@@ -32,6 +32,8 @@ impl Spanner for ExprTuple {
 impl ToTokens for ExprTuple {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
-        self.elems.to_tokens(t);
+        let mut inner = TokenStream::new();
+        self.elems.inner.tuple_to_tokens(&mut inner);
+        self.elems.surround(t, inner);
     }
 }
