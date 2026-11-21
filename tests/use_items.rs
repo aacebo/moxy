@@ -14,3 +14,17 @@ fn leading_paths_and_single_names_render_without_extra_spaces() {
     let item: Item = moxy::parse!("use ::core::fmt;").unwrap();
     assert_eq!(moxy::fmt!(&item).unwrap(), "use ::core::fmt;");
 }
+
+#[test]
+fn use_path_can_contain_special_segments() {
+    for case in [
+        "use crate as my_library;",
+        "use super::*;",
+        "use crate::super::self;",
+        "use crate::super::self::{crate::a, super::b, self::c};",
+    ] {
+        eprintln!("{case}");
+        let item: Item = moxy::parse!(case).unwrap();
+        assert_eq!(moxy::fmt!(&item).unwrap(), case);
+    }
+}

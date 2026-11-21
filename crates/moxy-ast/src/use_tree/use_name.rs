@@ -7,7 +7,7 @@ use crate::*;
 #[cfg_attr(feature = "derives", derive(Debug, PartialEq, Eq))]
 #[cfg_attr(feature = "serde", derive(serde::Serialize))]
 pub struct UseName {
-    pub ident: Ident,
+    pub segment: UseSegment,
 }
 
 impl Parse for UseName {
@@ -17,7 +17,7 @@ impl Parse for UseName {
 
     fn parse(parser: &Parser) -> Result<Self, ParseError> {
         Ok(Self {
-            ident: <_ as Parse>::parse(parser)?,
+            segment: <_ as Parse>::parse(parser)?,
         })
     }
 
@@ -28,12 +28,12 @@ impl Parse for UseName {
 
 impl Spanner for UseName {
     fn span(&self) -> Span {
-        self.ident.span()
+        self.segment.span()
     }
 }
 
 impl ToTokens for UseName {
     fn to_tokens(&self, t: &mut TokenStream) {
-        self.ident.to_tokens(t);
+        self.segment.to_tokens(t);
     }
 }
