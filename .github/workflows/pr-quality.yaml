@@ -1,0 +1,25 @@
+name: PR Quality
+
+on:
+  pull_request_target:
+    types: [opened, reopened]
+
+permissions:
+  contents: read
+  issues: read
+  pull-requests: write
+
+jobs:
+  anti-slop:
+    name: Anti Slop
+    runs-on: ubuntu-latest
+    steps:
+      - uses: peakoss/anti-slop@v0
+        with:
+          max-failures: 4
+          require-description: true
+          require-linked-issue: true
+          require-pr-template: true
+          close-pr: false
+          failure-add-pr-labels: slop
+          failure-pr-message: "this PR has been flagged as potential slop"
