@@ -69,7 +69,7 @@ Choose only the layers you need:
 cargo add moxy --no-default-features --features token,ast
 ```
 
-## Feature guide
+## Feature Guide
 
 ### Tokens
 
@@ -248,7 +248,7 @@ fn build_args(field: &moxy::ast::Field) -> Result<Option<BuildArgs>, moxy::ast::
 }
 ```
 
-#### Custom derive macros
+#### Custom Derive Macros
 
 Use `#[moxy::derive(Name)]` to turn a public function that accepts one
 parseable moxy AST type into a custom derive macro. The derive name is the
@@ -350,3 +350,8 @@ the generated wrapper as a compiler note. Stable Rust does not emit this note.
 `serde` adds serialization for supported token, AST, and formatter types.
 `proc-macro2` adds token conversions for interoperability with the wider
 procedural-macro ecosystem.
+
+## Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md) and the
+[AI-assisted contribution policy](AI_POLICY.md).

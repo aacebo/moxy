@@ -4,11 +4,7 @@
 
 Refactor ast of fmt crate to implement `Parse` and `Format` for each sub node type.
 
-## 2. Refactor `moxy-template` AST
-
-Refactor ast for template crate to implement `Parse` for each sub node type.
-
-## 3. `fmt!` should recurse through nested `template!`
+## 3. `fmt!` Should Recurse Through Nested `template!`
 
 ```rust
 pub fn apply(tokens: TokenStream) -> Result<TokenStream, ParseError> {

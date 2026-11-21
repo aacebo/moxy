@@ -1,0 +1,36 @@
+name: Feature Request
+description: Propose a change or new capability
+title: "[Feature]: "
+labels:
+  - enhancement
+assignees:
+  - aacebo
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please search existing issues before submitting a feature request.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: What problem does this solve? Include a concrete use case.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed Change
+      description: Describe the behavior or API you would like to see. Include an example when possible.
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Existing Alternatives or Workarounds
+      description: What existing APIs, workarounds, or alternative designs have you considered? Why are they insufficient?
+    validations:
+      required: false
