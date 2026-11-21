@@ -18,4 +18,4 @@ doctest = false
 workspace = true
 
 [dependencies]
-moxy = { path = "../..", version = "0.5.6", features = ["macros", "template", "diagnostic"] }
+moxy = { path = "../..", version = "0.5.7", features = ["macros", "template", "diagnostic"] }
