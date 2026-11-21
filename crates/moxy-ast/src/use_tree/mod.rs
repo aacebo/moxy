@@ -3,12 +3,14 @@ mod use_group;
 mod use_name;
 mod use_path;
 mod use_rename;
+mod use_segment;
 
 pub use use_glob::*;
 pub use use_group::*;
 pub use use_name::*;
 pub use use_path::*;
 pub use use_rename::*;
+pub use use_segment::*;
 
 use moxy_token::{Span, Spanner, ToTokens, TokenStream};
 

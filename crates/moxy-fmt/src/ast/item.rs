@@ -205,21 +205,32 @@ impl Format for UsePath {
             f.text("::")?;
         }
 
-        self.ident.format(f)?;
+        self.segment.format(f)?;
         f.text("::")?;
         self.tree.format(f)
     }
 }
 
+impl Format for UseSegment {
+    fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
+        match self {
+            UseSegment::Ident(v) => v.format(f),
+            UseSegment::Super(_) => f.text("super"),
+            UseSegment::SelfValue(_) => f.text("self"),
+            UseSegment::Crate(_) => f.text("crate"),
+        }
+    }
+}
+
 impl Format for UseName {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.ident.format(f)
+        self.segment.format(f)
     }
 }
 
 impl Format for UseRename {
     fn format(&self, f: &mut Formatter) -> Result<(), FmtError> {
-        self.ident.format(f)?;
+        self.segment.format(f)?;
         f.text(" as ")?;
         self.rename.format(f)
     }
