@@ -81,8 +81,7 @@ impl Parse for PatStruct {
 impl ToTokens for PatStruct {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
-        self.qself.to_tokens(t);
-        self.path.to_tokens(t);
+        TypePath::emit_qualified(self.qself.as_ref(), &self.path, t);
         self.body.to_tokens(t);
     }
 }
