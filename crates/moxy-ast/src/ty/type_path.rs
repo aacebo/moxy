@@ -72,19 +72,17 @@ impl TypePath {
             seg.to_tokens(tokens);
         }
     }
-}
 
-impl ToTokens for TypePath {
-    fn to_tokens(&self, tokens: &mut TokenStream) {
-        match &self.qself {
-            None => self.path.to_tokens(tokens),
+    pub(crate) fn emit_qualified(qself: Option<&QSelf>, path: &Path, tokens: &mut TokenStream) {
+        match qself {
+            None => path.to_tokens(tokens),
             Some(qself) => {
                 // `< ty (as Trait)? > :: rest`, where `position` segments of the
                 // path belong to the trait inside the angle brackets.
                 <Token![<]>::default().to_tokens(tokens);
                 qself.ty.to_tokens(tokens);
 
-                let segs: Vec<&PathSegment> = self.path.iter().collect();
+                let segs: Vec<&PathSegment> = path.iter().collect();
 
                 if qself.position > 0 {
                     <Token![as]>::default().to_tokens(tokens);
@@ -99,5 +97,11 @@ impl ToTokens for TypePath {
                 }
             }
         }
+    }
+}
+
+impl ToTokens for TypePath {
+    fn to_tokens(&self, tokens: &mut TokenStream) {
+        Self::emit_qualified(self.qself.as_ref(), &self.path, tokens);
     }
 }

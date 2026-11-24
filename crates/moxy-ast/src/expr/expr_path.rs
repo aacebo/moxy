@@ -33,6 +33,6 @@ impl Spanner for ExprPath {
 impl ToTokens for ExprPath {
     fn to_tokens(&self, t: &mut TokenStream) {
         self.attrs.to_tokens(t);
-        self.path.to_tokens(t);
+        TypePath::emit_qualified(self.qself.as_ref(), &self.path, t);
     }
 }

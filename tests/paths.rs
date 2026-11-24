@@ -1,5 +1,5 @@
-use moxy::ast::{Expr, Type};
-use moxy::token::Spanner;
+use moxy::ast::{Expr, Pattern, Type};
+use moxy::token::{Spanner, ToTokenStream, TokenStream};
 
 #[test]
 fn absolute_generic_paths_preserve_segments_and_arguments() {
@@ -75,4 +75,23 @@ fn qualified_self_paths_render_complete_valid_syntax() {
     assert!(ty.is_path());
     assert!(!ty.span().is_empty());
     assert_eq!(moxy::fmt!(&ty).unwrap(), "<T as Trait>::Assoc");
+}
+
+fn token_texts(tokens: &TokenStream) -> Vec<String> {
+    tokens.iter().map(ToString::to_string).collect()
+}
+
+#[test]
+fn qualified_self_paths_keep_their_qualifier_in_tokens() {
+    for source in ["<T as Trait>::f", "<T as Trait>::C { x: 1 }"] {
+        let expression: Expr = moxy::parse!(source).unwrap();
+        let expected: TokenStream = source.parse().unwrap();
+        assert_eq!(token_texts(&expression.to_token_stream()), token_texts(&expected));
+    }
+
+    for source in ["<T as Trait>::C", "<T as Trait>::C(x)", "<T as Trait>::C { a }"] {
+        let pattern: Pattern = moxy::parse!(source).unwrap();
+        let expected: TokenStream = source.parse().unwrap();
+        assert_eq!(token_texts(&pattern.to_token_stream()), token_texts(&expected));
+    }
 }
